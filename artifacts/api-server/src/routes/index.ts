@@ -1,0 +1,44 @@
+import { Router, type IRouter } from "express";
+import professoresRouter from "./professores";
+import disciplinasRouter from "./disciplinas";
+import turmasRouter from "./turmas";
+import horariosRouter from "./horarios";
+import statsRouter from "./stats";
+import salasRouter from "./salas";
+import licencasRouter from "./licencas";
+import comunicadosRouter from "./comunicados";
+import usuariosRouter from "./usuarios";
+import auditRouter from "./audit";
+import configuracoesRouter from "./configuracoes";
+import exportRouter from "./export";
+import conflitosRouter from "./conflitos";
+import aiRouter from "./ai";
+import importarRouter from "./importar";
+import escolasRouter from "./escolas";
+import disponibilidadeRouter from "./disponibilidade";
+import cursosRouter from "./cursos";
+import masterRouter from "./master";
+
+const router: IRouter = Router();
+
+router.use("/professores", professoresRouter);
+router.use("/disciplinas", disciplinasRouter);
+router.use("/turmas", turmasRouter);
+router.use("/horarios", horariosRouter);
+router.use("/stats", statsRouter);
+router.use("/salas", salasRouter);
+router.use("/licencas", licencasRouter);
+router.use("/comunicados", comunicadosRouter);
+router.use("/usuarios", usuariosRouter);
+router.use("/audit", auditRouter);
+router.use("/configuracoes", configuracoesRouter);
+router.use("/export", exportRouter);
+router.use("/conflitos", conflitosRouter);
+router.use("/ai", aiRouter);
+router.use("/importar", importarRouter);
+router.use("/escolas", escolasRouter);
+router.use("/disponibilidade", disponibilidadeRouter);
+router.use("/cursos", cursosRouter);
+router.use("/master", masterRouter);
+
+export default router;

@@ -1,0 +1,4 @@
+- [Clerk Tailwind v4 setup](clerk-tailwind-v4.md) — @layer declaration must come BEFORE @import "tailwindcss"; optimize: false in vite config required.
+- [Orval query options](orval-query-options.md) — when passing { query: { enabled } } to Orval hooks, must also include queryKey explicitly or TS errors occur.
+- [Zod subpath import](zod-subpath.md) — api-server must use `import { z } from "zod"` not "zod/v4"; esbuild cannot resolve zod/v4 subpath.
+- [Clerk publishableKey](clerk-publishable-key.md) — always use publishableKeyFromHost(window.location.hostname, env) never raw env var; proxyUrl always unconditional.

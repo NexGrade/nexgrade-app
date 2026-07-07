@@ -1,0 +1,189 @@
+import { useState } from "react";
+import { useListTurmas, useListProfessores } from "@workspace/api-client-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Download, FileText, Table, BarChart3 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+function buildUrl(path: string, params: Record<string, string | undefined>) {
+  const url = new URL(path, window.location.origin);
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== "") url.searchParams.set(k, v);
+  }
+  return url.toString();
+}
+
+export default function ExportPage() {
+  const { data: turmas = [] } = useListTurmas();
+  const { data: professores = [] } = useListProfessores();
+  const { toast } = useToast();
+
+  const [gradeOpts, setGradeOpts] = useState({ turmaId: "", formato: "csv" });
+  const [pontoOpts, setPontoOpts] = useState({
+    professorId: "",
+    mes: String(new Date().getMonth() + 1),
+    ano: String(new Date().getFullYear()),
+  });
+  const [seedEstado, setSeedEstado] = useState("SP");
+  const [loadingSeed, setLoadingSeed] = useState(false);
+
+  const handleDownload = (url: string, filename: string) => {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    toast({ title: `Download iniciado: ${filename}` });
+  };
+
+  const handleSeedDownload = async () => {
+    setLoadingSeed(true);
+    try {
+      const url = buildUrl("/api/export/relatorio-seed", { estado: seedEstado });
+      const res = await fetch(url);
+      const data = await res.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const objUrl = URL.createObjectURL(blob);
+      handleDownload(objUrl, `relatorio_seed_${seedEstado}_${new Date().getFullYear()}.json`);
+      URL.revokeObjectURL(objUrl);
+    } catch {
+      toast({ title: "Erro ao gerar relatório", variant: "destructive" });
+    } finally {
+      setLoadingSeed(false);
+    }
+  };
+
+  const MESES = [
+    "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+    "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Exportar Dados</h1>
+        <p className="text-muted-foreground mt-1">Exporte a grade horária, controle de ponto e relatórios SEED.</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Grade Horária */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Table className="w-4 h-4" /> Grade Horária
+            </CardTitle>
+            <CardDescription>Exporta a grade completa ou por turma em CSV ou JSON.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Turma (opcional)</Label>
+              <Select value={gradeOpts.turmaId} onValueChange={v => setGradeOpts(o => ({ ...o, turmaId: v }))}>
+                <SelectTrigger><SelectValue placeholder="Todas as turmas" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todas as turmas</SelectItem>
+                  {turmas.map(t => <SelectItem key={t.id} value={String(t.id)}>{t.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Formato</Label>
+              <Select value={gradeOpts.formato} onValueChange={v => setGradeOpts(o => ({ ...o, formato: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="csv">CSV (Excel)</SelectItem>
+                  <SelectItem value="json">JSON (API)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button className="w-full" onClick={() => {
+              const url = buildUrl("/api/export/grade", { turmaId: gradeOpts.turmaId || undefined, formato: gradeOpts.formato });
+              handleDownload(url, "grade_horaria.csv");
+            }}>
+              <Download className="w-4 h-4 mr-2" />Baixar Grade Horária
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Controle de Ponto */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <FileText className="w-4 h-4" /> Controle de Ponto
+            </CardTitle>
+            <CardDescription>Gera planilha de ponto com carga horária dos professores.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Professor (opcional)</Label>
+              <Select value={pontoOpts.professorId} onValueChange={v => setPontoOpts(o => ({ ...o, professorId: v }))}>
+                <SelectTrigger><SelectValue placeholder="Todos os professores" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todos os professores</SelectItem>
+                  {professores.map(p => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Mês</Label>
+                <Select value={pontoOpts.mes} onValueChange={v => setPontoOpts(o => ({ ...o, mes: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{MESES.map((m, i) => <SelectItem key={i + 1} value={String(i + 1)}>{m}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Ano</Label>
+                <Select value={pontoOpts.ano} onValueChange={v => setPontoOpts(o => ({ ...o, ano: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {[2025, 2026, 2027].map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <Button className="w-full" onClick={() => {
+              const url = buildUrl("/api/export/ponto", {
+                professorId: pontoOpts.professorId || undefined,
+                mes: pontoOpts.mes,
+                ano: pontoOpts.ano,
+              });
+              handleDownload(url, `ponto_professores_${pontoOpts.mes}_${pontoOpts.ano}.csv`);
+            }}>
+              <Download className="w-4 h-4 mr-2" />Baixar Controle de Ponto
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Relatório SEED */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <BarChart3 className="w-4 h-4" /> Relatório SEED
+            </CardTitle>
+            <CardDescription>Exporta o relatório no formato compatível com o sistema SEED do estado selecionado.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-end gap-4">
+              <div className="space-y-1.5 w-40">
+                <Label>Estado</Label>
+                <Select value={seedEstado} onValueChange={setSeedEstado}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["SP","MG","RJ","BA","PR","RS","PE","CE","GO","AM"].map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleSeedDownload} disabled={loadingSeed}>
+                <Download className="w-4 h-4 mr-2" />
+                {loadingSeed ? "Gerando..." : `Baixar Relatório SEED-${seedEstado}`}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

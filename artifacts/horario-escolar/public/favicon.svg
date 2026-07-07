@@ -1,0 +1,32 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="nexgradeBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1565C0"/>
+      <stop offset="100%" stop-color="#0D47A1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Fundo arredondado -->
+  <rect width="512" height="512" rx="96" fill="url(#nexgradeBlue)"/>
+
+  <!-- Alças do calendário -->
+  <rect x="150" y="60" width="28" height="70" rx="14" fill="#ECEFF1"/>
+  <rect x="334" y="60" width="28" height="70" rx="14" fill="#ECEFF1"/>
+
+  <!-- Corpo do calendário / grade -->
+  <rect x="120" y="110" width="272" height="300" rx="24" fill="#FFFFFF" opacity="0.12"/>
+
+  <!-- Grade de quadrados (parte direita, estilo do manual) -->
+  <g fill="#42A5F5">
+    <rect x="270" y="170" width="42" height="42" rx="6"/>
+    <rect x="322" y="170" width="42" height="42" rx="6"/>
+    <rect x="270" y="222" width="42" height="42" rx="6"/>
+    <rect x="322" y="222" width="42" height="42" rx="6"/>
+    <rect x="270" y="274" width="42" height="42" rx="6"/>
+    <rect x="322" y="274" width="42" height="42" rx="6"/>
+  </g>
+
+  <!-- Letra N estilizada (parte esquerda, diagonal) -->
+  <path d="M130 380 L130 150 L175 150 L245 300 L245 150 L290 150 L290 380 L245 380 L175 230 L175 380 Z"
+        fill="#FFFFFF"/>
+</svg>

@@ -1,0 +1,2003 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.2.0
+  description: GradeEscolar — Sistema Completo de Gestão de Horários Escolares
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: professores
+    description: Gestão de professores
+  - name: disciplinas
+    description: Gestão de disciplinas
+  - name: turmas
+    description: Gestão de turmas
+  - name: horarios
+    description: Gestão e geração de horários
+  - name: salas
+    description: Gestão de salas e espaços
+  - name: licencas
+    description: Licenças de professores e substituições
+  - name: comunicados
+    description: Comunicados para turmas e professores
+  - name: usuarios
+    description: Usuários e perfis de acesso
+  - name: audit
+    description: Histórico de alterações
+  - name: configuracoes
+    description: Configurações do sistema
+  - name: export
+    description: Exportação de dados
+  - name: conflitos
+    description: Detecção e sugestões de conflitos
+  - name: stats
+    description: Estatísticas e resumos
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # ── PROFESSORES ──────────────────────────────────────────────────────────────
+  /professores:
+    get:
+      operationId: listProfessores
+      tags: [professores]
+      summary: Lista todos os professores
+      responses:
+        "200":
+          description: Lista de professores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Professor"
+    post:
+      operationId: createProfessor
+      tags: [professores]
+      summary: Cria um professor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfessorInput"
+      responses:
+        "201":
+          description: Professor criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Professor"
+
+  /professores/{id}:
+    get:
+      operationId: getProfessor
+      tags: [professores]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Professor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Professor"
+        "404":
+          description: Não encontrado
+    patch:
+      operationId: updateProfessor
+      tags: [professores]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfessorUpdate"
+      responses:
+        "200":
+          description: Atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Professor"
+    delete:
+      operationId: deleteProfessor
+      tags: [professores]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removido
+
+  /professores/{id}/carga:
+    get:
+      operationId: getProfessorCarga
+      tags: [professores]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Carga horária
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfessorCarga"
+
+  # ── DISCIPLINAS ───────────────────────────────────────────────────────────────
+  /disciplinas:
+    get:
+      operationId: listDisciplinas
+      tags: [disciplinas]
+      responses:
+        "200":
+          description: Lista
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Disciplina"
+    post:
+      operationId: createDisciplina
+      tags: [disciplinas]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DisciplinaInput"
+      responses:
+        "201":
+          description: Criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Disciplina"
+
+  /disciplinas/{id}:
+    get:
+      operationId: getDisciplina
+      tags: [disciplinas]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Disciplina
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Disciplina"
+        "404":
+          description: Não encontrada
+    patch:
+      operationId: updateDisciplina
+      tags: [disciplinas]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DisciplinaUpdate"
+      responses:
+        "200":
+          description: Atualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Disciplina"
+    delete:
+      operationId: deleteDisciplina
+      tags: [disciplinas]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removida
+
+  # ── TURMAS ───────────────────────────────────────────────────────────────────
+  /turmas:
+    get:
+      operationId: listTurmas
+      tags: [turmas]
+      responses:
+        "200":
+          description: Lista
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Turma"
+    post:
+      operationId: createTurma
+      tags: [turmas]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TurmaInput"
+      responses:
+        "201":
+          description: Criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Turma"
+
+  /turmas/{id}:
+    get:
+      operationId: getTurma
+      tags: [turmas]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Turma
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Turma"
+        "404":
+          description: Não encontrada
+    patch:
+      operationId: updateTurma
+      tags: [turmas]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TurmaUpdate"
+      responses:
+        "200":
+          description: Atualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Turma"
+    delete:
+      operationId: deleteTurma
+      tags: [turmas]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removida
+
+  /turmas/{id}/aplicar-matriz:
+    post:
+      operationId: aplicarMatrizTurma
+      tags: [turmas]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AplicarMatrizInput"
+      responses:
+        "200":
+          description: Turma com disciplinas e cargas horárias substituídas pelas da matriz (RF-TUR-02)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Turma"
+        "404":
+          description: Turma ou matriz curricular não encontrada
+
+  /turmas/{id}/horario:
+    get:
+      operationId: getTurmaHorario
+      tags: [turmas]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Grade horária
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HorarioSlot"
+
+  # ── HORÁRIOS ──────────────────────────────────────────────────────────────────
+  /horarios:
+    get:
+      operationId: listHorarios
+      tags: [horarios]
+      parameters:
+        - name: turmaId
+          in: query
+          schema:
+            type: integer
+        - name: professorId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lista
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HorarioSlot"
+    post:
+      operationId: createHorario
+      tags: [horarios]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HorarioSlotInput"
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HorarioSlot"
+
+  /horarios/{id}:
+    delete:
+      operationId: deleteHorario
+      tags: [horarios]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removido
+
+  /horarios/gerar:
+    post:
+      operationId: gerarHorario
+      tags: [horarios]
+      summary: Gera horário automaticamente com algoritmo avançado
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GerarHorarioInput"
+      responses:
+        "200":
+          description: Resultado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GerarHorarioResult"
+
+  /horarios/experimentais:
+    get:
+      operationId: listHorariosExperimentais
+      tags: [horarios]
+      summary: Lista horários experimentais
+      parameters:
+        - name: turmaId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lista
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HorarioExperimental"
+    post:
+      operationId: createHorarioExperimental
+      tags: [horarios]
+      summary: Cria horário experimental
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HorarioExperimentalInput"
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HorarioExperimental"
+
+  /horarios/experimentais/{nome}/promover:
+    post:
+      operationId: promoverHorarioExperimental
+      tags: [horarios]
+      summary: Promove horário experimental para oficial
+      parameters:
+        - name: nome
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Promovido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GerarHorarioResult"
+
+  /horarios/experimentais/{nome}:
+    delete:
+      operationId: deleteHorarioExperimental
+      tags: [horarios]
+      summary: Remove horário experimental
+      parameters:
+        - name: nome
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Removido
+
+  # ── SALAS ────────────────────────────────────────────────────────────────────
+  /salas:
+    get:
+      operationId: listSalas
+      tags: [salas]
+      responses:
+        "200":
+          description: Lista
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Sala"
+    post:
+      operationId: createSala
+      tags: [salas]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SalaInput"
+      responses:
+        "201":
+          description: Criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sala"
+
+  /salas/{id}:
+    patch:
+      operationId: updateSala
+      tags: [salas]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SalaUpdate"
+      responses:
+        "200":
+          description: Atualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sala"
+    delete:
+      operationId: deleteSala
+      tags: [salas]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removida
+
+  # ── DISPONIBILIDADE ──────────────────────────────────────────────────────────
+  /disponibilidade:
+    get:
+      operationId: listDisponibilidade
+      tags: [disponibilidade]
+      parameters:
+        - name: professorId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lista
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Disponibilidade"
+    post:
+      operationId: setDisponibilidade
+      tags: [disponibilidade]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DisponibilidadeInput"
+      responses:
+        "201":
+          description: Criada ou atualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Disponibilidade"
+
+  /disponibilidade/lote:
+    post:
+      operationId: setDisponibilidadeLote
+      tags: [disponibilidade]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DisponibilidadeLoteInput"
+      responses:
+        "201":
+          description: Itens criados ou atualizados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Disponibilidade"
+
+  /disponibilidade/{id}:
+    delete:
+      operationId: deleteDisponibilidade
+      tags: [disponibilidade]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removida
+
+  # ── ESCOLAS / ONBOARDING ─────────────────────────────────────────────────────
+  /escolas/planos:
+    get:
+      operationId: listPlanos
+      tags: [escolas]
+      responses:
+        "200":
+          description: Lista de planos disponíveis (RF-ESC, expansão SaaS)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Plano"
+
+  /escolas/me:
+    get:
+      operationId: getEscolaAtual
+      tags: [escolas]
+      responses:
+        "200":
+          description: Escola vinculada ao usuário/organização logada, se já cadastrada (RF-ESC-01)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EscolaAtual"
+
+  /escolas:
+    post:
+      operationId: cadastrarEscola
+      tags: [escolas]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EscolaInput"
+      responses:
+        "200":
+          description: Escola atualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Escola"
+        "201":
+          description: Escola criada (onboarding concluído)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Escola"
+
+  # ── PAINEL MASTER SAAS (RF-MASTER-01 a RF-MASTER-03) ────────────────────────
+  # Opera fora do isolamento por escola de propósito — administra todas as
+  # escolas da plataforma. Ver middlewares/requireMaster.ts.
+  /master/whoami:
+    get:
+      operationId: masterWhoami
+      tags: [master]
+      responses:
+        "200":
+          description: Se o usuário autenticado é administrador da plataforma
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [isMaster]
+                properties:
+                  isMaster: { type: boolean }
+
+  /master/escolas:
+    get:
+      operationId: listEscolasMaster
+      tags: [master]
+      responses:
+        "200":
+          description: Todas as escolas da plataforma, com métricas básicas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EscolaComMetricas"
+        "403":
+          description: Usuário não é administrador da plataforma
+
+  /master/escolas/{id}:
+    patch:
+      operationId: updateEscolaMaster
+      tags: [master]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EscolaMasterUpdateInput"
+      responses:
+        "200":
+          description: Escola atualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Escola"
+
+  /master/planos:
+    get:
+      operationId: listPlanosMaster
+      tags: [master]
+      responses:
+        "200":
+          description: Todos os planos, incluindo inativos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Plano"
+    post:
+      operationId: createPlano
+      tags: [master]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlanoInput"
+      responses:
+        "201":
+          description: Plano criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Plano"
+
+  /master/planos/{id}:
+    patch:
+      operationId: updatePlano
+      tags: [master]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlanoInput"
+      responses:
+        "200":
+          description: Plano atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Plano"
+
+  /master/metrics:
+    get:
+      operationId: getMasterMetrics
+      tags: [master]
+      responses:
+        "200":
+          description: Métricas agregadas de uso da plataforma (RF-MASTER-03)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MasterMetrics"
+
+  # ── CURSOS E MATRIZ CURRICULAR ─────────────────────────────────────────────────
+  /cursos:
+    get:
+      operationId: listCursos
+      tags: [cursos]
+      responses:
+        "200":
+          description: Lista
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Curso"
+    post:
+      operationId: createCurso
+      tags: [cursos]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CursoInput"
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Curso"
+
+  /cursos/{id}:
+    patch:
+      operationId: updateCurso
+      tags: [cursos]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CursoInput"
+      responses:
+        "200":
+          description: Atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Curso"
+    delete:
+      operationId: deleteCurso
+      tags: [cursos]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removido
+
+  /cursos/{cursoId}/matrizes:
+    get:
+      operationId: listMatrizesCurriculares
+      tags: [cursos]
+      parameters:
+        - name: cursoId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lista de matrizes do curso, com itens
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MatrizCurricular"
+    post:
+      operationId: createMatrizCurricular
+      tags: [cursos]
+      parameters:
+        - name: cursoId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MatrizCurricularInput"
+      responses:
+        "201":
+          description: Criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatrizCurricular"
+
+  /cursos/{cursoId}/matrizes/{matrizId}:
+    delete:
+      operationId: deleteMatrizCurricular
+      tags: [cursos]
+      parameters:
+        - name: cursoId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: matrizId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removida
+
+  # ── LICENÇAS ─────────────────────────────────────────────────────────────────
+  /licencas:
+    get:
+      operationId: listLicencas
+      tags: [licencas]
+      parameters:
+        - name: professorId
+          in: query
+          schema:
+            type: integer
+        - name: ativas
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Lista
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Licenca"
+    post:
+      operationId: createLicenca
+      tags: [licencas]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LicencaInput"
+      responses:
+        "201":
+          description: Criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Licenca"
+
+  /licencas/{id}:
+    patch:
+      operationId: updateLicenca
+      tags: [licencas]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LicencaUpdate"
+      responses:
+        "200":
+          description: Atualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Licenca"
+    delete:
+      operationId: deleteLicenca
+      tags: [licencas]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removida
+
+  # ── COMUNICADOS ───────────────────────────────────────────────────────────────
+  /comunicados:
+    get:
+      operationId: listComunicados
+      tags: [comunicados]
+      parameters:
+        - name: turmaId
+          in: query
+          schema:
+            type: integer
+        - name: naoLidos
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Lista
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comunicado"
+    post:
+      operationId: createComunicado
+      tags: [comunicados]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ComunicadoInput"
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comunicado"
+
+  /comunicados/{id}/lida:
+    patch:
+      operationId: marcarComunicadoLido
+      tags: [comunicados]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Marcado como lido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comunicado"
+
+  /comunicados/{id}:
+    delete:
+      operationId: deleteComunicado
+      tags: [comunicados]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removido
+
+  # ── USUÁRIOS ──────────────────────────────────────────────────────────────────
+  /usuarios:
+    get:
+      operationId: listUsuarios
+      tags: [usuarios]
+      responses:
+        "200":
+          description: Lista
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Usuario"
+    post:
+      operationId: createUsuario
+      tags: [usuarios]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UsuarioInput"
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+
+  /usuarios/me:
+    get:
+      operationId: getMe
+      tags: [usuarios]
+      summary: Retorna o perfil do usuário autenticado
+      responses:
+        "200":
+          description: Meu perfil
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "404":
+          description: Não cadastrado ainda
+
+  /usuarios/{id}:
+    patch:
+      operationId: updateUsuario
+      tags: [usuarios]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UsuarioUpdate"
+      responses:
+        "200":
+          description: Atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+
+  # ── AUDIT LOG ─────────────────────────────────────────────────────────────────
+  /audit:
+    get:
+      operationId: listAuditLogs
+      tags: [audit]
+      parameters:
+        - name: entidade
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Histórico
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditLog"
+
+  # ── CONFIGURAÇÕES ─────────────────────────────────────────────────────────────
+  /configuracoes:
+    get:
+      operationId: listConfiguracoes
+      tags: [configuracoes]
+      responses:
+        "200":
+          description: Configurações
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Configuracao"
+
+  /configuracoes/{chave}:
+    get:
+      operationId: getConfiguracao
+      tags: [configuracoes]
+      parameters:
+        - name: chave
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Configuração
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Configuracao"
+    put:
+      operationId: upsertConfiguracao
+      tags: [configuracoes]
+      parameters:
+        - name: chave
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfiguracaoInput"
+      responses:
+        "200":
+          description: Salva
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Configuracao"
+
+  # ── EXPORTAÇÃO ────────────────────────────────────────────────────────────────
+  /export/grade:
+    get:
+      operationId: exportGrade
+      tags: [export]
+      summary: Exporta grade horária em CSV
+      parameters:
+        - name: turmaId
+          in: query
+          schema:
+            type: integer
+        - name: formato
+          in: query
+          schema:
+            type: string
+            enum: [csv, json]
+      responses:
+        "200":
+          description: Arquivo CSV ou JSON
+          content:
+            text/csv:
+              schema:
+                type: string
+            application/json:
+              schema:
+                type: object
+
+  /export/ponto:
+    get:
+      operationId: exportPonto
+      tags: [export]
+      summary: Exporta controle de ponto dos professores em CSV
+      parameters:
+        - name: professorId
+          in: query
+          schema:
+            type: integer
+        - name: mes
+          in: query
+          schema:
+            type: integer
+        - name: ano
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: CSV de ponto
+          content:
+            text/csv:
+              schema:
+                type: string
+
+  /export/relatorio-seed:
+    get:
+      operationId: exportRelatorioSeed
+      tags: [export]
+      summary: Exporta relatório no formato SEED do estado
+      parameters:
+        - name: estado
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Relatório
+          content:
+            application/json:
+              schema:
+                type: object
+
+  # ── CONFLITOS ─────────────────────────────────────────────────────────────────
+  /conflitos:
+    get:
+      operationId: listConflitos
+      tags: [conflitos]
+      summary: Lista todos os conflitos detectados
+      responses:
+        "200":
+          description: Conflitos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Conflito"
+
+  /conflitos/sugestoes:
+    get:
+      operationId: getConflitosComSugestoes
+      tags: [conflitos]
+      summary: Conflitos com sugestões algorítmicas de resolução
+      responses:
+        "200":
+          description: Conflitos com sugestões
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConflitoComSugestao"
+
+  # ── STATS ─────────────────────────────────────────────────────────────────────
+  /stats:
+    get:
+      operationId: getStats
+      tags: [stats]
+      responses:
+        "200":
+          description: Estatísticas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Stats"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    Professor:
+      type: object
+      required: [id, nome, email, ativo, createdAt]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        email: { type: string }
+        telefone: { type: ["string", "null"] }
+        ativo: { type: boolean }
+        disciplinaIds:
+          type: array
+          items: { type: integer }
+        createdAt: { type: string }
+
+    ProfessorInput:
+      type: object
+      required: [nome, email]
+      properties:
+        nome: { type: string, minLength: 2 }
+        email: { type: string }
+        telefone: { type: string }
+        disciplinaIds:
+          type: array
+          items: { type: integer }
+
+    ProfessorUpdate:
+      type: object
+      properties:
+        nome: { type: string }
+        email: { type: string }
+        telefone: { type: string }
+        ativo: { type: boolean }
+        disciplinaIds:
+          type: array
+          items: { type: integer }
+
+    ProfessorCarga:
+      type: object
+      required: [professorId, totalAulas, porDia]
+      properties:
+        professorId: { type: integer }
+        totalAulas: { type: integer }
+        porDia:
+          type: object
+          additionalProperties: { type: integer }
+
+    Disciplina:
+      type: object
+      required: [id, nome, cargaSemanal, cor, createdAt]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        cargaSemanal: { type: integer }
+        cor: { type: string }
+        createdAt: { type: string }
+
+    DisciplinaInput:
+      type: object
+      required: [nome, cargaSemanal]
+      properties:
+        nome: { type: string, minLength: 2 }
+        cargaSemanal: { type: integer, minimum: 1, maximum: 10 }
+        cor: { type: string }
+
+    DisciplinaUpdate:
+      type: object
+      properties:
+        nome: { type: string }
+        cargaSemanal: { type: integer }
+        cor: { type: string }
+
+    Turma:
+      type: object
+      required: [id, nome, serie, turno, anoLetivo, createdAt]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        serie: { type: string }
+        turno: { type: string, enum: [matutino, vespertino, noturno, integral] }
+        anoLetivo: { type: integer }
+        modalidade: { type: ["string", "null"] }
+        matrizCurricularId: { type: ["integer", "null"], description: "Matriz Curricular aplicada a esta turma (RF-TUR-02), se houver." }
+        disciplinaIds:
+          type: array
+          items: { type: integer }
+        disciplinasComCarga:
+          type: array
+          description: "Carga horária semanal efetiva por disciplina (override da matriz aplicada, com fallback para a carga global)."
+          items:
+            type: object
+            required: [disciplinaId, nome, cargaHorariaSemanal, origemMatriz]
+            properties:
+              disciplinaId: { type: integer }
+              nome: { type: string }
+              cargaHorariaSemanal: { type: integer }
+              origemMatriz: { type: boolean }
+        createdAt: { type: string }
+
+    AplicarMatrizInput:
+      type: object
+      required: [matrizCurricularId]
+      properties:
+        matrizCurricularId: { type: integer }
+
+    TurmaInput:
+      type: object
+      required: [nome, serie, turno, anoLetivo]
+      properties:
+        nome: { type: string, minLength: 1 }
+        serie: { type: string }
+        turno: { type: string, enum: [matutino, vespertino, noturno, integral] }
+        anoLetivo: { type: integer }
+        modalidade: { type: string }
+        disciplinaIds:
+          type: array
+          items: { type: integer }
+
+    TurmaUpdate:
+      type: object
+      properties:
+        nome: { type: string }
+        serie: { type: string }
+        turno: { type: string, enum: [matutino, vespertino, noturno, integral] }
+        anoLetivo: { type: integer }
+        modalidade: { type: string }
+        disciplinaIds:
+          type: array
+          items: { type: integer }
+
+    HorarioSlot:
+      type: object
+      required: [id, turmaId, disciplinaId, professorId, diaSemana, numeroAula]
+      properties:
+        id: { type: integer }
+        turmaId: { type: integer }
+        turma:
+          $ref: "#/components/schemas/Turma"
+        disciplinaId: { type: integer }
+        disciplina:
+          $ref: "#/components/schemas/Disciplina"
+        professorId: { type: integer }
+        professor:
+          $ref: "#/components/schemas/Professor"
+        diaSemana: { type: integer, minimum: 0, maximum: 4 }
+        numeroAula: { type: integer, minimum: 1, maximum: 8 }
+        sala: { type: ["string", "null"] }
+
+    HorarioSlotInput:
+      type: object
+      required: [turmaId, disciplinaId, professorId, diaSemana, numeroAula]
+      properties:
+        turmaId: { type: integer }
+        disciplinaId: { type: integer }
+        professorId: { type: integer }
+        diaSemana: { type: integer, minimum: 0, maximum: 4 }
+        numeroAula: { type: integer, minimum: 1, maximum: 8 }
+        sala: { type: string }
+
+    HorarioExperimental:
+      type: object
+      required: [id, nome, turmaId, disciplinaId, professorId, diaSemana, numeroAula]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        turmaId: { type: integer }
+        disciplinaId: { type: integer }
+        professorId: { type: integer }
+        diaSemana: { type: integer }
+        numeroAula: { type: integer }
+        sala: { type: ["string", "null"] }
+        ativo: { type: boolean }
+
+    HorarioExperimentalInput:
+      type: object
+      required: [nome, turmaId, disciplinaId, professorId, diaSemana, numeroAula]
+      properties:
+        nome: { type: string }
+        turmaId: { type: integer }
+        disciplinaId: { type: integer }
+        professorId: { type: integer }
+        diaSemana: { type: integer }
+        numeroAula: { type: integer }
+        sala: { type: string }
+
+    GerarHorarioInput:
+      type: object
+      required: [turmaId]
+      properties:
+        turmaId: { type: integer }
+        aulaspordia: { type: integer, minimum: 4, maximum: 8 }
+        substituir: { type: boolean }
+        reduzirJanelas: { type: boolean }
+        fatorPedagogico: { type: boolean }
+        experimental: { type: boolean }
+        nomeExperimental: { type: string }
+
+    GerarHorarioResult:
+      type: object
+      required: [slotsGerados, conflitos]
+      properties:
+        slotsGerados: { type: integer }
+        conflitos:
+          type: array
+          items: { type: string }
+        horario:
+          type: array
+          items:
+            $ref: "#/components/schemas/HorarioSlot"
+
+    Sala:
+      type: object
+      required: [id, nome, tipo, capacidade, ativa]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        tipo: { type: string, enum: [sala_aula, laboratorio, quadra, informatica, auditorio, biblioteca, sala_arte, outro] }
+        capacidade: { type: integer }
+        ativa: { type: boolean }
+        observacoes: { type: ["string", "null"] }
+
+    SalaInput:
+      type: object
+      required: [nome]
+      properties:
+        nome: { type: string, minLength: 1 }
+        tipo: { type: string, enum: [sala_aula, laboratorio, quadra, informatica, auditorio, biblioteca, sala_arte, outro] }
+        capacidade: { type: integer }
+        observacoes: { type: string }
+
+    SalaUpdate:
+      type: object
+      properties:
+        nome: { type: string }
+        tipo: { type: string }
+        capacidade: { type: integer }
+        ativa: { type: boolean }
+        observacoes: { type: string }
+
+    Disponibilidade:
+      type: object
+      required: [id, professorId, diaSemana, horarioSlot, disponivel]
+      properties:
+        id: { type: integer }
+        professorId: { type: integer }
+        diaSemana: { type: integer, minimum: 0, maximum: 6 }
+        horarioSlot: { type: integer, minimum: 1 }
+        disponivel: { type: boolean }
+        motivo: { type: ["string", "null"] }
+
+    DisponibilidadeInput:
+      type: object
+      required: [professorId, diaSemana, horarioSlot]
+      properties:
+        professorId: { type: integer }
+        diaSemana: { type: integer, minimum: 0, maximum: 6 }
+        horarioSlot: { type: integer, minimum: 1 }
+        disponivel: { type: boolean, default: true }
+        motivo: { type: string }
+
+    DisponibilidadeLoteInput:
+      type: object
+      required: [professorId, itens]
+      properties:
+        professorId: { type: integer }
+        itens:
+          type: array
+          items:
+            type: object
+            required: [diaSemana, horarioSlot]
+            properties:
+              diaSemana: { type: integer, minimum: 0, maximum: 6 }
+              horarioSlot: { type: integer, minimum: 1 }
+              disponivel: { type: boolean, default: true }
+              motivo: { type: string }
+
+    Curso:
+      type: object
+      required: [id, nome, nivel]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        codigoCurso: { type: ["string", "null"] }
+        nivel: { type: string, enum: [fundamental, medio, tecnico, normal_magisterio] }
+
+    CursoInput:
+      type: object
+      required: [nome]
+      properties:
+        nome: { type: string, minLength: 1 }
+        codigoCurso: { type: string }
+        nivel: { type: string, enum: [fundamental, medio, tecnico, normal_magisterio], default: fundamental }
+
+    ItemMatriz:
+      type: object
+      required: [id, disciplinaId, categoriaCurricular, cargaHorariaSemanal, ehPadraoDoGrupo, obrigatoria]
+      properties:
+        id: { type: integer }
+        disciplinaId: { type: integer }
+        disciplina:
+          $ref: "#/components/schemas/Disciplina"
+        categoriaCurricular:
+          type: string
+          enum:
+            [
+              base_nacional_comum,
+              parte_diversificada,
+              formacao_geral_basica,
+              itinerario_formativo,
+              itinerario_profissionalizante,
+              aprofundamento_pratica,
+              parte_flexivel,
+            ]
+        cargaHorariaSemanal: { type: integer }
+        grupoDisciplina: { type: ["string", "null"] }
+        ehPadraoDoGrupo: { type: boolean }
+        obrigatoria: { type: boolean }
+
+    ItemMatrizInput:
+      type: object
+      required: [disciplinaId, cargaHorariaSemanal]
+      properties:
+        disciplinaId: { type: integer }
+        categoriaCurricular:
+          type: string
+          enum:
+            [
+              base_nacional_comum,
+              parte_diversificada,
+              formacao_geral_basica,
+              itinerario_formativo,
+              itinerario_profissionalizante,
+              aprofundamento_pratica,
+              parte_flexivel,
+            ]
+          default: base_nacional_comum
+        cargaHorariaSemanal: { type: integer, minimum: 1 }
+        grupoDisciplina: { type: string }
+        ehPadraoDoGrupo: { type: boolean, default: false }
+        obrigatoria: { type: boolean, default: true }
+
+    MatrizCurricular:
+      type: object
+      required: [id, cursoId, serieAno, cargaHorariaSemanalTotal, itens]
+      properties:
+        id: { type: integer }
+        cursoId: { type: integer }
+        serieAno: { type: string }
+        cargaHorariaSemanalTotal: { type: integer }
+        itens:
+          type: array
+          items:
+            $ref: "#/components/schemas/ItemMatriz"
+
+    MatrizCurricularInput:
+      type: object
+      required: [serieAno]
+      properties:
+        serieAno: { type: string, minLength: 1 }
+        itens:
+          type: array
+          items:
+            $ref: "#/components/schemas/ItemMatrizInput"
+          default: []
+
+    Plano:
+      type: object
+      required: [id, nome, preco, maxProfessores, maxTurmas, temIA, temExport, temImport, ativo]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        preco: { type: integer, description: "Preço mensal em centavos. 0 = plano gratuito (Piloto)." }
+        maxProfessores: { type: integer }
+        maxTurmas: { type: integer }
+        temIA: { type: boolean }
+        temExport: { type: boolean }
+        temImport: { type: boolean }
+        ativo: { type: boolean }
+        stripePriceId: { type: ["string", "null"], description: "Preenchido apenas quando a cobrança via Stripe for habilitada (fase de expansão SaaS)." }
+
+    Escola:
+      type: object
+      required: [id, nomeFantasia, estado, modalidade, planoAtivo]
+      properties:
+        id: { type: string }
+        nomeFantasia: { type: string }
+        cnpj: { type: ["string", "null"] }
+        cidade: { type: ["string", "null"] }
+        estado: { type: string }
+        modalidade: { type: string, enum: [regular, tecnica, eja, normal_magisterio] }
+        planoId: { type: ["integer", "null"] }
+        clerkOrgId: { type: ["string", "null"] }
+        planoAtivo: { type: boolean }
+        trialEndsAt: { type: ["string", "null"], format: date-time }
+
+    EscolaAtual:
+      type: object
+      required: [cadastrada]
+      properties:
+        cadastrada: { type: boolean, description: "false quando o usuário/organização ainda não passou pelo onboarding." }
+        id: { type: string }
+        nomeFantasia: { type: string }
+        cidade: { type: ["string", "null"] }
+        estado: { type: string }
+        modalidade: { type: string }
+        planoAtivo: { type: boolean }
+        trialEndsAt: { type: ["string", "null"], format: date-time }
+        plano:
+          $ref: "#/components/schemas/Plano"
+
+    EscolaInput:
+      type: object
+      required: [nomeFantasia]
+      properties:
+        nomeFantasia: { type: string, minLength: 2 }
+        cnpj: { type: string }
+        cidade: { type: string }
+        estado: { type: string, default: "SP" }
+        modalidade: { type: string, enum: [regular, tecnica, eja, normal_magisterio], default: regular }
+
+    Licenca:
+      type: object
+      required: [id, professorId, dataInicio, dataFim, tipo, aprovada]
+      properties:
+        id: { type: integer }
+        professorId: { type: integer }
+        professor:
+          $ref: "#/components/schemas/Professor"
+        professorSubstitutoId: { type: ["integer", "null"] }
+        professorSubstituto:
+          $ref: "#/components/schemas/Professor"
+        dataInicio: { type: string }
+        dataFim: { type: string }
+        tipo: { type: string, enum: [medica, maternidade, paternidade, capacitacao, outros] }
+        motivo: { type: ["string", "null"] }
+        aprovada: { type: boolean }
+        comunicadoEnviado: { type: boolean }
+
+    LicencaInput:
+      type: object
+      required: [professorId, dataInicio, dataFim, tipo]
+      properties:
+        professorId: { type: integer }
+        professorSubstitutoId: { type: integer }
+        dataInicio: { type: string }
+        dataFim: { type: string }
+        tipo: { type: string, enum: [medica, maternidade, paternidade, capacitacao, outros] }
+        motivo: { type: string }
+        aprovada: { type: boolean }
+
+    LicencaUpdate:
+      type: object
+      properties:
+        professorSubstitutoId: { type: integer }
+        dataInicio: { type: string }
+        dataFim: { type: string }
+        tipo: { type: string }
+        motivo: { type: string }
+        aprovada: { type: boolean }
+
+    Comunicado:
+      type: object
+      required: [id, titulo, mensagem, tipo, lida, autorNome, createdAt]
+      properties:
+        id: { type: integer }
+        titulo: { type: string }
+        mensagem: { type: string }
+        tipo: { type: string, enum: [geral, licenca, conflito, horario, urgente] }
+        turmaId: { type: ["integer", "null"] }
+        professorId: { type: ["integer", "null"] }
+        lida: { type: boolean }
+        autorNome: { type: string }
+        createdAt: { type: string }
+
+    ComunicadoInput:
+      type: object
+      required: [titulo, mensagem]
+      properties:
+        titulo: { type: string, minLength: 2 }
+        mensagem: { type: string, minLength: 5 }
+        tipo: { type: string, enum: [geral, licenca, conflito, horario, urgente] }
+        turmaId: { type: integer }
+        professorId: { type: integer }
+        autorNome: { type: string }
+
+    Usuario:
+      type: object
+      required: [id, clerkId, nome, email, perfil, ativo]
+      properties:
+        id: { type: integer }
+        clerkId: { type: string }
+        nome: { type: string }
+        email: { type: string }
+        perfil: { type: string, enum: [direcao, coordenacao, professor, secretaria] }
+        ativo: { type: boolean }
+        createdAt: { type: string }
+
+    UsuarioInput:
+      type: object
+      required: [clerkId, nome, email]
+      properties:
+        clerkId: { type: string }
+        nome: { type: string }
+        email: { type: string }
+        perfil: { type: string, enum: [direcao, coordenacao, professor, secretaria] }
+
+    UsuarioUpdate:
+      type: object
+      properties:
+        nome: { type: string }
+        perfil: { type: string, enum: [direcao, coordenacao, professor, secretaria] }
+        ativo: { type: boolean }
+
+    AuditLog:
+      type: object
+      required: [id, entidade, acao, createdAt]
+      properties:
+        id: { type: integer }
+        entidade: { type: string }
+        entidadeId: { type: ["integer", "null"] }
+        acao: { type: string }
+        dadosAnteriores: {}
+        dadosNovos: {}
+        usuarioId: { type: ["string", "null"] }
+        usuarioNome: { type: ["string", "null"] }
+        ip: { type: ["string", "null"] }
+        createdAt: { type: string }
+
+    Configuracao:
+      type: object
+      required: [id, chave]
+      properties:
+        id: { type: integer }
+        chave: { type: string }
+        valor: {}
+        descricao: { type: ["string", "null"] }
+
+    ConfiguracaoInput:
+      type: object
+      required: [valor]
+      properties:
+        valor: {}
+        descricao: { type: string }
+
+    Conflito:
+      type: object
+      required: [tipo, descricao, gravidade]
+      properties:
+        tipo: { type: string }
+        descricao: { type: string }
+        gravidade: { type: string, enum: [critico, alto, medio, baixo] }
+        turmaId: { type: ["integer", "null"] }
+        professorId: { type: ["integer", "null"] }
+        diaSemana: { type: ["integer", "null"] }
+        numeroAula: { type: ["integer", "null"] }
+
+    ConflitoComSugestao:
+      type: object
+      required: [conflito, sugestoes]
+      properties:
+        conflito:
+          $ref: "#/components/schemas/Conflito"
+        sugestoes:
+          type: array
+          items: { type: string }
+
+    Stats:
+      type: object
+      required: [totalProfessores, totalTurmas, totalDisciplinas, turmasSemHorario, totalConflitos, aulasDistribuidas]
+      properties:
+        totalProfessores: { type: integer }
+        totalTurmas: { type: integer }
+        totalDisciplinas: { type: integer }
+        turmasSemHorario: { type: integer }
+        totalConflitos: { type: integer }
+        aulasDistribuidas: { type: integer }
+        totalSalas: { type: integer }
+        licencasAtivas: { type: integer }
+        comunicadosNaoLidos: { type: integer }
+
+    EscolaComMetricas:
+      allOf:
+        - $ref: "#/components/schemas/Escola"
+        - type: object
+          required: [totalProfessores, totalTurmas]
+          properties:
+            plano:
+              anyOf:
+                - $ref: "#/components/schemas/Plano"
+                - type: "null"
+            totalProfessores: { type: integer }
+            totalTurmas: { type: integer }
+
+    EscolaMasterUpdateInput:
+      type: object
+      properties:
+        planoId: { type: ["integer", "null"] }
+        planoAtivo: { type: boolean }
+
+    PlanoInput:
+      type: object
+      required: [nome]
+      properties:
+        nome: { type: string, minLength: 1 }
+        preco: { type: integer, minimum: 0, default: 0 }
+        maxProfessores: { type: integer, minimum: 1, default: 10 }
+        maxTurmas: { type: integer, minimum: 1, default: 5 }
+        temIA: { type: boolean, default: false }
+        temExport: { type: boolean, default: false }
+        temImport: { type: boolean, default: false }
+        ativo: { type: boolean, default: true }
+        stripePriceId: { type: string }
+
+    MasterMetrics:
+      type: object
+      required: [totalEscolas, escolasAtivas, escolasInativas, escolasEmTrial, totalProfessores, totalTurmas, totalAulasDistribuidas, totalUsuarios, mensagensEnviadasParaIA]
+      properties:
+        totalEscolas: { type: integer }
+        escolasAtivas: { type: integer }
+        escolasInativas: { type: integer }
+        escolasEmTrial: { type: integer }
+        totalProfessores: { type: integer }
+        totalTurmas: { type: integer }
+        totalAulasDistribuidas: { type: integer }
+        totalUsuarios: { type: integer }
+        mensagensEnviadasParaIA: { type: integer }

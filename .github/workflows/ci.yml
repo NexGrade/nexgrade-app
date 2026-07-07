@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  typecheck:
+    name: Typecheck (libs + backend + frontend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      # As libs (db, api-zod, api-client-react) precisam ser
+      # "buildadas" (tsc --build) antes do typecheck do backend/frontend,
+      # porque os projetos consumidores resolvem os tipos delas via
+      # project references do TypeScript, que usam os .d.ts gerados em
+      # dist/ — sem isso, o typecheck vê tipos desatualizados mesmo que
+      # o código-fonte esteja correto (gotcha documentado em replit.md).
+      - name: Build das libs (tsc --build)
+        run: pnpm exec tsc --build --force
+
+      - name: Typecheck do backend
+        working-directory: artifacts/api-server
+        run: pnpm exec tsc --noEmit -p tsconfig.json
+
+      - name: Typecheck do frontend
+        working-directory: artifacts/horario-escolar
+        run: pnpm exec tsc --noEmit -p tsconfig.json
