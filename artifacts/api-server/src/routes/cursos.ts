@@ -13,20 +13,38 @@ import { registrarAuditoria } from "../lib/audit";
 
 // RF-CUR-01 a RF-CUR-05: Curso, Matriz Curricular e Itens da Matriz.
 // Ver docs/requisitos-funcionais-e-nao-funcionais.md e
-// docs/analise-formatos-uranin-sere.md (categorias curriculares usam
-// nomenclatura própria do NexGrade, não a "Composição Curricular" do
-// SERE nem qualquer taxonomia de terceiros).
+// docs/analise-formatos-uranin-sere.md.
+//
+// [ATUALIZADO] categoriaCurricular passou a usar as siglas oficiais de
+// Composição Curricular da SEED-PR (BNC/PD/FGB/PFO/IFA/IFP/APF/IF), não
+// mais a nomenclatura própria que este arquivo usava antes
+// (base_nacional_comum, parte_diversificada, etc.). Isso está de acordo
+// com a seção 0.2 de docs/analise-formatos-uranin-sere.md: códigos
+// oficiais do governo (SAE, INEP, Composição Curricular) são dados
+// públicos da SEED-PR, seguros para uso — o que a diretriz pede pra NÃO
+// reaproveitar é a taxonomia proprietária do concorrente (ex.: os
+// códigos de geminação "TIPO A"–"TIPO $"), não terminologia oficial do
+// Estado. A coluna categoria_curricular no banco já foi migrada para
+// este enum (ver lib/db, migration 0001).
+//
+// [NOTA] O valor "IF" (sem sufixo) foi incluído por segurança: a seção
+// 2.2 do documento de análise identificou que cursos "ENSINO MEDIO IF..."
+// usam a etiqueta "IF" sozinha para categorias equivalentes a IFA em
+// outros cursos — ainda não confirmado oficialmente com a SEED-PR se são
+// a mesma coisa ou categorias distintas. Ver também o item "CONFIRMAR"
+// correspondente no plano de implementação.
 const router = Router();
 
 const NIVEIS = ["fundamental", "medio", "tecnico", "normal_magisterio"] as const;
 const CATEGORIAS = [
-  "base_nacional_comum",
-  "parte_diversificada",
-  "formacao_geral_basica",
-  "itinerario_formativo",
-  "itinerario_profissionalizante",
-  "aprofundamento_pratica",
-  "parte_flexivel",
+  "BNC",
+  "PD",
+  "FGB",
+  "PFO",
+  "IFA",
+  "IF",
+  "IFP",
+  "APF",
 ] as const;
 
 const CursoInput = z.object({
@@ -37,7 +55,7 @@ const CursoInput = z.object({
 
 const ItemMatrizInput = z.object({
   disciplinaId: z.number().int(),
-  categoriaCurricular: z.enum(CATEGORIAS).default("base_nacional_comum"),
+  categoriaCurricular: z.enum(CATEGORIAS).default("BNC"),
   cargaHorariaSemanal: z.number().int().min(1),
   grupoDisciplina: z.string().optional(),
   ehPadraoDoGrupo: z.boolean().default(false),
@@ -49,7 +67,7 @@ const MatrizInput = z.object({
   itens: z.array(ItemMatrizInput).default([]),
 });
 
-// ── CURSOS ───────────────────────────────────────────────────────────────────
+// ── CURSOS ──────────────────────────────────────────────────────────────
 
 router.get("/", async (req, res) => {
   const escolaId = getEscolaId(req);
@@ -117,7 +135,7 @@ router.delete("/:id", async (req, res) => {
   res.status(204).send();
 });
 
-// ── MATRIZES CURRICULARES (por curso) ────────────────────────────────────────
+// ── MATRIZES CURRICULARES (por curso) ────────────────────────────────────
 
 router.get("/:cursoId/matrizes", async (req, res) => {
   const escolaId = getEscolaId(req);
