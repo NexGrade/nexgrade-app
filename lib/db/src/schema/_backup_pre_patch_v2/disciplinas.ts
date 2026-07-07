@@ -12,10 +12,6 @@ export const disciplinasTable = pgTable("disciplinas", {
   // Estado do Paraná). Opcional: nem toda escola/disciplina tem um
   // vínculo já mapeado. RF-DISC-01/02.
   codigoSae: text("codigo_sae"),
-  // [NOVO] Confirmado nas grades reais: célula da grelha exige nome curto
-  // (ex.: "ED.FIS", "L.POR", "REDLEI"). Nullable: cai no nome completo
-  // enquanto não preenchido.
-  abreviatura: text("abreviatura"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
