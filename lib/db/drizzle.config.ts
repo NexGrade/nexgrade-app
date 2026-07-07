@@ -8,8 +8,8 @@ import path from "path";
 // localmente (ex. numa máquina sem DATABASE_URL configurada) falhava
 // por um motivo que não tem nada a ver com o comando sendo executado.
 export default defineConfig({
-  schema: path.join(__dirname, "./src/schema/index.ts"),
-  out: path.join(__dirname, "./drizzle"),
+  schema: path.join(__dirname, "./src/schema/index.ts").replace(/\\/g, "/"),
+  out: path.join(__dirname, "./drizzle").replace(/\\/g, "/"),
   dialect: "postgresql",
   dbCredentials: {
     url: process.env.DATABASE_URL ?? "postgresql://localhost:5432/placeholder",
