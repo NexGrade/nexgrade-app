@@ -12,8 +12,8 @@ const navGroups = [
   {
     label: "Principal",
     items: [
-      { href: "/dashboard", label: "VisÃ£o Geral", icon: LayoutDashboard },
-      { href: "/horarios", label: "Grade HorÃ¡ria", icon: Calendar },
+      { href: "/dashboard", label: "Visão Geral", icon: LayoutDashboard },
+      { href: "/horarios", label: "Grade Horária", icon: Calendar },
       { href: "/conflitos", label: "Conflitos", icon: AlertTriangle },
       { href: "/assistente", label: "Assistente de IA", icon: Sparkles, badge: "IA" },
     ],
@@ -29,9 +29,9 @@ const navGroups = [
     ],
   },
   {
-    label: "GestÃ£o",
+    label: "Gestão",
     items: [
-      { href: "/licencas", label: "LicenÃ§as", icon: FileText },
+      { href: "/licencas", label: "Licenças", icon: FileText },
       { href: "/comunicados", label: "Comunicados", icon: Bell },
       { href: "/horarios/experimentais", label: "Modo Experimental", icon: FlaskConical },
       { href: "/importar", label: "Importar Dados", icon: Upload },
@@ -42,9 +42,9 @@ const navGroups = [
     items: [
       { href: "/export", label: "Exportar Dados", icon: Download },
       { href: "/planos", label: "Planos & Billing", icon: CreditCard },
-      { href: "/usuarios", label: "UsuÃ¡rios", icon: Shield },
-      { href: "/audit", label: "HistÃ³rico", icon: History },
-      { href: "/configuracoes", label: "ConfiguraÃ§Ãµes", icon: Settings },
+      { href: "/usuarios", label: "Usuários", icon: Shield },
+      { href: "/audit", label: "Histórico", icon: History },
+      { href: "/configuracoes", label: "Configurações", icon: Settings },
     ],
   },
 ];
@@ -57,7 +57,7 @@ function NexGradeLogo() {
       </div>
       <div className="leading-none">
         <span className="font-bold text-[15px] tracking-tight text-foreground font-heading">NexGrade</span>
-        <span className="block text-[10px] text-muted-foreground font-medium tracking-wide -mt-0.5">by NexusCore Tecnologia</span>
+        <span className="block text-[10px] text-muted-foreground font-medium tracking-wide -mt-0.5">by NexCore Tecnologia</span>
       </div>
     </div>
   );
@@ -65,14 +65,14 @@ function NexGradeLogo() {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
-  // RF-MASTER: o link sÃ³ aparece pra quem de fato Ã© administrador da
-  // plataforma â€” a checagem real de acesso continua sendo feita no
+  // RF-MASTER: o link só aparece pra quem de fato é administrador da
+  // plataforma — a checagem real de acesso continua sendo feita no
   // backend (requireMaster) e na rota (MasterGate em App.tsx); isto
-  // aqui Ã© sÃ³ para nÃ£o poluir o menu de quem nÃ£o precisa dele.
+  // aqui é só para não poluir o menu de quem não precisa dele.
   const { data: whoami } = useMasterWhoami();
 
   const grupos = whoami?.isMaster
-    ? [...navGroups, { label: "AdministraÃ§Ã£o", items: [{ href: "/master", label: "Painel Master", icon: ShieldCheck }] }]
+    ? [...navGroups, { label: "Administração", items: [{ href: "/master", label: "Painel Master", icon: ShieldCheck }] }]
     : navGroups;
 
   const isActive = (href: string) =>
@@ -130,4 +130,3 @@ export function Layout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-

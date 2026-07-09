@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Save } from "lucide-react";
+import { Settings, Save, ShieldCheck } from "lucide-react";
 
 const ESTADOS_BR = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"
@@ -24,6 +24,18 @@ const CONFIG_DEFAULTS = {
   "seed.versao": "2025",
 };
 
+// RNF-SEED-01: valores confirmados na Resolução SEED n.º 7.200/2025 —
+// ver scripts/src/seed-config-seed-pr.ts para a fonte de cada um. Ficam
+// configuráveis (não fixos no código) porque a proporção hora-aula /
+// hora-atividade está sob disputa judicial ativa e pode mudar.
+const SEED_PR_DEFAULTS = {
+  "seed_pr.padrao_20h": { aulasRegencia: 15, horasAtividade: 9 },
+  "seed_pr.padrao_40h": { aulasRegencia: 30, horasAtividade: 18 },
+  "seed_pr.teto_aulas_turno": { noturno: 19, diurno: 24 },
+  "seed_pr.hora_atividade_mesmo_turno_ate": 19,
+  "seed_pr.max_aulas_geminadas_padrao": 2,
+};
+
 export default function ConfiguracoesList() {
   const { data: configs = [], isLoading } = useListConfiguracoes();
   const { mutateAsync: upsert } = useUpsertConfiguracao();
@@ -32,6 +44,8 @@ export default function ConfiguracoesList() {
 
   const [form, setForm] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [seedForm, setSeedForm] = useState<Record<string, unknown>>({});
+  const [savingSeed, setSavingSeed] = useState(false);
 
   const getVal = (chave: string): string => {
     const override = form[chave];
@@ -42,6 +56,37 @@ export default function ConfiguracoesList() {
   };
 
   const set = (chave: string, valor: string) => setForm(f => ({ ...f, [chave]: valor }));
+
+  const getSeedVal = <T,>(chave: keyof typeof SEED_PR_DEFAULTS): T => {
+    if (seedForm[chave] !== undefined) return seedForm[chave] as T;
+    const saved = configs.find(c => c.chave === chave);
+    if (saved?.valor !== undefined && saved.valor !== null) return saved.valor as T;
+    return SEED_PR_DEFAULTS[chave] as T;
+  };
+
+  const setSeedSubVal = (chave: keyof typeof SEED_PR_DEFAULTS, subchave: string | null, valor: number) => {
+    setSeedForm(f => {
+      if (subchave === null) return { ...f, [chave]: valor };
+      const atual = getSeedVal<Record<string, number>>(chave);
+      return { ...f, [chave]: { ...atual, [subchave]: valor } };
+    });
+  };
+
+  const handleSaveSeed = async () => {
+    setSavingSeed(true);
+    try {
+      for (const chave of Object.keys(SEED_PR_DEFAULTS) as (keyof typeof SEED_PR_DEFAULTS)[]) {
+        await upsert({ chave, data: { valor: getSeedVal(chave) } });
+      }
+      await queryClient.invalidateQueries({ queryKey: ["/api/configuracoes"] });
+      setSeedForm({});
+      toast({ title: "Parâmetros SEED-PR salvos!" });
+    } catch {
+      toast({ title: "Erro ao salvar", variant: "destructive" });
+    } finally {
+      setSavingSeed(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -159,6 +204,119 @@ export default function ConfiguracoesList() {
                   <SelectItem value="2023">2023</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2 border-[#1565C0]/30">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-base flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-[#1565C0]" /> Conformidade SEED-PR
+            </CardTitle>
+            <Button size="sm" onClick={handleSaveSeed} disabled={savingSeed || isLoading}>
+              <Save className="w-3.5 h-3.5 mr-2" />
+              {savingSeed ? "Salvando..." : "Salvar conformidade"}
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <p className="text-sm text-muted-foreground -mt-2">
+              Valores confirmados na Resolução SEED n.º 7.200/2025 (Art. 11). Ficam editáveis aqui — não fixos no
+              sistema — porque a proporção hora-aula/hora-atividade está sob disputa judicial ativa entre a SEED-PR
+              e o sindicato dos professores e pode mudar.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">Padrão 20h semanais</Label>
+                <p className="text-xs text-muted-foreground">Art. 11, §1º, I</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Aulas de regência</Label>
+                    <Input
+                      type="number" min={1}
+                      value={getSeedVal<{ aulasRegencia: number }>("seed_pr.padrao_20h").aulasRegencia}
+                      onChange={e => setSeedSubVal("seed_pr.padrao_20h", "aulasRegencia", Number(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Horas-atividade</Label>
+                    <Input
+                      type="number" min={1}
+                      value={getSeedVal<{ horasAtividade: number }>("seed_pr.padrao_20h").horasAtividade}
+                      onChange={e => setSeedSubVal("seed_pr.padrao_20h", "horasAtividade", Number(e.target.value))}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">Padrão 40h semanais</Label>
+                <p className="text-xs text-muted-foreground">Art. 11, §1º, II</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Aulas de regência</Label>
+                    <Input
+                      type="number" min={1}
+                      value={getSeedVal<{ aulasRegencia: number }>("seed_pr.padrao_40h").aulasRegencia}
+                      onChange={e => setSeedSubVal("seed_pr.padrao_40h", "aulasRegencia", Number(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Horas-atividade</Label>
+                    <Input
+                      type="number" min={1}
+                      value={getSeedVal<{ horasAtividade: number }>("seed_pr.padrao_40h").horasAtividade}
+                      onChange={e => setSeedSubVal("seed_pr.padrao_40h", "horasAtividade", Number(e.target.value))}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">Teto de aulas por turno (semanal)</Label>
+                <p className="text-xs text-muted-foreground">Art. 11, §3º</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Turno da noite</Label>
+                    <Input
+                      type="number" min={1}
+                      value={getSeedVal<{ noturno: number }>("seed_pr.teto_aulas_turno").noturno}
+                      onChange={e => setSeedSubVal("seed_pr.teto_aulas_turno", "noturno", Number(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Demais turnos</Label>
+                    <Input
+                      type="number" min={1}
+                      value={getSeedVal<{ diurno: number }>("seed_pr.teto_aulas_turno").diurno}
+                      onChange={e => setSeedSubVal("seed_pr.teto_aulas_turno", "diurno", Number(e.target.value))}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">Outras regras</Label>
+                <p className="text-xs text-muted-foreground">Art. 11, §4º e recomendação operacional</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">HA no mesmo turno até (nº aulas)</Label>
+                    <Input
+                      type="number" min={1}
+                      value={getSeedVal<number>("seed_pr.hora_atividade_mesmo_turno_ate")}
+                      onChange={e => setSeedSubVal("seed_pr.hora_atividade_mesmo_turno_ate", null, Number(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Máx. aulas geminadas/dia (padrão)</Label>
+                    <Input
+                      type="number" min={1}
+                      value={getSeedVal<number>("seed_pr.max_aulas_geminadas_padrao")}
+                      onChange={e => setSeedSubVal("seed_pr.max_aulas_geminadas_padrao", null, Number(e.target.value))}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

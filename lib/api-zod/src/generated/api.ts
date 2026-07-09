@@ -117,6 +117,8 @@ export const ListDisciplinasResponseItem = zod.object({
   "nome": zod.string(),
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
+  "codigoSae": zod.string().nullish().describe('Código SAE oficial (SEED-PR), quando conhecido.'),
+  "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "createdAt": zod.string()
 })
 export const ListDisciplinasResponse = zod.array(ListDisciplinasResponseItem)
@@ -131,7 +133,9 @@ export const createDisciplinaBodyCargaSemanalMax = 10;
 export const CreateDisciplinaBody = zod.object({
   "nome": zod.string().min(createDisciplinaBodyNomeMin),
   "cargaSemanal": zod.number().min(1).max(createDisciplinaBodyCargaSemanalMax),
-  "cor": zod.string().optional()
+  "cor": zod.string().optional(),
+  "codigoSae": zod.string().optional(),
+  "tipoSalaExigido": zod.string().optional()
 })
 
 export const CreateDisciplinaResponse = zod.object({
@@ -139,6 +143,8 @@ export const CreateDisciplinaResponse = zod.object({
   "nome": zod.string(),
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
+  "codigoSae": zod.string().nullish().describe('Código SAE oficial (SEED-PR), quando conhecido.'),
+  "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "createdAt": zod.string()
 })
 
@@ -152,6 +158,8 @@ export const GetDisciplinaResponse = zod.object({
   "nome": zod.string(),
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
+  "codigoSae": zod.string().nullish().describe('Código SAE oficial (SEED-PR), quando conhecido.'),
+  "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "createdAt": zod.string()
 })
 
@@ -163,7 +171,9 @@ export const UpdateDisciplinaParams = zod.object({
 export const UpdateDisciplinaBody = zod.object({
   "nome": zod.string().optional(),
   "cargaSemanal": zod.number().optional(),
-  "cor": zod.string().optional()
+  "cor": zod.string().optional(),
+  "codigoSae": zod.string().nullish(),
+  "tipoSalaExigido": zod.string().nullish()
 })
 
 export const UpdateDisciplinaResponse = zod.object({
@@ -171,6 +181,8 @@ export const UpdateDisciplinaResponse = zod.object({
   "nome": zod.string(),
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
+  "codigoSae": zod.string().nullish().describe('Código SAE oficial (SEED-PR), quando conhecido.'),
+  "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "createdAt": zod.string()
 })
 
@@ -195,11 +207,14 @@ export const ListTurmasResponseItem = zod.object({
   "disciplinaId": zod.number(),
   "nome": zod.string(),
   "cargaHorariaSemanal": zod.number(),
-  "origemMatriz": zod.boolean()
+  "origemMatriz": zod.boolean(),
+  "maxAulasConsecutivasDia": zod.number().nullish().describe('Limite de aulas geminadas desta disciplina, nesta turma, por dia. Nulo = usa o padrão geral (configuracoes\/seed_pr.max_aulas_geminadas_padrao).'),
+  "grupoCompartilhadoId": zod.string().nullish().describe('Quando preenchido, agrupa esta disciplina com a mesma linha de outras turmas para horário simultâneo (ex. Itinerário Formativo cursado junto).')
 })).optional().describe('Carga horária semanal efetiva por disciplina (override da matriz aplicada, com fallback para a carga global).'),
   "createdAt": zod.string()
 })
 export const ListTurmasResponse = zod.array(ListTurmasResponseItem)
+
 
 
 
@@ -211,7 +226,11 @@ export const CreateTurmaBody = zod.object({
   "turno": zod.enum(['matutino', 'vespertino', 'noturno', 'integral']),
   "anoLetivo": zod.number(),
   "modalidade": zod.string().optional(),
-  "disciplinaIds": zod.array(zod.number()).optional()
+  "disciplinaIds": zod.array(zod.number()).optional(),
+  "disciplinasConfig": zod.record(zod.string(), zod.object({
+  "maxAulasConsecutivasDia": zod.number().min(1).optional(),
+  "grupoCompartilhadoId": zod.string().optional()
+})).optional().describe('Configuração extra por disciplina — chave é o disciplinaId (como string). Só tem efeito para disciplinas presentes em disciplinaIds.')
 })
 
 export const CreateTurmaResponse = zod.object({
@@ -227,7 +246,9 @@ export const CreateTurmaResponse = zod.object({
   "disciplinaId": zod.number(),
   "nome": zod.string(),
   "cargaHorariaSemanal": zod.number(),
-  "origemMatriz": zod.boolean()
+  "origemMatriz": zod.boolean(),
+  "maxAulasConsecutivasDia": zod.number().nullish().describe('Limite de aulas geminadas desta disciplina, nesta turma, por dia. Nulo = usa o padrão geral (configuracoes\/seed_pr.max_aulas_geminadas_padrao).'),
+  "grupoCompartilhadoId": zod.string().nullish().describe('Quando preenchido, agrupa esta disciplina com a mesma linha de outras turmas para horário simultâneo (ex. Itinerário Formativo cursado junto).')
 })).optional().describe('Carga horária semanal efetiva por disciplina (override da matriz aplicada, com fallback para a carga global).'),
   "createdAt": zod.string()
 })
@@ -250,7 +271,9 @@ export const GetTurmaResponse = zod.object({
   "disciplinaId": zod.number(),
   "nome": zod.string(),
   "cargaHorariaSemanal": zod.number(),
-  "origemMatriz": zod.boolean()
+  "origemMatriz": zod.boolean(),
+  "maxAulasConsecutivasDia": zod.number().nullish().describe('Limite de aulas geminadas desta disciplina, nesta turma, por dia. Nulo = usa o padrão geral (configuracoes\/seed_pr.max_aulas_geminadas_padrao).'),
+  "grupoCompartilhadoId": zod.string().nullish().describe('Quando preenchido, agrupa esta disciplina com a mesma linha de outras turmas para horário simultâneo (ex. Itinerário Formativo cursado junto).')
 })).optional().describe('Carga horária semanal efetiva por disciplina (override da matriz aplicada, com fallback para a carga global).'),
   "createdAt": zod.string()
 })
@@ -260,13 +283,20 @@ export const UpdateTurmaParams = zod.object({
   "id": zod.coerce.number()
 })
 
+
+
+
 export const UpdateTurmaBody = zod.object({
   "nome": zod.string().optional(),
   "serie": zod.string().optional(),
   "turno": zod.enum(['matutino', 'vespertino', 'noturno', 'integral']).optional(),
   "anoLetivo": zod.number().optional(),
   "modalidade": zod.string().optional(),
-  "disciplinaIds": zod.array(zod.number()).optional()
+  "disciplinaIds": zod.array(zod.number()).optional(),
+  "disciplinasConfig": zod.record(zod.string(), zod.object({
+  "maxAulasConsecutivasDia": zod.number().min(1).optional(),
+  "grupoCompartilhadoId": zod.string().optional()
+})).optional().describe('Configuração extra por disciplina — chave é o disciplinaId (como string). Pode ser enviado mesmo sem disciplinaIds, para só atualizar a configuração de vínculos já existentes.')
 })
 
 export const UpdateTurmaResponse = zod.object({
@@ -282,7 +312,9 @@ export const UpdateTurmaResponse = zod.object({
   "disciplinaId": zod.number(),
   "nome": zod.string(),
   "cargaHorariaSemanal": zod.number(),
-  "origemMatriz": zod.boolean()
+  "origemMatriz": zod.boolean(),
+  "maxAulasConsecutivasDia": zod.number().nullish().describe('Limite de aulas geminadas desta disciplina, nesta turma, por dia. Nulo = usa o padrão geral (configuracoes\/seed_pr.max_aulas_geminadas_padrao).'),
+  "grupoCompartilhadoId": zod.string().nullish().describe('Quando preenchido, agrupa esta disciplina com a mesma linha de outras turmas para horário simultâneo (ex. Itinerário Formativo cursado junto).')
 })).optional().describe('Carga horária semanal efetiva por disciplina (override da matriz aplicada, com fallback para a carga global).'),
   "createdAt": zod.string()
 })
@@ -316,7 +348,9 @@ export const AplicarMatrizTurmaResponse = zod.object({
   "disciplinaId": zod.number(),
   "nome": zod.string(),
   "cargaHorariaSemanal": zod.number(),
-  "origemMatriz": zod.boolean()
+  "origemMatriz": zod.boolean(),
+  "maxAulasConsecutivasDia": zod.number().nullish().describe('Limite de aulas geminadas desta disciplina, nesta turma, por dia. Nulo = usa o padrão geral (configuracoes\/seed_pr.max_aulas_geminadas_padrao).'),
+  "grupoCompartilhadoId": zod.string().nullish().describe('Quando preenchido, agrupa esta disciplina com a mesma linha de outras turmas para horário simultâneo (ex. Itinerário Formativo cursado junto).')
 })).optional().describe('Carga horária semanal efetiva por disciplina (override da matriz aplicada, com fallback para a carga global).'),
   "createdAt": zod.string()
 })
@@ -349,7 +383,9 @@ export const GetTurmaHorarioResponseItem = zod.object({
   "disciplinaId": zod.number(),
   "nome": zod.string(),
   "cargaHorariaSemanal": zod.number(),
-  "origemMatriz": zod.boolean()
+  "origemMatriz": zod.boolean(),
+  "maxAulasConsecutivasDia": zod.number().nullish().describe('Limite de aulas geminadas desta disciplina, nesta turma, por dia. Nulo = usa o padrão geral (configuracoes\/seed_pr.max_aulas_geminadas_padrao).'),
+  "grupoCompartilhadoId": zod.string().nullish().describe('Quando preenchido, agrupa esta disciplina com a mesma linha de outras turmas para horário simultâneo (ex. Itinerário Formativo cursado junto).')
 })).optional().describe('Carga horária semanal efetiva por disciplina (override da matriz aplicada, com fallback para a carga global).'),
   "createdAt": zod.string()
 }).optional(),
@@ -359,6 +395,8 @@ export const GetTurmaHorarioResponseItem = zod.object({
   "nome": zod.string(),
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
+  "codigoSae": zod.string().nullish().describe('Código SAE oficial (SEED-PR), quando conhecido.'),
+  "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "createdAt": zod.string()
 }).optional(),
   "professorId": zod.number(),
@@ -406,7 +444,9 @@ export const ListHorariosResponseItem = zod.object({
   "disciplinaId": zod.number(),
   "nome": zod.string(),
   "cargaHorariaSemanal": zod.number(),
-  "origemMatriz": zod.boolean()
+  "origemMatriz": zod.boolean(),
+  "maxAulasConsecutivasDia": zod.number().nullish().describe('Limite de aulas geminadas desta disciplina, nesta turma, por dia. Nulo = usa o padrão geral (configuracoes\/seed_pr.max_aulas_geminadas_padrao).'),
+  "grupoCompartilhadoId": zod.string().nullish().describe('Quando preenchido, agrupa esta disciplina com a mesma linha de outras turmas para horário simultâneo (ex. Itinerário Formativo cursado junto).')
 })).optional().describe('Carga horária semanal efetiva por disciplina (override da matriz aplicada, com fallback para a carga global).'),
   "createdAt": zod.string()
 }).optional(),
@@ -416,6 +456,8 @@ export const ListHorariosResponseItem = zod.object({
   "nome": zod.string(),
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
+  "codigoSae": zod.string().nullish().describe('Código SAE oficial (SEED-PR), quando conhecido.'),
+  "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "createdAt": zod.string()
 }).optional(),
   "professorId": zod.number(),
@@ -474,7 +516,9 @@ export const CreateHorarioResponse = zod.object({
   "disciplinaId": zod.number(),
   "nome": zod.string(),
   "cargaHorariaSemanal": zod.number(),
-  "origemMatriz": zod.boolean()
+  "origemMatriz": zod.boolean(),
+  "maxAulasConsecutivasDia": zod.number().nullish().describe('Limite de aulas geminadas desta disciplina, nesta turma, por dia. Nulo = usa o padrão geral (configuracoes\/seed_pr.max_aulas_geminadas_padrao).'),
+  "grupoCompartilhadoId": zod.string().nullish().describe('Quando preenchido, agrupa esta disciplina com a mesma linha de outras turmas para horário simultâneo (ex. Itinerário Formativo cursado junto).')
 })).optional().describe('Carga horária semanal efetiva por disciplina (override da matriz aplicada, com fallback para a carga global).'),
   "createdAt": zod.string()
 }).optional(),
@@ -484,6 +528,8 @@ export const CreateHorarioResponse = zod.object({
   "nome": zod.string(),
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
+  "codigoSae": zod.string().nullish().describe('Código SAE oficial (SEED-PR), quando conhecido.'),
+  "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "createdAt": zod.string()
 }).optional(),
   "professorId": zod.number(),
@@ -553,7 +599,9 @@ export const GerarHorarioResponse = zod.object({
   "disciplinaId": zod.number(),
   "nome": zod.string(),
   "cargaHorariaSemanal": zod.number(),
-  "origemMatriz": zod.boolean()
+  "origemMatriz": zod.boolean(),
+  "maxAulasConsecutivasDia": zod.number().nullish().describe('Limite de aulas geminadas desta disciplina, nesta turma, por dia. Nulo = usa o padrão geral (configuracoes\/seed_pr.max_aulas_geminadas_padrao).'),
+  "grupoCompartilhadoId": zod.string().nullish().describe('Quando preenchido, agrupa esta disciplina com a mesma linha de outras turmas para horário simultâneo (ex. Itinerário Formativo cursado junto).')
 })).optional().describe('Carga horária semanal efetiva por disciplina (override da matriz aplicada, com fallback para a carga global).'),
   "createdAt": zod.string()
 }).optional(),
@@ -563,6 +611,8 @@ export const GerarHorarioResponse = zod.object({
   "nome": zod.string(),
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
+  "codigoSae": zod.string().nullish().describe('Código SAE oficial (SEED-PR), quando conhecido.'),
+  "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "createdAt": zod.string()
 }).optional(),
   "professorId": zod.number(),
@@ -662,7 +712,9 @@ export const PromoverHorarioExperimentalResponse = zod.object({
   "disciplinaId": zod.number(),
   "nome": zod.string(),
   "cargaHorariaSemanal": zod.number(),
-  "origemMatriz": zod.boolean()
+  "origemMatriz": zod.boolean(),
+  "maxAulasConsecutivasDia": zod.number().nullish().describe('Limite de aulas geminadas desta disciplina, nesta turma, por dia. Nulo = usa o padrão geral (configuracoes\/seed_pr.max_aulas_geminadas_padrao).'),
+  "grupoCompartilhadoId": zod.string().nullish().describe('Quando preenchido, agrupa esta disciplina com a mesma linha de outras turmas para horário simultâneo (ex. Itinerário Formativo cursado junto).')
 })).optional().describe('Carga horária semanal efetiva por disciplina (override da matriz aplicada, com fallback para a carga global).'),
   "createdAt": zod.string()
 }).optional(),
@@ -672,6 +724,8 @@ export const PromoverHorarioExperimentalResponse = zod.object({
   "nome": zod.string(),
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
+  "codigoSae": zod.string().nullish().describe('Código SAE oficial (SEED-PR), quando conhecido.'),
+  "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "createdAt": zod.string()
 }).optional(),
   "professorId": zod.number(),
@@ -769,7 +823,7 @@ export const listDisponibilidadeResponseDiaSemanaMin = 0;
 export const listDisponibilidadeResponseDiaSemanaMax = 6;
 
 
-
+export const listDisponibilidadeResponseHoraAtividadeObrigatoriaDefault = false;
 
 export const ListDisponibilidadeResponseItem = zod.object({
   "id": zod.number(),
@@ -777,7 +831,9 @@ export const ListDisponibilidadeResponseItem = zod.object({
   "diaSemana": zod.number().min(listDisponibilidadeResponseDiaSemanaMin).max(listDisponibilidadeResponseDiaSemanaMax),
   "horarioSlot": zod.number().min(1),
   "disponivel": zod.boolean(),
-  "motivo": zod.string().nullish()
+  "motivo": zod.string().nullish(),
+  "turno": zod.union([zod.literal('matutino'),zod.literal('vespertino'),zod.literal('noturno'),zod.literal(null)]).nullish().describe('Turno deste bloqueio — necessário para validar concentração de hora-atividade no mesmo turno das aulas (Resolução SEED n.º 7.200\/2025, art. 11, §4º).'),
+  "horaAtividadeObrigatoria": zod.boolean().default(listDisponibilidadeResponseHoraAtividadeObrigatoriaDefault).describe('true quando este bloqueio representa Hora-Atividade obrigatória, não outro tipo de indisponibilidade.')
 })
 export const ListDisponibilidadeResponse = zod.array(ListDisponibilidadeResponseItem)
 
@@ -787,20 +843,23 @@ export const setDisponibilidadeBodyDiaSemanaMax = 6;
 
 
 export const setDisponibilidadeBodyDisponivelDefault = true;
+export const setDisponibilidadeBodyHoraAtividadeObrigatoriaDefault = false;
 
 export const SetDisponibilidadeBody = zod.object({
   "professorId": zod.number(),
   "diaSemana": zod.number().min(setDisponibilidadeBodyDiaSemanaMin).max(setDisponibilidadeBodyDiaSemanaMax),
   "horarioSlot": zod.number().min(1),
   "disponivel": zod.boolean().default(setDisponibilidadeBodyDisponivelDefault),
-  "motivo": zod.string().optional()
+  "motivo": zod.string().optional(),
+  "turno": zod.enum(['matutino', 'vespertino', 'noturno']).optional(),
+  "horaAtividadeObrigatoria": zod.boolean().default(setDisponibilidadeBodyHoraAtividadeObrigatoriaDefault)
 })
 
 export const setDisponibilidadeResponseDiaSemanaMin = 0;
 export const setDisponibilidadeResponseDiaSemanaMax = 6;
 
 
-
+export const setDisponibilidadeResponseHoraAtividadeObrigatoriaDefault = false;
 
 export const SetDisponibilidadeResponse = zod.object({
   "id": zod.number(),
@@ -808,7 +867,9 @@ export const SetDisponibilidadeResponse = zod.object({
   "diaSemana": zod.number().min(setDisponibilidadeResponseDiaSemanaMin).max(setDisponibilidadeResponseDiaSemanaMax),
   "horarioSlot": zod.number().min(1),
   "disponivel": zod.boolean(),
-  "motivo": zod.string().nullish()
+  "motivo": zod.string().nullish(),
+  "turno": zod.union([zod.literal('matutino'),zod.literal('vespertino'),zod.literal('noturno'),zod.literal(null)]).nullish().describe('Turno deste bloqueio — necessário para validar concentração de hora-atividade no mesmo turno das aulas (Resolução SEED n.º 7.200\/2025, art. 11, §4º).'),
+  "horaAtividadeObrigatoria": zod.boolean().default(setDisponibilidadeResponseHoraAtividadeObrigatoriaDefault).describe('true quando este bloqueio representa Hora-Atividade obrigatória, não outro tipo de indisponibilidade.')
 })
 
 
@@ -817,6 +878,7 @@ export const setDisponibilidadeLoteBodyItensItemDiaSemanaMax = 6;
 
 
 export const setDisponibilidadeLoteBodyItensItemDisponivelDefault = true;
+export const setDisponibilidadeLoteBodyItensItemHoraAtividadeObrigatoriaDefault = false;
 
 export const SetDisponibilidadeLoteBody = zod.object({
   "professorId": zod.number(),
@@ -824,7 +886,9 @@ export const SetDisponibilidadeLoteBody = zod.object({
   "diaSemana": zod.number().min(setDisponibilidadeLoteBodyItensItemDiaSemanaMin).max(setDisponibilidadeLoteBodyItensItemDiaSemanaMax),
   "horarioSlot": zod.number().min(1),
   "disponivel": zod.boolean().default(setDisponibilidadeLoteBodyItensItemDisponivelDefault),
-  "motivo": zod.string().optional()
+  "motivo": zod.string().optional(),
+  "turno": zod.enum(['matutino', 'vespertino', 'noturno']).optional(),
+  "horaAtividadeObrigatoria": zod.boolean().default(setDisponibilidadeLoteBodyItensItemHoraAtividadeObrigatoriaDefault)
 }))
 })
 
@@ -832,7 +896,7 @@ export const setDisponibilidadeLoteResponseDiaSemanaMin = 0;
 export const setDisponibilidadeLoteResponseDiaSemanaMax = 6;
 
 
-
+export const setDisponibilidadeLoteResponseHoraAtividadeObrigatoriaDefault = false;
 
 export const SetDisponibilidadeLoteResponseItem = zod.object({
   "id": zod.number(),
@@ -840,7 +904,9 @@ export const SetDisponibilidadeLoteResponseItem = zod.object({
   "diaSemana": zod.number().min(setDisponibilidadeLoteResponseDiaSemanaMin).max(setDisponibilidadeLoteResponseDiaSemanaMax),
   "horarioSlot": zod.number().min(1),
   "disponivel": zod.boolean(),
-  "motivo": zod.string().nullish()
+  "motivo": zod.string().nullish(),
+  "turno": zod.union([zod.literal('matutino'),zod.literal('vespertino'),zod.literal('noturno'),zod.literal(null)]).nullish().describe('Turno deste bloqueio — necessário para validar concentração de hora-atividade no mesmo turno das aulas (Resolução SEED n.º 7.200\/2025, art. 11, §4º).'),
+  "horaAtividadeObrigatoria": zod.boolean().default(setDisponibilidadeLoteResponseHoraAtividadeObrigatoriaDefault).describe('true quando este bloqueio representa Hora-Atividade obrigatória, não outro tipo de indisponibilidade.')
 })
 export const SetDisponibilidadeLoteResponse = zod.array(SetDisponibilidadeLoteResponseItem)
 
@@ -1157,6 +1223,8 @@ export const ListMatrizesCurricularesResponseItem = zod.object({
   "nome": zod.string(),
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
+  "codigoSae": zod.string().nullish().describe('Código SAE oficial (SEED-PR), quando conhecido.'),
+  "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "createdAt": zod.string()
 }).optional(),
   "categoriaCurricular": zod.enum(['base_nacional_comum', 'parte_diversificada', 'formacao_geral_basica', 'itinerario_formativo', 'itinerario_profissionalizante', 'aprofundamento_pratica', 'parte_flexivel']),
@@ -1204,6 +1272,8 @@ export const CreateMatrizCurricularResponse = zod.object({
   "nome": zod.string(),
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
+  "codigoSae": zod.string().nullish().describe('Código SAE oficial (SEED-PR), quando conhecido.'),
+  "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "createdAt": zod.string()
 }).optional(),
   "categoriaCurricular": zod.enum(['base_nacional_comum', 'parte_diversificada', 'formacao_geral_basica', 'itinerario_formativo', 'itinerario_profissionalizante', 'aprofundamento_pratica', 'parte_flexivel']),

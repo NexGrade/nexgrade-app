@@ -12,6 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const professorSchema = z.object({
@@ -295,30 +297,41 @@ function DisponibilidadeGrade({ professorId }: { professorId: number }) {
   );
   const salvarLote = useSetDisponibilidadeLote();
 
-  const [indisponiveis, setIndisponiveis] = useState<Set<string>>(new Set());
+  // Mapa "dia-slot" -> horaAtividadeObrigatoria. Presença na estrutura =
+  // indisponível; o valor diz se é especificamente Hora-Atividade
+  // obrigatória (Resolução SEED n.º 7.200/2025, art. 11) ou outro motivo.
+  const [indisponiveis, setIndisponiveis] = useState<Map<string, boolean>>(new Map());
+  const [turnoGrade, setTurnoGrade] = useState<"matutino" | "vespertino" | "noturno">("matutino");
   const initRef = useRef(false);
 
   useEffect(() => {
     if (disponibilidades && !initRef.current) {
-      const set = new Set<string>();
+      const mapa = new Map<string, boolean>();
       disponibilidades
         .filter((d) => !d.disponivel)
-        .forEach((d) => set.add(`${d.diaSemana}-${d.horarioSlot}`));
-      setIndisponiveis(set);
+        .forEach((d) => mapa.set(`${d.diaSemana}-${d.horarioSlot}`, d.horaAtividadeObrigatoria ?? false));
+      setIndisponiveis(mapa);
+      const primeiroTurno = disponibilidades.find((d) => !d.disponivel && d.turno)?.turno;
+      if (primeiroTurno) setTurnoGrade(primeiroTurno);
       initRef.current = true;
     }
   }, [disponibilidades]);
 
   const totalIndisponivel = useMemo(() => indisponiveis.size, [indisponiveis]);
+  const totalHA = useMemo(() => [...indisponiveis.values()].filter(Boolean).length, [indisponiveis]);
 
+  // Clique cicla 3 estados: disponível -> indisponível -> indisponível +
+  // Hora-Atividade obrigatória -> disponível de novo.
   function alternarCelula(dia: number, slot: number) {
     const key = `${dia}-${slot}`;
     setIndisponiveis((atual) => {
-      const proximo = new Set(atual);
-      if (proximo.has(key)) {
-        proximo.delete(key);
+      const proximo = new Map(atual);
+      if (!proximo.has(key)) {
+        proximo.set(key, false);
+      } else if (proximo.get(key) === false) {
+        proximo.set(key, true);
       } else {
-        proximo.add(key);
+        proximo.delete(key);
       }
       return proximo;
     });
@@ -326,11 +339,17 @@ function DisponibilidadeGrade({ professorId }: { professorId: number }) {
 
   function salvar() {
     const itens = DIAS_SEMANA_GRADE.flatMap((_, dia) =>
-      SLOTS_GRADE.map((slot) => ({
-        diaSemana: dia,
-        horarioSlot: slot,
-        disponivel: !indisponiveis.has(`${dia}-${slot}`),
-      })),
+      SLOTS_GRADE.map((slot) => {
+        const key = `${dia}-${slot}`;
+        const marcado = indisponiveis.has(key);
+        return {
+          diaSemana: dia,
+          horarioSlot: slot,
+          disponivel: !marcado,
+          turno: marcado ? turnoGrade : undefined,
+          horaAtividadeObrigatoria: marcado ? (indisponiveis.get(key) ?? false) : false,
+        };
+      }),
     );
 
     salvarLote.mutate(
@@ -352,8 +371,9 @@ function DisponibilidadeGrade({ professorId }: { professorId: number }) {
       <CardHeader>
         <CardTitle>Disponibilidade Semanal</CardTitle>
         <CardDescription>
-          Marque os horários em que {"este(a) professor(a) NÃO"} pode dar aula. Células desmarcadas são
-          consideradas disponíveis pelo gerador de horário e pela detecção de conflitos.
+          Clique uma vez para marcar indisponível, duas vezes para marcar como Hora-Atividade obrigatória
+          (Resolução SEED n.º 7.200/2025, art. 11), três vezes para voltar a disponível. Células não marcadas
+          são consideradas disponíveis pelo gerador de horário e pela detecção de conflitos.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -361,6 +381,18 @@ function DisponibilidadeGrade({ professorId }: { professorId: number }) {
           <Skeleton className="h-64 w-full" />
         ) : (
           <div className="space-y-4">
+            <div className="flex items-center gap-3 max-w-xs">
+              <Label className="text-sm shrink-0">Turno desta grade</Label>
+              <Select value={turnoGrade} onValueChange={(v) => setTurnoGrade(v as "matutino" | "vespertino" | "noturno")}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="matutino">Matutino</SelectItem>
+                  <SelectItem value="vespertino">Vespertino</SelectItem>
+                  <SelectItem value="noturno">Noturno</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-sm">
                 <thead>
@@ -379,6 +411,7 @@ function DisponibilidadeGrade({ professorId }: { professorId: number }) {
                       <td className="p-2 text-muted-foreground">{slot}ª</td>
                       {DIAS_SEMANA_GRADE.map((_, dia) => {
                         const key = `${dia}-${slot}`;
+                        const ehHA = indisponiveis.get(key) === true;
                         const marcado = indisponiveis.has(key);
                         return (
                           <td key={key} className="p-2 text-center">
@@ -388,12 +421,14 @@ function DisponibilidadeGrade({ professorId }: { professorId: number }) {
                               aria-pressed={marcado}
                               className={
                                 "h-8 w-full rounded-md border text-xs font-medium transition-colors " +
-                                (marcado
+                                (ehHA
+                                  ? "bg-[#42A5F5]/15 border-[#1565C0]/40 text-[#0D47A1]"
+                                  : marcado
                                   ? "bg-destructive/10 border-destructive/40 text-destructive"
                                   : "bg-muted/40 border-transparent hover:border-muted-foreground/30")
                               }
                             >
-                              {marcado ? "Indisponível" : ""}
+                              {ehHA ? "Hora-Atividade" : marcado ? "Indisponível" : ""}
                             </button>
                           </td>
                         );
@@ -406,7 +441,7 @@ function DisponibilidadeGrade({ professorId }: { professorId: number }) {
 
             <div className="flex items-center justify-between pt-2 border-t">
               <p className="text-sm text-muted-foreground">
-                {totalIndisponivel} período(s) marcado(s) como indisponível.
+                {totalIndisponivel} período(s) indisponível(is), {totalHA} de Hora-Atividade obrigatória.
               </p>
               <Button onClick={salvar} disabled={salvarLote.isPending}>
                 {salvarLote.isPending ? "Salvando..." : "Salvar Disponibilidade"}

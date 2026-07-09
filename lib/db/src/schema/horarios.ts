@@ -1,21 +1,9 @@
-﻿import { pgTable, serial, timestamp, integer, text } from "drizzle-orm/pg-core";
+import { pgTable, serial, timestamp, integer, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { turmasTable } from "./turmas";
 import { disciplinasTable } from "./disciplinas";
 import { professoresTable } from "./professores";
-
-// [ATUALIZADO] modalidade -- confirmado com a coordenacao da escola: os
-// codigos "IF-1B", "IF-2C" (na grade do professor) e "HIBRIDA-1NB" (como
-// pseudo-professor + disciplina "HIB" na grade da turma) representam a
-// mesma coisa -- aula assincrona ou hibrida -- nao um agrupamento de
-// turmas. Modelado como campo de modalidade na propria aula, nao como
-// entidade nova.
-//
-// Valores esperados: presencial | assincrona | hibrida
-// (texto livre por enquanto, mesmo padrao de turno/nivel no resto do
-// schema -- nao usa pgEnum aqui para manter consistencia com o restante
-// do projeto).
 
 export const horariosTable = pgTable("horarios", {
   id: serial("id").primaryKey(),
@@ -26,8 +14,6 @@ export const horariosTable = pgTable("horarios", {
   diaSemana: integer("dia_semana").notNull(),
   numeroAula: integer("numero_aula").notNull(),
   sala: text("sala"),
-  // [NOVO] presencial (default) | assincrona | hibrida
-  modalidade: text("modalidade").notNull().default("presencial"),
   versaoGrade: text("versao_grade").default("oficial"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

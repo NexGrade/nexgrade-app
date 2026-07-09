@@ -49,6 +49,16 @@ export interface Disciplina {
   nome: string;
   cargaSemanal: number;
   cor: string;
+  /**
+     * Código SAE oficial (SEED-PR), quando conhecido.
+     * @nullable
+     */
+  codigoSae?: string | null;
+  /**
+     * Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).
+     * @nullable
+     */
+  tipoSalaExigido?: string | null;
   createdAt: string;
 }
 
@@ -61,12 +71,18 @@ export interface DisciplinaInput {
      */
   cargaSemanal: number;
   cor?: string;
+  codigoSae?: string;
+  tipoSalaExigido?: string;
 }
 
 export interface DisciplinaUpdate {
   nome?: string;
   cargaSemanal?: number;
   cor?: string;
+  /** @nullable */
+  codigoSae?: string | null;
+  /** @nullable */
+  tipoSalaExigido?: string | null;
 }
 
 export type TurmaTurno = typeof TurmaTurno[keyof typeof TurmaTurno];
@@ -84,6 +100,16 @@ export type TurmaDisciplinasComCargaItem = {
   nome: string;
   cargaHorariaSemanal: number;
   origemMatriz: boolean;
+  /**
+     * Limite de aulas geminadas desta disciplina, nesta turma, por dia. Nulo = usa o padrão geral (configuracoes/seed_pr.max_aulas_geminadas_padrao).
+     * @nullable
+     */
+  maxAulasConsecutivasDia?: number | null;
+  /**
+     * Quando preenchido, agrupa esta disciplina com a mesma linha de outras turmas para horário simultâneo (ex. Itinerário Formativo cursado junto).
+     * @nullable
+     */
+  grupoCompartilhadoId?: string | null;
 };
 
 export interface Turma {
@@ -109,6 +135,12 @@ export interface AplicarMatrizInput {
   matrizCurricularId: number;
 }
 
+export interface DisciplinaConfigTurma {
+  /** @minimum 1 */
+  maxAulasConsecutivasDia?: number;
+  grupoCompartilhadoId?: string;
+}
+
 export type TurmaInputTurno = typeof TurmaInputTurno[keyof typeof TurmaInputTurno];
 
 
@@ -119,6 +151,11 @@ export const TurmaInputTurno = {
   integral: 'integral',
 } as const;
 
+/**
+ * Configuração extra por disciplina — chave é o disciplinaId (como string). Só tem efeito para disciplinas presentes em disciplinaIds.
+ */
+export type TurmaInputDisciplinasConfig = {[key: string]: DisciplinaConfigTurma};
+
 export interface TurmaInput {
   /** @minLength 1 */
   nome: string;
@@ -127,6 +164,8 @@ export interface TurmaInput {
   anoLetivo: number;
   modalidade?: string;
   disciplinaIds?: number[];
+  /** Configuração extra por disciplina — chave é o disciplinaId (como string). Só tem efeito para disciplinas presentes em disciplinaIds. */
+  disciplinasConfig?: TurmaInputDisciplinasConfig;
 }
 
 export type TurmaUpdateTurno = typeof TurmaUpdateTurno[keyof typeof TurmaUpdateTurno];
@@ -139,6 +178,11 @@ export const TurmaUpdateTurno = {
   integral: 'integral',
 } as const;
 
+/**
+ * Configuração extra por disciplina — chave é o disciplinaId (como string). Pode ser enviado mesmo sem disciplinaIds, para só atualizar a configuração de vínculos já existentes.
+ */
+export type TurmaUpdateDisciplinasConfig = {[key: string]: DisciplinaConfigTurma};
+
 export interface TurmaUpdate {
   nome?: string;
   serie?: string;
@@ -146,6 +190,8 @@ export interface TurmaUpdate {
   anoLetivo?: number;
   modalidade?: string;
   disciplinaIds?: number[];
+  /** Configuração extra por disciplina — chave é o disciplinaId (como string). Pode ser enviado mesmo sem disciplinaIds, para só atualizar a configuração de vínculos já existentes. */
+  disciplinasConfig?: TurmaUpdateDisciplinasConfig;
 }
 
 export interface HorarioSlot {
@@ -284,6 +330,19 @@ export interface SalaUpdate {
   observacoes?: string;
 }
 
+/**
+ * Turno deste bloqueio — necessário para validar concentração de hora-atividade no mesmo turno das aulas (Resolução SEED n.º 7.200/2025, art. 11, §4º).
+ * @nullable
+ */
+export type DisponibilidadeTurno = typeof DisponibilidadeTurno[keyof typeof DisponibilidadeTurno] | null;
+
+
+export const DisponibilidadeTurno = {
+  matutino: 'matutino',
+  vespertino: 'vespertino',
+  noturno: 'noturno',
+} as const;
+
 export interface Disponibilidade {
   id: number;
   professorId: number;
@@ -297,7 +356,23 @@ export interface Disponibilidade {
   disponivel: boolean;
   /** @nullable */
   motivo?: string | null;
+  /**
+     * Turno deste bloqueio — necessário para validar concentração de hora-atividade no mesmo turno das aulas (Resolução SEED n.º 7.200/2025, art. 11, §4º).
+     * @nullable
+     */
+  turno?: DisponibilidadeTurno;
+  /** true quando este bloqueio representa Hora-Atividade obrigatória, não outro tipo de indisponibilidade. */
+  horaAtividadeObrigatoria?: boolean;
 }
+
+export type DisponibilidadeInputTurno = typeof DisponibilidadeInputTurno[keyof typeof DisponibilidadeInputTurno];
+
+
+export const DisponibilidadeInputTurno = {
+  matutino: 'matutino',
+  vespertino: 'vespertino',
+  noturno: 'noturno',
+} as const;
 
 export interface DisponibilidadeInput {
   professorId: number;
@@ -310,7 +385,18 @@ export interface DisponibilidadeInput {
   horarioSlot: number;
   disponivel?: boolean;
   motivo?: string;
+  turno?: DisponibilidadeInputTurno;
+  horaAtividadeObrigatoria?: boolean;
 }
+
+export type DisponibilidadeLoteInputItensItemTurno = typeof DisponibilidadeLoteInputItensItemTurno[keyof typeof DisponibilidadeLoteInputItensItemTurno];
+
+
+export const DisponibilidadeLoteInputItensItemTurno = {
+  matutino: 'matutino',
+  vespertino: 'vespertino',
+  noturno: 'noturno',
+} as const;
 
 export type DisponibilidadeLoteInputItensItem = {
   /**
@@ -322,6 +408,8 @@ export type DisponibilidadeLoteInputItensItem = {
   horarioSlot: number;
   disponivel?: boolean;
   motivo?: string;
+  turno?: DisponibilidadeLoteInputItensItemTurno;
+  horaAtividadeObrigatoria?: boolean;
 };
 
 export interface DisponibilidadeLoteInput {

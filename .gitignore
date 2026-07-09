@@ -48,11 +48,7 @@ Thumbs.db
 .cache/
 .local/
 
-# Environment variables (NUNCA subir)
+# Variaveis de ambiente / segredos - NUNCA versionar
 .env
-.env.local
-.env.*.local
-.env.development
-.env.production
-*.pem
-*.key
+.env.*
+!.env.example

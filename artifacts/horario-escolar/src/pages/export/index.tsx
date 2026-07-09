@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Download, FileText, Table, BarChart3 } from "lucide-react";
+import { Download, FileText, Table, BarChart3, FileDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 function buildUrl(path: string, params: Record<string, string | undefined>) {
@@ -28,6 +28,7 @@ export default function ExportPage() {
   });
   const [seedEstado, setSeedEstado] = useState("SP");
   const [loadingSeed, setLoadingSeed] = useState(false);
+  const [pdfOpts, setPdfOpts] = useState({ visao: "turma", entidadeId: "" });
 
   const handleDownload = (url: string, filename: string) => {
     const a = document.createElement("a");
@@ -153,6 +154,55 @@ export default function ExportPage() {
               handleDownload(url, `ponto_professores_${pontoOpts.mes}_${pontoOpts.ano}.csv`);
             }}>
               <Download className="w-4 h-4 mr-2" />Baixar Controle de Ponto
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Grade em PDF */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <FileDown className="w-4 h-4" /> Grade em PDF
+            </CardTitle>
+            <CardDescription>Gera um PDF pronto para impressão — visão por turma ou por professor, para conferência da equipe pedagógica antes de homologar.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Visão</Label>
+              <Select
+                value={pdfOpts.visao}
+                onValueChange={(v) => setPdfOpts({ visao: v, entidadeId: "" })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="turma">Por Turma</SelectItem>
+                  <SelectItem value="professor">Por Professor</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>{pdfOpts.visao === "turma" ? "Turma (opcional)" : "Professor (opcional)"}</Label>
+              <Select value={pdfOpts.entidadeId} onValueChange={(v) => setPdfOpts((o) => ({ ...o, entidadeId: v }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder={pdfOpts.visao === "turma" ? "Todas as turmas (uma página cada)" : "Todos os professores (uma página cada)"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">{pdfOpts.visao === "turma" ? "Todas as turmas" : "Todos os professores"}</SelectItem>
+                  {pdfOpts.visao === "turma"
+                    ? turmas.map((t) => <SelectItem key={t.id} value={String(t.id)}>{t.nome}</SelectItem>)
+                    : professores.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              className="w-full"
+              onClick={() => {
+                const param = pdfOpts.visao === "turma" ? "turmaId" : "professorId";
+                const url = buildUrl(`/api/export/grade-pdf/${pdfOpts.visao}`, { [param]: pdfOpts.entidadeId || undefined });
+                handleDownload(url, `grade_por_${pdfOpts.visao}.pdf`);
+              }}
+            >
+              <Download className="w-4 h-4 mr-2" />Baixar PDF
             </Button>
           </CardContent>
         </Card>

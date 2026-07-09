@@ -16,6 +16,31 @@ import { registrarAuditoria } from "../lib/audit";
 
 const router = Router();
 
+type DisciplinaConfigTurma = { maxAulasConsecutivasDia?: number; grupoCompartilhadoId?: string };
+
+// RNF-SEED-03/04: aplica o max de aulas geminadas/dia e o grupo
+// compartilhado por disciplina, enviados em `disciplinasConfig` (chave =
+// disciplinaId como string). Só tem efeito nas disciplinas que já têm um
+// vínculo turma_disciplinas — não cria vínculo novo sozinho.
+async function aplicarDisciplinasConfig(
+  turmaId: number,
+  disciplinasConfig: Record<string, DisciplinaConfigTurma> | undefined,
+) {
+  if (!disciplinasConfig) return;
+  for (const [disciplinaIdStr, cfg] of Object.entries(disciplinasConfig)) {
+    const disciplinaId = Number(disciplinaIdStr);
+    if (!Number.isInteger(disciplinaId)) continue;
+    const patch: Partial<typeof turmaDisciplinasTable.$inferInsert> = {};
+    if (cfg.maxAulasConsecutivasDia !== undefined) patch.maxAulasConsecutivasDia = cfg.maxAulasConsecutivasDia;
+    if (cfg.grupoCompartilhadoId !== undefined) patch.grupoCompartilhadoId = cfg.grupoCompartilhadoId;
+    if (Object.keys(patch).length === 0) continue;
+    await db
+      .update(turmaDisciplinasTable)
+      .set(patch)
+      .where(and(eq(turmaDisciplinasTable.turmaId, turmaId), eq(turmaDisciplinasTable.disciplinaId, disciplinaId)));
+  }
+}
+
 async function getTurmaWithDisciplinas(id: number, escolaId: string) {
   const turma = await db
     .select()
@@ -41,6 +66,8 @@ async function getTurmaWithDisciplinas(id: number, escolaId: string) {
         nome: disc?.nome ?? "",
         cargaHorariaSemanal: l.cargaHorariaSemanalOverride ?? disc?.cargaSemanal ?? 0,
         origemMatriz: l.cargaHorariaSemanalOverride !== null,
+        maxAulasConsecutivasDia: l.maxAulasConsecutivasDia,
+        grupoCompartilhadoId: l.grupoCompartilhadoId,
       };
     }),
   };
@@ -72,8 +99,9 @@ router.post("/", async (req, res) => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { disciplinaIds, ...data } = parsed.data as {
-    nome: string; serie: string; turno: string; anoLetivo: number; disciplinaIds?: number[];
+  const { disciplinaIds, disciplinasConfig, ...data } = parsed.data as {
+    nome: string; serie: string; turno: string; anoLetivo: number;
+    disciplinaIds?: number[]; disciplinasConfig?: Record<string, DisciplinaConfigTurma>;
   };
   const [turma] = await db
     .insert(turmasTable)
@@ -84,6 +112,7 @@ router.post("/", async (req, res) => {
       disciplinaIds.map((did) => ({ turmaId: turma.id, disciplinaId: did }))
     );
   }
+  await aplicarDisciplinasConfig(turma.id, disciplinasConfig);
   const result = await getTurmaWithDisciplinas(turma.id, escolaId);
   await registrarAuditoria({
     req, escolaId, entidade: "turmas", entidadeId: turma.id,
@@ -119,8 +148,9 @@ router.patch("/:id", async (req, res) => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { disciplinaIds, ...data } = parsed.data as {
-    nome?: string; serie?: string; turno?: string; anoLetivo?: number; disciplinaIds?: number[];
+  const { disciplinaIds, disciplinasConfig, ...data } = parsed.data as {
+    nome?: string; serie?: string; turno?: string; anoLetivo?: number;
+    disciplinaIds?: number[]; disciplinasConfig?: Record<string, DisciplinaConfigTurma>;
   };
   const id = paramsParsed.data.id;
   const anterior = await getTurmaWithDisciplinas(id, escolaId);
@@ -146,6 +176,9 @@ router.patch("/:id", async (req, res) => {
     // conjunto de disciplinas que não reflete mais a realidade da turma.
     await db.update(turmasTable).set({ matrizCurricularId: null }).where(eq(turmasTable.id, id));
   }
+  // disciplinasConfig pode vir sozinho (sem disciplinaIds) — ex. só
+  // ajustar o Max_Aulas_Dia de uma disciplina que a turma já tem.
+  await aplicarDisciplinasConfig(id, disciplinasConfig);
   const result = await getTurmaWithDisciplinas(id, escolaId);
   if (!result) {
     res.status(404).json({ error: "Turma não encontrada" });

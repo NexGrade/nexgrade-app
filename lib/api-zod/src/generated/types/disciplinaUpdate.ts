@@ -10,4 +10,8 @@ export interface DisciplinaUpdate {
   nome?: string;
   cargaSemanal?: number;
   cor?: string;
+  /** @nullable */
+  codigoSae?: string | null;
+  /** @nullable */
+  tipoSalaExigido?: string | null;
 }

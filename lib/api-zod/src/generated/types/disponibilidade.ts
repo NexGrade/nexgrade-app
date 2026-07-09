@@ -5,6 +5,7 @@
  * GradeEscolar — Sistema Completo de Gestão de Horários Escolares
  * OpenAPI spec version: 0.2.0
  */
+import type { DisponibilidadeTurno } from './disponibilidadeTurno';
 
 export interface Disponibilidade {
   id: number;
@@ -19,4 +20,11 @@ export interface Disponibilidade {
   disponivel: boolean;
   /** @nullable */
   motivo?: string | null;
+  /**
+     * Turno deste bloqueio — necessário para validar concentração de hora-atividade no mesmo turno das aulas (Resolução SEED n.º 7.200/2025, art. 11, §4º).
+     * @nullable
+     */
+  turno?: DisponibilidadeTurno;
+  /** true quando este bloqueio representa Hora-Atividade obrigatória, não outro tipo de indisponibilidade. */
+  horaAtividadeObrigatoria?: boolean;
 }

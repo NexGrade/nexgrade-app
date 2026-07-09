@@ -10,10 +10,6 @@ export const professoresTable = pgTable("professores", {
   cpf: text("cpf"),
   matricula: text("matricula"),
   telefone: text("telefone"),
-  // [NOVO] Confirmado nas grades reais: célula da grelha exige nome curto
-  // (ex.: "ANDERSON", "IVETE"). Nullable: cai no nome completo enquanto
-  // não preenchido.
-  abreviatura: text("abreviatura"),
   cargaHorariaTotal: integer("carga_horaria_total").notNull().default(20),
   ativo: boolean("ativo").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

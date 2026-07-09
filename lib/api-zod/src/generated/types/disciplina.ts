@@ -11,5 +11,15 @@ export interface Disciplina {
   nome: string;
   cargaSemanal: number;
   cor: string;
+  /**
+     * Código SAE oficial (SEED-PR), quando conhecido.
+     * @nullable
+     */
+  codigoSae?: string | null;
+  /**
+     * Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).
+     * @nullable
+     */
+  tipoSalaExigido?: string | null;
   createdAt: string;
 }

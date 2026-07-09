@@ -11,4 +11,14 @@ export type TurmaDisciplinasComCargaItem = {
   nome: string;
   cargaHorariaSemanal: number;
   origemMatriz: boolean;
+  /**
+     * Limite de aulas geminadas desta disciplina, nesta turma, por dia. Nulo = usa o padrão geral (configuracoes/seed_pr.max_aulas_geminadas_padrao).
+     * @nullable
+     */
+  maxAulasConsecutivasDia?: number | null;
+  /**
+     * Quando preenchido, agrupa esta disciplina com a mesma linha de outras turmas para horário simultâneo (ex. Itinerário Formativo cursado junto).
+     * @nullable
+     */
+  grupoCompartilhadoId?: string | null;
 };

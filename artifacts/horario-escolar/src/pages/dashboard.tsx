@@ -40,7 +40,7 @@ export default function Dashboard() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Visão Geral</h1>
-          <p className="text-muted-foreground mt-1">Bem-vindo(a) ao GradeEscolar — sistema de gestão de horários.</p>
+          <p className="text-muted-foreground mt-1">Bem-vindo(a) ao NexGrade — sistema de gestão de horários.</p>
         </div>
         <Link href="/horarios">
           <Button>Ver Grade Horária</Button>

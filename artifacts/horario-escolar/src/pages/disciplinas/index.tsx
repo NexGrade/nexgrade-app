@@ -30,11 +30,14 @@ import {
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const disciplinaSchema = z.object({
   nome: z.string().min(2, "O nome deve ter pelo menos 2 caracteres"),
   cargaSemanal: z.coerce.number().min(1).max(10),
   cor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Cor inválida (ex: #FF0000)"),
+  codigoSae: z.string().optional(),
+  tipoSalaExigido: z.string().optional(),
 });
 
 type DisciplinaFormValues = z.infer<typeof disciplinaSchema>;
@@ -56,12 +59,14 @@ export default function DisciplinasList() {
       nome: "",
       cargaSemanal: 2,
       cor: "#3b82f6",
+      codigoSae: "",
+      tipoSalaExigido: "",
     },
   });
 
   const handleOpenCreate = () => {
     setEditingId(null);
-    form.reset({ nome: "", cargaSemanal: 2, cor: "#3b82f6" });
+    form.reset({ nome: "", cargaSemanal: 2, cor: "#3b82f6", codigoSae: "", tipoSalaExigido: "" });
     setIsDialogOpen(true);
   };
 
@@ -71,13 +76,20 @@ export default function DisciplinasList() {
       nome: disciplina.nome,
       cargaSemanal: disciplina.cargaSemanal,
       cor: disciplina.cor,
+      codigoSae: disciplina.codigoSae ?? "",
+      tipoSalaExigido: disciplina.tipoSalaExigido ?? "",
     });
     setIsDialogOpen(true);
   };
 
   const onSubmit = (data: DisciplinaFormValues) => {
+    const payload = {
+      ...data,
+      codigoSae: data.codigoSae?.trim() || undefined,
+      tipoSalaExigido: data.tipoSalaExigido?.trim() || undefined,
+    };
     if (editingId) {
-      updateDisciplina.mutate({ id: editingId, data }, {
+      updateDisciplina.mutate({ id: editingId, data: payload }, {
         onSuccess: () => {
           toast({ title: "Disciplina atualizada com sucesso!" });
           queryClient.invalidateQueries({ queryKey: getListDisciplinasQueryKey() });
@@ -88,7 +100,7 @@ export default function DisciplinasList() {
         }
       });
     } else {
-      createDisciplina.mutate({ data }, {
+      createDisciplina.mutate({ data: payload }, {
         onSuccess: () => {
           toast({ title: "Disciplina criada com sucesso!" });
           queryClient.invalidateQueries({ queryKey: getListDisciplinasQueryKey() });
@@ -184,6 +196,43 @@ export default function DisciplinasList() {
                   />
                 </div>
                 
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="codigoSae"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Código SAE (opcional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: 2700" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="tipoSalaExigido"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Sala exigida (opcional)</FormLabel>
+                        <Select value={field.value || "nenhuma"} onValueChange={(v) => field.onChange(v === "nenhuma" ? "" : v)}>
+                          <FormControl>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="nenhuma">Nenhuma (sala comum)</SelectItem>
+                            <SelectItem value="laboratorio">Laboratório de Informática</SelectItem>
+                            <SelectItem value="quadra">Quadra Poliesportiva</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 <div className="flex justify-end gap-2 pt-4">
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
                   <Button type="submit" disabled={createDisciplina.isPending || updateDisciplina.isPending}>
@@ -216,6 +265,11 @@ export default function DisciplinasList() {
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: disciplina.cor }} />
                     <h3 className="font-semibold text-lg">{disciplina.nome}</h3>
                   </div>
+                  {disciplina.codigoSae && (
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#1565C0]/10 text-[#1565C0]">
+                      SAE {disciplina.codigoSae}
+                    </span>
+                  )}
                 </div>
                 
                 <div className="mt-auto flex items-center justify-between">

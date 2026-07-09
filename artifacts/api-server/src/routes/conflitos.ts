@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { horariosTable, professoresTable, disciplinasTable, turmasTable, turmaDisciplinasTable, professorDisciplinasTable, disponibilidadeTable } from "@workspace/db";
+import { horariosTable, professoresTable, disciplinasTable, turmasTable, turmaDisciplinasTable, professorDisciplinasTable, disponibilidadeTable, salasTable, configuracoesTable } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
 
@@ -22,14 +22,29 @@ type ConflitoComSugestao = {
 };
 
 async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
-  const [slots, professores, disciplinas, turmas, turmaDiscsTodos, profDiscs] = await Promise.all([
+  const [slots, professores, disciplinas, turmas, turmaDiscsTodos, profDiscs, salas, configs] = await Promise.all([
     db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
     db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
     db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
     db.select().from(turmaDisciplinasTable),
     db.select().from(professorDisciplinasTable),
+    db.select().from(salasTable).where(eq(salasTable.escolaId, escolaId)),
+    db.select().from(configuracoesTable).where(eq(configuracoesTable.escolaId, escolaId)),
   ]);
+
+  // Parâmetros SEED-PR: usa o valor salvo em `configuracoes` se existir,
+  // senão cai no default confirmado pela Resolução SEED n.º 7.200/2025
+  // (ver scripts/src/seed-config-seed-pr.ts para a fonte de cada um).
+  function configValor<T>(chave: string, padrao: T): T {
+    const cfg = configs.find((c) => c.chave === chave);
+    return (cfg?.valor as T) ?? padrao;
+  }
+  const tetoAulasTurno = configValor("seed_pr.teto_aulas_turno", { noturno: 19, diurno: 24 });
+  const horaAtividadeMesmoTurnoAte = configValor("seed_pr.hora_atividade_mesmo_turno_ate", 19);
+  const maxAulasGeminadasPadrao = configValor("seed_pr.max_aulas_geminadas_padrao", 2);
+  const padrao20h = configValor("seed_pr.padrao_20h", { aulasRegencia: 15, horasAtividade: 9 });
+  const padrao40h = configValor("seed_pr.padrao_40h", { aulasRegencia: 30, horasAtividade: 18 });
 
   // turma_disciplinas não tem coluna própria de escola — é escopada via
   // turmaId, filtrado aqui pela lista de turmas já restrita à escola atual.
@@ -180,6 +195,163 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     }
   });
 
+  // 7. RNF-SEED-02: disciplina exige um tipo de sala (ex. laboratório de
+  // informática, quadra) mas a aula foi alocada em sala de outro tipo
+  // (ou sem sala definida).
+  const salaPorNome = new Map(salas.map((s) => [s.nome, s]));
+  slots.forEach((s) => {
+    const disc = disciplinas.find((d) => d.id === s.disciplinaId);
+    if (!disc?.tipoSalaExigido) return;
+    const salaUsada = s.sala ? salaPorNome.get(s.sala) : undefined;
+    if (!salaUsada || salaUsada.tipo !== disc.tipoSalaExigido) {
+      const turma = turmas.find((t) => t.id === s.turmaId);
+      conflitos.push({
+        tipo: "sala_incompativel",
+        descricao: `"${disc.nome}" exige sala do tipo "${disc.tipoSalaExigido}", mas a turma ${turma?.nome ?? s.turmaId} está com "${s.sala ?? "sem sala definida"}"`,
+        gravidade: "alto",
+        turmaId: s.turmaId,
+        professorId: s.professorId,
+        diaSemana: s.diaSemana,
+        numeroAula: s.numeroAula,
+      });
+    }
+  });
+
+  // 8. RNF-SEED-02: duas turmas usando a mesma sala restrita (tipo ≠
+  // sala_aula comum) no mesmo dia/aula — ex. laboratório ou quadra
+  // ocupados por mais de uma turma ao mesmo tempo.
+  const slotSalaMap: Record<string, number[]> = {};
+  slots.forEach((s) => {
+    if (!s.sala) return;
+    const sala = salaPorNome.get(s.sala);
+    if (!sala || sala.tipo === "sala_aula") return; // salas comuns podem repetir nome sem ser o mesmo espaço físico exclusivo
+    const key = `${s.sala}-${s.diaSemana}-${s.numeroAula}`;
+    if (!slotSalaMap[key]) slotSalaMap[key] = [];
+    slotSalaMap[key]!.push(s.id);
+  });
+  Object.entries(slotSalaMap).forEach(([key, ids]) => {
+    if (ids.length > 1) {
+      const [salaNome, dia, aula] = key.split("-");
+      conflitos.push({
+        tipo: "sala_restrita_duplicada",
+        descricao: `Sala "${salaNome}" está reservada para ${ids.length} turmas ao mesmo tempo no ${["Seg", "Ter", "Qua", "Qui", "Sex"][Number(dia)]}, aula ${aula}`,
+        gravidade: "critico",
+        turmaId: null,
+        professorId: null,
+        diaSemana: Number(dia),
+        numeroAula: Number(aula),
+      });
+    }
+  });
+
+  // 9. RNF-SEED-03: mais aulas consecutivas da mesma disciplina, na
+  // mesma turma, no mesmo dia, do que o limite configurado (Max_Aulas_Dia).
+  const consecutivasPorTurmaDiscDia: Record<string, number[]> = {};
+  slots.forEach((s) => {
+    const key = `${s.turmaId}-${s.disciplinaId}-${s.diaSemana}`;
+    if (!consecutivasPorTurmaDiscDia[key]) consecutivasPorTurmaDiscDia[key] = [];
+    consecutivasPorTurmaDiscDia[key]!.push(s.numeroAula);
+  });
+  Object.entries(consecutivasPorTurmaDiscDia).forEach(([key, aulas]) => {
+    const [turmaId, disciplinaId, dia] = key.split("-").map(Number);
+    const td = turmaDiscs.find((t) => t.turmaId === turmaId && t.disciplinaId === disciplinaId);
+    const limite = td?.maxAulasConsecutivasDia ?? maxAulasGeminadasPadrao;
+    // conta a maior sequência de números consecutivos em `aulas`
+    const ordenado = [...aulas].sort((a, b) => a - b);
+    let maiorSequencia = 1;
+    let atual = 1;
+    for (let i = 1; i < ordenado.length; i++) {
+      atual = ordenado[i] === ordenado[i - 1]! + 1 ? atual + 1 : 1;
+      maiorSequencia = Math.max(maiorSequencia, atual);
+    }
+    if (maiorSequencia > limite) {
+      const turma = turmas.find((t) => t.id === turmaId);
+      const disc = disciplinas.find((d) => d.id === disciplinaId);
+      conflitos.push({
+        tipo: "aulas_geminadas_excedidas",
+        descricao: `Turma ${turma?.nome ?? turmaId}: "${disc?.nome ?? disciplinaId}" tem ${maiorSequencia} aulas seguidas no ${["Seg", "Ter", "Qua", "Qui", "Sex"][dia ?? 0]} (limite: ${limite})`,
+        gravidade: "medio",
+        turmaId,
+        professorId: null,
+        diaSemana: dia,
+        numeroAula: null,
+      });
+    }
+  });
+
+  // 10. RNF-SEED-01: professor ultrapassa o teto semanal de aulas por
+  // turno (Resolução SEED n.º 7.200/2025, art. 11, §3º — 19 no turno da
+  // noite, 24 nos demais).
+  const aulasPorProfTurno: Record<string, number> = {};
+  slots.forEach((s) => {
+    const turma = turmas.find((t) => t.id === s.turmaId);
+    if (!turma) return;
+    const key = `${s.professorId}-${turma.turno}`;
+    aulasPorProfTurno[key] = (aulasPorProfTurno[key] ?? 0) + 1;
+  });
+  Object.entries(aulasPorProfTurno).forEach(([key, total]) => {
+    const [profId, turno] = key.split("-", 2) as [string, string];
+    const teto = turno === "noturno" ? tetoAulasTurno.noturno : tetoAulasTurno.diurno;
+    if (total > teto) {
+      const prof = professores.find((p) => p.id === Number(profId));
+      conflitos.push({
+        tipo: "teto_aulas_turno_excedido",
+        descricao: `Prof. ${prof?.nome ?? profId} tem ${total} aulas no turno ${turno} (teto SEED-PR: ${teto})`,
+        gravidade: "critico",
+        turmaId: null,
+        professorId: Number(profId),
+        diaSemana: null,
+        numeroAula: null,
+      });
+    }
+  });
+
+  // 11. RNF-SEED-01: professor não tem horas-atividade suficientes
+  // marcadas na disponibilidade para o padrão dele (20h → 9 unidades de
+  // 50min; 40h → 18 unidades), ou tem HA fora do turno em que dá aula
+  // apesar de ter até 19 aulas nesse turno (art. 11, §4º).
+  professores.forEach((prof) => {
+    const exigido = prof.cargaHorariaTotal >= 40 ? padrao40h.horasAtividade : padrao20h.horasAtividade;
+    const haMarcadas = disponibilidades.filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria).length;
+    if (haMarcadas < exigido) {
+      conflitos.push({
+        tipo: "hora_atividade_insuficiente",
+        descricao: `Prof. ${prof.nome} (padrão ${prof.cargaHorariaTotal}h) tem apenas ${haMarcadas}/${exigido} horas-atividade marcadas na disponibilidade`,
+        gravidade: "medio",
+        turmaId: null,
+        professorId: prof.id,
+        diaSemana: null,
+        numeroAula: null,
+      });
+    }
+
+    // Turno(s) em que o professor dá aula, com contagem
+    const turnosComAula: Record<string, number> = {};
+    slots.filter((s) => s.professorId === prof.id).forEach((s) => {
+      const turma = turmas.find((t) => t.id === s.turmaId);
+      if (!turma) return;
+      turnosComAula[turma.turno] = (turnosComAula[turma.turno] ?? 0) + 1;
+    });
+    const turnosComHA = new Set(
+      disponibilidades
+        .filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && d.turno)
+        .map((d) => d.turno as string),
+    );
+    Object.entries(turnosComAula).forEach(([turno, total]) => {
+      if (total <= horaAtividadeMesmoTurnoAte && !turnosComHA.has(turno)) {
+        conflitos.push({
+          tipo: "hora_atividade_turno_incorreto",
+          descricao: `Prof. ${prof.nome} tem ${total} aulas no turno ${turno} (≤ ${horaAtividadeMesmoTurnoAte}) mas nenhuma hora-atividade obrigatória marcada nesse mesmo turno — a Resolução SEED n.º 7.200/2025 (art. 11, §4º) exige que a HA fique concentrada no turno das aulas`,
+          gravidade: "medio",
+          turmaId: null,
+          professorId: prof.id,
+          diaSemana: null,
+          numeroAula: null,
+        });
+      }
+    });
+  });
+
   return conflitos;
 }
 
@@ -220,6 +392,38 @@ function gerarSugestoes(conflito: Conflito): string[] {
         "Mova este slot para um horário em que o professor esteja disponível",
         "Revise a disponibilidade cadastrada do professor — pode estar desatualizada",
         "Regenere o horário desta turma para que o algoritmo respeite a disponibilidade atual",
+      ];
+    case "sala_incompativel":
+      return [
+        "Edite este horário e selecione uma sala do tipo exigido pela disciplina",
+        "Verifique se a escola tem sala suficiente desse tipo cadastrada em 'Salas'",
+        "Se a disciplina não precisa mais desse vínculo, remova o 'Tipo de sala exigido' no cadastro dela",
+      ];
+    case "sala_restrita_duplicada":
+      return [
+        "Mova uma das turmas para outro horário — o espaço é de uso exclusivo por vez",
+        "Verifique se existe mais de uma sala desse tipo (ex. 2 laboratórios) e cadastre a que falta",
+      ];
+    case "aulas_geminadas_excedidas":
+      return [
+        "Redistribua as aulas dessa disciplina/turma para não ultrapassar o limite no mesmo dia",
+        "Se for intencional (ex. aula prática longa), ajuste o limite em 'Turmas' > disciplina > Max. aulas consecutivas/dia",
+      ];
+    case "teto_aulas_turno_excedido":
+      return [
+        "Redistribua parte da carga do professor para outro turno",
+        "Confirme o padrão (20h/40h) cadastrado do professor — o teto muda conforme o padrão e o turno",
+        "Considere dividir a disciplina entre dois professores habilitados",
+      ];
+    case "hora_atividade_insuficiente":
+      return [
+        "Cadastre blocos de indisponibilidade marcados como 'Hora-Atividade obrigatória' até completar o total exigido pelo padrão do professor",
+        "Confirme se o padrão (20h/40h) do professor está correto no cadastro",
+      ];
+    case "hora_atividade_turno_incorreto":
+      return [
+        "Marque a hora-atividade do professor no mesmo turno em que ele dá aula, informando o campo 'Turno' na disponibilidade",
+        "Revise se o professor tem aulas em mais de um turno — nesse caso a HA pode legitimamente ficar dividida",
       ];
     default:
       return ["Revise manualmente a grade desta turma/professor"];

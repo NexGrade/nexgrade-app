@@ -13,6 +13,3 @@ export * from "./escolas";
 export * from "./disponibilidade";
 export * from "./ai_conversas";
 export * from "./cursos";
-export * from "./enums";
-export * from "./horarios_slots";
-export * from "./aulas_fixas";

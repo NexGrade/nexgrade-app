@@ -25,6 +25,8 @@ const DisponibilidadeInput = z.object({
   horarioSlot: z.number().int().min(1),
   disponivel: z.boolean().default(true),
   motivo: z.string().optional(),
+  turno: z.enum(["matutino", "vespertino", "noturno"]).optional(),
+  horaAtividadeObrigatoria: z.boolean().default(false),
 });
 
 // RF-DISP-02: edição em lote — substitui todas as marcações de
@@ -38,6 +40,8 @@ const DisponibilidadeLoteInput = z.object({
       horarioSlot: z.number().int().min(1),
       disponivel: z.boolean().default(true),
       motivo: z.string().optional(),
+      turno: z.enum(["matutino", "vespertino", "noturno"]).optional(),
+      horaAtividadeObrigatoria: z.boolean().default(false),
     }),
   ),
 });
@@ -98,7 +102,12 @@ router.post("/", async (req, res) => {
 
   if (existente) {
     const [atualizado] = await db.update(disponibilidadeTable)
-      .set({ disponivel: parsed.data.disponivel, motivo: parsed.data.motivo })
+      .set({
+        disponivel: parsed.data.disponivel,
+        motivo: parsed.data.motivo,
+        turno: parsed.data.turno,
+        horaAtividadeObrigatoria: parsed.data.horaAtividadeObrigatoria,
+      })
       .where(eq(disponibilidadeTable.id, existente.id))
       .returning();
     res.json(atualizado);
@@ -135,7 +144,12 @@ router.post("/lote", async (req, res) => {
 
     if (existente) {
       const [atualizado] = await db.update(disponibilidadeTable)
-        .set({ disponivel: item.disponivel, motivo: item.motivo })
+        .set({
+          disponivel: item.disponivel,
+          motivo: item.motivo,
+          turno: item.turno,
+          horaAtividadeObrigatoria: item.horaAtividadeObrigatoria,
+        })
         .where(eq(disponibilidadeTable.id, existente.id))
         .returning();
       resultado.push(atualizado);

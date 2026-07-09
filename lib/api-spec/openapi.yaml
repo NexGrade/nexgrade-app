@@ -1430,6 +1430,8 @@ components:
         nome: { type: string }
         cargaSemanal: { type: integer }
         cor: { type: string }
+        codigoSae: { type: ["string", "null"], description: "Código SAE oficial (SEED-PR), quando conhecido." }
+        tipoSalaExigido: { type: ["string", "null"], description: "Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra)." }
         createdAt: { type: string }
 
     DisciplinaInput:
@@ -1439,6 +1441,8 @@ components:
         nome: { type: string, minLength: 2 }
         cargaSemanal: { type: integer, minimum: 1, maximum: 10 }
         cor: { type: string }
+        codigoSae: { type: string }
+        tipoSalaExigido: { type: string }
 
     DisciplinaUpdate:
       type: object
@@ -1446,6 +1450,8 @@ components:
         nome: { type: string }
         cargaSemanal: { type: integer }
         cor: { type: string }
+        codigoSae: { type: ["string", "null"] }
+        tipoSalaExigido: { type: ["string", "null"] }
 
     Turma:
       type: object
@@ -1472,6 +1478,8 @@ components:
               nome: { type: string }
               cargaHorariaSemanal: { type: integer }
               origemMatriz: { type: boolean }
+              maxAulasConsecutivasDia: { type: ["integer", "null"], description: "Limite de aulas geminadas desta disciplina, nesta turma, por dia. Nulo = usa o padrão geral (configuracoes/seed_pr.max_aulas_geminadas_padrao)." }
+              grupoCompartilhadoId: { type: ["string", "null"], description: "Quando preenchido, agrupa esta disciplina com a mesma linha de outras turmas para horário simultâneo (ex. Itinerário Formativo cursado junto)." }
         createdAt: { type: string }
 
     AplicarMatrizInput:
@@ -1479,6 +1487,12 @@ components:
       required: [matrizCurricularId]
       properties:
         matrizCurricularId: { type: integer }
+
+    DisciplinaConfigTurma:
+      type: object
+      properties:
+        maxAulasConsecutivasDia: { type: integer, minimum: 1 }
+        grupoCompartilhadoId: { type: string }
 
     TurmaInput:
       type: object
@@ -1492,6 +1506,11 @@ components:
         disciplinaIds:
           type: array
           items: { type: integer }
+        disciplinasConfig:
+          type: object
+          description: "Configuração extra por disciplina — chave é o disciplinaId (como string). Só tem efeito para disciplinas presentes em disciplinaIds."
+          additionalProperties:
+            $ref: "#/components/schemas/DisciplinaConfigTurma"
 
     TurmaUpdate:
       type: object
@@ -1504,6 +1523,11 @@ components:
         disciplinaIds:
           type: array
           items: { type: integer }
+        disciplinasConfig:
+          type: object
+          description: "Configuração extra por disciplina — chave é o disciplinaId (como string). Pode ser enviado mesmo sem disciplinaIds, para só atualizar a configuração de vínculos já existentes."
+          additionalProperties:
+            $ref: "#/components/schemas/DisciplinaConfigTurma"
 
     HorarioSlot:
       type: object
@@ -1624,6 +1648,8 @@ components:
         horarioSlot: { type: integer, minimum: 1 }
         disponivel: { type: boolean }
         motivo: { type: ["string", "null"] }
+        turno: { type: ["string", "null"], enum: [matutino, vespertino, noturno, null], description: "Turno deste bloqueio — necessário para validar concentração de hora-atividade no mesmo turno das aulas (Resolução SEED n.º 7.200/2025, art. 11, §4º)." }
+        horaAtividadeObrigatoria: { type: boolean, default: false, description: "true quando este bloqueio representa Hora-Atividade obrigatória, não outro tipo de indisponibilidade." }
 
     DisponibilidadeInput:
       type: object
@@ -1634,6 +1660,8 @@ components:
         horarioSlot: { type: integer, minimum: 1 }
         disponivel: { type: boolean, default: true }
         motivo: { type: string }
+        turno: { type: string, enum: [matutino, vespertino, noturno] }
+        horaAtividadeObrigatoria: { type: boolean, default: false }
 
     DisponibilidadeLoteInput:
       type: object
@@ -1650,6 +1678,8 @@ components:
               horarioSlot: { type: integer, minimum: 1 }
               disponivel: { type: boolean, default: true }
               motivo: { type: string }
+              turno: { type: string, enum: [matutino, vespertino, noturno] }
+              horaAtividadeObrigatoria: { type: boolean, default: false }
 
     Curso:
       type: object

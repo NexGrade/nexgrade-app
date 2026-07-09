@@ -36,7 +36,7 @@ router.post("/", async (req, res) => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const data = parsed.data as { nome: string; cargaSemanal: number; cor?: string };
+  const data = parsed.data as { nome: string; cargaSemanal: number; cor?: string; codigoSae?: string; tipoSalaExigido?: string };
   const count = await db
     .select()
     .from(disciplinasTable)
@@ -45,7 +45,14 @@ router.post("/", async (req, res) => {
   const cor = data.cor ?? CORES[count % CORES.length];
   const [disciplina] = await db
     .insert(disciplinasTable)
-    .values({ escolaId, nome: data.nome, cargaSemanal: data.cargaSemanal, cor })
+    .values({
+      escolaId,
+      nome: data.nome,
+      cargaSemanal: data.cargaSemanal,
+      cor,
+      codigoSae: data.codigoSae,
+      tipoSalaExigido: data.tipoSalaExigido,
+    })
     .returning();
   await registrarAuditoria({
     req, escolaId, entidade: "disciplinas", entidadeId: disciplina.id,

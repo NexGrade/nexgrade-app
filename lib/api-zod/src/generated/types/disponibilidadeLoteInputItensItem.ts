@@ -5,6 +5,7 @@
  * GradeEscolar — Sistema Completo de Gestão de Horários Escolares
  * OpenAPI spec version: 0.2.0
  */
+import type { DisponibilidadeLoteInputItensItemTurno } from './disponibilidadeLoteInputItensItemTurno';
 
 export type DisponibilidadeLoteInputItensItem = {
   /**
@@ -16,4 +17,6 @@ export type DisponibilidadeLoteInputItensItem = {
   horarioSlot: number;
   disponivel?: boolean;
   motivo?: string;
+  turno?: DisponibilidadeLoteInputItensItemTurno;
+  horaAtividadeObrigatoria?: boolean;
 };

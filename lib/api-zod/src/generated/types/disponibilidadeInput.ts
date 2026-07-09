@@ -5,6 +5,7 @@
  * GradeEscolar — Sistema Completo de Gestão de Horários Escolares
  * OpenAPI spec version: 0.2.0
  */
+import type { DisponibilidadeInputTurno } from './disponibilidadeInputTurno';
 
 export interface DisponibilidadeInput {
   professorId: number;
@@ -17,4 +18,6 @@ export interface DisponibilidadeInput {
   horarioSlot: number;
   disponivel?: boolean;
   motivo?: string;
+  turno?: DisponibilidadeInputTurno;
+  horaAtividadeObrigatoria?: boolean;
 }

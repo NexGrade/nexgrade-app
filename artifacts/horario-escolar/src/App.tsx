@@ -1,9 +1,6 @@
 import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ClerkProvider, SignIn, SignUp, Show } from "@clerk/react";
-import { useAuth } from "@clerk/react";
-import { useEffect } from "react";
-import { setBaseUrl, setAuthTokenGetter } from "@workspace/api-client-react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
 import { useGetEscolaAtual, getGetEscolaAtualQueryKey, useMasterWhoami, getMasterWhoamiQueryKey } from "@workspace/api-client-react";
@@ -49,16 +46,6 @@ const clerkPubKey = publishableKeyFromHost(
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-function ApiConfig() {
-  const { getToken } = useAuth();
-
-  useEffect(() => {
-    setBaseUrl("https://nexgrade-app.onrender.com");
-    setAuthTokenGetter(() => getToken());
-  }, [getToken]);
-
-  return null;
-}
 function stripBase(path: string): string {
   return basePath && path.startsWith(basePath)
     ? path.slice(basePath.length) || "/"
@@ -311,7 +298,6 @@ function App() {
       routerReplace={(to) => window.history.replaceState(null, "", to)}
       appearance={clerkAppearance}
     >
-      <ApiConfig />
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <WouterRouter base={basePath}>

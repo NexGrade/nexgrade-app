@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import {
-  horariosTable, professoresTable, disciplinasTable, turmasTable,
+  horariosTable, professoresTable, disciplinasTable, turmasTable, disponibilidadeTable,
 } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
+import { gerarPdfGrade, type PaginaGrade } from "../lib/pdf-grade";
 
 const router = Router();
 
@@ -155,6 +156,99 @@ router.get("/relatorio-seed", async (req, res) => {
   };
 
   res.json(relatorio);
+});
+
+// ------------------------------------------------------------------
+// PDF — Visão por Turma: uma página por turma, grade dia x aula com
+// disciplina + professor em cada célula.
+// ------------------------------------------------------------------
+router.get("/grade-pdf/turma", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const turmaIdFiltro = req.query.turmaId ? Number(req.query.turmaId) : undefined;
+
+  const [slots, professores, disciplinas, turmasTodas] = await Promise.all([
+    db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
+    db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
+    db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
+    db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
+  ]);
+
+  const turmas = turmaIdFiltro ? turmasTodas.filter((t) => t.id === turmaIdFiltro) : turmasTodas;
+
+  const paginas: PaginaGrade[] = turmas.map((turma) => ({
+    titulo: `Grade Horária — Turma ${turma.nome}`,
+    subtitulo: `${turma.serie} · ${turma.turno}`,
+    slots: slots
+      .filter((s) => s.turmaId === turma.id)
+      .map((s) => ({
+        diaSemana: s.diaSemana,
+        numeroAula: s.numeroAula,
+        linha1: disciplinas.find((d) => d.id === s.disciplinaId)?.nome ?? "?",
+        linha2: professores.find((p) => p.id === s.professorId)?.nome,
+      })),
+  }));
+
+  const pdfBytes = await gerarPdfGrade(paginas);
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", 'attachment; filename="grade_por_turma.pdf"');
+  res.send(Buffer.from(pdfBytes));
+});
+
+// ------------------------------------------------------------------
+// PDF — Visão por Professor: uma página por professor, grade dia x
+// aula com turma + disciplina em cada célula. Blocos marcados como
+// Hora-Atividade obrigatória (ver RNF-SEED-01) aparecem destacados,
+// para a equipe conferir concentração no turno certo antes de
+// homologar (Resolução SEED n.º 7.200/2025, art. 11, §4º).
+// ------------------------------------------------------------------
+router.get("/grade-pdf/professor", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const professorIdFiltro = req.query.professorId ? Number(req.query.professorId) : undefined;
+
+  const [slots, professoresTodos, disciplinas, turmas, disponibilidades] = await Promise.all([
+    db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
+    db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
+    db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
+    db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
+    db.select().from(disponibilidadeTable),
+  ]);
+
+  const professores = professorIdFiltro ? professoresTodos.filter((p) => p.id === professorIdFiltro) : professoresTodos;
+
+  const paginas: PaginaGrade[] = professores.map((prof) => {
+    const aulasDoProf: PaginaGrade["slots"] = slots
+      .filter((s) => s.professorId === prof.id)
+      .map((s) => ({
+        diaSemana: s.diaSemana,
+        numeroAula: s.numeroAula,
+        linha1: turmas.find((t) => t.id === s.turmaId)?.nome ?? "?",
+        linha2: disciplinas.find((d) => d.id === s.disciplinaId)?.nome,
+      }));
+
+    // Hora-Atividade obrigatória marcada na disponibilidade deste
+    // professor entra como célula destacada, mesmo sem aula.
+    const haDoProf: PaginaGrade["slots"] = disponibilidades
+      .filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria)
+      .filter((d) => !aulasDoProf.some((a) => a.diaSemana === d.diaSemana && a.numeroAula === d.horarioSlot))
+      .map((d) => ({
+        diaSemana: d.diaSemana,
+        numeroAula: d.horarioSlot,
+        linha1: "Hora-Atividade",
+        linha2: d.turno ?? undefined,
+        destacado: true,
+      }));
+
+    return {
+      titulo: `Grade Horária — Prof. ${prof.nome}`,
+      subtitulo: `Padrão ${prof.cargaHorariaTotal}h`,
+      slots: [...aulasDoProf, ...haDoProf],
+    };
+  });
+
+  const pdfBytes = await gerarPdfGrade(paginas);
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", 'attachment; filename="grade_por_professor.pdf"');
+  res.send(Buffer.from(pdfBytes));
 });
 
 export default router;

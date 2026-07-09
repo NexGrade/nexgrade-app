@@ -12,10 +12,12 @@ export const disciplinasTable = pgTable("disciplinas", {
   // Estado do Paraná). Opcional: nem toda escola/disciplina tem um
   // vínculo já mapeado. RF-DISC-01/02.
   codigoSae: text("codigo_sae"),
-  // [NOVO] Confirmado nas grades reais: célula da grelha exige nome curto
-  // (ex.: "ED.FIS", "L.POR", "REDLEI"). Nullable: cai no nome completo
-  // enquanto não preenchido.
-  abreviatura: text("abreviatura"),
+  // RNF-SEED-02: quando preenchido, toda aula dessa disciplina deve
+  // acontecer numa sala com esse mesmo `tipo` (ver salasTable.tipo —
+  // ex. "laboratorio", "quadra"). Nulo = sem restrição de espaço.
+  // Usado para travar automaticamente Pensamento Computacional/cursos
+  // técnicos no laboratório e Educação Física na quadra.
+  tipoSalaExigido: text("tipo_sala_exigido"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

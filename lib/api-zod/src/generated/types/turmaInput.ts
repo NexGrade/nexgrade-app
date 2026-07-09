@@ -5,6 +5,7 @@
  * GradeEscolar — Sistema Completo de Gestão de Horários Escolares
  * OpenAPI spec version: 0.2.0
  */
+import type { TurmaInputDisciplinasConfig } from './turmaInputDisciplinasConfig';
 import type { TurmaInputTurno } from './turmaInputTurno';
 
 export interface TurmaInput {
@@ -15,4 +16,6 @@ export interface TurmaInput {
   anoLetivo: number;
   modalidade?: string;
   disciplinaIds?: number[];
+  /** Configuração extra por disciplina — chave é o disciplinaId (como string). Só tem efeito para disciplinas presentes em disciplinaIds. */
+  disciplinasConfig?: TurmaInputDisciplinasConfig;
 }

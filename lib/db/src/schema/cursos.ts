@@ -1,18 +1,16 @@
 import { pgTable, text, serial, timestamp, integer, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
-import { composicaoCurricularEnum } from "./enums";
 
 // RF-CUR-01 a RF-CUR-05: Curso, Matriz Curricular e Itens da Matriz.
 //
-// [ATUALIZADO] categoriaCurricular agora usa o enum oficial do SERE-PR
-// (composicaoCurricularEnum, ver enums.ts), confirmado via CODIGOS_SEED.pdf.
-// A nomenclatura própria do NexGrade usada anteriormente (base_nacional_comum,
-// parte_diversificada, etc.) foi substituída — ver migration-notes.md para o
-// mapeamento de valores e os dois casos que exigem revisão manual.
-//
-// [ATUALIZADO] matrizesCurricularesTable ganhou codigoMatrizSere: permite
-// exportação e conferência cruzada 1:1 com o RCO (ex.: 2957644, 3014494).
+// Modela a estrutura curricular oficial (série/ano -> disciplinas com
+// carga horária e categoria) de forma independente de qualquer sistema
+// de terceiros. "categoriaCurricular" usa nomenclatura própria do
+// NexGrade (ver comentário abaixo) — mapeável para a "Composição
+// Curricular" do SERE (dado público/regulatório), mas não copiada dela.
+// "codigoSae" em disciplinas.ts é o único campo de origem regulatória
+// direta (Código SAE é identificador público do Estado do Paraná).
 
 export const cursosTable = pgTable("cursos", {
   id: serial("id").primaryKey(),
@@ -38,9 +36,6 @@ export const matrizesCurricularesTable = pgTable("matrizes_curriculares", {
   serieAno: text("serie_ano").notNull(),
   // RF-CUR-05: deve bater com a soma de cargaHorariaSemanal dos itens.
   cargaHorariaSemanalTotal: integer("carga_horaria_semanal_total").notNull().default(0),
-  // [NOVO] Código único da matriz no SERE — chave de conferência com o RCO.
-  // Nullable: nem toda matriz cadastrada manualmente terá vindo do SERE.
-  codigoMatrizSere: text("codigo_matriz_sere"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -50,8 +45,11 @@ export const itensMatrizTable = pgTable("itens_matriz", {
     .notNull()
     .references(() => matrizesCurricularesTable.id, { onDelete: "cascade" }),
   disciplinaId: integer("disciplina_id").notNull(),
-  // [ATUALIZADO] Agora usa o enum oficial do SERE — ver enums.ts.
-  categoriaCurricular: composicaoCurricularEnum("categoria_curricular").notNull().default("BNC"),
+  // Categoria curricular, nomenclatura própria do NexGrade:
+  // base_nacional_comum | parte_diversificada | formacao_geral_basica |
+  // itinerario_formativo | itinerario_profissionalizante |
+  // aprofundamento_pratica | parte_flexivel
+  categoriaCurricular: text("categoria_curricular").notNull().default("base_nacional_comum"),
   cargaHorariaSemanal: integer("carga_horaria_semanal").notNull().default(2),
   // RF-CUR-03: nome do grupo de opções (ex. "Língua Estrangeira Moderna").
   // Nulo quando o item não pertence a um grupo de escolha.
