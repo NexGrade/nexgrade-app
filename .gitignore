@@ -48,7 +48,8 @@ Thumbs.db
 .cache/
 .local/
 
-# Variaveis de ambiente / segredos - NUNCA versionar
+# Variáveis de ambiente / segredos — NUNCA versionar (DATABASE_URL,
+# CLERK_SECRET_KEY, OPENAI_API_KEY etc.). Repositório é público.
 .env
 .env.*
 !.env.example

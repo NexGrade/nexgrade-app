@@ -24,9 +24,10 @@ export const limitadorGeral = rateLimit({
   legacyHeaders: false,
   keyGenerator: chavePorUsuario,
   // A checagem "keyGeneratorIpFallback" da lib é um lint baseado em texto
-  // (procura o literal "ipKeyGenerator" no `.toString()` da função) — já
-  // verificamos manualmente que o código está correto; desativando pra
-  // evitar falso positivo.
+  // (procura o literal "ipKeyGenerator" no `.toString()` da função) — o
+  // esbuild minifica e renomeia esse import no build de produção, dando
+  // falso positivo mesmo com o código correto. Já verificamos manualmente
+  // que `chavePorUsuario` usa `ipKeyGenerator` de verdade (ver acima).
   validate: { keyGeneratorIpFallback: false },
   message: { error: "Muitas requisições. Aguarde um momento e tente novamente." },
 });

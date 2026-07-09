@@ -1,15 +1,16 @@
 import { defineConfig } from "drizzle-kit";
-import path from "path";
 
-// `generate` (usado para criar um novo arquivo de migration a partir de
-// uma mudança no schema) NÃO precisa de conexão com o banco — só
-// `push`, `migrate` e `introspect` precisam. Por isso dbCredentials usa
-// um valor de fallback aqui: sem isso, rodar `drizzle-kit generate`
-// localmente (ex. numa máquina sem DATABASE_URL configurada) falhava
-// por um motivo que não tem nada a ver com o comando sendo executado.
+// Caminhos relativos simples (sem path.join/__dirname): drizzle-kit
+// roda a partir do diretório deste arquivo (lib/db) quando chamado via
+// `pnpm --filter @workspace/db run ...`. Usar path.join(__dirname, ...)
+// aqui causa dois problemas diferentes no Windows: com barra invertida,
+// o glob matching do schema falha ("No schema files found"); mesmo
+// convertendo pra barra normal, o caminho absoluto resultante faz o
+// drizzle-kit duplicar o prefixo do diretório ao gerar migrations.
+// Caminho relativo com barra normal evita os dois problemas de vez.
 export default defineConfig({
-  schema: path.join(__dirname, "./src/schema/index.ts"),
-  out: path.join(__dirname, "./drizzle"),
+  schema: "./src/schema/index.ts",
+  out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {
     url: process.env.DATABASE_URL ?? "postgresql://localhost:5432/placeholder",

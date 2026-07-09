@@ -56,19 +56,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     .then(r => r[0]);
   if (!turma) throw new Error("Turma não encontrada");
 
-  if (!useExperimental && substituir) {
-    await db.delete(horariosTable)
-      .where(and(eq(horariosTable.turmaId, turmaId), eq(horariosTable.escolaId, escolaId)));
-  }
-  if (useExperimental && substituir) {
-    await db.delete(horariosExperimentaisTable)
-      .where(and(
-        eq(horariosExperimentaisTable.turmaId, turmaId),
-        eq(horariosExperimentaisTable.nome, nomeExperimental!),
-        eq(horariosExperimentaisTable.escolaId, escolaId),
-      ));
-  }
-
   const [turmaDiscs, disciplinas, professores, profDiscs] = await Promise.all([
     db.select().from(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.turmaId, turmaId)),
     db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
@@ -101,8 +88,15 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     });
 
   const conflitos: string[] = [];
-  const gerados: typeof horariosTable.$inferSelect[] = [];
-  const geradosExp: typeof horariosExperimentaisTable.$inferSelect[] = [];
+  // RNF-ROBUSTEZ-01: a decisão de QUAIS aulas alocar acontece inteiramente
+  // em memória, sem tocar no banco a cada aula (como era antes — um
+  // insert por aula, um ponto de falha por aula). Só ao final,
+  // `slotsParaGravar` é escrito de uma vez, dentro de uma transação (ver
+  // abaixo). Se algo falhar no meio da gravação, o Postgres desfaz tudo
+  // sozinho — a turma nunca fica com grade pela metade.
+  const slotsParaGravar: Array<{
+    disciplinaId: number; professorId: number; diaSemana: number; numeroAula: number;
+  }> = [];
 
   const ocupadoProf: Record<string, boolean> = {};
   const ocupadoSlot: Record<string, boolean> = {};
@@ -121,11 +115,19 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     ? await db.select().from(horariosExperimentaisTable).where(eq(horariosExperimentaisTable.escolaId, escolaId))
     : await db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId));
 
-  existing.forEach(s => {
-    ocupadoSlot[`${s.diaSemana}-${s.numeroAula}`] = true;
-    ocupadoProf[`${s.professorId}-${s.diaSemana}-${s.numeroAula}`] = true;
-  });
-  allSlots
+  // Se `substituir`, a grade atual desta turma não conta como ocupada —
+  // ela vai ser apagada e regravada. Simulamos isso em memória (sem
+  // apagar do banco ainda) filtrando esses slots da checagem de conflito.
+  const existingIds = new Set(existing.map(s => s.id));
+  const baseSlots = substituir ? allSlots.filter(s => !existingIds.has(s.id)) : allSlots;
+
+  if (!substituir) {
+    existing.forEach(s => {
+      ocupadoSlot[`${s.diaSemana}-${s.numeroAula}`] = true;
+      ocupadoProf[`${s.professorId}-${s.diaSemana}-${s.numeroAula}`] = true;
+    });
+  }
+  baseSlots
     .filter(s => s.turmaId !== turmaId)
     .forEach(s => {
       ocupadoProf[`${s.professorId}-${s.diaSemana}-${s.numeroAula}`] = true;
@@ -153,6 +155,12 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     const db2 = disciplinas.find(d => d.id === b.disciplinaId);
     return cargaEfetiva(b, db2) - cargaEfetiva(a, da);
   });
+
+  function alocar(disciplinaId: number, professorId: number, dia: number, aula: number) {
+    slotsParaGravar.push({ disciplinaId, professorId, diaSemana: dia, numeroAula: aula });
+    ocupadoSlot[`${dia}-${aula}`] = true;
+    ocupadoProf[`${professorId}-${dia}-${aula}`] = true;
+  }
 
   for (const td of discOrdenadas) {
     const disc = disciplinas.find(d => d.id === td.disciplinaId);
@@ -213,31 +221,7 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
         );
         if (!profDisponivel) continue;
 
-        if (useExperimental) {
-          const [slot] = await db.insert(horariosExperimentaisTable).values({
-            escolaId,
-            nome: nomeExperimental!,
-            turmaId,
-            disciplinaId: td.disciplinaId,
-            professorId: profDisponivel.id,
-            diaSemana: dia,
-            numeroAula: aula,
-          }).returning();
-          geradosExp.push(slot);
-        } else {
-          const [slot] = await db.insert(horariosTable).values({
-            escolaId,
-            turmaId,
-            disciplinaId: td.disciplinaId,
-            professorId: profDisponivel.id,
-            diaSemana: dia,
-            numeroAula: aula,
-          }).returning();
-          gerados.push(slot);
-        }
-
-        ocupadoSlot[slotKey] = true;
-        ocupadoProf[`${profDisponivel.id}-${dia}-${aula}`] = true;
+        alocar(td.disciplinaId, profDisponivel.id, dia, aula);
         alocadas++;
         alocacaoPorDia[dia] = jaNesteDia + 1;
         break;
@@ -256,31 +240,7 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
           );
           if (!profDisponivel) continue;
 
-          if (useExperimental) {
-            const [slot] = await db.insert(horariosExperimentaisTable).values({
-              escolaId,
-              nome: nomeExperimental!,
-              turmaId,
-              disciplinaId: td.disciplinaId,
-              professorId: profDisponivel.id,
-              diaSemana: dia,
-              numeroAula: aula,
-            }).returning();
-            geradosExp.push(slot);
-          } else {
-            const [slot] = await db.insert(horariosTable).values({
-              escolaId,
-              turmaId,
-              disciplinaId: td.disciplinaId,
-              professorId: profDisponivel.id,
-              diaSemana: dia,
-              numeroAula: aula,
-            }).returning();
-            gerados.push(slot);
-          }
-
-          ocupadoSlot[slotKey] = true;
-          ocupadoProf[`${profDisponivel.id}-${dia}-${aula}`] = true;
+          alocar(td.disciplinaId, profDisponivel.id, dia, aula);
           alocadas++;
         }
       }
@@ -291,12 +251,41 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     }
   }
 
+  // RNF-ROBUSTEZ-01: gravação atômica. `db.transaction` garante que o
+  // apagar (se `substituir`) e todos os inserts abaixo aconteçam como uma
+  // unidade só — se qualquer insert falhar (ex. queda de conexão no meio),
+  // o Postgres desfaz TUDO sozinho, e a turma mantém a grade anterior
+  // intacta em vez de ficar com metade apagada e metade regravada.
+  const gravados = await db.transaction(async (tx) => {
+    if (useExperimental) {
+      if (substituir) {
+        await tx.delete(horariosExperimentaisTable)
+          .where(and(
+            eq(horariosExperimentaisTable.turmaId, turmaId),
+            eq(horariosExperimentaisTable.nome, nomeExperimental!),
+            eq(horariosExperimentaisTable.escolaId, escolaId),
+          ));
+      }
+      if (slotsParaGravar.length === 0) return [];
+      const linhas = slotsParaGravar.map(s => ({ escolaId, nome: nomeExperimental!, turmaId, ...s }));
+      return tx.insert(horariosExperimentaisTable).values(linhas).returning();
+    }
+
+    if (substituir) {
+      await tx.delete(horariosTable)
+        .where(and(eq(horariosTable.turmaId, turmaId), eq(horariosTable.escolaId, escolaId)));
+    }
+    if (slotsParaGravar.length === 0) return [];
+    const linhas = slotsParaGravar.map(s => ({ escolaId, turmaId, ...s }));
+    return tx.insert(horariosTable).values(linhas).returning();
+  });
+
   if (useExperimental) {
-    return { slotsGerados: geradosExp.length, conflitos, horario: [] };
+    return { slotsGerados: gravados.length, conflitos, horario: [] };
   }
 
-  const enriched = await Promise.all(gerados.map(enrichSlot));
-  return { slotsGerados: gerados.length, conflitos, horario: enriched };
+  const enriched = await Promise.all((gravados as typeof horariosTable.$inferSelect[]).map(enrichSlot));
+  return { slotsGerados: gravados.length, conflitos, horario: enriched };
 }
 
 // ── ROUTES ───────────────────────────────────────────────────────────────────

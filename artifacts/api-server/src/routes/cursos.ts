@@ -179,17 +179,21 @@ router.post("/:cursoId/matrizes", async (req, res) => {
 
   const cargaHorariaSemanalTotal = parsed.data.itens.reduce((soma, i) => soma + i.cargaHorariaSemanal, 0);
 
-  const [matriz] = await db
-    .insert(matrizesCurricularesTable)
-    .values({ escolaId, cursoId, serieAno: parsed.data.serieAno, cargaHorariaSemanalTotal })
-    .returning();
+  const { matriz, itensInseridos } = await db.transaction(async (tx) => {
+    const [matriz] = await tx
+      .insert(matrizesCurricularesTable)
+      .values({ escolaId, cursoId, serieAno: parsed.data.serieAno, cargaHorariaSemanalTotal })
+      .returning();
 
-  const itensInseridos = parsed.data.itens.length
-    ? await db
-        .insert(itensMatrizTable)
-        .values(parsed.data.itens.map((item) => ({ ...item, matrizCurricularId: matriz.id })))
-        .returning()
-    : [];
+    const itensInseridos = parsed.data.itens.length
+      ? await tx
+          .insert(itensMatrizTable)
+          .values(parsed.data.itens.map((item) => ({ ...item, matrizCurricularId: matriz.id })))
+          .returning()
+      : [];
+
+    return { matriz, itensInseridos };
+  });
 
   await registrarAuditoria({
     req, escolaId, entidade: "matrizes_curriculares", entidadeId: matriz.id,

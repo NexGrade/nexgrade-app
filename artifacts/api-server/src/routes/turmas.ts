@@ -18,11 +18,23 @@ const router = Router();
 
 type DisciplinaConfigTurma = { maxAulasConsecutivasDia?: number; grupoCompartilhadoId?: string };
 
+// Aceita tanto `db` quanto um `tx` de dentro de `db.transaction(...)` — os
+// dois implementam os mesmos métodos de query (.insert/.update/.delete/
+// .select), só o `tx` não expõe `$client`. Extraindo o tipo do parâmetro
+// de `transaction` em vez de usar `typeof db` direto evita esse conflito.
+type DbOrTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 // RNF-SEED-03/04: aplica o max de aulas geminadas/dia e o grupo
 // compartilhado por disciplina, enviados em `disciplinasConfig` (chave =
 // disciplinaId como string). Só tem efeito nas disciplinas que já têm um
 // vínculo turma_disciplinas — não cria vínculo novo sozinho.
+//
+// Recebe `client` (a conexão `db` normal, ou um `tx` de dentro de
+// `db.transaction`) em vez de usar `db` fixo — assim as chamadas em
+// POST/PATCH participam da mesma transação atômica da rota, ao invés de
+// serem operações soltas que podem ficar pela metade se algo falhar.
 async function aplicarDisciplinasConfig(
+  client: DbOrTx,
   turmaId: number,
   disciplinasConfig: Record<string, DisciplinaConfigTurma> | undefined,
 ) {
@@ -34,7 +46,7 @@ async function aplicarDisciplinasConfig(
     if (cfg.maxAulasConsecutivasDia !== undefined) patch.maxAulasConsecutivasDia = cfg.maxAulasConsecutivasDia;
     if (cfg.grupoCompartilhadoId !== undefined) patch.grupoCompartilhadoId = cfg.grupoCompartilhadoId;
     if (Object.keys(patch).length === 0) continue;
-    await db
+    await client
       .update(turmaDisciplinasTable)
       .set(patch)
       .where(and(eq(turmaDisciplinasTable.turmaId, turmaId), eq(turmaDisciplinasTable.disciplinaId, disciplinaId)));
@@ -103,16 +115,19 @@ router.post("/", async (req, res) => {
     nome: string; serie: string; turno: string; anoLetivo: number;
     disciplinaIds?: number[]; disciplinasConfig?: Record<string, DisciplinaConfigTurma>;
   };
-  const [turma] = await db
-    .insert(turmasTable)
-    .values({ escolaId, nome: data.nome, serie: data.serie, turno: data.turno, anoLetivo: data.anoLetivo })
-    .returning();
-  if (disciplinaIds && disciplinaIds.length > 0) {
-    await db.insert(turmaDisciplinasTable).values(
-      disciplinaIds.map((did) => ({ turmaId: turma.id, disciplinaId: did }))
-    );
-  }
-  await aplicarDisciplinasConfig(turma.id, disciplinasConfig);
+  const turma = await db.transaction(async (tx) => {
+    const [novaTurma] = await tx
+      .insert(turmasTable)
+      .values({ escolaId, nome: data.nome, serie: data.serie, turno: data.turno, anoLetivo: data.anoLetivo })
+      .returning();
+    if (disciplinaIds && disciplinaIds.length > 0) {
+      await tx.insert(turmaDisciplinasTable).values(
+        disciplinaIds.map((did) => ({ turmaId: novaTurma.id, disciplinaId: did }))
+      );
+    }
+    await aplicarDisciplinasConfig(tx, novaTurma.id, disciplinasConfig);
+    return novaTurma;
+  });
   const result = await getTurmaWithDisciplinas(turma.id, escolaId);
   await registrarAuditoria({
     req, escolaId, entidade: "turmas", entidadeId: turma.id,
@@ -158,27 +173,29 @@ router.patch("/:id", async (req, res) => {
     res.status(404).json({ error: "Turma não encontrada" });
     return;
   }
-  if (Object.keys(data).length > 0) {
-    await db
-      .update(turmasTable)
-      .set(data)
-      .where(and(eq(turmasTable.id, id), eq(turmasTable.escolaId, escolaId)));
-  }
-  if (disciplinaIds !== undefined) {
-    await db.delete(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.turmaId, id));
-    if (disciplinaIds.length > 0) {
-      await db.insert(turmaDisciplinasTable).values(
-        disciplinaIds.map((did) => ({ turmaId: id, disciplinaId: did }))
-      );
+  await db.transaction(async (tx) => {
+    if (Object.keys(data).length > 0) {
+      await tx
+        .update(turmasTable)
+        .set(data)
+        .where(and(eq(turmasTable.id, id), eq(turmasTable.escolaId, escolaId)));
     }
-    // Edição manual desvincula a turma da matriz aplicada anteriormente
-    // (RF-TUR-02/03) — evita `matrizCurricularId` apontar para um
-    // conjunto de disciplinas que não reflete mais a realidade da turma.
-    await db.update(turmasTable).set({ matrizCurricularId: null }).where(eq(turmasTable.id, id));
-  }
-  // disciplinasConfig pode vir sozinho (sem disciplinaIds) — ex. só
-  // ajustar o Max_Aulas_Dia de uma disciplina que a turma já tem.
-  await aplicarDisciplinasConfig(id, disciplinasConfig);
+    if (disciplinaIds !== undefined) {
+      await tx.delete(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.turmaId, id));
+      if (disciplinaIds.length > 0) {
+        await tx.insert(turmaDisciplinasTable).values(
+          disciplinaIds.map((did) => ({ turmaId: id, disciplinaId: did }))
+        );
+      }
+      // Edição manual desvincula a turma da matriz aplicada anteriormente
+      // (RF-TUR-02/03) — evita `matrizCurricularId` apontar para um
+      // conjunto de disciplinas que não reflete mais a realidade da turma.
+      await tx.update(turmasTable).set({ matrizCurricularId: null }).where(eq(turmasTable.id, id));
+    }
+    // disciplinasConfig pode vir sozinho (sem disciplinaIds) — ex. só
+    // ajustar o Max_Aulas_Dia de uma disciplina que a turma já tem.
+    await aplicarDisciplinasConfig(tx, id, disciplinasConfig);
+  });
   const result = await getTurmaWithDisciplinas(id, escolaId);
   if (!result) {
     res.status(404).json({ error: "Turma não encontrada" });
@@ -264,18 +281,19 @@ router.post("/:id/aplicar-matriz", async (req, res) => {
     return;
   }
 
-  await db.delete(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.turmaId, turmaId));
-  await db.insert(turmaDisciplinasTable).values(
-    itens.map((item) => ({
-      turmaId,
-      disciplinaId: item.disciplinaId,
-      cargaHorariaSemanalOverride: item.cargaHorariaSemanal,
-    })),
-  );
-
-  await db.update(turmasTable)
-    .set({ matrizCurricularId: matriz.id })
-    .where(eq(turmasTable.id, turmaId));
+  await db.transaction(async (tx) => {
+    await tx.delete(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.turmaId, turmaId));
+    await tx.insert(turmaDisciplinasTable).values(
+      itens.map((item) => ({
+        turmaId,
+        disciplinaId: item.disciplinaId,
+        cargaHorariaSemanalOverride: item.cargaHorariaSemanal,
+      })),
+    );
+    await tx.update(turmasTable)
+      .set({ matrizCurricularId: matriz.id })
+      .where(eq(turmasTable.id, turmaId));
+  });
 
   const result = await getTurmaWithDisciplinas(turmaId, escolaId);
   await registrarAuditoria({
