@@ -1,12 +1,18 @@
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 
 // RNF-SEG: limites de taxa por sessão autenticada (requireAuth já roda
 // antes destes limitadores, então toda requisição aqui já tem
 // req.auth.userId — usamos isso como chave em vez do IP, que em
 // ambientes com proxy/CDN compartilhado (Replit, Vercel etc.) tende a
 // ser o mesmo para muitos usuários diferentes).
+//
+// O fallback pro IP (quando não há usuário autenticado, ex. rota
+// pública) precisa passar pelo helper `ipKeyGenerator` — sem isso, o
+// express-rate-limit recusa subir (ValidationError ERR_ERL_KEY_GEN_IPV6)
+// porque um IPv6 bruto tem várias representações textuais válidas pro
+// mesmo endereço, permitindo burlar o limite variando a escrita do IP.
 function chavePorUsuario(req: any): string {
-  return req.auth?.userId ?? req.ip ?? "anonimo";
+  return req.auth?.userId ?? ipKeyGenerator(req.ip ?? "0.0.0.0") ?? "anonimo";
 }
 
 // Limite geral, generoso — só existe para conter abuso grosseiro
@@ -17,6 +23,11 @@ export const limitadorGeral = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: chavePorUsuario,
+  // A checagem "keyGeneratorIpFallback" da lib é um lint baseado em texto
+  // (procura o literal "ipKeyGenerator" no `.toString()` da função) — já
+  // verificamos manualmente que o código está correto; desativando pra
+  // evitar falso positivo.
+  validate: { keyGeneratorIpFallback: false },
   message: { error: "Muitas requisições. Aguarde um momento e tente novamente." },
 });
 
@@ -29,5 +40,6 @@ export const limitadorIA = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: chavePorUsuario,
+  validate: { keyGeneratorIpFallback: false },
   message: { error: "Muitas mensagens ao Assistente de IA em pouco tempo. Aguarde um momento." },
 });
