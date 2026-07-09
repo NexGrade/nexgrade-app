@@ -47,8 +47,3 @@ Thumbs.db
 # Replit
 .cache/
 .local/
-
-# Variaveis de ambiente / segredos - NUNCA versionar
-.env
-.env.*
-!.env.example
