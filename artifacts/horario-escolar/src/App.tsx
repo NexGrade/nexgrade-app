@@ -1,9 +1,10 @@
+﻿import { useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ClerkProvider, SignIn, SignUp, Show } from "@clerk/react";
+import { ClerkProvider, SignIn, SignUp, Show, useAuth } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
-import { useGetEscolaAtual, getGetEscolaAtualQueryKey, useMasterWhoami, getMasterWhoamiQueryKey } from "@workspace/api-client-react";
+import { useGetEscolaAtual, getGetEscolaAtualQueryKey, useMasterWhoami, getMasterWhoamiQueryKey, setAuthTokenGetter } from "@workspace/api-client-react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -116,7 +117,7 @@ function SignInPage() {
             </div>
             <h1 className="text-2xl font-bold text-slate-900 font-heading">NexGrade</h1>
           </div>
-          <p className="text-slate-500 text-sm mt-1">Sistema de Gestão de Horários Escolares</p>
+          <p className="text-slate-500 text-sm mt-1">Sistema de GestÃ£o de HorÃ¡rios Escolares</p>
         </div>
         <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} appearance={clerkAppearance} />
       </div>
@@ -135,7 +136,7 @@ function SignUpPage() {
             </div>
             <h1 className="text-2xl font-bold text-slate-900 font-heading">NexGrade</h1>
           </div>
-          <p className="text-slate-500 text-sm mt-1">Crie sua conta para começar</p>
+          <p className="text-slate-500 text-sm mt-1">Crie sua conta para comeÃ§ar</p>
         </div>
         <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} appearance={clerkAppearance} />
       </div>
@@ -169,9 +170,9 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   );
 }
 
-// RF-ESC-01: toda rota protegida (exceto a própria /onboarding) exige que
-// a escola já tenha sido cadastrada. Isso garante que qualquer usuário
-// recém-logado — mesmo entrando direto por um link profundo — passe pelo
+// RF-ESC-01: toda rota protegida (exceto a prÃ³pria /onboarding) exige que
+// a escola jÃ¡ tenha sido cadastrada. Isso garante que qualquer usuÃ¡rio
+// recÃ©m-logado â€” mesmo entrando direto por um link profundo â€” passe pelo
 // onboarding antes de acessar o restante do produto.
 function EscolaGate({ component: Component }: { component: React.ComponentType }) {
   const { data, isLoading } = useGetEscolaAtual({
@@ -211,10 +212,10 @@ function OnboardingRoute() {
   );
 }
 
-// RF-MASTER: gate próprio, além do EscolaGate normal — precisa passar
+// RF-MASTER: gate prÃ³prio, alÃ©m do EscolaGate normal â€” precisa passar
 // pelas duas checagens (escola cadastrada E ser administrador da
-// plataforma). A checagem de verdade é sempre no backend
-// (requireMaster); isto aqui só evita renderizar a tela pra quem não
+// plataforma). A checagem de verdade Ã© sempre no backend
+// (requireMaster); isto aqui sÃ³ evita renderizar a tela pra quem nÃ£o
 // tem acesso, e redireciona de volta ao dashboard.
 function MasterRoute() {
   return (
@@ -289,6 +290,17 @@ function Router() {
   );
 }
 
+function ApiAuthBridge() {
+  const { getToken, isLoaded } = useAuth();
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    setAuthTokenGetter(() => getToken());
+  }, [isLoaded, getToken]);
+
+  return null;
+}
+
 function App() {
   return (
     <ClerkProvider
@@ -298,6 +310,7 @@ function App() {
       routerReplace={(to) => window.history.replaceState(null, "", to)}
       appearance={clerkAppearance}
     >
+      <ApiAuthBridge />
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <WouterRouter base={basePath}>
