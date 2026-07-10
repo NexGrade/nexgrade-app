@@ -17,9 +17,45 @@ const TIPO_LABELS: Record<string, { label: string; color: string }> = {
   fim_trimestre: { label: "Fim de Trimestre", color: "bg-[#1565C0]/10 text-[#1565C0]" },
 };
 
+const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+
 function formatarData(data: string) {
   const [ano, mes, dia] = data.split("-");
-  return `${dia}/${mes}/${ano}`;
+  return `${dia}/${mes}`;
+}
+
+type Evento = { id: number; data: string; tipo: string; descricao: string };
+
+// Agrupa dias consecutivos do mesmo tipo+descrição em um único intervalo,
+// pra evitar 10 linhas repetidas de "Recesso Escolar" (13/07, 14/07, 15/07...).
+function agruparEventos(eventos: Evento[]) {
+  const ordenados = [...eventos].sort((a, b) => a.data.localeCompare(b.data));
+  const grupos: { inicio: string; fim: string; tipo: string; descricao: string }[] = [];
+
+  for (const e of ordenados) {
+    const ultimo = grupos[grupos.length - 1];
+    if (ultimo && ultimo.tipo === e.tipo && ultimo.descricao === e.descricao) {
+      const diaSeguinte = new Date(ultimo.fim + "T00:00:00");
+      diaSeguinte.setDate(diaSeguinte.getDate() + 1);
+      const dataEsperada = diaSeguinte.toISOString().slice(0, 10);
+      if (dataEsperada === e.data) {
+        ultimo.fim = e.data;
+        continue;
+      }
+    }
+    grupos.push({ inicio: e.data, fim: e.data, tipo: e.tipo, descricao: e.descricao });
+  }
+  return grupos;
+}
+
+function agruparPorMes(grupos: ReturnType<typeof agruparEventos>) {
+  const porMes = new Map<number, typeof grupos>();
+  for (const g of grupos) {
+    const mes = Number(g.inicio.split("-")[1]) - 1;
+    if (!porMes.has(mes)) porMes.set(mes, []);
+    porMes.get(mes)!.push(g);
+  }
+  return [...porMes.entries()].sort((a, b) => a[0] - b[0]);
 }
 
 export default function CalendarioEscolarPage() {
@@ -28,6 +64,7 @@ export default function CalendarioEscolarPage() {
   const { data: trimestres = [], isLoading: loadingTrimestres } = useListTrimestresLetivos({ ano });
 
   const totalDiasLetivos = trimestres.reduce((soma, t) => soma + t.diasLetivos, 0);
+  const gruposPorMes = agruparPorMes(agruparEventos(eventos));
 
   return (
     <div className="space-y-6">
@@ -86,19 +123,27 @@ export default function CalendarioEscolarPage() {
           ) : eventos.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">Nenhum evento cadastrado para {ano}.</p>
           ) : (
-            <div className="divide-y divide-border">
-              {eventos.map((e) => {
-                const tipo = TIPO_LABELS[e.tipo] ?? { label: e.tipo, color: "bg-gray-100 text-gray-700" };
-                return (
-                  <div key={e.id} className="flex items-center justify-between py-3">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium w-24 shrink-0">{formatarData(e.data)}</span>
-                      <span className="text-sm">{e.descricao}</span>
-                    </div>
-                    <Badge className={`${tipo.color} border-0`}>{tipo.label}</Badge>
+            <div className="space-y-6">
+              {gruposPorMes.map(([mes, grupos]) => (
+                <div key={mes}>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">{MESES[mes]}</p>
+                  <div className="divide-y divide-border rounded-lg border border-border/50">
+                    {grupos.map((g, i) => {
+                      const tipo = TIPO_LABELS[g.tipo] ?? { label: g.tipo, color: "bg-gray-100 text-gray-700" };
+                      const periodo = g.inicio === g.fim ? formatarData(g.inicio) : `${formatarData(g.inicio)} – ${formatarData(g.fim)}`;
+                      return (
+                        <div key={i} className="flex items-center justify-between py-3 px-4">
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-medium w-28 shrink-0">{periodo}</span>
+                            <span className="text-sm">{g.descricao}</span>
+                          </div>
+                          <Badge className={`${tipo.color} border-0`}>{tipo.label}</Badge>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           )}
         </CardContent>
