@@ -50,7 +50,6 @@ export default function PlanosPage() {
     { ok: p.temExport, label: "Exportar CSV / SEED" },
     { ok: p.temImport, label: "Importação inteligente CSV" },
     { ok: p.temIA, label: "Assistente de IA" },
-    { ok: p.nome === "Master", label: "Painel Master SaaS (multischool)" },
     { ok: p.nome === "Master", label: "Suporte prioritário" },
   ];
 
