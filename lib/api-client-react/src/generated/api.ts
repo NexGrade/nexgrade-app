@@ -23,6 +23,7 @@ import type {
   AplicarMatrizInput,
   AuditLog,
   CalendarioEscolarEvento,
+  CargaHorariaTurmaDisciplina,
   Comunicado,
   ComunicadoInput,
   Configuracao,
@@ -59,6 +60,7 @@ import type {
   LicencaUpdate,
   ListAuditLogsParams,
   ListCalendarioEscolarParams,
+  ListCargaHorariaParams,
   ListComunicadosParams,
   ListDisponibilidadeParams,
   ListHorariosExperimentaisParams,
@@ -4085,6 +4087,84 @@ export function useListTrimestresLetivos<TData = Awaited<ReturnType<typeof listT
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getListTrimestresLetivosQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListCargaHorariaUrl = (params?: ListCargaHorariaParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/calendario-escolar/carga-horaria?${stringifiedParams}` : `/api/calendario-escolar/carga-horaria`
+}
+
+export const listCargaHoraria = async (params?: ListCargaHorariaParams, options?: RequestInit): Promise<CargaHorariaTurmaDisciplina[]> => {
+
+  return customFetch<CargaHorariaTurmaDisciplina[]>(getListCargaHorariaUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCargaHorariaQueryKey = (params?: ListCargaHorariaParams,) => {
+    return [
+    `/api/calendario-escolar/carga-horaria`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListCargaHorariaQueryOptions = <TData = Awaited<ReturnType<typeof listCargaHoraria>>, TError = ErrorType<unknown>>(params?: ListCargaHorariaParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCargaHoraria>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCargaHorariaQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCargaHoraria>>> = ({ signal }) => listCargaHoraria(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCargaHoraria>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCargaHorariaQueryResult = NonNullable<Awaited<ReturnType<typeof listCargaHoraria>>>
+export type ListCargaHorariaQueryError = ErrorType<unknown>
+
+
+
+export function useListCargaHoraria<TData = Awaited<ReturnType<typeof listCargaHoraria>>, TError = ErrorType<unknown>>(
+ params?: ListCargaHorariaParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCargaHoraria>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCargaHorariaQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

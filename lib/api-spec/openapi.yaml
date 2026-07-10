@@ -1071,6 +1071,25 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/TrimestreLetivo"
+
+  /calendario-escolar/carga-horaria:
+    get:
+      operationId: listCargaHoraria
+      tags: [calendario-escolar]
+      parameters:
+        - name: ano
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Carga horaria cumprida (grade x semanas letivas) vs exigida, por turma e disciplina
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CargaHorariaTurmaDisciplina"
   /comunicados:
     get:
       operationId: listComunicados
@@ -1951,6 +1970,30 @@ components:
         dataFim: { type: string }
         diasLetivos: { type: integer }
 
+    CargaHorariaTurmaDisciplina:
+      type: object
+      required: [turmaId, turmaNome, disciplinaId, disciplinaNome, cargaSemanalExigida, aulasSemanaGrid, trimestres, totalCumprido, totalExigido, status]
+      properties:
+        turmaId: { type: integer }
+        turmaNome: { type: string }
+        disciplinaId: { type: integer }
+        disciplinaNome: { type: string }
+        cargaSemanalExigida: { type: integer }
+        aulasSemanaGrid: { type: integer }
+        trimestres:
+          type: array
+          items:
+            type: object
+            required: [trimestre, semanasLetivas, cumprido, exigido, status]
+            properties:
+              trimestre: { type: integer }
+              semanasLetivas: { type: number }
+              cumprido: { type: integer }
+              exigido: { type: integer }
+              status: { type: string, enum: [ok, insuficiente] }
+        totalCumprido: { type: integer }
+        totalExigido: { type: integer }
+        status: { type: string, enum: [ok, insuficiente] }
     Usuario:
       type: object
       required: [id, clerkId, nome, email, perfil, ativo]

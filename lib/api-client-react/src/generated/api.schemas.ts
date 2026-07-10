@@ -716,6 +716,43 @@ export interface TrimestreLetivo {
   diasLetivos: number;
 }
 
+export type CargaHorariaTurmaDisciplinaTrimestresItemStatus = typeof CargaHorariaTurmaDisciplinaTrimestresItemStatus[keyof typeof CargaHorariaTurmaDisciplinaTrimestresItemStatus];
+
+
+export const CargaHorariaTurmaDisciplinaTrimestresItemStatus = {
+  ok: 'ok',
+  insuficiente: 'insuficiente',
+} as const;
+
+export type CargaHorariaTurmaDisciplinaTrimestresItem = {
+  trimestre: number;
+  semanasLetivas: number;
+  cumprido: number;
+  exigido: number;
+  status: CargaHorariaTurmaDisciplinaTrimestresItemStatus;
+};
+
+export type CargaHorariaTurmaDisciplinaStatus = typeof CargaHorariaTurmaDisciplinaStatus[keyof typeof CargaHorariaTurmaDisciplinaStatus];
+
+
+export const CargaHorariaTurmaDisciplinaStatus = {
+  ok: 'ok',
+  insuficiente: 'insuficiente',
+} as const;
+
+export interface CargaHorariaTurmaDisciplina {
+  turmaId: number;
+  turmaNome: string;
+  disciplinaId: number;
+  disciplinaNome: string;
+  cargaSemanalExigida: number;
+  aulasSemanaGrid: number;
+  trimestres: CargaHorariaTurmaDisciplinaTrimestresItem[];
+  totalCumprido: number;
+  totalExigido: number;
+  status: CargaHorariaTurmaDisciplinaStatus;
+}
+
 export type UsuarioPerfil = typeof UsuarioPerfil[keyof typeof UsuarioPerfil];
 
 
@@ -907,6 +944,10 @@ ano?: number;
 };
 
 export type ListTrimestresLetivosParams = {
+ano?: number;
+};
+
+export type ListCargaHorariaParams = {
 ano?: number;
 };
 

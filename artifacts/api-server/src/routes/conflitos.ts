@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { horariosTable, professoresTable, disciplinasTable, turmasTable, turmaDisciplinasTable, professorDisciplinasTable, disponibilidadeTable, salasTable, configuracoesTable } from "@workspace/db";
+import { horariosTable, professoresTable, disciplinasTable, turmasTable, turmaDisciplinasTable, professorDisciplinasTable, disponibilidadeTable, salasTable, configuracoesTable, trimestresLetivosTable } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
 
@@ -352,6 +352,29 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     });
   });
 
+
+  // 12. Turma sem calendario/trimestres letivos configurados para o ano letivo dela
+  // (LDB Art. 24, I: minimo de 800h anuais distribuidas em pelo menos 200 dias
+  // letivos -- sem o calendario cadastrado nao ha como validar o cumprimento).
+  const anosLetivosDasTurmas = [...new Set(turmas.map(t => t.anoLetivo))];
+  if (anosLetivosDasTurmas.length > 0) {
+    const trimestresCadastrados = await db.select().from(trimestresLetivosTable)
+      .where(eq(trimestresLetivosTable.escolaId, escolaId));
+    const anosComCalendario = new Set(trimestresCadastrados.map(t => t.ano));
+    turmas.forEach(t => {
+      if (!anosComCalendario.has(t.anoLetivo)) {
+        conflitos.push({
+          tipo: "turma_sem_calendario",
+          descricao: "Turma " + t.nome + " nao tem calendario escolar (feriados/trimestres) cadastrado para o ano letivo " + t.anoLetivo + " -- necessario para validar dias letivos e carga horaria",
+          gravidade: "medio",
+          turmaId: t.id,
+          professorId: null,
+          diaSemana: null,
+          numeroAula: null,
+        });
+      }
+    });
+  }
   return conflitos;
 }
 
@@ -424,6 +447,11 @@ function gerarSugestoes(conflito: Conflito): string[] {
       return [
         "Marque a hora-atividade do professor no mesmo turno em que ele dá aula, informando o campo 'Turno' na disponibilidade",
         "Revise se o professor tem aulas em mais de um turno — nesse caso a HA pode legitimamente ficar dividida",
+      ];
+    case "turma_sem_calendario":
+      return [
+        "Acesse 'Calendario Escolar' e cadastre os trimestres letivos e feriados do ano letivo desta turma",
+        "Sem essa configuracao nao e possivel validar se a carga horaria cumprida atende ao minimo legal (LDB Art. 24)",
       ];
     default:
       return ["Revise manualmente a grade desta turma/professor"];

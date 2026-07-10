@@ -1452,6 +1452,31 @@ export const ListTrimestresLetivosResponseItem = zod.object({
 export const ListTrimestresLetivosResponse = zod.array(ListTrimestresLetivosResponseItem)
 
 
+export const ListCargaHorariaQueryParams = zod.object({
+  "ano": zod.coerce.number().optional()
+})
+
+export const ListCargaHorariaResponseItem = zod.object({
+  "turmaId": zod.number(),
+  "turmaNome": zod.string(),
+  "disciplinaId": zod.number(),
+  "disciplinaNome": zod.string(),
+  "cargaSemanalExigida": zod.number(),
+  "aulasSemanaGrid": zod.number(),
+  "trimestres": zod.array(zod.object({
+  "trimestre": zod.number(),
+  "semanasLetivas": zod.number(),
+  "cumprido": zod.number(),
+  "exigido": zod.number(),
+  "status": zod.enum(['ok', 'insuficiente'])
+})),
+  "totalCumprido": zod.number(),
+  "totalExigido": zod.number(),
+  "status": zod.enum(['ok', 'insuficiente'])
+})
+export const ListCargaHorariaResponse = zod.array(ListCargaHorariaResponseItem)
+
+
 export const ListComunicadosQueryParams = zod.object({
   "turmaId": zod.coerce.number().optional(),
   "naoLidos": zod.coerce.boolean().optional()
