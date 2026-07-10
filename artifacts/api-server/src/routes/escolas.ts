@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { escolasTable, planosTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
 
 const router = Router();
@@ -39,7 +39,7 @@ const PLANOS_SEED = [
 
 // GET /escolas/planos — lista planos disponíveis (público)
 router.get("/planos", async (_req, res) => {
-  let planos = await db.select().from(planosTable).where(eq(planosTable.ativo, true));
+  let planos = await db.select().from(planosTable).where(and(eq(planosTable.ativo, true), eq(planosTable.visivelPublicamente, true)));
   if (planos.length === 0) {
     // Seed planos se ainda não existem
     await db.insert(planosTable).values(PLANOS_SEED.map(p => ({ ...p, ativo: true })));

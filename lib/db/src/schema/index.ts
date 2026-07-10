@@ -13,3 +13,4 @@ export * from "./escolas";
 export * from "./disponibilidade";
 export * from "./ai_conversas";
 export * from "./cursos";
+export * from "./calendario_escolar";

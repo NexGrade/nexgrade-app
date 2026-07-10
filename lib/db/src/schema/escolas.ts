@@ -12,6 +12,7 @@ export const planosTable = pgTable("planos", {
   temExport: boolean("tem_export").notNull().default(false),
   temImport: boolean("tem_import").notNull().default(false),
   ativo: boolean("ativo").notNull().default(true),
+  visivelPublicamente: boolean("visivel_publicamente").notNull().default(true),
   stripePriceId: text("stripe_price_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
