@@ -1422,6 +1422,36 @@ export const DeleteLicencaParams = zod.object({
 export const DeleteLicencaResponse = zod.void()
 
 
+export const ListCalendarioEscolarQueryParams = zod.object({
+  "ano": zod.coerce.number().optional()
+})
+
+export const ListCalendarioEscolarResponseItem = zod.object({
+  "id": zod.number(),
+  "ano": zod.number(),
+  "data": zod.string(),
+  "tipo": zod.string(),
+  "descricao": zod.string(),
+  "diaLetivo": zod.boolean()
+})
+export const ListCalendarioEscolarResponse = zod.array(ListCalendarioEscolarResponseItem)
+
+
+export const ListTrimestresLetivosQueryParams = zod.object({
+  "ano": zod.coerce.number().optional()
+})
+
+export const ListTrimestresLetivosResponseItem = zod.object({
+  "id": zod.number(),
+  "ano": zod.number(),
+  "trimestre": zod.number(),
+  "dataInicio": zod.string(),
+  "dataFim": zod.string(),
+  "diasLetivos": zod.number()
+})
+export const ListTrimestresLetivosResponse = zod.array(ListTrimestresLetivosResponseItem)
+
+
 export const ListComunicadosQueryParams = zod.object({
   "turmaId": zod.coerce.number().optional(),
   "naoLidos": zod.coerce.boolean().optional()

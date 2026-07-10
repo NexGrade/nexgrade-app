@@ -18,6 +18,7 @@ import escolasRouter from "./escolas";
 import disponibilidadeRouter from "./disponibilidade";
 import cursosRouter from "./cursos";
 import masterRouter from "./master";
+import calendarioEscolarRouter from "./calendario-escolar";
 
 const router: IRouter = Router();
 
@@ -40,5 +41,6 @@ router.use("/escolas", escolasRouter);
 router.use("/disponibilidade", disponibilidadeRouter);
 router.use("/cursos", cursosRouter);
 router.use("/master", masterRouter);
+router.use("/calendario-escolar", calendarioEscolarRouter);
 
 export default router;

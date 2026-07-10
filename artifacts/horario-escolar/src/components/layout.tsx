@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { UserButton } from "@clerk/react";
 import { useMasterWhoami } from "@workspace/api-client-react";
 import {
-  LayoutDashboard, Users, BookOpen, GraduationCap, Calendar,
+  LayoutDashboard, Users, BookOpen, GraduationCap, Calendar, CalendarDays,
   Building2, FileText, Bell, Shield, History, AlertTriangle,
   Settings, Download, FlaskConical, Sparkles, Upload, CreditCard, Library, ShieldCheck,
 } from "lucide-react";
@@ -15,6 +15,7 @@ const navGroups = [
       { href: "/dashboard", label: "Visão Geral", icon: LayoutDashboard },
       { href: "/horarios", label: "Grade Horária", icon: Calendar },
       { href: "/conflitos", label: "Conflitos", icon: AlertTriangle },
+      { href: "/calendario", label: "Calend�rio Escolar", icon: CalendarDays },
       { href: "/assistente", label: "Assistente de IA", icon: Sparkles, badge: "IA" },
     ],
   },

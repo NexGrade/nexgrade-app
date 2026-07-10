@@ -35,6 +35,8 @@ tags:
     description: Detecção e sugestões de conflitos
   - name: stats
     description: Estatísticas e resumos
+  - name: calendario-escolar
+    description: Calendario escolar, feriados e trimestres letivos
 
 paths:
   /healthz:
@@ -1032,6 +1034,43 @@ paths:
           description: Removida
 
   # ── COMUNICADOS ───────────────────────────────────────────────────────────────
+  /calendario-escolar:
+    get:
+      operationId: listCalendarioEscolar
+      tags: [calendario-escolar]
+      parameters:
+        - name: ano
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lista de eventos do calend�rio
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CalendarioEscolarEvento"
+
+  /calendario-escolar/trimestres:
+    get:
+      operationId: listTrimestresLetivos
+      tags: [calendario-escolar]
+      parameters:
+        - name: ano
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lista de trimestres letivos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TrimestreLetivo"
   /comunicados:
     get:
       operationId: listComunicados
@@ -1889,6 +1928,28 @@ components:
         turmaId: { type: integer }
         professorId: { type: integer }
         autorNome: { type: string }
+
+    CalendarioEscolarEvento:
+      type: object
+      required: [id, ano, data, tipo, descricao, diaLetivo]
+      properties:
+        id: { type: integer }
+        ano: { type: integer }
+        data: { type: string }
+        tipo: { type: string }
+        descricao: { type: string }
+        diaLetivo: { type: boolean }
+
+    TrimestreLetivo:
+      type: object
+      required: [id, ano, trimestre, dataInicio, dataFim, diasLetivos]
+      properties:
+        id: { type: integer }
+        ano: { type: integer }
+        trimestre: { type: integer }
+        dataInicio: { type: string }
+        dataFim: { type: string }
+        diasLetivos: { type: integer }
 
     Usuario:
       type: object

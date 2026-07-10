@@ -1,4 +1,4 @@
-﻿import { useEffect } from "react";
+import { useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ClerkProvider, SignIn, SignUp, Show, useAuth } from "@clerk/react";
@@ -32,6 +32,7 @@ import PlanosPage from "@/pages/planos/index";
 import MasterPage from "@/pages/master/index";
 import OnboardingPage from "@/pages/onboarding/index";
 import CursosList from "@/pages/cursos/index";
+import CalendarioEscolarPage from "@/pages/calendario/index";
 import CursoMatrizCurricular from "@/pages/cursos/id";
 import NotFound from "@/pages/not-found";
 
@@ -117,7 +118,7 @@ function SignInPage() {
             </div>
             <h1 className="text-2xl font-bold text-slate-900 font-heading">NexGrade</h1>
           </div>
-          <p className="text-slate-500 text-sm mt-1">Sistema de GestÃ£o de HorÃ¡rios Escolares</p>
+          <p className="text-slate-500 text-sm mt-1">Sistema de Gestão de Horários Escolares</p>
         </div>
         <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} appearance={clerkAppearance} />
       </div>
@@ -136,7 +137,7 @@ function SignUpPage() {
             </div>
             <h1 className="text-2xl font-bold text-slate-900 font-heading">NexGrade</h1>
           </div>
-          <p className="text-slate-500 text-sm mt-1">Crie sua conta para comeÃ§ar</p>
+          <p className="text-slate-500 text-sm mt-1">Crie sua conta para começar</p>
         </div>
         <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} appearance={clerkAppearance} />
       </div>
@@ -170,9 +171,9 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   );
 }
 
-// RF-ESC-01: toda rota protegida (exceto a prÃ³pria /onboarding) exige que
-// a escola jÃ¡ tenha sido cadastrada. Isso garante que qualquer usuÃ¡rio
-// recÃ©m-logado â€” mesmo entrando direto por um link profundo â€” passe pelo
+// RF-ESC-01: toda rota protegida (exceto a própria /onboarding) exige que
+// a escola já tenha sido cadastrada. Isso garante que qualquer usuário
+// recém-logado — mesmo entrando direto por um link profundo — passe pelo
 // onboarding antes de acessar o restante do produto.
 function EscolaGate({ component: Component }: { component: React.ComponentType }) {
   const { data, isLoading } = useGetEscolaAtual({
@@ -212,10 +213,10 @@ function OnboardingRoute() {
   );
 }
 
-// RF-MASTER: gate prÃ³prio, alÃ©m do EscolaGate normal â€” precisa passar
+// RF-MASTER: gate próprio, além do EscolaGate normal — precisa passar
 // pelas duas checagens (escola cadastrada E ser administrador da
-// plataforma). A checagem de verdade Ã© sempre no backend
-// (requireMaster); isto aqui sÃ³ evita renderizar a tela pra quem nÃ£o
+// plataforma). A checagem de verdade é sempre no backend
+// (requireMaster); isto aqui só evita renderizar a tela pra quem não
 // tem acesso, e redireciona de volta ao dashboard.
 function MasterRoute() {
   return (
@@ -276,6 +277,7 @@ function Router() {
       <Route path="/salas" component={() => <ProtectedRoute component={SalasList} />} />
       <Route path="/licencas" component={() => <ProtectedRoute component={LicencasList} />} />
       <Route path="/comunicados" component={() => <ProtectedRoute component={ComunicadosList} />} />
+      <Route path="/calendario" component={() => <ProtectedRoute component={CalendarioEscolarPage} />} />
       <Route path="/usuarios" component={() => <ProtectedRoute component={UsuariosList} />} />
       <Route path="/audit" component={() => <ProtectedRoute component={AuditList} />} />
       <Route path="/conflitos" component={() => <ProtectedRoute component={ConflitosList} />} />

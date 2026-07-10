@@ -698,6 +698,24 @@ export interface ComunicadoInput {
   autorNome?: string;
 }
 
+export interface CalendarioEscolarEvento {
+  id: number;
+  ano: number;
+  data: string;
+  tipo: string;
+  descricao: string;
+  diaLetivo: boolean;
+}
+
+export interface TrimestreLetivo {
+  id: number;
+  ano: number;
+  trimestre: number;
+  dataInicio: string;
+  dataFim: string;
+  diasLetivos: number;
+}
+
 export type UsuarioPerfil = typeof UsuarioPerfil[keyof typeof UsuarioPerfil];
 
 
@@ -882,6 +900,14 @@ export type MasterWhoami200 = {
 export type ListLicencasParams = {
 professorId?: number;
 ativas?: boolean;
+};
+
+export type ListCalendarioEscolarParams = {
+ano?: number;
+};
+
+export type ListTrimestresLetivosParams = {
+ano?: number;
 };
 
 export type ListComunicadosParams = {

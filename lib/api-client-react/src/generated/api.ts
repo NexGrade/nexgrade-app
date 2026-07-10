@@ -22,6 +22,7 @@ import type {
 import type {
   AplicarMatrizInput,
   AuditLog,
+  CalendarioEscolarEvento,
   Comunicado,
   ComunicadoInput,
   Configuracao,
@@ -57,11 +58,13 @@ import type {
   LicencaInput,
   LicencaUpdate,
   ListAuditLogsParams,
+  ListCalendarioEscolarParams,
   ListComunicadosParams,
   ListDisponibilidadeParams,
   ListHorariosExperimentaisParams,
   ListHorariosParams,
   ListLicencasParams,
+  ListTrimestresLetivosParams,
   MasterMetrics,
   MasterWhoami200,
   MatrizCurricular,
@@ -76,6 +79,7 @@ import type {
   SalaInput,
   SalaUpdate,
   Stats,
+  TrimestreLetivo,
   Turma,
   TurmaInput,
   TurmaUpdate,
@@ -3936,6 +3940,162 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getDeleteLicencaMutationOptions(options));
     }
+
+export const getListCalendarioEscolarUrl = (params?: ListCalendarioEscolarParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/calendario-escolar?${stringifiedParams}` : `/api/calendario-escolar`
+}
+
+export const listCalendarioEscolar = async (params?: ListCalendarioEscolarParams, options?: RequestInit): Promise<CalendarioEscolarEvento[]> => {
+
+  return customFetch<CalendarioEscolarEvento[]>(getListCalendarioEscolarUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCalendarioEscolarQueryKey = (params?: ListCalendarioEscolarParams,) => {
+    return [
+    `/api/calendario-escolar`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListCalendarioEscolarQueryOptions = <TData = Awaited<ReturnType<typeof listCalendarioEscolar>>, TError = ErrorType<unknown>>(params?: ListCalendarioEscolarParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCalendarioEscolar>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCalendarioEscolarQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCalendarioEscolar>>> = ({ signal }) => listCalendarioEscolar(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCalendarioEscolar>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCalendarioEscolarQueryResult = NonNullable<Awaited<ReturnType<typeof listCalendarioEscolar>>>
+export type ListCalendarioEscolarQueryError = ErrorType<unknown>
+
+
+
+export function useListCalendarioEscolar<TData = Awaited<ReturnType<typeof listCalendarioEscolar>>, TError = ErrorType<unknown>>(
+ params?: ListCalendarioEscolarParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCalendarioEscolar>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCalendarioEscolarQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListTrimestresLetivosUrl = (params?: ListTrimestresLetivosParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/calendario-escolar/trimestres?${stringifiedParams}` : `/api/calendario-escolar/trimestres`
+}
+
+export const listTrimestresLetivos = async (params?: ListTrimestresLetivosParams, options?: RequestInit): Promise<TrimestreLetivo[]> => {
+
+  return customFetch<TrimestreLetivo[]>(getListTrimestresLetivosUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTrimestresLetivosQueryKey = (params?: ListTrimestresLetivosParams,) => {
+    return [
+    `/api/calendario-escolar/trimestres`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListTrimestresLetivosQueryOptions = <TData = Awaited<ReturnType<typeof listTrimestresLetivos>>, TError = ErrorType<unknown>>(params?: ListTrimestresLetivosParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrimestresLetivos>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTrimestresLetivosQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTrimestresLetivos>>> = ({ signal }) => listTrimestresLetivos(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTrimestresLetivos>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTrimestresLetivosQueryResult = NonNullable<Awaited<ReturnType<typeof listTrimestresLetivos>>>
+export type ListTrimestresLetivosQueryError = ErrorType<unknown>
+
+
+
+export function useListTrimestresLetivos<TData = Awaited<ReturnType<typeof listTrimestresLetivos>>, TError = ErrorType<unknown>>(
+ params?: ListTrimestresLetivosParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrimestresLetivos>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTrimestresLetivosQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getListComunicadosUrl = (params?: ListComunicadosParams,) => {
   const normalizedParams = new URLSearchParams();
