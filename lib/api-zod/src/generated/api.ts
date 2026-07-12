@@ -918,6 +918,181 @@ export const DeleteDisponibilidadeParams = zod.object({
 export const DeleteDisponibilidadeResponse = zod.void()
 
 
+export const ListHorarioSlotsQueryParams = zod.object({
+  "turno": zod.enum(['matutino', 'vespertino', 'noturno']).optional()
+})
+
+
+export const listHorarioSlotsResponseDuracaoMinutosDefault = 50;
+
+export const ListHorarioSlotsResponseItem = zod.object({
+  "id": zod.number(),
+  "turno": zod.enum(['matutino', 'vespertino', 'noturno']),
+  "numeroAula": zod.number().min(1),
+  "horaInicio": zod.string().describe('Formato HH:MM ou HH:MM:SS'),
+  "duracaoMinutos": zod.number().default(listHorarioSlotsResponseDuracaoMinutosDefault)
+})
+export const ListHorarioSlotsResponse = zod.array(ListHorarioSlotsResponseItem)
+
+
+
+export const setHorarioSlotBodyDuracaoMinutosDefault = 50;
+
+export const SetHorarioSlotBody = zod.object({
+  "turno": zod.enum(['matutino', 'vespertino', 'noturno']),
+  "numeroAula": zod.number().min(1),
+  "horaInicio": zod.string().describe('Formato HH:MM ou HH:MM:SS'),
+  "duracaoMinutos": zod.number().default(setHorarioSlotBodyDuracaoMinutosDefault)
+})
+
+
+export const setHorarioSlotResponseDuracaoMinutosDefault = 50;
+
+export const SetHorarioSlotResponse = zod.object({
+  "id": zod.number(),
+  "turno": zod.enum(['matutino', 'vespertino', 'noturno']),
+  "numeroAula": zod.number().min(1),
+  "horaInicio": zod.string().describe('Formato HH:MM ou HH:MM:SS'),
+  "duracaoMinutos": zod.number().default(setHorarioSlotResponseDuracaoMinutosDefault)
+})
+
+
+
+export const setHorarioSlotsLoteBodySlotsItemDuracaoMinutosDefault = 50;
+
+export const SetHorarioSlotsLoteBody = zod.object({
+  "turno": zod.enum(['matutino', 'vespertino', 'noturno']),
+  "slots": zod.array(zod.object({
+  "numeroAula": zod.number().min(1),
+  "horaInicio": zod.string().describe('Formato HH:MM ou HH:MM:SS'),
+  "duracaoMinutos": zod.number().default(setHorarioSlotsLoteBodySlotsItemDuracaoMinutosDefault)
+}))
+})
+
+
+export const setHorarioSlotsLoteResponseDuracaoMinutosDefault = 50;
+
+export const SetHorarioSlotsLoteResponseItem = zod.object({
+  "id": zod.number(),
+  "turno": zod.enum(['matutino', 'vespertino', 'noturno']),
+  "numeroAula": zod.number().min(1),
+  "horaInicio": zod.string().describe('Formato HH:MM ou HH:MM:SS'),
+  "duracaoMinutos": zod.number().default(setHorarioSlotsLoteResponseDuracaoMinutosDefault)
+})
+export const SetHorarioSlotsLoteResponse = zod.array(SetHorarioSlotsLoteResponseItem)
+
+
+export const DeleteHorarioSlotParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteHorarioSlotResponse = zod.void()
+
+
+export const ListAulasFixasQueryParams = zod.object({
+  "turmaId": zod.coerce.number().optional()
+})
+
+export const listAulasFixasResponseDiaSemanaMin = 0;
+export const listAulasFixasResponseDiaSemanaMax = 6;
+
+
+
+
+export const ListAulasFixasResponseItem = zod.object({
+  "id": zod.number(),
+  "turmaId": zod.number(),
+  "disciplinaId": zod.number(),
+  "professorId": zod.number(),
+  "diaSemana": zod.number().min(listAulasFixasResponseDiaSemanaMin).max(listAulasFixasResponseDiaSemanaMax),
+  "numeroAula": zod.number().min(1),
+  "anoLetivo": zod.number()
+})
+export const ListAulasFixasResponse = zod.array(ListAulasFixasResponseItem)
+
+
+export const criarAulaFixaBodyDiaSemanaMin = 0;
+export const criarAulaFixaBodyDiaSemanaMax = 6;
+
+
+
+
+export const CriarAulaFixaBody = zod.object({
+  "turmaId": zod.number(),
+  "disciplinaId": zod.number(),
+  "professorId": zod.number(),
+  "diaSemana": zod.number().min(criarAulaFixaBodyDiaSemanaMin).max(criarAulaFixaBodyDiaSemanaMax),
+  "numeroAula": zod.number().min(1),
+  "anoLetivo": zod.number()
+})
+
+export const criarAulaFixaResponseDiaSemanaMin = 0;
+export const criarAulaFixaResponseDiaSemanaMax = 6;
+
+
+
+
+export const CriarAulaFixaResponse = zod.object({
+  "id": zod.number(),
+  "turmaId": zod.number(),
+  "disciplinaId": zod.number(),
+  "professorId": zod.number(),
+  "diaSemana": zod.number().min(criarAulaFixaResponseDiaSemanaMin).max(criarAulaFixaResponseDiaSemanaMax),
+  "numeroAula": zod.number().min(1),
+  "anoLetivo": zod.number()
+})
+
+
+export const DeleteAulaFixaParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteAulaFixaResponse = zod.void()
+
+
+export const ListLimitesDiariosProfessorQueryParams = zod.object({
+  "professorId": zod.coerce.number().optional()
+})
+
+
+
+
+export const ListLimitesDiariosProfessorResponseItem = zod.object({
+  "id": zod.number(),
+  "professorId": zod.number(),
+  "turmaId": zod.number().nullish().describe('Nulo = padrão do professor, válido em qualquer turma. Preenchido = override específico por turma.'),
+  "maxAulasPorDia": zod.number().min(1)
+})
+export const ListLimitesDiariosProfessorResponse = zod.array(ListLimitesDiariosProfessorResponseItem)
+
+
+export const setLimiteDiarioProfessorBodyTurmaIdDefault = null;
+
+
+export const SetLimiteDiarioProfessorBody = zod.object({
+  "professorId": zod.number(),
+  "turmaId": zod.number().nullish().default(setLimiteDiarioProfessorBodyTurmaIdDefault).describe('Nulo = padrão do professor, válido em qualquer turma. Preenchido = override específico por turma.'),
+  "maxAulasPorDia": zod.number().min(1)
+})
+
+
+
+
+export const SetLimiteDiarioProfessorResponse = zod.object({
+  "id": zod.number(),
+  "professorId": zod.number(),
+  "turmaId": zod.number().nullish().describe('Nulo = padrão do professor, válido em qualquer turma. Preenchido = override específico por turma.'),
+  "maxAulasPorDia": zod.number().min(1)
+})
+
+
+export const DeleteLimiteDiarioProfessorParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteLimiteDiarioProfessorResponse = zod.void()
+
+
 export const ListPlanosResponseItem = zod.object({
   "id": zod.number(),
   "nome": zod.string(),
@@ -1227,7 +1402,7 @@ export const ListMatrizesCurricularesResponseItem = zod.object({
   "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "createdAt": zod.string()
 }).optional(),
-  "categoriaCurricular": zod.enum(['base_nacional_comum', 'parte_diversificada', 'formacao_geral_basica', 'itinerario_formativo', 'itinerario_profissionalizante', 'aprofundamento_pratica', 'parte_flexivel']),
+  "categoriaCurricular": zod.enum(['BNC', 'PD', 'FGB', 'PFO', 'IFA', 'IF', 'IFP', 'APF']),
   "cargaHorariaSemanal": zod.number(),
   "grupoDisciplina": zod.string().nullish(),
   "ehPadraoDoGrupo": zod.boolean(),
@@ -1242,7 +1417,7 @@ export const CreateMatrizCurricularParams = zod.object({
 })
 
 
-export const createMatrizCurricularBodyItensItemCategoriaCurricularDefault = `base_nacional_comum`;
+export const createMatrizCurricularBodyItensItemCategoriaCurricularDefault = `BNC`;
 export const createMatrizCurricularBodyItensItemEhPadraoDoGrupoDefault = false;
 export const createMatrizCurricularBodyItensItemObrigatoriaDefault = true;
 export const createMatrizCurricularBodyItensDefault = [];
@@ -1251,7 +1426,7 @@ export const CreateMatrizCurricularBody = zod.object({
   "serieAno": zod.string().min(1),
   "itens": zod.array(zod.object({
   "disciplinaId": zod.number(),
-  "categoriaCurricular": zod.enum(['base_nacional_comum', 'parte_diversificada', 'formacao_geral_basica', 'itinerario_formativo', 'itinerario_profissionalizante', 'aprofundamento_pratica', 'parte_flexivel']).default(createMatrizCurricularBodyItensItemCategoriaCurricularDefault),
+  "categoriaCurricular": zod.enum(['BNC', 'PD', 'FGB', 'PFO', 'IFA', 'IF', 'IFP', 'APF']).default(createMatrizCurricularBodyItensItemCategoriaCurricularDefault),
   "cargaHorariaSemanal": zod.number().min(1),
   "grupoDisciplina": zod.string().optional(),
   "ehPadraoDoGrupo": zod.boolean().default(createMatrizCurricularBodyItensItemEhPadraoDoGrupoDefault),
@@ -1276,7 +1451,7 @@ export const CreateMatrizCurricularResponse = zod.object({
   "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "createdAt": zod.string()
 }).optional(),
-  "categoriaCurricular": zod.enum(['base_nacional_comum', 'parte_diversificada', 'formacao_geral_basica', 'itinerario_formativo', 'itinerario_profissionalizante', 'aprofundamento_pratica', 'parte_flexivel']),
+  "categoriaCurricular": zod.enum(['BNC', 'PD', 'FGB', 'PFO', 'IFA', 'IF', 'IFP', 'APF']),
   "cargaHorariaSemanal": zod.number(),
   "grupoDisciplina": zod.string().nullish(),
   "ehPadraoDoGrupo": zod.boolean(),
@@ -1291,6 +1466,53 @@ export const DeleteMatrizCurricularParams = zod.object({
 })
 
 export const DeleteMatrizCurricularResponse = zod.void()
+
+
+export const AdicionarItemMatrizParams = zod.object({
+  "cursoId": zod.coerce.number(),
+  "matrizId": zod.coerce.number()
+})
+
+export const adicionarItemMatrizBodyCategoriaCurricularDefault = `BNC`;
+export const adicionarItemMatrizBodyEhPadraoDoGrupoDefault = false;
+export const adicionarItemMatrizBodyObrigatoriaDefault = true;
+
+export const AdicionarItemMatrizBody = zod.object({
+  "disciplinaId": zod.number(),
+  "categoriaCurricular": zod.enum(['BNC', 'PD', 'FGB', 'PFO', 'IFA', 'IF', 'IFP', 'APF']).default(adicionarItemMatrizBodyCategoriaCurricularDefault),
+  "cargaHorariaSemanal": zod.number().min(1),
+  "grupoDisciplina": zod.string().optional(),
+  "ehPadraoDoGrupo": zod.boolean().default(adicionarItemMatrizBodyEhPadraoDoGrupoDefault),
+  "obrigatoria": zod.boolean().default(adicionarItemMatrizBodyObrigatoriaDefault)
+})
+
+export const AdicionarItemMatrizResponse = zod.object({
+  "id": zod.number(),
+  "disciplinaId": zod.number(),
+  "disciplina": zod.object({
+  "id": zod.number(),
+  "nome": zod.string(),
+  "cargaSemanal": zod.number(),
+  "cor": zod.string(),
+  "codigoSae": zod.string().nullish().describe('Código SAE oficial (SEED-PR), quando conhecido.'),
+  "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
+  "createdAt": zod.string()
+}).optional(),
+  "categoriaCurricular": zod.enum(['BNC', 'PD', 'FGB', 'PFO', 'IFA', 'IF', 'IFP', 'APF']),
+  "cargaHorariaSemanal": zod.number(),
+  "grupoDisciplina": zod.string().nullish(),
+  "ehPadraoDoGrupo": zod.boolean(),
+  "obrigatoria": zod.boolean()
+})
+
+
+export const RemoverItemMatrizParams = zod.object({
+  "cursoId": zod.coerce.number(),
+  "matrizId": zod.coerce.number(),
+  "itemId": zod.coerce.number()
+})
+
+export const RemoverItemMatrizResponse = zod.void()
 
 
 export const ListLicencasQueryParams = zod.object({

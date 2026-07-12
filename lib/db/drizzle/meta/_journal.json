@@ -8,6 +8,34 @@
       "when": 1783171199561,
       "tag": "0000_slow_saracen",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783648040915,
+      "tag": "0001_huge_fantastic_four",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783649466218,
+      "tag": "0002_sour_wendigo",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1783826373491,
+      "tag": "0003_nosy_zeigeist",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1783828485477,
+      "tag": "0004_clumsy_ricochet",
+      "breakpoints": true
     }
   ]
 }

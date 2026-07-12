@@ -417,6 +417,117 @@ export interface DisponibilidadeLoteInput {
   itens: DisponibilidadeLoteInputItensItem[];
 }
 
+export type EsquemaHorarioSlotTurno = typeof EsquemaHorarioSlotTurno[keyof typeof EsquemaHorarioSlotTurno];
+
+
+export const EsquemaHorarioSlotTurno = {
+  matutino: 'matutino',
+  vespertino: 'vespertino',
+  noturno: 'noturno',
+} as const;
+
+export interface EsquemaHorarioSlot {
+  id: number;
+  turno: EsquemaHorarioSlotTurno;
+  /** @minimum 1 */
+  numeroAula: number;
+  /** Formato HH:MM ou HH:MM:SS */
+  horaInicio: string;
+  duracaoMinutos: number;
+}
+
+export type EsquemaHorarioSlotInputTurno = typeof EsquemaHorarioSlotInputTurno[keyof typeof EsquemaHorarioSlotInputTurno];
+
+
+export const EsquemaHorarioSlotInputTurno = {
+  matutino: 'matutino',
+  vespertino: 'vespertino',
+  noturno: 'noturno',
+} as const;
+
+export interface EsquemaHorarioSlotInput {
+  turno: EsquemaHorarioSlotInputTurno;
+  /** @minimum 1 */
+  numeroAula: number;
+  /** Formato HH:MM ou HH:MM:SS */
+  horaInicio: string;
+  duracaoMinutos?: number;
+}
+
+export type EsquemaHorarioSlotLoteInputTurno = typeof EsquemaHorarioSlotLoteInputTurno[keyof typeof EsquemaHorarioSlotLoteInputTurno];
+
+
+export const EsquemaHorarioSlotLoteInputTurno = {
+  matutino: 'matutino',
+  vespertino: 'vespertino',
+  noturno: 'noturno',
+} as const;
+
+export type EsquemaHorarioSlotLoteInputSlotsItem = {
+  /** @minimum 1 */
+  numeroAula: number;
+  /** Formato HH:MM ou HH:MM:SS */
+  horaInicio: string;
+  duracaoMinutos?: number;
+};
+
+export interface EsquemaHorarioSlotLoteInput {
+  turno: EsquemaHorarioSlotLoteInputTurno;
+  slots: EsquemaHorarioSlotLoteInputSlotsItem[];
+}
+
+export interface AulaFixa {
+  id: number;
+  turmaId: number;
+  disciplinaId: number;
+  professorId: number;
+  /**
+     * @minimum 0
+     * @maximum 6
+     */
+  diaSemana: number;
+  /** @minimum 1 */
+  numeroAula: number;
+  anoLetivo: number;
+}
+
+export interface AulaFixaInput {
+  turmaId: number;
+  disciplinaId: number;
+  professorId: number;
+  /**
+     * @minimum 0
+     * @maximum 6
+     */
+  diaSemana: number;
+  /** @minimum 1 */
+  numeroAula: number;
+  anoLetivo: number;
+}
+
+export interface LimiteDiarioProfessor {
+  id: number;
+  professorId: number;
+  /**
+     * Nulo = padrão do professor, válido em qualquer turma. Preenchido = override específico por turma.
+     * @nullable
+     */
+  turmaId?: number | null;
+  /** @minimum 1 */
+  maxAulasPorDia: number;
+}
+
+export interface LimiteDiarioProfessorInput {
+  professorId: number;
+  /**
+     * Nulo = padrão do professor, válido em qualquer turma. Preenchido = override específico por turma.
+     * @nullable
+     */
+  turmaId?: number | null;
+  /** @minimum 1 */
+  maxAulasPorDia: number;
+}
+
 export type CursoNivel = typeof CursoNivel[keyof typeof CursoNivel];
 
 
@@ -456,13 +567,14 @@ export type ItemMatrizCategoriaCurricular = typeof ItemMatrizCategoriaCurricular
 
 
 export const ItemMatrizCategoriaCurricular = {
-  base_nacional_comum: 'base_nacional_comum',
-  parte_diversificada: 'parte_diversificada',
-  formacao_geral_basica: 'formacao_geral_basica',
-  itinerario_formativo: 'itinerario_formativo',
-  itinerario_profissionalizante: 'itinerario_profissionalizante',
-  aprofundamento_pratica: 'aprofundamento_pratica',
-  parte_flexivel: 'parte_flexivel',
+  BNC: 'BNC',
+  PD: 'PD',
+  FGB: 'FGB',
+  PFO: 'PFO',
+  IFA: 'IFA',
+  IF: 'IF',
+  IFP: 'IFP',
+  APF: 'APF',
 } as const;
 
 export interface ItemMatriz {
@@ -481,13 +593,14 @@ export type ItemMatrizInputCategoriaCurricular = typeof ItemMatrizInputCategoria
 
 
 export const ItemMatrizInputCategoriaCurricular = {
-  base_nacional_comum: 'base_nacional_comum',
-  parte_diversificada: 'parte_diversificada',
-  formacao_geral_basica: 'formacao_geral_basica',
-  itinerario_formativo: 'itinerario_formativo',
-  itinerario_profissionalizante: 'itinerario_profissionalizante',
-  aprofundamento_pratica: 'aprofundamento_pratica',
-  parte_flexivel: 'parte_flexivel',
+  BNC: 'BNC',
+  PD: 'PD',
+  FGB: 'FGB',
+  PFO: 'PFO',
+  IFA: 'IFA',
+  IF: 'IF',
+  IFP: 'IFP',
+  APF: 'APF',
 } as const;
 
 export interface ItemMatrizInput {
@@ -927,6 +1040,27 @@ turmaId?: number;
 };
 
 export type ListDisponibilidadeParams = {
+professorId?: number;
+};
+
+export type ListHorarioSlotsParams = {
+turno?: ListHorarioSlotsTurno;
+};
+
+export type ListHorarioSlotsTurno = typeof ListHorarioSlotsTurno[keyof typeof ListHorarioSlotsTurno];
+
+
+export const ListHorarioSlotsTurno = {
+  matutino: 'matutino',
+  vespertino: 'vespertino',
+  noturno: 'noturno',
+} as const;
+
+export type ListAulasFixasParams = {
+turmaId?: number;
+};
+
+export type ListLimitesDiariosProfessorParams = {
 professorId?: number;
 };
 

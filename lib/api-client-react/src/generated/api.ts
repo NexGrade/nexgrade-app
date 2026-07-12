@@ -22,6 +22,8 @@ import type {
 import type {
   AplicarMatrizInput,
   AuditLog,
+  AulaFixa,
+  AulaFixaInput,
   CalendarioEscolarEvento,
   CargaHorariaTurmaDisciplina,
   Comunicado,
@@ -43,6 +45,9 @@ import type {
   EscolaComMetricas,
   EscolaInput,
   EscolaMasterUpdateInput,
+  EsquemaHorarioSlot,
+  EsquemaHorarioSlotInput,
+  EsquemaHorarioSlotLoteInput,
   ExportGrade200Two,
   ExportGradeParams,
   ExportPontoParams,
@@ -55,17 +60,24 @@ import type {
   HorarioExperimentalInput,
   HorarioSlot,
   HorarioSlotInput,
+  ItemMatriz,
+  ItemMatrizInput,
   Licenca,
   LicencaInput,
   LicencaUpdate,
+  LimiteDiarioProfessor,
+  LimiteDiarioProfessorInput,
   ListAuditLogsParams,
+  ListAulasFixasParams,
   ListCalendarioEscolarParams,
   ListCargaHorariaParams,
   ListComunicadosParams,
   ListDisponibilidadeParams,
+  ListHorarioSlotsParams,
   ListHorariosExperimentaisParams,
   ListHorariosParams,
   ListLicencasParams,
+  ListLimitesDiariosProfessorParams,
   ListTrimestresLetivosParams,
   MasterMetrics,
   MasterWhoami200,
@@ -2522,6 +2534,688 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getDeleteDisponibilidadeMutationOptions(options));
     }
 
+export const getListHorarioSlotsUrl = (params?: ListHorarioSlotsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/horario-slots?${stringifiedParams}` : `/api/horario-slots`
+}
+
+export const listHorarioSlots = async (params?: ListHorarioSlotsParams, options?: RequestInit): Promise<EsquemaHorarioSlot[]> => {
+
+  return customFetch<EsquemaHorarioSlot[]>(getListHorarioSlotsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListHorarioSlotsQueryKey = (params?: ListHorarioSlotsParams,) => {
+    return [
+    `/api/horario-slots`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListHorarioSlotsQueryOptions = <TData = Awaited<ReturnType<typeof listHorarioSlots>>, TError = ErrorType<unknown>>(params?: ListHorarioSlotsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listHorarioSlots>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListHorarioSlotsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listHorarioSlots>>> = ({ signal }) => listHorarioSlots(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listHorarioSlots>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListHorarioSlotsQueryResult = NonNullable<Awaited<ReturnType<typeof listHorarioSlots>>>
+export type ListHorarioSlotsQueryError = ErrorType<unknown>
+
+
+
+export function useListHorarioSlots<TData = Awaited<ReturnType<typeof listHorarioSlots>>, TError = ErrorType<unknown>>(
+ params?: ListHorarioSlotsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listHorarioSlots>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListHorarioSlotsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSetHorarioSlotUrl = () => {
+
+
+
+
+  return `/api/horario-slots`
+}
+
+export const setHorarioSlot = async (esquemaHorarioSlotInput: EsquemaHorarioSlotInput, options?: RequestInit): Promise<EsquemaHorarioSlot> => {
+
+  return customFetch<EsquemaHorarioSlot>(getSetHorarioSlotUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(esquemaHorarioSlotInput)
+  }
+);}
+
+
+
+
+export const getSetHorarioSlotMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setHorarioSlot>>, TError,{data: BodyType<EsquemaHorarioSlotInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setHorarioSlot>>, TError,{data: BodyType<EsquemaHorarioSlotInput>}, TContext> => {
+
+const mutationKey = ['setHorarioSlot'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setHorarioSlot>>, {data: BodyType<EsquemaHorarioSlotInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  setHorarioSlot(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetHorarioSlotMutationResult = NonNullable<Awaited<ReturnType<typeof setHorarioSlot>>>
+    export type SetHorarioSlotMutationBody = BodyType<EsquemaHorarioSlotInput>
+    export type SetHorarioSlotMutationError = ErrorType<unknown>
+
+    export const useSetHorarioSlot = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setHorarioSlot>>, TError,{data: BodyType<EsquemaHorarioSlotInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setHorarioSlot>>,
+        TError,
+        {data: BodyType<EsquemaHorarioSlotInput>},
+        TContext
+      > => {
+      return useMutation(getSetHorarioSlotMutationOptions(options));
+    }
+
+export const getSetHorarioSlotsLoteUrl = () => {
+
+
+
+
+  return `/api/horario-slots/lote`
+}
+
+export const setHorarioSlotsLote = async (esquemaHorarioSlotLoteInput: EsquemaHorarioSlotLoteInput, options?: RequestInit): Promise<EsquemaHorarioSlot[]> => {
+
+  return customFetch<EsquemaHorarioSlot[]>(getSetHorarioSlotsLoteUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(esquemaHorarioSlotLoteInput)
+  }
+);}
+
+
+
+
+export const getSetHorarioSlotsLoteMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setHorarioSlotsLote>>, TError,{data: BodyType<EsquemaHorarioSlotLoteInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setHorarioSlotsLote>>, TError,{data: BodyType<EsquemaHorarioSlotLoteInput>}, TContext> => {
+
+const mutationKey = ['setHorarioSlotsLote'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setHorarioSlotsLote>>, {data: BodyType<EsquemaHorarioSlotLoteInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  setHorarioSlotsLote(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetHorarioSlotsLoteMutationResult = NonNullable<Awaited<ReturnType<typeof setHorarioSlotsLote>>>
+    export type SetHorarioSlotsLoteMutationBody = BodyType<EsquemaHorarioSlotLoteInput>
+    export type SetHorarioSlotsLoteMutationError = ErrorType<unknown>
+
+    export const useSetHorarioSlotsLote = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setHorarioSlotsLote>>, TError,{data: BodyType<EsquemaHorarioSlotLoteInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setHorarioSlotsLote>>,
+        TError,
+        {data: BodyType<EsquemaHorarioSlotLoteInput>},
+        TContext
+      > => {
+      return useMutation(getSetHorarioSlotsLoteMutationOptions(options));
+    }
+
+export const getDeleteHorarioSlotUrl = (id: number,) => {
+
+
+
+
+  return `/api/horario-slots/${id}`
+}
+
+export const deleteHorarioSlot = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteHorarioSlotUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteHorarioSlotMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteHorarioSlot>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteHorarioSlot>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteHorarioSlot'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteHorarioSlot>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteHorarioSlot(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteHorarioSlotMutationResult = NonNullable<Awaited<ReturnType<typeof deleteHorarioSlot>>>
+
+    export type DeleteHorarioSlotMutationError = ErrorType<unknown>
+
+    export const useDeleteHorarioSlot = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteHorarioSlot>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteHorarioSlot>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteHorarioSlotMutationOptions(options));
+    }
+
+export const getListAulasFixasUrl = (params?: ListAulasFixasParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/aulas-fixas?${stringifiedParams}` : `/api/aulas-fixas`
+}
+
+export const listAulasFixas = async (params?: ListAulasFixasParams, options?: RequestInit): Promise<AulaFixa[]> => {
+
+  return customFetch<AulaFixa[]>(getListAulasFixasUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAulasFixasQueryKey = (params?: ListAulasFixasParams,) => {
+    return [
+    `/api/aulas-fixas`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAulasFixasQueryOptions = <TData = Awaited<ReturnType<typeof listAulasFixas>>, TError = ErrorType<unknown>>(params?: ListAulasFixasParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAulasFixas>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAulasFixasQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAulasFixas>>> = ({ signal }) => listAulasFixas(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAulasFixas>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAulasFixasQueryResult = NonNullable<Awaited<ReturnType<typeof listAulasFixas>>>
+export type ListAulasFixasQueryError = ErrorType<unknown>
+
+
+
+export function useListAulasFixas<TData = Awaited<ReturnType<typeof listAulasFixas>>, TError = ErrorType<unknown>>(
+ params?: ListAulasFixasParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAulasFixas>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAulasFixasQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCriarAulaFixaUrl = () => {
+
+
+
+
+  return `/api/aulas-fixas`
+}
+
+export const criarAulaFixa = async (aulaFixaInput: AulaFixaInput, options?: RequestInit): Promise<AulaFixa> => {
+
+  return customFetch<AulaFixa>(getCriarAulaFixaUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(aulaFixaInput)
+  }
+);}
+
+
+
+
+export const getCriarAulaFixaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof criarAulaFixa>>, TError,{data: BodyType<AulaFixaInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof criarAulaFixa>>, TError,{data: BodyType<AulaFixaInput>}, TContext> => {
+
+const mutationKey = ['criarAulaFixa'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof criarAulaFixa>>, {data: BodyType<AulaFixaInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  criarAulaFixa(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CriarAulaFixaMutationResult = NonNullable<Awaited<ReturnType<typeof criarAulaFixa>>>
+    export type CriarAulaFixaMutationBody = BodyType<AulaFixaInput>
+    export type CriarAulaFixaMutationError = ErrorType<unknown>
+
+    export const useCriarAulaFixa = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof criarAulaFixa>>, TError,{data: BodyType<AulaFixaInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof criarAulaFixa>>,
+        TError,
+        {data: BodyType<AulaFixaInput>},
+        TContext
+      > => {
+      return useMutation(getCriarAulaFixaMutationOptions(options));
+    }
+
+export const getDeleteAulaFixaUrl = (id: number,) => {
+
+
+
+
+  return `/api/aulas-fixas/${id}`
+}
+
+export const deleteAulaFixa = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteAulaFixaUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteAulaFixaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAulaFixa>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAulaFixa>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteAulaFixa'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAulaFixa>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteAulaFixa(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAulaFixaMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAulaFixa>>>
+
+    export type DeleteAulaFixaMutationError = ErrorType<unknown>
+
+    export const useDeleteAulaFixa = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAulaFixa>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAulaFixa>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteAulaFixaMutationOptions(options));
+    }
+
+export const getListLimitesDiariosProfessorUrl = (params?: ListLimitesDiariosProfessorParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/limites-diarios-professor?${stringifiedParams}` : `/api/limites-diarios-professor`
+}
+
+export const listLimitesDiariosProfessor = async (params?: ListLimitesDiariosProfessorParams, options?: RequestInit): Promise<LimiteDiarioProfessor[]> => {
+
+  return customFetch<LimiteDiarioProfessor[]>(getListLimitesDiariosProfessorUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListLimitesDiariosProfessorQueryKey = (params?: ListLimitesDiariosProfessorParams,) => {
+    return [
+    `/api/limites-diarios-professor`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListLimitesDiariosProfessorQueryOptions = <TData = Awaited<ReturnType<typeof listLimitesDiariosProfessor>>, TError = ErrorType<unknown>>(params?: ListLimitesDiariosProfessorParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listLimitesDiariosProfessor>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListLimitesDiariosProfessorQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listLimitesDiariosProfessor>>> = ({ signal }) => listLimitesDiariosProfessor(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listLimitesDiariosProfessor>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListLimitesDiariosProfessorQueryResult = NonNullable<Awaited<ReturnType<typeof listLimitesDiariosProfessor>>>
+export type ListLimitesDiariosProfessorQueryError = ErrorType<unknown>
+
+
+
+export function useListLimitesDiariosProfessor<TData = Awaited<ReturnType<typeof listLimitesDiariosProfessor>>, TError = ErrorType<unknown>>(
+ params?: ListLimitesDiariosProfessorParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listLimitesDiariosProfessor>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListLimitesDiariosProfessorQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSetLimiteDiarioProfessorUrl = () => {
+
+
+
+
+  return `/api/limites-diarios-professor`
+}
+
+export const setLimiteDiarioProfessor = async (limiteDiarioProfessorInput: LimiteDiarioProfessorInput, options?: RequestInit): Promise<LimiteDiarioProfessor> => {
+
+  return customFetch<LimiteDiarioProfessor>(getSetLimiteDiarioProfessorUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(limiteDiarioProfessorInput)
+  }
+);}
+
+
+
+
+export const getSetLimiteDiarioProfessorMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setLimiteDiarioProfessor>>, TError,{data: BodyType<LimiteDiarioProfessorInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setLimiteDiarioProfessor>>, TError,{data: BodyType<LimiteDiarioProfessorInput>}, TContext> => {
+
+const mutationKey = ['setLimiteDiarioProfessor'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setLimiteDiarioProfessor>>, {data: BodyType<LimiteDiarioProfessorInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  setLimiteDiarioProfessor(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetLimiteDiarioProfessorMutationResult = NonNullable<Awaited<ReturnType<typeof setLimiteDiarioProfessor>>>
+    export type SetLimiteDiarioProfessorMutationBody = BodyType<LimiteDiarioProfessorInput>
+    export type SetLimiteDiarioProfessorMutationError = ErrorType<unknown>
+
+    export const useSetLimiteDiarioProfessor = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setLimiteDiarioProfessor>>, TError,{data: BodyType<LimiteDiarioProfessorInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setLimiteDiarioProfessor>>,
+        TError,
+        {data: BodyType<LimiteDiarioProfessorInput>},
+        TContext
+      > => {
+      return useMutation(getSetLimiteDiarioProfessorMutationOptions(options));
+    }
+
+export const getDeleteLimiteDiarioProfessorUrl = (id: number,) => {
+
+
+
+
+  return `/api/limites-diarios-professor/${id}`
+}
+
+export const deleteLimiteDiarioProfessor = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteLimiteDiarioProfessorUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteLimiteDiarioProfessorMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLimiteDiarioProfessor>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteLimiteDiarioProfessor>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteLimiteDiarioProfessor'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteLimiteDiarioProfessor>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteLimiteDiarioProfessor(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteLimiteDiarioProfessorMutationResult = NonNullable<Awaited<ReturnType<typeof deleteLimiteDiarioProfessor>>>
+
+    export type DeleteLimiteDiarioProfessorMutationError = ErrorType<unknown>
+
+    export const useDeleteLimiteDiarioProfessor = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLimiteDiarioProfessor>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteLimiteDiarioProfessor>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteLimiteDiarioProfessorMutationOptions(options));
+    }
+
 export const getListPlanosUrl = () => {
 
 
@@ -3670,6 +4364,141 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getDeleteMatrizCurricularMutationOptions(options));
+    }
+
+export const getAdicionarItemMatrizUrl = (cursoId: number,
+    matrizId: number,) => {
+
+
+
+
+  return `/api/cursos/${cursoId}/matrizes/${matrizId}/itens`
+}
+
+export const adicionarItemMatriz = async (cursoId: number,
+    matrizId: number,
+    itemMatrizInput: ItemMatrizInput, options?: RequestInit): Promise<ItemMatriz> => {
+
+  return customFetch<ItemMatriz>(getAdicionarItemMatrizUrl(cursoId,matrizId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(itemMatrizInput)
+  }
+);}
+
+
+
+
+export const getAdicionarItemMatrizMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adicionarItemMatriz>>, TError,{cursoId: number;matrizId: number;data: BodyType<ItemMatrizInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adicionarItemMatriz>>, TError,{cursoId: number;matrizId: number;data: BodyType<ItemMatrizInput>}, TContext> => {
+
+const mutationKey = ['adicionarItemMatriz'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adicionarItemMatriz>>, {cursoId: number;matrizId: number;data: BodyType<ItemMatrizInput>}> = (props) => {
+          const {cursoId,matrizId,data} = props ?? {};
+
+          return  adicionarItemMatriz(cursoId,matrizId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdicionarItemMatrizMutationResult = NonNullable<Awaited<ReturnType<typeof adicionarItemMatriz>>>
+    export type AdicionarItemMatrizMutationBody = BodyType<ItemMatrizInput>
+    export type AdicionarItemMatrizMutationError = ErrorType<unknown>
+
+    export const useAdicionarItemMatriz = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adicionarItemMatriz>>, TError,{cursoId: number;matrizId: number;data: BodyType<ItemMatrizInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adicionarItemMatriz>>,
+        TError,
+        {cursoId: number;matrizId: number;data: BodyType<ItemMatrizInput>},
+        TContext
+      > => {
+      return useMutation(getAdicionarItemMatrizMutationOptions(options));
+    }
+
+export const getRemoverItemMatrizUrl = (cursoId: number,
+    matrizId: number,
+    itemId: number,) => {
+
+
+
+
+  return `/api/cursos/${cursoId}/matrizes/${matrizId}/itens/${itemId}`
+}
+
+export const removerItemMatriz = async (cursoId: number,
+    matrizId: number,
+    itemId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getRemoverItemMatrizUrl(cursoId,matrizId,itemId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getRemoverItemMatrizMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removerItemMatriz>>, TError,{cursoId: number;matrizId: number;itemId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removerItemMatriz>>, TError,{cursoId: number;matrizId: number;itemId: number}, TContext> => {
+
+const mutationKey = ['removerItemMatriz'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removerItemMatriz>>, {cursoId: number;matrizId: number;itemId: number}> = (props) => {
+          const {cursoId,matrizId,itemId} = props ?? {};
+
+          return  removerItemMatriz(cursoId,matrizId,itemId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoverItemMatrizMutationResult = NonNullable<Awaited<ReturnType<typeof removerItemMatriz>>>
+
+    export type RemoverItemMatrizMutationError = ErrorType<unknown>
+
+    export const useRemoverItemMatriz = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removerItemMatriz>>, TError,{cursoId: number;matrizId: number;itemId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removerItemMatriz>>,
+        TError,
+        {cursoId: number;matrizId: number;itemId: number},
+        TContext
+      > => {
+      return useMutation(getRemoverItemMatrizMutationOptions(options));
     }
 
 export const getListLicencasUrl = (params?: ListLicencasParams,) => {

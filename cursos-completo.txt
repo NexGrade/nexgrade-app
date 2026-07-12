@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import { db } from "@workspace/db";
 import {
   cursosTable,
@@ -14,7 +14,7 @@ import { registrarAuditoria } from "../lib/audit";
 // RF-CUR-01 a RF-CUR-05: Curso, Matriz Curricular e Itens da Matriz.
 // Ver docs/requisitos-funcionais-e-nao-funcionais.md e
 // docs/analise-formatos-uranin-sere.md (categorias curriculares usam
-// nomenclatura própria do NexGrade, não a "Composição Curricular" do
+// nomenclatura prÃ³pria do NexGrade, nÃ£o a "ComposiÃ§Ã£o Curricular" do
 // SERE nem qualquer taxonomia de terceiros).
 const router = Router();
 
@@ -41,7 +41,7 @@ const MatrizInput = z.object({
   itens: z.array(ItemMatrizInput).default([]),
 });
 
-// ── CURSOS ───────────────────────────────────────────────────────────────
+// â”€â”€ CURSOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 router.get("/", async (req, res) => {
   const escolaId = getEscolaId(req);
@@ -76,7 +76,7 @@ router.patch("/:id", async (req, res) => {
     .where(and(eq(cursosTable.id, id), eq(cursosTable.escolaId, escolaId)))
     .then((r) => r[0]);
   if (!anterior) {
-    res.status(404).json({ error: "Curso não encontrado" });
+    res.status(404).json({ error: "Curso nÃ£o encontrado" });
     return;
   }
   const [curso] = await db
@@ -109,7 +109,7 @@ router.delete("/:id", async (req, res) => {
   res.status(204).send();
 });
 
-// ── MATRIZES CURRICULARES (por curso) ──────────────────────────────────
+// â”€â”€ MATRIZES CURRICULARES (por curso) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 router.get("/:cursoId/matrizes", async (req, res) => {
   const escolaId = getEscolaId(req);
@@ -119,7 +119,7 @@ router.get("/:cursoId/matrizes", async (req, res) => {
     .where(and(eq(cursosTable.id, cursoId), eq(cursosTable.escolaId, escolaId)))
     .then((r) => r[0]);
   if (!curso) {
-    res.status(404).json({ error: "Curso não encontrado" });
+    res.status(404).json({ error: "Curso nÃ£o encontrado" });
     return;
   }
 
@@ -159,7 +159,7 @@ router.post("/:cursoId/matrizes", async (req, res) => {
     .where(and(eq(cursosTable.id, cursoId), eq(cursosTable.escolaId, escolaId)))
     .then((r) => r[0]);
   if (!curso) {
-    res.status(404).json({ error: "Curso não encontrado" });
+    res.status(404).json({ error: "Curso nÃ£o encontrado" });
     return;
   }
 
@@ -194,112 +194,6 @@ router.post("/:cursoId/matrizes", async (req, res) => {
   res.status(201).json({ ...matriz, itens: itensInseridos });
 });
 
-// [NOVO] RF-CUR-06: adiciona um único item a uma matriz já existente,
-// sem precisar recriar a matriz inteira. Recalcula
-// cargaHorariaSemanalTotal (soma de todos os itens) a cada mudança —
-// esse campo nunca é escrito diretamente pelo cliente, só derivado.
-router.post("/:cursoId/matrizes/:matrizId/itens", async (req, res) => {
-  const escolaId = getEscolaId(req);
-  const cursoId = Number(req.params.cursoId);
-  const matrizId = Number(req.params.matrizId);
-
-  const matriz = await db.select().from(matrizesCurricularesTable)
-    .where(and(
-      eq(matrizesCurricularesTable.id, matrizId),
-      eq(matrizesCurricularesTable.cursoId, cursoId),
-      eq(matrizesCurricularesTable.escolaId, escolaId),
-    ))
-    .then((r) => r[0]);
-  if (!matriz) {
-    res.status(404).json({ error: "Matriz curricular não encontrada" });
-    return;
-  }
-
-  const parsed = ItemMatrizInput.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
-    return;
-  }
-
-  const disciplina = await db.select().from(disciplinasTable)
-    .where(and(eq(disciplinasTable.id, parsed.data.disciplinaId), eq(disciplinasTable.escolaId, escolaId)))
-    .then((r) => r[0]);
-  if (!disciplina) {
-    res.status(404).json({ error: "Disciplina não encontrada" });
-    return;
-  }
-
-  const { item, matrizAtualizada } = await db.transaction(async (tx) => {
-    const [item] = await tx.insert(itensMatrizTable)
-      .values({ ...parsed.data, matrizCurricularId: matrizId })
-      .returning();
-
-    const todosItens = await tx.select().from(itensMatrizTable)
-      .where(eq(itensMatrizTable.matrizCurricularId, matrizId));
-    const novoTotal = todosItens.reduce((soma, i) => soma + i.cargaHorariaSemanal, 0);
-
-    const [matrizAtualizada] = await tx.update(matrizesCurricularesTable)
-      .set({ cargaHorariaSemanalTotal: novoTotal })
-      .where(eq(matrizesCurricularesTable.id, matrizId))
-      .returning();
-
-    return { item, matrizAtualizada };
-  });
-
-  await registrarAuditoria({
-    req, escolaId, entidade: "itens_matriz", entidadeId: item.id,
-    acao: "criacao", dadosAnteriores: null, dadosNovos: item,
-  });
-  res.status(201).json({ ...item, disciplina, matrizCurricularAtualizada: matrizAtualizada });
-});
-
-// [NOVO] RF-CUR-06: remove um item específico da matriz e recalcula o
-// total, sem afetar os outros itens.
-router.delete("/:cursoId/matrizes/:matrizId/itens/:itemId", async (req, res) => {
-  const escolaId = getEscolaId(req);
-  const cursoId = Number(req.params.cursoId);
-  const matrizId = Number(req.params.matrizId);
-  const itemId = Number(req.params.itemId);
-
-  const matriz = await db.select().from(matrizesCurricularesTable)
-    .where(and(
-      eq(matrizesCurricularesTable.id, matrizId),
-      eq(matrizesCurricularesTable.cursoId, cursoId),
-      eq(matrizesCurricularesTable.escolaId, escolaId),
-    ))
-    .then((r) => r[0]);
-  if (!matriz) {
-    res.status(204).send();
-    return;
-  }
-
-  const item = await db.select().from(itensMatrizTable)
-    .where(and(eq(itensMatrizTable.id, itemId), eq(itensMatrizTable.matrizCurricularId, matrizId)))
-    .then((r) => r[0]);
-  if (!item) {
-    res.status(204).send();
-    return;
-  }
-
-  await db.transaction(async (tx) => {
-    await tx.delete(itensMatrizTable).where(eq(itensMatrizTable.id, itemId));
-
-    const restantes = await tx.select().from(itensMatrizTable)
-      .where(eq(itensMatrizTable.matrizCurricularId, matrizId));
-    const novoTotal = restantes.reduce((soma, i) => soma + i.cargaHorariaSemanal, 0);
-
-    await tx.update(matrizesCurricularesTable)
-      .set({ cargaHorariaSemanalTotal: novoTotal })
-      .where(eq(matrizesCurricularesTable.id, matrizId));
-  });
-
-  await registrarAuditoria({
-    req, escolaId, entidade: "itens_matriz", entidadeId: itemId,
-    acao: "exclusao", dadosAnteriores: item, dadosNovos: null,
-  });
-  res.status(204).send();
-});
-
 router.delete("/:cursoId/matrizes/:matrizId", async (req, res) => {
   const escolaId = getEscolaId(req);
   const matrizId = Number(req.params.matrizId);
@@ -321,3 +215,5 @@ router.delete("/:cursoId/matrizes/:matrizId", async (req, res) => {
 });
 
 export default router;
+
+

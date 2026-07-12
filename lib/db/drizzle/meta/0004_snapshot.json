@@ -1,6 +1,6 @@
 {
-  "id": "5a7aa435-9e27-423e-a44d-ed7edc34926c",
-  "prevId": "2b6c76aa-6cce-40ba-b272-cdd95fee68ee",
+  "id": "90322ab5-1301-4489-bd17-fb06b71c02cc",
+  "prevId": "26473eab-ccc6-4d35-9afa-771710855e81",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1515,10 +1515,11 @@
         },
         "categoria_curricular": {
           "name": "categoria_curricular",
-          "type": "text",
+          "type": "composicao_curricular",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'base_nacional_comum'"
+          "default": "'BNC'"
         },
         "carga_horaria_semanal": {
           "name": "carga_horaria_semanal",
@@ -1762,9 +1763,277 @@
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
+    },
+    "public.aulas_fixas": {
+      "name": "aulas_fixas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "escola_id": {
+          "name": "escola_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'escola_default'"
+        },
+        "turma_id": {
+          "name": "turma_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "disciplina_id": {
+          "name": "disciplina_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "professor_id": {
+          "name": "professor_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dia_semana": {
+          "name": "dia_semana",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "numero_aula": {
+          "name": "numero_aula",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ano_letivo": {
+          "name": "ano_letivo",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "aulas_fixas_turma_id_turmas_id_fk": {
+          "name": "aulas_fixas_turma_id_turmas_id_fk",
+          "tableFrom": "aulas_fixas",
+          "tableTo": "turmas",
+          "columnsFrom": [
+            "turma_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "aulas_fixas_disciplina_id_disciplinas_id_fk": {
+          "name": "aulas_fixas_disciplina_id_disciplinas_id_fk",
+          "tableFrom": "aulas_fixas",
+          "tableTo": "disciplinas",
+          "columnsFrom": [
+            "disciplina_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "aulas_fixas_professor_id_professores_id_fk": {
+          "name": "aulas_fixas_professor_id_professores_id_fk",
+          "tableFrom": "aulas_fixas",
+          "tableTo": "professores",
+          "columnsFrom": [
+            "professor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.horario_slots": {
+      "name": "horario_slots",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "escola_id": {
+          "name": "escola_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'escola_default'"
+        },
+        "turno": {
+          "name": "turno",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "numero_aula": {
+          "name": "numero_aula",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hora_inicio": {
+          "name": "hora_inicio",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "duracao_minutos": {
+          "name": "duracao_minutos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 50
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.limites_diarios_professor": {
+      "name": "limites_diarios_professor",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "escola_id": {
+          "name": "escola_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'escola_default'"
+        },
+        "professor_id": {
+          "name": "professor_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "turma_id": {
+          "name": "turma_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "max_aulas_por_dia": {
+          "name": "max_aulas_por_dia",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 2
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "limites_diarios_professor_professor_id_professores_id_fk": {
+          "name": "limites_diarios_professor_professor_id_professores_id_fk",
+          "tableFrom": "limites_diarios_professor",
+          "tableTo": "professores",
+          "columnsFrom": [
+            "professor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "limites_diarios_professor_turma_id_turmas_id_fk": {
+          "name": "limites_diarios_professor_turma_id_turmas_id_fk",
+          "tableFrom": "limites_diarios_professor",
+          "tableTo": "turmas",
+          "columnsFrom": [
+            "turma_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.composicao_curricular": {
+      "name": "composicao_curricular",
+      "schema": "public",
+      "values": [
+        "BNC",
+        "PD",
+        "FGB",
+        "PFO",
+        "IFA",
+        "IF",
+        "IFP",
+        "APF"
+      ]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},

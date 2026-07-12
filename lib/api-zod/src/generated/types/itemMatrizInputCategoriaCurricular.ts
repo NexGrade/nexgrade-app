@@ -10,11 +10,12 @@ export type ItemMatrizInputCategoriaCurricular = typeof ItemMatrizInputCategoria
 
 
 export const ItemMatrizInputCategoriaCurricular = {
-  base_nacional_comum: 'base_nacional_comum',
-  parte_diversificada: 'parte_diversificada',
-  formacao_geral_basica: 'formacao_geral_basica',
-  itinerario_formativo: 'itinerario_formativo',
-  itinerario_profissionalizante: 'itinerario_profissionalizante',
-  aprofundamento_pratica: 'aprofundamento_pratica',
-  parte_flexivel: 'parte_flexivel',
+  BNC: 'BNC',
+  PD: 'PD',
+  FGB: 'FGB',
+  PFO: 'PFO',
+  IFA: 'IFA',
+  IF: 'IF',
+  IFP: 'IFP',
+  APF: 'APF',
 } as const;

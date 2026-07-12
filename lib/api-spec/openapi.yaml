@@ -653,7 +653,176 @@ paths:
       responses:
         "204":
           description: Removida
+# ── HORARIO SLOTS ────────────────────────────────────────────────────────
+  /horario-slots:
+    get:
+      operationId: listHorarioSlots
+      tags: [horario-slots]
+      parameters:
+        - name: turno
+          in: query
+          schema:
+            type: string
+            enum: [matutino, vespertino, noturno]
+      responses:
+        "200":
+          description: Lista
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EsquemaHorarioSlot"
+    post:
+      operationId: setHorarioSlot
+      tags: [horario-slots]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EsquemaHorarioSlotInput"
+      responses:
+        "201":
+          description: Criado ou atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EsquemaHorarioSlot"
 
+  /horario-slots/lote:
+    post:
+      operationId: setHorarioSlotsLote
+      tags: [horario-slots]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EsquemaHorarioSlotLoteInput"
+      responses:
+        "201":
+          description: Esquema do turno substituído
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EsquemaHorarioSlot"
+
+  /horario-slots/{id}:
+    delete:
+      operationId: deleteHorarioSlot
+      tags: [horario-slots]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removido
+
+  # ── AULAS FIXAS ──────────────────────────────────────────────────────────
+  /aulas-fixas:
+    get:
+      operationId: listAulasFixas
+      tags: [aulas-fixas]
+      parameters:
+        - name: turmaId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lista
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AulaFixa"
+    post:
+      operationId: criarAulaFixa
+      tags: [aulas-fixas]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AulaFixaInput"
+      responses:
+        "201":
+          description: Criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AulaFixa"
+
+  /aulas-fixas/{id}:
+    delete:
+      operationId: deleteAulaFixa
+      tags: [aulas-fixas]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removida
+
+  # ── LIMITES DIÁRIOS PROFESSOR ────────────────────────────────────────────
+  /limites-diarios-professor:
+    get:
+      operationId: listLimitesDiariosProfessor
+      tags: [limites-diarios-professor]
+      parameters:
+        - name: professorId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lista
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LimiteDiarioProfessor"
+    post:
+      operationId: setLimiteDiarioProfessor
+      tags: [limites-diarios-professor]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LimiteDiarioProfessorInput"
+      responses:
+        "201":
+          description: Criado ou atualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LimiteDiarioProfessor"
+
+  /limites-diarios-professor/{id}:
+    delete:
+      operationId: deleteLimiteDiarioProfessor
+      tags: [limites-diarios-professor]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removido
   # ── ESCOLAS / ONBOARDING ─────────────────────────────────────────────────────
   /escolas/planos:
     get:
@@ -956,6 +1125,58 @@ paths:
       responses:
         "204":
           description: Removida
+  /cursos/{cursoId}/matrizes/{matrizId}/itens:
+    post:
+      operationId: adicionarItemMatriz
+      tags: [cursos]
+      parameters:
+        - name: cursoId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: matrizId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemMatrizInput"
+      responses:
+        "201":
+          description: Item adicionado, matriz recalculada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemMatriz"
+
+  /cursos/{cursoId}/matrizes/{matrizId}/itens/{itemId}:
+    delete:
+      operationId: removerItemMatriz
+      tags: [cursos]
+      parameters:
+        - name: cursoId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: matrizId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removido
 
   # ── LICENÇAS ─────────────────────────────────────────────────────────────────
   /licencas:
@@ -1045,7 +1266,7 @@ paths:
             type: integer
       responses:
         "200":
-          description: Lista de eventos do calend�rio
+          description: Lista de eventos do calend�rio
           content:
             application/json:
               schema:
@@ -1738,7 +1959,78 @@ components:
               motivo: { type: string }
               turno: { type: string, enum: [matutino, vespertino, noturno] }
               horaAtividadeObrigatoria: { type: boolean, default: false }
+    EsquemaHorarioSlot:
+      type: object
+      required: [id, turno, numeroAula, horaInicio, duracaoMinutos]
+      properties:
+        id: { type: integer }
+        turno: { type: string, enum: [matutino, vespertino, noturno] }
+        numeroAula: { type: integer, minimum: 1 }
+        horaInicio: { type: string, description: "Formato HH:MM ou HH:MM:SS" }
+        duracaoMinutos: { type: integer, default: 50 }
 
+    EsquemaHorarioSlotInput:
+      type: object
+      required: [turno, numeroAula, horaInicio]
+      properties:
+        turno: { type: string, enum: [matutino, vespertino, noturno] }
+        numeroAula: { type: integer, minimum: 1 }
+        horaInicio: { type: string, description: "Formato HH:MM ou HH:MM:SS" }
+        duracaoMinutos: { type: integer, default: 50 }
+
+    EsquemaHorarioSlotLoteInput:
+      type: object
+      required: [turno, slots]
+      properties:
+        turno: { type: string, enum: [matutino, vespertino, noturno] }
+        slots:
+          type: array
+          items:
+            type: object
+            required: [numeroAula, horaInicio]
+            properties:
+              numeroAula: { type: integer, minimum: 1 }
+              horaInicio: { type: string, description: "Formato HH:MM ou HH:MM:SS" }
+              duracaoMinutos: { type: integer, default: 50 }
+    AulaFixa:
+      type: object
+      required: [id, turmaId, disciplinaId, professorId, diaSemana, numeroAula, anoLetivo]
+      properties:
+        id: { type: integer }
+        turmaId: { type: integer }
+        disciplinaId: { type: integer }
+        professorId: { type: integer }
+        diaSemana: { type: integer, minimum: 0, maximum: 6 }
+        numeroAula: { type: integer, minimum: 1 }
+        anoLetivo: { type: integer }
+
+    AulaFixaInput:
+      type: object
+      required: [turmaId, disciplinaId, professorId, diaSemana, numeroAula, anoLetivo]
+      properties:
+        turmaId: { type: integer }
+        disciplinaId: { type: integer }
+        professorId: { type: integer }
+        diaSemana: { type: integer, minimum: 0, maximum: 6 }
+        numeroAula: { type: integer, minimum: 1 }
+        anoLetivo: { type: integer }
+
+    LimiteDiarioProfessor:
+      type: object
+      required: [id, professorId, maxAulasPorDia]
+      properties:
+        id: { type: integer }
+        professorId: { type: integer }
+        turmaId: { type: ["integer", "null"], description: "Nulo = padrão do professor, válido em qualquer turma. Preenchido = override específico por turma." }
+        maxAulasPorDia: { type: integer, minimum: 1 }
+
+    LimiteDiarioProfessorInput:
+      type: object
+      required: [professorId, maxAulasPorDia]
+      properties:
+        professorId: { type: integer }
+        turmaId: { type: ["integer", "null"], default: null, description: "Nulo = padrão do professor, válido em qualquer turma. Preenchido = override específico por turma." }
+        maxAulasPorDia: { type: integer, minimum: 1 }
     Curso:
       type: object
       required: [id, nome, nivel]
@@ -1766,16 +2058,7 @@ components:
           $ref: "#/components/schemas/Disciplina"
         categoriaCurricular:
           type: string
-          enum:
-            [
-              base_nacional_comum,
-              parte_diversificada,
-              formacao_geral_basica,
-              itinerario_formativo,
-              itinerario_profissionalizante,
-              aprofundamento_pratica,
-              parte_flexivel,
-            ]
+          enum: [BNC, PD, FGB, PFO, IFA, IF, IFP, APF]
         cargaHorariaSemanal: { type: integer }
         grupoDisciplina: { type: ["string", "null"] }
         ehPadraoDoGrupo: { type: boolean }
@@ -1788,17 +2071,8 @@ components:
         disciplinaId: { type: integer }
         categoriaCurricular:
           type: string
-          enum:
-            [
-              base_nacional_comum,
-              parte_diversificada,
-              formacao_geral_basica,
-              itinerario_formativo,
-              itinerario_profissionalizante,
-              aprofundamento_pratica,
-              parte_flexivel,
-            ]
-          default: base_nacional_comum
+          enum: [BNC, PD, FGB, PFO, IFA, IF, IFP, APF]
+          default: BNC
         cargaHorariaSemanal: { type: integer, minimum: 1 }
         grupoDisciplina: { type: string }
         ehPadraoDoGrupo: { type: boolean, default: false }
@@ -2135,3 +2409,4 @@ components:
         totalAulasDistribuidas: { type: integer }
         totalUsuarios: { type: integer }
         mensagensEnviadasParaIA: { type: integer }
+

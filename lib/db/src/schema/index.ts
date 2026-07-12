@@ -14,3 +14,7 @@ export * from "./disponibilidade";
 export * from "./ai_conversas";
 export * from "./cursos";
 export * from "./calendario_escolar";
+export * from "./aulas_fixas";
+export * from "./enums";
+export * from "./horarios_slots";
+export * from "./limites_diarios_professor";

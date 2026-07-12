@@ -1,16 +1,18 @@
 import { pgTable, text, serial, timestamp, integer, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { composicaoCurricularEnum } from "./enums";
 
 // RF-CUR-01 a RF-CUR-05: Curso, Matriz Curricular e Itens da Matriz.
 //
 // Modela a estrutura curricular oficial (série/ano -> disciplinas com
 // carga horária e categoria) de forma independente de qualquer sistema
-// de terceiros. "categoriaCurricular" usa nomenclatura própria do
-// NexGrade (ver comentário abaixo) — mapeável para a "Composição
-// Curricular" do SERE (dado público/regulatório), mas não copiada dela.
-// "codigoSae" em disciplinas.ts é o único campo de origem regulatória
-// direta (Código SAE é identificador público do Estado do Paraná).
+// de terceiros. "categoriaCurricular" agora usa o enum oficial
+// composicaoCurricularEnum (ver enums.ts), com as siglas SERE-PR
+// (BNC/PD/FGB/PFO/IFA/IF/IFP/APF) — antes era texto livre, o que
+// permitia qualquer valor na coluna. "codigoSae" em disciplinas.ts é
+// o único outro campo de origem regulatória direta (Código SAE é
+// identificador público do Estado do Paraná).
 
 export const cursosTable = pgTable("cursos", {
   id: serial("id").primaryKey(),
@@ -45,11 +47,10 @@ export const itensMatrizTable = pgTable("itens_matriz", {
     .notNull()
     .references(() => matrizesCurricularesTable.id, { onDelete: "cascade" }),
   disciplinaId: integer("disciplina_id").notNull(),
-  // Categoria curricular, nomenclatura própria do NexGrade:
-  // base_nacional_comum | parte_diversificada | formacao_geral_basica |
-  // itinerario_formativo | itinerario_profissionalizante |
-  // aprofundamento_pratica | parte_flexivel
-  categoriaCurricular: text("categoria_curricular").notNull().default("base_nacional_comum"),
+  // Categoria curricular — agora enum fechado com as siglas oficiais
+  // SERE-PR (ver enums.ts / composicaoCurricularEnum). Antes era texto
+  // livre; alterado para travar valores inválidos na origem.
+  categoriaCurricular: composicaoCurricularEnum("categoria_curricular").notNull().default("BNC"),
   cargaHorariaSemanal: integer("carga_horaria_semanal").notNull().default(2),
   // RF-CUR-03: nome do grupo de opções (ex. "Língua Estrangeira Moderna").
   // Nulo quando o item não pertence a um grupo de escolha.
