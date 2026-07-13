@@ -5,6 +5,7 @@ import {
   LayoutDashboard, Users, BookOpen, GraduationCap, Calendar, CalendarDays,
   Building2, FileText, Bell, Shield, History, AlertTriangle,
   Settings, Download, FlaskConical, Sparkles, Upload, CreditCard, Library, ShieldCheck,
+  Clock, ListTree,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -14,8 +15,10 @@ const navGroups = [
     items: [
       { href: "/dashboard", label: "Visão Geral", icon: LayoutDashboard },
       { href: "/horarios", label: "Grade Horária", icon: Calendar },
+      { href: "/horarios/esquema", label: "Esquema de Horário", icon: Clock },
+      { href: "/regras-distribuicao", label: "Regras de Distribuição", icon: ListTree },
       { href: "/conflitos", label: "Conflitos", icon: AlertTriangle },
-      { href: "/calendario", label: "Calend�rio Escolar", icon: CalendarDays },
+      { href: "/calendario", label: "Calendário Escolar", icon: CalendarDays },
       { href: "/assistente", label: "Assistente de IA", icon: Sparkles, badge: "IA" },
     ],
   },
