@@ -36,6 +36,48 @@
       "when": 1783828485477,
       "tag": "0004_clumsy_ricochet",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1783865600531,
+      "tag": "0005_broad_sentinel",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1783956165502,
+      "tag": "0006_round_moonstone",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1783957979928,
+      "tag": "0007_messy_maverick",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1783977979507,
+      "tag": "0008_yummy_senator_kelly",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1784060887038,
+      "tag": "0009_adorable_black_knight",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1784080126282,
+      "tag": "0010_normal_silver_fox",
+      "breakpoints": true
     }
   ]
 }

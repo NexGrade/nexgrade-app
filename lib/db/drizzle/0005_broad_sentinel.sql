@@ -1,0 +1,1 @@
+ALTER TABLE "disciplinas" ADD COLUMN "categoria_curricular_padrao" "composicao_curricular";

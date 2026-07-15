@@ -1,0 +1,2 @@
+ALTER TABLE "turma_disciplinas" ADD COLUMN "professor_id" integer;--> statement-breakpoint
+ALTER TABLE "turma_disciplinas" ADD CONSTRAINT "turma_disciplinas_professor_id_professores_id_fk" FOREIGN KEY ("professor_id") REFERENCES "public"."professores"("id") ON DELETE set null ON UPDATE no action;

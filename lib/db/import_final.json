@@ -1,0 +1,5177 @@
+{
+  "professores": [
+    {
+      "nome": "Aline",
+      "email": "aline@pendente-cadastro.local",
+      "cargaHorariaTotal": 16
+    },
+    {
+      "nome": "Anderson",
+      "email": "anderson@pendente-cadastro.local",
+      "cargaHorariaTotal": 26
+    },
+    {
+      "nome": "Andre",
+      "email": "andre@pendente-cadastro.local",
+      "cargaHorariaTotal": 30
+    },
+    {
+      "nome": "Andreia",
+      "email": "andreia@pendente-cadastro.local",
+      "cargaHorariaTotal": 4
+    },
+    {
+      "nome": "Antonio Silva",
+      "email": "antonio.silva@pendente-cadastro.local",
+      "cargaHorariaTotal": 31
+    },
+    {
+      "nome": "Arnaldo",
+      "email": "arnaldo@pendente-cadastro.local",
+      "cargaHorariaTotal": 16
+    },
+    {
+      "nome": "Carlos",
+      "email": "carlos@pendente-cadastro.local",
+      "cargaHorariaTotal": 14
+    },
+    {
+      "nome": "Cecilia",
+      "email": "cecilia@pendente-cadastro.local",
+      "cargaHorariaTotal": 26
+    },
+    {
+      "nome": "Cesar",
+      "email": "cesar@pendente-cadastro.local",
+      "cargaHorariaTotal": 3
+    },
+    {
+      "nome": "Chrystian",
+      "email": "chrystian@pendente-cadastro.local",
+      "cargaHorariaTotal": 12
+    },
+    {
+      "nome": "Cleide",
+      "email": "cleide@pendente-cadastro.local",
+      "cargaHorariaTotal": 14
+    },
+    {
+      "nome": "Crislaine",
+      "email": "crislaine@pendente-cadastro.local",
+      "cargaHorariaTotal": 28
+    },
+    {
+      "nome": "Cristiane",
+      "email": "cristiane@pendente-cadastro.local",
+      "cargaHorariaTotal": 29
+    },
+    {
+      "nome": "Daiane",
+      "email": "daiane@pendente-cadastro.local",
+      "cargaHorariaTotal": 21
+    },
+    {
+      "nome": "Debora",
+      "email": "debora@pendente-cadastro.local",
+      "cargaHorariaTotal": 10
+    },
+    {
+      "nome": "Dorival",
+      "email": "dorival@pendente-cadastro.local",
+      "cargaHorariaTotal": 29
+    },
+    {
+      "nome": "Ednilson",
+      "email": "ednilson@pendente-cadastro.local",
+      "cargaHorariaTotal": 14
+    },
+    {
+      "nome": "Eduarda",
+      "email": "eduarda@pendente-cadastro.local",
+      "cargaHorariaTotal": 30
+    },
+    {
+      "nome": "Eduardo",
+      "email": "eduardo@pendente-cadastro.local",
+      "cargaHorariaTotal": 18
+    },
+    {
+      "nome": "Eleciana",
+      "email": "eleciana@pendente-cadastro.local",
+      "cargaHorariaTotal": 10
+    },
+    {
+      "nome": "Eliana",
+      "email": "eliana@pendente-cadastro.local",
+      "cargaHorariaTotal": 15
+    },
+    {
+      "nome": "Eliane",
+      "email": "eliane@pendente-cadastro.local",
+      "cargaHorariaTotal": 10
+    },
+    {
+      "nome": "Eliane Rocha",
+      "email": "eliane.rocha@pendente-cadastro.local",
+      "cargaHorariaTotal": 19
+    },
+    {
+      "nome": "Elisabete",
+      "email": "elisabete@pendente-cadastro.local",
+      "cargaHorariaTotal": 14
+    },
+    {
+      "nome": "Elisangela",
+      "email": "elisangela@pendente-cadastro.local",
+      "cargaHorariaTotal": 29
+    },
+    {
+      "nome": "Emanuele",
+      "email": "emanuele@pendente-cadastro.local",
+      "cargaHorariaTotal": 30
+    },
+    {
+      "nome": "Felipe",
+      "email": "felipe@pendente-cadastro.local",
+      "cargaHorariaTotal": 5
+    },
+    {
+      "nome": "Fernanda",
+      "email": "fernanda@pendente-cadastro.local",
+      "cargaHorariaTotal": 15
+    },
+    {
+      "nome": "Franciele De Assis",
+      "email": "franciele.de.assis@pendente-cadastro.local",
+      "cargaHorariaTotal": 24
+    },
+    {
+      "nome": "Francielle",
+      "email": "francielle@pendente-cadastro.local",
+      "cargaHorariaTotal": 4
+    },
+    {
+      "nome": "Gabriela",
+      "email": "gabriela@pendente-cadastro.local",
+      "cargaHorariaTotal": 30
+    },
+    {
+      "nome": "Geovani",
+      "email": "geovani@pendente-cadastro.local",
+      "cargaHorariaTotal": 9
+    },
+    {
+      "nome": "Geverson",
+      "email": "geverson@pendente-cadastro.local",
+      "cargaHorariaTotal": 35
+    },
+    {
+      "nome": "Gilberto",
+      "email": "gilberto@pendente-cadastro.local",
+      "cargaHorariaTotal": 10
+    },
+    {
+      "nome": "Gleiciane",
+      "email": "gleiciane@pendente-cadastro.local",
+      "cargaHorariaTotal": 17
+    },
+    {
+      "nome": "Gustavo",
+      "email": "gustavo@pendente-cadastro.local",
+      "cargaHorariaTotal": 21
+    },
+    {
+      "nome": "Heberton",
+      "email": "heberton@pendente-cadastro.local",
+      "cargaHorariaTotal": 22
+    },
+    {
+      "nome": "Hemelly",
+      "email": "hemelly@pendente-cadastro.local",
+      "cargaHorariaTotal": 7
+    },
+    {
+      "nome": "Herica",
+      "email": "herica@pendente-cadastro.local",
+      "cargaHorariaTotal": 15
+    },
+    {
+      "nome": "Ione",
+      "email": "ione@pendente-cadastro.local",
+      "cargaHorariaTotal": 12
+    },
+    {
+      "nome": "Ivanir",
+      "email": "ivanir@pendente-cadastro.local",
+      "cargaHorariaTotal": 30
+    },
+    {
+      "nome": "Ivete",
+      "email": "ivete@pendente-cadastro.local",
+      "cargaHorariaTotal": 8
+    },
+    {
+      "nome": "Jackson",
+      "email": "jackson@pendente-cadastro.local",
+      "cargaHorariaTotal": 18
+    },
+    {
+      "nome": "Janice",
+      "email": "janice@pendente-cadastro.local",
+      "cargaHorariaTotal": 1
+    },
+    {
+      "nome": "Jordana",
+      "email": "jordana@pendente-cadastro.local",
+      "cargaHorariaTotal": 18
+    },
+    {
+      "nome": "João Lucas",
+      "email": "joao.lucas@pendente-cadastro.local",
+      "cargaHorariaTotal": 20
+    },
+    {
+      "nome": "Juliana",
+      "email": "juliana@pendente-cadastro.local",
+      "cargaHorariaTotal": 8
+    },
+    {
+      "nome": "Julio",
+      "email": "julio@pendente-cadastro.local",
+      "cargaHorariaTotal": 30
+    },
+    {
+      "nome": "Kethelin",
+      "email": "kethelin@pendente-cadastro.local",
+      "cargaHorariaTotal": 14
+    },
+    {
+      "nome": "Lisiane",
+      "email": "lisiane@pendente-cadastro.local",
+      "cargaHorariaTotal": 22
+    },
+    {
+      "nome": "Lorena",
+      "email": "lorena@pendente-cadastro.local",
+      "cargaHorariaTotal": 26
+    },
+    {
+      "nome": "Luciane",
+      "email": "luciane@pendente-cadastro.local",
+      "cargaHorariaTotal": 8
+    },
+    {
+      "nome": "Luis Fernando",
+      "email": "luis.fernando@pendente-cadastro.local",
+      "cargaHorariaTotal": 4
+    },
+    {
+      "nome": "Marcio",
+      "email": "marcio@pendente-cadastro.local",
+      "cargaHorariaTotal": 21
+    },
+    {
+      "nome": "Mario",
+      "email": "mario@pendente-cadastro.local",
+      "cargaHorariaTotal": 23
+    },
+    {
+      "nome": "Marise",
+      "email": "marise@pendente-cadastro.local",
+      "cargaHorariaTotal": 30
+    },
+    {
+      "nome": "Maristela",
+      "email": "maristela@pendente-cadastro.local",
+      "cargaHorariaTotal": 15
+    },
+    {
+      "nome": "Marlete",
+      "email": "marlete@pendente-cadastro.local",
+      "cargaHorariaTotal": 8
+    },
+    {
+      "nome": "Marta",
+      "email": "marta@pendente-cadastro.local",
+      "cargaHorariaTotal": 20
+    },
+    {
+      "nome": "Matheus",
+      "email": "matheus@pendente-cadastro.local",
+      "cargaHorariaTotal": 30
+    },
+    {
+      "nome": "Melina",
+      "email": "melina@pendente-cadastro.local",
+      "cargaHorariaTotal": 10
+    },
+    {
+      "nome": "Mirian",
+      "email": "mirian@pendente-cadastro.local",
+      "cargaHorariaTotal": 2
+    },
+    {
+      "nome": "Nelson",
+      "email": "nelson@pendente-cadastro.local",
+      "cargaHorariaTotal": 15
+    },
+    {
+      "nome": "Patricia",
+      "email": "patricia@pendente-cadastro.local",
+      "cargaHorariaTotal": 3
+    },
+    {
+      "nome": "Paulo",
+      "email": "paulo@pendente-cadastro.local",
+      "cargaHorariaTotal": 4
+    },
+    {
+      "nome": "Pedro",
+      "email": "pedro@pendente-cadastro.local",
+      "cargaHorariaTotal": 18
+    },
+    {
+      "nome": "Priscila",
+      "email": "priscila@pendente-cadastro.local",
+      "cargaHorariaTotal": 18
+    },
+    {
+      "nome": "Rafael",
+      "email": "rafael@pendente-cadastro.local",
+      "cargaHorariaTotal": 27
+    },
+    {
+      "nome": "Ricardo",
+      "email": "ricardo@pendente-cadastro.local",
+      "cargaHorariaTotal": 30
+    },
+    {
+      "nome": "Roberval",
+      "email": "roberval@pendente-cadastro.local",
+      "cargaHorariaTotal": 14
+    },
+    {
+      "nome": "Robson",
+      "email": "robson@pendente-cadastro.local",
+      "cargaHorariaTotal": 29
+    },
+    {
+      "nome": "Rodrigo",
+      "email": "rodrigo@pendente-cadastro.local",
+      "cargaHorariaTotal": 19
+    },
+    {
+      "nome": "Salete",
+      "email": "salete@pendente-cadastro.local",
+      "cargaHorariaTotal": 22
+    },
+    {
+      "nome": "Sarah",
+      "email": "sarah@pendente-cadastro.local",
+      "cargaHorariaTotal": 2
+    },
+    {
+      "nome": "Silmara",
+      "email": "silmara@pendente-cadastro.local",
+      "cargaHorariaTotal": 30
+    },
+    {
+      "nome": "Simone",
+      "email": "simone@pendente-cadastro.local",
+      "cargaHorariaTotal": 16
+    },
+    {
+      "nome": "Soneide",
+      "email": "soneide@pendente-cadastro.local",
+      "cargaHorariaTotal": 16
+    },
+    {
+      "nome": "Sypriano",
+      "email": "sypriano@pendente-cadastro.local",
+      "cargaHorariaTotal": 26
+    },
+    {
+      "nome": "Tiago",
+      "email": "tiago@pendente-cadastro.local",
+      "cargaHorariaTotal": 3
+    },
+    {
+      "nome": "Viviane",
+      "email": "viviane@pendente-cadastro.local",
+      "cargaHorariaTotal": 21
+    },
+    {
+      "nome": "Wellington",
+      "email": "wellington@pendente-cadastro.local",
+      "cargaHorariaTotal": 20
+    },
+    {
+      "nome": "Werediana",
+      "email": "werediana@pendente-cadastro.local",
+      "cargaHorariaTotal": 10
+    },
+    {
+      "nome": "Wildemberg",
+      "email": "wildemberg@pendente-cadastro.local",
+      "cargaHorariaTotal": 2
+    },
+    {
+      "nome": "Willian",
+      "email": "willian@pendente-cadastro.local",
+      "cargaHorariaTotal": 6
+    }
+  ],
+  "turmas": [
+    {
+      "nome": "1NB",
+      "serie": "1ª Série",
+      "turno": "noturno",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "2NB",
+      "serie": "2ª Série",
+      "turno": "noturno",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "1NF ADM",
+      "serie": "1ª Série",
+      "turno": "noturno",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "2NC",
+      "serie": "2ª Série",
+      "turno": "noturno",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "3NB",
+      "serie": "3ª Série",
+      "turno": "noturno",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "3NC",
+      "serie": "3ª Série",
+      "turno": "noturno",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "8TF",
+      "serie": "8º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "6TA",
+      "serie": "6º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "6TB",
+      "serie": "6º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "7TA",
+      "serie": "7º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "7TB",
+      "serie": "7º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "9TG",
+      "serie": "9º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "9TH",
+      "serie": "9º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "8TG",
+      "serie": "8º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "8TH",
+      "serie": "8º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "6TC",
+      "serie": "6º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "7TG",
+      "serie": "7º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "9TI",
+      "serie": "9º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "7TC",
+      "serie": "7º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "7TD",
+      "serie": "7º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "7TE",
+      "serie": "7º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "6TE",
+      "serie": "6º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "6TF",
+      "serie": "6º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "6TG",
+      "serie": "6º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "6TH",
+      "serie": "6º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "6TI",
+      "serie": "6º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "7TF",
+      "serie": "7º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "7TH",
+      "serie": "7º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "6TD",
+      "serie": "6º Ano",
+      "turno": "vespertino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "3MA EM",
+      "serie": "3ª Série",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "1MB DES",
+      "serie": "1ª Série",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "1MC FAR",
+      "serie": "1ª Série",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "2MC FAR",
+      "serie": "2ª Série",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "1MD MA",
+      "serie": "1ª Série",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "2MD MA",
+      "serie": "2ª Série",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "2MA ADM",
+      "serie": "2ª Série",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "2MB DES",
+      "serie": "2ª Série",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "1ME DOC",
+      "serie": "1ª Série",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "8MA",
+      "serie": "8º Ano",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "8MB",
+      "serie": "8º Ano",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "8MC",
+      "serie": "8º Ano",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "8MD",
+      "serie": "8º Ano",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "3MB DES",
+      "serie": "3ª Série",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "8ME",
+      "serie": "8º Ano",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "9MA",
+      "serie": "9º Ano",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "9MB",
+      "serie": "9º Ano",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "9MC",
+      "serie": "9º Ano",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "9MD",
+      "serie": "9º Ano",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "9ME",
+      "serie": "9º Ano",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "9MF",
+      "serie": "9º Ano",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "1MA EM",
+      "serie": "1ª Série",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "2MA EM",
+      "serie": "2ª Série",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    },
+    {
+      "nome": "3MA ADM",
+      "serie": "3ª Série",
+      "turno": "matutino",
+      "anoLetivo": 2026
+    }
+  ],
+  "vinculos": [
+    {
+      "professor": "ANDERSON",
+      "turma": "1NB",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ANDERSON",
+      "turma": "2NB",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ANDERSON",
+      "turma": "1NF ADM",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 3,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ANTONIO SILVA",
+      "turma": "2NB",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 4,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ANTONIO SILVA",
+      "turma": "2NC",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 4,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ANTONIO SILVA",
+      "turma": "3NB",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 4,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ANTONIO SILVA",
+      "turma": "3NC",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 4,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ARNALDO",
+      "turma": "1NB",
+      "disciplina": "EDUCAÇÃO FINANCEIRA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ARNALDO",
+      "turma": "2NB",
+      "disciplina": "EDUCAÇÃO FINANCEIRA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ARNALDO",
+      "turma": "2NC",
+      "disciplina": "EDUCAÇÃO FINANCEIRA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ARNALDO",
+      "turma": "1NF ADM",
+      "disciplina": "TÉCNICAS INTEGRADAS",
+      "aulas": 1,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ARNALDO",
+      "turma": "1NF ADM",
+      "disciplina": "EDUCAÇÃO DIGITAL",
+      "aulas": 1,
+      "turno": "noturno"
+    },
+    {
+      "professor": "CARLOS",
+      "turma": "2NC",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "noturno"
+    },
+    {
+      "professor": "CARLOS",
+      "turma": "3NB",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 3,
+      "turno": "noturno"
+    },
+    {
+      "professor": "CARLOS",
+      "turma": "3NB",
+      "disciplina": "REC. APREND. MATEMÁTICA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "CARLOS",
+      "turma": "3NC",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 3,
+      "turno": "noturno"
+    },
+    {
+      "professor": "CARLOS",
+      "turma": "3NC",
+      "disciplina": "REC. APREND. MATEMÁTICA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "CLEIDE",
+      "turma": "3NB",
+      "disciplina": "BIOLOGIA 2",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "DAIANE",
+      "turma": "2NB",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "DAIANE",
+      "turma": "2NC",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "DAIANE",
+      "turma": "3NC",
+      "disciplina": "HISTÓRIA 1",
+      "aulas": 1,
+      "turno": "noturno"
+    },
+    {
+      "professor": "DORIVAL",
+      "turma": "1NB",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "DORIVAL",
+      "turma": "3NC",
+      "disciplina": "GEOGRAFIA 1",
+      "aulas": 1,
+      "turno": "noturno"
+    },
+    {
+      "professor": "DORIVAL",
+      "turma": "1NF ADM",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ELIANE",
+      "turma": "1NB",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ELIANE",
+      "turma": "2NB",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ELIANE",
+      "turma": "2NC",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ELIANE",
+      "turma": "3NC",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ELIANE",
+      "turma": "1NF ADM",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ELISANGELA",
+      "turma": "1NB",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ELISANGELA",
+      "turma": "2NB",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ELISANGELA",
+      "turma": "2NC",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ELISANGELA",
+      "turma": "3NB",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ELISANGELA",
+      "turma": "3NC",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ELISANGELA",
+      "turma": "1NF ADM",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "FELIPE",
+      "turma": "3NB",
+      "disciplina": "PROJETO DE VIDA",
+      "aulas": 1,
+      "turno": "noturno"
+    },
+    {
+      "professor": "FELIPE",
+      "turma": "3NC",
+      "disciplina": "PROJETO DE VIDA",
+      "aulas": 1,
+      "turno": "noturno"
+    },
+    {
+      "professor": "FELIPE",
+      "turma": "1NF ADM",
+      "disciplina": "FINANÇAS EMPRESARIAIS",
+      "aulas": 1,
+      "turno": "noturno"
+    },
+    {
+      "professor": "FELIPE",
+      "turma": "1NF ADM",
+      "disciplina": "RECURSOS HUMANOS",
+      "aulas": 1,
+      "turno": "noturno"
+    },
+    {
+      "professor": "FELIPE",
+      "turma": "1NF ADM",
+      "disciplina": "ESTRATÉGIAS DE MARKETING",
+      "aulas": 1,
+      "turno": "noturno"
+    },
+    {
+      "professor": "GEVERSON",
+      "turma": "3NB",
+      "disciplina": "EDUCAÇÃO FINANCEIRA",
+      "aulas": 1,
+      "turno": "noturno"
+    },
+    {
+      "professor": "GEVERSON",
+      "turma": "3NC",
+      "disciplina": "EDUCAÇÃO FINANCEIRA",
+      "aulas": 1,
+      "turno": "noturno"
+    },
+    {
+      "professor": "GLEICIANE",
+      "turma": "3NC",
+      "disciplina": "REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "GLEICIANE",
+      "turma": "1NF ADM",
+      "disciplina": "PRINCÍPIOS ECONÔMICOS",
+      "aulas": 1,
+      "turno": "noturno"
+    },
+    {
+      "professor": "IVETE",
+      "turma": "1NB",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 4,
+      "turno": "noturno"
+    },
+    {
+      "professor": "IVETE",
+      "turma": "3NB",
+      "disciplina": "REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "IVETE",
+      "turma": "1NF ADM",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "JOÃO LUCAS",
+      "turma": "2NB",
+      "disciplina": "FÍSICA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "JOÃO LUCAS",
+      "turma": "2NC",
+      "disciplina": "FÍSICA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "JOÃO LUCAS",
+      "turma": "3NB",
+      "disciplina": "FÍSICA",
+      "aulas": 1,
+      "turno": "noturno"
+    },
+    {
+      "professor": "JOÃO LUCAS",
+      "turma": "3NC",
+      "disciplina": "FÍSICA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ROBERVAL",
+      "turma": "1NB",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ROBERVAL",
+      "turma": "2NB",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ROBERVAL",
+      "turma": "2NC",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ROBERVAL",
+      "turma": "3NC",
+      "disciplina": "ARTE 2",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ROBERVAL",
+      "turma": "1NF ADM",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "RODRIGO",
+      "turma": "1NB",
+      "disciplina": "BIOLOGIA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "RODRIGO",
+      "turma": "1NF ADM",
+      "disciplina": "BIOLOGIA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "SYPRIANO",
+      "turma": "2NB",
+      "disciplina": "FILOSOFIA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "SYPRIANO",
+      "turma": "2NC",
+      "disciplina": "FILOSOFIA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "TIAGO",
+      "turma": "3NB",
+      "disciplina": "MATEMÁTICA 2",
+      "aulas": 1,
+      "turno": "noturno"
+    },
+    {
+      "professor": "TIAGO",
+      "turma": "1NF ADM",
+      "disciplina": "INFORMÁTICA EMPRESARIAL",
+      "aulas": 1,
+      "turno": "noturno"
+    },
+    {
+      "professor": "TIAGO",
+      "turma": "1NF ADM",
+      "disciplina": "PRINC. DE ADMINISTRAÇÃO",
+      "aulas": 1,
+      "turno": "noturno"
+    },
+    {
+      "professor": "VIVIANE",
+      "turma": "1NB",
+      "disciplina": "QUÍMICA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "VIVIANE",
+      "turma": "1NB",
+      "disciplina": "EDUCAÇÃO DIGITAL",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "VIVIANE",
+      "turma": "3NB",
+      "disciplina": "FÍSICA 2",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "VIVIANE",
+      "turma": "3NB",
+      "disciplina": "FÍSICA 3",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "VIVIANE",
+      "turma": "3NB",
+      "disciplina": "QUÍMICA 1",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "VIVIANE",
+      "turma": "1NF ADM",
+      "disciplina": "QUÍMICA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "WILLIAN",
+      "turma": "2NB",
+      "disciplina": "SOCIOLOGIA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "WILLIAN",
+      "turma": "2NC",
+      "disciplina": "SOCIOLOGIA",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "WILLIAN",
+      "turma": "3NC",
+      "disciplina": "SOCIOLOGIA 1",
+      "aulas": 2,
+      "turno": "noturno"
+    },
+    {
+      "professor": "ANDERSON",
+      "turma": "8TF",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ANDRE",
+      "turma": "6TA",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ANDRE",
+      "turma": "6TB",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ANDRE",
+      "turma": "7TA",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 5,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ANDRE",
+      "turma": "7TB",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 5,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ANDREIA",
+      "turma": "9TG",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ANDREIA",
+      "turma": "9TH",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ANTONIO SILVA",
+      "turma": "8TF",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ANTONIO SILVA",
+      "turma": "8TF",
+      "disciplina": "REDAÇÃO E LEITURA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ANTONIO SILVA",
+      "turma": "8TG",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ANTONIO SILVA",
+      "turma": "8TG",
+      "disciplina": "REDAÇÃO E LEITURA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ANTONIO SILVA",
+      "turma": "8TH",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ANTONIO SILVA",
+      "turma": "8TH",
+      "disciplina": "REDAÇÃO E LEITURA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "CECILIA",
+      "turma": "6TA",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "CECILIA",
+      "turma": "6TB",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "CECILIA",
+      "turma": "6TC",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "CECILIA",
+      "turma": "7TG",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "CRISLAINE",
+      "turma": "8TF",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "CRISLAINE",
+      "turma": "8TG",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "CRISLAINE",
+      "turma": "8TH",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "CRISTIANE",
+      "turma": "9TG",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "CRISTIANE",
+      "turma": "9TH",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "CRISTIANE",
+      "turma": "9TI",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "DAIANE",
+      "turma": "6TA",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "DAIANE",
+      "turma": "6TB",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "DAIANE",
+      "turma": "6TC",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "DAIANE",
+      "turma": "7TA",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "DAIANE",
+      "turma": "7TB",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "DAIANE",
+      "turma": "7TC",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "DAIANE",
+      "turma": "7TD",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "DAIANE",
+      "turma": "7TE",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "DEBORA",
+      "turma": "6TE",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "DEBORA",
+      "turma": "6TF",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "DEBORA",
+      "turma": "6TG",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "DEBORA",
+      "turma": "6TH",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "DEBORA",
+      "turma": "6TI",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "DORIVAL",
+      "turma": "7TA",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "DORIVAL",
+      "turma": "7TB",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EDNILSON",
+      "turma": "7TF",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EDNILSON",
+      "turma": "7TG",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EDUARDA",
+      "turma": "7TA",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EDUARDA",
+      "turma": "7TB",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EDUARDA",
+      "turma": "9TH",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EDUARDA",
+      "turma": "9TI",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EDUARDA",
+      "turma": "9TI",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EDUARDA",
+      "turma": "9TI",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EDUARDO",
+      "turma": "7TA",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EDUARDO",
+      "turma": "7TB",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EDUARDO",
+      "turma": "7TC",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EDUARDO",
+      "turma": "7TD",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EDUARDO",
+      "turma": "7TE",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EDUARDO",
+      "turma": "7TF",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EDUARDO",
+      "turma": "8TF",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EDUARDO",
+      "turma": "8TG",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EDUARDO",
+      "turma": "8TH",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ELECIANA",
+      "turma": "6TG",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ELECIANA",
+      "turma": "7TC",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ELECIANA",
+      "turma": "7TD",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ELIANE ROCHA",
+      "turma": "7TE",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ELIANE ROCHA",
+      "turma": "7TG",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ELIANE ROCHA",
+      "turma": "7TH",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ELIANE ROCHA",
+      "turma": "9TG",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ELIANE ROCHA",
+      "turma": "9TH",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ELISANGELA",
+      "turma": "6TA",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ELISANGELA",
+      "turma": "6TB",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ELISANGELA",
+      "turma": "6TC",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ELISANGELA",
+      "turma": "6TD",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ELISANGELA",
+      "turma": "6TF",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EMANUELE",
+      "turma": "7TH",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EMANUELE",
+      "turma": "8TG",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EMANUELE",
+      "turma": "8TH",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "EMANUELE",
+      "turma": "9TI",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "FRANCIELE DE ASSIS",
+      "turma": "6TE",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "FRANCIELE DE ASSIS",
+      "turma": "6TI",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "FRANCIELE DE ASSIS",
+      "turma": "8TG",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "FRANCIELE DE ASSIS",
+      "turma": "9TG",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 5,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "GABRIELA",
+      "turma": "7TA",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "GABRIELA",
+      "turma": "7TB",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "GABRIELA",
+      "turma": "7TC",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "GABRIELA",
+      "turma": "7TD",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "GABRIELA",
+      "turma": "7TE",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "GEVERSON",
+      "turma": "7TC",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 5,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "GEVERSON",
+      "turma": "7TD",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 5,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "GILBERTO",
+      "turma": "6TH",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "GILBERTO",
+      "turma": "6TI",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "GILBERTO",
+      "turma": "9TG",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "GILBERTO",
+      "turma": "9TH",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "GILBERTO",
+      "turma": "9TI",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "GUSTAVO",
+      "turma": "8TF",
+      "disciplina": "EDUCAÇÃO DIGITAL",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "HEBERTON",
+      "turma": "7TG",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "HEBERTON",
+      "turma": "7TH",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "HERICA",
+      "turma": "7TA",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "HERICA",
+      "turma": "7TB",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "HERICA",
+      "turma": "7TC",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "HERICA",
+      "turma": "7TD",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "IVANIR",
+      "turma": "6TA",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "IVANIR",
+      "turma": "6TB",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "IVANIR",
+      "turma": "6TC",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "IVANIR",
+      "turma": "6TD",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "IVANIR",
+      "turma": "6TE",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "IVANIR",
+      "turma": "6TF",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "IVANIR",
+      "turma": "6TG",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "IVANIR",
+      "turma": "6TH",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "IVANIR",
+      "turma": "6TI",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "JACKSON",
+      "turma": "6TB",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "JACKSON",
+      "turma": "6TC",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "JACKSON",
+      "turma": "9TG",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "JACKSON",
+      "turma": "9TH",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "JANICE",
+      "turma": "6TB",
+      "disciplina": "ENS.RELIGIOSO",
+      "aulas": 1,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "JORDANA",
+      "turma": "7TA",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "JORDANA",
+      "turma": "7TB",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "JORDANA",
+      "turma": "7TC",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "JORDANA",
+      "turma": "7TD",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "JORDANA",
+      "turma": "7TE",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "JULIO",
+      "turma": "6TE",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "JULIO",
+      "turma": "9TH",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 5,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "JULIO",
+      "turma": "9TI",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 5,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "LISIANE",
+      "turma": "6TB",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "LISIANE",
+      "turma": "6TC",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "LISIANE",
+      "turma": "6TD",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "LISIANE",
+      "turma": "6TE",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "LISIANE",
+      "turma": "6TF",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "LISIANE",
+      "turma": "6TG",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "LISIANE",
+      "turma": "6TH",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "LISIANE",
+      "turma": "6TI",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "LISIANE",
+      "turma": "9TG",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "LISIANE",
+      "turma": "9TH",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "LISIANE",
+      "turma": "9TI",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "LORENA",
+      "turma": "7TF",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "LORENA",
+      "turma": "7TG",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "LORENA",
+      "turma": "7TH",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "LORENA",
+      "turma": "8TF",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "LORENA",
+      "turma": "8TG",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "LUCIANE",
+      "turma": "8TH",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "LUCIANE",
+      "turma": "9TG",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "LUCIANE",
+      "turma": "9TH",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "LUCIANE",
+      "turma": "9TI",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARCIO",
+      "turma": "6TA",
+      "disciplina": "ENS.RELIGIOSO",
+      "aulas": 1,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARCIO",
+      "turma": "6TC",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARCIO",
+      "turma": "6TD",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARCIO",
+      "turma": "6TD",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARCIO",
+      "turma": "6TE",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARCIO",
+      "turma": "7TE",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 5,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARCIO",
+      "turma": "7TH",
+      "disciplina": "ENS.RELIGIOSO",
+      "aulas": 1,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARCIO",
+      "turma": "9TG",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARIO",
+      "turma": "7TH",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARIO",
+      "turma": "8TF",
+      "disciplina": "HISTÓRIA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARIO",
+      "turma": "8TG",
+      "disciplina": "HISTÓRIA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARIO",
+      "turma": "8TH",
+      "disciplina": "HISTÓRIA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARIO",
+      "turma": "9TH",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARIO",
+      "turma": "9TI",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARISE",
+      "turma": "6TA",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARISE",
+      "turma": "6TB",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARISE",
+      "turma": "6TC",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARISE",
+      "turma": "6TD",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARISE",
+      "turma": "6TE",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARISE",
+      "turma": "6TF",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARISE",
+      "turma": "6TG",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARISE",
+      "turma": "6TH",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARISE",
+      "turma": "6TI",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARISE",
+      "turma": "7TF",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARISTELA",
+      "turma": "7TF",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 5,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARISTELA",
+      "turma": "7TG",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 5,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARISTELA",
+      "turma": "7TH",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 5,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARLETE",
+      "turma": "6TE",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARLETE",
+      "turma": "6TG",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARLETE",
+      "turma": "6TH",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARLETE",
+      "turma": "6TI",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARTA",
+      "turma": "6TD",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARTA",
+      "turma": "6TE",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARTA",
+      "turma": "6TF",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARTA",
+      "turma": "6TH",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MARTA",
+      "turma": "6TI",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MATHEUS",
+      "turma": "6TF",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MATHEUS",
+      "turma": "6TG",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MATHEUS",
+      "turma": "6TH",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MATHEUS",
+      "turma": "8TH",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MELINA",
+      "turma": "7TF",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MELINA",
+      "turma": "7TG",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "MELINA",
+      "turma": "7TH",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "NELSON",
+      "turma": "7TC",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "NELSON",
+      "turma": "7TD",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "NELSON",
+      "turma": "7TE",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "NELSON",
+      "turma": "7TF",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "NELSON",
+      "turma": "7TG",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "PATRICIA",
+      "turma": "7TH",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "PAULO",
+      "turma": "8TG",
+      "disciplina": "EDUCAÇÃO DIGITAL",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "PAULO",
+      "turma": "8TH",
+      "disciplina": "EDUCAÇÃO DIGITAL",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "PEDRO",
+      "turma": "6TA",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "PEDRO",
+      "turma": "6TC",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "PEDRO",
+      "turma": "6TD",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "PEDRO",
+      "turma": "6TE",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "PEDRO",
+      "turma": "6TF",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "PEDRO",
+      "turma": "6TG",
+      "disciplina": "REC. APREND. MATEM.",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "PRISCILA",
+      "turma": "6TA",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "PRISCILA",
+      "turma": "6TB",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "PRISCILA",
+      "turma": "6TC",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "PRISCILA",
+      "turma": "6TD",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "RAFAEL",
+      "turma": "6TA",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "RAFAEL",
+      "turma": "6TB",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "RAFAEL",
+      "turma": "6TC",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "RAFAEL",
+      "turma": "7TE",
+      "disciplina": "REDAÇÃO E LEITURA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "RAFAEL",
+      "turma": "7TF",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "RAFAEL",
+      "turma": "7TF",
+      "disciplina": "REDAÇÃO E LEITURA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "RAFAEL",
+      "turma": "7TG",
+      "disciplina": "REDAÇÃO E LEITURA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "RAFAEL",
+      "turma": "9TG",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "RICARDO",
+      "turma": "6TA",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "RICARDO",
+      "turma": "6TD",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "RICARDO",
+      "turma": "6TE",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "RICARDO",
+      "turma": "6TF",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "RICARDO",
+      "turma": "6TG",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "RICARDO",
+      "turma": "6TH",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "RICARDO",
+      "turma": "6TI",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "RICARDO",
+      "turma": "8TF",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ROBSON",
+      "turma": "6TA",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ROBSON",
+      "turma": "6TB",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ROBSON",
+      "turma": "6TF",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ROBSON",
+      "turma": "6TG",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ROBSON",
+      "turma": "7TA",
+      "disciplina": "REDAÇÃO E LEITURA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ROBSON",
+      "turma": "7TB",
+      "disciplina": "REDAÇÃO E LEITURA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ROBSON",
+      "turma": "7TC",
+      "disciplina": "REDAÇÃO E LEITURA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ROBSON",
+      "turma": "7TD",
+      "disciplina": "REDAÇÃO E LEITURA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ROBSON",
+      "turma": "7TF",
+      "disciplina": "ENS.RELIGIOSO",
+      "aulas": 1,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ROBSON",
+      "turma": "7TG",
+      "disciplina": "ENS.RELIGIOSO",
+      "aulas": 1,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ROBSON",
+      "turma": "7TH",
+      "disciplina": "REDAÇÃO E LEITURA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SARAH",
+      "turma": "6TI",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SILMARA",
+      "turma": "6TA",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SILMARA",
+      "turma": "6TD",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SILMARA",
+      "turma": "6TE",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SILMARA",
+      "turma": "6TF",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SILMARA",
+      "turma": "6TG",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SILMARA",
+      "turma": "6TH",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SILMARA",
+      "turma": "6TI",
+      "disciplina": "LEI REC. APREND. L. PORT",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SONEIDE",
+      "turma": "9TG",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SONEIDE",
+      "turma": "9TH",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SYPRIANO",
+      "turma": "6TC",
+      "disciplina": "ENS.RELIGIOSO",
+      "aulas": 1,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SYPRIANO",
+      "turma": "6TD",
+      "disciplina": "ENS.RELIGIOSO",
+      "aulas": 1,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SYPRIANO",
+      "turma": "6TE",
+      "disciplina": "ENS.RELIGIOSO",
+      "aulas": 1,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SYPRIANO",
+      "turma": "6TF",
+      "disciplina": "ENS.RELIGIOSO",
+      "aulas": 1,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SYPRIANO",
+      "turma": "6TG",
+      "disciplina": "ENS.RELIGIOSO",
+      "aulas": 1,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SYPRIANO",
+      "turma": "6TH",
+      "disciplina": "ENS.RELIGIOSO",
+      "aulas": 1,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SYPRIANO",
+      "turma": "6TI",
+      "disciplina": "ENS.RELIGIOSO",
+      "aulas": 1,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SYPRIANO",
+      "turma": "7TA",
+      "disciplina": "ENS.RELIGIOSO",
+      "aulas": 1,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SYPRIANO",
+      "turma": "7TB",
+      "disciplina": "ENS.RELIGIOSO",
+      "aulas": 1,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SYPRIANO",
+      "turma": "7TC",
+      "disciplina": "ENS.RELIGIOSO",
+      "aulas": 1,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SYPRIANO",
+      "turma": "7TD",
+      "disciplina": "ENS.RELIGIOSO",
+      "aulas": 1,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "SYPRIANO",
+      "turma": "7TE",
+      "disciplina": "ENS.RELIGIOSO",
+      "aulas": 1,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "WELLINGTON",
+      "turma": "6TB",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "WELLINGTON",
+      "turma": "6TC",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "WELLINGTON",
+      "turma": "6TD",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "WELLINGTON",
+      "turma": "6TF",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "WELLINGTON",
+      "turma": "6TG",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "WELLINGTON",
+      "turma": "6TH",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "WELLINGTON",
+      "turma": "6TI",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "WELLINGTON",
+      "turma": "7TE",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "WELLINGTON",
+      "turma": "8TF",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "WEREDIANA",
+      "turma": "8TG",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "WEREDIANA",
+      "turma": "8TH",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 3,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "WEREDIANA",
+      "turma": "9TI",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "WILDEMBERG",
+      "turma": "6TH",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "vespertino"
+    },
+    {
+      "professor": "ALINE",
+      "turma": "3MA EM",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 4,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ALINE",
+      "turma": "1MB DES",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ALINE",
+      "turma": "1MC FAR",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ALINE",
+      "turma": "2MC FAR",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ALINE",
+      "turma": "1MD MA",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ALINE",
+      "turma": "2MD MA",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ANDERSON",
+      "turma": "2MA ADM",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ANDERSON",
+      "turma": "2MB DES",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ANDERSON",
+      "turma": "2MC FAR",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ANDERSON",
+      "turma": "2MD MA",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ANDERSON",
+      "turma": "1ME DOC",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ANDRE",
+      "turma": "8MA",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ANDRE",
+      "turma": "8MB",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ANDRE",
+      "turma": "8MC",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ANDRE",
+      "turma": "8MD",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ARNALDO",
+      "turma": "3MA EM",
+      "disciplina": "FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ARNALDO",
+      "turma": "3MB DES",
+      "disciplina": "BANCO DE DADOS",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ARNALDO",
+      "turma": "3MB DES",
+      "disciplina": "PROG NO DES DE SISTEMAS",
+      "aulas": 4,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CECILIA",
+      "turma": "2MA ADM",
+      "disciplina": "TÉCNICAS INTEGRADAS",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CECILIA",
+      "turma": "1MC FAR",
+      "disciplina": "DIS PROD FAR E CORRELATOS",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CECILIA",
+      "turma": "1MC FAR",
+      "disciplina": "FARMÁCIA HOSPITALAR",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CECILIA",
+      "turma": "1MC FAR",
+      "disciplina": "FARMACOLOGIA 1",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CECILIA",
+      "turma": "1MC FAR",
+      "disciplina": "FUNDAMENTOS DE FARMÁCIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CECILIA",
+      "turma": "2MC FAR",
+      "disciplina": "BIOSSEGURANÇA E SEG TRAB",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CECILIA",
+      "turma": "2MC FAR",
+      "disciplina": "DIS PROD FAR E CORRELATOS",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CECILIA",
+      "turma": "2MC FAR",
+      "disciplina": "FARMACOLOGIA 2",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CECILIA",
+      "turma": "1ME DOC",
+      "disciplina": "ED INCLUSIVA DIVERSIDADE",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CESAR",
+      "turma": "3MA EM",
+      "disciplina": "PROJETO DE VIDA",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CESAR",
+      "turma": "2MD MA",
+      "disciplina": "FILOSOFIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CHRYSTIAN",
+      "turma": "8MA",
+      "disciplina": "REDAÇÃO E LEITURA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CHRYSTIAN",
+      "turma": "8MB",
+      "disciplina": "REDAÇÃO E LEITURA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CHRYSTIAN",
+      "turma": "8MC",
+      "disciplina": "REDAÇÃO E LEITURA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CHRYSTIAN",
+      "turma": "8MD",
+      "disciplina": "REDAÇÃO E LEITURA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CHRYSTIAN",
+      "turma": "8ME",
+      "disciplina": "REDAÇÃO E LEITURA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CHRYSTIAN",
+      "turma": "3MA EM",
+      "disciplina": "REC. APREND. L.PORT",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CLEIDE",
+      "turma": "9MA",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CLEIDE",
+      "turma": "9MB",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CLEIDE",
+      "turma": "9MC",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CLEIDE",
+      "turma": "9MD",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CLEIDE",
+      "turma": "9ME",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CLEIDE",
+      "turma": "9MF",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISLAINE",
+      "turma": "1MA EM",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISLAINE",
+      "turma": "2MA EM",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISLAINE",
+      "turma": "2MA ADM",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISLAINE",
+      "turma": "1MB DES",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISLAINE",
+      "turma": "2MB DES",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISLAINE",
+      "turma": "3MB DES",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 4,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISLAINE",
+      "turma": "2MC FAR",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISLAINE",
+      "turma": "1MD MA",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISLAINE",
+      "turma": "2MD MA",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISLAINE",
+      "turma": "1ME DOC",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISTIANE",
+      "turma": "1MA EM",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISTIANE",
+      "turma": "2MA EM",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISTIANE",
+      "turma": "3MA EM",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISTIANE",
+      "turma": "2MA ADM",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISTIANE",
+      "turma": "3MA ADM",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISTIANE",
+      "turma": "3MA ADM",
+      "disciplina": "PROJETO DE VIDA",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISTIANE",
+      "turma": "1MB DES",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISTIANE",
+      "turma": "2MB DES",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISTIANE",
+      "turma": "1MC FAR",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISTIANE",
+      "turma": "2MC FAR",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISTIANE",
+      "turma": "1MD MA",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "CRISTIANE",
+      "turma": "2MD MA",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "DORIVAL",
+      "turma": "1MA EM",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "DORIVAL",
+      "turma": "1MA EM",
+      "disciplina": "GEOGRAFIA DO PARANÁ",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "DORIVAL",
+      "turma": "2MA EM",
+      "disciplina": "SOC.GOV.CIDAD E SOCIEDADE",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "DORIVAL",
+      "turma": "1MB DES",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "DORIVAL",
+      "turma": "1MC FAR",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "DORIVAL",
+      "turma": "1MD MA",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "DORIVAL",
+      "turma": "2MD MA",
+      "disciplina": "EST DE IMP RIS AMBIENTAIS",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "DORIVAL",
+      "turma": "2MD MA",
+      "disciplina": "GESTÃO DE REC NATURAIS 1",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "DORIVAL",
+      "turma": "1ME DOC",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "EDNILSON",
+      "turma": "8MA",
+      "disciplina": "HISTÓRIA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "EDNILSON",
+      "turma": "8MD",
+      "disciplina": "HISTÓRIA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "EDNILSON",
+      "turma": "2MA EM",
+      "disciplina": "SOCIOLOGIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "EDNILSON",
+      "turma": "2MA ADM",
+      "disciplina": "SOCIOLOGIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "EDUARDA",
+      "turma": "9MC",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "EDUARDA",
+      "turma": "9MD",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "EDUARDA",
+      "turma": "9MF",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "EDUARDA",
+      "turma": "3MB DES",
+      "disciplina": "ANÁLISE PROJ DE SISTEMAS",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "EDUARDA",
+      "turma": "1ME DOC",
+      "disciplina": "MAT BAS P ANOS INICIAIS",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "EDUARDA",
+      "turma": "1ME DOC",
+      "disciplina": "DES HUM E SOCIOEMOCIONAL",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ELIANA",
+      "turma": "9MA",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 5,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ELIANA",
+      "turma": "9MB",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 5,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ELIANA",
+      "turma": "9MC",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 5,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ELIANE ROCHA",
+      "turma": "9ME",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ELIANE ROCHA",
+      "turma": "9MF",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ELIANE ROCHA",
+      "turma": "3MB DES",
+      "disciplina": "EDUCAÇÃO FINANCEIRA",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ELIANE ROCHA",
+      "turma": "1MC FAR",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ELIANE ROCHA",
+      "turma": "1ME DOC",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ELISABETE",
+      "turma": "3MA ADM",
+      "disciplina": "RECURSOS HUMANOS",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ELISABETE",
+      "turma": "1MB DES",
+      "disciplina": "QUÍMICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ELISABETE",
+      "turma": "1MC FAR",
+      "disciplina": "QUÍMICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ELISABETE",
+      "turma": "1MD MA",
+      "disciplina": "ANÁLISE CONT E QUIM AMB",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ELISABETE",
+      "turma": "1MD MA",
+      "disciplina": "GESTÃO DE REC NATURAIS",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ELISABETE",
+      "turma": "2MD MA",
+      "disciplina": "EDUCAÇÃO AMBIENTAL 1",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ELISABETE",
+      "turma": "2MD MA",
+      "disciplina": "SIST DE GESTÃO AMBIENTAL",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ELISABETE",
+      "turma": "1ME DOC",
+      "disciplina": "QUÍMICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ELISANGELA",
+      "turma": "9MA",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ELISANGELA",
+      "turma": "9MD",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ELISANGELA",
+      "turma": "3MB DES",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ELISANGELA",
+      "turma": "1ME DOC",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "EMANUELE",
+      "turma": "8MA",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "EMANUELE",
+      "turma": "8MB",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "EMANUELE",
+      "turma": "8MC",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "EMANUELE",
+      "turma": "8MD",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "EMANUELE",
+      "turma": "8ME",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "EMANUELE",
+      "turma": "2MB DES",
+      "disciplina": "IN TEC E EMPREENDEDORISMO",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "EMANUELE",
+      "turma": "1MD MA",
+      "disciplina": "INFORMÁTICA APLICADA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "EMANUELE",
+      "turma": "1MD MA",
+      "disciplina": "SIST DE GESTÃO AMBIENTAL",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "EMANUELE",
+      "turma": "2MD MA",
+      "disciplina": "GESTÃO DE RESÍDUOS",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "FERNANDA",
+      "turma": "9MA",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "FERNANDA",
+      "turma": "9MB",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "FERNANDA",
+      "turma": "9MC",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "FERNANDA",
+      "turma": "9MD",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "FERNANDA",
+      "turma": "9ME",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "FRANCIELE DE ASSIS",
+      "turma": "1MA EM",
+      "disciplina": "EDUCAÇÃO FINANCEIRA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "FRANCIELE DE ASSIS",
+      "turma": "2MA ADM",
+      "disciplina": "COMUNICAÇÃO E VENDAS",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "FRANCIELE DE ASSIS",
+      "turma": "2MA ADM",
+      "disciplina": "FINANÇAS EMPRESARIAIS",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "FRANCIELE DE ASSIS",
+      "turma": "2MA ADM",
+      "disciplina": "ESTRATÉGIA DE MARKETING",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "FRANCIELE DE ASSIS",
+      "turma": "3MA ADM",
+      "disciplina": "TECNO. E FER. DE GESTÃO",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "FRANCIELLE",
+      "turma": "3MA ADM",
+      "disciplina": "LID E GESTÃO DE PESSOAS",
+      "aulas": 4,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GABRIELA",
+      "turma": "8MA",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GABRIELA",
+      "turma": "8MB",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GABRIELA",
+      "turma": "8MC",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GABRIELA",
+      "turma": "8MD",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GABRIELA",
+      "turma": "8ME",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GEOVANI",
+      "turma": "8ME",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GEOVANI",
+      "turma": "9MF",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 5,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GEVERSON",
+      "turma": "1MA EM",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GEVERSON",
+      "turma": "2MA EM",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GEVERSON",
+      "turma": "2MA EM",
+      "disciplina": "EDUCAÇÃO FINANCEIRA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GEVERSON",
+      "turma": "3MA ADM",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GEVERSON",
+      "turma": "1MB DES",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GEVERSON",
+      "turma": "1MC FAR",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GEVERSON",
+      "turma": "1MD MA",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GLEICIANE",
+      "turma": "3MA EM",
+      "disciplina": "HISTÓRIA 1",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GLEICIANE",
+      "turma": "3MA EM",
+      "disciplina": "SOCIOLOGIA 1",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GLEICIANE",
+      "turma": "3MA ADM",
+      "disciplina": "NOÇÕES DE DIREITO",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GLEICIANE",
+      "turma": "2MB DES",
+      "disciplina": "SOCIOLOGIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GLEICIANE",
+      "turma": "3MB DES",
+      "disciplina": "COMPUTAÇÃO GRÁFICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GLEICIANE",
+      "turma": "2MC FAR",
+      "disciplina": "SOCIOLOGIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GLEICIANE",
+      "turma": "2MD MA",
+      "disciplina": "SOCIOLOGIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GUSTAVO",
+      "turma": "1MB DES",
+      "disciplina": "INTRODUÇÃO À COMPUTAÇÃO",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GUSTAVO",
+      "turma": "1MB DES",
+      "disciplina": "LÓGICA COMPUTACIONAL",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GUSTAVO",
+      "turma": "1MB DES",
+      "disciplina": "INTRODUÇÃO À PROGRAMAÇÃO",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GUSTAVO",
+      "turma": "2MB DES",
+      "disciplina": "PROGRAMAÇÃO BACK END 1",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GUSTAVO",
+      "turma": "2MB DES",
+      "disciplina": "PROGRAMAÇÃO FRONT END",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GUSTAVO",
+      "turma": "2MB DES",
+      "disciplina": "BANCO DE DADOS 2",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "GUSTAVO",
+      "turma": "3MB DES",
+      "disciplina": "PROGRAMAÇÃO BACK END",
+      "aulas": 4,
+      "turno": "matutino"
+    },
+    {
+      "professor": "HEBERTON",
+      "turma": "8MA",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "HEBERTON",
+      "turma": "8MB",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "HEBERTON",
+      "turma": "8MC",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "HEBERTON",
+      "turma": "8MD",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "HEBERTON",
+      "turma": "8ME",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "HEBERTON",
+      "turma": "9MB",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "HEBERTON",
+      "turma": "9MC",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "HEBERTON",
+      "turma": "9ME",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "HEBERTON",
+      "turma": "9MF",
+      "disciplina": "EDUCAÇÃO FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "HEMELLY",
+      "turma": "3MA EM",
+      "disciplina": "EDUCAÇÃO FINANCEIRA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "HEMELLY",
+      "turma": "2MA ADM",
+      "disciplina": "EDUCAÇÃO FINANCEIRA",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "HEMELLY",
+      "turma": "3MA ADM",
+      "disciplina": "EDUCAÇÃO FINANCEIRA",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "HEMELLY",
+      "turma": "2MB DES",
+      "disciplina": "EDUCAÇÃO FINANCEIRA",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "HEMELLY",
+      "turma": "2MC FAR",
+      "disciplina": "EDUCAÇÃO FINANCEIRA",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "HEMELLY",
+      "turma": "2MD MA",
+      "disciplina": "EDUCAÇÃO FINANCEIRA",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "HERICA",
+      "turma": "9MA",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "HERICA",
+      "turma": "9MB",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "HERICA",
+      "turma": "3MA EM",
+      "disciplina": "LÍNGUA INGLESA 1",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "IONE",
+      "turma": "1MA EM",
+      "disciplina": "BIOLOGIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "IONE",
+      "turma": "1MB DES",
+      "disciplina": "BIOLOGIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "IONE",
+      "turma": "1MC FAR",
+      "disciplina": "BIOLOGIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "IONE",
+      "turma": "1MD MA",
+      "disciplina": "BIOLOGIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "IONE",
+      "turma": "1MD MA",
+      "disciplina": "GESTÃO DE RESÍDUOS",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "IONE",
+      "turma": "1ME DOC",
+      "disciplina": "BIOLOGIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "IVANIR",
+      "turma": "9MA",
+      "disciplina": "LEI E REC APREND L PORT",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "IVANIR",
+      "turma": "9MB",
+      "disciplina": "LEI E REC APREND L PORT",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "IVANIR",
+      "turma": "9MC",
+      "disciplina": "LEI E REC APREND L PORT",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "IVANIR",
+      "turma": "9MD",
+      "disciplina": "LEI E REC APREND L PORT",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "IVANIR",
+      "turma": "9ME",
+      "disciplina": "LEI E REC APREND L PORT",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "IVANIR",
+      "turma": "9MF",
+      "disciplina": "LEI E REC APREND L PORT",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JACKSON",
+      "turma": "9MC",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JACKSON",
+      "turma": "9MF",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JACKSON",
+      "turma": "1MD MA",
+      "disciplina": "EDUCAÇÃO AMBIENTAL",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JOÃO LUCAS",
+      "turma": "2MA EM",
+      "disciplina": "FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JOÃO LUCAS",
+      "turma": "2MA ADM",
+      "disciplina": "FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JOÃO LUCAS",
+      "turma": "3MA ADM",
+      "disciplina": "FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JOÃO LUCAS",
+      "turma": "2MB DES",
+      "disciplina": "FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JOÃO LUCAS",
+      "turma": "3MB DES",
+      "disciplina": "FÍSICA",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JOÃO LUCAS",
+      "turma": "2MC FAR",
+      "disciplina": "FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JOÃO LUCAS",
+      "turma": "2MD MA",
+      "disciplina": "FÍSICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JORDANA",
+      "turma": "1MA EM",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JORDANA",
+      "turma": "1MA EM",
+      "disciplina": "ARTE PARANAENSE",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JORDANA",
+      "turma": "1MB DES",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JORDANA",
+      "turma": "1MD MA",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JULIANA",
+      "turma": "9MA",
+      "disciplina": "REC. APREND. MATEMÁTICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JULIANA",
+      "turma": "9MB",
+      "disciplina": "REC. APREND. MATEMÁTICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JULIANA",
+      "turma": "9MC",
+      "disciplina": "REC. APREND. MATEMÁTICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JULIANA",
+      "turma": "9MD",
+      "disciplina": "REC. APREND. MATEMÁTICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JULIO",
+      "turma": "9MA",
+      "disciplina": "REC. APREND. MATEMÁTICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JULIO",
+      "turma": "9MB",
+      "disciplina": "REC. APREND. MATEMÁTICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JULIO",
+      "turma": "9MC",
+      "disciplina": "REC. APREND. MATEMÁTICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JULIO",
+      "turma": "9MD",
+      "disciplina": "REC. APREND. MATEMÁTICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JULIO",
+      "turma": "9ME",
+      "disciplina": "REC. APREND. MATEMÁTICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JULIO",
+      "turma": "9MF",
+      "disciplina": "REC. APREND. MATEMÁTICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JULIO",
+      "turma": "1ME DOC",
+      "disciplina": "ORG DO TRAB PEDAGÓGICO",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "JULIO",
+      "turma": "1ME DOC",
+      "disciplina": "TRAB PED NA ED INFANTIL",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "KETHELIN",
+      "turma": "3MA EM",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "matutino"
+    },
+    {
+      "professor": "KETHELIN",
+      "turma": "2MA ADM",
+      "disciplina": "INFORMÁTICA EMPRESARIAL",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "KETHELIN",
+      "turma": "2MA ADM",
+      "disciplina": "PRINCÍPIOS ECONÔMICOS",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "KETHELIN",
+      "turma": "3MB DES",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 4,
+      "turno": "matutino"
+    },
+    {
+      "professor": "KETHELIN",
+      "turma": "3MB DES",
+      "disciplina": "PROGRAMAÇÃO MOBILE",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "KETHELIN",
+      "turma": "3MB DES",
+      "disciplina": "CIÊNCIAS DE DADOS",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "LORENA",
+      "turma": "9MA",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "LORENA",
+      "turma": "9MB",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "LORENA",
+      "turma": "9MC",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "LORENA",
+      "turma": "9MD",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "LORENA",
+      "turma": "9ME",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "LORENA",
+      "turma": "9MF",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "LORENA",
+      "turma": "1MC FAR",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "LORENA",
+      "turma": "1ME DOC",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "LUIS FERNANDO",
+      "turma": "1MA EM",
+      "disciplina": "QUÍMICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "LUIS FERNANDO",
+      "turma": "1MD MA",
+      "disciplina": "QUÍMICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "MARIO",
+      "turma": "8MB",
+      "disciplina": "HISTÓRIA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "MARIO",
+      "turma": "8MC",
+      "disciplina": "HISTÓRIA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "MARIO",
+      "turma": "9MD",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "MARISE",
+      "turma": "8MA",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "MARISE",
+      "turma": "8MB",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "MARISE",
+      "turma": "8MC",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "MARISE",
+      "turma": "8MD",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "MARISE",
+      "turma": "8ME",
+      "disciplina": "LÍNGUA INGLESA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "MATHEUS",
+      "turma": "9MD",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 5,
+      "turno": "matutino"
+    },
+    {
+      "professor": "MATHEUS",
+      "turma": "9ME",
+      "disciplina": "MATEMÁTICA",
+      "aulas": 5,
+      "turno": "matutino"
+    },
+    {
+      "professor": "MATHEUS",
+      "turma": "9ME",
+      "disciplina": "REC. APREND. MATEMÁTICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "MATHEUS",
+      "turma": "9MF",
+      "disciplina": "REC. APREND. MATEMÁTICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "MELINA",
+      "turma": "1MC FAR",
+      "disciplina": "SAÚDE PÚBLICA",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "MIRIAN",
+      "turma": "3MA EM",
+      "disciplina": "REC. APREND. MATEMÁTICA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "PEDRO",
+      "turma": "1MA EM",
+      "disciplina": "EDUCAÇÃO DIGITAL",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "PEDRO",
+      "turma": "1MB DES",
+      "disciplina": "EDUCAÇÃO DIGITAL",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "PEDRO",
+      "turma": "1MC FAR",
+      "disciplina": "EDUCAÇÃO DIGITAL",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "PEDRO",
+      "turma": "1MD MA",
+      "disciplina": "EDUCAÇÃO DIGITAL",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "PEDRO",
+      "turma": "1ME DOC",
+      "disciplina": "EDUCAÇÃO DIGITAL",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "PRISCILA",
+      "turma": "8MA",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "PRISCILA",
+      "turma": "8MB",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "PRISCILA",
+      "turma": "8MC",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "PRISCILA",
+      "turma": "8MD",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "PRISCILA",
+      "turma": "8ME",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "RAFAEL",
+      "turma": "1MA EM",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 4,
+      "turno": "matutino"
+    },
+    {
+      "professor": "RICARDO",
+      "turma": "9MA",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "RICARDO",
+      "turma": "9MB",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "RICARDO",
+      "turma": "9MD",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "RICARDO",
+      "turma": "9ME",
+      "disciplina": "GEOGRAFIA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "RICARDO",
+      "turma": "3MA EM",
+      "disciplina": "GEOGRAFIA 1",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ROBERVAL",
+      "turma": "2MA EM",
+      "disciplina": "ARTE",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ROBERVAL",
+      "turma": "3MA EM",
+      "disciplina": "ARTE 2",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ROBSON",
+      "turma": "8ME",
+      "disciplina": "HISTÓRIA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "ROBSON",
+      "turma": "1MC FAR",
+      "disciplina": "EMPREENDEDORISMO",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "RODRIGO",
+      "turma": "8MA",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "RODRIGO",
+      "turma": "8MB",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "RODRIGO",
+      "turma": "8MC",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "RODRIGO",
+      "turma": "8MD",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "RODRIGO",
+      "turma": "8ME",
+      "disciplina": "CIÊNCIAS",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SALETE",
+      "turma": "9MA",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SALETE",
+      "turma": "9MB",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SALETE",
+      "turma": "9MC",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SALETE",
+      "turma": "9ME",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SALETE",
+      "turma": "9MF",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SALETE",
+      "turma": "1MA EM",
+      "disciplina": "HISTÓRIA DO PARANÁ",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SALETE",
+      "turma": "2MA EM",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SALETE",
+      "turma": "2MA ADM",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SALETE",
+      "turma": "2MB DES",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SALETE",
+      "turma": "2MC FAR",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SALETE",
+      "turma": "2MD MA",
+      "disciplina": "HISTÓRIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SILMARA",
+      "turma": "8MA",
+      "disciplina": "EDUCAÇÃO DIGITAL",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SILMARA",
+      "turma": "8MB",
+      "disciplina": "EDUCAÇÃO DIGITAL",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SILMARA",
+      "turma": "8MC",
+      "disciplina": "EDUCAÇÃO DIGITAL",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SILMARA",
+      "turma": "8MD",
+      "disciplina": "EDUCAÇÃO DIGITAL",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SILMARA",
+      "turma": "8ME",
+      "disciplina": "EDUCAÇÃO DIGITAL",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SILMARA",
+      "turma": "2MA ADM",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SILMARA",
+      "turma": "2MB DES",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SIMONE",
+      "turma": "2MA ADM",
+      "disciplina": "LID ORG E GES DE PESSOAS",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SIMONE",
+      "turma": "2MA ADM",
+      "disciplina": "RECURSOS HUMANOS",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SIMONE",
+      "turma": "3MA ADM",
+      "disciplina": "ADM FINANC E ORÇAMENTÁRIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SIMONE",
+      "turma": "3MA ADM",
+      "disciplina": "NEGOCIAÇÃO E VENDAS",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SIMONE",
+      "turma": "3MA ADM",
+      "disciplina": "CONTROLADORIA E FINANÇAS",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SIMONE",
+      "turma": "1MB DES",
+      "disciplina": "ANÁLISE E MET P SISTEMAS",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SIMONE",
+      "turma": "1MB DES",
+      "disciplina": "BANCO DE DADOS 1",
+      "aulas": 3,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SONEIDE",
+      "turma": "2MA EM",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 4,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SONEIDE",
+      "turma": "2MA EM",
+      "disciplina": "LIT. E PROD. DE TEXTO",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SONEIDE",
+      "turma": "3MA ADM",
+      "disciplina": "LÍNGUA PORTUGUESA",
+      "aulas": 4,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SYPRIANO",
+      "turma": "2MA EM",
+      "disciplina": "FILOSOFIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SYPRIANO",
+      "turma": "2MA EM",
+      "disciplina": "FIL.TEXTOS FILOSÓFICOS",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SYPRIANO",
+      "turma": "2MA ADM",
+      "disciplina": "FILOSOFIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SYPRIANO",
+      "turma": "2MB DES",
+      "disciplina": "FILOSOFIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "SYPRIANO",
+      "turma": "2MC FAR",
+      "disciplina": "FILOSOFIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "VIVIANE",
+      "turma": "1MC FAR",
+      "disciplina": "REDAÇÃO TÉCNICA",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "VIVIANE",
+      "turma": "2MC FAR",
+      "disciplina": "REDAÇÃO TÉCNICA",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "VIVIANE",
+      "turma": "2MC FAR",
+      "disciplina": "FUND DA FISIOPATOLOGIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "VIVIANE",
+      "turma": "2MC FAR",
+      "disciplina": "TOXICOLOGIA",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "VIVIANE",
+      "turma": "2MD MA",
+      "disciplina": "ANÁLISE CONT E QUIM AMB 1",
+      "aulas": 2,
+      "turno": "matutino"
+    },
+    {
+      "professor": "VIVIANE",
+      "turma": "2MD MA",
+      "disciplina": "MET CIENT E COMUNICAÇÃO",
+      "aulas": 1,
+      "turno": "matutino"
+    },
+    {
+      "professor": "WEREDIANA",
+      "turma": "2MC FAR",
+      "disciplina": "BASES BIO APLIC A SAUDE",
+      "aulas": 2,
+      "turno": "matutino"
+    }
+  ]
+}

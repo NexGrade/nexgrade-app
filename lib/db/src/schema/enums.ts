@@ -32,3 +32,49 @@ export const composicaoCurricularEnum = pgEnum("composicao_curricular", [
   "IFP",
   "APF",
 ]);
+
+/**
+ * Eixo Tecnológico — os 13 eixos do Catálogo Nacional de Cursos
+ * Técnicos (CNCT, 4ª edição, MEC/Setec, Resolução CNE/CEB nº 2/2020),
+ * usado pra classificar cursos de nível técnico (cursosTable.nivel =
+ * "tecnico"). Não se aplica a fundamental/medio/normal_magisterio —
+ * ver cursosTable.eixoTecnologico, nulo pra esses níveis.
+ *
+ * Fonte: MEC/Setec, cnct.mec.gov.br.
+ */
+export const eixoTecnologicoEnum = pgEnum("eixo_tecnologico", [
+  "ambiente_saude",
+  "controle_processos_industriais",
+  "desenvolvimento_educacional_social",
+  "gestao_negocios",
+  "informacao_comunicacao",
+  "infraestrutura",
+  "militar",
+  "producao_alimenticia",
+  "producao_cultural_design",
+  "producao_industrial",
+  "recursos_naturais",
+  "seguranca",
+  "turismo_hospitalidade_lazer",
+]);
+
+/**
+ * [NOVO] Forma de Oferta — distingue os dois formatos oficiais de curso
+ * técnico da SEED-PR (Instruções Normativas Conjuntas 001/2026 e
+ * 005/2026), que frequentemente compartilham o MESMO nome de curso mas
+ * têm código, carga horária e estrutura curricular diferentes:
+ *
+ * integrada                     Técnico já embutido no currículo do
+ *                                Ensino Médio, pacote único e contínuo
+ *                                na mesma escola (IN 001/2026).
+ * concomitante_intercomplementar Aluno já matriculado no Ensino Médio
+ *                                regular (nesta ou noutra escola) cursa
+ *                                o técnico em paralelo, como
+ *                                complemento (IN 005/2026).
+ *
+ * Só se aplica a cursosTable.nivel = "tecnico" — nulo pros demais níveis.
+ */
+export const formaOfertaEnum = pgEnum("forma_oferta", [
+  "integrada",
+  "concomitante_intercomplementar",
+]);

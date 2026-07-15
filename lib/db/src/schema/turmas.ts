@@ -2,6 +2,7 @@ import { pgTable, text, serial, timestamp, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { matrizesCurricularesTable } from "./cursos";
+import { professoresTable } from "./professores";
 
 export const turmasTable = pgTable("turmas", {
   id: serial("id").primaryKey(),
@@ -12,10 +13,9 @@ export const turmasTable = pgTable("turmas", {
   anoLetivo: integer("ano_letivo").notNull(),
   // RF-TUR-01/02: vínculo opcional com a Matriz Curricular (ver
   // cursos.ts) que define a carga horária esperada por disciplina desta
-  // turma. Nulo enquanto a turma não estiver associada a uma matriz —
-  // widget de aplicação automática ainda não implementado (ver
-  // replit.md, seção "Próximos passos").
-  matrizCurricularId: integer("matriz_curricular_id").references(() => matrizesCurricularesTable.id),
+  // turma. Nulo enquanto a turma não estiver associada a uma matriz.
+  matrizCurricularId: integer("matriz_curricular_id")
+    .references(() => matrizesCurricularesTable.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
@@ -24,6 +24,13 @@ export const turmaDisciplinasTable = pgTable("turma_disciplinas", {
   id: serial("id").primaryKey(),
   turmaId: integer("turma_id").notNull().references(() => turmasTable.id, { onDelete: "cascade" }),
   disciplinaId: integer("disciplina_id").notNull(),
+  // [NOVO] Professor específico que dá ESSA disciplina NESSA turma —
+  // necessário porque a mesma disciplina (ex: Matemática) costuma ter
+  // professores diferentes em turmas diferentes; professor_disciplinas
+  // (genérico, professor+disciplina) não é suficiente pra desambiguar
+  // isso. Nulo enquanto a turma não tiver um professor definido pra essa
+  // disciplina (ex: antes da distribuição de aulas ser fechada).
+  professorId: integer("professor_id").references(() => professoresTable.id, { onDelete: "set null" }),
   // RF-TUR-02: quando a disciplina veio de uma Matriz Curricular
   // aplicada (ver rota POST /turmas/:id/aplicar-matriz), este campo
   // guarda a carga horária semanal daquela série específica — que tem

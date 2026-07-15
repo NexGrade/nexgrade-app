@@ -1,0 +1,2 @@
+CREATE TYPE "public"."eixo_tecnologico" AS ENUM('ambiente_saude', 'controle_processos_industriais', 'desenvolvimento_educacional_social', 'gestao_negocios', 'informacao_comunicacao', 'infraestrutura', 'militar', 'producao_alimenticia', 'producao_cultural_design', 'producao_industrial', 'recursos_naturais', 'seguranca', 'turismo_hospitalidade_lazer');--> statement-breakpoint
+ALTER TABLE "cursos" ADD COLUMN "eixo_tecnologico" "eixo_tecnologico";

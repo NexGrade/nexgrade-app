@@ -1,6 +1,7 @@
 import { pgTable, text, serial, timestamp, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { composicaoCurricularEnum } from "./enums";
 
 export const disciplinasTable = pgTable("disciplinas", {
   id: serial("id").primaryKey(),
@@ -18,6 +19,13 @@ export const disciplinasTable = pgTable("disciplinas", {
   // Usado para travar automaticamente Pensamento Computacional/cursos
   // técnicos no laboratório e Educação Física na quadra.
   tipoSalaExigido: text("tipo_sala_exigido"),
+  // [NOVO] RF-DISC-03: categoria curricular fixa/padrão desta
+  // disciplina (BNC/PD/FGB/PFO/IFA/IF/IFP/APF), usada pra filtrar a
+  // lista de disciplinas na hora de montar uma Grade Curricular — ao
+  // escolher a categoria primeiro, só aparecem disciplinas com esse
+  // vínculo. Nula = disciplina "flexível", sem categoria fixa, elegível
+  // pra qualquer categoria ao montar a matriz.
+  categoriaCurricularPadrao: composicaoCurricularEnum("categoria_curricular_padrao"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
