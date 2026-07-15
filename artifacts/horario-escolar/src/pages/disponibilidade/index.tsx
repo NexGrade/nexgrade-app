@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +52,16 @@ export default function DisponibilidadePage() {
   const [turno, setTurno] = useState<Turno>("matutino");
   const [matriz, setMatriz] = useState<CelulaState>({});
   const [original, setOriginal] = useState<CelulaState>({});
+
+  // Permite chegar nesta página já com um professor pré-selecionado,
+  // via link tipo /disponibilidade?professorId=42 — usado pelo botão
+  // "Gerenciar disponibilidade" na tela de edição do professor, pra não
+  // duplicar essa lógica em dois lugares diferentes.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const idFromUrl = params.get("professorId");
+    if (idFromUrl) setProfessorId(idFromUrl);
+  }, []);
 
   const { data: professores = [], isLoading: carregandoProfessores } = useListProfessores();
 

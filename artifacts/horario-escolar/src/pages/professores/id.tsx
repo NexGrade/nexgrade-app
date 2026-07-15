@@ -1,8 +1,8 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useGetProfessor, useUpdateProfessor, getGetProfessorQueryKey, useListDisciplinas, getListProfessoresQueryKey, useGetProfessorCarga, useListDisponibilidade, useSetDisponibilidadeLote, getListDisponibilidadeQueryKey } from "@workspace/api-client-react";
-import { useLocation, useParams } from "wouter";
+import { useGetProfessor, useUpdateProfessor, getGetProfessorQueryKey, useListDisciplinas, getListProfessoresQueryKey, useGetProfessorCarga } from "@workspace/api-client-react";
+import { Link, useLocation, useParams } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -11,10 +11,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { CalendarClock, ArrowRight } from "lucide-react";
+import { useEffect, useMemo, useRef } from "react";
 import { MultiSelectBusca } from "@/components/multi-select-busca";
 
 const professorSchema = z.object({
@@ -269,178 +269,32 @@ export default function ProfessorEditar() {
               )}
             </CardContent>
           </Card>
+
+          {/* Disponibilidade agora vive só na página dedicada
+             (/disponibilidade), turno-aware e com horários reais —
+             evita manter duas implementações divergentes da mesma
+             funcionalidade. */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <CalendarClock className="w-4 h-4 text-[#1565C0]" />
+                Disponibilidade Semanal
+              </CardTitle>
+              <CardDescription>
+                Gerencie os dias e horários em que {professor?.nome ?? "este professor"} não pode dar aula.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href={`/disponibilidade?professorId=${professorId}`}>
+                <Button variant="outline" className="w-full justify-between">
+                  Gerenciar disponibilidade
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
         </div>
       </div>
-
-      <DisponibilidadeGrade professorId={professorId} />
     </div>
-  );
-}
-
-// RF-DISP-01/02, RF-PROF-04: grade semanal de disponibilidade do
-// professor. Convenção do backend: só é preciso enviar uma exceção
-// quando o professor NÃO está disponível — o padrão de toda célula é
-// "disponível" até que o usuário marque o contrário aqui.
-const DIAS_SEMANA_GRADE = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"] as const;
-const SLOTS_GRADE = [1, 2, 3, 4, 5, 6, 7, 8] as const;
-
-function DisponibilidadeGrade({ professorId }: { professorId: number }) {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { data: disponibilidades, isLoading } = useListDisponibilidade(
-    { professorId },
-    { query: { enabled: !!professorId, queryKey: getListDisponibilidadeQueryKey({ professorId }) } },
-  );
-  const salvarLote = useSetDisponibilidadeLote();
-
-  const [indisponiveis, setIndisponiveis] = useState<Map<string, boolean>>(new Map());
-  const [turnoGrade, setTurnoGrade] = useState<"matutino" | "vespertino" | "noturno">("matutino");
-  const initRef = useRef(false);
-
-  useEffect(() => {
-    if (disponibilidades && !initRef.current) {
-      const mapa = new Map<string, boolean>();
-      disponibilidades
-        .filter((d) => !d.disponivel)
-        .forEach((d) => mapa.set(`${d.diaSemana}-${d.horarioSlot}`, d.horaAtividadeObrigatoria ?? false));
-      setIndisponiveis(mapa);
-      const primeiroTurno = disponibilidades.find((d) => !d.disponivel && d.turno)?.turno;
-      if (primeiroTurno) setTurnoGrade(primeiroTurno);
-      initRef.current = true;
-    }
-  }, [disponibilidades]);
-
-  const totalIndisponivel = useMemo(() => indisponiveis.size, [indisponiveis]);
-  const totalHA = useMemo(() => [...indisponiveis.values()].filter(Boolean).length, [indisponiveis]);
-
-  function alternarCelula(dia: number, slot: number) {
-    const key = `${dia}-${slot}`;
-    setIndisponiveis((atual) => {
-      const proximo = new Map(atual);
-      if (!proximo.has(key)) {
-        proximo.set(key, false);
-      } else if (proximo.get(key) === false) {
-        proximo.set(key, true);
-      } else {
-        proximo.delete(key);
-      }
-      return proximo;
-    });
-  }
-
-  function salvar() {
-    const itens = DIAS_SEMANA_GRADE.flatMap((_, dia) =>
-      SLOTS_GRADE.map((slot) => {
-        const key = `${dia}-${slot}`;
-        const marcado = indisponiveis.has(key);
-        return {
-          diaSemana: dia,
-          horarioSlot: slot,
-          disponivel: !marcado,
-          turno: marcado ? turnoGrade : undefined,
-          horaAtividadeObrigatoria: marcado ? (indisponiveis.get(key) ?? false) : false,
-        };
-      }),
-    );
-
-    salvarLote.mutate(
-      { data: { professorId, itens } },
-      {
-        onSuccess: () => {
-          toast({ title: "Disponibilidade salva com sucesso!" });
-          queryClient.invalidateQueries({ queryKey: getListDisponibilidadeQueryKey({ professorId }) });
-        },
-        onError: () => {
-          toast({ title: "Erro ao salvar disponibilidade", variant: "destructive" });
-        },
-      },
-    );
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Disponibilidade Semanal</CardTitle>
-        <CardDescription>
-          Clique uma vez para marcar indisponível, duas vezes para marcar como Hora-Atividade obrigatória
-          (Resolução SEED n.º 7.200/2025, art. 11), três vezes para voltar a disponível. Células não marcadas
-          são consideradas disponíveis pelo gerador de horário e pela detecção de conflitos.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <Skeleton className="h-64 w-full" />
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 max-w-xs">
-              <Label className="text-sm shrink-0">Turno desta grade</Label>
-              <Select value={turnoGrade} onValueChange={(v) => setTurnoGrade(v as "matutino" | "vespertino" | "noturno")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="matutino">Matutino</SelectItem>
-                  <SelectItem value="vespertino">Vespertino</SelectItem>
-                  <SelectItem value="noturno">Noturno</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-sm">
-                <thead>
-                  <tr>
-                    <th className="p-2 text-left text-muted-foreground font-medium">Aula</th>
-                    {DIAS_SEMANA_GRADE.map((dia) => (
-                      <th key={dia} className="p-2 text-center text-muted-foreground font-medium">
-                        {dia}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {SLOTS_GRADE.map((slot) => (
-                    <tr key={slot} className="border-t">
-                      <td className="p-2 text-muted-foreground">{slot}ª</td>
-                      {DIAS_SEMANA_GRADE.map((_, dia) => {
-                        const key = `${dia}-${slot}`;
-                        const ehHA = indisponiveis.get(key) === true;
-                        const marcado = indisponiveis.has(key);
-                        return (
-                          <td key={key} className="p-2 text-center">
-                            <button
-                              type="button"
-                              onClick={() => alternarCelula(dia, slot)}
-                              aria-pressed={marcado}
-                              className={
-                                "h-8 w-full rounded-md border text-xs font-medium transition-colors " +
-                                (ehHA
-                                  ? "bg-[#42A5F5]/15 border-[#1565C0]/40 text-[#0D47A1]"
-                                  : marcado
-                                  ? "bg-destructive/10 border-destructive/40 text-destructive"
-                                  : "bg-muted/40 border-transparent hover:border-muted-foreground/30")
-                              }
-                            >
-                              {ehHA ? "Hora-Atividade" : marcado ? "Indisponível" : ""}
-                            </button>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="flex items-center justify-between pt-2 border-t">
-              <p className="text-sm text-muted-foreground">
-                {totalIndisponivel} período(s) indisponível(is), {totalHA} de Hora-Atividade obrigatória.
-              </p>
-              <Button onClick={salvar} disabled={salvarLote.isPending}>
-                {salvarLote.isPending ? "Salvando..." : "Salvar Disponibilidade"}
-              </Button>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
   );
 }
