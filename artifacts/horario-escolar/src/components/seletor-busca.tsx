@@ -40,11 +40,22 @@ export function SeletorBusca({
   }, []);
 
   const selecionado = options.find((o) => o.value === value);
-  const buscaNorm = busca.trim().toLowerCase();
+
+  // Mesma normalização usada no MultiSelectBusca: remove acentos e
+  // caixa, casa em qualquer posição do texto.
+  function normalizar(s: string) {
+    return s
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+  }
+
+  const buscaNorm = normalizar(busca);
   const filtradas = options.filter(
     (o) =>
-      o.label.toLowerCase().includes(buscaNorm) ||
-      (o.sublabel ?? "").toLowerCase().includes(buscaNorm),
+      normalizar(o.label).includes(buscaNorm) ||
+      normalizar(o.sublabel ?? "").includes(buscaNorm),
   );
 
   return (

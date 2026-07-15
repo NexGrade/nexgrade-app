@@ -41,8 +41,21 @@ export function MultiSelectBusca({
 
   const valorAtual = value ?? [];
   const selecionadas = options.filter((o) => valorAtual.includes(o.value));
-  const buscaNorm = busca.trim().toLowerCase();
-  const filtradas = options.filter((o) => o.label.toLowerCase().includes(buscaNorm));
+
+  // Normaliza removendo acentos (NFD + remove marcas diacríticas) e
+  // caixa, para a busca aceitar "eletrica", "Elétrica", "ELÉTRICA" etc.
+  // como equivalentes, e casar em qualquer posição do nome, não só no
+  // início.
+  function normalizar(s: string) {
+    return s
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+  }
+
+  const buscaNorm = normalizar(busca);
+  const filtradas = options.filter((o) => normalizar(o.label).includes(buscaNorm));
 
   function alternar(id: number) {
     if (valorAtual.includes(id)) {
