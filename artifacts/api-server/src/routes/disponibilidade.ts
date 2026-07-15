@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { disponibilidadeTable, professoresTable } from "@workspace/db";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 
@@ -17,6 +17,14 @@ import { getEscolaId } from "../lib/escola-id";
 // `disponibilidade_professores` não tem coluna própria de escola
 // (RNF-SEG-04) — é sempre escopada validando que o `professorId`
 // envolvido pertence à escola do usuário autenticado.
+//
+// [FIX] A identidade de um registro de disponibilidade é
+// professorId + diaSemana + horarioSlot + turno — não só os três
+// primeiros. horarioSlot é só um número (1, 2, 3...) que SE REPETE entre
+// turnos (manhã e noite ambos têm slot 1, 2, 3...), então a query de
+// "já existe" precisa incluir turno, senão um bloqueio no turno noturno
+// pode sobrescrever silenciosamente um bloqueio já existente no turno
+// matutino para o mesmo dia/slot.
 const router = Router();
 
 const DisponibilidadeInput = z.object({
@@ -45,6 +53,13 @@ const DisponibilidadeLoteInput = z.object({
     }),
   ),
 });
+
+// [FIX] Helper para montar a condição de turno de forma segura —
+// quando turno é undefined, compara com IS NULL em vez de tentar
+// eq(coluna, undefined) (que o Drizzle rejeitaria/ignoraria).
+function condicaoTurno(turno: "matutino" | "vespertino" | "noturno" | undefined) {
+  return turno ? eq(disponibilidadeTable.turno, turno) : isNull(disponibilidadeTable.turno);
+}
 
 async function buscarProfessorDaEscola(professorId: number, escolaId: string) {
   return db.select().from(professoresTable)
@@ -97,6 +112,7 @@ router.post("/", async (req, res) => {
       eq(disponibilidadeTable.professorId, parsed.data.professorId),
       eq(disponibilidadeTable.diaSemana, parsed.data.diaSemana),
       eq(disponibilidadeTable.horarioSlot, parsed.data.horarioSlot),
+      condicaoTurno(parsed.data.turno),
     ))
     .then(r => r[0]);
 
@@ -139,6 +155,7 @@ router.post("/lote", async (req, res) => {
         eq(disponibilidadeTable.professorId, parsed.data.professorId),
         eq(disponibilidadeTable.diaSemana, item.diaSemana),
         eq(disponibilidadeTable.horarioSlot, item.horarioSlot),
+        condicaoTurno(item.turno),
       ))
       .then(r => r[0]);
 
