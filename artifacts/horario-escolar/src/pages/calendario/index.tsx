@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarDays, GraduationCap, BarChart3, CheckCircle2, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, GraduationCap, BarChart3, CheckCircle2, AlertTriangle, ChevronLeft, ChevronRight, Info } from "lucide-react";
 
 const TIPO_LABELS: Record<string, { label: string; color: string; dot: string }> = {
   feriado: { label: "Feriado", color: "bg-red-100 text-red-700", dot: "bg-red-500" },
@@ -48,12 +48,10 @@ function agruparEventos(eventos: Evento[]) {
   return grupos;
 }
 
-// Monta o grid de um mês: array de semanas, cada semana com 7 células
-// (dia do mês ou null pra célula vazia antes/depois do mês).
 function montarGridMes(ano: number, mes: number, eventosPorDia: Map<string, Evento[]>) {
   const primeiroDia = new Date(ano, mes, 1);
   const ultimoDia = new Date(ano, mes + 1, 0);
-  const offsetInicial = primeiroDia.getDay(); // 0 = domingo
+  const offsetInicial = primeiroDia.getDay();
   const totalDias = ultimoDia.getDate();
 
   const celulas: { dia: number | null; dataStr: string | null; eventos: Evento[] }[] = [];
@@ -78,6 +76,12 @@ export default function CalendarioEscolarPage() {
 
   const totalDiasLetivos = trimestres.reduce((soma, t) => soma + t.diasLetivos, 0);
   const disciplinasInsuficientes = cargaHoraria.filter((c) => c.status === "insuficiente").length;
+
+  // Enquanto nenhuma turma tem horário gerado ainda, TODA disciplina
+  // aparece com totalCumprido = 0 — isso não é um problema de dado, é
+  // esperado nesta fase do projeto. Mostrar isso como alerta antes de
+  // existir qualquer horário gerado é ruído, não informação útil.
+  const nenhumHorarioGeradoAinda = cargaHoraria.length > 0 && cargaHoraria.every((c) => c.totalCumprido === 0);
 
   const eventosPorDia = useMemo(() => {
     const mapa = new Map<string, Evento[]>();
@@ -157,6 +161,17 @@ export default function CalendarioEscolarPage() {
             <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
           ) : cargaHoraria.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">Nenhuma turma com disciplinas vinculadas para {ano}.</p>
+          ) : nenhumHorarioGeradoAinda ? (
+            <div className="flex items-start gap-3 py-8 px-4 rounded-lg bg-muted/40 text-muted-foreground">
+              <Info className="w-5 h-5 shrink-0 mt-0.5 text-[#1565C0]" />
+              <div>
+                <p className="text-sm font-medium text-foreground">Nenhum horário gerado ainda</p>
+                <p className="text-sm mt-1">
+                  Gere os horários das turmas para acompanhar aqui o cumprimento da carga horária anual exigida
+                  pela SEED-PR. Esse painel fica disponível assim que a primeira turma tiver horário gerado.
+                </p>
+              </div>
+            </div>
           ) : (
             <>
               {disciplinasInsuficientes > 0 && (
