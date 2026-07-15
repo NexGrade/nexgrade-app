@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import {
   useListHorarioSlots, useSetHorarioSlotsLote, getListHorarioSlotsQueryKey,
   useListAulasFixas, useCriarAulaFixa, getListAulasFixasQueryKey,
@@ -813,6 +813,7 @@ function AbaExperimental() {
     substituir: true,
     reduzirJanelas: true,
     fatorPedagogico: false,
+    compactarCargaHoraria: false,
   });
 
   const nomes = [...new Set(expSlots.map((s) => s.nome))];
@@ -830,6 +831,7 @@ function AbaExperimental() {
           substituir: gerarForm.substituir,
           reduzirJanelas: gerarForm.reduzirJanelas,
           fatorPedagogico: gerarForm.fatorPedagogico,
+          compactarCargaHoraria: gerarForm.compactarCargaHoraria,
           experimental: true,
         },
       });
@@ -960,6 +962,10 @@ function AbaExperimental() {
               <Label className="cursor-pointer">Fator pedagógico (distribuição equilibrada)</Label>
               <Switch checked={gerarForm.fatorPedagogico} onCheckedChange={(v) => setGerarForm((f) => ({ ...f, fatorPedagogico: v }))} />
             </div>
+            <div className="flex items-center justify-between py-1">
+              <Label className="cursor-pointer">Compactar carga horária</Label>
+              <Switch checked={gerarForm.compactarCargaHoraria} onCheckedChange={(v) => setGerarForm((f) => ({ ...f, compactarCargaHoraria: v }))} />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenGerar(false)}>Cancelar</Button>
@@ -970,3 +976,6 @@ function AbaExperimental() {
     </div>
   );
 }
+
+
+

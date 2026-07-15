@@ -37,6 +37,7 @@ export default function HorariosExperimentais() {
     substituir: true,
     reduzirJanelas: true,
     fatorPedagogico: false,
+    compactarCargaHoraria: false,
   });
 
   const nomes = [...new Set(expSlots.map(s => s.nome))];
@@ -54,6 +55,7 @@ export default function HorariosExperimentais() {
           substituir: gerarForm.substituir,
           reduzirJanelas: gerarForm.reduzirJanelas,
           fatorPedagogico: gerarForm.fatorPedagogico,
+          compactarCargaHoraria: gerarForm.compactarCargaHoraria,
           experimental: true,
         }
       });
@@ -198,6 +200,10 @@ export default function HorariosExperimentais() {
             <div className="flex items-center justify-between py-1">
               <Label className="cursor-pointer">Fator pedagógico (distribuição equilibrada)</Label>
               <Switch checked={gerarForm.fatorPedagogico} onCheckedChange={v => setGerarForm(f => ({ ...f, fatorPedagogico: v }))} />
+            </div>
+            <div className="flex items-center justify-between py-1">
+              <Label className="cursor-pointer">Compactar carga horária</Label>
+              <Switch checked={gerarForm.compactarCargaHoraria} onCheckedChange={v => setGerarForm(f => ({ ...f, compactarCargaHoraria: v }))} />
             </div>
           </div>
           <DialogFooter>
