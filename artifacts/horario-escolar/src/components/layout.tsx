@@ -1,10 +1,10 @@
-import { Link, useLocation } from "wouter";
+﻿import { Link, useLocation } from "wouter";
 import { UserButton } from "@clerk/react";
 import { useMasterWhoami } from "@workspace/api-client-react";
 import {
   LayoutDashboard, Users, BookOpen, GraduationCap, Calendar, CalendarDays,
   Building2, FileText, Bell, Shield, History,
-  Settings, Download, Sparkles, Upload, CreditCard, Library, ShieldCheck,
+  Settings, Download, Sparkles, Upload, CreditCard, Library, ShieldCheck, Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +22,7 @@ const navGroups = [
     label: "Cadastros",
     items: [
       { href: "/professores", label: "Professores", icon: Users },
+      { href: "/disponibilidade", label: "Disponibilidade", icon: Clock },
       { href: "/disciplinas", label: "Disciplinas", icon: BookOpen },
       { href: "/cursos", label: "Cursos e Matriz Curricular", icon: Library },
       { href: "/turmas", label: "Turmas", icon: GraduationCap },
@@ -129,3 +130,5 @@ export function Layout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+

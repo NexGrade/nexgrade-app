@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ClerkProvider, SignIn, SignUp, Show, useAuth } from "@clerk/react";
@@ -30,6 +30,7 @@ import PlanosPage from "@/pages/planos/index";
 import MasterPage from "@/pages/master/index";
 import OnboardingPage from "@/pages/onboarding/index";
 import CursosList from "@/pages/cursos/index";
+import DisponibilidadePage from "@/pages/disponibilidade/index";
 import CalendarioEscolarPage from "@/pages/calendario/index";
 import NotFound from "@/pages/not-found";
 
@@ -265,6 +266,7 @@ function Router() {
       <Route path="/professores" component={() => <ProtectedRoute component={ProfessoresList} />} />
       <Route path="/professores/novo" component={() => <ProtectedRoute component={ProfessorNovo} />} />
       <Route path="/professores/:id" component={() => <ProtectedRoute component={ProfessorEditar} />} />
+      <Route path="/disponibilidade" component={() => <ProtectedRoute component={DisponibilidadePage} />} />
       <Route path="/disciplinas" component={() => <ProtectedRoute component={DisciplinasList} />} />
       <Route path="/cursos" component={() => <ProtectedRoute component={CursosList} />} />
       <Route path="/turmas" component={() => <ProtectedRoute component={TurmasList} />} />
@@ -320,5 +322,7 @@ function App() {
 }
 
 export default App;
+
+
 
 
