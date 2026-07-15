@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const professorSchema = z.object({
@@ -34,7 +35,7 @@ export default function ProfessorEditar() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const { data: professor, isLoading: isLoadingProfessor } = useGetProfessor(professorId, { query: { enabled: !!professorId, queryKey: getGetProfessorQueryKey(professorId) } });
   const { data: cargaData, isLoading: isLoadingCarga } = useGetProfessorCarga(professorId, { query: { enabled: !!professorId, queryKey: ["professor-carga", professorId] as const } });
   const updateProfessor = useUpdateProfessor();
@@ -65,6 +66,16 @@ export default function ProfessorEditar() {
       initRef.current = true;
     }
   }, [professor, form]);
+
+  // Disciplinas únicas que este professor leciona (sem repetir, mesmo
+  // que ele dê a mesma disciplina em várias turmas diferentes).
+  const disciplinasUnicas = useMemo(() => {
+    const ids = form.watch("disciplinaIds") || [];
+    const idsUnicos = [...new Set(ids)];
+    return idsUnicos
+      .map((id) => disciplinas?.find((d) => d.id === id))
+      .filter((d): d is NonNullable<typeof d> => !!d);
+  }, [form.watch("disciplinaIds"), disciplinas]);
 
   const onSubmit = (data: ProfessorFormValues) => {
     updateProfessor.mutate({ id: professorId, data }, {
@@ -102,7 +113,7 @@ export default function ProfessorEditar() {
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <div className="flex items-center justify-between border-b pb-4">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-base">Status do Professor</FormLabel>
+                      <Label className="text-base">Status do Professor</Label>
                       <p className="text-sm text-muted-foreground">Professores inativos não recebem aulas no horário automático.</p>
                     </div>
                     <FormField
@@ -132,7 +143,7 @@ export default function ProfessorEditar() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="email"
@@ -146,7 +157,7 @@ export default function ProfessorEditar() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="telefone"
@@ -191,7 +202,7 @@ export default function ProfessorEditar() {
                                         checked={value.includes(disciplina.id)}
                                         onCheckedChange={(checked) => {
                                           return checked
-                                            ? field.onChange([...value, disciplina.id])
+                                            ? field.onChange([...new Set([...value, disciplina.id])])
                                             : field.onChange(
                                                 value.filter((val) => val !== disciplina.id)
                                               );
@@ -228,10 +239,11 @@ export default function ProfessorEditar() {
           </Card>
         </div>
 
-        <div>
+        <div className="space-y-6">
           <Card className="sticky top-6">
             <CardHeader>
               <CardTitle>Carga Horária</CardTitle>
+              <CardDescription>Total de aulas semanais que o professor tem na escola.</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoadingCarga ? (
@@ -246,7 +258,7 @@ export default function ProfessorEditar() {
                     <span className="text-muted-foreground">Total Semanal</span>
                     <span className="text-2xl font-bold">{cargaData.totalAulas} aulas</span>
                   </div>
-                  
+
                   <div className="space-y-3">
                     <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">Distribuição por Dia</h4>
                     {diasSemana.map((dia, index) => {
@@ -256,8 +268,8 @@ export default function ProfessorEditar() {
                           <span className="text-sm">{dia}</span>
                           <div className="flex items-center gap-3">
                             <div className="w-24 h-2 bg-secondary rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-primary transition-all" 
+                              <div
+                                className="h-full bg-primary transition-all"
                                 style={{ width: `${Math.min(100, (aulas / 8) * 100)}%` }}
                               />
                             </div>
@@ -267,9 +279,20 @@ export default function ProfessorEditar() {
                       );
                     })}
                   </div>
+
+                  {disciplinasUnicas.length > 0 && (
+                    <div className="space-y-2 pt-2 border-t">
+                      <h4 className="text-sm font-medium text-muted-foreground pb-1">Disciplinas que leciona</h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {disciplinasUnicas.map((d) => (
+                          <Badge key={d.id} variant="outline">{d.nome}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">Sem dados de carga horária disponíveis.</p>
+                <p className="text-sm text-muted-foreground">Sem dados de carga horária disponível.</p>
               )}
             </CardContent>
           </Card>
@@ -297,9 +320,6 @@ function DisponibilidadeGrade({ professorId }: { professorId: number }) {
   );
   const salvarLote = useSetDisponibilidadeLote();
 
-  // Mapa "dia-slot" -> horaAtividadeObrigatoria. Presença na estrutura =
-  // indisponível; o valor diz se é especificamente Hora-Atividade
-  // obrigatória (Resolução SEED n.º 7.200/2025, art. 11) ou outro motivo.
   const [indisponiveis, setIndisponiveis] = useState<Map<string, boolean>>(new Map());
   const [turnoGrade, setTurnoGrade] = useState<"matutino" | "vespertino" | "noturno">("matutino");
   const initRef = useRef(false);
@@ -320,8 +340,6 @@ function DisponibilidadeGrade({ professorId }: { professorId: number }) {
   const totalIndisponivel = useMemo(() => indisponiveis.size, [indisponiveis]);
   const totalHA = useMemo(() => [...indisponiveis.values()].filter(Boolean).length, [indisponiveis]);
 
-  // Clique cicla 3 estados: disponível -> indisponível -> indisponível +
-  // Hora-Atividade obrigatória -> disponível de novo.
   function alternarCelula(dia: number, slot: number) {
     const key = `${dia}-${slot}`;
     setIndisponiveis((atual) => {

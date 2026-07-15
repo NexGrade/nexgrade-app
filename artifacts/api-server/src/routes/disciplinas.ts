@@ -36,7 +36,10 @@ router.post("/", async (req, res) => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const data = parsed.data as { nome: string; cargaSemanal: number; cor?: string; codigoSae?: string; tipoSalaExigido?: string };
+  const data = parsed.data as {
+    nome: string; cargaSemanal: number; cor?: string; codigoSae?: string;
+    tipoSalaExigido?: string; categoriaCurricularPadrao?: string;
+  };
   const count = await db
     .select()
     .from(disciplinasTable)
@@ -52,6 +55,7 @@ router.post("/", async (req, res) => {
       cor,
       codigoSae: data.codigoSae,
       tipoSalaExigido: data.tipoSalaExigido,
+      categoriaCurricularPadrao: data.categoriaCurricularPadrao as any,
     })
     .returning();
   await registrarAuditoria({

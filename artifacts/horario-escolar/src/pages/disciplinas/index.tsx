@@ -31,6 +31,20 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useListaFiltrada } from "@/hooks/use-lista-filtrada";
+import { CampoBusca } from "@/components/campo-busca";
+
+const CATEGORIAS = ["BNC", "PD", "FGB", "PFO", "IFA", "IF", "IFP", "APF"] as const;
+const CATEGORIA_LABEL: Record<string, string> = {
+  BNC: "Base Nacional Comum",
+  PD: "Parte Diversificada",
+  FGB: "Formação Geral Básica",
+  PFO: "Percurso Formativo Obrigatório",
+  IFA: "Itinerário Formativo de Aprofundamento",
+  IF: "Itinerário Formativo",
+  IFP: "Itinerário Formativo Profissional",
+  APF: "Aprofundamento Profissional",
+};
 
 const disciplinaSchema = z.object({
   nome: z.string().min(2, "O nome deve ter pelo menos 2 caracteres"),
@@ -38,12 +52,14 @@ const disciplinaSchema = z.object({
   cor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Cor inválida (ex: #FF0000)"),
   codigoSae: z.string().optional(),
   tipoSalaExigido: z.string().optional(),
+  categoriaCurricularPadrao: z.string().optional(),
 });
 
 type DisciplinaFormValues = z.infer<typeof disciplinaSchema>;
 
 export default function DisciplinasList() {
   const { data: disciplinas, isLoading } = useListDisciplinas();
+  const { busca, setBusca, itensFiltrados: disciplinasFiltradas } = useListaFiltrada(disciplinas, (d) => d.nome);
   const deleteDisciplina = useDeleteDisciplina();
   const createDisciplina = useCreateDisciplina();
   const updateDisciplina = useUpdateDisciplina();
@@ -61,12 +77,13 @@ export default function DisciplinasList() {
       cor: "#3b82f6",
       codigoSae: "",
       tipoSalaExigido: "",
+      categoriaCurricularPadrao: "",
     },
   });
 
   const handleOpenCreate = () => {
     setEditingId(null);
-    form.reset({ nome: "", cargaSemanal: 2, cor: "#3b82f6", codigoSae: "", tipoSalaExigido: "" });
+    form.reset({ nome: "", cargaSemanal: 2, cor: "#3b82f6", codigoSae: "", tipoSalaExigido: "", categoriaCurricularPadrao: "" });
     setIsDialogOpen(true);
   };
 
@@ -78,6 +95,7 @@ export default function DisciplinasList() {
       cor: disciplina.cor,
       codigoSae: disciplina.codigoSae ?? "",
       tipoSalaExigido: disciplina.tipoSalaExigido ?? "",
+      categoriaCurricularPadrao: disciplina.categoriaCurricularPadrao ?? "",
     });
     setIsDialogOpen(true);
   };
@@ -87,6 +105,7 @@ export default function DisciplinasList() {
       ...data,
       codigoSae: data.codigoSae?.trim() || undefined,
       tipoSalaExigido: data.tipoSalaExigido?.trim() || undefined,
+      categoriaCurricularPadrao: (data.categoriaCurricularPadrao || undefined) as any,
     };
     if (editingId) {
       updateDisciplina.mutate({ id: editingId, data: payload }, {
@@ -195,6 +214,31 @@ export default function DisciplinasList() {
                     )}
                   />
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="categoriaCurricularPadrao"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Categoria curricular fixa (opcional)</FormLabel>
+                      <Select value={field.value || "nenhuma"} onValueChange={(v) => field.onChange(v === "nenhuma" ? "" : v)}>
+                        <FormControl>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="nenhuma">Nenhuma (flexível — qualquer categoria)</SelectItem>
+                          {CATEGORIAS.map((c) => (
+                            <SelectItem key={c} value={c}>{c} — {CATEGORIA_LABEL[c]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        Quando definida, esta disciplina só aparece ao montar uma Grade Curricular dessa categoria específica.
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
@@ -245,6 +289,13 @@ export default function DisciplinasList() {
         </Dialog>
       </div>
 
+      <CampoBusca
+        value={busca}
+        onChange={setBusca}
+        placeholder="Buscar disciplina por nome..."
+        className="max-w-sm"
+      />
+
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => <Skeleton key={i} className="h-28 w-full" />)}
@@ -255,9 +306,14 @@ export default function DisciplinasList() {
           <h3 className="text-lg font-medium text-foreground">Nenhuma disciplina</h3>
           <p className="text-sm text-muted-foreground mt-1">Crie as disciplinas que farão parte das turmas.</p>
         </div>
+      ) : disciplinasFiltradas.length === 0 ? (
+        <div className="text-center py-12 bg-card rounded-lg border border-border">
+          <BookOpen className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+          <p className="text-sm text-muted-foreground">Nenhuma disciplina encontrada para "{busca}".</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {disciplinas?.map((disciplina) => (
+          {disciplinasFiltradas.map((disciplina) => (
             <Card key={disciplina.id} className="overflow-hidden border-l-4" style={{ borderLeftColor: disciplina.cor }}>
               <CardContent className="p-5 flex flex-col h-full">
                 <div className="flex justify-between items-start mb-4">
@@ -265,11 +321,18 @@ export default function DisciplinasList() {
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: disciplina.cor }} />
                     <h3 className="font-semibold text-lg">{disciplina.nome}</h3>
                   </div>
-                  {disciplina.codigoSae && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#1565C0]/10 text-[#1565C0]">
-                      SAE {disciplina.codigoSae}
-                    </span>
-                  )}
+                  <div className="flex gap-1">
+                    {disciplina.categoriaCurricularPadrao && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                        {disciplina.categoriaCurricularPadrao}
+                      </span>
+                    )}
+                    {disciplina.codigoSae && (
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#1565C0]/10 text-[#1565C0]">
+                        SAE {disciplina.codigoSae}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="mt-auto flex items-center justify-between">

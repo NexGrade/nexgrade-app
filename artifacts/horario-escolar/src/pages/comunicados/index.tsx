@@ -1,194 +1,179 @@
-import { useState } from "react";
-import { useListComunicados, useCreateComunicado, useMarcarComunicadoLido, useDeleteComunicado, useListTurmas } from "@workspace/api-client-react";
+import { useListComunicados, useCreateComunicado, useDeleteComunicado, getListComunicadosQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { Bell, Plus, Trash2, CheckCheck } from "lucide-react";
+import { Plus, Trash2, Bell } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useListaFiltrada } from "@/hooks/use-lista-filtrada";
+import { CampoBusca } from "@/components/campo-busca";
 
-const TIPOS = [
-  { value: "geral", label: "Geral", color: "bg-[#1565C0]/10 text-[#1565C0]" },
-  { value: "licenca", label: "Licença", color: "bg-amber-100 text-amber-700" },
-  { value: "conflito", label: "Conflito", color: "bg-red-100 text-red-700" },
-  { value: "horario", label: "Horário", color: "bg-green-100 text-green-700" },
-  { value: "urgente", label: "Urgente", color: "bg-rose-100 text-rose-700" },
-];
-
-type Form = { titulo: string; mensagem: string; tipo: string; turmaId?: number; autorNome: string };
-const emptyForm: Form = { titulo: "", mensagem: "", tipo: "geral", autorNome: "Coordenação" };
+const comunicadoSchema = z.object({
+  titulo: z.string().min(1, "Informe o título"),
+  mensagem: z.string().min(1, "Informe a mensagem"),
+});
+type ComunicadoFormValues = z.infer<typeof comunicadoSchema>;
 
 export default function ComunicadosList() {
-  const { data: comunicados = [], isLoading } = useListComunicados({});
-  const { data: turmas = [] } = useListTurmas();
-  const { mutateAsync: createComunicado } = useCreateComunicado();
-  const { mutateAsync: marcarLido } = useMarcarComunicadoLido();
-  const { mutateAsync: deleteComunicado } = useDeleteComunicado();
+  const { data: comunicados, isLoading } = useListComunicados();
+  const { busca, setBusca, itensFiltrados: comunicadosFiltrados } = useListaFiltrada(comunicados, (c) => c.titulo);
+  const createComunicado = useCreateComunicado();
+  const deleteComunicado = useDeleteComunicado();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<Form>(emptyForm);
-  const [saving, setSaving] = useState(false);
-  const [filtroNaoLidos, setFiltroNaoLidos] = useState(false);
+  const form = useForm<ComunicadoFormValues>({
+    resolver: zodResolver(comunicadoSchema),
+    defaultValues: { titulo: "", mensagem: "" },
+  });
 
-  const displayed = filtroNaoLidos ? comunicados.filter(c => !c.lida) : comunicados;
-
-  const handleSave = async () => {
-    if (!form.titulo.trim() || !form.mensagem.trim()) {
-      toast({ title: "Título e mensagem são obrigatórios", variant: "destructive" });
-      return;
-    }
-    setSaving(true);
-    try {
-      await createComunicado({ data: { ...form, tipo: form.tipo as "geral" | "licenca" | "conflito" | "horario" | "urgente" } });
-      toast({ title: "Comunicado enviado!" });
-      await queryClient.invalidateQueries({ queryKey: ["/api/comunicados"] });
-      await queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
-      setOpen(false);
-      setForm(emptyForm);
-    } catch {
-      toast({ title: "Erro ao enviar comunicado", variant: "destructive" });
-    } finally {
-      setSaving(false);
-    }
+  const handleOpenCreate = () => {
+    form.reset({ titulo: "", mensagem: "" });
+    setIsDialogOpen(true);
   };
 
-  const handleLido = async (id: number) => {
-    await marcarComunicadoLido({ id });
-    await queryClient.invalidateQueries({ queryKey: ["/api/comunicados"] });
-    await queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+  const onSubmit = (data: ComunicadoFormValues) => {
+    createComunicado.mutate({ data }, {
+      onSuccess: () => {
+        toast({ title: "Comunicado enviado!" });
+        queryClient.invalidateQueries({ queryKey: getListComunicadosQueryKey() });
+        setIsDialogOpen(false);
+      },
+      onError: () => toast({ title: "Erro ao enviar comunicado", variant: "destructive" }),
+    });
   };
 
-  // silence unused var warning
-  const marcarComunicadoLido = marcarLido;
-
-  const handleDelete = async (id: number) => {
-    if (!confirm("Remover este comunicado?")) return;
-    await deleteComunicado({ id });
-    await queryClient.invalidateQueries({ queryKey: ["/api/comunicados"] });
-    await queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
-    toast({ title: "Comunicado removido" });
+  const handleDelete = (id: number) => {
+    deleteComunicado.mutate({ id }, {
+      onSuccess: () => {
+        toast({ title: "Comunicado removido" });
+        queryClient.invalidateQueries({ queryKey: getListComunicadosQueryKey() });
+      },
+      onError: () => toast({ title: "Erro ao remover", variant: "destructive" }),
+    });
   };
 
-  const naoLidos = comunicados.filter(c => !c.lida).length;
+  function formatarData(data: string) {
+    return new Date(data).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            Comunicados
-            {naoLidos > 0 && <Badge className="bg-pink-100 text-pink-700 border-0">{naoLidos} não lido{naoLidos > 1 ? "s" : ""}</Badge>}
-          </h1>
-          <p className="text-muted-foreground mt-1">Avisos e notificações para turmas e professores.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Comunicados</h1>
+          <p className="text-muted-foreground">Envie avisos e comunicados para a escola.</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant={filtroNaoLidos ? "default" : "outline"} size="sm" onClick={() => setFiltroNaoLidos(!filtroNaoLidos)}>
-            {filtroNaoLidos ? "Todos" : "Não lidos"}
-          </Button>
-          <Button onClick={() => { setForm(emptyForm); setOpen(true); }}>
-            <Plus className="w-4 h-4 mr-2" />Novo Comunicado
-          </Button>
-        </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={handleOpenCreate}><Plus className="mr-2 h-4 w-4" />Novo Comunicado</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Novo Comunicado</DialogTitle>
+              <DialogDescription>Escreva o comunicado a ser publicado.</DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="titulo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Título</FormLabel>
+                      <FormControl><Input placeholder="Ex: Reunião de pais" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="mensagem"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mensagem</FormLabel>
+                      <FormControl><Textarea rows={4} placeholder="Escreva o conteúdo do comunicado..." {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end pt-2">
+                  <Button type="submit" disabled={createComunicado.isPending}>
+                    {createComunicado.isPending ? "Enviando..." : "Enviar Comunicado"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
 
+      <CampoBusca
+        value={busca}
+        onChange={setBusca}
+        placeholder="Buscar comunicado por título..."
+        className="max-w-sm"
+      />
+
       {isLoading ? (
-        <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}</div>
-      ) : displayed.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="py-16 text-center">
-            <Bell className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">Nenhum comunicado {filtroNaoLidos ? "não lido" : ""} encontrado.</p>
-          </CardContent>
-        </Card>
+        <div className="space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 w-full" />)}</div>
+      ) : comunicados?.length === 0 ? (
+        <div className="text-center py-12 bg-card rounded-lg border border-border">
+          <Bell className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+          <h3 className="text-lg font-medium text-foreground">Nenhum comunicado</h3>
+          <p className="text-sm text-muted-foreground mt-1">Envie avisos para a comunidade escolar aqui.</p>
+        </div>
+      ) : comunicadosFiltrados.length === 0 ? (
+        <div className="text-center py-12 bg-card rounded-lg border border-border">
+          <p className="text-sm text-muted-foreground">Nenhum comunicado encontrado para "{busca}".</p>
+        </div>
       ) : (
-        <div className="space-y-3">
-          {displayed.map((c) => {
-            const tipo = TIPOS.find(t => t.value === c.tipo);
-            const turma = turmas.find(t => t.id === c.turmaId);
-            return (
-              <Card key={c.id} className={`border-border/50 transition-opacity ${c.lida ? "opacity-60" : ""}`}>
-                <CardHeader className="pb-2 flex flex-row items-start justify-between">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${tipo?.color ?? "bg-gray-100 text-gray-700"}`}>
-                        {tipo?.label ?? c.tipo}
-                      </span>
-                      {!c.lida && <span className="w-2 h-2 rounded-full bg-pink-500" />}
-                      {turma && <span className="text-xs text-muted-foreground">· {turma.nome}</span>}
-                    </div>
-                    <CardTitle className="text-base">{c.titulo}</CardTitle>
-                  </div>
-                  <div className="flex gap-1 shrink-0">
-                    {!c.lida && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Marcar como lido" onClick={() => handleLido(c.id)}>
-                        <CheckCheck className="w-3.5 h-3.5" />
-                      </Button>
-                    )}
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(c.id)}>
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">{c.mensagem}</p>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {c.autorNome} · {new Date(c.createdAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
-                  </p>
-                </CardContent>
-              </Card>
-            );
-          })}
+        <div className="grid gap-4">
+          {comunicadosFiltrados.map((comunicado) => (
+            <Card key={comunicado.id}>
+              <CardContent className="pt-6 flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="font-semibold">{comunicado.titulo}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{comunicado.mensagem}</p>
+                  {comunicado.createdAt && (
+                    <p className="text-xs text-muted-foreground mt-2">{formatarData(comunicado.createdAt)}</p>
+                  )}
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="shrink-0"><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Remover comunicado?</AlertDialogTitle>
+                      <AlertDialogDescription>Isso removerá "{comunicado.titulo}" permanentemente.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDelete(comunicado.id)}>Remover</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Novo Comunicado</DialogTitle></DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label>Título *</Label>
-              <Input placeholder="Ex: Reunião de pais e mestres" value={form.titulo} onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Tipo</Label>
-              <Select value={form.tipo} onValueChange={v => setForm(f => ({ ...f, tipo: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{TIPOS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Turma (opcional)</Label>
-              <Select value={String(form.turmaId ?? "")} onValueChange={v => setForm(f => ({ ...f, turmaId: v ? Number(v) : undefined }))}>
-                <SelectTrigger><SelectValue placeholder="Todas as turmas" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Todas as turmas</SelectItem>
-                  {turmas.map(t => <SelectItem key={t.id} value={String(t.id)}>{t.nome}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Mensagem *</Label>
-              <Textarea placeholder="Conteúdo do comunicado..." value={form.mensagem} onChange={e => setForm(f => ({ ...f, mensagem: e.target.value }))} rows={4} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Autor</Label>
-              <Input value={form.autorNome} onChange={e => setForm(f => ({ ...f, autorNome: e.target.value }))} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSave} disabled={saving}>{saving ? "Enviando..." : "Enviar Comunicado"}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

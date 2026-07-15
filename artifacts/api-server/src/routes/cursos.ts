@@ -11,20 +11,25 @@ import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 import { registrarAuditoria } from "../lib/audit";
 
-// RF-CUR-01 a RF-CUR-05: Curso, Matriz Curricular e Itens da Matriz.
-// Ver docs/requisitos-funcionais-e-nao-funcionais.md e
-// docs/analise-formatos-uranin-sere.md (categorias curriculares usam
-// nomenclatura própria do NexGrade, não a "Composição Curricular" do
-// SERE nem qualquer taxonomia de terceiros).
 const router = Router();
 
 const NIVEIS = ["fundamental", "medio", "tecnico", "normal_magisterio"] as const;
 const CATEGORIAS = ["BNC", "PD", "FGB", "PFO", "IFA", "IF", "IFP", "APF"] as const;
+const EIXOS_TECNOLOGICOS = [
+  "ambiente_saude", "controle_processos_industriais", "desenvolvimento_educacional_social",
+  "gestao_negocios", "informacao_comunicacao", "infraestrutura", "militar",
+  "producao_alimenticia", "producao_cultural_design", "producao_industrial",
+  "recursos_naturais", "seguranca", "turismo_hospitalidade_lazer",
+] as const;
+// [NOVO] Ver enums.ts / formaOfertaEnum
+const FORMAS_OFERTA = ["integrada", "concomitante_intercomplementar"] as const;
 
 const CursoInput = z.object({
   nome: z.string().min(1),
   codigoCurso: z.string().optional(),
   nivel: z.enum(NIVEIS).default("fundamental"),
+  eixoTecnologico: z.enum(EIXOS_TECNOLOGICOS).optional(),
+  formaOferta: z.enum(FORMAS_OFERTA).optional(),
 });
 
 const ItemMatrizInput = z.object({
@@ -38,10 +43,9 @@ const ItemMatrizInput = z.object({
 
 const MatrizInput = z.object({
   serieAno: z.string().min(1),
+  codigoMatrizSere: z.string().optional(),
   itens: z.array(ItemMatrizInput).default([]),
 });
-
-// ── CURSOS ───────────────────────────────────────────────────────────────
 
 router.get("/", async (req, res) => {
   const escolaId = getEscolaId(req);
@@ -109,8 +113,6 @@ router.delete("/:id", async (req, res) => {
   res.status(204).send();
 });
 
-// ── MATRIZES CURRICULARES (por curso) ──────────────────────────────────
-
 router.get("/:cursoId/matrizes", async (req, res) => {
   const escolaId = getEscolaId(req);
   const cursoId = Number(req.params.cursoId);
@@ -174,7 +176,11 @@ router.post("/:cursoId/matrizes", async (req, res) => {
   const { matriz, itensInseridos } = await db.transaction(async (tx) => {
     const [matriz] = await tx
       .insert(matrizesCurricularesTable)
-      .values({ escolaId, cursoId, serieAno: parsed.data.serieAno, cargaHorariaSemanalTotal })
+      .values({
+        escolaId, cursoId, serieAno: parsed.data.serieAno,
+        codigoMatrizSere: parsed.data.codigoMatrizSere,
+        cargaHorariaSemanalTotal,
+      })
       .returning();
 
     const itensInseridos = parsed.data.itens.length
@@ -194,10 +200,42 @@ router.post("/:cursoId/matrizes", async (req, res) => {
   res.status(201).json({ ...matriz, itens: itensInseridos });
 });
 
-// [NOVO] RF-CUR-06: adiciona um único item a uma matriz já existente,
-// sem precisar recriar a matriz inteira. Recalcula
-// cargaHorariaSemanalTotal (soma de todos os itens) a cada mudança —
-// esse campo nunca é escrito diretamente pelo cliente, só derivado.
+router.patch("/:cursoId/matrizes/:matrizId", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const cursoId = Number(req.params.cursoId);
+  const matrizId = Number(req.params.matrizId);
+
+  const matrizSchema = z.object({ codigoMatrizSere: z.string().nullable() });
+  const parsed = matrizSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const anterior = await db.select().from(matrizesCurricularesTable)
+    .where(and(
+      eq(matrizesCurricularesTable.id, matrizId),
+      eq(matrizesCurricularesTable.cursoId, cursoId),
+      eq(matrizesCurricularesTable.escolaId, escolaId),
+    ))
+    .then((r) => r[0]);
+  if (!anterior) {
+    res.status(404).json({ error: "Matriz curricular não encontrada" });
+    return;
+  }
+
+  const [matriz] = await db.update(matrizesCurricularesTable)
+    .set({ codigoMatrizSere: parsed.data.codigoMatrizSere })
+    .where(eq(matrizesCurricularesTable.id, matrizId))
+    .returning();
+
+  await registrarAuditoria({
+    req, escolaId, entidade: "matrizes_curriculares", entidadeId: matrizId,
+    acao: "alteracao", dadosAnteriores: anterior, dadosNovos: matriz,
+  });
+  res.json(matriz);
+});
+
 router.post("/:cursoId/matrizes/:matrizId/itens", async (req, res) => {
   const escolaId = getEscolaId(req);
   const cursoId = Number(req.params.cursoId);
@@ -253,8 +291,6 @@ router.post("/:cursoId/matrizes/:matrizId/itens", async (req, res) => {
   res.status(201).json({ ...item, disciplina, matrizCurricularAtualizada: matrizAtualizada });
 });
 
-// [NOVO] RF-CUR-06: remove um item específico da matriz e recalcula o
-// total, sem afetar os outros itens.
 router.delete("/:cursoId/matrizes/:matrizId/itens/:itemId", async (req, res) => {
   const escolaId = getEscolaId(req);
   const cursoId = Number(req.params.cursoId);

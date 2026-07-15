@@ -11,19 +11,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Layout } from "@/components/layout";
 import Dashboard from "@/pages/dashboard";
 import ProfessoresList from "@/pages/professores/index";
+import HorarioHubPage from "@/pages/horario/index";
 import ProfessorNovo from "@/pages/professores/novo";
 import ProfessorEditar from "@/pages/professores/id";
 import DisciplinasList from "@/pages/disciplinas/index";
 import TurmasList from "@/pages/turmas/index";
 import TurmaHorario from "@/pages/turmas/horario";
-import HorariosGlobais from "@/pages/horarios/index";
-import HorariosExperimentais from "@/pages/horarios/experimentais";
 import SalasList from "@/pages/salas/index";
 import LicencasList from "@/pages/licencas/index";
 import ComunicadosList from "@/pages/comunicados/index";
 import UsuariosList from "@/pages/usuarios/index";
 import AuditList from "@/pages/audit/index";
-import ConflitosList from "@/pages/conflitos/index";
 import ConfiguracoesList from "@/pages/configuracoes/index";
 import ExportPage from "@/pages/export/index";
 import AssistentePage from "@/pages/assistente/index";
@@ -33,7 +31,6 @@ import MasterPage from "@/pages/master/index";
 import OnboardingPage from "@/pages/onboarding/index";
 import CursosList from "@/pages/cursos/index";
 import CalendarioEscolarPage from "@/pages/calendario/index";
-import CursoMatrizCurricular from "@/pages/cursos/id";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -264,23 +261,20 @@ function Router() {
       <Route path="/sign-up/*?" component={SignUpPage} />
       <Route path="/onboarding" component={OnboardingRoute} />
       <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
+      <Route path="/horario" component={() => <ProtectedRoute component={HorarioHubPage} />} />
       <Route path="/professores" component={() => <ProtectedRoute component={ProfessoresList} />} />
       <Route path="/professores/novo" component={() => <ProtectedRoute component={ProfessorNovo} />} />
       <Route path="/professores/:id" component={() => <ProtectedRoute component={ProfessorEditar} />} />
       <Route path="/disciplinas" component={() => <ProtectedRoute component={DisciplinasList} />} />
       <Route path="/cursos" component={() => <ProtectedRoute component={CursosList} />} />
-      <Route path="/cursos/:id" component={() => <ProtectedRoute component={CursoMatrizCurricular} />} />
       <Route path="/turmas" component={() => <ProtectedRoute component={TurmasList} />} />
       <Route path="/turmas/:id/horario" component={() => <ProtectedRoute component={TurmaHorario} />} />
-      <Route path="/horarios" component={() => <ProtectedRoute component={HorariosGlobais} />} />
-      <Route path="/horarios/experimentais" component={() => <ProtectedRoute component={HorariosExperimentais} />} />
       <Route path="/salas" component={() => <ProtectedRoute component={SalasList} />} />
       <Route path="/licencas" component={() => <ProtectedRoute component={LicencasList} />} />
       <Route path="/comunicados" component={() => <ProtectedRoute component={ComunicadosList} />} />
       <Route path="/calendario" component={() => <ProtectedRoute component={CalendarioEscolarPage} />} />
       <Route path="/usuarios" component={() => <ProtectedRoute component={UsuariosList} />} />
       <Route path="/audit" component={() => <ProtectedRoute component={AuditList} />} />
-      <Route path="/conflitos" component={() => <ProtectedRoute component={ConflitosList} />} />
       <Route path="/configuracoes" component={() => <ProtectedRoute component={ConfiguracoesList} />} />
       <Route path="/export" component={() => <ProtectedRoute component={ExportPage} />} />
       <Route path="/assistente" component={() => <ProtectedRoute component={AssistentePage} />} />
@@ -326,3 +320,5 @@ function App() {
 }
 
 export default App;
+
+

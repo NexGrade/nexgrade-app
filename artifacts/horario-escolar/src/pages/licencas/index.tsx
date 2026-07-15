@@ -1,197 +1,235 @@
-import { useState } from "react";
-import { useListLicencas, useCreateLicenca, useUpdateLicenca, useDeleteLicenca, useListProfessores } from "@workspace/api-client-react";
+import { useListLicencas, useCreateLicenca, useDeleteLicenca, getListLicencasQueryKey, useListProfessores } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { FileText, Plus, Trash2, CheckCircle, Clock } from "lucide-react";
+import { Plus, Trash2, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { useListaFiltrada } from "@/hooks/use-lista-filtrada";
+import { CampoBusca } from "@/components/campo-busca";
 
-const TIPOS_LICENCA = [
-  { value: "medica", label: "Médica" },
-  { value: "maternidade", label: "Maternidade" },
-  { value: "paternidade", label: "Paternidade" },
-  { value: "capacitacao", label: "Capacitação" },
-  { value: "outros", label: "Outros" },
-];
-
-type LicencaForm = { professorId: number; professorSubstitutoId?: number; dataInicio: string; dataFim: string; tipo: string; motivo: string; aprovada: boolean };
-const emptyForm: LicencaForm = { professorId: 0, dataInicio: "", dataFim: "", tipo: "medica", motivo: "", aprovada: false };
-
-function isAtiva(l: { dataInicio: string; dataFim: string }) {
-  const hoje = new Date().toISOString().split("T")[0]!;
-  return l.dataInicio <= hoje && l.dataFim >= hoje;
-}
+const licencaSchema = z.object({
+  professorId: z.coerce.number().min(1, "Selecione um professor"),
+  tipo: z.string().min(1, "Informe o tipo"),
+  dataInicio: z.string().min(1, "Informe a data de início"),
+  dataFim: z.string().min(1, "Informe a data de fim"),
+  observacoes: z.string().optional(),
+});
+type LicencaFormValues = z.infer<typeof licencaSchema>;
 
 export default function LicencasList() {
-  const { data: licencas = [], isLoading } = useListLicencas({});
-  const { data: professores = [] } = useListProfessores();
-  const { mutateAsync: createLicenca } = useCreateLicenca();
-  const { mutateAsync: updateLicenca } = useUpdateLicenca();
-  const { mutateAsync: deleteLicenca } = useDeleteLicenca();
+  const { data: licencas, isLoading } = useListLicencas();
+  const { data: professores } = useListProfessores();
+  const createLicenca = useCreateLicenca();
+  const deleteLicenca = useDeleteLicenca();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<LicencaForm>(emptyForm);
-  const [saving, setSaving] = useState(false);
-  const [filtroAtivas, setFiltroAtivas] = useState(false);
+  function nomeProfessor(id: number) {
+    return professores?.find((p) => p.id === id)?.nome ?? `#${id}`;
+  }
 
-  const displayed = filtroAtivas ? licencas.filter(isAtiva) : licencas;
+  const { busca, setBusca, itensFiltrados: licencasFiltradas } = useListaFiltrada(
+    licencas,
+    (l) => nomeProfessor(l.professorId),
+  );
 
-  const handleSave = async () => {
-    if (!form.professorId || !form.dataInicio || !form.dataFim) {
-      toast({ title: "Preencha todos os campos obrigatórios", variant: "destructive" });
-      return;
-    }
-    setSaving(true);
-    try {
-      await createLicenca({ data: { ...form, professorId: Number(form.professorId), tipo: form.tipo as "medica" | "maternidade" | "paternidade" | "capacitacao" | "outros" } });
-      toast({ title: "Licença registrada! Comunicado automático criado." });
-      await queryClient.invalidateQueries({ queryKey: ["/api/licencas"] });
-      await queryClient.invalidateQueries({ queryKey: ["/api/comunicados"] });
-      await queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
-      setOpen(false);
-      setForm(emptyForm);
-    } catch {
-      toast({ title: "Erro ao registrar licença", variant: "destructive" });
-    } finally {
-      setSaving(false);
-    }
+  const form = useForm<LicencaFormValues>({
+    resolver: zodResolver(licencaSchema),
+    defaultValues: { professorId: undefined, tipo: "", dataInicio: "", dataFim: "", observacoes: "" },
+  });
+
+  const handleOpenCreate = () => {
+    form.reset({ professorId: undefined, tipo: "", dataInicio: "", dataFim: "", observacoes: "" });
+    setIsDialogOpen(true);
   };
 
-  const handleAprovar = async (id: number, aprovada: boolean) => {
-    await updateLicenca({ id, data: { aprovada } });
-    await queryClient.invalidateQueries({ queryKey: ["/api/licencas"] });
-    toast({ title: aprovada ? "Licença aprovada" : "Aprovação cancelada" });
+  const onSubmit = (data: LicencaFormValues) => {
+    createLicenca.mutate({ data: data as any }, {
+      onSuccess: () => {
+        toast({ title: "Licença registrada!" });
+        queryClient.invalidateQueries({ queryKey: getListLicencasQueryKey() });
+        setIsDialogOpen(false);
+      },
+      onError: () => toast({ title: "Erro ao registrar licença", variant: "destructive" }),
+    });
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Remover esta licença?")) return;
-    await deleteLicenca({ id });
-    await queryClient.invalidateQueries({ queryKey: ["/api/licencas"] });
-    await queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
-    toast({ title: "Licença removida" });
+  const handleDelete = (id: number) => {
+    deleteLicenca.mutate({ id }, {
+      onSuccess: () => {
+        toast({ title: "Licença removida" });
+        queryClient.invalidateQueries({ queryKey: getListLicencasQueryKey() });
+      },
+      onError: () => toast({ title: "Erro ao remover", variant: "destructive" }),
+    });
   };
+
+  function formatarData(data: string) {
+    const [ano, mes, dia] = data.split("-");
+    return `${dia}/${mes}/${ano}`;
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Licenças de Professores</h1>
-          <p className="text-muted-foreground mt-1">Registre ausências e defina professores substitutos.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Licenças</h1>
+          <p className="text-muted-foreground">Gerencie afastamentos e licenças de professores.</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant={filtroAtivas ? "default" : "outline"} size="sm" onClick={() => setFiltroAtivas(!filtroAtivas)}>
-            {filtroAtivas ? "Todas" : "Apenas ativas"}
-          </Button>
-          <Button onClick={() => { setForm(emptyForm); setOpen(true); }}>
-            <Plus className="w-4 h-4 mr-2" />Nova Licença
-          </Button>
-        </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={handleOpenCreate}><Plus className="mr-2 h-4 w-4" />Nova Licença</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Nova Licença</DialogTitle>
+              <DialogDescription>Registre um afastamento de professor.</DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="professorId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Professor</FormLabel>
+                      <Select onValueChange={(v) => field.onChange(Number(v))} value={field.value ? String(field.value) : undefined}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Selecione o professor" /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          {professores?.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="tipo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de licença</FormLabel>
+                      <FormControl><Input placeholder="Ex: Licença médica" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="dataInicio"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Data de início</FormLabel>
+                        <FormControl><Input type="date" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="dataFim"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Data de fim</FormLabel>
+                        <FormControl><Input type="date" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormField
+                  control={form.control}
+                  name="observacoes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Observações (opcional)</FormLabel>
+                      <FormControl><Input placeholder="Detalhes adicionais" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end pt-2">
+                  <Button type="submit" disabled={createLicenca.isPending}>
+                    {createLicenca.isPending ? "Salvando..." : "Registrar Licença"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
 
+      <CampoBusca
+        value={busca}
+        onChange={setBusca}
+        placeholder="Buscar por nome do professor..."
+        className="max-w-sm"
+      />
+
       {isLoading ? (
-        <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}</div>
-      ) : displayed.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="py-16 text-center">
-            <FileText className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">Nenhuma licença {filtroAtivas ? "ativa " : ""}registrada.</p>
-          </CardContent>
-        </Card>
+        <div className="space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 w-full" />)}</div>
+      ) : licencas?.length === 0 ? (
+        <div className="text-center py-12 bg-card rounded-lg border border-border">
+          <FileText className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+          <h3 className="text-lg font-medium text-foreground">Nenhuma licença registrada</h3>
+          <p className="text-sm text-muted-foreground mt-1">Registre afastamentos de professores aqui.</p>
+        </div>
+      ) : licencasFiltradas.length === 0 ? (
+        <div className="text-center py-12 bg-card rounded-lg border border-border">
+          <p className="text-sm text-muted-foreground">Nenhuma licença encontrada para "{busca}".</p>
+        </div>
       ) : (
-        <div className="space-y-3">
-          {displayed.map((l) => {
-            const ativa = isAtiva(l);
-            const prof = professores.find(p => p.id === l.professorId);
-            const sub = l.professorSubstitutoId ? professores.find(p => p.id === l.professorSubstitutoId) : null;
-            return (
-              <Card key={l.id} className={`border-border/50 ${ativa ? "border-amber-200 bg-amber-50/30" : ""}`}>
-                <CardHeader className="pb-2 flex flex-row items-start justify-between">
+        <div className="grid gap-4">
+          {licencasFiltradas.map((licenca) => (
+            <Card key={licenca.id}>
+              <CardContent className="pt-6 flex items-center justify-between">
+                <div>
                   <div className="flex items-center gap-2">
-                    {ativa ? <Clock className="w-4 h-4 text-amber-500" /> : <CheckCircle className="w-4 h-4 text-muted-foreground" />}
-                    <CardTitle className="text-base">{prof?.nome ?? `Professor #${l.professorId}`}</CardTitle>
-                    {ativa && <Badge className="bg-amber-100 text-amber-700 border-0">Ativa</Badge>}
-                    {l.aprovada && <Badge className="bg-green-100 text-green-700 border-0">Aprovada</Badge>}
+                    <h3 className="font-semibold">{nomeProfessor(licenca.professorId)}</h3>
+                    <Badge variant="outline">{licenca.tipo}</Badge>
                   </div>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => handleAprovar(l.id, !l.aprovada)}>
-                      {l.aprovada ? "Cancelar aprovação" : "Aprovar"}
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(l.id)}>
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="text-sm space-y-1">
-                  <p className="text-muted-foreground">
-                    <span className="font-medium text-foreground">{TIPOS_LICENCA.find(t => t.value === l.tipo)?.label ?? l.tipo}</span>
-                    {" · "}{l.dataInicio} até {l.dataFim}
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {formatarData(licenca.dataInicio)} — {formatarData(licenca.dataFim)}
                   </p>
-                  {sub && <p className="text-muted-foreground">Substituto: <span className="font-medium text-foreground">{sub.nome}</span></p>}
-                  {l.motivo && <p className="text-muted-foreground italic">{l.motivo}</p>}
-                </CardContent>
-              </Card>
-            );
-          })}
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon"><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Remover licença?</AlertDialogTitle>
+                      <AlertDialogDescription>Isso removerá o registro de afastamento.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDelete(licenca.id)}>Remover</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Nova Licença</DialogTitle></DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label>Professor *</Label>
-              <Select value={String(form.professorId)} onValueChange={v => setForm(f => ({ ...f, professorId: Number(v) }))}>
-                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                <SelectContent>{professores.map(p => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Data início *</Label>
-                <Input type="date" value={form.dataInicio} onChange={e => setForm(f => ({ ...f, dataInicio: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Data fim *</Label>
-                <Input type="date" value={form.dataFim} onChange={e => setForm(f => ({ ...f, dataFim: e.target.value }))} />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Tipo</Label>
-              <Select value={form.tipo} onValueChange={v => setForm(f => ({ ...f, tipo: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{TIPOS_LICENCA.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Professor Substituto</Label>
-              <Select value={String(form.professorSubstitutoId ?? "")} onValueChange={v => setForm(f => ({ ...f, professorSubstitutoId: v ? Number(v) : undefined }))}>
-                <SelectTrigger><SelectValue placeholder="Opcional..." /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Nenhum</SelectItem>
-                  {professores.filter(p => p.id !== form.professorId).map(p => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Motivo</Label>
-              <Input placeholder="Opcional..." value={form.motivo} onChange={e => setForm(f => ({ ...f, motivo: e.target.value }))} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSave} disabled={saving}>{saving ? "Salvando..." : "Registrar Licença"}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

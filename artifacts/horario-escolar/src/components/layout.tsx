@@ -3,9 +3,8 @@ import { UserButton } from "@clerk/react";
 import { useMasterWhoami } from "@workspace/api-client-react";
 import {
   LayoutDashboard, Users, BookOpen, GraduationCap, Calendar, CalendarDays,
-  Building2, FileText, Bell, Shield, History, AlertTriangle,
-  Settings, Download, FlaskConical, Sparkles, Upload, CreditCard, Library, ShieldCheck,
-  Clock, ListTree,
+  Building2, FileText, Bell, Shield, History,
+  Settings, Download, Sparkles, Upload, CreditCard, Library, ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -14,10 +13,7 @@ const navGroups = [
     label: "Principal",
     items: [
       { href: "/dashboard", label: "Visão Geral", icon: LayoutDashboard },
-      { href: "/horarios", label: "Grade Horária", icon: Calendar },
-      { href: "/horarios/esquema", label: "Esquema de Horário", icon: Clock },
-      { href: "/regras-distribuicao", label: "Regras de Distribuição", icon: ListTree },
-      { href: "/conflitos", label: "Conflitos", icon: AlertTriangle },
+      { href: "/horario", label: "Horário", icon: Calendar },
       { href: "/calendario", label: "Calendário Escolar", icon: CalendarDays },
       { href: "/assistente", label: "Assistente de IA", icon: Sparkles, badge: "IA" },
     ],
@@ -37,7 +33,6 @@ const navGroups = [
     items: [
       { href: "/licencas", label: "Licenças", icon: FileText },
       { href: "/comunicados", label: "Comunicados", icon: Bell },
-      { href: "/horarios/experimentais", label: "Modo Experimental", icon: FlaskConical },
       { href: "/importar", label: "Importar Dados", icon: Upload },
     ],
   },
