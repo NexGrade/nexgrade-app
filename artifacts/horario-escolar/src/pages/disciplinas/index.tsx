@@ -1,11 +1,17 @@
-import { useListDisciplinas, useCreateDisciplina, useDeleteDisciplina, useUpdateDisciplina, getListDisciplinasQueryKey } from "@workspace/api-client-react";
+import { useState } from "react";
+import {
+  useListDisciplinas,
+  useCreateDisciplina,
+  useDeleteDisciplina,
+  useUpdateDisciplina,
+  getListDisciplinasQueryKey,
+} from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Trash2, BookOpen } from "lucide-react";
+import { Plus, Edit, Trash2, BookOpen, LayoutGrid, List } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -33,6 +39,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useListaFiltrada } from "@/hooks/use-lista-filtrada";
 import { CampoBusca } from "@/components/campo-busca";
+import { cn } from "@/lib/utils";
 
 const CATEGORIAS = ["BNC", "PD", "FGB", "PFO", "IFA", "IF", "IFP", "APF"] as const;
 const CATEGORIA_LABEL: Record<string, string> = {
@@ -57,6 +64,8 @@ const disciplinaSchema = z.object({
 
 type DisciplinaFormValues = z.infer<typeof disciplinaSchema>;
 
+type ModoVisualizacao = "grade" | "lista";
+
 export default function DisciplinasList() {
   const { data: disciplinas, isLoading } = useListDisciplinas();
   const { busca, setBusca, itensFiltrados: disciplinasFiltradas } = useListaFiltrada(disciplinas, (d) => d.nome);
@@ -65,9 +74,10 @@ export default function DisciplinasList() {
   const updateDisciplina = useUpdateDisciplina();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [modo, setModo] = useState<ModoVisualizacao>("grade");
 
   const form = useForm<DisciplinaFormValues>({
     resolver: zodResolver(disciplinaSchema),
@@ -144,149 +154,206 @@ export default function DisciplinasList() {
     });
   };
 
+  const dialogFormulario = (
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogTrigger asChild>
+        <Button onClick={handleOpenCreate}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nova Disciplina
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{editingId ? "Editar Disciplina" : "Nova Disciplina"}</DialogTitle>
+          <DialogDescription>
+            {editingId ? "Altere os dados da disciplina abaixo." : "Preencha os dados da nova disciplina."}
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="nome"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome da Disciplina</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ex: Matemática" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="cargaSemanal"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Aulas por Semana</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="1" max="10" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="cor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cor no Horário</FormLabel>
+                    <div className="flex gap-2">
+                      <FormControl>
+                        <Input type="color" className="w-12 h-10 p-1 cursor-pointer" {...field} />
+                      </FormControl>
+                      <Input className="flex-1 uppercase font-mono" {...field} />
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="categoriaCurricularPadrao"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Categoria curricular fixa (opcional)</FormLabel>
+                  <Select value={field.value || "nenhuma"} onValueChange={(v) => field.onChange(v === "nenhuma" ? "" : v)}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="nenhuma">Nenhuma (flexível — qualquer categoria)</SelectItem>
+                      {CATEGORIAS.map((c) => (
+                        <SelectItem key={c} value={c}>{c} — {CATEGORIA_LABEL[c]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Quando definida, esta disciplina só aparece ao montar uma Grade Curricular dessa categoria específica.
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="codigoSae"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Código SAE (opcional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: 2700" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="tipoSalaExigido"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Sala exigida (opcional)</FormLabel>
+                    <Select value={field.value || "nenhuma"} onValueChange={(v) => field.onChange(v === "nenhuma" ? "" : v)}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="nenhuma">Nenhuma (sala comum)</SelectItem>
+                        <SelectItem value="laboratorio">Laboratório de Informática</SelectItem>
+                        <SelectItem value="quadra">Quadra Poliesportiva</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
+              <Button type="submit" disabled={createDisciplina.isPending || updateDisciplina.isPending}>
+                Salvar
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+
+  const dialogoExcluir = (disciplina: any) => (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remover disciplina?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Isso removerá a disciplina de todas as turmas e professores associados.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => handleDelete(disciplina.id)}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Remover
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Disciplinas</h1>
           <p className="text-muted-foreground">Gerencie as matérias da grade curricular.</p>
         </div>
-        
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleOpenCreate}>
-              <Plus className="mr-2 h-4 w-4" />
-              Nova Disciplina
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{editingId ? "Editar Disciplina" : "Nova Disciplina"}</DialogTitle>
-              <DialogDescription>
-                {editingId ? "Altere os dados da disciplina abaixo." : "Preencha os dados da nova disciplina."}
-              </DialogDescription>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="nome"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome da Disciplina</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ex: Matemática" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="cargaSemanal"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Aulas por Semana</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="1" max="10" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="cor"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cor no Horário</FormLabel>
-                        <div className="flex gap-2">
-                          <FormControl>
-                            <Input type="color" className="w-12 h-10 p-1 cursor-pointer" {...field} />
-                          </FormControl>
-                          <Input className="flex-1 uppercase font-mono" {...field} />
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
 
-                <FormField
-                  control={form.control}
-                  name="categoriaCurricularPadrao"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Categoria curricular fixa (opcional)</FormLabel>
-                      <Select value={field.value || "nenhuma"} onValueChange={(v) => field.onChange(v === "nenhuma" ? "" : v)}>
-                        <FormControl>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="nenhuma">Nenhuma (flexível — qualquer categoria)</SelectItem>
-                          {CATEGORIAS.map((c) => (
-                            <SelectItem key={c} value={c}>{c} — {CATEGORIA_LABEL[c]}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <p className="text-xs text-muted-foreground">
-                        Quando definida, esta disciplina só aparece ao montar uma Grade Curricular dessa categoria específica.
-                      </p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="codigoSae"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Código SAE (opcional)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ex: 2700" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="tipoSalaExigido"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Sala exigida (opcional)</FormLabel>
-                        <Select value={field.value || "nenhuma"} onValueChange={(v) => field.onChange(v === "nenhuma" ? "" : v)}>
-                          <FormControl>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="nenhuma">Nenhuma (sala comum)</SelectItem>
-                            <SelectItem value="laboratorio">Laboratório de Informática</SelectItem>
-                            <SelectItem value="quadra">Quadra Poliesportiva</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
-                  <Button type="submit" disabled={createDisciplina.isPending || updateDisciplina.isPending}>
-                    Salvar
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+        <div className="flex flex-col items-end gap-2">
+          {dialogFormulario}
+          <div className="flex items-center gap-0.5 border border-border rounded-md p-0.5">
+            <button
+              type="button"
+              onClick={() => setModo("grade")}
+              title="Ver em grade"
+              className={cn(
+                "flex items-center justify-center h-7 w-7 rounded transition-colors",
+                modo === "grade" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setModo("lista")}
+              title="Ver em lista"
+              className={cn(
+                "flex items-center justify-center h-7 w-7 rounded transition-colors",
+                modo === "lista" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <List className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
       </div>
 
       <CampoBusca
@@ -311,7 +378,7 @@ export default function DisciplinasList() {
           <BookOpen className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
           <p className="text-sm text-muted-foreground">Nenhuma disciplina encontrada para "{busca}".</p>
         </div>
-      ) : (
+      ) : modo === "grade" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {disciplinasFiltradas.map((disciplina) => (
             <Card key={disciplina.id} className="overflow-hidden border-l-4" style={{ borderLeftColor: disciplina.cor }}>
@@ -334,45 +401,72 @@ export default function DisciplinasList() {
                     )}
                   </div>
                 </div>
-                
+
                 <div className="mt-auto flex items-center justify-between">
                   <div className="text-sm text-muted-foreground">
                     <span className="font-medium text-foreground">{disciplina.cargaSemanal}</span> aulas/semana
                   </div>
-                  
+
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => handleOpenEdit(disciplina)}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Remover disciplina?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Isso removerá a disciplina de todas as turmas e professores associados.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction 
-                            onClick={() => handleDelete(disciplina.id)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            Remover
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    {dialogoExcluir(disciplina)}
                   </div>
                 </div>
               </CardContent>
             </Card>
           ))}
+        </div>
+      ) : (
+        <div className="border border-border rounded-lg overflow-hidden bg-card">
+          <div className="hidden md:grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide border-b border-border bg-muted/40">
+            <span>Nome</span>
+            <span className="w-16 text-center">Categoria</span>
+            <span className="w-20 text-center">SAE</span>
+            <span className="w-24 text-center">Aulas/sem.</span>
+            <span className="w-20 text-center">Ações</span>
+          </div>
+          <div className="divide-y divide-border">
+            {disciplinasFiltradas.map((disciplina) => (
+              <div
+                key={disciplina.id}
+                className="grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-4 px-4 py-2.5 hover:bg-accent/40 transition-colors"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: disciplina.cor }} />
+                  <span className="font-medium truncate">{disciplina.nome}</span>
+                </div>
+                <div className="w-16 flex justify-center">
+                  {disciplina.categoriaCurricularPadrao ? (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                      {disciplina.categoriaCurricularPadrao}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">—</span>
+                  )}
+                </div>
+                <div className="w-20 flex justify-center">
+                  {disciplina.codigoSae ? (
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#1565C0]/10 text-[#1565C0]">
+                      {disciplina.codigoSae}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">—</span>
+                  )}
+                </div>
+                <div className="w-24 text-center text-sm text-muted-foreground">
+                  {disciplina.cargaSemanal}
+                </div>
+                <div className="w-20 flex items-center justify-center gap-1">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => handleOpenEdit(disciplina)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  {dialogoExcluir(disciplina)}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

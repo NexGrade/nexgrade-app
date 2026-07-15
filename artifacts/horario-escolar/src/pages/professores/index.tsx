@@ -1,12 +1,12 @@
+import { useState } from "react";
 import { useListProfessores, useDeleteProfessor, getListProfessoresQueryKey, useListDisciplinas } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Trash2, Users, Mail, Phone } from "lucide-react";
+import { Plus, Edit, Trash2, Users, Mail, Phone, LayoutGrid, List } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,6 +15,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useListaFiltrada } from "@/hooks/use-lista-filtrada";
 import { CampoBusca } from "@/components/campo-busca";
+import { cn } from "@/lib/utils";
+
+type ModoVisualizacao = "grade" | "lista";
 
 export default function ProfessoresList() {
   const { data: professores, isLoading } = useListProfessores();
@@ -23,6 +26,7 @@ export default function ProfessoresList() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [filtroDisciplina, setFiltroDisciplina] = useState<string>("todas");
+  const [modo, setModo] = useState<ModoVisualizacao>("grade");
 
   // Busca + ordenação alfabética primeiro, filtro de disciplina depois —
   // os dois funcionam juntos.
@@ -50,16 +54,65 @@ export default function ProfessoresList() {
     return disciplinas?.find((d) => d.id === id)?.nome ?? `#${id}`;
   }
 
+  const dialogoExcluir = (professor: any) => (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remover professor?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Isso também removerá a disponibilidade e os horários vinculados a "{professor.nome}".
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={() => handleDelete(professor.id)}>Remover</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Professores</h1>
           <p className="text-muted-foreground">Gerencie o corpo docente da escola.</p>
         </div>
-        <Link href="/professores/novo">
-          <Button><Plus className="mr-2 h-4 w-4" />Novo Professor</Button>
-        </Link>
+
+        <div className="flex flex-col items-end gap-2">
+          <Link href="/professores/novo">
+            <Button><Plus className="mr-2 h-4 w-4" />Novo Professor</Button>
+          </Link>
+          <div className="flex items-center gap-0.5 border border-border rounded-md p-0.5">
+            <button
+              type="button"
+              onClick={() => setModo("grade")}
+              title="Ver em grade"
+              className={cn(
+                "flex items-center justify-center h-7 w-7 rounded transition-colors",
+                modo === "grade" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setModo("lista")}
+              title="Ver em lista"
+              className={cn(
+                "flex items-center justify-center h-7 w-7 rounded transition-colors",
+                modo === "lista" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <List className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -94,7 +147,7 @@ export default function ProfessoresList() {
             Nenhum professor encontrado{busca ? ` para "${busca}"` : ""}{filtroDisciplina !== "todas" ? " com essa disciplina" : ""}.
           </p>
         </div>
-      ) : (
+      ) : modo === "grade" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {professoresFiltrados.map((professor) => (
             <Card key={professor.id}>
@@ -115,23 +168,7 @@ export default function ProfessoresList() {
                     <Link href={`/professores/${professor.id}`}>
                       <Button variant="ghost" size="icon"><Edit className="w-4 h-4" /></Button>
                     </Link>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon"><Trash2 className="w-4 h-4 text-destructive" /></Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Remover professor?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Isso também removerá a disponibilidade e os horários vinculados a "{professor.nome}".
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(professor.id)}>Remover</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    {dialogoExcluir(professor)}
                   </div>
                 </div>
                 <div className="space-y-1 text-sm text-muted-foreground">
@@ -145,6 +182,47 @@ export default function ProfessoresList() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      ) : (
+        <div className="border border-border rounded-lg overflow-hidden bg-card">
+          <div className="hidden md:grid grid-cols-[1fr_1.5fr_1fr_auto] gap-4 px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide border-b border-border bg-muted/40">
+            <span>Nome</span>
+            <span>Disciplinas</span>
+            <span>Contato</span>
+            <span className="w-20 text-center">Ações</span>
+          </div>
+          <div className="divide-y divide-border">
+            {professoresFiltrados.map((professor) => (
+              <div
+                key={professor.id}
+                className="grid grid-cols-[1fr_1.5fr_1fr_auto] items-center gap-4 px-4 py-2.5 hover:bg-accent/40 transition-colors"
+              >
+                <span className="font-medium truncate">{professor.nome}</span>
+                <div className="flex flex-wrap gap-1 min-w-0">
+                  {(professor.disciplinaIds ?? []).slice(0, 3).map((id: number) => (
+                    <Badge key={id} variant="outline" className="text-[10px]">{nomeDisciplina(id)}</Badge>
+                  ))}
+                  {(professor.disciplinaIds ?? []).length > 3 && (
+                    <Badge variant="outline" className="text-[10px]">+{professor.disciplinaIds!.length - 3}</Badge>
+                  )}
+                  {(professor.disciplinaIds ?? []).length === 0 && (
+                    <span className="text-muted-foreground text-xs">—</span>
+                  )}
+                </div>
+                <div className="text-xs text-muted-foreground truncate">
+                  {professor.email || professor.telefone || "—"}
+                </div>
+                <div className="w-20 flex items-center justify-center gap-1">
+                  <Link href={`/professores/${professor.id}`}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  {dialogoExcluir(professor)}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
