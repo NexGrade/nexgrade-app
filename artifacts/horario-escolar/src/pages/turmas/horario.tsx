@@ -4,14 +4,24 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, AlertTriangle, BookOpen } from "lucide-react";
+import { Sparkles, AlertTriangle, BookOpen, Settings2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
-const aulasPorDia = 8; // Max aulas
 const turnosMap: Record<string, string> = { matutino: "Matutino", vespertino: "Vespertino", noturno: "Noturno" };
 
 export default function TurmaHorario() {
@@ -24,26 +34,49 @@ export default function TurmaHorario() {
   const { data: horarioSlots, isLoading: isLoadingHorario } = useGetTurmaHorario(turmaId, { query: { enabled: !!turmaId, queryKey: getGetTurmaHorarioQueryKey(turmaId) } });
   const gerarHorario = useGerarHorario();
 
+  const [openOpcoes, setOpenOpcoes] = useState(false);
+  // Mesmos defaults ja usados no Modo Experimental (horario/index.tsx),
+  // pra manter consistencia entre as duas telas de geracao.
+  const [opcoes, setOpcoes] = useState({
+    aulaspordia: 5,
+    reduzirJanelas: true,
+    fatorPedagogico: false,
+    compactarCargaHoraria: false,
+  });
+
   const handleGerarHorario = () => {
-    gerarHorario.mutate({ data: { turmaId, substituir: true } }, {
-      onSuccess: (result) => {
-        toast({ 
-          title: "Horário gerado com sucesso!", 
-          description: `${result.slotsGerados} aulas alocadas.` 
-        });
-        if (result.conflitos && result.conflitos.length > 0) {
-          toast({ 
-            title: "Conflitos encontrados", 
-            description: "Alguns horários não puderam ser alocados. Verifique os avisos.",
-            variant: "destructive"
-          });
-        }
-        queryClient.invalidateQueries({ queryKey: getGetTurmaHorarioQueryKey(turmaId) });
+    gerarHorario.mutate(
+      {
+        data: {
+          turmaId,
+          substituir: true,
+          aulaspordia: opcoes.aulaspordia,
+          reduzirJanelas: opcoes.reduzirJanelas,
+          fatorPedagogico: opcoes.fatorPedagogico,
+          compactarCargaHoraria: opcoes.compactarCargaHoraria,
+        },
       },
-      onError: () => {
-        toast({ title: "Erro ao gerar horário", variant: "destructive" });
+      {
+        onSuccess: (result) => {
+          toast({
+            title: "Horário gerado com sucesso!",
+            description: `${result.slotsGerados} aulas alocadas.`
+          });
+          if (result.conflitos && result.conflitos.length > 0) {
+            toast({
+              title: "Conflitos encontrados",
+              description: "Alguns horários não puderam ser alocados. Verifique os avisos.",
+              variant: "destructive"
+            });
+          }
+          queryClient.invalidateQueries({ queryKey: getGetTurmaHorarioQueryKey(turmaId) });
+          setOpenOpcoes(false);
+        },
+        onError: () => {
+          toast({ title: "Erro ao gerar horário", variant: "destructive" });
+        }
       }
-    });
+    );
   };
 
   const getSlot = (diaSemana: number, numeroAula: number) => {
@@ -76,15 +109,83 @@ export default function TurmaHorario() {
             {turma?.serie} • {turma?.turno ? turnosMap[turma.turno] : ''} • Ano {turma?.anoLetivo}
           </p>
         </div>
-        
-        <Button 
-          onClick={handleGerarHorario} 
-          disabled={gerarHorario.isPending}
-          className="gap-2"
-        >
-          <Sparkles className="h-4 w-4" />
-          {gerarHorario.isPending ? "Gerando..." : "Gerar Horário Automático"}
-        </Button>
+
+        <Dialog open={openOpcoes} onOpenChange={setOpenOpcoes}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Sparkles className="h-4 w-4" />
+              Gerar Horário Automático
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Settings2 className="h-4 w-4" />
+                Opções de geração
+              </DialogTitle>
+              <DialogDescription>
+                Isso substitui o horário atual desta turma. Ajuste as preferências abaixo antes de gerar.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-2">
+              <div className="space-y-1.5">
+                <Label>Aulas por dia</Label>
+                <Select
+                  value={String(opcoes.aulaspordia)}
+                  onValueChange={(v) => setOpcoes((o) => ({ ...o, aulaspordia: Number(v) }))}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {[4, 5, 6, 7, 8].map((n) => (
+                      <SelectItem key={n} value={String(n)}>{n} aulas/dia</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between py-1">
+                <div>
+                  <Label className="cursor-pointer">Reduzir janelas do professor</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">Prioriza slots adjacentes a aulas já alocadas do mesmo professor.</p>
+                </div>
+                <Switch
+                  checked={opcoes.reduzirJanelas}
+                  onCheckedChange={(v) => setOpcoes((o) => ({ ...o, reduzirJanelas: v }))}
+                />
+              </div>
+
+              <div className="flex items-center justify-between py-1">
+                <div>
+                  <Label className="cursor-pointer">Fator pedagógico</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">Distribuição equilibrada, priorizando ordem de dias mais favorável.</p>
+                </div>
+                <Switch
+                  checked={opcoes.fatorPedagogico}
+                  onCheckedChange={(v) => setOpcoes((o) => ({ ...o, fatorPedagogico: v }))}
+                />
+              </div>
+
+              <div className="flex items-center justify-between py-1">
+                <div>
+                  <Label className="cursor-pointer">Compactar carga horária</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">Concentra cada professor em menos dias distintos, em vez de espalhar pela semana.</p>
+                </div>
+                <Switch
+                  checked={opcoes.compactarCargaHoraria}
+                  onCheckedChange={(v) => setOpcoes((o) => ({ ...o, compactarCargaHoraria: v }))}
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpenOpcoes(false)}>Cancelar</Button>
+              <Button onClick={handleGerarHorario} disabled={gerarHorario.isPending}>
+                {gerarHorario.isPending ? "Gerando..." : "Gerar Horário"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {gerarHorario.isSuccess && gerarHorario.data?.conflitos && gerarHorario.data.conflitos.length > 0 && (
@@ -122,10 +223,10 @@ export default function TurmaHorario() {
                   <div className="p-4 flex items-center justify-center font-medium text-muted-foreground border-r border-border bg-muted/20">
                     {aulaNum}ª Aula
                   </div>
-                  
+
                   {Array.from({ length: 5 }).map((_, colIndex) => {
                     const slot = getSlot(colIndex, aulaNum);
-                    
+
                     if (!slot) {
                       return (
                         <div key={`${aulaNum}-${colIndex}`} className="p-2 border-r border-border last:border-0 bg-background hover:bg-muted/30 transition-colors min-h-[100px] flex items-center justify-center">
@@ -136,9 +237,9 @@ export default function TurmaHorario() {
 
                     return (
                       <div key={slot.id} className="p-2 border-r border-border last:border-0 relative group">
-                        <div 
+                        <div
                           className="h-full rounded-md p-3 flex flex-col justify-between shadow-sm transition-transform hover:-translate-y-0.5 border"
-                          style={{ 
+                          style={{
                             backgroundColor: `${slot.disciplina?.cor}15`, // 15% opacity
                             borderColor: `${slot.disciplina?.cor}30`, // 30% opacity
                             borderLeftWidth: '4px',
@@ -150,7 +251,7 @@ export default function TurmaHorario() {
                               {slot.disciplina?.nome}
                             </div>
                           </div>
-                          
+
                           <div className="mt-2 text-xs font-medium text-foreground/80 flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-foreground/30"></span>
                             <span className="truncate">{slot.professor?.nome || 'Sem professor'}</span>
