@@ -53,3 +53,6 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Dumps de código para sessões de debug
+*.txt
