@@ -1,0 +1,1 @@
+ALTER TABLE "professor_disciplinas" ADD CONSTRAINT "professor_disciplinas_disciplina_id_disciplinas_id_fk" FOREIGN KEY ("disciplina_id") REFERENCES "public"."disciplinas"("id") ON DELETE cascade ON UPDATE no action;
