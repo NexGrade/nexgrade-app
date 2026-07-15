@@ -14,7 +14,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Users, Save, RotateCcw, Lock, CheckCircle2, Info, GraduationCap } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SeletorBusca } from "@/components/seletor-busca";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const DIAS = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
@@ -28,11 +28,8 @@ const TURNOS = [
 
 type Turno = (typeof TURNOS)[number]["value"];
 
-// Estado de uma célula da matriz. "disponivel" é o padrão implícito
-// quando não existe registro no banco (convenção do backend).
 type CelulaEstado = "disponivel" | "bloqueado" | "ha_obrigatoria";
-
-type CelulaState = Record<string, CelulaEstado>; // key: "dia-slot"
+type CelulaState = Record<string, CelulaEstado>;
 
 function cellKey(dia: number, numeroAula: number) {
   return `${dia}-${numeroAula}`;
@@ -45,7 +42,6 @@ function proximoEstado(atual: CelulaEstado): CelulaEstado {
 }
 
 function formatHora(horaInicio: string) {
-  // aceita "HH:MM" ou "HH:MM:SS"
   return horaInicio.slice(0, 5);
 }
 
@@ -78,9 +74,6 @@ export default function DisponibilidadePage() {
 
   const salvarLote = useSetDisponibilidadeLote();
 
-  // Monta a matriz em memória a partir dos registros existentes no banco
-  // (só existem registros para EXCEÇÕES — bloqueios ou HA obrigatória —
-  // qualquer célula sem registro é "disponivel" por convenção do backend).
   const carregarMatriz = () => {
     const m: CelulaState = {};
     slotsOrdenados.forEach((slot) => {
@@ -103,16 +96,12 @@ export default function DisponibilidadePage() {
     return m;
   };
 
-  // Recarrega a matriz sempre que o professor, turno ou os dados mudarem
-  // e ainda não houver edição local pendente.
   const matrizAtual = useMemo(() => {
     if (!professorIdNum || carregandoDisponibilidade || carregandoSlots) return {};
     return carregarMatriz();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [professorIdNum, turno, disponibilidadeRows, slotsOrdenados, carregandoDisponibilidade, carregandoSlots]);
 
-  // Sincroniza o estado editável sempre que a base recalculada mudar
-  // (troca de professor/turno, ou dados recém-carregados).
   const matrizKey = JSON.stringify(matrizAtual);
   const [ultimaMatrizKey, setUltimaMatrizKey] = useState("");
   if (matrizKey !== ultimaMatrizKey && Object.keys(matrizAtual).length > 0) {
@@ -156,13 +145,6 @@ export default function DisponibilidadePage() {
   const salvar = async () => {
     if (!professorIdNum) return;
 
-    // Precisamos enviar toda célula cujo estado final for diferente de
-    // "disponivel" (novos bloqueios/HA) E toda célula que ERA diferente
-    // de "disponivel" no snapshot original mas virou "disponivel" agora
-    // (desbloqueios) — porque o endpoint /lote faz upsert por
-    // professorId+dia+slot+turno, não substituição total. Se não
-    // enviarmos o desbloqueio explicitamente, o registro antigo fica
-    // órfão no banco.
     const chaves = new Set([...Object.keys(matriz), ...Object.keys(original)]);
     const itens: {
       diaSemana: number;
@@ -232,22 +214,14 @@ export default function DisponibilidadePage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-4">
-        <div className="w-72">
-          <Select value={professorId} onValueChange={setProfessorId}>
-            <SelectTrigger>
-              <SelectValue placeholder={carregandoProfessores ? "Carregando..." : "Selecione um professor"} />
-            </SelectTrigger>
-            <SelectContent>
-              {professores
-                .filter((p) => p.ativo)
-                .map((p) => (
-                  <SelectItem key={p.id} value={String(p.id)}>
-                    {p.nome}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <SeletorBusca
+          className="w-72"
+          options={professores.filter((p) => p.ativo).map((p) => ({ value: String(p.id), label: p.nome }))}
+          value={professorId}
+          onChange={setProfessorId}
+          placeholder={carregandoProfessores ? "Carregando..." : "Selecione um professor"}
+          buscarPlaceholder="Buscar professor por nome..."
+        />
 
         <Tabs value={turno} onValueChange={(v) => setTurno(v as Turno)}>
           <TabsList>

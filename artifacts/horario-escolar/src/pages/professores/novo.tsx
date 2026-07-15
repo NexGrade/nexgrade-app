@@ -8,8 +8,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent } from "@/components/ui/card";
+import { MultiSelectBusca } from "@/components/multi-select-busca";
 
 const professorSchema = z.object({
   nome: z.string().min(2, "O nome deve ter pelo menos 2 caracteres"),
@@ -75,7 +75,7 @@ export default function ProfessorNovo() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="email"
@@ -89,7 +89,7 @@ export default function ProfessorNovo() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="telefone"
@@ -108,7 +108,7 @@ export default function ProfessorNovo() {
               <FormField
                 control={form.control}
                 name="disciplinaIds"
-                render={() => (
+                render={({ field }) => (
                   <FormItem>
                     <div className="mb-4">
                       <FormLabel className="text-base">Disciplinas</FormLabel>
@@ -116,42 +116,15 @@ export default function ProfessorNovo() {
                         Selecione as disciplinas que este professor leciona.
                       </p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {disciplinas?.map((disciplina) => (
-                        <FormField
-                          key={disciplina.id}
-                          control={form.control}
-                          name="disciplinaIds"
-                          render={({ field }) => {
-                            const value = field.value || [];
-                            return (
-                              <FormItem
-                                key={disciplina.id}
-                                className="flex flex-row items-start space-x-3 space-y-0 p-4 border rounded-md"
-                              >
-                                <FormControl>
-                                  <Checkbox
-                                    checked={value.includes(disciplina.id)}
-                                    onCheckedChange={(checked) => {
-                                      return checked
-                                        ? field.onChange([...value, disciplina.id])
-                                        : field.onChange(
-                                            value.filter((val) => val !== disciplina.id)
-                                          );
-                                    }}
-                                  />
-                                </FormControl>
-                                <div className="space-y-1 leading-none">
-                                  <FormLabel className="font-medium cursor-pointer">
-                                    {disciplina.nome}
-                                  </FormLabel>
-                                </div>
-                              </FormItem>
-                            );
-                          }}
-                        />
-                      ))}
-                    </div>
+                    <FormControl>
+                      <MultiSelectBusca
+                        options={(disciplinas ?? []).map((d) => ({ value: d.id, label: d.nome }))}
+                        value={field.value ?? []}
+                        onChange={field.onChange}
+                        placeholder="Selecione as disciplinas..."
+                        buscarPlaceholder="Buscar disciplina por nome..."
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
