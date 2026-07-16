@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+﻿import { useState, useEffect } from "react";
 import {
   useListHorarioSlots, useSetHorarioSlotsLote, getListHorarioSlotsQueryKey,
   useListAulasFixas, useCriarAulaFixa, getListAulasFixasQueryKey,
@@ -86,7 +86,7 @@ function AbaEsquema() {
   const [step, setStep] = useState(1);
   const [modoAvancado, setModoAvancado] = useState(false);
   const [form, setForm] = useState({
-    qtdAulas: 6,
+    qtdAulas: 5, // fundamental e o nivelEnsino padrao inicial (5 aulas)
     duracao: 50,
     horaInicio: "07:30",
     intervaloApos: 3,
@@ -101,6 +101,10 @@ function AbaEsquema() {
     { query: { queryKey: getListHorarioSlotsQueryKey({ turno, nivelEnsino: turno === "matutino" ? nivelEnsino : undefined }) } },
   );
   const salvarLote = useSetHorarioSlotsLote();
+  useEffect(() => {
+    const correto = turno !== "matutino" ? 5 : (nivelEnsino === "medio_tecnico" ? 6 : 5);
+    setForm((f) => (f.qtdAulas === correto ? f : { ...f, qtdAulas: correto }));
+  }, [turno, nivelEnsino]);
 
   const slotsPreview = Array.from({ length: form.qtdAulas }, (_, i) => {
     const [h, m] = form.horaInicio.split(":").map(Number);
@@ -983,6 +987,11 @@ function AbaExperimental() {
     </div>
   );
 }
+
+
+
+
+
 
 
 
