@@ -66,8 +66,16 @@ export default function DisponibilidadePage() {
   const { data: professores = [], isLoading: carregandoProfessores } = useListProfessores();
 
   const { data: slots = [], isLoading: carregandoSlots } = useListHorarioSlots(
-    { turno },
-    { query: { queryKey: getListHorarioSlotsQueryKey({ turno }) } },
+    // No matutino, sempre pede o esquema "medio_tecnico" (6 aulas) em
+    // vez de "fundamental" (5 aulas) -- os 5 primeiros horarios sao
+    // IDENTICOS entre os dois esquemas (07:30 a 11:05), a 6a aula
+    // (11:55) e a unica exclusiva do Medio/Tecnico. Usar sempre o
+    // superconjunto garante a grade completa pra qualquer professor,
+    // sem precisar de um seletor de nivel nesta tela (um professor que
+    // so da aula pro Fundamental simplesmente nunca marca nada na 6a
+    // linha).
+    { turno, nivelEnsino: turno === "matutino" ? "medio_tecnico" : undefined },
+    { query: { queryKey: getListHorarioSlotsQueryKey({ turno, nivelEnsino: turno === "matutino" ? "medio_tecnico" : undefined }) } },
   );
 
   const slotsOrdenados = useMemo(
