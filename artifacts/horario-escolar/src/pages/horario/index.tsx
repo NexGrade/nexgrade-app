@@ -21,6 +21,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { SeletorBusca } from "@/components/seletor-busca";
 import {
   Check, ArrowRight, ArrowLeft, Lock, ChevronDown, ChevronRight, Plus,
   Calendar, ListChecks, AlertTriangle, FlaskConical,
@@ -585,23 +586,23 @@ function AbaGrade() {
         <CardContent className="p-4 flex flex-col md:flex-row gap-4 items-end">
           <div className="space-y-2 flex-1 w-full">
             <Label>Filtrar por Turma</Label>
-            <Select value={turmaId} onValueChange={(v) => { setTurmaId(v); setProfessorId("all"); }}>
-              <SelectTrigger><SelectValue placeholder="Todas as Turmas" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as Turmas</SelectItem>
-                {turmas?.map((t) => <SelectItem key={t.id} value={t.id.toString()}>{t.nome}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <SeletorBusca
+              options={[{ value: "all", label: "Todas as Turmas" }, ...(turmas ?? []).map((t) => ({ value: String(t.id), label: t.nome }))]}
+              value={turmaId}
+              onChange={(v) => { setTurmaId(v); setProfessorId("all"); }}
+              placeholder="Todas as Turmas"
+              buscarPlaceholder="Buscar turma..."
+            />
           </div>
           <div className="space-y-2 flex-1 w-full">
             <Label>Filtrar por Professor</Label>
-            <Select value={professorId} onValueChange={(v) => { setProfessorId(v); setTurmaId("all"); }}>
-              <SelectTrigger><SelectValue placeholder="Todos os Professores" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os Professores</SelectItem>
-                {professores?.map((p) => <SelectItem key={p.id} value={p.id.toString()}>{p.nome}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <SeletorBusca
+              options={[{ value: "all", label: "Todos os Professores" }, ...(professores ?? []).map((p) => ({ value: String(p.id), label: p.nome }))]}
+              value={professorId}
+              onChange={(v) => { setProfessorId(v); setTurmaId("all"); }}
+              placeholder="Todos os Professores"
+              buscarPlaceholder="Buscar professor..."
+            />
           </div>
           <Button variant="outline" onClick={() => { setTurmaId("all"); setProfessorId("all"); }}>Limpar</Button>
         </CardContent>
@@ -976,6 +977,9 @@ function AbaExperimental() {
     </div>
   );
 }
+
+
+
 
 
 
