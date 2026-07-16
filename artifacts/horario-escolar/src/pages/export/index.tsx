@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useListTurmas, useListProfessores } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,7 @@ export default function ExportPage() {
     mes: String(new Date().getMonth() + 1),
     ano: String(new Date().getFullYear()),
   });
-  const [seedEstado, setSeedEstado] = useState("SP");
+  const [seedEstado, setSeedEstado] = useState("PR");
   const [loadingSeed, setLoadingSeed] = useState(false);
   // [NOVO] "turno" filtra o PDF para só um período por vez -- sem isso,
   // turmas de matutino/vespertino/noturno saem misturadas na mesma
@@ -268,3 +268,4 @@ export default function ExportPage() {
     </div>
   );
 }
+
