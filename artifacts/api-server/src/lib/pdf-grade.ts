@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+﻿import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 
 const DIAS_CURTOS = ["Seg", "Ter", "Qua", "Qui", "Sex"];
 
@@ -31,8 +31,8 @@ type BlocoGrade = {
   horariosPorAula?: Record<number, string>;
 };
 
-const LARGURA = 841.89; // A4 paisagem
-const ALTURA = 595.28;
+const LARGURA = 595.28; // A4 retrato (mais blocos por pagina)
+const ALTURA = 841.89;
 const MARGEM = 30;
 const ALTURA_CABECALHO_PAGINA = 46;
 const ALTURA_RODAPE = 14;
@@ -172,3 +172,4 @@ export async function gerarPdfGradeCompacta(
 }
 
 export type { BlocoGrade, SlotGrade };
+
