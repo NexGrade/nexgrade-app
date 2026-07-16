@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import { db } from "@workspace/db";
 import {
   horariosTable, professoresTable, disciplinasTable, turmasTable, disponibilidadeTable,
@@ -101,7 +101,7 @@ router.get("/grade", async (req, res) => {
   const csv = toCSV(["Turma", "Dia", "Aula", "Disciplina", "Professor", "Sala"], rows);
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", 'attachment; filename="grade_horaria.csv"');
-  res.send(csv);
+  res.send('\uFEFF' + csv);
 });
 
 router.get("/ponto", async (req, res) => {
@@ -144,7 +144,7 @@ router.get("/ponto", async (req, res) => {
   );
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", 'attachment; filename="ponto_professores.csv"');
-  res.send(csv);
+  res.send('\uFEFF' + csv);
 });
 
 router.get("/relatorio-seed", async (req, res) => {
@@ -291,3 +291,5 @@ router.get("/grade-pdf/professor", async (req, res) => {
 });
 
 export default router;
+
+
