@@ -18,3 +18,4 @@ export * from "./aulas_fixas";
 export * from "./enums";
 export * from "./horarios_slots";
 export * from "./limites_diarios_professor";
+export * from "./disciplinas-catalogo";
