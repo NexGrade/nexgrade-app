@@ -22,6 +22,11 @@ type PaginaGrade = {
   titulo: string;
   subtitulo?: string;
   slots: SlotGrade[];
+  // [NOVO] Horário real de início de cada número de aula (ex.: {1: "07:30",
+  // 2: "08:20", ...}), vindo de horario_slots (turno + nivelEnsino da
+  // turma/professor). Quando ausente, a coluna "Aula" mostra só o número,
+  // como antes -- retrocompatível.
+  horariosPorAula?: Record<number, string>;
 };
 
 const LARGURA = 841.89; // A4 paisagem
@@ -46,6 +51,7 @@ function desenharGrade(
   font: PDFFont,
   fontBold: PDFFont,
   slots: SlotGrade[],
+  horariosPorAula: Record<number, string> | undefined,
 ) {
   const aulas = [...new Set(slots.map((s) => s.numeroAula))].sort((a, b) => a - b);
   if (aulas.length === 0) {
@@ -54,9 +60,10 @@ function desenharGrade(
     });
     return;
   }
-
   const topoTabela = ALTURA - 95;
-  const colAulaLargura = 60;
+  // [ALTERADO] Coluna "Aula" ficou mais larga quando há horário real pra
+  // caber "1ª aula" + "07:30" empilhados, sem truncar.
+  const colAulaLargura = horariosPorAula ? 68 : 60;
   const colDiaLargura = (LARGURA - 2 * MARGEM - colAulaLargura) / 5;
   const alturaLinha = Math.min(48, (topoTabela - MARGEM) / (aulas.length + 1));
 
@@ -74,9 +81,20 @@ function desenharGrade(
   aulas.forEach((numeroAula, linhaIdx) => {
     const y = topoTabela - alturaLinha * (linhaIdx + 2);
     const corFundoLinha = linhaIdx % 2 === 0 ? BRANCO : CINZA_CLARO;
-
     page.drawRectangle({ x: MARGEM, y, width: colAulaLargura, height: alturaLinha, color: corFundoLinha, borderColor: CINZA_ESCURO, borderWidth: 0.5 });
-    page.drawText(String(numeroAula), { x: MARGEM + colAulaLargura / 2 - 4, y: y + alturaLinha / 2 - 4, size: 10, font: fontBold, color: AZUL_ESCURO });
+
+    const horaReal = horariosPorAula?.[numeroAula];
+    if (horaReal) {
+      // Duas linhas empilhadas: "1ª aula" em cima, horário real embaixo
+      // -- mesmo padrão visual das grades reais da SEED-PR/Urânia.
+      const labelAula = `${numeroAula}ª aula`;
+      const larguraLabel = font.widthOfTextAtSize(labelAula, 7.5);
+      const larguraHora = fontBold.widthOfTextAtSize(horaReal, 9.5);
+      page.drawText(labelAula, { x: MARGEM + colAulaLargura / 2 - larguraLabel / 2, y: y + alturaLinha / 2 + 3, size: 7.5, font, color: CINZA_ESCURO });
+      page.drawText(horaReal, { x: MARGEM + colAulaLargura / 2 - larguraHora / 2, y: y + alturaLinha / 2 - 11, size: 9.5, font: fontBold, color: AZUL_ESCURO });
+    } else {
+      page.drawText(String(numeroAula), { x: MARGEM + colAulaLargura / 2 - 4, y: y + alturaLinha / 2 - 4, size: 10, font: fontBold, color: AZUL_ESCURO });
+    }
 
     DIAS_CURTOS.forEach((_, diaSemana) => {
       const x = MARGEM + colAulaLargura + diaSemana * colDiaLargura;
@@ -101,30 +119,30 @@ function desenharGrade(
 /**
  * Gera um PDF com uma página por item de `paginas`, cada uma com a grade
  * semanal (dia x aula) daquele item. Usado tanto para "visão por turma"
- * quanto "visão por professor" — o chamador monta os `slots` de acordo.
+ * quanto "visão por professor" — o chamador monta os `slots` (e,
+ * opcionalmente, `horariosPorAula`) de acordo.
  */
 export async function gerarPdfGrade(paginas: PaginaGrade[]): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.create();
   pdfDoc.setTitle("NexGrade — Grade Horária");
-  pdfDoc.setProducer("NexGrade (by NexCore Tecnologia)");
-
+  // [FIX] Era "NexCore Tecnologia" -- nome correto da empresa e
+  // "Nexus Core Tecnologia" (ver demais correções de branding feitas hoje
+  // em layout.tsx, index.html, planos/index.tsx).
+  pdfDoc.setProducer("NexGrade (by Nexus Core Tecnologia)");
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-
   for (const pagina of paginas) {
     const page = pdfDoc.addPage([LARGURA, ALTURA]);
     desenharCabecalho(page, fontBold, pagina.titulo, pagina.subtitulo);
-    desenharGrade(page, font, fontBold, pagina.slots);
+    desenharGrade(page, font, fontBold, pagina.slots, pagina.horariosPorAula);
     page.drawText("Gerado pelo NexGrade — conferir antes de homologar oficialmente", {
       x: MARGEM, y: 16, size: 7, font, color: CINZA_ESCURO,
     });
   }
-
   if (paginas.length === 0) {
     const page = pdfDoc.addPage([LARGURA, ALTURA]);
     desenharCabecalho(page, fontBold, "Nenhum dado encontrado", undefined);
   }
-
   return pdfDoc.save();
 }
 
