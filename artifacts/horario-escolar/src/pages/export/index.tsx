@@ -15,11 +15,17 @@ function buildUrl(path: string, params: Record<string, string | undefined>) {
   return url.toString();
 }
 
+const TURNOS = [
+  { value: "", label: "Todos os turnos (misturados)" },
+  { value: "matutino", label: "Matutino" },
+  { value: "vespertino", label: "Vespertino" },
+  { value: "noturno", label: "Noturno" },
+];
+
 export default function ExportPage() {
   const { data: turmas = [] } = useListTurmas();
   const { data: professores = [] } = useListProfessores();
   const { toast } = useToast();
-
   const [gradeOpts, setGradeOpts] = useState({ turmaId: "", formato: "csv" });
   const [pontoOpts, setPontoOpts] = useState({
     professorId: "",
@@ -28,7 +34,10 @@ export default function ExportPage() {
   });
   const [seedEstado, setSeedEstado] = useState("SP");
   const [loadingSeed, setLoadingSeed] = useState(false);
-  const [pdfOpts, setPdfOpts] = useState({ visao: "turma", entidadeId: "" });
+  // [NOVO] "turno" filtra o PDF para só um período por vez -- sem isso,
+  // turmas de matutino/vespertino/noturno saem misturadas na mesma
+  // sequência de páginas, sem nenhuma ordem lógica.
+  const [pdfOpts, setPdfOpts] = useState({ visao: "turma", entidadeId: "", turno: "" });
 
   const handleDownload = (url: string, filename: string) => {
     const a = document.createElement("a");
@@ -101,7 +110,12 @@ export default function ExportPage() {
             </div>
             <Button className="w-full" onClick={() => {
               const url = buildUrl("/api/export/grade", { turmaId: gradeOpts.turmaId || undefined, formato: gradeOpts.formato });
-              handleDownload(url, "grade_horaria.csv");
+              // [FIX] Antes o nome do arquivo vinha sempre fixo em
+              // ".csv", mesmo quando "JSON (API)" estava selecionado --
+              // o navegador baixava conteúdo JSON com extensão .csv, e
+              // o Excel tentava (e falhava) interpretar como CSV.
+              const extensao = gradeOpts.formato === "json" ? "json" : "csv";
+              handleDownload(url, `grade_horaria.${extensao}`);
             }}>
               <Download className="w-4 h-4 mr-2" />Baixar Grade Horária
             </Button>
@@ -171,12 +185,23 @@ export default function ExportPage() {
               <Label>Visão</Label>
               <Select
                 value={pdfOpts.visao}
-                onValueChange={(v) => setPdfOpts({ visao: v, entidadeId: "" })}
+                onValueChange={(v) => setPdfOpts((o) => ({ ...o, visao: v, entidadeId: "" }))}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="turma">Por Turma</SelectItem>
                   <SelectItem value="professor">Por Professor</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {/* [NOVO] Filtro de turno -- evita PDFs gigantes com
+                matutino/vespertino/noturno misturados sem ordem. */}
+            <div className="space-y-1.5">
+              <Label>Turno</Label>
+              <Select value={pdfOpts.turno} onValueChange={(v) => setPdfOpts((o) => ({ ...o, turno: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {TURNOS.map((t) => <SelectItem key={t.value || "todos"} value={t.value}>{t.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -189,7 +214,9 @@ export default function ExportPage() {
                 <SelectContent>
                   <SelectItem value="">{pdfOpts.visao === "turma" ? "Todas as turmas" : "Todos os professores"}</SelectItem>
                   {pdfOpts.visao === "turma"
-                    ? turmas.map((t) => <SelectItem key={t.id} value={String(t.id)}>{t.nome}</SelectItem>)
+                    ? turmas
+                        .filter((t) => !pdfOpts.turno || t.turno === pdfOpts.turno)
+                        .map((t) => <SelectItem key={t.id} value={String(t.id)}>{t.nome}</SelectItem>)
                     : professores.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -198,8 +225,12 @@ export default function ExportPage() {
               className="w-full"
               onClick={() => {
                 const param = pdfOpts.visao === "turma" ? "turmaId" : "professorId";
-                const url = buildUrl(`/api/export/grade-pdf/${pdfOpts.visao}`, { [param]: pdfOpts.entidadeId || undefined });
-                handleDownload(url, `grade_por_${pdfOpts.visao}.pdf`);
+                const url = buildUrl(`/api/export/grade-pdf/${pdfOpts.visao}`, {
+                  [param]: pdfOpts.entidadeId || undefined,
+                  turno: pdfOpts.turno || undefined,
+                });
+                const sufixoTurno = pdfOpts.turno ? `_${pdfOpts.turno}` : "";
+                handleDownload(url, `grade_por_${pdfOpts.visao}${sufixoTurno}.pdf`);
               }}
             >
               <Download className="w-4 h-4 mr-2" />Baixar PDF

@@ -201,13 +201,15 @@ router.get("/relatorio-seed", async (req, res) => {
 router.get("/grade-pdf/turma", async (req, res) => {
   const escolaId = getEscolaId(req);
   const turmaIdFiltro = req.query.turmaId ? Number(req.query.turmaId) : undefined;
+  const turnoFiltro = req.query.turno as string | undefined;
   const [slots, professores, disciplinas, turmasTodas] = await Promise.all([
     db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
     db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
     db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
   ]);
-  const turmas = turmaIdFiltro ? turmasTodas.filter((t) => t.id === turmaIdFiltro) : turmasTodas;
+  let turmas = turmaIdFiltro ? turmasTodas.filter((t) => t.id === turmaIdFiltro) : turmasTodas;
+  if (turnoFiltro) turmas = turmas.filter((t) => t.turno === turnoFiltro);
 
   const blocos: BlocoGrade[] = await Promise.all(turmas.map(async (turma) => ({
     rotulo: `Turma: ${turma.nome}`,
@@ -236,6 +238,7 @@ router.get("/grade-pdf/turma", async (req, res) => {
 router.get("/grade-pdf/professor", async (req, res) => {
   const escolaId = getEscolaId(req);
   const professorIdFiltro = req.query.professorId ? Number(req.query.professorId) : undefined;
+  const turnoFiltroProf = req.query.turno as string | undefined;
   const [slots, professoresTodos, disciplinas, turmas, disponibilidades] = await Promise.all([
     db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
@@ -245,9 +248,10 @@ router.get("/grade-pdf/professor", async (req, res) => {
   ]);
   const professores = professorIdFiltro ? professoresTodos.filter((p) => p.id === professorIdFiltro) : professoresTodos;
 
-  const blocos: BlocoGrade[] = await Promise.all(professores.map(async (prof) => {
+  const blocos: (BlocoGrade | null)[] = await Promise.all(professores.map(async (prof) => {
     const aulasDoProf: BlocoGrade["slots"] = slots
       .filter((s) => s.professorId === prof.id)
+      .filter((s) => !turnoFiltroProf || turmas.find((t) => t.id === s.turmaId)?.turno === turnoFiltroProf)
       .map((s) => ({
         diaSemana: s.diaSemana,
         numeroAula: s.numeroAula,
@@ -277,6 +281,7 @@ router.get("/grade-pdf/professor", async (req, res) => {
         destacado: true,
       }));
 
+    if (turnoFiltroProf && aulasDoProf.length === 0) return null;
     return {
       rotulo: primeiroNome(prof.nome),
       horariosPorAula,
@@ -284,12 +289,20 @@ router.get("/grade-pdf/professor", async (req, res) => {
     };
   }));
 
-  const pdfBytes = await gerarPdfGradeCompacta(NOME_ESCOLA, "Grade Horária por Professor", intervaloSemanaAtual(), blocos);
+  const blocosValidos = blocos.filter((b): b is BlocoGrade => b !== null);
+  const pdfBytes = await gerarPdfGradeCompacta(NOME_ESCOLA, "Grade Horária por Professor", intervaloSemanaAtual(), blocosValidos);
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", 'attachment; filename="grade_por_professor.pdf"');
   res.send(Buffer.from(pdfBytes));
 });
 
 export default router;
+
+
+
+
+
+
+
 
 
