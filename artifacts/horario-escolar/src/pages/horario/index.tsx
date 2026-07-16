@@ -25,7 +25,7 @@ import { SeletorBusca } from "@/components/seletor-busca";
 import {
   Check, ArrowRight, ArrowLeft, Lock, ChevronDown, ChevronRight, Plus,
   Calendar, ListChecks, AlertTriangle, FlaskConical,
-  CheckCircle2, RefreshCw, ChevronUp, ArrowUpCircle, Trash2, Clock,
+  CheckCircle2, RefreshCw, ChevronUp, ArrowUpCircle, Trash2, Clock, Info,
 } from "lucide-react";
 
 // Hub único de Horário — Esquema > Regras > Grade > Conflitos > Experimental,
@@ -810,7 +810,6 @@ function AbaExperimental() {
   const [gerarForm, setGerarForm] = useState({
     turmaId: "",
     nomeExperimental: `Experimento-${new Date().toISOString().split("T")[0]}`,
-    aulaspordia: 5,
     substituir: true,
     reduzirJanelas: true,
     fatorPedagogico: false,
@@ -828,7 +827,6 @@ function AbaExperimental() {
         data: {
           turmaId: Number(gerarForm.turmaId),
           nomeExperimental: gerarForm.nomeExperimental,
-          aulaspordia: gerarForm.aulaspordia,
           substituir: gerarForm.substituir,
           reduzirJanelas: gerarForm.reduzirJanelas,
           fatorPedagogico: gerarForm.fatorPedagogico,
@@ -948,12 +946,9 @@ function AbaExperimental() {
                 <SelectContent>{turmas.map((t) => <SelectItem key={t.id} value={String(t.id)}>{t.nome}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <Label>Aulas por dia</Label>
-              <Select value={String(gerarForm.aulaspordia)} onValueChange={(v) => setGerarForm((f) => ({ ...f, aulaspordia: Number(v) }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{[4, 5, 6, 7, 8].map((n) => <SelectItem key={n} value={String(n)}>{n} aulas/dia</SelectItem>)}</SelectContent>
-              </Select>
+            <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 rounded-md p-2.5">
+              <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+              A quantidade de aulas por dia e calculada automaticamente pelo esquema de horario configurado para o turno e nivel de ensino da turma selecionada.
             </div>
             <div className="flex items-center justify-between py-1">
               <Label className="cursor-pointer">Reduzir janelas do professor</Label>
@@ -977,6 +972,10 @@ function AbaExperimental() {
     </div>
   );
 }
+
+
+
+
 
 
 

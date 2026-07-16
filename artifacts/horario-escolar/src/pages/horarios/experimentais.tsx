@@ -16,7 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { FlaskConical, Plus, Trash2, CheckCircle, ArrowUpCircle } from "lucide-react";
+import { FlaskConical, Plus, Trash2, CheckCircle, ArrowUpCircle, Info } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function HorariosExperimentais() {
@@ -30,11 +30,12 @@ export default function HorariosExperimentais() {
 
   const [openGerar, setOpenGerar] = useState(false);
   const [gerando, setGerando] = useState(false);
+  // [ALTERADO] "aulaspordia" removido -- o backend calcula isso sozinho
+  // a partir de horario_slots (turno + nivelEnsino da turma), igual a
+  // geracao oficial (pages/turmas/horario.tsx).
   const [gerarForm, setGerarForm] = useState({
     turmaId: "",
     nomeExperimental: `Experimento-${new Date().toISOString().split("T")[0]}`,
-    aulaspordia: 5,
-    substituir: true,
     reduzirJanelas: true,
     fatorPedagogico: false,
     compactarCargaHoraria: false,
@@ -51,8 +52,6 @@ export default function HorariosExperimentais() {
         data: {
           turmaId: Number(gerarForm.turmaId),
           nomeExperimental: gerarForm.nomeExperimental,
-          aulaspordia: gerarForm.aulaspordia,
-          substituir: gerarForm.substituir,
           reduzirJanelas: gerarForm.reduzirJanelas,
           fatorPedagogico: gerarForm.fatorPedagogico,
           compactarCargaHoraria: gerarForm.compactarCargaHoraria,
@@ -63,7 +62,7 @@ export default function HorariosExperimentais() {
       toast({ title: `Experimento gerado! ${result.slotsGerados} aulas criadas.${result.conflitos.length ? ` ${result.conflitos.length} aviso(s).` : ""}` });
       setOpenGerar(false);
     } catch (e) {
-      toast({ title: "Erro ao gerar experimento", variant: "destructive" });
+      toast({ title: e instanceof Error ? e.message : "Erro ao gerar experimento", variant: "destructive" });
     } finally {
       setGerando(false);
     }
@@ -186,12 +185,10 @@ export default function HorariosExperimentais() {
                 <SelectContent>{turmas.map(t => <SelectItem key={t.id} value={String(t.id)}>{t.nome}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <Label>Aulas por dia</Label>
-              <Select value={String(gerarForm.aulaspordia)} onValueChange={v => setGerarForm(f => ({ ...f, aulaspordia: Number(v) }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{[4,5,6,7,8].map(n => <SelectItem key={n} value={String(n)}>{n} aulas/dia</SelectItem>)}</SelectContent>
-              </Select>
+            <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 rounded-md p-2.5">
+              <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+              A quantidade de aulas por dia é calculada automaticamente pelo esquema de horário configurado
+              para o turno e nível de ensino da turma selecionada.
             </div>
             <div className="flex items-center justify-between py-1">
               <Label className="cursor-pointer">Reduzir janelas do professor</Label>
