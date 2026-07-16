@@ -57,7 +57,7 @@ function NexGradeLogo() {
       </div>
       <div className="leading-none">
         <span className="font-bold text-[15px] tracking-tight text-foreground font-heading">NexGrade</span>
-        <span className="block text-[10px] text-muted-foreground font-medium tracking-wide -mt-0.5">by NexCore Tecnologia</span>
+        <span className="block text-[10px] text-muted-foreground font-medium tracking-wide -mt-0.5">by Nexus Core Tecnologia</span>
       </div>
     </div>
   );
@@ -130,5 +130,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
 
 

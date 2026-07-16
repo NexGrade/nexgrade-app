@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Zap, Crown, Shield } from "lucide-react";
@@ -108,7 +108,7 @@ export default function PlanosPage() {
                     variant={isPro ? "default" : "outline"}
                     onClick={() => {
                       if (plano.preco === 0) return;
-                      window.open("mailto:contato@nexcoretecnologia.com.br?subject=Interesse no plano " + plano.nome, "_blank");
+                      window.open("mailto:contato@nexuscoretecnologia.com.br?subject=Interesse no plano " + plano.nome, "_blank");
                     }}
                   >
                     {plano.preco === 0 ? "Plano atual" : `Assinar ${plano.nome}`}
@@ -126,3 +126,4 @@ export default function PlanosPage() {
     </div>
   );
 }
+
