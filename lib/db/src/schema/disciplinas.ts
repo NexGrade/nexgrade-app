@@ -2,11 +2,15 @@ import { pgTable, text, serial, timestamp, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { composicaoCurricularEnum } from "./enums";
-
 export const disciplinasTable = pgTable("disciplinas", {
   id: serial("id").primaryKey(),
   escolaId: text("escola_id").notNull().default("escola_default"),
   nome: text("nome").notNull(),
+  // [NOVO] Sigla curta (ex.: "MAT", "L.POR", "ED.FIS"), usada nas
+  // grades PDF compactas (ver lib/pdf-grade.ts) — formato oficial já
+  // praticado pela escola nos exports do Urânia, com várias turmas por
+  // página. Nula até ser preenchida manualmente ou populada em lote.
+  sigla: text("sigla"),
   cargaSemanal: integer("carga_semanal").notNull().default(2),
   cor: text("cor").notNull().default("#6366f1"),
   // Código SAE oficial (origem regulatória — identificador público do
@@ -29,7 +33,6 @@ export const disciplinasTable = pgTable("disciplinas", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
-
 export const insertDisciplinaSchema = createInsertSchema(disciplinasTable).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertDisciplina = z.infer<typeof insertDisciplinaSchema>;
 export type Disciplina = typeof disciplinasTable.$inferSelect;

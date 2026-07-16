@@ -1,0 +1,1 @@
+ALTER TABLE "disciplinas" ADD COLUMN "sigla" text;
