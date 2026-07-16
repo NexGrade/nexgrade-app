@@ -1,8 +1,17 @@
-import { pgTable, text, serial, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { matrizesCurricularesTable } from "./cursos";
 import { professoresTable } from "./professores";
+
+// [NOVO] Distingue os dois esquemas de horario matutino que a escola
+// pratica de verdade (confirmado com PDFs reais da SEED-PR/Urania):
+// Fundamental (6-9 ano) tem 5 aulas de manha (07:30-11:05), Medio e
+// Tecnico (1a-3a serie) tem 6 aulas de manha (07:30-11:55). Vespertino
+// e sempre Fundamental (5 aulas), noturno e uniforme para todos os
+// niveis (5 aulas comecando as 18:45) -- por isso o campo so precisa
+// ser consultado quando o turno da turma for "matutino".
+export const nivelEnsinoEnum = pgEnum("nivel_ensino", ["fundamental", "medio_tecnico"]);
 
 export const turmasTable = pgTable("turmas", {
   id: serial("id").primaryKey(),
@@ -10,6 +19,10 @@ export const turmasTable = pgTable("turmas", {
   nome: text("nome").notNull(),
   serie: text("serie").notNull(),
   turno: text("turno").notNull().default("matutino"),
+  // [NOVO] Ver nivelEnsinoEnum acima. Nulo apenas durante a migracao de
+  // dados existentes (populado logo em seguida a partir do texto de
+  // `serie`); daqui pra frente, obrigatorio definir no cadastro da turma.
+  nivelEnsino: nivelEnsinoEnum("nivel_ensino"),
   anoLetivo: integer("ano_letivo").notNull(),
   // RF-TUR-01/02: vínculo opcional com a Matriz Curricular (ver
   // cursos.ts) que define a carga horária esperada por disciplina desta
