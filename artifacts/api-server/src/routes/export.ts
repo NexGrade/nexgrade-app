@@ -6,22 +6,50 @@ import {
 } from "@workspace/db";
 import { and, eq, isNull } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
-import { gerarPdfGrade, type PaginaGrade } from "../lib/pdf-grade";
+import { gerarPdfGradeCompacta, type BlocoGrade } from "../lib/pdf-grade";
 
 const router = Router();
 
 const DIAS = ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira"];
+
+// [NOVO] Nome oficial da escola, usado no cabeçalho das grades PDF
+// compactas. Fixo por enquanto -- não há campo de "nome da escola"
+// configurável na plataforma ainda; se um dia a NexGrade atender mais
+// de uma escola, isso precisa vir de escolasTable em vez de constante.
+const NOME_ESCOLA = "C.E. Prof. Mário B.T. Braga";
 
 function toCSV(headers: string[], rows: string[][]): string {
   const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
   return [headers.map(escape), ...rows.map(r => r.map(escape))].map(r => r.join(",")).join("\n");
 }
 
-// [NOVO] Busca o horário real de início de cada número de aula para um
-// turno + nível de ensino (nivelEnsino só importa quando turno é
-// "matutino" — ver schema/horarios_slots.ts). Devolve um mapa
-// numeroAula -> "HH:MM" (sem segundos), pronto pra passar direto pra
-// gerarPdfGrade.
+// Primeiro nome apenas (ex.: "Anderson Silva" -> "ANDERSON") -- formato
+// real confirmado nos PDFs do Urânia, que nunca mostram sobrenome.
+function primeiroNome(nomeCompleto: string): string {
+  return (nomeCompleto.split(" ")[0] ?? nomeCompleto).toUpperCase();
+}
+
+// Sigla da disciplina com fallback pro nome truncado, para disciplinas
+// que ainda não tiveram sigla definida manualmente ou gerada em lote.
+function siglaOuFallback(disc: { nome: string; sigla?: string | null } | undefined): string {
+  if (!disc) return "?";
+  return disc.sigla?.toUpperCase() ?? disc.nome.slice(0, 8).toUpperCase();
+}
+
+// Intervalo da semana atual no formato "DD/MM A DD/MM", igual ao
+// cabeçalho usado pelo Urânia ("22/06 A 26/06").
+function intervaloSemanaAtual(): string {
+  const hoje = new Date();
+  const diaSemana = hoje.getDay(); // 0 = domingo
+  const offsetSegunda = diaSemana === 0 ? -6 : 1 - diaSemana;
+  const segunda = new Date(hoje);
+  segunda.setDate(hoje.getDate() + offsetSegunda);
+  const sexta = new Date(segunda);
+  sexta.setDate(segunda.getDate() + 4);
+  const fmt = (d: Date) => `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+  return `${fmt(segunda)} A ${fmt(sexta)}`;
+}
+
 async function buscarHorariosPorAula(
   escolaId: string,
   turno: string,
@@ -166,10 +194,9 @@ router.get("/relatorio-seed", async (req, res) => {
 });
 
 // ------------------------------------------------------------------
-// PDF — Visão por Turma: uma página por turma, grade dia x aula com
-// disciplina + professor em cada célula. Linha "Aula" mostra o horário
-// real de início (07:30, 08:20...), vindo de horario_slots -- cada
-// turma tem um único turno+nivelEnsino, então não há ambiguidade aqui.
+// PDF — Visão por Turma: formato compacto multi-turma por página
+// (padrão real do Urânia). Sigla da disciplina + primeiro nome do
+// professor em cada célula, horário real na coluna "Hor".
 // ------------------------------------------------------------------
 router.get("/grade-pdf/turma", async (req, res) => {
   const escolaId = getEscolaId(req);
@@ -182,37 +209,29 @@ router.get("/grade-pdf/turma", async (req, res) => {
   ]);
   const turmas = turmaIdFiltro ? turmasTodas.filter((t) => t.id === turmaIdFiltro) : turmasTodas;
 
-  const paginas: PaginaGrade[] = await Promise.all(turmas.map(async (turma) => ({
-    titulo: `Grade Horária — Turma ${turma.nome}`,
-    subtitulo: `${turma.serie} · ${turma.turno}`,
+  const blocos: BlocoGrade[] = await Promise.all(turmas.map(async (turma) => ({
+    rotulo: `Turma: ${turma.nome}`,
     horariosPorAula: await buscarHorariosPorAula(escolaId, turma.turno, turma.nivelEnsino),
     slots: slots
       .filter((s) => s.turmaId === turma.id)
       .map((s) => ({
         diaSemana: s.diaSemana,
         numeroAula: s.numeroAula,
-        linha1: disciplinas.find((d) => d.id === s.disciplinaId)?.nome ?? "?",
-        linha2: professores.find((p) => p.id === s.professorId)?.nome,
+        linha1: siglaOuFallback(disciplinas.find((d) => d.id === s.disciplinaId)),
+        linha2: primeiroNome(professores.find((p) => p.id === s.professorId)?.nome ?? "?"),
       })),
   })));
 
-  const pdfBytes = await gerarPdfGrade(paginas);
+  const pdfBytes = await gerarPdfGradeCompacta(NOME_ESCOLA, "Grade Horária por Turma", intervaloSemanaAtual(), blocos);
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", 'attachment; filename="grade_por_turma.pdf"');
   res.send(Buffer.from(pdfBytes));
 });
 
 // ------------------------------------------------------------------
-// PDF — Visão por Professor: uma página por professor, grade dia x
-// aula com turma + disciplina em cada célula. Blocos marcados como
-// Hora-Atividade obrigatória (ver RNF-SEED-01) aparecem destacados,
-// para a equipe conferir concentração no turno certo antes de
-// homologar (Resolução SEED n.º 7.200/2025, art. 11, §4º).
-//
-// [NOVO] Linha "Aula" mostra horário real, igual à visão por turma.
-// Um professor pode lecionar em turmas de turnos diferentes na mesma
-// semana (raro, mas possível) -- nesse caso usamos o esquema do turno
-// mais frequente entre as aulas dele como melhor aproximação.
+// PDF — Visão por Professor: formato compacto multi-professor por
+// página. Célula combinada "TURMA/SIGLA" numa linha só; Hora-Atividade
+// obrigatória aparece como "HA" destacado.
 // ------------------------------------------------------------------
 router.get("/grade-pdf/professor", async (req, res) => {
   const escolaId = getEscolaId(req);
@@ -226,18 +245,16 @@ router.get("/grade-pdf/professor", async (req, res) => {
   ]);
   const professores = professorIdFiltro ? professoresTodos.filter((p) => p.id === professorIdFiltro) : professoresTodos;
 
-  const paginas: PaginaGrade[] = await Promise.all(professores.map(async (prof) => {
-    const aulasDoProf: PaginaGrade["slots"] = slots
+  const blocos: BlocoGrade[] = await Promise.all(professores.map(async (prof) => {
+    const aulasDoProf: BlocoGrade["slots"] = slots
       .filter((s) => s.professorId === prof.id)
       .map((s) => ({
         diaSemana: s.diaSemana,
         numeroAula: s.numeroAula,
         linha1: turmas.find((t) => t.id === s.turmaId)?.nome ?? "?",
-        linha2: disciplinas.find((d) => d.id === s.disciplinaId)?.nome,
+        linha2: siglaOuFallback(disciplinas.find((d) => d.id === s.disciplinaId)),
       }));
 
-    // Turno/nível mais frequente entre as aulas deste professor, usado
-    // como base pra buscar os horários reais (ver comentário acima).
     const turmasDoProf = slots
       .filter((s) => s.professorId === prof.id)
       .map((s) => turmas.find((t) => t.id === s.turmaId))
@@ -248,28 +265,26 @@ router.get("/grade-pdf/professor", async (req, res) => {
     const nivelPredominante = turmasDoProf.find((t) => t.turno === turnoPredominante)?.nivelEnsino ?? null;
     const horariosPorAula = await buscarHorariosPorAula(escolaId, turnoPredominante, nivelPredominante);
 
-    // Hora-Atividade obrigatória marcada na disponibilidade deste
-    // professor entra como célula destacada, mesmo sem aula.
-    const haDoProf: PaginaGrade["slots"] = disponibilidades
+    // "HA" literal, igual ao Urânia — sem linha2 pra não formatar como
+    // célula combinada.
+    const haDoProf: BlocoGrade["slots"] = disponibilidades
       .filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria)
       .filter((d) => !aulasDoProf.some((a) => a.diaSemana === d.diaSemana && a.numeroAula === d.horarioSlot))
       .map((d) => ({
         diaSemana: d.diaSemana,
         numeroAula: d.horarioSlot,
-        linha1: "Hora-Atividade",
-        linha2: d.turno ?? undefined,
+        linha1: "HA",
         destacado: true,
       }));
 
     return {
-      titulo: `Grade Horária — Prof. ${prof.nome}`,
-      subtitulo: `Padrão ${prof.cargaHorariaTotal}h`,
+      rotulo: primeiroNome(prof.nome),
       horariosPorAula,
       slots: [...aulasDoProf, ...haDoProf],
     };
   }));
 
-  const pdfBytes = await gerarPdfGrade(paginas);
+  const pdfBytes = await gerarPdfGradeCompacta(NOME_ESCOLA, "Grade Horária por Professor", intervaloSemanaAtual(), blocos);
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", 'attachment; filename="grade_por_professor.pdf"');
   res.send(Buffer.from(pdfBytes));
