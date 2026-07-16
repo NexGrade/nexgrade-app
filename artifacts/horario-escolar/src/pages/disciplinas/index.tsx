@@ -59,6 +59,7 @@ const CATEGORIA_LABEL: Record<string, string> = {
 
 const disciplinaSchema = z.object({
   nome: z.string().min(2, "O nome deve ter pelo menos 2 caracteres"),
+  sigla: z.string().optional(),
   cargaSemanal: z.coerce.number().min(1).max(10),
   cor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Cor inválida (ex: #FF0000)"),
   codigoSae: z.string().optional(),
@@ -72,7 +73,10 @@ type ModoVisualizacao = "grade" | "lista";
 
 export default function DisciplinasList() {
   const { data: disciplinas, isLoading } = useListDisciplinas();
-  const { busca, setBusca, itensFiltrados: disciplinasFiltradas } = useListaFiltrada(disciplinas, (d) => d.nome);
+  const { busca, setBusca, itensFiltrados: disciplinasFiltradas } = useListaFiltrada(
+    disciplinas,
+    (d) => `${d.nome} ${d.sigla ?? ""}`,
+  );
   const deleteDisciplina = useDeleteDisciplina();
   const createDisciplina = useCreateDisciplina();
   const updateDisciplina = useUpdateDisciplina();
@@ -87,6 +91,7 @@ export default function DisciplinasList() {
     resolver: zodResolver(disciplinaSchema),
     defaultValues: {
       nome: "",
+      sigla: "",
       cargaSemanal: 2,
       cor: "#3b82f6",
       codigoSae: "",
@@ -97,7 +102,7 @@ export default function DisciplinasList() {
 
   const handleOpenCreate = () => {
     setEditingId(null);
-    form.reset({ nome: "", cargaSemanal: 2, cor: "#3b82f6", codigoSae: "", tipoSalaExigido: "", categoriaCurricularPadrao: "" });
+    form.reset({ nome: "", sigla: "", cargaSemanal: 2, cor: "#3b82f6", codigoSae: "", tipoSalaExigido: "", categoriaCurricularPadrao: "" });
     setIsDialogOpen(true);
   };
 
@@ -105,6 +110,7 @@ export default function DisciplinasList() {
     setEditingId(disciplina.id);
     form.reset({
       nome: disciplina.nome,
+      sigla: disciplina.sigla ?? "",
       cargaSemanal: disciplina.cargaSemanal,
       cor: disciplina.cor,
       codigoSae: disciplina.codigoSae ?? "",
@@ -117,6 +123,7 @@ export default function DisciplinasList() {
   const onSubmit = (data: DisciplinaFormValues) => {
     const payload = {
       ...data,
+      sigla: data.sigla?.trim().toUpperCase() || undefined,
       codigoSae: data.codigoSae?.trim() || undefined,
       tipoSalaExigido: data.tipoSalaExigido?.trim() || undefined,
       categoriaCurricularPadrao: (data.categoriaCurricularPadrao || undefined) as any,
@@ -184,6 +191,23 @@ export default function DisciplinasList() {
                   <FormControl>
                     <Input placeholder="Ex: Matemática" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="sigla"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Sigla (opcional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ex: MAT, L.POR, ED.FIS" className="uppercase" {...field} />
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    Usada nas grades PDF compactas (formato multi-turma por página).
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
@@ -366,7 +390,7 @@ export default function DisciplinasList() {
       <CampoBusca
         value={busca}
         onChange={setBusca}
-        placeholder="Buscar disciplina por nome..."
+        placeholder="Buscar por nome ou sigla..."
         className="max-w-sm"
       />
 
@@ -398,6 +422,11 @@ export default function DisciplinasList() {
                     <h3 className="font-semibold text-lg">{disciplina.nome}</h3>
                   </div>
                   <div className="flex gap-1">
+                    {disciplina.sigla && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground">
+                        {disciplina.sigla}
+                      </span>
+                    )}
                     {disciplina.categoriaCurricularPadrao && (
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary">
                         {disciplina.categoriaCurricularPadrao}
@@ -429,8 +458,9 @@ export default function DisciplinasList() {
         </div>
       ) : (
         <div className="border border-border rounded-lg overflow-hidden bg-card">
-          <div className="hidden md:grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide border-b border-border bg-muted/40">
+          <div className="hidden md:grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide border-b border-border bg-muted/40">
             <span>Nome</span>
+            <span className="w-16 text-center">Sigla</span>
             <span className="w-16 text-center">Categoria</span>
             <span className="w-20 text-center">SAE</span>
             <span className="w-24 text-center">Aulas/sem.</span>
@@ -440,11 +470,20 @@ export default function DisciplinasList() {
             {disciplinasFiltradas.map((disciplina) => (
               <div
                 key={disciplina.id}
-                className="grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-4 px-4 py-2.5 hover:bg-accent/40 transition-colors"
+                className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] items-center gap-4 px-4 py-2.5 hover:bg-accent/40 transition-colors"
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: disciplina.cor }} />
                   <span className="font-medium truncate">{disciplina.nome}</span>
+                </div>
+                <div className="w-16 flex justify-center">
+                  {disciplina.sigla ? (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground">
+                      {disciplina.sigla}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">—</span>
+                  )}
                 </div>
                 <div className="w-16 flex justify-center">
                   {disciplina.categoriaCurricularPadrao ? (
