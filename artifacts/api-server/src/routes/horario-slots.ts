@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { horarioSlotsTable } from "@workspace/db";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 
@@ -10,23 +10,36 @@ import { getEscolaId } from "../lib/escola-id";
 // pela exportação de PDF (routes/export.ts), que precisam mostrar horas
 // reais em vez de apenas "1ª aula", "2ª aula".
 //
+// [NOVO] O turno matutino tem DOIS esquemas reais diferentes,
+// dependendo do nível de ensino da turma (confirmado via PDFs reais da
+// SEED-PR): Fundamental (5 aulas, 07:30-11:05) e Médio/Técnico (6 aulas,
+// 07:30-11:55). Vespertino e noturno são uniformes — nivelEnsino fica
+// nulo nesses dois. Toda operação abaixo precisa tratar
+// turno+nivelEnsino como a identidade completa de um esquema, nunca só
+// o turno sozinho — senão salvar o esquema Fundamental do matutino
+// apagaria o esquema Médio/Técnico do mesmo turno (e vice-versa).
+//
 // `horario_slots` tem escolaId próprio (diferente de disponibilidade,
 // que escopa via professorId) — filtragem é direta.
 const router = Router();
 
+const NivelEnsino = z.enum(["fundamental", "medio_tecnico"]).nullable().optional();
+
 const HorarioSlotInput = z.object({
   turno: z.enum(["matutino", "vespertino", "noturno"]),
+  nivelEnsino: NivelEnsino,
   numeroAula: z.number().int().min(1),
   horaInicio: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, "Formato esperado HH:MM"),
   duracaoMinutos: z.number().int().min(1).default(50),
 });
 
-// Criação em lote: gera o esquema inteiro de um turno de uma vez (fluxo
-// do wizard de Horário/Esquema — passo "esquema base" + "ajustes finos").
-// Substitui todos os slots existentes daquele turno, evitando N chamadas
-// separadas.
+// Criação em lote: gera o esquema inteiro de um turno (e, no caso do
+// matutino, de um nível de ensino específico) de uma vez — fluxo do
+// wizard de Horário/Esquema. Substitui os slots existentes SÓ daquela
+// combinação turno+nivelEnsino, nunca o turno inteiro.
 const HorarioSlotLoteInput = z.object({
   turno: z.enum(["matutino", "vespertino", "noturno"]),
+  nivelEnsino: NivelEnsino,
   slots: z.array(
     z.object({
       numeroAula: z.number().int().min(1),
@@ -36,15 +49,24 @@ const HorarioSlotLoteInput = z.object({
   ),
 });
 
+// Monta a condição de nivelEnsino de forma segura — quando nulo/ausente,
+// compara com IS NULL (Drizzle não interpreta eq(coluna, undefined)
+// corretamente). Mesmo padrão já usado em routes/disponibilidade.ts
+// para o campo turno.
+function condicaoNivelEnsino(nivelEnsino: "fundamental" | "medio_tecnico" | null | undefined) {
+  return nivelEnsino ? eq(horarioSlotsTable.nivelEnsino, nivelEnsino) : isNull(horarioSlotsTable.nivelEnsino);
+}
+
 router.get("/", async (req, res) => {
   const escolaId = getEscolaId(req);
   const turno = req.query.turno as string | undefined;
+  const nivelEnsino = req.query.nivelEnsino as string | undefined;
 
-  const rows = turno
-    ? await db.select().from(horarioSlotsTable)
-        .where(and(eq(horarioSlotsTable.escolaId, escolaId), eq(horarioSlotsTable.turno, turno)))
-    : await db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId));
+  const condicoes = [eq(horarioSlotsTable.escolaId, escolaId)];
+  if (turno) condicoes.push(eq(horarioSlotsTable.turno, turno));
+  if (nivelEnsino) condicoes.push(eq(horarioSlotsTable.nivelEnsino, nivelEnsino as "fundamental" | "medio_tecnico"));
 
+  const rows = await db.select().from(horarioSlotsTable).where(and(...condicoes));
   res.json(rows);
 });
 
@@ -60,6 +82,7 @@ router.post("/", async (req, res) => {
     .where(and(
       eq(horarioSlotsTable.escolaId, escolaId),
       eq(horarioSlotsTable.turno, parsed.data.turno),
+      condicaoNivelEnsino(parsed.data.nivelEnsino),
       eq(horarioSlotsTable.numeroAula, parsed.data.numeroAula),
     ))
     .then(r => r[0]);
@@ -90,13 +113,25 @@ router.post("/lote", async (req, res) => {
     return;
   }
 
-  // Remove o esquema anterior deste turno antes de recriar — o wizard
-  // sempre substitui o esquema inteiro, nunca mescla parcialmente.
+  // [CORRIGIDO] Antes apagava TODO o esquema do turno (`WHERE turno = X`),
+  // o que destruiria o esquema Médio/Técnico ao salvar o Fundamental (ou
+  // vice-versa), já que os dois compartilham o mesmo turno "matutino".
+  // Agora a condição inclui nivelEnsino, escopando a substituição só à
+  // combinação exata que está sendo salva.
   await db.delete(horarioSlotsTable)
-    .where(and(eq(horarioSlotsTable.escolaId, escolaId), eq(horarioSlotsTable.turno, parsed.data.turno)));
+    .where(and(
+      eq(horarioSlotsTable.escolaId, escolaId),
+      eq(horarioSlotsTable.turno, parsed.data.turno),
+      condicaoNivelEnsino(parsed.data.nivelEnsino),
+    ));
 
   const resultado = await db.insert(horarioSlotsTable)
-    .values(parsed.data.slots.map(slot => ({ escolaId, turno: parsed.data.turno, ...slot })))
+    .values(parsed.data.slots.map(slot => ({
+      escolaId,
+      turno: parsed.data.turno,
+      nivelEnsino: parsed.data.nivelEnsino ?? null,
+      ...slot,
+    })))
     .returning();
 
   res.status(201).json(resultado);
