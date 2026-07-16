@@ -16,6 +16,7 @@ export interface DisciplinaInput {
      */
   cargaSemanal: number;
   cor?: string;
+  sigla?: string;
   codigoSae?: string;
   tipoSalaExigido?: string;
   categoriaCurricularPadrao?: DisciplinaInputCategoriaCurricularPadrao;

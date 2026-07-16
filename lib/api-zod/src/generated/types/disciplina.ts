@@ -18,6 +18,11 @@ export interface Disciplina {
      */
   codigoSae?: string | null;
   /**
+     * Sigla curta usada nas grades PDF compactas (ex: MAT, L.POR).
+     * @nullable
+     */
+  sigla?: string | null;
+  /**
      * Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).
      * @nullable
      */

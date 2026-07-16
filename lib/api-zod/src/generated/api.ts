@@ -118,6 +118,7 @@ export const ListDisciplinasResponseItem = zod.object({
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
   "codigoSae": zod.string().nullish().describe('CÃ³digo SAE oficial (SEED-PR), quando conhecido.'),
+  "sigla": zod.string().nullish().describe('Sigla curta usada nas grades PDF compactas (ex: MAT, L.POR).'),
   "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "categoriaCurricularPadrao": zod.union([zod.literal('BNC'),zod.literal('PD'),zod.literal('FGB'),zod.literal('PFO'),zod.literal('IFA'),zod.literal('IF'),zod.literal('IFP'),zod.literal('APF'),zod.literal(null)]).nullish().describe('Categoria curricular fixa desta disciplina (nula = flexivel, elegivel para qualquer categoria).'),
   "createdAt": zod.string()
@@ -135,6 +136,7 @@ export const CreateDisciplinaBody = zod.object({
   "nome": zod.string().min(createDisciplinaBodyNomeMin),
   "cargaSemanal": zod.number().min(1).max(createDisciplinaBodyCargaSemanalMax),
   "cor": zod.string().optional(),
+  "sigla": zod.string().optional(),
   "codigoSae": zod.string().optional(),
   "tipoSalaExigido": zod.string().optional(),
   "categoriaCurricularPadrao": zod.enum(['BNC', 'PD', 'FGB', 'PFO', 'IFA', 'IF', 'IFP', 'APF']).optional()
@@ -146,6 +148,7 @@ export const CreateDisciplinaResponse = zod.object({
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
   "codigoSae": zod.string().nullish().describe('CÃ³digo SAE oficial (SEED-PR), quando conhecido.'),
+  "sigla": zod.string().nullish().describe('Sigla curta usada nas grades PDF compactas (ex: MAT, L.POR).'),
   "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "categoriaCurricularPadrao": zod.union([zod.literal('BNC'),zod.literal('PD'),zod.literal('FGB'),zod.literal('PFO'),zod.literal('IFA'),zod.literal('IF'),zod.literal('IFP'),zod.literal('APF'),zod.literal(null)]).nullish().describe('Categoria curricular fixa desta disciplina (nula = flexivel, elegivel para qualquer categoria).'),
   "createdAt": zod.string()
@@ -176,6 +179,7 @@ export const AdicionarDisciplinasCatalogoSelecionadasResponse = zod.object({
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
   "codigoSae": zod.string().nullish().describe('CÃ³digo SAE oficial (SEED-PR), quando conhecido.'),
+  "sigla": zod.string().nullish().describe('Sigla curta usada nas grades PDF compactas (ex: MAT, L.POR).'),
   "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "categoriaCurricularPadrao": zod.union([zod.literal('BNC'),zod.literal('PD'),zod.literal('FGB'),zod.literal('PFO'),zod.literal('IFA'),zod.literal('IF'),zod.literal('IFP'),zod.literal('APF'),zod.literal(null)]).nullish().describe('Categoria curricular fixa desta disciplina (nula = flexivel, elegivel para qualquer categoria).'),
   "createdAt": zod.string()
@@ -194,6 +198,7 @@ export const GetDisciplinaResponse = zod.object({
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
   "codigoSae": zod.string().nullish().describe('CÃ³digo SAE oficial (SEED-PR), quando conhecido.'),
+  "sigla": zod.string().nullish().describe('Sigla curta usada nas grades PDF compactas (ex: MAT, L.POR).'),
   "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "categoriaCurricularPadrao": zod.union([zod.literal('BNC'),zod.literal('PD'),zod.literal('FGB'),zod.literal('PFO'),zod.literal('IFA'),zod.literal('IF'),zod.literal('IFP'),zod.literal('APF'),zod.literal(null)]).nullish().describe('Categoria curricular fixa desta disciplina (nula = flexivel, elegivel para qualquer categoria).'),
   "createdAt": zod.string()
@@ -208,6 +213,7 @@ export const UpdateDisciplinaBody = zod.object({
   "nome": zod.string().optional(),
   "cargaSemanal": zod.number().optional(),
   "cor": zod.string().optional(),
+  "sigla": zod.string().nullish(),
   "codigoSae": zod.string().nullish(),
   "tipoSalaExigido": zod.string().nullish(),
   "categoriaCurricularPadrao": zod.union([zod.literal('BNC'),zod.literal('PD'),zod.literal('FGB'),zod.literal('PFO'),zod.literal('IFA'),zod.literal('IF'),zod.literal('IFP'),zod.literal('APF'),zod.literal(null)]).nullish()
@@ -219,6 +225,7 @@ export const UpdateDisciplinaResponse = zod.object({
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
   "codigoSae": zod.string().nullish().describe('CÃ³digo SAE oficial (SEED-PR), quando conhecido.'),
+  "sigla": zod.string().nullish().describe('Sigla curta usada nas grades PDF compactas (ex: MAT, L.POR).'),
   "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "categoriaCurricularPadrao": zod.union([zod.literal('BNC'),zod.literal('PD'),zod.literal('FGB'),zod.literal('PFO'),zod.literal('IFA'),zod.literal('IF'),zod.literal('IFP'),zod.literal('APF'),zod.literal(null)]).nullish().describe('Categoria curricular fixa desta disciplina (nula = flexivel, elegivel para qualquer categoria).'),
   "createdAt": zod.string()
@@ -434,6 +441,7 @@ export const GetTurmaHorarioResponseItem = zod.object({
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
   "codigoSae": zod.string().nullish().describe('CÃ³digo SAE oficial (SEED-PR), quando conhecido.'),
+  "sigla": zod.string().nullish().describe('Sigla curta usada nas grades PDF compactas (ex: MAT, L.POR).'),
   "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "categoriaCurricularPadrao": zod.union([zod.literal('BNC'),zod.literal('PD'),zod.literal('FGB'),zod.literal('PFO'),zod.literal('IFA'),zod.literal('IF'),zod.literal('IFP'),zod.literal('APF'),zod.literal(null)]).nullish().describe('Categoria curricular fixa desta disciplina (nula = flexivel, elegivel para qualquer categoria).'),
   "createdAt": zod.string()
@@ -496,6 +504,7 @@ export const ListHorariosResponseItem = zod.object({
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
   "codigoSae": zod.string().nullish().describe('CÃ³digo SAE oficial (SEED-PR), quando conhecido.'),
+  "sigla": zod.string().nullish().describe('Sigla curta usada nas grades PDF compactas (ex: MAT, L.POR).'),
   "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "categoriaCurricularPadrao": zod.union([zod.literal('BNC'),zod.literal('PD'),zod.literal('FGB'),zod.literal('PFO'),zod.literal('IFA'),zod.literal('IF'),zod.literal('IFP'),zod.literal('APF'),zod.literal(null)]).nullish().describe('Categoria curricular fixa desta disciplina (nula = flexivel, elegivel para qualquer categoria).'),
   "createdAt": zod.string()
@@ -569,6 +578,7 @@ export const CreateHorarioResponse = zod.object({
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
   "codigoSae": zod.string().nullish().describe('CÃ³digo SAE oficial (SEED-PR), quando conhecido.'),
+  "sigla": zod.string().nullish().describe('Sigla curta usada nas grades PDF compactas (ex: MAT, L.POR).'),
   "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "categoriaCurricularPadrao": zod.union([zod.literal('BNC'),zod.literal('PD'),zod.literal('FGB'),zod.literal('PFO'),zod.literal('IFA'),zod.literal('IF'),zod.literal('IFP'),zod.literal('APF'),zod.literal(null)]).nullish().describe('Categoria curricular fixa desta disciplina (nula = flexivel, elegivel para qualquer categoria).'),
   "createdAt": zod.string()
@@ -653,6 +663,7 @@ export const GerarHorarioResponse = zod.object({
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
   "codigoSae": zod.string().nullish().describe('CÃ³digo SAE oficial (SEED-PR), quando conhecido.'),
+  "sigla": zod.string().nullish().describe('Sigla curta usada nas grades PDF compactas (ex: MAT, L.POR).'),
   "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "categoriaCurricularPadrao": zod.union([zod.literal('BNC'),zod.literal('PD'),zod.literal('FGB'),zod.literal('PFO'),zod.literal('IFA'),zod.literal('IF'),zod.literal('IFP'),zod.literal('APF'),zod.literal(null)]).nullish().describe('Categoria curricular fixa desta disciplina (nula = flexivel, elegivel para qualquer categoria).'),
   "createdAt": zod.string()
@@ -767,6 +778,7 @@ export const PromoverHorarioExperimentalResponse = zod.object({
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
   "codigoSae": zod.string().nullish().describe('CÃ³digo SAE oficial (SEED-PR), quando conhecido.'),
+  "sigla": zod.string().nullish().describe('Sigla curta usada nas grades PDF compactas (ex: MAT, L.POR).'),
   "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "categoriaCurricularPadrao": zod.union([zod.literal('BNC'),zod.literal('PD'),zod.literal('FGB'),zod.literal('PFO'),zod.literal('IFA'),zod.literal('IF'),zod.literal('IFP'),zod.literal('APF'),zod.literal(null)]).nullish().describe('Categoria curricular fixa desta disciplina (nula = flexivel, elegivel para qualquer categoria).'),
   "createdAt": zod.string()
@@ -1448,6 +1460,7 @@ export const ListMatrizesCurricularesResponseItem = zod.object({
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
   "codigoSae": zod.string().nullish().describe('CÃ³digo SAE oficial (SEED-PR), quando conhecido.'),
+  "sigla": zod.string().nullish().describe('Sigla curta usada nas grades PDF compactas (ex: MAT, L.POR).'),
   "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "categoriaCurricularPadrao": zod.union([zod.literal('BNC'),zod.literal('PD'),zod.literal('FGB'),zod.literal('PFO'),zod.literal('IFA'),zod.literal('IF'),zod.literal('IFP'),zod.literal('APF'),zod.literal(null)]).nullish().describe('Categoria curricular fixa desta disciplina (nula = flexivel, elegivel para qualquer categoria).'),
   "createdAt": zod.string()
@@ -1500,6 +1513,7 @@ export const CreateMatrizCurricularResponse = zod.object({
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
   "codigoSae": zod.string().nullish().describe('CÃ³digo SAE oficial (SEED-PR), quando conhecido.'),
+  "sigla": zod.string().nullish().describe('Sigla curta usada nas grades PDF compactas (ex: MAT, L.POR).'),
   "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "categoriaCurricularPadrao": zod.union([zod.literal('BNC'),zod.literal('PD'),zod.literal('FGB'),zod.literal('PFO'),zod.literal('IFA'),zod.literal('IF'),zod.literal('IFP'),zod.literal('APF'),zod.literal(null)]).nullish().describe('Categoria curricular fixa desta disciplina (nula = flexivel, elegivel para qualquer categoria).'),
   "createdAt": zod.string()
@@ -1545,6 +1559,7 @@ export const UpdateMatrizCurricularResponse = zod.object({
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
   "codigoSae": zod.string().nullish().describe('CÃ³digo SAE oficial (SEED-PR), quando conhecido.'),
+  "sigla": zod.string().nullish().describe('Sigla curta usada nas grades PDF compactas (ex: MAT, L.POR).'),
   "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "categoriaCurricularPadrao": zod.union([zod.literal('BNC'),zod.literal('PD'),zod.literal('FGB'),zod.literal('PFO'),zod.literal('IFA'),zod.literal('IF'),zod.literal('IFP'),zod.literal('APF'),zod.literal(null)]).nullish().describe('Categoria curricular fixa desta disciplina (nula = flexivel, elegivel para qualquer categoria).'),
   "createdAt": zod.string()
@@ -1585,6 +1600,7 @@ export const AdicionarItemMatrizResponse = zod.object({
   "cargaSemanal": zod.number(),
   "cor": zod.string(),
   "codigoSae": zod.string().nullish().describe('CÃ³digo SAE oficial (SEED-PR), quando conhecido.'),
+  "sigla": zod.string().nullish().describe('Sigla curta usada nas grades PDF compactas (ex: MAT, L.POR).'),
   "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
   "categoriaCurricularPadrao": zod.union([zod.literal('BNC'),zod.literal('PD'),zod.literal('FGB'),zod.literal('PFO'),zod.literal('IFA'),zod.literal('IF'),zod.literal('IFP'),zod.literal('APF'),zod.literal(null)]).nullish().describe('Categoria curricular fixa desta disciplina (nula = flexivel, elegivel para qualquer categoria).'),
   "createdAt": zod.string()

@@ -1767,6 +1767,7 @@ components:
         cargaSemanal: { type: integer }
         cor: { type: string }
         codigoSae: { type: ["string", "null"], description: "CÃ³digo SAE oficial (SEED-PR), quando conhecido." }
+        sigla: { type: ["string", "null"], description: "Sigla curta usada nas grades PDF compactas (ex: MAT, L.POR)." }
         tipoSalaExigido: { type: ["string", "null"], description: "Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra)." }
         categoriaCurricularPadrao: { type: ["string", "null"], enum: [BNC, PD, FGB, PFO, IFA, IF, IFP, APF, null], description: "Categoria curricular fixa desta disciplina (nula = flexivel, elegivel para qualquer categoria)." }
         createdAt: { type: string }
@@ -1778,6 +1779,7 @@ components:
         nome: { type: string, minLength: 2 }
         cargaSemanal: { type: integer, minimum: 1, maximum: 10 }
         cor: { type: string }
+        sigla: { type: string }
         codigoSae: { type: string }
         tipoSalaExigido: { type: string }
         categoriaCurricularPadrao: { type: string, enum: [BNC, PD, FGB, PFO, IFA, IF, IFP, APF] }
@@ -1788,6 +1790,7 @@ components:
         nome: { type: string }
         cargaSemanal: { type: integer }
         cor: { type: string }
+        sigla: { type: ["string", "null"] }
         codigoSae: { type: ["string", "null"] }
         tipoSalaExigido: { type: ["string", "null"] }
         categoriaCurricularPadrao: { type: ["string", "null"], enum: [BNC, PD, FGB, PFO, IFA, IF, IFP, APF, null] }
@@ -2506,6 +2509,9 @@ components:
         totalAulasDistribuidas: { type: integer }
         totalUsuarios: { type: integer }
         mensagensEnviadasParaIA: { type: integer }
+
+
+
 
 
 

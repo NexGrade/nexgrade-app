@@ -12,6 +12,8 @@ export interface DisciplinaUpdate {
   cargaSemanal?: number;
   cor?: string;
   /** @nullable */
+  sigla?: string | null;
+  /** @nullable */
   codigoSae?: string | null;
   /** @nullable */
   tipoSalaExigido?: string | null;
