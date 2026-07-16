@@ -5,11 +5,13 @@ import {
   useDeleteDisciplina,
   useUpdateDisciplina,
   getListDisciplinasQueryKey,
+  useListDisciplinasCatalogo,
+  useAdicionarDisciplinasCatalogoSelecionadas,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Trash2, BookOpen, LayoutGrid, List } from "lucide-react";
+import { Plus, Edit, Trash2, BookOpen, LayoutGrid, List, LibraryBig } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
@@ -30,6 +32,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -39,6 +42,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useListaFiltrada } from "@/hooks/use-lista-filtrada";
 import { CampoBusca } from "@/components/campo-busca";
+import { MultiSelectBusca } from "@/components/multi-select-busca";
 import { cn } from "@/lib/utils";
 
 const CATEGORIAS = ["BNC", "PD", "FGB", "PFO", "IFA", "IF", "IFP", "APF"] as const;
@@ -328,7 +332,10 @@ export default function DisciplinasList() {
         </div>
 
         <div className="flex flex-col items-end gap-2">
-          {dialogFormulario}
+          <div className="flex gap-2">
+            <DialogCatalogo disciplinasDaEscola={disciplinas ?? []} />
+            {dialogFormulario}
+          </div>
           <div className="flex items-center gap-0.5 border border-border rounded-md p-0.5">
             <button
               type="button"
@@ -371,7 +378,9 @@ export default function DisciplinasList() {
         <div className="text-center py-12 bg-card rounded-lg border border-border">
           <BookOpen className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
           <h3 className="text-lg font-medium text-foreground">Nenhuma disciplina</h3>
-          <p className="text-sm text-muted-foreground mt-1">Crie as disciplinas que farão parte das turmas.</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Adicione disciplinas do catálogo mestre ou crie novas manualmente.
+          </p>
         </div>
       ) : disciplinasFiltradas.length === 0 ? (
         <div className="text-center py-12 bg-card rounded-lg border border-border">
@@ -470,5 +479,85 @@ export default function DisciplinasList() {
         </div>
       )}
     </div>
+  );
+}
+
+// [NOVO] Seleção do catálogo mestre — permite adicionar disciplinas já
+// com nome/SAE corretos, sem digitar do zero. Ver
+// routes/disciplinas-catalogo.ts (backend faz o filtro de duplicata
+// definitivo; aqui filtramos visualmente também, por UX).
+function DialogCatalogo({ disciplinasDaEscola }: { disciplinasDaEscola: any[] }) {
+  const [open, setOpen] = useState(false);
+  const [selecionadas, setSelecionadas] = useState<number[]>([]);
+  const { data: catalogo, isLoading } = useListDisciplinasCatalogo({ query: { enabled: open } });
+  const adicionar = useAdicionarDisciplinasCatalogoSelecionadas();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const saesDaEscola = new Set(disciplinasDaEscola.map((d) => d.codigoSae).filter(Boolean));
+  const nomesDaEscola = new Set(disciplinasDaEscola.map((d) => d.nome.trim().toLowerCase()));
+
+  const disponiveis = (catalogo ?? []).filter((item) => {
+    if (item.codigoSae && saesDaEscola.has(item.codigoSae)) return false;
+    if (!item.codigoSae && nomesDaEscola.has(item.nome.trim().toLowerCase())) return false;
+    return true;
+  });
+
+  function confirmar() {
+    if (selecionadas.length === 0) return;
+    adicionar.mutate(
+      { data: { catalogoIds: selecionadas } },
+      {
+        onSuccess: (result) => {
+          toast({
+            title: `${result.criadas.length} disciplina(s) adicionada(s)!`,
+            description: result.jaExistiam > 0 ? `${result.jaExistiam} já existia(m) e foram ignoradas.` : undefined,
+          });
+          queryClient.invalidateQueries({ queryKey: getListDisciplinasQueryKey() });
+          setSelecionadas([]);
+          setOpen(false);
+        },
+        onError: () => toast({ title: "Erro ao adicionar disciplinas", variant: "destructive" }),
+      },
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline">
+          <LibraryBig className="mr-2 h-4 w-4" />
+          Adicionar do Catálogo
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Adicionar do Catálogo Mestre</DialogTitle>
+          <DialogDescription>
+            Selecione as disciplinas oficiais (SEED-PR/SAE) que esta escola utiliza. Nomes e códigos já vêm
+            preenchidos corretamente.
+          </DialogDescription>
+        </DialogHeader>
+
+        {isLoading ? (
+          <Skeleton className="h-64 w-full" />
+        ) : (
+          <MultiSelectBusca
+            options={disponiveis.map((item) => ({ value: item.id, label: item.nome }))}
+            value={selecionadas}
+            onChange={setSelecionadas}
+            placeholder="Selecione as disciplinas do catálogo..."
+            buscarPlaceholder="Buscar por nome..."
+          />
+        )}
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button onClick={confirmar} disabled={selecionadas.length === 0 || adicionar.isPending}>
+            {adicionar.isPending ? "Adicionando..." : `Adicionar ${selecionadas.length || ""}`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
