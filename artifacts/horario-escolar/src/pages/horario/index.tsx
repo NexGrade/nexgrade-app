@@ -82,6 +82,7 @@ type Turno = "matutino" | "vespertino" | "noturno";
 
 function AbaEsquema() {
   const [turno, setTurno] = useState<Turno>("matutino");
+  const [nivelEnsino, setNivelEnsino] = useState<"fundamental" | "medio_tecnico">("fundamental");
   const [step, setStep] = useState(1);
   const [modoAvancado, setModoAvancado] = useState(false);
   const [form, setForm] = useState({
@@ -96,8 +97,8 @@ function AbaEsquema() {
   const queryClient = useQueryClient();
 
   const { data: slotsExistentes, isLoading } = useListHorarioSlots(
-    { turno },
-    { query: { queryKey: getListHorarioSlotsQueryKey({ turno }) } },
+    { turno, nivelEnsino: turno === "matutino" ? nivelEnsino : undefined },
+    { query: { queryKey: getListHorarioSlotsQueryKey({ turno, nivelEnsino: turno === "matutino" ? nivelEnsino : undefined }) } },
   );
   const salvarLote = useSetHorarioSlotsLote();
 
@@ -112,11 +113,11 @@ function AbaEsquema() {
 
   function salvarEsquema() {
     salvarLote.mutate(
-      { data: { turno, slots: slotsPreview } },
+      { data: { turno, nivelEnsino: turno === "matutino" ? nivelEnsino : undefined, slots: slotsPreview } },
       {
         onSuccess: () => {
           toast({ title: "Esquema salvo!", description: `${slotsPreview.length} aulas configuradas para o turno ${turno}.` });
-          queryClient.invalidateQueries({ queryKey: getListHorarioSlotsQueryKey({ turno }) });
+          queryClient.invalidateQueries({ queryKey: getListHorarioSlotsQueryKey({ turno, nivelEnsino: turno === "matutino" ? nivelEnsino : undefined }) });
         },
         onError: () => toast({ title: "Erro ao salvar esquema", variant: "destructive" }),
       },
@@ -132,6 +133,16 @@ function AbaEsquema() {
           </Button>
         ))}
       </div>
+      {turno === "matutino" && (
+        <div className="flex gap-2">
+          <Button variant={nivelEnsino === "fundamental" ? "default" : "outline"} size="sm" onClick={() => { setNivelEnsino("fundamental"); setStep(1); }}>
+            Fundamental (6o-9o ano)
+          </Button>
+          <Button variant={nivelEnsino === "medio_tecnico" ? "default" : "outline"} size="sm" onClick={() => { setNivelEnsino("medio_tecnico"); setStep(1); }}>
+            Medio/Tecnico (1a-3a serie)
+          </Button>
+        </div>
+      )}
 
       {isLoading ? (
         <Skeleton className="h-[400px] w-full" />
@@ -972,6 +983,11 @@ function AbaExperimental() {
     </div>
   );
 }
+
+
+
+
+
 
 
 
