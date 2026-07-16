@@ -1,4 +1,4 @@
-openapi: 3.1.0
+﻿openapi: 3.1.0
 info:
   title: Api
   version: 0.2.0
@@ -1995,6 +1995,7 @@ components:
       properties:
         id: { type: integer }
         turno: { type: string, enum: [matutino, vespertino, noturno] }
+        nivelEnsino: { type: string, enum: [fundamental, medio_tecnico], nullable: true }
         numeroAula: { type: integer, minimum: 1 }
         horaInicio: { type: string, description: "Formato HH:MM ou HH:MM:SS" }
         duracaoMinutos: { type: integer, default: 50 }
@@ -2004,6 +2005,7 @@ components:
       required: [turno, numeroAula, horaInicio]
       properties:
         turno: { type: string, enum: [matutino, vespertino, noturno] }
+        nivelEnsino: { type: string, enum: [fundamental, medio_tecnico], nullable: true }
         numeroAula: { type: integer, minimum: 1 }
         horaInicio: { type: string, description: "Formato HH:MM ou HH:MM:SS" }
         duracaoMinutos: { type: integer, default: 50 }
@@ -2013,6 +2015,7 @@ components:
       required: [turno, slots]
       properties:
         turno: { type: string, enum: [matutino, vespertino, noturno] }
+        nivelEnsino: { type: string, enum: [fundamental, medio_tecnico], nullable: true }
         slots:
           type: array
           items:
@@ -2447,4 +2450,7 @@ components:
         totalAulasDistribuidas: { type: integer }
         totalUsuarios: { type: integer }
         mensagensEnviadasParaIA: { type: integer }
+
+
+
 

@@ -483,9 +483,18 @@ export const EsquemaHorarioSlotTurno = {
   noturno: 'noturno',
 } as const;
 
+export type EsquemaHorarioSlotNivelEnsino = typeof EsquemaHorarioSlotNivelEnsino[keyof typeof EsquemaHorarioSlotNivelEnsino] | null;
+
+
+export const EsquemaHorarioSlotNivelEnsino = {
+  fundamental: 'fundamental',
+  medio_tecnico: 'medio_tecnico',
+} as const;
+
 export interface EsquemaHorarioSlot {
   id: number;
   turno: EsquemaHorarioSlotTurno;
+  nivelEnsino?: EsquemaHorarioSlotNivelEnsino;
   /** @minimum 1 */
   numeroAula: number;
   /** Formato HH:MM ou HH:MM:SS */
@@ -502,8 +511,17 @@ export const EsquemaHorarioSlotInputTurno = {
   noturno: 'noturno',
 } as const;
 
+export type EsquemaHorarioSlotInputNivelEnsino = typeof EsquemaHorarioSlotInputNivelEnsino[keyof typeof EsquemaHorarioSlotInputNivelEnsino] | null;
+
+
+export const EsquemaHorarioSlotInputNivelEnsino = {
+  fundamental: 'fundamental',
+  medio_tecnico: 'medio_tecnico',
+} as const;
+
 export interface EsquemaHorarioSlotInput {
   turno: EsquemaHorarioSlotInputTurno;
+  nivelEnsino?: EsquemaHorarioSlotInputNivelEnsino;
   /** @minimum 1 */
   numeroAula: number;
   /** Formato HH:MM ou HH:MM:SS */
@@ -520,6 +538,14 @@ export const EsquemaHorarioSlotLoteInputTurno = {
   noturno: 'noturno',
 } as const;
 
+export type EsquemaHorarioSlotLoteInputNivelEnsino = typeof EsquemaHorarioSlotLoteInputNivelEnsino[keyof typeof EsquemaHorarioSlotLoteInputNivelEnsino] | null;
+
+
+export const EsquemaHorarioSlotLoteInputNivelEnsino = {
+  fundamental: 'fundamental',
+  medio_tecnico: 'medio_tecnico',
+} as const;
+
 export type EsquemaHorarioSlotLoteInputSlotsItem = {
   /** @minimum 1 */
   numeroAula: number;
@@ -530,6 +556,7 @@ export type EsquemaHorarioSlotLoteInputSlotsItem = {
 
 export interface EsquemaHorarioSlotLoteInput {
   turno: EsquemaHorarioSlotLoteInputTurno;
+  nivelEnsino?: EsquemaHorarioSlotLoteInputNivelEnsino;
   slots: EsquemaHorarioSlotLoteInputSlotsItem[];
 }
 
