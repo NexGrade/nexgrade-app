@@ -11,8 +11,9 @@ import {
   disponibilidadeTable,
   limitesDiariosProfessorTable,
   configuracoesTable,
+  horarioSlotsTable,
 } from "@workspace/db";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, isNull } from "drizzle-orm";
 import {
   CreateHorarioBody,
   DeleteHorarioParams,
@@ -33,12 +34,18 @@ async function enrichSlot(slot: typeof horariosTable.$inferSelect) {
   return { ...slot, disciplina, professor, turma };
 }
 
-// ── ALGORITHM ─────────────────────────────────────────────────────────
+// ── ALGORITHM ────────────────────────────────────────────────────────
 
 export interface GerarOpts {
   escolaId: string;
   turmaId: number;
-  aulaspordia: number;
+  // [DEPRECADO] Não é mais usado para decidir quantas aulas por dia
+  // existem — isso agora vem de horario_slots, calculado automaticamente
+  // a partir do turno + nivelEnsino da turma (ver busca de
+  // `aulasPorDiaReal` abaixo). Mantido opcional só para não quebrar
+  // chamadas antigas (ex.: routes/ai.ts) que ainda possam enviar esse
+  // campo — o valor recebido é ignorado.
+  aulaspordia?: number;
   substituir: boolean;
   reduzirJanelas: boolean;
   fatorPedagogico: boolean;
@@ -57,7 +64,7 @@ const DEFAULT_MAX_GEMINADAS = 2;
 
 export async function gerarAlgoritmo(opts: GerarOpts) {
   const {
-    escolaId, turmaId, aulaspordia, substituir, reduzirJanelas,
+    escolaId, turmaId, substituir, reduzirJanelas,
     fatorPedagogico, compactarCargaHoraria = false, experimental, nomeExperimental,
   } = opts;
   const useExperimental = experimental && nomeExperimental;
@@ -69,6 +76,33 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     .where(and(eq(turmasTable.id, turmaId), eq(turmasTable.escolaId, escolaId)))
     .then(r => r[0]);
   if (!turma) throw new Error("Turma não encontrada");
+
+  // [NOVO] A quantidade real de aulas por dia vem de horario_slots, não
+  // mais de um número digitado no formulário — evita o erro comum de
+  // gerar horário noturno pedindo 6 aulas (só existem 5) ou matutino
+  // Fundamental pedindo 6 (só existem 5; só Médio/Técnico tem 6).
+  // Matutino tem dois esquemas reais diferentes dependendo do nível de
+  // ensino da turma; vespertino e noturno são uniformes (nivelEnsino
+  // nulo na tabela).
+  if (turma.turno === "matutino" && !turma.nivelEnsino) {
+    throw new Error(
+      "Esta turma não tem o nível de ensino definido (Fundamental ou Médio/Técnico), necessário para saber se o " +
+      "esquema matutino tem 5 ou 6 aulas por dia. Defina o nível de ensino da turma antes de gerar o horário.",
+    );
+  }
+  const condicaoNivel = turma.turno === "matutino"
+    ? eq(horarioSlotsTable.nivelEnsino, turma.nivelEnsino!)
+    : isNull(horarioSlotsTable.nivelEnsino);
+  const slotsDoTurno = await db.select().from(horarioSlotsTable)
+    .where(and(eq(horarioSlotsTable.turno, turma.turno), condicaoNivel));
+  if (slotsDoTurno.length === 0) {
+    throw new Error(
+      `Nenhum esquema de horário configurado para o turno "${turma.turno}"` +
+      (turma.turno === "matutino" ? ` (nível: ${turma.nivelEnsino})` : "") +
+      ". Configure o esquema de horários antes de gerar.",
+    );
+  }
+  const aulasPorDiaReal = slotsDoTurno.length;
 
   const [turmaDiscs, disciplinas, professores, profDiscs, configGeminadas, limitesProfessor] = await Promise.all([
     db.select().from(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.turmaId, turmaId)),
@@ -200,7 +234,10 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
 
   const DIAS = [0, 1, 2, 3, 4];
   const diasBase = fatorPedagogico ? [1, 3, 2, 4, 0] : DIAS;
-  const AULAS = Array.from({ length: aulaspordia }, (_, i) => i + 1);
+  // [ALTERADO] Antes vinha de `opts.aulaspordia` (digitado no
+  // formulário); agora vem de `aulasPorDiaReal`, calculado acima a
+  // partir de horario_slots — reflete o esquema real da turma.
+  const AULAS = Array.from({ length: aulasPorDiaReal }, (_, i) => i + 1);
 
   // RF-TUR-02: a carga horária efetiva de uma disciplina NESTA turma é o
   // override vindo da Matriz Curricular aplicada (ver
@@ -383,7 +420,7 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
   return { slotsGerados: gravados.length, conflitos, horario: enriched };
 }
 
-// ── ROUTES ────────────────────────────────────────────────────────────
+// ── ROUTES ───────────────────────────────────────────────────────────
 
 router.post("/gerar", async (req, res) => {
   const escolaId = getEscolaId(req);
@@ -407,7 +444,10 @@ router.post("/gerar", async (req, res) => {
     const result = await gerarAlgoritmo({
       escolaId,
       turmaId: data.turmaId,
-      aulaspordia: data.aulaspordia ?? 5,
+      // [DEPRECADO] aulaspordia nao e mais usado internamente (ver
+      // gerarAlgoritmo) -- mantido apenas para nao quebrar o contrato da
+      // API para clientes antigos que ainda enviem esse campo.
+      aulaspordia: data.aulaspordia,
       substituir: data.substituir ?? false,
       reduzirJanelas: data.reduzirJanelas ?? false,
       fatorPedagogico: data.fatorPedagogico ?? false,

@@ -37,8 +37,11 @@ export default function TurmaHorario() {
   const [openOpcoes, setOpenOpcoes] = useState(false);
   // Mesmos defaults ja usados no Modo Experimental (horario/index.tsx),
   // pra manter consistencia entre as duas telas de geracao.
+  // [ALTERADO] "aulaspordia" nao existe mais aqui -- o backend calcula
+  // isso sozinho a partir de horario_slots (turno + nivelEnsino da
+  // turma), evitando o erro de pedir 6 aulas numa turma que so tem 5
+  // (ou vice-versa).
   const [opcoes, setOpcoes] = useState({
-    aulaspordia: 5,
     reduzirJanelas: true,
     fatorPedagogico: false,
     compactarCargaHoraria: false,
@@ -50,7 +53,6 @@ export default function TurmaHorario() {
         data: {
           turmaId,
           substituir: true,
-          aulaspordia: opcoes.aulaspordia,
           reduzirJanelas: opcoes.reduzirJanelas,
           fatorPedagogico: opcoes.fatorPedagogico,
           compactarCargaHoraria: opcoes.compactarCargaHoraria,
@@ -129,19 +131,10 @@ export default function TurmaHorario() {
             </DialogHeader>
 
             <div className="space-y-4 py-2">
-              <div className="space-y-1.5">
-                <Label>Aulas por dia</Label>
-                <Select
-                  value={String(opcoes.aulaspordia)}
-                  onValueChange={(v) => setOpcoes((o) => ({ ...o, aulaspordia: Number(v) }))}
-                >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {[4, 5, 6, 7, 8].map((n) => (
-                      <SelectItem key={n} value={String(n)}>{n} aulas/dia</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 rounded-md p-2.5">
+                <Settings2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                A quantidade de aulas por dia é calculada automaticamente pelo esquema de horário configurado
+                para o turno e nível de ensino desta turma.
               </div>
 
               <div className="flex items-center justify-between py-1">
