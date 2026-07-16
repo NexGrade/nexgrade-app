@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarDays, GraduationCap, BarChart3, CheckCircle2, AlertTriangle, ChevronLeft, ChevronRight, Info } from "lucide-react";
+import { CalendarDays, GraduationCap, BarChart3, CheckCircle2, AlertTriangle, ChevronLeft, ChevronRight, Circle } from "lucide-react";
 
 const TIPO_LABELS: Record<string, { label: string; color: string; dot: string }> = {
   feriado: { label: "Feriado", color: "bg-red-100 text-red-700", dot: "bg-red-500" },
@@ -75,13 +75,18 @@ export default function CalendarioEscolarPage() {
   const { data: cargaHoraria = [], isLoading: loadingCarga } = useListCargaHoraria({ ano });
 
   const totalDiasLetivos = trimestres.reduce((soma, t) => soma + t.diasLetivos, 0);
-  const disciplinasInsuficientes = cargaHoraria.filter((c) => c.status === "insuficiente").length;
 
-  // Enquanto nenhuma turma tem horário gerado ainda, TODA disciplina
-  // aparece com totalCumprido = 0 — isso não é um problema de dado, é
-  // esperado nesta fase do projeto. Mostrar isso como alerta antes de
-  // existir qualquer horário gerado é ruído, não informação útil.
-  const nenhumHorarioGeradoAinda = cargaHoraria.length > 0 && cargaHoraria.every((c) => c.totalCumprido === 0);
+  // [FIX] Antes a condicao considerava a lista inteira "sem horario
+  // gerado" só se TODAS as disciplinas do sistema tivessem
+  // totalCumprido = 0 — bastava UMA disciplina de UMA turma ja ter
+  // algum horario gerado (de teste antigo, por exemplo) pra essa
+  // condicao nunca ser verdadeira, e o alarme completo voltava a
+  // aparecer pra todo o resto. Agora a distincao e por LINHA: cada
+  // disciplina que nunca teve horario gerado mostra um badge neutro
+  // "Nao gerado ainda"; só disciplinas que JA tem horario gerado e
+  // mesmo assim estao abaixo do exigido contam como alerta de verdade.
+  const disciplinasComAlertaReal = cargaHoraria.filter((c) => c.totalCumprido > 0 && c.status === "insuficiente");
+  const disciplinasSemGeracao = cargaHoraria.filter((c) => c.totalCumprido === 0);
 
   const eventosPorDia = useMemo(() => {
     const mapa = new Map<string, Evento[]>();
@@ -161,23 +166,18 @@ export default function CalendarioEscolarPage() {
             <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
           ) : cargaHoraria.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">Nenhuma turma com disciplinas vinculadas para {ano}.</p>
-          ) : nenhumHorarioGeradoAinda ? (
-            <div className="flex items-start gap-3 py-8 px-4 rounded-lg bg-muted/40 text-muted-foreground">
-              <Info className="w-5 h-5 shrink-0 mt-0.5 text-[#1565C0]" />
-              <div>
-                <p className="text-sm font-medium text-foreground">Nenhum horário gerado ainda</p>
-                <p className="text-sm mt-1">
-                  Gere os horários das turmas para acompanhar aqui o cumprimento da carga horária anual exigida
-                  pela SEED-PR. Esse painel fica disponível assim que a primeira turma tiver horário gerado.
-                </p>
-              </div>
-            </div>
           ) : (
             <>
-              {disciplinasInsuficientes > 0 && (
-                <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg bg-amber-50 text-amber-800 text-sm">
+              {disciplinasComAlertaReal.length > 0 && (
+                <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-amber-50 text-amber-800 text-sm">
                   <AlertTriangle className="w-4 h-4 shrink-0" />
-                  {disciplinasInsuficientes} disciplina{disciplinasInsuficientes > 1 ? "s" : ""} abaixo da carga horária exigida no ano.
+                  {disciplinasComAlertaReal.length} disciplina{disciplinasComAlertaReal.length > 1 ? "s" : ""} com horário gerado, mas abaixo da carga horária exigida no ano.
+                </div>
+              )}
+              {disciplinasSemGeracao.length > 0 && (
+                <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg bg-muted/50 text-muted-foreground text-sm">
+                  <Circle className="w-3.5 h-3.5 shrink-0" />
+                  {disciplinasSemGeracao.length} disciplina{disciplinasSemGeracao.length > 1 ? "s" : ""} ainda sem horário gerado (não conta como insuficiência).
                 </div>
               )}
               <div className="divide-y divide-border rounded-lg border border-border/50">
@@ -189,7 +189,11 @@ export default function CalendarioEscolarPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-sm text-muted-foreground">{c.totalCumprido} / {c.totalExigido} aulas no ano</span>
-                      {c.status === "ok" ? (
+                      {c.totalCumprido === 0 ? (
+                        <Badge variant="outline" className="text-muted-foreground border-border flex items-center gap-1">
+                          <Circle className="w-3 h-3" /> Não gerado
+                        </Badge>
+                      ) : c.status === "ok" ? (
                         <Badge className="bg-green-100 text-green-700 border-0 flex items-center gap-1">
                           <CheckCircle2 className="w-3 h-3" /> OK
                         </Badge>
