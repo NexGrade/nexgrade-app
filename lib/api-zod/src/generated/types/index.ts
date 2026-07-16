@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.2.0
  */
 
+export * from './adicionarDisciplinasCatalogoInput';
+export * from './adicionarDisciplinasCatalogoResponse';
 export * from './aplicarMatrizInput';
 export * from './atualizarCodigoMatrizInput';
 export * from './auditLog';
@@ -30,6 +32,8 @@ export * from './cursoInput';
 export * from './cursoInputNivel';
 export * from './cursoNivel';
 export * from './disciplina';
+export * from './disciplinaCatalogo';
+export * from './disciplinaCatalogoCategoriaCurricularPadrao';
 export * from './disciplinaCategoriaCurricularPadrao';
 export * from './disciplinaConfigTurma';
 export * from './disciplinaInput';

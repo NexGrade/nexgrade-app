@@ -188,6 +188,36 @@ paths:
               schema:
                 $ref: "#/components/schemas/Disciplina"
 
+  /disciplinas-catalogo:
+    get:
+      operationId: listDisciplinasCatalogo
+      tags: [disciplinas-catalogo]
+      responses:
+        "200":
+          description: Lista do catalogo mestre
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DisciplinaCatalogo"
+  /disciplinas-catalogo/adicionar-selecionadas:
+    post:
+      operationId: adicionarDisciplinasCatalogoSelecionadas
+      tags: [disciplinas-catalogo]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdicionarDisciplinasCatalogoInput"
+      responses:
+        "201":
+          description: Disciplinas adicionadas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdicionarDisciplinasCatalogoResponse"
   /disciplinas/{id}:
     get:
       operationId: getDisciplina
@@ -1989,6 +2019,32 @@ components:
               motivo: { type: string }
               turno: { type: string, enum: [matutino, vespertino, noturno] }
               horaAtividadeObrigatoria: { type: boolean, default: false }
+    DisciplinaCatalogo:
+      type: object
+      required: [id, nome, cargaSemanalSugerida]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        codigoSae: { type: string, nullable: true }
+        categoriaCurricularPadrao: { type: string, enum: [BNC, PD, FGB, PFO, IFA, IF, IFP, APF], nullable: true }
+        cargaSemanalSugerida: { type: integer, default: 2 }
+        tipoSalaExigido: { type: string, nullable: true }
+    AdicionarDisciplinasCatalogoInput:
+      type: object
+      required: [catalogoIds]
+      properties:
+        catalogoIds:
+          type: array
+          items: { type: integer }
+    AdicionarDisciplinasCatalogoResponse:
+      type: object
+      required: [criadas, jaExistiam]
+      properties:
+        criadas:
+          type: array
+          items:
+            $ref: "#/components/schemas/Disciplina"
+        jaExistiam: { type: integer }
     EsquemaHorarioSlot:
       type: object
       required: [id, turno, numeroAula, horaInicio, duracaoMinutos]
@@ -2450,6 +2506,8 @@ components:
         totalAulasDistribuidas: { type: integer }
         totalUsuarios: { type: integer }
         mensagensEnviadasParaIA: { type: integer }
+
+
 
 
 

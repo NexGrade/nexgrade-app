@@ -152,6 +152,38 @@ export const CreateDisciplinaResponse = zod.object({
 })
 
 
+export const listDisciplinasCatalogoResponseCargaSemanalSugeridaDefault = 2;
+
+export const ListDisciplinasCatalogoResponseItem = zod.object({
+  "id": zod.number(),
+  "nome": zod.string(),
+  "codigoSae": zod.string().nullish(),
+  "categoriaCurricularPadrao": zod.enum(['BNC', 'PD', 'FGB', 'PFO', 'IFA', 'IF', 'IFP', 'APF']).nullish(),
+  "cargaSemanalSugerida": zod.number().default(listDisciplinasCatalogoResponseCargaSemanalSugeridaDefault),
+  "tipoSalaExigido": zod.string().nullish()
+})
+export const ListDisciplinasCatalogoResponse = zod.array(ListDisciplinasCatalogoResponseItem)
+
+
+export const AdicionarDisciplinasCatalogoSelecionadasBody = zod.object({
+  "catalogoIds": zod.array(zod.number())
+})
+
+export const AdicionarDisciplinasCatalogoSelecionadasResponse = zod.object({
+  "criadas": zod.array(zod.object({
+  "id": zod.number(),
+  "nome": zod.string(),
+  "cargaSemanal": zod.number(),
+  "cor": zod.string(),
+  "codigoSae": zod.string().nullish().describe('CÃ³digo SAE oficial (SEED-PR), quando conhecido.'),
+  "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
+  "categoriaCurricularPadrao": zod.union([zod.literal('BNC'),zod.literal('PD'),zod.literal('FGB'),zod.literal('PFO'),zod.literal('IFA'),zod.literal('IF'),zod.literal('IFP'),zod.literal('APF'),zod.literal(null)]).nullish().describe('Categoria curricular fixa desta disciplina (nula = flexivel, elegivel para qualquer categoria).'),
+  "createdAt": zod.string()
+})),
+  "jaExistiam": zod.number()
+})
+
+
 export const GetDisciplinaParams = zod.object({
   "id": zod.coerce.number()
 })

@@ -1,6 +1,7 @@
-import { Router, type IRouter } from "express";
+﻿import { Router, type IRouter } from "express";
 import professoresRouter from "./professores";
 import disciplinasRouter from "./disciplinas";
+import disciplinasCatalogoRouter from "./disciplinas-catalogo";
 import turmasRouter from "./turmas";
 import horariosRouter from "./horarios";
 import statsRouter from "./stats";
@@ -27,6 +28,7 @@ const router: IRouter = Router();
 
 router.use("/professores", professoresRouter);
 router.use("/disciplinas", disciplinasRouter);
+router.use("/disciplinas-catalogo", disciplinasCatalogoRouter);
 router.use("/turmas", turmasRouter);
 router.use("/horarios", horariosRouter);
 router.use("/stats", statsRouter);
@@ -50,3 +52,5 @@ router.use("/aulas-fixas", aulasFixasRouter);
 router.use("/limites-diarios-professor", limitesDiariosProfessorRouter);
 
 export default router;
+
+

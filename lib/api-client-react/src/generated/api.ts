@@ -20,6 +20,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AdicionarDisciplinasCatalogoInput,
+  AdicionarDisciplinasCatalogoResponse,
   AplicarMatrizInput,
   AtualizarCodigoMatrizInput,
   AuditLog,
@@ -36,6 +38,7 @@ import type {
   Curso,
   CursoInput,
   Disciplina,
+  DisciplinaCatalogo,
   DisciplinaInput,
   DisciplinaUpdate,
   Disponibilidade,
@@ -758,6 +761,141 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getCreateDisciplinaMutationOptions(options));
+    }
+
+export const getListDisciplinasCatalogoUrl = () => {
+
+
+
+
+  return `/api/disciplinas-catalogo`
+}
+
+export const listDisciplinasCatalogo = async ( options?: RequestInit): Promise<DisciplinaCatalogo[]> => {
+
+  return customFetch<DisciplinaCatalogo[]>(getListDisciplinasCatalogoUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListDisciplinasCatalogoQueryKey = () => {
+    return [
+    `/api/disciplinas-catalogo`
+    ] as const;
+    }
+
+
+export const getListDisciplinasCatalogoQueryOptions = <TData = Awaited<ReturnType<typeof listDisciplinasCatalogo>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDisciplinasCatalogo>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListDisciplinasCatalogoQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listDisciplinasCatalogo>>> = ({ signal }) => listDisciplinasCatalogo({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listDisciplinasCatalogo>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListDisciplinasCatalogoQueryResult = NonNullable<Awaited<ReturnType<typeof listDisciplinasCatalogo>>>
+export type ListDisciplinasCatalogoQueryError = ErrorType<unknown>
+
+
+
+export function useListDisciplinasCatalogo<TData = Awaited<ReturnType<typeof listDisciplinasCatalogo>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDisciplinasCatalogo>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListDisciplinasCatalogoQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getAdicionarDisciplinasCatalogoSelecionadasUrl = () => {
+
+
+
+
+  return `/api/disciplinas-catalogo/adicionar-selecionadas`
+}
+
+export const adicionarDisciplinasCatalogoSelecionadas = async (adicionarDisciplinasCatalogoInput: AdicionarDisciplinasCatalogoInput, options?: RequestInit): Promise<AdicionarDisciplinasCatalogoResponse> => {
+
+  return customFetch<AdicionarDisciplinasCatalogoResponse>(getAdicionarDisciplinasCatalogoSelecionadasUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(adicionarDisciplinasCatalogoInput)
+  }
+);}
+
+
+
+
+export const getAdicionarDisciplinasCatalogoSelecionadasMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adicionarDisciplinasCatalogoSelecionadas>>, TError,{data: BodyType<AdicionarDisciplinasCatalogoInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adicionarDisciplinasCatalogoSelecionadas>>, TError,{data: BodyType<AdicionarDisciplinasCatalogoInput>}, TContext> => {
+
+const mutationKey = ['adicionarDisciplinasCatalogoSelecionadas'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adicionarDisciplinasCatalogoSelecionadas>>, {data: BodyType<AdicionarDisciplinasCatalogoInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adicionarDisciplinasCatalogoSelecionadas(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdicionarDisciplinasCatalogoSelecionadasMutationResult = NonNullable<Awaited<ReturnType<typeof adicionarDisciplinasCatalogoSelecionadas>>>
+    export type AdicionarDisciplinasCatalogoSelecionadasMutationBody = BodyType<AdicionarDisciplinasCatalogoInput>
+    export type AdicionarDisciplinasCatalogoSelecionadasMutationError = ErrorType<unknown>
+
+    export const useAdicionarDisciplinasCatalogoSelecionadas = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adicionarDisciplinasCatalogoSelecionadas>>, TError,{data: BodyType<AdicionarDisciplinasCatalogoInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adicionarDisciplinasCatalogoSelecionadas>>,
+        TError,
+        {data: BodyType<AdicionarDisciplinasCatalogoInput>},
+        TContext
+      > => {
+      return useMutation(getAdicionarDisciplinasCatalogoSelecionadasMutationOptions(options));
     }
 
 export const getGetDisciplinaUrl = (id: number,) => {

@@ -474,6 +474,38 @@ export interface DisponibilidadeLoteInput {
   itens: DisponibilidadeLoteInputItensItem[];
 }
 
+export type DisciplinaCatalogoCategoriaCurricularPadrao = typeof DisciplinaCatalogoCategoriaCurricularPadrao[keyof typeof DisciplinaCatalogoCategoriaCurricularPadrao] | null;
+
+
+export const DisciplinaCatalogoCategoriaCurricularPadrao = {
+  BNC: 'BNC',
+  PD: 'PD',
+  FGB: 'FGB',
+  PFO: 'PFO',
+  IFA: 'IFA',
+  IF: 'IF',
+  IFP: 'IFP',
+  APF: 'APF',
+} as const;
+
+export interface DisciplinaCatalogo {
+  id: number;
+  nome: string;
+  codigoSae?: string | null;
+  categoriaCurricularPadrao?: DisciplinaCatalogoCategoriaCurricularPadrao;
+  cargaSemanalSugerida: number;
+  tipoSalaExigido?: string | null;
+}
+
+export interface AdicionarDisciplinasCatalogoInput {
+  catalogoIds: number[];
+}
+
+export interface AdicionarDisciplinasCatalogoResponse {
+  criadas: Disciplina[];
+  jaExistiam: number;
+}
+
 export type EsquemaHorarioSlotTurno = typeof EsquemaHorarioSlotTurno[keyof typeof EsquemaHorarioSlotTurno];
 
 
