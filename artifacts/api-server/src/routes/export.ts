@@ -361,9 +361,15 @@ router.get("/relatorio-carga-pdf", async (req, res) => {
 
   const relatorio: RelatorioProfessor[] = professores.map((prof) => {
     const slotsDoProf = slots.filter((s) => s.professorId === prof.id);
-    const turnosPresentes = [...new Set(
-      slotsDoProf.map((s) => turmas.find((t) => t.id === s.turmaId)?.turno).filter((t): t is string => !!t)
-    )].sort((a, b) => ORDEM_TURNO.indexOf(a) - ORDEM_TURNO.indexOf(b));
+    // [FIX] antes só olhava as turmas das AULAS pra descobrir quais
+    // turnos mostrar -- um professor com HA institucional num turno
+    // onde ele não dá nenhuma aula (ex.: Simone, HA na tarde sem
+    // nenhuma aula lá) ficava com aquele período inteiro sumindo do
+    // relatório, mesmo a HA estando certinha no banco. Agora também
+    // conta os turnos que aparecem só na disponibilidade (HA).
+    const turnosDasAulas = slotsDoProf.map((s) => turmas.find((t) => t.id === s.turmaId)?.turno).filter((t): t is string => !!t);
+    const turnosDaHa = disponibilidades.filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && d.turno).map((d) => d.turno as string);
+    const turnosPresentes = [...new Set([...turnosDasAulas, ...turnosDaHa])].sort((a, b) => ORDEM_TURNO.indexOf(a) - ORDEM_TURNO.indexOf(b));
 
     const periodos = turnosPresentes.map((turno) => {
       const slotsTurno = slotsDoProf.filter((s) => turmas.find((t) => t.id === s.turmaId)?.turno === turno);
