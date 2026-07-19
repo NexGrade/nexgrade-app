@@ -1,6 +1,5 @@
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-
 export function CampoBusca({
   value,
   onChange,
@@ -23,6 +22,7 @@ export function CampoBusca({
       />
       {value && (
         <button
+          type="button"
           onClick={() => onChange("")}
           className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
         >
