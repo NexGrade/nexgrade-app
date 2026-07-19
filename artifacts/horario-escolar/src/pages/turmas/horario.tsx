@@ -1,4 +1,4 @@
-import { useGetTurma, useGetTurmaHorario, useGerarHorario, getGetTurmaHorarioQueryKey, useListCursos, useListMatrizesCurriculares, getListMatrizesCurricularesQueryKey, useAplicarMatrizTurma, getGetTurmaQueryKey } from "@workspace/api-client-react";
+﻿import { useGetTurma, useGetTurmaHorario, useGerarHorario, getGetTurmaHorarioQueryKey, useListCursos, useListMatrizesCurriculares, getListMatrizesCurricularesQueryKey, useAplicarMatrizTurma, getGetTurmaQueryKey } from "@workspace/api-client-react";
 import { useParams } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -81,8 +81,11 @@ export default function TurmaHorario() {
     );
   };
 
-  const getSlot = (diaSemana: number, numeroAula: number) => {
-    return horarioSlots?.find(s => s.diaSemana === diaSemana && s.numeroAula === numeroAula);
+  // [FIX] Retorna TODOS os horarios do slot (nao so o primeiro) -- em
+  // co-docencia, duas linhas compartilham o mesmo dia+aula com
+  // professores diferentes.
+  const getSlots = (diaSemana: number, numeroAula: number) => {
+    return horarioSlots?.filter(s => s.diaSemana === diaSemana && s.numeroAula === numeroAula) ?? [];
   };
 
   const getMaxAulasTurma = () => {
@@ -218,7 +221,9 @@ export default function TurmaHorario() {
                   </div>
 
                   {Array.from({ length: 5 }).map((_, colIndex) => {
-                    const slot = getSlot(colIndex, aulaNum);
+                    const slotsAqui = getSlots(colIndex, aulaNum);
+                    const slot = slotsAqui[0];
+                    const nomesProfessores = slotsAqui.map(s => s.professor?.nome || "Sem professor").join(" + ");
 
                     if (!slot) {
                       return (
@@ -247,7 +252,7 @@ export default function TurmaHorario() {
 
                           <div className="mt-2 text-xs font-medium text-foreground/80 flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-foreground/30"></span>
-                            <span className="truncate">{slot.professor?.nome || 'Sem professor'}</span>
+                            <span className="truncate">{nomesProfessores}</span>
                           </div>
                         </div>
                       </div>
@@ -364,3 +369,7 @@ function MatrizCurricularCard({
     </Card>
   );
 }
+
+
+
+
