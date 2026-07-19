@@ -54,7 +54,7 @@ function desenharCabecalhoPagina(page: PDFPage, fontBold: PDFFont, font: PDFFont
 function alturaDoBloco(bloco: BlocoGrade, alturaLinhaDado: number, alturaLinhaCabecalho: number): number {
   const aulas = [...new Set(bloco.slots.map((s) => s.numeroAula))];
   const numLinhas = Math.max(aulas.length, bloco.horariosPorAula ? Object.keys(bloco.horariosPorAula).length : 0, 5);
-  return 14 /* rótulo */ + alturaLinhaCabecalho + numLinhas * alturaLinhaDado + 10 /* espaço entre blocos */;
+  return 6 /* rótulo (bem colado na propria tabela) */ + alturaLinhaCabecalho + numLinhas * alturaLinhaDado + 18 /* espaço entre blocos, maior que o rotulo pra ficar claro qual tabela é de quem */;
 }
 
 function desenharBloco(
@@ -72,7 +72,7 @@ function desenharBloco(
 
   // Rótulo do bloco ("Turma: 8MA" ou nome do professor)
   page.drawText(bloco.rotulo, { x: MARGEM, y: yTopo, size: 9.5, font: fontBold, color: AZUL_ESCURO });
-  let y = yTopo - 14;
+  let y = yTopo - 6;
 
   const aulasNumeros = bloco.horariosPorAula
     ? Object.keys(bloco.horariosPorAula).map(Number).sort((a, b) => a - b)
@@ -172,4 +172,6 @@ export async function gerarPdfGradeCompacta(
 }
 
 export type { BlocoGrade, SlotGrade };
+
+
 
