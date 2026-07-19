@@ -214,14 +214,31 @@ router.get("/grade-pdf/turma", async (req, res) => {
   const blocos: BlocoGrade[] = await Promise.all(turmas.map(async (turma) => ({
     rotulo: `Turma: ${turma.nome}`,
     horariosPorAula: await buscarHorariosPorAula(escolaId, turma.turno, turma.nivelEnsino),
-    slots: slots
-      .filter((s) => s.turmaId === turma.id)
-      .map((s) => ({
-        diaSemana: s.diaSemana,
-        numeroAula: s.numeroAula,
-        linha1: siglaOuFallback(disciplinas.find((d) => d.id === s.disciplinaId)),
-        linha2: primeiroNome(professores.find((p) => p.id === s.professorId)?.nome ?? "?"),
-      })),
+    slots: (() => {
+      // [FIX] Agrupa por dia+aula antes de montar a celula -- quando ha
+      // co-docencia (duas linhas de horario para o mesmo turma+dia+aula,
+      // um professor_id diferente cada), junta os nomes numa celula so
+      // em vez de mostrar so o primeiro registro.
+      const slotsDaTurma = slots.filter((s) => s.turmaId === turma.id);
+      const agrupado = new Map<string, typeof slotsDaTurma>();
+      slotsDaTurma.forEach((s) => {
+        const chave = `${s.diaSemana}-${s.numeroAula}`;
+        if (!agrupado.has(chave)) agrupado.set(chave, []);
+        agrupado.get(chave)!.push(s);
+      });
+      return [...agrupado.values()].map((grupo) => {
+        const primeiro = grupo[0]!;
+        const nomesProfessores = grupo
+          .map((s) => primeiroNome(professores.find((p) => p.id === s.professorId)?.nome ?? "?"))
+          .join(" + ");
+        return {
+          diaSemana: primeiro.diaSemana,
+          numeroAula: primeiro.numeroAula,
+          linha1: siglaOuFallback(disciplinas.find((d) => d.id === primeiro.disciplinaId)),
+          linha2: nomesProfessores,
+        };
+      });
+    })(),
   })));
 
   const pdfBytes = await gerarPdfGradeCompacta(NOME_ESCOLA, "Grade Horária por Turma", intervaloSemanaAtual(), blocos);
@@ -297,6 +314,7 @@ router.get("/grade-pdf/professor", async (req, res) => {
 });
 
 export default router;
+
 
 
 
