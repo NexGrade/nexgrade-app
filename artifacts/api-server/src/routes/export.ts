@@ -62,6 +62,11 @@ async function buscarHorariosPorAula(
     .where(and(eq(horarioSlotsTable.escolaId, escolaId), eq(horarioSlotsTable.turno, turno), condicaoNivel));
   const mapa: Record<number, string> = {};
   rows.forEach((r) => { mapa[r.numeroAula] = r.horaInicio.slice(0, 5); });
+  // [NOVO] O turno noturno sempre mostra 18:00 no topo da grade, mesmo
+  // sem nenhuma aula real ali -- e o padrao visual do proprio Urania.
+  // numeroAula 0 nunca e usado por aula de verdade, entao essa linha
+  // sempre aparece vazia.
+  if (turno === "noturno") mapa[0] = "18:00";
   return mapa;
 }
 
@@ -314,6 +319,7 @@ router.get("/grade-pdf/professor", async (req, res) => {
 });
 
 export default router;
+
 
 
 
