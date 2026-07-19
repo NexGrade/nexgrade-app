@@ -54,7 +54,10 @@ function alturaDoProfessor(rel: RelatorioProfessor): number {
     altura += 16; // subtítulo do período
     altura += 14; // cabeçalho da mini-tabela
     altura += periodo.itens.length * 13; // linhas
-    altura += 6; // respiro entre períodos
+    if (periodo.haInstitucional > 0) altura += 13; // linha de HA destacada
+    altura += 18; // [FIX] respiro entre períodos -- 6pt colava o texto do
+    // próximo período quase em cima da borda da tabela anterior; 18pt dá
+    // um espaço visualmente claro entre "Manhã" e "Tarde", por exemplo.
   }
   altura += 14; // respiro entre professores
   return altura;
@@ -107,7 +110,7 @@ function desenharProfessor(page: PDFPage, font: PDFFont, fontBold: PDFFont, rel:
       y -= 13;
     }
 
-    y -= 6;
+    y -= 18;
   }
 
   return y - 14;
