@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Download, FileText, Table, BarChart3, FileDown } from "lucide-react";
+import { Download, FileText, Table, BarChart3, FileDown, ClipboardList } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 function buildUrl(path: string, params: Record<string, string | undefined>) {
@@ -48,6 +48,10 @@ export default function ExportPage() {
   // sequência de páginas, sem nenhuma ordem lógica.
   // [FIX] valor inicial agora é o sentinel TURNO_TODOS, não "".
   const [pdfOpts, setPdfOpts] = useState({ visao: "turma", entidadeId: "", turno: TURNO_TODOS });
+  // [NOVO] Relatório de Carga Horária por Professor -- resumo (total de
+  // aulas + HA institucional + turmas/disciplinas por período), não a
+  // grade dia-a-dia.
+  const [cargaOpts, setCargaOpts] = useState({ professorId: "" });
 
   const handleDownload = (url: string, filename: string) => {
     const a = document.createElement("a");
@@ -245,6 +249,40 @@ export default function ExportPage() {
               }}
             >
               <Download className="w-4 h-4 mr-2" />Baixar PDF
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Relatório de Carga Horária por Professor */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ClipboardList className="w-4 h-4" /> Relatório de Carga Horária
+            </CardTitle>
+            <CardDescription>PDF por professor com o total de aulas, Hora-Atividade institucional e as turmas/disciplinas de cada período (manhã/tarde/noite) — não é a grade dia-a-dia, é o resumo.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Professor (opcional)</Label>
+              <Select value={cargaOpts.professorId} onValueChange={(v) => setCargaOpts((o) => ({ ...o, professorId: v }))}>
+                <SelectTrigger><SelectValue placeholder="Todos os professores" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todos os professores</SelectItem>
+                  {professores.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              className="w-full"
+              onClick={() => {
+                const url = buildUrl("/api/export/relatorio-carga-pdf", { professorId: cargaOpts.professorId || undefined });
+                const sufixo = cargaOpts.professorId
+                  ? `_${professores.find((p) => String(p.id) === cargaOpts.professorId)?.nome ?? cargaOpts.professorId}`
+                  : "";
+                handleDownload(url, `relatorio_carga_professores${sufixo}.pdf`);
+              }}
+            >
+              <Download className="w-4 h-4 mr-2" />Baixar Relatório de Carga
             </Button>
           </CardContent>
         </Card>

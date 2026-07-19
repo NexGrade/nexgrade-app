@@ -7,6 +7,7 @@ import {
 import { and, eq, isNull } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
 import { gerarPdfGradeCompacta, type BlocoGrade } from "../lib/pdf-grade";
+import { gerarPdfCargaProfessores, type RelatorioProfessor } from "../lib/pdf-carga-professor";
 
 const router = Router();
 
@@ -16,6 +17,7 @@ const DIAS = ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "
 // mais de um turno -- ver comentário em /grade-pdf/professor sobre por
 // que cada turno vira um bloco separado.
 const TURNO_ROTULO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
+const ORDEM_TURNO = ["matutino", "vespertino", "noturno"];
 
 // [NOVO] Nome oficial da escola, usado no cabeçalho das grades PDF
 // compactas. Fixo por enquanto -- não há campo de "nome da escola"
@@ -334,6 +336,60 @@ router.get("/grade-pdf/professor", async (req, res) => {
   const pdfBytes = await gerarPdfGradeCompacta(NOME_ESCOLA, "Grade Horária por Professor", intervaloSemanaAtual(), blocos);
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", 'attachment; filename="grade_por_professor.pdf"');
+  res.send(Buffer.from(pdfBytes));
+});
+
+// ------------------------------------------------------------------
+// PDF — Relatório de Carga Horária por Professor: resumo (não a grade
+// dia-a-dia) mostrando, por professor e por período, o total de aulas,
+// a Hora-Atividade institucional e a lista de turmas/disciplinas.
+// Filtro opcional por professor; sem filtro, lista todos.
+// ------------------------------------------------------------------
+router.get("/relatorio-carga-pdf", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const professorIdFiltro = req.query.professorId ? Number(req.query.professorId) : undefined;
+  const [slots, professoresTodos, disciplinas, turmas, disponibilidades] = await Promise.all([
+    db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
+    db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
+    db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
+    db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
+    db.select().from(disponibilidadeTable),
+  ]);
+  const professores = (professorIdFiltro ? professoresTodos.filter((p) => p.id === professorIdFiltro) : professoresTodos)
+    .slice()
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+
+  const relatorio: RelatorioProfessor[] = professores.map((prof) => {
+    const slotsDoProf = slots.filter((s) => s.professorId === prof.id);
+    const turnosPresentes = [...new Set(
+      slotsDoProf.map((s) => turmas.find((t) => t.id === s.turmaId)?.turno).filter((t): t is string => !!t)
+    )].sort((a, b) => ORDEM_TURNO.indexOf(a) - ORDEM_TURNO.indexOf(b));
+
+    const periodos = turnosPresentes.map((turno) => {
+      const slotsTurno = slotsDoProf.filter((s) => turmas.find((t) => t.id === s.turmaId)?.turno === turno);
+      const haTurno = disponibilidades.filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && d.turno === turno).length;
+
+      const grupos = new Map<string, { turma: string; disciplina: string; aulas: number }>();
+      slotsTurno.forEach((s) => {
+        const turmaNome = turmas.find((t) => t.id === s.turmaId)?.nome ?? "?";
+        const discNome = disciplinas.find((d) => d.id === s.disciplinaId)?.nome ?? "?";
+        const chave = `${turmaNome}|||${discNome}`;
+        if (!grupos.has(chave)) grupos.set(chave, { turma: turmaNome, disciplina: discNome, aulas: 0 });
+        grupos.get(chave)!.aulas++;
+      });
+      const itens = [...grupos.values()].sort((a, b) => a.turma.localeCompare(b.turma, "pt-BR"));
+
+      return { turno, totalAulas: slotsTurno.length, haInstitucional: haTurno, itens };
+    });
+
+    const totalGeralHa = disponibilidades.filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria).length;
+
+    return { nome: prof.nome, totalGeralAulas: slotsDoProf.length, totalGeralHa, periodos };
+  });
+
+  const pdfBytes = await gerarPdfCargaProfessores(NOME_ESCOLA, intervaloSemanaAtual(), relatorio);
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", 'attachment; filename="relatorio_carga_professores.pdf"');
   res.send(Buffer.from(pdfBytes));
 });
 
