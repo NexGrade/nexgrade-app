@@ -1,18 +1,33 @@
-// Script de seed — popula o banco com dados de TESTE para você
-// conseguir navegar por todas as telas do NexGrade sem precisar
-// cadastrar tudo manualmente.
+// Script de seed — dados REAIS e completos da escola (todas as turmas,
+// professores, disciplinas e quantidade de aulas por turma), extraídos
+// dos relatórios oficiais da secretaria (grade por turma e grade por
+// professor, manhã/tarde/noite, cruzados e validados entre si).
 //
-// Os "codigo_sae" abaixo são os CÓDIGOS REAIS fornecidos pela escola
-// (planilha Codigo/Nome_Disciplina/Carga_Horaria_Padrao), cobrindo o
-// Ensino Médio regular + trilhas de aprofundamento + cursos técnicos
-// (Administração, Desenvolvimento de Sistemas, Logística, Agronegócio,
-// Enfermagem, Mecânica, Elétrica, RH, Marketing, Finanças).
+// ESCOPO DESTA VERSÃO: professores, disciplinas, turmas, a carga
+// horária (turma_disciplinas) de cada combinação turma+disciplina com
+// o professor responsável, e as aulas de CO-DOCÊNCIA real (duas
+// pessoas dando a mesma aula) — via `turma_disciplinas.professorApoioId`,
+// confirmadas em 6 duplas: Pedro+Lisiane, Cecília+Ivanir, Ivanir+Silmara,
+// Julio+Juliana, Julio+Matheus e Gilberto+Lisiane (27 combinações
+// turma+disciplina no total).
+//
+// NÃO inclui ainda:
+//   - Hora-Atividade (disponibilidade_professores) — depende do regime
+//     de contrato (20h/40h) de cada professor, ainda pendente de
+//     confirmação (ver Resolução SEED n.º 7.200/2025, Art. 11).
+//   - Grade dia-a-dia (horarios) — depende do gerador de horário
+//     (RF-SOLV) ser rodado depois deste seed.
+//   - Cursos/Matrizes Curriculares formais — turmas ficam com
+//     matrizCurricularId nulo por enquanto; carga horária de cada
+//     disciplina vem de turma_disciplinas.cargaHorariaSemanalOverride.
 //
 // Como rodar (na raiz do monorepo):
 //   pnpm --filter @workspace/scripts run seed
 //
-// É seguro rodar mais de uma vez: o script primeiro apaga os dados de
-// teste da escola "escola_default" antes de inserir de novo.
+// É seguro rodar mais de uma vez: o script apaga professores, turmas e
+// disciplinas da escola "escola_default" antes de inserir de novo (os
+// registros dependentes — professor_disciplinas, turma_disciplinas,
+// horarios, disponibilidade — saem em cascata via foreign key).
 
 import { db, pool } from "@workspace/db";
 import {
@@ -23,178 +38,16 @@ import {
   turmasTable,
   turmaDisciplinasTable,
   salasTable,
-  horariosTable,
-  disponibilidadeTable,
-  cursosTable,
-  matrizesCurricularesTable,
-  itensMatrizTable,
 } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 
 const ESCOLA_ID = "escola_default";
 
-// Paleta de cores da marca + tons auxiliares para diferenciar disciplinas
 const PALETA_CORES = [
   "#1565C0", "#0D47A1", "#42A5F5", "#607D8B", "#43A047",
   "#FB8C00", "#8E24AA", "#00897B", "#6D4C41", "#3949AB",
   "#D81B60", "#5D4037", "#00ACC1", "#7CB342", "#F4511E",
 ];
-
-// Fonte: planilha oficial fornecida pela escola (Codigo, Nome, Carga
-// Horária Padrão semanal). Ordem preservada conforme recebida.
-const DISCIPLINAS_SAE: Array<[codigo: string, nome: string, carga: number]> = [
-  ["1100", "Língua Portuguesa e Literatura", 5],
-  ["2700", "Matemática", 5],
-  ["2500", "Biologia", 2],
-  ["2600", "Física", 2],
-  ["2300", "Química", 2],
-  ["2200", "História", 2],
-  ["2100", "Geografia", 2],
-  ["3100", "Filosofia", 2],
-  ["3300", "Sociologia", 2],
-  ["4100", "Arte", 2],
-  ["3200", "Educação Física", 2],
-  ["1400", "Língua Estrangeira Moderna - Inglês", 2],
-  ["1200", "Língua Estrangeira Moderna - Espanhol", 2],
-  ["2400", "Ciências (Fundamental)", 3],
-  ["6400", "Ensino Religioso", 1],
-  ["PV01", "Projeto de Vida", 2],
-  ["PC01", "Pensamento Computacional", 1],
-  ["EDFIN", "Educação Financeira", 1],
-  ["CC01", "Cidadania e Civismo", 1],
-  ["RED01", "Redação e Leitura", 2],
-  ["LGG01", "Aprofundamento Linguagens e suas Tecnologias", 4],
-  ["MAT01", "Aprofundamento Matemática e suas Tecnologias", 4],
-  ["CNT01", "Aprofundamento Ciências da Natureza", 4],
-  ["CHS01", "Aprofundamento Ciências Humanas e Sociais", 4],
-  ["ADM01", "Introdução à Administração", 2],
-  ["ADM02", "Contabilidade Geral", 3],
-  ["ADM03", "Marketing e Gestão de Clientes", 2],
-  ["ADM04", "Gestão de Pessoas e Recursos Humanos", 3],
-  ["ADM05", "Administração Financeira e Orçamentária", 3],
-  ["DS01", "Lógica de Programação", 3],
-  ["DS02", "Modelagem e Banco de Dados", 3],
-  ["DS03", "Desenvolvimento de Sistemas Web", 4],
-  ["DS04", "Programação para Dispositivos Móveis", 4],
-  ["DS05", "Análise e Projeto de Sistemas", 2],
-  ["LOG01", "Introdução à Logística", 2],
-  ["LOG02", "Gestão de Armazenamento e Estoques", 3],
-  ["LOG03", "Logística de Suprimentos e Distribuição", 3],
-  ["LOG04", "Planejamento de Transportes e Modais", 3],
-  ["LOG05", "Custos Logísticos", 2],
-  ["AGRO01", "Introdução ao Agronegócio", 2],
-  ["AGRO02", "Cadeias Produtivas Agropecuárias", 3],
-  ["AGRO03", "Gestão de Propriedades Rurais", 3],
-  ["AGRO04", "Economia e Políticas Agrícolas", 2],
-  ["AGRO05", "Tecnologias Aplicadas ao Campo", 2],
-  ["ENF01", "Fundamentos de Enfermagem", 4],
-  ["ENF02", "Anatomia e Fisiologia Humana", 3],
-  ["ENF03", "Enfermagem em Saúde Pública", 3],
-  ["ENF04", "Biossegurança e Vigilância Sanitária", 2],
-  ["ENF05", "Farmacologia Aplicada", 2],
-  ["MEC01", "Desenho Técnico Mecânico", 3],
-  ["MEC02", "Tecnologia dos Materiais", 2],
-  ["MEC03", "Processos de Fabricação e Usinagem", 4],
-  ["MEC04", "Manutenção Mecânica Preventiva", 3],
-  ["MEC05", "Sistemas Hidráulicos e Pneumáticos", 2],
-  ["ELET01", "Eletricidade Geral e Circuitos", 3],
-  ["ELET02", "Instalações Elétricas Residenciais", 3],
-  ["ELET03", "Instalações Elétricas Industriais", 4],
-  ["ELET04", "Máquinas Elétricas e Transformadores", 3],
-  ["ELET05", "Sistemas de Automação e CLPs", 3],
-  ["RH01", "Rotinas de Departamento de Pessoal", 3],
-  ["RH02", "Legislação Trabalhista e Previdenciária", 3],
-  ["RH03", "Recrutamento, Seleção e Treinamento", 2],
-  ["RH04", "Cargos, Salários e Benefícios", 2],
-  ["RH05", "Saúde e Segurança no Trabalho", 2],
-  ["DEV01", "Arquitetura de Computadores e Redes", 2],
-  ["DEV02", "Segurança da Informação", 2],
-  ["DEV03", "Programação Orientada a Objetos", 4],
-  ["DEV04", "Estruturas de Dados", 3],
-  ["DEV05", "Qualidade e Testes de Software", 2],
-  ["MKT01", "Fundamentos do Marketing", 2],
-  ["MKT02", "Comportamento do Consumidor", 2],
-  ["MKT03", "Marketing Digital e Mídias Sociais", 4],
-  ["MKT04", "Gestão de Marcas e Branding", 2],
-  ["MKT05", "Pesquisa de Mercado e Planejamento", 3],
-  ["FIN01", "Contabilidade Básica e Custos", 3],
-  ["FIN02", "Matemática Financeira Aplicada", 3],
-  ["FIN03", "Mercado Financeiro e de Capitais", 2],
-  ["FIN04", "Planejamento e Controle Orçamentário", 3],
-  ["FIN05", "Análise de Investimentos", 2],
-];
-
-// ⚠️ ATENÇÃO — GAP DE SCHEMA: a planilha real da escola tem uma coluna
-// "Max_Aulas_Dia" (limite de aulas da mesma disciplina por dia para uma
-// turma). Hoje NENHUMA tabela do banco guarda essa regra — nem
-// `turma_disciplinas`, nem `horarios`. Este seed usa o valor só para
-// DISTRIBUIR as aulas de forma realista aqui na hora de gerar dado de
-// teste, mas o motor de geração de horário do app (RF-SOLV) e o
-// detector de conflitos (RF-ALOC) HOJE NÃO conhecem nem aplicam essa
-// regra ao gerar/validar uma grade de verdade. Se isso for uma regra de
-// negócio real (não só um teto informal), vale abrir isso como tarefa:
-// adicionar um campo tipo `maxAulasDia` em `turma_disciplinas` e fazer
-// o gerador/o detector de conflito respeitarem.
-
-// Mapa turma → (etapa, série/ano) da matriz curricular real (seção
-// abaixo). Nomes de turma exatamente como veio da planilha da escola.
-const TURMA_MATRIZ_CHAVE: Record<string, string> = {
-  "6 Ano A": "Ensino Fundamental II::6º Ano",
-  "1 Serie A": "Ensino Médio Regular::1ª Série",
-  "1 Serie Tec ADM": "Ensino Médio Técnico::1ª Série ADM",
-};
-
-const TURMA_TURNO: Record<string, string> = {
-  "6 Ano A": "matutino",
-  "1 Serie A": "matutino",
-  "1 Serie Tec ADM": "noturno",
-};
-
-type LinhaMatriz = { etapa: string; serieAno: string; codigoSae: string; aulas: number };
-
-// Fonte: planilha oficial da escola (Ano_Letivo, Etapa_Ensino,
-// Serie_Ano, Codigo_Disciplina, Aulas_Semanais). Define O QUE e QUANTO
-// cada série estuda — independente de qual professor específico dá
-// aquela aula (isso vem em TURMA_PROFESSOR_REAL, mais abaixo).
-const MATRIZ_REAL: LinhaMatriz[] = [
-  { etapa: "Ensino Fundamental II", serieAno: "6º Ano", codigoSae: "1100", aulas: 5 },
-  { etapa: "Ensino Fundamental II", serieAno: "6º Ano", codigoSae: "2700", aulas: 5 },
-  { etapa: "Ensino Fundamental II", serieAno: "6º Ano", codigoSae: "2100", aulas: 3 },
-  { etapa: "Ensino Fundamental II", serieAno: "6º Ano", codigoSae: "PC01", aulas: 1 },
-  { etapa: "Ensino Médio Regular", serieAno: "1ª Série", codigoSae: "1100", aulas: 5 },
-  { etapa: "Ensino Médio Regular", serieAno: "1ª Série", codigoSae: "2700", aulas: 5 },
-  { etapa: "Ensino Médio Regular", serieAno: "1ª Série", codigoSae: "PV01", aulas: 2 },
-  { etapa: "Ensino Médio Regular", serieAno: "1ª Série", codigoSae: "EDFIN", aulas: 1 },
-  { etapa: "Ensino Médio Técnico", serieAno: "1ª Série ADM", codigoSae: "1100", aulas: 4 },
-  { etapa: "Ensino Médio Técnico", serieAno: "1ª Série ADM", codigoSae: "ADM01", aulas: 3 },
-  { etapa: "Ensino Médio Técnico", serieAno: "1ª Série ADM", codigoSae: "ADM02", aulas: 3 },
-];
-
-type AtribuicaoReal = { turma: string; codigoSae: string; professor: string; maxAulasDia: number };
-
-// Fonte: planilha oficial da escola (Ano_Letivo, Nome_Turma, Turno,
-// Codigo_Disciplina, Nome_Professor, Max_Aulas_Dia). Define QUEM dá
-// aula de quê, em qual turma. Nomes exatamente como vieram da escola —
-// sem completar sobrenome nem inventar disciplina/professor extra.
-//
-// Disciplinas da matriz SEM linha aqui ainda (2700 e EDFIN em
-// "1 Serie A") não têm professor confirmado — o seed não gera aula
-// pra elas até você mandar essa confirmação.
-const TURMA_PROFESSOR_REAL: AtribuicaoReal[] = [
-  { turma: "6 Ano A", codigoSae: "1100", professor: "Maria Silva", maxAulasDia: 2 },
-  { turma: "6 Ano A", codigoSae: "2700", professor: "Carlos Souza", maxAulasDia: 2 },
-  { turma: "6 Ano A", codigoSae: "PC01", professor: "Roberto Lima", maxAulasDia: 1 },
-  { turma: "1 Serie A", codigoSae: "1100", professor: "Maria Silva", maxAulasDia: 2 },
-  { turma: "1 Serie A", codigoSae: "PV01", professor: "Ana Paula", maxAulasDia: 2 },
-  { turma: "1 Serie Tec ADM", codigoSae: "ADM01", professor: "Joao Santos", maxAulasDia: 2 },
-  { turma: "1 Serie Tec ADM", codigoSae: "ADM02", professor: "Fernanda Costa", maxAulasDia: 3 },
-];
-
-function cargaHorariaMatriz(turma: string, codigoSae: string): number {
-  const chave = TURMA_MATRIZ_CHAVE[turma];
-  const linha = MATRIZ_REAL.find((l) => `${l.etapa}::${l.serieAno}` === chave && l.codigoSae === codigoSae);
-  return linha?.aulas ?? 0;
-}
 
 function emailFromNome(nome: string): string {
   const semAcento = nome
@@ -207,45 +60,898 @@ function emailFromNome(nome: string): string {
   return `${semAcento}@escola.exemplo.br`;
 }
 
+// Disciplinas reais da grade da escola. `codigoSae: null` = ainda sem
+// código SAE oficial confirmado. 17 disciplinas centrais reaproveitam o
+// código já usado no catálogo anterior; mais 51 disciplinas técnicas
+// (Administração, Desenvolvimento de Sistemas, Farmácia, Meio Ambiente,
+// Formação de Docentes) tiveram o código SAE confirmado via Instrução
+// Normativa Conjunta n.º 001/2026 - DEDUC/DPGE/SEED (Matrizes
+// Curriculares EPT Integrada). As demais (recomposição de
+// aprendizagem, itens numerados de Ensino Médio Regular/Fundamental
+// como "Geografia 1"/"Física 2", Híbrida etc.) seguem sem código —
+// não cobertas por esse documento (são de outra normativa) ou não
+// encontradas em nenhuma matriz.
+
+const DISCIPLINAS_REAIS: Array<{ label: string; nome: string; codigoSae: string | null }> = [
+  { label: "ADM FINANC E ORÇAMENTÁRIA", nome: "Adm Financ e Orçamentária", codigoSae: null },
+  { label: "ANÁLISE CONT E QUIM AMB", nome: "Análise Cont e Quim Amb", codigoSae: "867" },
+  { label: "ANÁLISE CONT E QUIM AMB 1", nome: "Análise Cont e Quim Amb 1", codigoSae: "6620" },
+  { label: "ANÁLISE E MET P SISTEMAS", nome: "Análise e Met p Sistemas", codigoSae: "5316" },
+  { label: "ANÁLISE PROJ DE SISTEMAS", nome: "Análise Proj de Sistemas", codigoSae: null },
+  { label: "ARTE", nome: "Arte", codigoSae: "4100" },
+  { label: "ARTE 2", nome: "Arte 2", codigoSae: null },
+  { label: "ARTE PARANAENSE", nome: "Arte Paranaense", codigoSae: null },
+  { label: "BANCO DE DADOS", nome: "Banco de Dados", codigoSae: "6510" },
+  { label: "BANCO DE DADOS 1", nome: "Banco de Dados 1", codigoSae: "5400" },
+  { label: "BANCO DE DADOS 2", nome: "Banco de Dados 2", codigoSae: "5600" },
+  { label: "BASES BIO APLIC A SAUDE", nome: "Bases Bio Aplic a Saude", codigoSae: "4288" },
+  { label: "BIOLOGIA", nome: "Biologia", codigoSae: "2500" },
+  { label: "BIOLOGIA 2", nome: "Biologia 2", codigoSae: null },
+  { label: "BIOSSEGURANÇA E SEG TRAB", nome: "Biossegurança e Seg Trab", codigoSae: "4290" },
+  { label: "CIÊNCIAS", nome: "Ciências (Fundamental)", codigoSae: "2400" },
+  { label: "CIÊNCIAS DE DADOS", nome: "Ciências de Dados", codigoSae: "4763" },
+  { label: "COMPUTAÇÃO GRÁFICA", nome: "Computação Gráfica", codigoSae: null },
+  { label: "COMUNICAÇÃO E VENDAS", nome: "Comunicação e Vendas", codigoSae: "5020" },
+  { label: "CONTROLADORIA E FINANÇAS", nome: "Controladoria e Finanças", codigoSae: null },
+  { label: "DES HUM E SOCIOEMOCIONAL", nome: "Des Hum e Socioemocional", codigoSae: "5216" },
+  { label: "DIS PROD FAR E CORRELATOS", nome: "Dis Prod Far e Correlatos", codigoSae: "4291" },
+  { label: "ED INCLUSIVA DIVERSIDADE", nome: "Ed Inclusiva Diversidade", codigoSae: "5303" },
+  { label: "EDUCAÇÃO AMBIENTAL", nome: "Educação Ambiental", codigoSae: "310" },
+  { label: "EDUCAÇÃO AMBIENTAL 1", nome: "Educação Ambiental 1", codigoSae: "6622" },
+  { label: "EDUCAÇÃO DIGITAL", nome: "Educação Digital", codigoSae: null },
+  { label: "EDUCAÇÃO FINANCEIRA", nome: "Educação Financeira", codigoSae: "EDFIN" },
+  { label: "EDUCAÇÃO FÍSICA", nome: "Educação Física", codigoSae: "3200" },
+  { label: "EMPREENDEDORISMO", nome: "Empreendedorismo", codigoSae: null },
+  { label: "ENS.RELIGIOSO", nome: "Ensino Religioso", codigoSae: "6400" },
+  { label: "EST DE IMP RIS AMBIENTAIS", nome: "Est de Imp Ris Ambientais", codigoSae: "1519" },
+  { label: "ESTRATÉGIA DE MARKETING", nome: "Estratégia de Marketing", codigoSae: "5019" },
+  { label: "ESTRATÉGIAS DE MARKETING", nome: "Estratégias de Marketing", codigoSae: "5019" },
+  { label: "FARMACOLOGIA 1", nome: "Farmacologia 1", codigoSae: "5513" },
+  { label: "FARMACOLOGIA 2", nome: "Farmacologia 2", codigoSae: "5514" },
+  { label: "FARMÁCIA HOSPITALAR", nome: "Farmácia Hospitalar", codigoSae: "5319" },
+  { label: "FIL.TEXTOS FILOSÓFICOS", nome: "Fil.textos Filosóficos", codigoSae: null },
+  { label: "FILOSOFIA", nome: "Filosofia", codigoSae: "3100" },
+  { label: "FINANÇAS EMPRESARIAIS", nome: "Finanças Empresariais", codigoSae: "5033" },
+  { label: "FUND DA FISIOPATOLOGIA", nome: "Fund da Fisiopatologia", codigoSae: "5515" },
+  { label: "FUNDAMENTOS DE FARMÁCIA", nome: "Fundamentos de Farmácia", codigoSae: "4295" },
+  { label: "FÍSICA", nome: "Física", codigoSae: "2600" },
+  { label: "FÍSICA 2", nome: "Física 2", codigoSae: null },
+  { label: "FÍSICA 3", nome: "Física 3", codigoSae: null },
+  { label: "GEOGRAFIA", nome: "Geografia", codigoSae: "2100" },
+  { label: "GEOGRAFIA 1", nome: "Geografia 1", codigoSae: null },
+  { label: "GEOGRAFIA DO PARANÁ", nome: "Geografia do Paraná", codigoSae: null },
+  { label: "GESTÃO DE REC NATURAIS", nome: "Gestão de Rec Naturais", codigoSae: "868" },
+  { label: "GESTÃO DE REC NATURAIS 1", nome: "Gestão de Rec Naturais 1", codigoSae: "6623" },
+  { label: "GESTÃO DE RESÍDUOS", nome: "Gestão de Resíduos", codigoSae: "1928" },
+  { label: "HIBRIDA", nome: "Hibrida", codigoSae: null },
+  { label: "HISTÓRIA", nome: "História", codigoSae: "2200" },
+  { label: "HISTÓRIA 1", nome: "História 1", codigoSae: null },
+  { label: "HISTÓRIA DO PARANÁ", nome: "História do Paraná", codigoSae: null },
+  { label: "IN TEC E EMPREENDEDORISMO", nome: "In Tec e Empreendedorismo", codigoSae: "5999" },
+  { label: "INFORMÁTICA APLICADA", nome: "Informática Aplicada", codigoSae: "4420" },
+  { label: "INFORMÁTICA EMPRESARIAL", nome: "Informática Empresarial", codigoSae: "5015" },
+  { label: "INTRODUÇÃO À COMPUTAÇÃO", nome: "Introdução à Computação", codigoSae: "5314" },
+  { label: "INTRODUÇÃO À PROGRAMAÇÃO", nome: "Introdução à Programação", codigoSae: "5315" },
+  { label: "LEI REC. APREND. L. PORT", nome: "Leitura e Recomposição da Aprendizagem - Língua Portuguesa", codigoSae: null },
+  { label: "LID E GESTÃO DE PESSOAS", nome: "Lid e Gestão de Pessoas", codigoSae: "5034" },
+  { label: "LID ORG E GES DE PESSOAS", nome: "Lid Org e Ges de Pessoas", codigoSae: "5034" },
+  { label: "LIT. E PROD. DE TEXTO", nome: "Lit. e Prod. de Texto", codigoSae: null },
+  { label: "LÍNGUA INGLESA", nome: "Língua Estrangeira Moderna - Inglês", codigoSae: "1400" },
+  { label: "LÍNGUA INGLESA 1", nome: "Língua Inglesa 1", codigoSae: null },
+  { label: "LÍNGUA PORTUGUESA", nome: "Língua Portuguesa e Literatura", codigoSae: "1100" },
+  { label: "LÓGICA COMPUTACIONAL", nome: "Lógica Computacional", codigoSae: "1348" },
+  { label: "MAT BAS P ANOS INICIAIS", nome: "Mat Bas p Anos Iniciais", codigoSae: "6508" },
+  { label: "MATEMÁTICA", nome: "Matemática", codigoSae: "2700" },
+  { label: "MATEMÁTICA 2", nome: "Matemática 2", codigoSae: null },
+  { label: "MET CIENT E COMUNICAÇÃO", nome: "Met Cient e Comunicação", codigoSae: "871" },
+  { label: "NEGOCIAÇÃO E VENDAS", nome: "Negociação e Vendas", codigoSae: null },
+  { label: "NOÇÕES DE DIREITO", nome: "Noções de Direito", codigoSae: null },
+  { label: "ORG DO TRAB PEDAGÓGICO", nome: "Org do Trab Pedagógico", codigoSae: "1803" },
+  { label: "PRINC. DE ADMINISTRAÇÃO", nome: "Princ. de Administração", codigoSae: "4129" },
+  { label: "PRINCÍPIOS ECONÔMICOS", nome: "Princípios Econômicos", codigoSae: "5031" },
+  { label: "PROG NO DES DE SISTEMAS", nome: "Prog no Des de Sistemas", codigoSae: null },
+  { label: "PROGRAMAÇÃO BACK END", nome: "Programação Back End", codigoSae: "5900" },
+  { label: "PROGRAMAÇÃO BACK END 1", nome: "Programação Back End 1", codigoSae: "5700" },
+  { label: "PROGRAMAÇÃO FRONT END", nome: "Programação Front End", codigoSae: "4761" },
+  { label: "PROGRAMAÇÃO MOBILE", nome: "Programação Mobile", codigoSae: "4491" },
+  { label: "PROJETO DE VIDA", nome: "Projeto de Vida", codigoSae: "PV01" },
+  { label: "QUÍMICA", nome: "Química", codigoSae: "2300" },
+  { label: "QUÍMICA 1", nome: "Química 1", codigoSae: null },
+  { label: "REC. APREND. L. PORT", nome: "Recomposição da Aprendizagem - Língua Portuguesa", codigoSae: null },
+  { label: "REC. APREND. MATEMÁTICA", nome: "Recomposição da Aprendizagem - Matemática", codigoSae: null },
+  { label: "RECURSOS HUMANOS", nome: "Recursos Humanos", codigoSae: "4450" },
+  { label: "REDAÇÃO E LEITURA", nome: "Redação e Leitura", codigoSae: "RED01" },
+  { label: "REDAÇÃO TÉCNICA", nome: "Redação Técnica", codigoSae: "126" },
+  { label: "SAÚDE PÚBLICA", nome: "Saúde Pública", codigoSae: "3228" },
+  { label: "SIST DE GESTÃO AMBIENTAL", nome: "Sist de Gestão Ambiental", codigoSae: "6713" },
+  { label: "SOC.GOV.CIDAD E SOCIEDADE", nome: "Soc.gov.cidad e Sociedade", codigoSae: null },
+  { label: "SOCIOLOGIA", nome: "Sociologia", codigoSae: "3300" },
+  { label: "SOCIOLOGIA 1", nome: "Sociologia 1", codigoSae: null },
+  { label: "TECNO. E FER. DE GESTÃO", nome: "Tecno. e Fer. de Gestão", codigoSae: null },
+  { label: "TOXICOLOGIA", nome: "Toxicologia", codigoSae: "3511" },
+  { label: "TRAB PED NA ED INFANTIL", nome: "Trab Ped na Ed Infantil", codigoSae: "1726" },
+  { label: "TÉCNICAS INTEGRADAS", nome: "Técnicas Integradas", codigoSae: "6509" },
+];
+
+// Professores confirmados nos relatórios reais (nome em Proper Case;
+// e-mail gerado automaticamente — ajustar depois se a escola tiver
+// e-mails institucionais reais). cargaHorariaTotal fica no padrão da
+// coluna (20h) até o regime de contrato de cada um ser confirmado.
+
+const PROFESSORES_REAIS: string[] = [
+  "Aline",
+  "Anderson",
+  "Andre",
+  "Andreia",
+  "Antonio Silva",
+  "Arnaldo",
+  "Carlos",
+  "Cecilia",
+  "Cesar",
+  "Chrystian",
+  "Cleide",
+  "Crislaine",
+  "Cristiane",
+  "Daiane",
+  "Debora",
+  "Dorival",
+  "Ednilson",
+  "Eduarda",
+  "Eduardo",
+  "Eleciana",
+  "Eliana",
+  "Eliane",
+  "Eliane Rocha",
+  "Elisabete",
+  "Elisangela",
+  "Emanuele",
+  "Felipe",
+  "Fernanda",
+  "Franciele de Assis",
+  "Francielle",
+  "Gabriela",
+  "Geovani",
+  "Geverson",
+  "Gilberto",
+  "Gleiciane",
+  "Gustavo",
+  "Heberton",
+  "Hemelly",
+  "Herica",
+  "Ione",
+  "Ivanir",
+  "Ivete",
+  "Jackson",
+  "Janice",
+  "Jordana",
+  "João Lucas",
+  "Juliana",
+  "Julio",
+  "Kethelin",
+  "Lisiane",
+  "Lorena",
+  "Luciane",
+  "Luis Fernando",
+  "Marcio",
+  "Mario",
+  "Marise",
+  "Maristela",
+  "Marlete",
+  "Marta",
+  "Matheus",
+  "Melina",
+  "Mirian",
+  "Nelson",
+  "Patricia",
+  "Paulo",
+  "Pedro",
+  "Priscila",
+  "Rafael",
+  "Ricardo",
+  "Roberval",
+  "Robson",
+  "Rodrigo",
+  "Salete",
+  "Sarah",
+  "Silmara",
+  "Simone",
+  "Soneide",
+  "Sypriano",
+  "Tiago",
+  "Viviane",
+  "Wellington",
+  "Werediana",
+  "Wildemberg",
+  "Willian",
+];
+
+// Turmas reais (nome exatamente como veio da secretaria).
+
+const TURMAS_REAIS: Array<{ nome: string; serie: string; turno: string; nivelEnsino: "fundamental" | "medio_tecnico" }> = [
+  { nome: "1MA EM", serie: "1ª Série EM", turno: "matutino", nivelEnsino: "medio_tecnico" },
+  { nome: "1MB DES", serie: "1ª Série DES", turno: "matutino", nivelEnsino: "medio_tecnico" },
+  { nome: "1MC FAR", serie: "1ª Série FAR", turno: "matutino", nivelEnsino: "medio_tecnico" },
+  { nome: "1MD MA", serie: "1ª Série MA", turno: "matutino", nivelEnsino: "medio_tecnico" },
+  { nome: "1ME DOC", serie: "1ª Série DOC", turno: "matutino", nivelEnsino: "medio_tecnico" },
+  { nome: "1NB", serie: "1ª Série", turno: "noturno", nivelEnsino: "medio_tecnico" },
+  { nome: "1NF ADM", serie: "1ª Série ADM", turno: "noturno", nivelEnsino: "medio_tecnico" },
+  { nome: "2MA ADM", serie: "2ª Série ADM", turno: "matutino", nivelEnsino: "medio_tecnico" },
+  { nome: "2MA EM", serie: "2ª Série EM", turno: "matutino", nivelEnsino: "medio_tecnico" },
+  { nome: "2MB DES", serie: "2ª Série DES", turno: "matutino", nivelEnsino: "medio_tecnico" },
+  { nome: "2MC FAR", serie: "2ª Série FAR", turno: "matutino", nivelEnsino: "medio_tecnico" },
+  { nome: "2MD MA", serie: "2ª Série MA", turno: "matutino", nivelEnsino: "medio_tecnico" },
+  { nome: "2NB", serie: "2ª Série", turno: "noturno", nivelEnsino: "medio_tecnico" },
+  { nome: "2NC", serie: "2ª Série", turno: "noturno", nivelEnsino: "medio_tecnico" },
+  { nome: "3MA ADM", serie: "3ª Série ADM", turno: "matutino", nivelEnsino: "medio_tecnico" },
+  { nome: "3MA EM", serie: "3ª Série EM", turno: "matutino", nivelEnsino: "medio_tecnico" },
+  { nome: "3MB DES", serie: "3ª Série DES", turno: "matutino", nivelEnsino: "medio_tecnico" },
+  { nome: "3NB", serie: "3ª Série", turno: "noturno", nivelEnsino: "medio_tecnico" },
+  { nome: "3NC", serie: "3ª Série", turno: "noturno", nivelEnsino: "medio_tecnico" },
+  { nome: "6TA", serie: "6º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "6TB", serie: "6º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "6TC", serie: "6º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "6TD", serie: "6º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "6TE", serie: "6º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "6TF", serie: "6º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "6TG", serie: "6º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "6TH", serie: "6º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "6TI", serie: "6º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "7TA", serie: "7º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "7TB", serie: "7º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "7TC", serie: "7º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "7TD", serie: "7º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "7TE", serie: "7º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "7TF", serie: "7º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "7TG", serie: "7º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "7TH", serie: "7º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "8MA", serie: "8º Ano", turno: "matutino", nivelEnsino: "fundamental" },
+  { nome: "8MB", serie: "8º Ano", turno: "matutino", nivelEnsino: "fundamental" },
+  { nome: "8MC", serie: "8º Ano", turno: "matutino", nivelEnsino: "fundamental" },
+  { nome: "8MD", serie: "8º Ano", turno: "matutino", nivelEnsino: "fundamental" },
+  { nome: "8ME", serie: "8º Ano", turno: "matutino", nivelEnsino: "fundamental" },
+  { nome: "8TF", serie: "8º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "8TG", serie: "8º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "8TH", serie: "8º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "9MA", serie: "9º Ano", turno: "matutino", nivelEnsino: "fundamental" },
+  { nome: "9MB", serie: "9º Ano", turno: "matutino", nivelEnsino: "fundamental" },
+  { nome: "9MC", serie: "9º Ano", turno: "matutino", nivelEnsino: "fundamental" },
+  { nome: "9MD", serie: "9º Ano", turno: "matutino", nivelEnsino: "fundamental" },
+  { nome: "9ME", serie: "9º Ano", turno: "matutino", nivelEnsino: "fundamental" },
+  { nome: "9MF", serie: "9º Ano", turno: "matutino", nivelEnsino: "fundamental" },
+  { nome: "9TG", serie: "9º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "9TH", serie: "9º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+  { nome: "9TI", serie: "9º Ano", turno: "vespertino", nivelEnsino: "fundamental" },
+];
+
+// Grade real: para cada (turma, disciplina), o professor responsável
+// (professor titular) e, quando há CO-DOCÊNCIA real confirmada pela
+// escola (duas pessoas dando a mesma aula, no mesmo dia/horário),
+// também o professor de apoio. `professor: null` = HIBRIDA (aula
+// híbrida sem professor regular associado no relatório de origem).
+
+const GRADE_REAL: Array<{ turma: string; discLabel: string; professor: string | null; professorApoio: string | null; aulas: number }> = [
+  { turma: "8MA", discLabel: "ARTE", professor: "Priscila", professorApoio: null, aulas: 2 },
+  { turma: "8MA", discLabel: "EDUCAÇÃO FÍSICA", professor: "Heberton", professorApoio: null, aulas: 2 },
+  { turma: "8MA", discLabel: "LÍNGUA INGLESA", professor: "Marise", professorApoio: null, aulas: 2 },
+  { turma: "8MA", discLabel: "LÍNGUA PORTUGUESA", professor: "Gabriela", professorApoio: null, aulas: 3 },
+  { turma: "8MA", discLabel: "GEOGRAFIA", professor: "Emanuele", professorApoio: null, aulas: 2 },
+  { turma: "8MA", discLabel: "HISTÓRIA", professor: "Ednilson", professorApoio: null, aulas: 3 },
+  { turma: "8MA", discLabel: "MATEMÁTICA", professor: "Andre", professorApoio: null, aulas: 4 },
+  { turma: "8MA", discLabel: "EDUCAÇÃO DIGITAL", professor: "Silmara", professorApoio: null, aulas: 2 },
+  { turma: "8MA", discLabel: "CIÊNCIAS", professor: "Rodrigo", professorApoio: null, aulas: 3 },
+  { turma: "8MA", discLabel: "REDAÇÃO E LEITURA", professor: "Chrystian", professorApoio: null, aulas: 2 },
+  { turma: "8MB", discLabel: "ARTE", professor: "Priscila", professorApoio: null, aulas: 2 },
+  { turma: "8MB", discLabel: "EDUCAÇÃO FÍSICA", professor: "Heberton", professorApoio: null, aulas: 2 },
+  { turma: "8MB", discLabel: "LÍNGUA INGLESA", professor: "Marise", professorApoio: null, aulas: 2 },
+  { turma: "8MB", discLabel: "LÍNGUA PORTUGUESA", professor: "Gabriela", professorApoio: null, aulas: 3 },
+  { turma: "8MB", discLabel: "GEOGRAFIA", professor: "Emanuele", professorApoio: null, aulas: 2 },
+  { turma: "8MB", discLabel: "HISTÓRIA", professor: "Mario", professorApoio: null, aulas: 3 },
+  { turma: "8MB", discLabel: "MATEMÁTICA", professor: "Andre", professorApoio: null, aulas: 4 },
+  { turma: "8MB", discLabel: "EDUCAÇÃO DIGITAL", professor: "Silmara", professorApoio: null, aulas: 2 },
+  { turma: "8MB", discLabel: "CIÊNCIAS", professor: "Rodrigo", professorApoio: null, aulas: 3 },
+  { turma: "8MB", discLabel: "REDAÇÃO E LEITURA", professor: "Chrystian", professorApoio: null, aulas: 2 },
+  { turma: "8MC", discLabel: "ARTE", professor: "Priscila", professorApoio: null, aulas: 2 },
+  { turma: "8MC", discLabel: "EDUCAÇÃO FÍSICA", professor: "Heberton", professorApoio: null, aulas: 2 },
+  { turma: "8MC", discLabel: "LÍNGUA INGLESA", professor: "Marise", professorApoio: null, aulas: 2 },
+  { turma: "8MC", discLabel: "LÍNGUA PORTUGUESA", professor: "Gabriela", professorApoio: null, aulas: 3 },
+  { turma: "8MC", discLabel: "GEOGRAFIA", professor: "Emanuele", professorApoio: null, aulas: 2 },
+  { turma: "8MC", discLabel: "HISTÓRIA", professor: "Mario", professorApoio: null, aulas: 3 },
+  { turma: "8MC", discLabel: "MATEMÁTICA", professor: "Andre", professorApoio: null, aulas: 4 },
+  { turma: "8MC", discLabel: "EDUCAÇÃO DIGITAL", professor: "Silmara", professorApoio: null, aulas: 2 },
+  { turma: "8MC", discLabel: "CIÊNCIAS", professor: "Rodrigo", professorApoio: null, aulas: 3 },
+  { turma: "8MC", discLabel: "REDAÇÃO E LEITURA", professor: "Chrystian", professorApoio: null, aulas: 2 },
+  { turma: "8MD", discLabel: "ARTE", professor: "Priscila", professorApoio: null, aulas: 2 },
+  { turma: "8MD", discLabel: "EDUCAÇÃO FÍSICA", professor: "Heberton", professorApoio: null, aulas: 2 },
+  { turma: "8MD", discLabel: "LÍNGUA INGLESA", professor: "Marise", professorApoio: null, aulas: 2 },
+  { turma: "8MD", discLabel: "LÍNGUA PORTUGUESA", professor: "Gabriela", professorApoio: null, aulas: 3 },
+  { turma: "8MD", discLabel: "GEOGRAFIA", professor: "Emanuele", professorApoio: null, aulas: 2 },
+  { turma: "8MD", discLabel: "HISTÓRIA", professor: "Ednilson", professorApoio: null, aulas: 3 },
+  { turma: "8MD", discLabel: "MATEMÁTICA", professor: "Andre", professorApoio: null, aulas: 4 },
+  { turma: "8MD", discLabel: "EDUCAÇÃO DIGITAL", professor: "Silmara", professorApoio: null, aulas: 2 },
+  { turma: "8MD", discLabel: "CIÊNCIAS", professor: "Rodrigo", professorApoio: null, aulas: 3 },
+  { turma: "8MD", discLabel: "REDAÇÃO E LEITURA", professor: "Chrystian", professorApoio: null, aulas: 2 },
+  { turma: "8ME", discLabel: "ARTE", professor: "Priscila", professorApoio: null, aulas: 2 },
+  { turma: "8ME", discLabel: "EDUCAÇÃO FÍSICA", professor: "Heberton", professorApoio: null, aulas: 2 },
+  { turma: "8ME", discLabel: "LÍNGUA INGLESA", professor: "Marise", professorApoio: null, aulas: 2 },
+  { turma: "8ME", discLabel: "LÍNGUA PORTUGUESA", professor: "Gabriela", professorApoio: null, aulas: 3 },
+  { turma: "8ME", discLabel: "GEOGRAFIA", professor: "Emanuele", professorApoio: null, aulas: 2 },
+  { turma: "8ME", discLabel: "HISTÓRIA", professor: "Robson", professorApoio: null, aulas: 3 },
+  { turma: "8ME", discLabel: "MATEMÁTICA", professor: "Geovani", professorApoio: null, aulas: 4 },
+  { turma: "8ME", discLabel: "EDUCAÇÃO DIGITAL", professor: "Silmara", professorApoio: null, aulas: 2 },
+  { turma: "8ME", discLabel: "CIÊNCIAS", professor: "Rodrigo", professorApoio: null, aulas: 3 },
+  { turma: "8ME", discLabel: "REDAÇÃO E LEITURA", professor: "Chrystian", professorApoio: null, aulas: 2 },
+  { turma: "9MA", discLabel: "ARTE", professor: "Lorena", professorApoio: null, aulas: 2 },
+  { turma: "9MA", discLabel: "EDUCAÇÃO FÍSICA", professor: "Elisangela", professorApoio: null, aulas: 2 },
+  { turma: "9MA", discLabel: "LÍNGUA INGLESA", professor: "Herica", professorApoio: null, aulas: 2 },
+  { turma: "9MA", discLabel: "LÍNGUA PORTUGUESA", professor: "Fernanda", professorApoio: null, aulas: 3 },
+  { turma: "9MA", discLabel: "GEOGRAFIA", professor: "Ricardo", professorApoio: null, aulas: 3 },
+  { turma: "9MA", discLabel: "HISTÓRIA", professor: "Salete", professorApoio: null, aulas: 2 },
+  { turma: "9MA", discLabel: "MATEMÁTICA", professor: "Eliana", professorApoio: null, aulas: 5 },
+  { turma: "9MA", discLabel: "REC. APREND. MATEMÁTICA", professor: "Juliana", professorApoio: "Julio", aulas: 2 },
+  { turma: "9MA", discLabel: "CIÊNCIAS", professor: "Cleide", professorApoio: null, aulas: 2 },
+  { turma: "9MA", discLabel: "LEI REC. APREND. L. PORT", professor: "Ivanir", professorApoio: null, aulas: 2 },
+  { turma: "9MB", discLabel: "ARTE", professor: "Lorena", professorApoio: null, aulas: 2 },
+  { turma: "9MB", discLabel: "EDUCAÇÃO FÍSICA", professor: "Heberton", professorApoio: null, aulas: 2 },
+  { turma: "9MB", discLabel: "LÍNGUA INGLESA", professor: "Herica", professorApoio: null, aulas: 2 },
+  { turma: "9MB", discLabel: "LÍNGUA PORTUGUESA", professor: "Fernanda", professorApoio: null, aulas: 3 },
+  { turma: "9MB", discLabel: "GEOGRAFIA", professor: "Ricardo", professorApoio: null, aulas: 3 },
+  { turma: "9MB", discLabel: "HISTÓRIA", professor: "Salete", professorApoio: null, aulas: 2 },
+  { turma: "9MB", discLabel: "MATEMÁTICA", professor: "Eliana", professorApoio: null, aulas: 5 },
+  { turma: "9MB", discLabel: "REC. APREND. MATEMÁTICA", professor: "Juliana", professorApoio: "Julio", aulas: 2 },
+  { turma: "9MB", discLabel: "CIÊNCIAS", professor: "Cleide", professorApoio: null, aulas: 2 },
+  { turma: "9MB", discLabel: "LEI REC. APREND. L. PORT", professor: "Ivanir", professorApoio: null, aulas: 2 },
+  { turma: "9MC", discLabel: "ARTE", professor: "Lorena", professorApoio: null, aulas: 2 },
+  { turma: "9MC", discLabel: "EDUCAÇÃO FÍSICA", professor: "Heberton", professorApoio: null, aulas: 2 },
+  { turma: "9MC", discLabel: "LÍNGUA INGLESA", professor: "Eduarda", professorApoio: null, aulas: 2 },
+  { turma: "9MC", discLabel: "LÍNGUA PORTUGUESA", professor: "Fernanda", professorApoio: null, aulas: 3 },
+  { turma: "9MC", discLabel: "GEOGRAFIA", professor: "Jackson", professorApoio: null, aulas: 3 },
+  { turma: "9MC", discLabel: "HISTÓRIA", professor: "Salete", professorApoio: null, aulas: 2 },
+  { turma: "9MC", discLabel: "MATEMÁTICA", professor: "Eliana", professorApoio: null, aulas: 5 },
+  { turma: "9MC", discLabel: "REC. APREND. MATEMÁTICA", professor: "Juliana", professorApoio: "Julio", aulas: 2 },
+  { turma: "9MC", discLabel: "CIÊNCIAS", professor: "Cleide", professorApoio: null, aulas: 2 },
+  { turma: "9MC", discLabel: "LEI REC. APREND. L. PORT", professor: "Ivanir", professorApoio: null, aulas: 2 },
+  { turma: "9MD", discLabel: "ARTE", professor: "Lorena", professorApoio: null, aulas: 2 },
+  { turma: "9MD", discLabel: "EDUCAÇÃO FÍSICA", professor: "Elisangela", professorApoio: null, aulas: 2 },
+  { turma: "9MD", discLabel: "LÍNGUA INGLESA", professor: "Eduarda", professorApoio: null, aulas: 2 },
+  { turma: "9MD", discLabel: "LÍNGUA PORTUGUESA", professor: "Fernanda", professorApoio: null, aulas: 3 },
+  { turma: "9MD", discLabel: "GEOGRAFIA", professor: "Ricardo", professorApoio: null, aulas: 3 },
+  { turma: "9MD", discLabel: "HISTÓRIA", professor: "Mario", professorApoio: null, aulas: 2 },
+  { turma: "9MD", discLabel: "MATEMÁTICA", professor: "Matheus", professorApoio: null, aulas: 5 },
+  { turma: "9MD", discLabel: "REC. APREND. MATEMÁTICA", professor: "Juliana", professorApoio: "Julio", aulas: 2 },
+  { turma: "9MD", discLabel: "CIÊNCIAS", professor: "Cleide", professorApoio: null, aulas: 2 },
+  { turma: "9MD", discLabel: "LEI REC. APREND. L. PORT", professor: "Ivanir", professorApoio: null, aulas: 2 },
+  { turma: "9ME", discLabel: "ARTE", professor: "Lorena", professorApoio: null, aulas: 2 },
+  { turma: "9ME", discLabel: "EDUCAÇÃO FÍSICA", professor: "Heberton", professorApoio: null, aulas: 2 },
+  { turma: "9ME", discLabel: "LÍNGUA INGLESA", professor: "Eliane Rocha", professorApoio: null, aulas: 2 },
+  { turma: "9ME", discLabel: "LÍNGUA PORTUGUESA", professor: "Fernanda", professorApoio: null, aulas: 3 },
+  { turma: "9ME", discLabel: "GEOGRAFIA", professor: "Ricardo", professorApoio: null, aulas: 3 },
+  { turma: "9ME", discLabel: "HISTÓRIA", professor: "Salete", professorApoio: null, aulas: 2 },
+  { turma: "9ME", discLabel: "MATEMÁTICA", professor: "Matheus", professorApoio: null, aulas: 5 },
+  { turma: "9ME", discLabel: "REC. APREND. MATEMÁTICA", professor: "Matheus", professorApoio: "Julio", aulas: 2 },
+  { turma: "9ME", discLabel: "CIÊNCIAS", professor: "Cleide", professorApoio: null, aulas: 2 },
+  { turma: "9ME", discLabel: "LEI REC. APREND. L. PORT", professor: "Ivanir", professorApoio: null, aulas: 2 },
+  { turma: "9MF", discLabel: "ARTE", professor: "Lorena", professorApoio: null, aulas: 2 },
+  { turma: "9MF", discLabel: "EDUCAÇÃO FÍSICA", professor: "Heberton", professorApoio: null, aulas: 2 },
+  { turma: "9MF", discLabel: "LÍNGUA INGLESA", professor: "Eliane Rocha", professorApoio: null, aulas: 2 },
+  { turma: "9MF", discLabel: "LÍNGUA PORTUGUESA", professor: "Eduarda", professorApoio: null, aulas: 3 },
+  { turma: "9MF", discLabel: "GEOGRAFIA", professor: "Jackson", professorApoio: null, aulas: 3 },
+  { turma: "9MF", discLabel: "HISTÓRIA", professor: "Salete", professorApoio: null, aulas: 2 },
+  { turma: "9MF", discLabel: "MATEMÁTICA", professor: "Geovani", professorApoio: null, aulas: 5 },
+  { turma: "9MF", discLabel: "REC. APREND. MATEMÁTICA", professor: "Matheus", professorApoio: "Julio", aulas: 2 },
+  { turma: "9MF", discLabel: "CIÊNCIAS", professor: "Cleide", professorApoio: null, aulas: 2 },
+  { turma: "9MF", discLabel: "LEI REC. APREND. L. PORT", professor: "Ivanir", professorApoio: null, aulas: 2 },
+  { turma: "1MA EM", discLabel: "ARTE", professor: "Jordana", professorApoio: null, aulas: 2 },
+  { turma: "1MA EM", discLabel: "EDUCAÇÃO FÍSICA", professor: "Cristiane", professorApoio: null, aulas: 2 },
+  { turma: "1MA EM", discLabel: "LÍNGUA INGLESA", professor: "Crislaine", professorApoio: null, aulas: 2 },
+  { turma: "1MA EM", discLabel: "LÍNGUA PORTUGUESA", professor: "Rafael", professorApoio: null, aulas: 4 },
+  { turma: "1MA EM", discLabel: "GEOGRAFIA", professor: "Dorival", professorApoio: null, aulas: 2 },
+  { turma: "1MA EM", discLabel: "MATEMÁTICA", professor: "Maristela", professorApoio: null, aulas: 4 },
+  { turma: "1MA EM", discLabel: "EDUCAÇÃO FINANCEIRA", professor: "Franciele de Assis", professorApoio: null, aulas: 2 },
+  { turma: "1MA EM", discLabel: "EDUCAÇÃO DIGITAL", professor: "Pedro", professorApoio: null, aulas: 2 },
+  { turma: "1MA EM", discLabel: "QUÍMICA", professor: "Luis Fernando", professorApoio: null, aulas: 2 },
+  { turma: "1MA EM", discLabel: "BIOLOGIA", professor: "Ione", professorApoio: null, aulas: 2 },
+  { turma: "1MA EM", discLabel: "HISTÓRIA DO PARANÁ", professor: "Salete", professorApoio: null, aulas: 2 },
+  { turma: "1MA EM", discLabel: "GEOGRAFIA DO PARANÁ", professor: "Dorival", professorApoio: null, aulas: 2 },
+  { turma: "1MA EM", discLabel: "ARTE PARANAENSE", professor: "Jordana", professorApoio: null, aulas: 2 },
+  { turma: "2MA EM", discLabel: "ARTE", professor: "Roberval", professorApoio: null, aulas: 2 },
+  { turma: "2MA EM", discLabel: "EDUCAÇÃO FÍSICA", professor: "Cristiane", professorApoio: null, aulas: 2 },
+  { turma: "2MA EM", discLabel: "LÍNGUA INGLESA", professor: "Crislaine", professorApoio: null, aulas: 2 },
+  { turma: "2MA EM", discLabel: "LÍNGUA PORTUGUESA", professor: "Soneide", professorApoio: null, aulas: 4 },
+  { turma: "2MA EM", discLabel: "FILOSOFIA", professor: "Sypriano", professorApoio: null, aulas: 2 },
+  { turma: "2MA EM", discLabel: "HISTÓRIA", professor: "Salete", professorApoio: null, aulas: 2 },
+  { turma: "2MA EM", discLabel: "SOCIOLOGIA", professor: "Ednilson", professorApoio: null, aulas: 2 },
+  { turma: "2MA EM", discLabel: "MATEMÁTICA", professor: "Geverson", professorApoio: null, aulas: 4 },
+  { turma: "2MA EM", discLabel: "EDUCAÇÃO FINANCEIRA", professor: "Maristela", professorApoio: null, aulas: 2 },
+  { turma: "2MA EM", discLabel: "FÍSICA", professor: "João Lucas", professorApoio: null, aulas: 2 },
+  { turma: "2MA EM", discLabel: "LIT. E PROD. DE TEXTO", professor: "Soneide", professorApoio: null, aulas: 2 },
+  { turma: "2MA EM", discLabel: "FIL.TEXTOS FILOSÓFICOS", professor: "Sypriano", professorApoio: null, aulas: 2 },
+  { turma: "2MA EM", discLabel: "SOC.GOV.CIDAD E SOCIEDADE", professor: "Dorival", professorApoio: null, aulas: 2 },
+  { turma: "3MA EM", discLabel: "EDUCAÇÃO FÍSICA", professor: "Cristiane", professorApoio: null, aulas: 2 },
+  { turma: "3MA EM", discLabel: "LÍNGUA PORTUGUESA", professor: "Aline", professorApoio: null, aulas: 4 },
+  { turma: "3MA EM", discLabel: "MATEMÁTICA", professor: "Kethelin", professorApoio: null, aulas: 4 },
+  { turma: "3MA EM", discLabel: "EDUCAÇÃO FINANCEIRA", professor: "Hemelly", professorApoio: null, aulas: 2 },
+  { turma: "3MA EM", discLabel: "FÍSICA", professor: "Arnaldo", professorApoio: null, aulas: 2 },
+  { turma: "3MA EM", discLabel: "PROJETO DE VIDA", professor: "Cesar", professorApoio: null, aulas: 1 },
+  { turma: "3MA EM", discLabel: "REC. APREND. L. PORT", professor: "Chrystian", professorApoio: null, aulas: 2 },
+  { turma: "3MA EM", discLabel: "REC. APREND. MATEMÁTICA", professor: "Mirian", professorApoio: null, aulas: 2 },
+  { turma: "3MA EM", discLabel: "GEOGRAFIA 1", professor: "Ricardo", professorApoio: null, aulas: 2 },
+  { turma: "3MA EM", discLabel: "HISTÓRIA 1", professor: "Gleiciane", professorApoio: null, aulas: 2 },
+  { turma: "3MA EM", discLabel: "LÍNGUA INGLESA 1", professor: "Herica", professorApoio: null, aulas: 3 },
+  { turma: "3MA EM", discLabel: "SOCIOLOGIA 1", professor: "Gleiciane", professorApoio: null, aulas: 2 },
+  { turma: "3MA EM", discLabel: "ARTE 2", professor: "Roberval", professorApoio: null, aulas: 2 },
+  { turma: "2MA ADM", discLabel: "EDUCAÇÃO FÍSICA", professor: "Cristiane", professorApoio: null, aulas: 2 },
+  { turma: "2MA ADM", discLabel: "LÍNGUA INGLESA", professor: "Crislaine", professorApoio: null, aulas: 2 },
+  { turma: "2MA ADM", discLabel: "LÍNGUA PORTUGUESA", professor: "Silmara", professorApoio: null, aulas: 3 },
+  { turma: "2MA ADM", discLabel: "FILOSOFIA", professor: "Sypriano", professorApoio: null, aulas: 2 },
+  { turma: "2MA ADM", discLabel: "HISTÓRIA", professor: "Salete", professorApoio: null, aulas: 2 },
+  { turma: "2MA ADM", discLabel: "SOCIOLOGIA", professor: "Ednilson", professorApoio: null, aulas: 2 },
+  { turma: "2MA ADM", discLabel: "MATEMÁTICA", professor: "Anderson", professorApoio: null, aulas: 2 },
+  { turma: "2MA ADM", discLabel: "EDUCAÇÃO FINANCEIRA", professor: "Hemelly", professorApoio: null, aulas: 1 },
+  { turma: "2MA ADM", discLabel: "FÍSICA", professor: "João Lucas", professorApoio: null, aulas: 2 },
+  { turma: "2MA ADM", discLabel: "INFORMÁTICA EMPRESARIAL", professor: "Kethelin", professorApoio: null, aulas: 1 },
+  { turma: "2MA ADM", discLabel: "COMUNICAÇÃO E VENDAS", professor: "Franciele de Assis", professorApoio: null, aulas: 1 },
+  { turma: "2MA ADM", discLabel: "FINANÇAS EMPRESARIAIS", professor: "Franciele de Assis", professorApoio: null, aulas: 2 },
+  { turma: "2MA ADM", discLabel: "LID ORG E GES DE PESSOAS", professor: "Simone", professorApoio: null, aulas: 2 },
+  { turma: "2MA ADM", discLabel: "RECURSOS HUMANOS", professor: "Simone", professorApoio: null, aulas: 2 },
+  { turma: "2MA ADM", discLabel: "ESTRATÉGIA DE MARKETING", professor: "Franciele de Assis", professorApoio: null, aulas: 2 },
+  { turma: "2MA ADM", discLabel: "TÉCNICAS INTEGRADAS", professor: "Cecilia", professorApoio: null, aulas: 1 },
+  { turma: "2MA ADM", discLabel: "PRINCÍPIOS ECONÔMICOS", professor: "Kethelin", professorApoio: null, aulas: 1 },
+  { turma: "3MA ADM", discLabel: "EDUCAÇÃO FÍSICA", professor: "Cristiane", professorApoio: null, aulas: 2 },
+  { turma: "3MA ADM", discLabel: "LÍNGUA PORTUGUESA", professor: "Soneide", professorApoio: null, aulas: 4 },
+  { turma: "3MA ADM", discLabel: "MATEMÁTICA", professor: "Geverson", professorApoio: null, aulas: 4 },
+  { turma: "3MA ADM", discLabel: "EDUCAÇÃO FINANCEIRA", professor: "Hemelly", professorApoio: null, aulas: 1 },
+  { turma: "3MA ADM", discLabel: "FÍSICA", professor: "João Lucas", professorApoio: null, aulas: 2 },
+  { turma: "3MA ADM", discLabel: "PROJETO DE VIDA", professor: "Cristiane", professorApoio: null, aulas: 1 },
+  { turma: "3MA ADM", discLabel: "RECURSOS HUMANOS", professor: "Elisabete", professorApoio: null, aulas: 2 },
+  { turma: "3MA ADM", discLabel: "ADM FINANC E ORÇAMENTÁRIA", professor: "Simone", professorApoio: null, aulas: 2 },
+  { turma: "3MA ADM", discLabel: "TECNO. E FER. DE GESTÃO", professor: "Franciele de Assis", professorApoio: null, aulas: 2 },
+  { turma: "3MA ADM", discLabel: "LID E GESTÃO DE PESSOAS", professor: "Francielle", professorApoio: null, aulas: 4 },
+  { turma: "3MA ADM", discLabel: "NEGOCIAÇÃO E VENDAS", professor: "Simone", professorApoio: null, aulas: 2 },
+  { turma: "3MA ADM", discLabel: "NOÇÕES DE DIREITO", professor: "Gleiciane", professorApoio: null, aulas: 2 },
+  { turma: "3MA ADM", discLabel: "CONTROLADORIA E FINANÇAS", professor: "Simone", professorApoio: null, aulas: 2 },
+  { turma: "1MB DES", discLabel: "ARTE", professor: "Jordana", professorApoio: null, aulas: 2 },
+  { turma: "1MB DES", discLabel: "EDUCAÇÃO FÍSICA", professor: "Cristiane", professorApoio: null, aulas: 2 },
+  { turma: "1MB DES", discLabel: "LÍNGUA INGLESA", professor: "Crislaine", professorApoio: null, aulas: 2 },
+  { turma: "1MB DES", discLabel: "LÍNGUA PORTUGUESA", professor: "Aline", professorApoio: null, aulas: 2 },
+  { turma: "1MB DES", discLabel: "GEOGRAFIA", professor: "Dorival", professorApoio: null, aulas: 2 },
+  { turma: "1MB DES", discLabel: "MATEMÁTICA", professor: "Maristela", professorApoio: null, aulas: 3 },
+  { turma: "1MB DES", discLabel: "EDUCAÇÃO DIGITAL", professor: "Pedro", professorApoio: null, aulas: 1 },
+  { turma: "1MB DES", discLabel: "QUÍMICA", professor: "Elisabete", professorApoio: null, aulas: 2 },
+  { turma: "1MB DES", discLabel: "BIOLOGIA", professor: "Ione", professorApoio: null, aulas: 2 },
+  { turma: "1MB DES", discLabel: "ANÁLISE E MET P SISTEMAS", professor: "Simone", professorApoio: null, aulas: 3 },
+  { turma: "1MB DES", discLabel: "INTRODUÇÃO À COMPUTAÇÃO", professor: "Gustavo", professorApoio: null, aulas: 2 },
+  { turma: "1MB DES", discLabel: "LÓGICA COMPUTACIONAL", professor: "Gustavo", professorApoio: null, aulas: 2 },
+  { turma: "1MB DES", discLabel: "BANCO DE DADOS 1", professor: "Simone", professorApoio: null, aulas: 3 },
+  { turma: "1MB DES", discLabel: "INTRODUÇÃO À PROGRAMAÇÃO", professor: "Gustavo", professorApoio: null, aulas: 2 },
+  { turma: "2MB DES", discLabel: "EDUCAÇÃO FÍSICA", professor: "Cristiane", professorApoio: null, aulas: 2 },
+  { turma: "2MB DES", discLabel: "LÍNGUA INGLESA", professor: "Crislaine", professorApoio: null, aulas: 2 },
+  { turma: "2MB DES", discLabel: "LÍNGUA PORTUGUESA", professor: "Silmara", professorApoio: null, aulas: 3 },
+  { turma: "2MB DES", discLabel: "FILOSOFIA", professor: "Sypriano", professorApoio: null, aulas: 2 },
+  { turma: "2MB DES", discLabel: "HISTÓRIA", professor: "Salete", professorApoio: null, aulas: 2 },
+  { turma: "2MB DES", discLabel: "SOCIOLOGIA", professor: "Gleiciane", professorApoio: null, aulas: 2 },
+  { turma: "2MB DES", discLabel: "MATEMÁTICA", professor: "Anderson", professorApoio: null, aulas: 2 },
+  { turma: "2MB DES", discLabel: "EDUCAÇÃO FINANCEIRA", professor: "Hemelly", professorApoio: null, aulas: 1 },
+  { turma: "2MB DES", discLabel: "FÍSICA", professor: "João Lucas", professorApoio: null, aulas: 2 },
+  { turma: "2MB DES", discLabel: "IN TEC E EMPREENDEDORISMO", professor: "Emanuele", professorApoio: null, aulas: 3 },
+  { turma: "2MB DES", discLabel: "PROGRAMAÇÃO BACK END 1", professor: "Gustavo", professorApoio: null, aulas: 3 },
+  { turma: "2MB DES", discLabel: "PROGRAMAÇÃO FRONT END", professor: "Gustavo", professorApoio: null, aulas: 3 },
+  { turma: "2MB DES", discLabel: "BANCO DE DADOS 2", professor: "Gustavo", professorApoio: null, aulas: 3 },
+  { turma: "3MB DES", discLabel: "EDUCAÇÃO FÍSICA", professor: "Elisangela", professorApoio: null, aulas: 1 },
+  { turma: "3MB DES", discLabel: "LÍNGUA PORTUGUESA", professor: "Crislaine", professorApoio: null, aulas: 4 },
+  { turma: "3MB DES", discLabel: "MATEMÁTICA", professor: "Kethelin", professorApoio: null, aulas: 4 },
+  { turma: "3MB DES", discLabel: "EDUCAÇÃO FINANCEIRA", professor: "Eliane Rocha", professorApoio: null, aulas: 1 },
+  { turma: "3MB DES", discLabel: "FÍSICA", professor: "João Lucas", professorApoio: null, aulas: 1 },
+  { turma: "3MB DES", discLabel: "ANÁLISE PROJ DE SISTEMAS", professor: "Eduarda", professorApoio: null, aulas: 3 },
+  { turma: "3MB DES", discLabel: "BANCO DE DADOS", professor: "Arnaldo", professorApoio: null, aulas: 2 },
+  { turma: "3MB DES", discLabel: "PROGRAMAÇÃO BACK END", professor: "Gustavo", professorApoio: null, aulas: 4 },
+  { turma: "3MB DES", discLabel: "PROGRAMAÇÃO MOBILE", professor: "Kethelin", professorApoio: null, aulas: 2 },
+  { turma: "3MB DES", discLabel: "PROG NO DES DE SISTEMAS", professor: "Arnaldo", professorApoio: null, aulas: 4 },
+  { turma: "3MB DES", discLabel: "CIÊNCIAS DE DADOS", professor: "Kethelin", professorApoio: null, aulas: 2 },
+  { turma: "3MB DES", discLabel: "COMPUTAÇÃO GRÁFICA", professor: "Gleiciane", professorApoio: null, aulas: 2 },
+  { turma: "1MC FAR", discLabel: "ARTE", professor: "Lorena", professorApoio: null, aulas: 2 },
+  { turma: "1MC FAR", discLabel: "EDUCAÇÃO FÍSICA", professor: "Cristiane", professorApoio: null, aulas: 2 },
+  { turma: "1MC FAR", discLabel: "LÍNGUA INGLESA", professor: "Eliane Rocha", professorApoio: null, aulas: 2 },
+  { turma: "1MC FAR", discLabel: "LÍNGUA PORTUGUESA", professor: "Aline", professorApoio: null, aulas: 2 },
+  { turma: "1MC FAR", discLabel: "GEOGRAFIA", professor: "Dorival", professorApoio: null, aulas: 2 },
+  { turma: "1MC FAR", discLabel: "MATEMÁTICA", professor: "Maristela", professorApoio: null, aulas: 3 },
+  { turma: "1MC FAR", discLabel: "EDUCAÇÃO DIGITAL", professor: "Pedro", professorApoio: null, aulas: 1 },
+  { turma: "1MC FAR", discLabel: "QUÍMICA", professor: "Elisabete", professorApoio: null, aulas: 2 },
+  { turma: "1MC FAR", discLabel: "BIOLOGIA", professor: "Ione", professorApoio: null, aulas: 2 },
+  { turma: "1MC FAR", discLabel: "REDAÇÃO TÉCNICA", professor: "Viviane", professorApoio: null, aulas: 1 },
+  { turma: "1MC FAR", discLabel: "EMPREENDEDORISMO", professor: "Robson", professorApoio: null, aulas: 2 },
+  { turma: "1MC FAR", discLabel: "DIS PROD FAR E CORRELATOS", professor: "Cecilia", professorApoio: null, aulas: 2 },
+  { turma: "1MC FAR", discLabel: "FARMÁCIA HOSPITALAR", professor: "Cecilia", professorApoio: null, aulas: 1 },
+  { turma: "1MC FAR", discLabel: "FARMACOLOGIA 1", professor: "Cecilia", professorApoio: null, aulas: 3 },
+  { turma: "1MC FAR", discLabel: "FUNDAMENTOS DE FARMÁCIA", professor: "Cecilia", professorApoio: null, aulas: 2 },
+  { turma: "1MC FAR", discLabel: "SAÚDE PÚBLICA", professor: "Melina", professorApoio: null, aulas: 1 },
+  { turma: "2MC FAR", discLabel: "EDUCAÇÃO FÍSICA", professor: "Cristiane", professorApoio: null, aulas: 2 },
+  { turma: "2MC FAR", discLabel: "LÍNGUA INGLESA", professor: "Crislaine", professorApoio: null, aulas: 2 },
+  { turma: "2MC FAR", discLabel: "LÍNGUA PORTUGUESA", professor: "Aline", professorApoio: null, aulas: 3 },
+  { turma: "2MC FAR", discLabel: "FILOSOFIA", professor: "Sypriano", professorApoio: null, aulas: 2 },
+  { turma: "2MC FAR", discLabel: "HISTÓRIA", professor: "Salete", professorApoio: null, aulas: 2 },
+  { turma: "2MC FAR", discLabel: "SOCIOLOGIA", professor: "Gleiciane", professorApoio: null, aulas: 2 },
+  { turma: "2MC FAR", discLabel: "MATEMÁTICA", professor: "Anderson", professorApoio: null, aulas: 2 },
+  { turma: "2MC FAR", discLabel: "EDUCAÇÃO FINANCEIRA", professor: "Hemelly", professorApoio: null, aulas: 1 },
+  { turma: "2MC FAR", discLabel: "FÍSICA", professor: "João Lucas", professorApoio: null, aulas: 2 },
+  { turma: "2MC FAR", discLabel: "BASES BIO APLIC A SAUDE", professor: "Werediana", professorApoio: null, aulas: 2 },
+  { turma: "2MC FAR", discLabel: "REDAÇÃO TÉCNICA", professor: "Viviane", professorApoio: null, aulas: 1 },
+  { turma: "2MC FAR", discLabel: "BIOSSEGURANÇA E SEG TRAB", professor: "Cecilia", professorApoio: null, aulas: 1 },
+  { turma: "2MC FAR", discLabel: "DIS PROD FAR E CORRELATOS", professor: "Cecilia", professorApoio: null, aulas: 2 },
+  { turma: "2MC FAR", discLabel: "FARMACOLOGIA 2", professor: "Cecilia", professorApoio: null, aulas: 2 },
+  { turma: "2MC FAR", discLabel: "FUND DA FISIOPATOLOGIA", professor: "Viviane", professorApoio: null, aulas: 2 },
+  { turma: "2MC FAR", discLabel: "TOXICOLOGIA", professor: "Viviane", professorApoio: null, aulas: 2 },
+  { turma: "1MD MA", discLabel: "ARTE", professor: "Jordana", professorApoio: null, aulas: 2 },
+  { turma: "1MD MA", discLabel: "EDUCAÇÃO FÍSICA", professor: "Cristiane", professorApoio: null, aulas: 2 },
+  { turma: "1MD MA", discLabel: "LÍNGUA INGLESA", professor: "Crislaine", professorApoio: null, aulas: 2 },
+  { turma: "1MD MA", discLabel: "LÍNGUA PORTUGUESA", professor: "Aline", professorApoio: null, aulas: 2 },
+  { turma: "1MD MA", discLabel: "GEOGRAFIA", professor: "Dorival", professorApoio: null, aulas: 2 },
+  { turma: "1MD MA", discLabel: "MATEMÁTICA", professor: "Maristela", professorApoio: null, aulas: 3 },
+  { turma: "1MD MA", discLabel: "EDUCAÇÃO DIGITAL", professor: "Pedro", professorApoio: null, aulas: 1 },
+  { turma: "1MD MA", discLabel: "QUÍMICA", professor: "Luis Fernando", professorApoio: null, aulas: 2 },
+  { turma: "1MD MA", discLabel: "BIOLOGIA", professor: "Ione", professorApoio: null, aulas: 2 },
+  { turma: "1MD MA", discLabel: "ANÁLISE CONT E QUIM AMB", professor: "Elisabete", professorApoio: null, aulas: 2 },
+  { turma: "1MD MA", discLabel: "GESTÃO DE REC NATURAIS", professor: "Elisabete", professorApoio: null, aulas: 1 },
+  { turma: "1MD MA", discLabel: "EDUCAÇÃO AMBIENTAL", professor: "Jackson", professorApoio: null, aulas: 2 },
+  { turma: "1MD MA", discLabel: "GESTÃO DE RESÍDUOS", professor: "Ione", professorApoio: null, aulas: 2 },
+  { turma: "1MD MA", discLabel: "INFORMÁTICA APLICADA", professor: "Emanuele", professorApoio: null, aulas: 2 },
+  { turma: "1MD MA", discLabel: "SIST DE GESTÃO AMBIENTAL", professor: "Emanuele", professorApoio: null, aulas: 3 },
+  { turma: "2MD MA", discLabel: "EDUCAÇÃO FÍSICA", professor: "Cristiane", professorApoio: null, aulas: 2 },
+  { turma: "2MD MA", discLabel: "LÍNGUA INGLESA", professor: "Crislaine", professorApoio: null, aulas: 2 },
+  { turma: "2MD MA", discLabel: "LÍNGUA PORTUGUESA", professor: "Aline", professorApoio: null, aulas: 3 },
+  { turma: "2MD MA", discLabel: "FILOSOFIA", professor: "Cesar", professorApoio: null, aulas: 2 },
+  { turma: "2MD MA", discLabel: "HISTÓRIA", professor: "Salete", professorApoio: null, aulas: 2 },
+  { turma: "2MD MA", discLabel: "SOCIOLOGIA", professor: "Gleiciane", professorApoio: null, aulas: 2 },
+  { turma: "2MD MA", discLabel: "MATEMÁTICA", professor: "Anderson", professorApoio: null, aulas: 2 },
+  { turma: "2MD MA", discLabel: "EDUCAÇÃO FINANCEIRA", professor: "Hemelly", professorApoio: null, aulas: 1 },
+  { turma: "2MD MA", discLabel: "FÍSICA", professor: "João Lucas", professorApoio: null, aulas: 2 },
+  { turma: "2MD MA", discLabel: "EDUCAÇÃO AMBIENTAL 1", professor: "Elisabete", professorApoio: null, aulas: 1 },
+  { turma: "2MD MA", discLabel: "EST DE IMP RIS AMBIENTAIS", professor: "Dorival", professorApoio: null, aulas: 2 },
+  { turma: "2MD MA", discLabel: "ANÁLISE CONT E QUIM AMB 1", professor: "Viviane", professorApoio: null, aulas: 2 },
+  { turma: "2MD MA", discLabel: "GESTÃO DE REC NATURAIS 1", professor: "Dorival", professorApoio: null, aulas: 2 },
+  { turma: "2MD MA", discLabel: "GESTÃO DE RESÍDUOS", professor: "Emanuele", professorApoio: null, aulas: 2 },
+  { turma: "2MD MA", discLabel: "MET CIENT E COMUNICAÇÃO", professor: "Viviane", professorApoio: null, aulas: 1 },
+  { turma: "2MD MA", discLabel: "SIST DE GESTÃO AMBIENTAL", professor: "Elisabete", professorApoio: null, aulas: 2 },
+  { turma: "1ME DOC", discLabel: "ARTE", professor: "Lorena", professorApoio: null, aulas: 2 },
+  { turma: "1ME DOC", discLabel: "EDUCAÇÃO FÍSICA", professor: "Elisangela", professorApoio: null, aulas: 2 },
+  { turma: "1ME DOC", discLabel: "LÍNGUA INGLESA", professor: "Eliane Rocha", professorApoio: null, aulas: 2 },
+  { turma: "1ME DOC", discLabel: "LÍNGUA PORTUGUESA", professor: "Crislaine", professorApoio: null, aulas: 2 },
+  { turma: "1ME DOC", discLabel: "GEOGRAFIA", professor: "Dorival", professorApoio: null, aulas: 2 },
+  { turma: "1ME DOC", discLabel: "MATEMÁTICA", professor: "Anderson", professorApoio: null, aulas: 3 },
+  { turma: "1ME DOC", discLabel: "EDUCAÇÃO DIGITAL", professor: "Pedro", professorApoio: null, aulas: 1 },
+  { turma: "1ME DOC", discLabel: "QUÍMICA", professor: "Elisabete", professorApoio: null, aulas: 2 },
+  { turma: "1ME DOC", discLabel: "BIOLOGIA", professor: "Ione", professorApoio: null, aulas: 2 },
+  { turma: "1ME DOC", discLabel: "MAT BAS P ANOS INICIAIS", professor: "Eduarda", professorApoio: null, aulas: 3 },
+  { turma: "1ME DOC", discLabel: "ORG DO TRAB PEDAGÓGICO", professor: "Julio", professorApoio: null, aulas: 2 },
+  { turma: "1ME DOC", discLabel: "DES HUM E SOCIOEMOCIONAL", professor: "Eduarda", professorApoio: null, aulas: 2 },
+  { turma: "1ME DOC", discLabel: "ED INCLUSIVA DIVERSIDADE", professor: "Cecilia", professorApoio: null, aulas: 3 },
+  { turma: "1ME DOC", discLabel: "TRAB PED NA ED INFANTIL", professor: "Julio", professorApoio: null, aulas: 2 },
+  { turma: "6TA", discLabel: "LÍNGUA PORTUGUESA", professor: "Rafael", professorApoio: null, aulas: 4 },
+  { turma: "6TA", discLabel: "MATEMÁTICA", professor: "Robson", professorApoio: null, aulas: 4 },
+  { turma: "6TA", discLabel: "HISTÓRIA", professor: "Daiane", professorApoio: null, aulas: 2 },
+  { turma: "6TA", discLabel: "GEOGRAFIA", professor: "Ricardo", professorApoio: null, aulas: 2 },
+  { turma: "6TA", discLabel: "ARTE", professor: "Priscila", professorApoio: null, aulas: 2 },
+  { turma: "6TA", discLabel: "EDUCAÇÃO FÍSICA", professor: "Elisangela", professorApoio: null, aulas: 2 },
+  { turma: "6TA", discLabel: "LÍNGUA INGLESA", professor: "Marise", professorApoio: null, aulas: 2 },
+  { turma: "6TA", discLabel: "CIÊNCIAS", professor: "Silmara", professorApoio: null, aulas: 2 },
+  { turma: "6TA", discLabel: "ENS.RELIGIOSO", professor: "Marcio", professorApoio: null, aulas: 1 },
+  { turma: "6TA", discLabel: "LEI REC. APREND. L. PORT", professor: "Cecilia", professorApoio: "Ivanir", aulas: 2 },
+  { turma: "6TA", discLabel: "REC. APREND. MATEMÁTICA", professor: "Andre", professorApoio: "Pedro", aulas: 2 },
+  { turma: "6TB", discLabel: "LÍNGUA PORTUGUESA", professor: "Rafael", professorApoio: null, aulas: 4 },
+  { turma: "6TB", discLabel: "MATEMÁTICA", professor: "Robson", professorApoio: null, aulas: 4 },
+  { turma: "6TB", discLabel: "HISTÓRIA", professor: "Daiane", professorApoio: null, aulas: 2 },
+  { turma: "6TB", discLabel: "GEOGRAFIA", professor: "Jackson", professorApoio: null, aulas: 2 },
+  { turma: "6TB", discLabel: "ARTE", professor: "Priscila", professorApoio: null, aulas: 2 },
+  { turma: "6TB", discLabel: "EDUCAÇÃO FÍSICA", professor: "Elisangela", professorApoio: null, aulas: 2 },
+  { turma: "6TB", discLabel: "LÍNGUA INGLESA", professor: "Marise", professorApoio: null, aulas: 2 },
+  { turma: "6TB", discLabel: "CIÊNCIAS", professor: "Wellington", professorApoio: null, aulas: 2 },
+  { turma: "6TB", discLabel: "ENS.RELIGIOSO", professor: "Janice", professorApoio: null, aulas: 1 },
+  { turma: "6TB", discLabel: "LEI REC. APREND. L. PORT", professor: "Cecilia", professorApoio: "Ivanir", aulas: 2 },
+  { turma: "6TB", discLabel: "REC. APREND. MATEMÁTICA", professor: "Andre", professorApoio: "Lisiane", aulas: 2 },
+  { turma: "6TC", discLabel: "LÍNGUA PORTUGUESA", professor: "Rafael", professorApoio: null, aulas: 4 },
+  { turma: "6TC", discLabel: "MATEMÁTICA", professor: "Marcio", professorApoio: null, aulas: 4 },
+  { turma: "6TC", discLabel: "HISTÓRIA", professor: "Daiane", professorApoio: null, aulas: 2 },
+  { turma: "6TC", discLabel: "GEOGRAFIA", professor: "Jackson", professorApoio: null, aulas: 2 },
+  { turma: "6TC", discLabel: "ARTE", professor: "Priscila", professorApoio: null, aulas: 2 },
+  { turma: "6TC", discLabel: "EDUCAÇÃO FÍSICA", professor: "Elisangela", professorApoio: null, aulas: 2 },
+  { turma: "6TC", discLabel: "LÍNGUA INGLESA", professor: "Marise", professorApoio: null, aulas: 2 },
+  { turma: "6TC", discLabel: "CIÊNCIAS", professor: "Wellington", professorApoio: null, aulas: 2 },
+  { turma: "6TC", discLabel: "ENS.RELIGIOSO", professor: "Sypriano", professorApoio: null, aulas: 1 },
+  { turma: "6TC", discLabel: "LEI REC. APREND. L. PORT", professor: "Cecilia", professorApoio: "Ivanir", aulas: 2 },
+  { turma: "6TC", discLabel: "REC. APREND. MATEMÁTICA", professor: "Pedro", professorApoio: "Lisiane", aulas: 2 },
+  { turma: "6TD", discLabel: "LÍNGUA PORTUGUESA", professor: "Marta", professorApoio: null, aulas: 4 },
+  { turma: "6TD", discLabel: "MATEMÁTICA", professor: "Marcio", professorApoio: null, aulas: 4 },
+  { turma: "6TD", discLabel: "HISTÓRIA", professor: "Marcio", professorApoio: null, aulas: 2 },
+  { turma: "6TD", discLabel: "GEOGRAFIA", professor: "Ricardo", professorApoio: null, aulas: 2 },
+  { turma: "6TD", discLabel: "ARTE", professor: "Priscila", professorApoio: null, aulas: 2 },
+  { turma: "6TD", discLabel: "EDUCAÇÃO FÍSICA", professor: "Elisangela", professorApoio: null, aulas: 2 },
+  { turma: "6TD", discLabel: "LÍNGUA INGLESA", professor: "Marise", professorApoio: null, aulas: 2 },
+  { turma: "6TD", discLabel: "CIÊNCIAS", professor: "Wellington", professorApoio: null, aulas: 2 },
+  { turma: "6TD", discLabel: "ENS.RELIGIOSO", professor: "Sypriano", professorApoio: null, aulas: 1 },
+  { turma: "6TD", discLabel: "LEI REC. APREND. L. PORT", professor: "Ivanir", professorApoio: "Silmara", aulas: 2 },
+  { turma: "6TD", discLabel: "REC. APREND. MATEMÁTICA", professor: "Pedro", professorApoio: "Lisiane", aulas: 2 },
+  { turma: "6TE", discLabel: "LÍNGUA PORTUGUESA", professor: "Marta", professorApoio: null, aulas: 4 },
+  { turma: "6TE", discLabel: "MATEMÁTICA", professor: "Julio", professorApoio: null, aulas: 4 },
+  { turma: "6TE", discLabel: "HISTÓRIA", professor: "Marcio", professorApoio: null, aulas: 2 },
+  { turma: "6TE", discLabel: "GEOGRAFIA", professor: "Ricardo", professorApoio: null, aulas: 2 },
+  { turma: "6TE", discLabel: "ARTE", professor: "Debora", professorApoio: null, aulas: 2 },
+  { turma: "6TE", discLabel: "EDUCAÇÃO FÍSICA", professor: "Marlete", professorApoio: null, aulas: 2 },
+  { turma: "6TE", discLabel: "LÍNGUA INGLESA", professor: "Marise", professorApoio: null, aulas: 2 },
+  { turma: "6TE", discLabel: "CIÊNCIAS", professor: "Franciele de Assis", professorApoio: null, aulas: 2 },
+  { turma: "6TE", discLabel: "ENS.RELIGIOSO", professor: "Sypriano", professorApoio: null, aulas: 1 },
+  { turma: "6TE", discLabel: "LEI REC. APREND. L. PORT", professor: "Ivanir", professorApoio: "Silmara", aulas: 2 },
+  { turma: "6TE", discLabel: "REC. APREND. MATEMÁTICA", professor: "Pedro", professorApoio: "Lisiane", aulas: 2 },
+  { turma: "6TF", discLabel: "LÍNGUA PORTUGUESA", professor: "Marta", professorApoio: null, aulas: 4 },
+  { turma: "6TF", discLabel: "MATEMÁTICA", professor: "Matheus", professorApoio: null, aulas: 4 },
+  { turma: "6TF", discLabel: "HISTÓRIA", professor: "Robson", professorApoio: null, aulas: 2 },
+  { turma: "6TF", discLabel: "GEOGRAFIA", professor: "Ricardo", professorApoio: null, aulas: 2 },
+  { turma: "6TF", discLabel: "ARTE", professor: "Debora", professorApoio: null, aulas: 2 },
+  { turma: "6TF", discLabel: "EDUCAÇÃO FÍSICA", professor: "Elisangela", professorApoio: null, aulas: 2 },
+  { turma: "6TF", discLabel: "LÍNGUA INGLESA", professor: "Marise", professorApoio: null, aulas: 2 },
+  { turma: "6TF", discLabel: "CIÊNCIAS", professor: "Wellington", professorApoio: null, aulas: 2 },
+  { turma: "6TF", discLabel: "ENS.RELIGIOSO", professor: "Sypriano", professorApoio: null, aulas: 1 },
+  { turma: "6TF", discLabel: "LEI REC. APREND. L. PORT", professor: "Ivanir", professorApoio: "Silmara", aulas: 2 },
+  { turma: "6TF", discLabel: "REC. APREND. MATEMÁTICA", professor: "Pedro", professorApoio: "Lisiane", aulas: 2 },
+  { turma: "6TG", discLabel: "LÍNGUA PORTUGUESA", professor: "Eleciana", professorApoio: null, aulas: 4 },
+  { turma: "6TG", discLabel: "MATEMÁTICA", professor: "Matheus", professorApoio: null, aulas: 4 },
+  { turma: "6TG", discLabel: "HISTÓRIA", professor: "Robson", professorApoio: null, aulas: 2 },
+  { turma: "6TG", discLabel: "GEOGRAFIA", professor: "Ricardo", professorApoio: null, aulas: 2 },
+  { turma: "6TG", discLabel: "ARTE", professor: "Debora", professorApoio: null, aulas: 2 },
+  { turma: "6TG", discLabel: "EDUCAÇÃO FÍSICA", professor: "Marlete", professorApoio: null, aulas: 2 },
+  { turma: "6TG", discLabel: "LÍNGUA INGLESA", professor: "Marise", professorApoio: null, aulas: 2 },
+  { turma: "6TG", discLabel: "CIÊNCIAS", professor: "Wellington", professorApoio: null, aulas: 2 },
+  { turma: "6TG", discLabel: "ENS.RELIGIOSO", professor: "Sypriano", professorApoio: null, aulas: 1 },
+  { turma: "6TG", discLabel: "LEI REC. APREND. L. PORT", professor: "Ivanir", professorApoio: "Silmara", aulas: 2 },
+  { turma: "6TG", discLabel: "REC. APREND. MATEMÁTICA", professor: "Pedro", professorApoio: "Lisiane", aulas: 2 },
+  { turma: "6TH", discLabel: "LÍNGUA PORTUGUESA", professor: "Marta", professorApoio: null, aulas: 4 },
+  { turma: "6TH", discLabel: "MATEMÁTICA", professor: "Matheus", professorApoio: null, aulas: 4 },
+  { turma: "6TH", discLabel: "HISTÓRIA", professor: "Wildemberg", professorApoio: null, aulas: 2 },
+  { turma: "6TH", discLabel: "GEOGRAFIA", professor: "Ricardo", professorApoio: null, aulas: 2 },
+  { turma: "6TH", discLabel: "ARTE", professor: "Debora", professorApoio: null, aulas: 2 },
+  { turma: "6TH", discLabel: "EDUCAÇÃO FÍSICA", professor: "Marlete", professorApoio: null, aulas: 2 },
+  { turma: "6TH", discLabel: "LÍNGUA INGLESA", professor: "Marise", professorApoio: null, aulas: 2 },
+  { turma: "6TH", discLabel: "CIÊNCIAS", professor: "Wellington", professorApoio: null, aulas: 2 },
+  { turma: "6TH", discLabel: "ENS.RELIGIOSO", professor: "Sypriano", professorApoio: null, aulas: 1 },
+  { turma: "6TH", discLabel: "LEI REC. APREND. L. PORT", professor: "Ivanir", professorApoio: "Silmara", aulas: 2 },
+  { turma: "6TH", discLabel: "REC. APREND. MATEMÁTICA", professor: "Gilberto", professorApoio: "Lisiane", aulas: 2 },
+  { turma: "6TI", discLabel: "LÍNGUA PORTUGUESA", professor: "Marta", professorApoio: null, aulas: 4 },
+  { turma: "6TI", discLabel: "MATEMÁTICA", professor: "Franciele de Assis", professorApoio: null, aulas: 4 },
+  { turma: "6TI", discLabel: "HISTÓRIA", professor: "Sarah", professorApoio: null, aulas: 2 },
+  { turma: "6TI", discLabel: "GEOGRAFIA", professor: "Ricardo", professorApoio: null, aulas: 2 },
+  { turma: "6TI", discLabel: "ARTE", professor: "Debora", professorApoio: null, aulas: 2 },
+  { turma: "6TI", discLabel: "EDUCAÇÃO FÍSICA", professor: "Marlete", professorApoio: null, aulas: 2 },
+  { turma: "6TI", discLabel: "LÍNGUA INGLESA", professor: "Marise", professorApoio: null, aulas: 2 },
+  { turma: "6TI", discLabel: "CIÊNCIAS", professor: "Wellington", professorApoio: null, aulas: 2 },
+  { turma: "6TI", discLabel: "ENS.RELIGIOSO", professor: "Sypriano", professorApoio: null, aulas: 1 },
+  { turma: "6TI", discLabel: "LEI REC. APREND. L. PORT", professor: "Ivanir", professorApoio: "Silmara", aulas: 2 },
+  { turma: "6TI", discLabel: "REC. APREND. MATEMÁTICA", professor: "Gilberto", professorApoio: "Lisiane", aulas: 2 },
+  { turma: "7TA", discLabel: "LÍNGUA PORTUGUESA", professor: "Gabriela", professorApoio: null, aulas: 3 },
+  { turma: "7TA", discLabel: "MATEMÁTICA", professor: "Andre", professorApoio: null, aulas: 5 },
+  { turma: "7TA", discLabel: "HISTÓRIA", professor: "Daiane", professorApoio: null, aulas: 2 },
+  { turma: "7TA", discLabel: "GEOGRAFIA", professor: "Dorival", professorApoio: null, aulas: 3 },
+  { turma: "7TA", discLabel: "ARTE", professor: "Jordana", professorApoio: null, aulas: 2 },
+  { turma: "7TA", discLabel: "EDUCAÇÃO FÍSICA", professor: "Eduardo", professorApoio: null, aulas: 2 },
+  { turma: "7TA", discLabel: "LÍNGUA INGLESA", professor: "Herica", professorApoio: null, aulas: 2 },
+  { turma: "7TA", discLabel: "CIÊNCIAS", professor: "Eduarda", professorApoio: null, aulas: 3 },
+  { turma: "7TA", discLabel: "ENS.RELIGIOSO", professor: "Sypriano", professorApoio: null, aulas: 1 },
+  { turma: "7TA", discLabel: "REDAÇÃO E LEITURA", professor: "Robson", professorApoio: null, aulas: 2 },
+  { turma: "7TB", discLabel: "LÍNGUA PORTUGUESA", professor: "Gabriela", professorApoio: null, aulas: 3 },
+  { turma: "7TB", discLabel: "MATEMÁTICA", professor: "Andre", professorApoio: null, aulas: 5 },
+  { turma: "7TB", discLabel: "HISTÓRIA", professor: "Daiane", professorApoio: null, aulas: 2 },
+  { turma: "7TB", discLabel: "GEOGRAFIA", professor: "Dorival", professorApoio: null, aulas: 3 },
+  { turma: "7TB", discLabel: "ARTE", professor: "Jordana", professorApoio: null, aulas: 2 },
+  { turma: "7TB", discLabel: "EDUCAÇÃO FÍSICA", professor: "Eduardo", professorApoio: null, aulas: 2 },
+  { turma: "7TB", discLabel: "LÍNGUA INGLESA", professor: "Herica", professorApoio: null, aulas: 2 },
+  { turma: "7TB", discLabel: "CIÊNCIAS", professor: "Eduarda", professorApoio: null, aulas: 3 },
+  { turma: "7TB", discLabel: "ENS.RELIGIOSO", professor: "Sypriano", professorApoio: null, aulas: 1 },
+  { turma: "7TB", discLabel: "REDAÇÃO E LEITURA", professor: "Robson", professorApoio: null, aulas: 2 },
+  { turma: "7TC", discLabel: "LÍNGUA PORTUGUESA", professor: "Gabriela", professorApoio: null, aulas: 3 },
+  { turma: "7TC", discLabel: "MATEMÁTICA", professor: "Geverson", professorApoio: null, aulas: 5 },
+  { turma: "7TC", discLabel: "HISTÓRIA", professor: "Daiane", professorApoio: null, aulas: 2 },
+  { turma: "7TC", discLabel: "GEOGRAFIA", professor: "Nelson", professorApoio: null, aulas: 3 },
+  { turma: "7TC", discLabel: "ARTE", professor: "Jordana", professorApoio: null, aulas: 2 },
+  { turma: "7TC", discLabel: "EDUCAÇÃO FÍSICA", professor: "Eduardo", professorApoio: null, aulas: 2 },
+  { turma: "7TC", discLabel: "LÍNGUA INGLESA", professor: "Herica", professorApoio: null, aulas: 2 },
+  { turma: "7TC", discLabel: "CIÊNCIAS", professor: "Eleciana", professorApoio: null, aulas: 3 },
+  { turma: "7TC", discLabel: "ENS.RELIGIOSO", professor: "Sypriano", professorApoio: null, aulas: 1 },
+  { turma: "7TC", discLabel: "REDAÇÃO E LEITURA", professor: "Robson", professorApoio: null, aulas: 2 },
+  { turma: "7TD", discLabel: "LÍNGUA PORTUGUESA", professor: "Gabriela", professorApoio: null, aulas: 3 },
+  { turma: "7TD", discLabel: "MATEMÁTICA", professor: "Geverson", professorApoio: null, aulas: 5 },
+  { turma: "7TD", discLabel: "HISTÓRIA", professor: "Daiane", professorApoio: null, aulas: 2 },
+  { turma: "7TD", discLabel: "GEOGRAFIA", professor: "Nelson", professorApoio: null, aulas: 3 },
+  { turma: "7TD", discLabel: "ARTE", professor: "Jordana", professorApoio: null, aulas: 2 },
+  { turma: "7TD", discLabel: "EDUCAÇÃO FÍSICA", professor: "Eduardo", professorApoio: null, aulas: 2 },
+  { turma: "7TD", discLabel: "LÍNGUA INGLESA", professor: "Herica", professorApoio: null, aulas: 2 },
+  { turma: "7TD", discLabel: "CIÊNCIAS", professor: "Eleciana", professorApoio: null, aulas: 3 },
+  { turma: "7TD", discLabel: "ENS.RELIGIOSO", professor: "Sypriano", professorApoio: null, aulas: 1 },
+  { turma: "7TD", discLabel: "REDAÇÃO E LEITURA", professor: "Robson", professorApoio: null, aulas: 2 },
+  { turma: "7TE", discLabel: "LÍNGUA PORTUGUESA", professor: "Gabriela", professorApoio: null, aulas: 3 },
+  { turma: "7TE", discLabel: "MATEMÁTICA", professor: "Marcio", professorApoio: null, aulas: 5 },
+  { turma: "7TE", discLabel: "HISTÓRIA", professor: "Daiane", professorApoio: null, aulas: 2 },
+  { turma: "7TE", discLabel: "GEOGRAFIA", professor: "Nelson", professorApoio: null, aulas: 3 },
+  { turma: "7TE", discLabel: "ARTE", professor: "Jordana", professorApoio: null, aulas: 2 },
+  { turma: "7TE", discLabel: "EDUCAÇÃO FÍSICA", professor: "Eduardo", professorApoio: null, aulas: 2 },
+  { turma: "7TE", discLabel: "LÍNGUA INGLESA", professor: "Eliane Rocha", professorApoio: null, aulas: 2 },
+  { turma: "7TE", discLabel: "CIÊNCIAS", professor: "Wellington", professorApoio: null, aulas: 3 },
+  { turma: "7TE", discLabel: "ENS.RELIGIOSO", professor: "Sypriano", professorApoio: null, aulas: 1 },
+  { turma: "7TE", discLabel: "REDAÇÃO E LEITURA", professor: "Rafael", professorApoio: null, aulas: 2 },
+  { turma: "7TF", discLabel: "LÍNGUA PORTUGUESA", professor: "Rafael", professorApoio: null, aulas: 3 },
+  { turma: "7TF", discLabel: "MATEMÁTICA", professor: "Maristela", professorApoio: null, aulas: 5 },
+  { turma: "7TF", discLabel: "HISTÓRIA", professor: "Ednilson", professorApoio: null, aulas: 2 },
+  { turma: "7TF", discLabel: "GEOGRAFIA", professor: "Nelson", professorApoio: null, aulas: 3 },
+  { turma: "7TF", discLabel: "ARTE", professor: "Lorena", professorApoio: null, aulas: 2 },
+  { turma: "7TF", discLabel: "EDUCAÇÃO FÍSICA", professor: "Eduardo", professorApoio: null, aulas: 2 },
+  { turma: "7TF", discLabel: "LÍNGUA INGLESA", professor: "Marise", professorApoio: null, aulas: 2 },
+  { turma: "7TF", discLabel: "CIÊNCIAS", professor: "Melina", professorApoio: null, aulas: 3 },
+  { turma: "7TF", discLabel: "ENS.RELIGIOSO", professor: "Robson", professorApoio: null, aulas: 1 },
+  { turma: "7TF", discLabel: "REDAÇÃO E LEITURA", professor: "Rafael", professorApoio: null, aulas: 2 },
+  { turma: "7TG", discLabel: "LÍNGUA PORTUGUESA", professor: "Cecilia", professorApoio: null, aulas: 3 },
+  { turma: "7TG", discLabel: "MATEMÁTICA", professor: "Maristela", professorApoio: null, aulas: 5 },
+  { turma: "7TG", discLabel: "HISTÓRIA", professor: "Ednilson", professorApoio: null, aulas: 2 },
+  { turma: "7TG", discLabel: "GEOGRAFIA", professor: "Nelson", professorApoio: null, aulas: 3 },
+  { turma: "7TG", discLabel: "ARTE", professor: "Lorena", professorApoio: null, aulas: 2 },
+  { turma: "7TG", discLabel: "EDUCAÇÃO FÍSICA", professor: "Heberton", professorApoio: null, aulas: 2 },
+  { turma: "7TG", discLabel: "LÍNGUA INGLESA", professor: "Eliane Rocha", professorApoio: null, aulas: 2 },
+  { turma: "7TG", discLabel: "CIÊNCIAS", professor: "Melina", professorApoio: null, aulas: 3 },
+  { turma: "7TG", discLabel: "ENS.RELIGIOSO", professor: "Robson", professorApoio: null, aulas: 1 },
+  { turma: "7TG", discLabel: "REDAÇÃO E LEITURA", professor: "Rafael", professorApoio: null, aulas: 2 },
+  { turma: "7TH", discLabel: "LÍNGUA PORTUGUESA", professor: "Patricia", professorApoio: null, aulas: 3 },
+  { turma: "7TH", discLabel: "MATEMÁTICA", professor: "Maristela", professorApoio: null, aulas: 5 },
+  { turma: "7TH", discLabel: "HISTÓRIA", professor: "Mario", professorApoio: null, aulas: 2 },
+  { turma: "7TH", discLabel: "GEOGRAFIA", professor: "Emanuele", professorApoio: null, aulas: 3 },
+  { turma: "7TH", discLabel: "ARTE", professor: "Lorena", professorApoio: null, aulas: 2 },
+  { turma: "7TH", discLabel: "EDUCAÇÃO FÍSICA", professor: "Heberton", professorApoio: null, aulas: 2 },
+  { turma: "7TH", discLabel: "LÍNGUA INGLESA", professor: "Eliane Rocha", professorApoio: null, aulas: 2 },
+  { turma: "7TH", discLabel: "CIÊNCIAS", professor: "Melina", professorApoio: null, aulas: 3 },
+  { turma: "7TH", discLabel: "ENS.RELIGIOSO", professor: "Marcio", professorApoio: null, aulas: 1 },
+  { turma: "7TH", discLabel: "REDAÇÃO E LEITURA", professor: "Robson", professorApoio: null, aulas: 2 },
+  { turma: "8TF", discLabel: "LÍNGUA PORTUGUESA", professor: "Antonio Silva", professorApoio: null, aulas: 3 },
+  { turma: "8TF", discLabel: "MATEMÁTICA", professor: "Anderson", professorApoio: null, aulas: 4 },
+  { turma: "8TF", discLabel: "HISTÓRIA", professor: "Mario", professorApoio: null, aulas: 3 },
+  { turma: "8TF", discLabel: "GEOGRAFIA", professor: "Ricardo", professorApoio: null, aulas: 2 },
+  { turma: "8TF", discLabel: "ARTE", professor: "Lorena", professorApoio: null, aulas: 2 },
+  { turma: "8TF", discLabel: "EDUCAÇÃO FÍSICA", professor: "Eduardo", professorApoio: null, aulas: 2 },
+  { turma: "8TF", discLabel: "LÍNGUA INGLESA", professor: "Crislaine", professorApoio: null, aulas: 2 },
+  { turma: "8TF", discLabel: "CIÊNCIAS", professor: "Wellington", professorApoio: null, aulas: 3 },
+  { turma: "8TF", discLabel: "REDAÇÃO E LEITURA", professor: "Antonio Silva", professorApoio: null, aulas: 2 },
+  { turma: "8TF", discLabel: "EDUCAÇÃO DIGITAL", professor: "Gustavo", professorApoio: null, aulas: 2 },
+  { turma: "8TG", discLabel: "LÍNGUA PORTUGUESA", professor: "Antonio Silva", professorApoio: null, aulas: 3 },
+  { turma: "8TG", discLabel: "MATEMÁTICA", professor: "Franciele de Assis", professorApoio: null, aulas: 4 },
+  { turma: "8TG", discLabel: "HISTÓRIA", professor: "Mario", professorApoio: null, aulas: 3 },
+  { turma: "8TG", discLabel: "GEOGRAFIA", professor: "Emanuele", professorApoio: null, aulas: 2 },
+  { turma: "8TG", discLabel: "ARTE", professor: "Lorena", professorApoio: null, aulas: 2 },
+  { turma: "8TG", discLabel: "EDUCAÇÃO FÍSICA", professor: "Eduardo", professorApoio: null, aulas: 2 },
+  { turma: "8TG", discLabel: "LÍNGUA INGLESA", professor: "Crislaine", professorApoio: null, aulas: 2 },
+  { turma: "8TG", discLabel: "CIÊNCIAS", professor: "Werediana", professorApoio: null, aulas: 3 },
+  { turma: "8TG", discLabel: "REDAÇÃO E LEITURA", professor: "Antonio Silva", professorApoio: null, aulas: 2 },
+  { turma: "8TG", discLabel: "EDUCAÇÃO DIGITAL", professor: "Paulo", professorApoio: null, aulas: 2 },
+  { turma: "8TH", discLabel: "LÍNGUA PORTUGUESA", professor: "Antonio Silva", professorApoio: null, aulas: 3 },
+  { turma: "8TH", discLabel: "MATEMÁTICA", professor: "Matheus", professorApoio: null, aulas: 4 },
+  { turma: "8TH", discLabel: "HISTÓRIA", professor: "Mario", professorApoio: null, aulas: 3 },
+  { turma: "8TH", discLabel: "GEOGRAFIA", professor: "Emanuele", professorApoio: null, aulas: 2 },
+  { turma: "8TH", discLabel: "ARTE", professor: "Luciane", professorApoio: null, aulas: 2 },
+  { turma: "8TH", discLabel: "EDUCAÇÃO FÍSICA", professor: "Eduardo", professorApoio: null, aulas: 2 },
+  { turma: "8TH", discLabel: "LÍNGUA INGLESA", professor: "Crislaine", professorApoio: null, aulas: 2 },
+  { turma: "8TH", discLabel: "CIÊNCIAS", professor: "Werediana", professorApoio: null, aulas: 3 },
+  { turma: "8TH", discLabel: "REDAÇÃO E LEITURA", professor: "Antonio Silva", professorApoio: null, aulas: 2 },
+  { turma: "8TH", discLabel: "EDUCAÇÃO DIGITAL", professor: "Paulo", professorApoio: null, aulas: 2 },
+  { turma: "9TG", discLabel: "LÍNGUA PORTUGUESA", professor: "Soneide", professorApoio: null, aulas: 3 },
+  { turma: "9TG", discLabel: "MATEMÁTICA", professor: "Franciele de Assis", professorApoio: null, aulas: 5 },
+  { turma: "9TG", discLabel: "HISTÓRIA", professor: "Marcio", professorApoio: null, aulas: 2 },
+  { turma: "9TG", discLabel: "GEOGRAFIA", professor: "Jackson", professorApoio: null, aulas: 3 },
+  { turma: "9TG", discLabel: "ARTE", professor: "Luciane", professorApoio: null, aulas: 2 },
+  { turma: "9TG", discLabel: "EDUCAÇÃO FÍSICA", professor: "Cristiane", professorApoio: null, aulas: 2 },
+  { turma: "9TG", discLabel: "LÍNGUA INGLESA", professor: "Eliane Rocha", professorApoio: null, aulas: 2 },
+  { turma: "9TG", discLabel: "CIÊNCIAS", professor: "Andreia", professorApoio: null, aulas: 2 },
+  { turma: "9TG", discLabel: "LEI REC. APREND. L. PORT", professor: "Rafael", professorApoio: null, aulas: 2 },
+  { turma: "9TG", discLabel: "REC. APREND. MATEMÁTICA", professor: "Gilberto", professorApoio: "Lisiane", aulas: 2 },
+  { turma: "9TH", discLabel: "LÍNGUA PORTUGUESA", professor: "Soneide", professorApoio: null, aulas: 3 },
+  { turma: "9TH", discLabel: "MATEMÁTICA", professor: "Julio", professorApoio: null, aulas: 5 },
+  { turma: "9TH", discLabel: "HISTÓRIA", professor: "Mario", professorApoio: null, aulas: 2 },
+  { turma: "9TH", discLabel: "GEOGRAFIA", professor: "Jackson", professorApoio: null, aulas: 3 },
+  { turma: "9TH", discLabel: "ARTE", professor: "Luciane", professorApoio: null, aulas: 2 },
+  { turma: "9TH", discLabel: "EDUCAÇÃO FÍSICA", professor: "Cristiane", professorApoio: null, aulas: 2 },
+  { turma: "9TH", discLabel: "LÍNGUA INGLESA", professor: "Eliane Rocha", professorApoio: null, aulas: 2 },
+  { turma: "9TH", discLabel: "CIÊNCIAS", professor: "Andreia", professorApoio: null, aulas: 2 },
+  { turma: "9TH", discLabel: "LEI REC. APREND. L. PORT", professor: "Eduarda", professorApoio: null, aulas: 2 },
+  { turma: "9TH", discLabel: "REC. APREND. MATEMÁTICA", professor: "Gilberto", professorApoio: "Lisiane", aulas: 2 },
+  { turma: "9TI", discLabel: "LÍNGUA PORTUGUESA", professor: "Eduarda", professorApoio: null, aulas: 3 },
+  { turma: "9TI", discLabel: "MATEMÁTICA", professor: "Julio", professorApoio: null, aulas: 5 },
+  { turma: "9TI", discLabel: "HISTÓRIA", professor: "Mario", professorApoio: null, aulas: 2 },
+  { turma: "9TI", discLabel: "GEOGRAFIA", professor: "Emanuele", professorApoio: null, aulas: 3 },
+  { turma: "9TI", discLabel: "ARTE", professor: "Luciane", professorApoio: null, aulas: 2 },
+  { turma: "9TI", discLabel: "EDUCAÇÃO FÍSICA", professor: "Cristiane", professorApoio: null, aulas: 2 },
+  { turma: "9TI", discLabel: "LÍNGUA INGLESA", professor: "Eduarda", professorApoio: null, aulas: 2 },
+  { turma: "9TI", discLabel: "CIÊNCIAS", professor: "Werediana", professorApoio: null, aulas: 2 },
+  { turma: "9TI", discLabel: "LEI REC. APREND. L. PORT", professor: "Eduarda", professorApoio: null, aulas: 2 },
+  { turma: "9TI", discLabel: "REC. APREND. MATEMÁTICA", professor: "Gilberto", professorApoio: "Lisiane", aulas: 2 },
+  { turma: "1NB", discLabel: "LÍNGUA PORTUGUESA", professor: "Ivete", professorApoio: null, aulas: 4 },
+  { turma: "1NB", discLabel: "MATEMÁTICA", professor: "Anderson", professorApoio: null, aulas: 4 },
+  { turma: "1NB", discLabel: "GEOGRAFIA", professor: "Dorival", professorApoio: null, aulas: 2 },
+  { turma: "1NB", discLabel: "BIOLOGIA", professor: "Rodrigo", professorApoio: null, aulas: 2 },
+  { turma: "1NB", discLabel: "QUÍMICA", professor: "Viviane", professorApoio: null, aulas: 2 },
+  { turma: "1NB", discLabel: "ARTE", professor: "Roberval", professorApoio: null, aulas: 2 },
+  { turma: "1NB", discLabel: "EDUCAÇÃO FÍSICA", professor: "Elisangela", professorApoio: null, aulas: 2 },
+  { turma: "1NB", discLabel: "LÍNGUA INGLESA", professor: "Eliane", professorApoio: null, aulas: 2 },
+  { turma: "1NB", discLabel: "EDUCAÇÃO FINANCEIRA", professor: "Arnaldo", professorApoio: null, aulas: 2 },
+  { turma: "1NB", discLabel: "EDUCAÇÃO DIGITAL", professor: "Viviane", professorApoio: null, aulas: 2 },
+  { turma: "1NB", discLabel: "HIBRIDA", professor: null, professorApoio: null, aulas: 1 },
+  { turma: "2NB", discLabel: "LÍNGUA PORTUGUESA", professor: "Antonio Silva", professorApoio: null, aulas: 4 },
+  { turma: "2NB", discLabel: "MATEMÁTICA", professor: "Anderson", professorApoio: null, aulas: 4 },
+  { turma: "2NB", discLabel: "HISTÓRIA", professor: "Daiane", professorApoio: null, aulas: 2 },
+  { turma: "2NB", discLabel: "FÍSICA", professor: "João Lucas", professorApoio: null, aulas: 2 },
+  { turma: "2NB", discLabel: "ARTE", professor: "Roberval", professorApoio: null, aulas: 2 },
+  { turma: "2NB", discLabel: "EDUCAÇÃO FÍSICA", professor: "Elisangela", professorApoio: null, aulas: 2 },
+  { turma: "2NB", discLabel: "LÍNGUA INGLESA", professor: "Eliane", professorApoio: null, aulas: 2 },
+  { turma: "2NB", discLabel: "FILOSOFIA", professor: "Sypriano", professorApoio: null, aulas: 2 },
+  { turma: "2NB", discLabel: "SOCIOLOGIA", professor: "Willian", professorApoio: null, aulas: 2 },
+  { turma: "2NB", discLabel: "EDUCAÇÃO FINANCEIRA", professor: "Arnaldo", professorApoio: null, aulas: 2 },
+  { turma: "2NB", discLabel: "HIBRIDA", professor: null, professorApoio: null, aulas: 1 },
+  { turma: "2NC", discLabel: "LÍNGUA PORTUGUESA", professor: "Antonio Silva", professorApoio: null, aulas: 4 },
+  { turma: "2NC", discLabel: "MATEMÁTICA", professor: "Carlos", professorApoio: null, aulas: 4 },
+  { turma: "2NC", discLabel: "HISTÓRIA", professor: "Daiane", professorApoio: null, aulas: 2 },
+  { turma: "2NC", discLabel: "FÍSICA", professor: "João Lucas", professorApoio: null, aulas: 2 },
+  { turma: "2NC", discLabel: "ARTE", professor: "Roberval", professorApoio: null, aulas: 2 },
+  { turma: "2NC", discLabel: "EDUCAÇÃO FÍSICA", professor: "Elisangela", professorApoio: null, aulas: 2 },
+  { turma: "2NC", discLabel: "LÍNGUA INGLESA", professor: "Eliane", professorApoio: null, aulas: 2 },
+  { turma: "2NC", discLabel: "FILOSOFIA", professor: "Sypriano", professorApoio: null, aulas: 2 },
+  { turma: "2NC", discLabel: "SOCIOLOGIA", professor: "Willian", professorApoio: null, aulas: 2 },
+  { turma: "2NC", discLabel: "EDUCAÇÃO FINANCEIRA", professor: "Arnaldo", professorApoio: null, aulas: 2 },
+  { turma: "2NC", discLabel: "HIBRIDA", professor: null, professorApoio: null, aulas: 1 },
+  { turma: "3NB", discLabel: "LÍNGUA PORTUGUESA", professor: "Antonio Silva", professorApoio: null, aulas: 4 },
+  { turma: "3NB", discLabel: "MATEMÁTICA", professor: "Carlos", professorApoio: null, aulas: 3 },
+  { turma: "3NB", discLabel: "FÍSICA", professor: "João Lucas", professorApoio: null, aulas: 1 },
+  { turma: "3NB", discLabel: "EDUCAÇÃO FÍSICA", professor: "Elisangela", professorApoio: null, aulas: 2 },
+  { turma: "3NB", discLabel: "EDUCAÇÃO FINANCEIRA", professor: "Geverson", professorApoio: null, aulas: 1 },
+  { turma: "3NB", discLabel: "PROJETO DE VIDA", professor: "Felipe", professorApoio: null, aulas: 1 },
+  { turma: "3NB", discLabel: "MATEMÁTICA 2", professor: "Tiago", professorApoio: null, aulas: 1 },
+  { turma: "3NB", discLabel: "BIOLOGIA 2", professor: "Cleide", professorApoio: null, aulas: 2 },
+  { turma: "3NB", discLabel: "FÍSICA 2", professor: "Viviane", professorApoio: null, aulas: 2 },
+  { turma: "3NB", discLabel: "FÍSICA 3", professor: "Viviane", professorApoio: null, aulas: 2 },
+  { turma: "3NB", discLabel: "QUÍMICA 1", professor: "Viviane", professorApoio: null, aulas: 2 },
+  { turma: "3NB", discLabel: "REC. APREND. L. PORT", professor: "Ivete", professorApoio: null, aulas: 2 },
+  { turma: "3NB", discLabel: "REC. APREND. MATEMÁTICA", professor: "Carlos", professorApoio: null, aulas: 2 },
+  { turma: "3NC", discLabel: "LÍNGUA PORTUGUESA", professor: "Antonio Silva", professorApoio: null, aulas: 4 },
+  { turma: "3NC", discLabel: "MATEMÁTICA", professor: "Carlos", professorApoio: null, aulas: 3 },
+  { turma: "3NC", discLabel: "FÍSICA", professor: "João Lucas", professorApoio: null, aulas: 2 },
+  { turma: "3NC", discLabel: "EDUCAÇÃO FÍSICA", professor: "Elisangela", professorApoio: null, aulas: 2 },
+  { turma: "3NC", discLabel: "LÍNGUA INGLESA", professor: "Eliane", professorApoio: null, aulas: 2 },
+  { turma: "3NC", discLabel: "EDUCAÇÃO FINANCEIRA", professor: "Geverson", professorApoio: null, aulas: 1 },
+  { turma: "3NC", discLabel: "PROJETO DE VIDA", professor: "Felipe", professorApoio: null, aulas: 1 },
+  { turma: "3NC", discLabel: "ARTE 2", professor: "Roberval", professorApoio: null, aulas: 2 },
+  { turma: "3NC", discLabel: "GEOGRAFIA 1", professor: "Dorival", professorApoio: null, aulas: 1 },
+  { turma: "3NC", discLabel: "HISTÓRIA 1", professor: "Daiane", professorApoio: null, aulas: 1 },
+  { turma: "3NC", discLabel: "SOCIOLOGIA 1", professor: "Willian", professorApoio: null, aulas: 2 },
+  { turma: "3NC", discLabel: "REC. APREND. L. PORT", professor: "Gleiciane", professorApoio: null, aulas: 2 },
+  { turma: "3NC", discLabel: "REC. APREND. MATEMÁTICA", professor: "Carlos", professorApoio: null, aulas: 2 },
+  { turma: "1NF ADM", discLabel: "LÍNGUA PORTUGUESA", professor: "Ivete", professorApoio: null, aulas: 2 },
+  { turma: "1NF ADM", discLabel: "MATEMÁTICA", professor: "Anderson", professorApoio: null, aulas: 3 },
+  { turma: "1NF ADM", discLabel: "GEOGRAFIA", professor: "Dorival", professorApoio: null, aulas: 2 },
+  { turma: "1NF ADM", discLabel: "BIOLOGIA", professor: "Rodrigo", professorApoio: null, aulas: 2 },
+  { turma: "1NF ADM", discLabel: "QUÍMICA", professor: "Viviane", professorApoio: null, aulas: 2 },
+  { turma: "1NF ADM", discLabel: "ARTE", professor: "Roberval", professorApoio: null, aulas: 2 },
+  { turma: "1NF ADM", discLabel: "EDUCAÇÃO FÍSICA", professor: "Elisangela", professorApoio: null, aulas: 2 },
+  { turma: "1NF ADM", discLabel: "LÍNGUA INGLESA", professor: "Eliane", professorApoio: null, aulas: 2 },
+  { turma: "1NF ADM", discLabel: "INFORMÁTICA EMPRESARIAL", professor: "Tiago", professorApoio: null, aulas: 1 },
+  { turma: "1NF ADM", discLabel: "PRINCÍPIOS ECONÔMICOS", professor: "Gleiciane", professorApoio: null, aulas: 1 },
+  { turma: "1NF ADM", discLabel: "FINANÇAS EMPRESARIAIS", professor: "Felipe", professorApoio: null, aulas: 1 },
+  { turma: "1NF ADM", discLabel: "PRINC. DE ADMINISTRAÇÃO", professor: "Tiago", professorApoio: null, aulas: 1 },
+  { turma: "1NF ADM", discLabel: "RECURSOS HUMANOS", professor: "Felipe", professorApoio: null, aulas: 1 },
+  { turma: "1NF ADM", discLabel: "ESTRATÉGIAS DE MARKETING", professor: "Felipe", professorApoio: null, aulas: 1 },
+  { turma: "1NF ADM", discLabel: "TÉCNICAS INTEGRADAS", professor: "Arnaldo", professorApoio: null, aulas: 1 },
+  { turma: "1NF ADM", discLabel: "EDUCAÇÃO DIGITAL", professor: "Arnaldo", professorApoio: null, aulas: 1 },
+];
 async function main() {
-  console.log("🌱 Iniciando seed do NexGrade...\n");
+  console.log("🌱 Iniciando seed REAL do NexGrade (dados da secretaria)...\n");
 
   // ------------------------------------------------------------------
-  // 1. PLANOS — a tabela que estava vazia e quebrando o onboarding
+  // 1. PLANOS
   // ------------------------------------------------------------------
   const planosExistentes = await db.select().from(planosTable);
   if (planosExistentes.length === 0) {
     await db.insert(planosTable).values([
-      {
-        nome: "Gratuito",
-        preco: 0,
-        maxProfessores: 5,
-        maxTurmas: 3,
-        temIA: true,
-        temExport: false,
-        temImport: false,
-        ativo: true,
-      },
-      {
-        nome: "Pro",
-        preco: 150,
-        maxProfessores: 30,
-        maxTurmas: 20,
-        temIA: true,
-        temExport: true,
-        temImport: true,
-        ativo: true,
-      },
-      {
-        nome: "Master",
-        preco: 400,
-        maxProfessores: 9999,
-        maxTurmas: 9999,
-        temIA: true,
-        temExport: true,
-        temImport: true,
-        ativo: true,
-      },
+      { nome: "Gratuito", preco: 0, maxProfessores: 5, maxTurmas: 3, temIA: true, temExport: false, temImport: false, ativo: true },
+      { nome: "Pro", preco: 150, maxProfessores: 30, maxTurmas: 20, temIA: true, temExport: true, temImport: true, ativo: true },
+      { nome: "Master", preco: 400, maxProfessores: 9999, maxTurmas: 9999, temIA: true, temExport: true, temImport: true, ativo: true },
     ]);
     console.log("✅ Planos criados: Gratuito, Pro, Master");
   } else {
@@ -253,92 +959,49 @@ async function main() {
   }
 
   // ------------------------------------------------------------------
-  // Limpa dados de teste anteriores da escola_default (idempotente)
+  // Limpa dados anteriores da escola_default. Professores, turmas e
+  // disciplinas em cascata levam junto professor_disciplinas,
+  // turma_disciplinas, horarios e disponibilidade (todas essas tabelas
+  // têm onDelete: "cascade" nas FKs pra professoresTable/turmasTable/
+  // disciplinasTable) — não precisa apagar cada uma manualmente.
   // ------------------------------------------------------------------
-  await db.delete(horariosTable).where(eq(horariosTable.escolaId, ESCOLA_ID));
-  await db.delete(disponibilidadeTable);
-  const turmasAntigas = await db.select({ id: turmasTable.id }).from(turmasTable).where(eq(turmasTable.escolaId, ESCOLA_ID));
-  for (const t of turmasAntigas) {
-    await db.delete(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.turmaId, t.id));
-  }
-  await db.delete(turmasTable).where(eq(turmasTable.escolaId, ESCOLA_ID));
-  const profsAntigos = await db.select({ id: professoresTable.id }).from(professoresTable).where(eq(professoresTable.escolaId, ESCOLA_ID));
-  for (const p of profsAntigos) {
-    await db.delete(professorDisciplinasTable).where(eq(professorDisciplinasTable.professorId, p.id));
-  }
   await db.delete(professoresTable).where(eq(professoresTable.escolaId, ESCOLA_ID));
-  const matrizesAntigas = await db.select({ id: matrizesCurricularesTable.id }).from(matrizesCurricularesTable).where(eq(matrizesCurricularesTable.escolaId, ESCOLA_ID));
-  for (const m of matrizesAntigas) {
-    await db.delete(itensMatrizTable).where(eq(itensMatrizTable.matrizCurricularId, m.id));
-  }
-  await db.delete(matrizesCurricularesTable).where(eq(matrizesCurricularesTable.escolaId, ESCOLA_ID));
-  await db.delete(cursosTable).where(eq(cursosTable.escolaId, ESCOLA_ID));
-  await db.delete(salasTable).where(eq(salasTable.escolaId, ESCOLA_ID));
+  await db.delete(turmasTable).where(eq(turmasTable.escolaId, ESCOLA_ID));
   await db.delete(disciplinasTable).where(eq(disciplinasTable.escolaId, ESCOLA_ID));
-  console.log("🧹 Dados de teste anteriores removidos");
+  await db.delete(salasTable).where(eq(salasTable.escolaId, ESCOLA_ID));
+  console.log("🧹 Dados anteriores (professores/turmas/disciplinas/salas) removidos");
 
   // ------------------------------------------------------------------
-  // 2. DISCIPLINAS — dataset real completo (76 disciplinas), cobrindo
-  // Ensino Médio regular + aprofundamentos + todos os cursos técnicos
+  // 2. DISCIPLINAS
   // ------------------------------------------------------------------
-  const disciplinasSeed = DISCIPLINAS_SAE.map(([codigoSae, nome, cargaSemanal], i) => ({
+  const disciplinasSeed = DISCIPLINAS_REAIS.map((d, i) => ({
     escolaId: ESCOLA_ID,
-    nome,
-    cargaSemanal,
+    nome: d.nome,
+    cargaSemanal: 2,
     cor: PALETA_CORES[i % PALETA_CORES.length],
-    codigoSae,
+    codigoSae: d.codigoSae,
   }));
-
-  const disciplinas = await db.insert(disciplinasTable).values(disciplinasSeed).returning();
-  console.log(`✅ ${disciplinas.length} disciplinas criadas (Código SAE real, Ensino Médio + cursos técnicos)`);
+  const disciplinasInseridas = await db.insert(disciplinasTable).values(disciplinasSeed).returning();
+  const disciplinaIdPorLabel = new Map<string, number>();
+  DISCIPLINAS_REAIS.forEach((d, i) => disciplinaIdPorLabel.set(d.label, disciplinasInseridas[i].id));
+  const comCodigo = DISCIPLINAS_REAIS.filter((d) => d.codigoSae).length;
+  console.log(`✅ ${disciplinasInseridas.length} disciplinas criadas (${comCodigo} com código SAE, ${disciplinasInseridas.length - comCodigo} pendentes de código)`);
 
   // ------------------------------------------------------------------
-  // 3. PROFESSORES — apenas os REALMENTE confirmados pela escola
-  // (ver TURMA_PROFESSOR_REAL no topo do arquivo). Carga horária total
-  // calculada automaticamente a partir da matriz real de cada turma
-  // onde o professor está confirmado.
+  // 3. PROFESSORES
   // ------------------------------------------------------------------
-  const disciplinaPorCodigoInicial = Object.fromEntries(disciplinas.map((d) => [d.codigoSae, d]));
-
-  const infoPorProfessor = new Map<string, { codigos: Set<string>; cargaTotal: number }>();
-  for (const a of TURMA_PROFESSOR_REAL) {
-    if (!infoPorProfessor.has(a.professor)) infoPorProfessor.set(a.professor, { codigos: new Set(), cargaTotal: 0 });
-    const info = infoPorProfessor.get(a.professor)!;
-    info.codigos.add(a.codigoSae);
-    info.cargaTotal += cargaHorariaMatriz(a.turma, a.codigoSae);
-  }
-
-  const professoresSeed = [...infoPorProfessor.entries()].map(([nome, info]) => ({
-    nome,
-    email: emailFromNome(nome),
-    cargaHorariaTotal: info.cargaTotal,
-    codigos: [...info.codigos],
-  }));
-
-  const professores: Record<string, typeof professoresTable.$inferSelect> = {};
-  for (const p of professoresSeed) {
+  const professorIdPorNome = new Map<string, number>();
+  for (const nome of PROFESSORES_REAIS) {
     const [prof] = await db
       .insert(professoresTable)
-      .values({
-        escolaId: ESCOLA_ID,
-        nome: p.nome,
-        email: p.email,
-        cargaHorariaTotal: p.cargaHorariaTotal,
-        ativo: true,
-      })
+      .values({ escolaId: ESCOLA_ID, nome, email: emailFromNome(nome), ativo: true })
       .returning();
-    professores[p.nome] = prof;
-    for (const codigoSae of p.codigos) {
-      await db.insert(professorDisciplinasTable).values({
-        professorId: prof.id,
-        disciplinaId: disciplinaPorCodigoInicial[codigoSae].id,
-      });
-    }
+    professorIdPorNome.set(nome, prof.id);
   }
-  console.log(`✅ ${professoresSeed.length} professores criados (apenas os confirmados pela escola: ${professoresSeed.map((p) => p.nome).join(", ")})`);
+  console.log(`✅ ${PROFESSORES_REAIS.length} professores criados (cargaHorariaTotal no padrão de 20h — regime real ainda pendente de confirmação)`);
 
   // ------------------------------------------------------------------
-  // 4. SALAS
+  // 4. SALAS (genéricas — a escola ainda não confirmou salas reais)
   // ------------------------------------------------------------------
   const salasSeed = [
     { nome: "Sala 01", tipo: "sala_aula", capacidade: 35 },
@@ -348,87 +1011,13 @@ async function main() {
     { nome: "Quadra Poliesportiva", tipo: "quadra", capacidade: 40 },
   ].map((s) => ({ ...s, escolaId: ESCOLA_ID }));
   await db.insert(salasTable).values(salasSeed);
-  console.log(`✅ ${salasSeed.length} salas criadas`);
+  console.log(`✅ ${salasSeed.length} salas genéricas criadas (ajustar quando a escola confirmar salas reais)`);
 
   // ------------------------------------------------------------------
-  // 5. CURSOS + MATRIZES CURRICULARES — dados REAIS fornecidos pela
-  // escola (ver MATRIZ_REAL no topo do arquivo). Seed exatamente o que
-  // foi informado — sem completar com disciplinas que a escola não
-  // confirmou. Se a planilha real tiver mais linhas, é só estender
-  // MATRIZ_REAL (e TURMA_MATRIZ_CHAVE, se for série/etapa nova).
+  // 5. TURMAS
   // ------------------------------------------------------------------
-
-  // Categoria curricular por etapa (nomenclatura do NexGrade — ver
-  // lib/db/src/schema/cursos.ts). Disciplinas comuns da BNCC/Formação
-  // Geral Básica entram como base_nacional_comum / formacao_geral_basica;
-  // as específicas de itinerário/curso técnico como itinerario_*.
-  function categoriaPor(etapa: string, codigoSae: string): string {
-    if (etapa === "Ensino Fundamental II") {
-      return codigoSae === "PC01" ? "parte_diversificada" : "base_nacional_comum";
-    }
-    if (etapa === "Ensino Médio Regular") {
-      return codigoSae === "1100" || codigoSae === "2700" ? "formacao_geral_basica" : "itinerario_formativo";
-    }
-    // Ensino Médio Técnico
-    return codigoSae === "1100" ? "formacao_geral_basica" : "itinerario_profissionalizante";
-  }
-
-  const cursosPorEtapa: Record<string, { nome: string; codigoCurso: string; nivel: string }> = {
-    "Ensino Fundamental II": { nome: "Ensino Fundamental II", codigoCurso: "EF2", nivel: "fundamental" },
-    "Ensino Médio Regular": { nome: "Ensino Médio Regular", codigoCurso: "EM-REG", nivel: "medio" },
-    "Ensino Médio Técnico": { nome: "Ensino Médio Técnico em Administração", codigoCurso: "EM-TEC-ADM", nivel: "tecnico" },
-  };
-
-  const cursos: Record<string, typeof cursosTable.$inferSelect> = {};
-  for (const [etapa, dadosCurso] of Object.entries(cursosPorEtapa)) {
-    const [curso] = await db.insert(cursosTable).values({ escolaId: ESCOLA_ID, ...dadosCurso }).returning();
-    cursos[etapa] = curso;
-  }
-
-  // Agrupa linhas da matriz por (etapa, série/ano) para criar uma
-  // matrizCurricular por combinação, com seus itens.
-  const matrizes: Record<string, typeof matrizesCurricularesTable.$inferSelect> = {};
-  const gruposMatriz = new Map<string, LinhaMatriz[]>();
-  for (const linha of MATRIZ_REAL) {
-    const chave = `${linha.etapa}::${linha.serieAno}`;
-    if (!gruposMatriz.has(chave)) gruposMatriz.set(chave, []);
-    gruposMatriz.get(chave)!.push(linha);
-  }
-
-  for (const [chave, linhas] of gruposMatriz) {
-    const [etapa, serieAno] = chave.split("::");
-    const cargaTotal = linhas.reduce((soma, l) => soma + l.aulas, 0);
-    const [matriz] = await db
-      .insert(matrizesCurricularesTable)
-      .values({ escolaId: ESCOLA_ID, cursoId: cursos[etapa].id, serieAno, cargaHorariaSemanalTotal: cargaTotal })
-      .returning();
-    matrizes[chave] = matriz;
-
-    const disciplinaPorCodigo = Object.fromEntries(disciplinas.map((d) => [d.codigoSae, d]));
-    await db.insert(itensMatrizTable).values(
-      linhas.map((l) => ({
-        matrizCurricularId: matriz.id,
-        disciplinaId: disciplinaPorCodigo[l.codigoSae].id,
-        categoriaCurricular: categoriaPor(etapa, l.codigoSae),
-        cargaHorariaSemanal: l.aulas,
-        obrigatoria: true,
-      })),
-    );
-  }
-  console.log(`✅ ${Object.keys(cursos).length} cursos + ${gruposMatriz.size} matrizes curriculares criadas (dados reais, ${MATRIZ_REAL.length} vínculos disciplina↔série)`);
-
-  // ------------------------------------------------------------------
-  // 6. TURMAS (nomenclatura real informada pela secretaria escolar,
-  // vinculadas à matriz curricular real correspondente)
-  // ------------------------------------------------------------------
-  const turmasSeed = [
-    { nome: "6 Ano A", serie: "6º Ano", turno: TURMA_TURNO["6 Ano A"], matrizChave: TURMA_MATRIZ_CHAVE["6 Ano A"] },
-    { nome: "1 Serie A", serie: "1ª Série", turno: TURMA_TURNO["1 Serie A"], matrizChave: TURMA_MATRIZ_CHAVE["1 Serie A"] },
-    { nome: "1 Serie Tec ADM", serie: "1ª Série ADM", turno: TURMA_TURNO["1 Serie Tec ADM"], matrizChave: TURMA_MATRIZ_CHAVE["1 Serie Tec ADM"] },
-  ];
-
-  const turmas: Record<string, typeof turmasTable.$inferSelect> = {};
-  for (const t of turmasSeed) {
+  const turmaIdPorNome = new Map<string, number>();
+  for (const t of TURMAS_REAIS) {
     const [turma] = await db
       .insert(turmasTable)
       .values({
@@ -436,112 +1025,76 @@ async function main() {
         nome: t.nome,
         serie: t.serie,
         turno: t.turno,
+        nivelEnsino: t.nivelEnsino,
         anoLetivo: 2026,
-        matrizCurricularId: matrizes[t.matrizChave].id,
       })
       .returning();
-    turmas[t.nome] = turma;
+    turmaIdPorNome.set(t.nome, turma.id);
   }
-  console.log(`✅ ${turmasSeed.length} turmas criadas (6 Ano A, 1 Serie A, 1 Serie Tec ADM), cada uma vinculada à sua matriz real`);
+  console.log(`✅ ${TURMAS_REAIS.length} turmas reais criadas (sem matriz curricular vinculada ainda)`);
 
-  // Vincula disciplinas às turmas conforme a composição real da matriz de cada uma
-  const disciplinaPorCodigo = Object.fromEntries(disciplinas.map((d) => [d.codigoSae, d]));
-  for (const t of turmasSeed) {
-    const linhas = gruposMatriz.get(t.matrizChave)!;
-    for (const l of linhas) {
-      await db.insert(turmaDisciplinasTable).values({
-        turmaId: turmas[t.nome].id,
-        disciplinaId: disciplinaPorCodigo[l.codigoSae].id,
-        cargaHorariaSemanalOverride: l.aulas,
-      });
+  // ------------------------------------------------------------------
+  // 6. TURMA_DISCIPLINAS — carga horária real de cada turma+disciplina,
+  // com o professor responsável (principal, em caso de co-docência).
+  // ------------------------------------------------------------------
+  let turmaDisciplinasCriadas = 0;
+  let coDocenciaGravadas = 0;
+  const profDisciplinaJaVinculado = new Set<string>();
+  for (const g of GRADE_REAL) {
+    const turmaId = turmaIdPorNome.get(g.turma);
+    const disciplinaId = disciplinaIdPorLabel.get(g.discLabel);
+    if (!turmaId || !disciplinaId) {
+      console.log(`⚠️  Pulei linha da grade sem turma/disciplina resolvida: ${g.turma} / ${g.discLabel}`);
+      continue;
     }
-  }
-  console.log("✅ Disciplinas vinculadas a cada turma conforme a matriz real");
+    const professorId = g.professor ? professorIdPorNome.get(g.professor) : undefined;
+    const professorApoioId = g.professorApoio ? professorIdPorNome.get(g.professorApoio) : undefined;
+    if (g.professor && !professorId) {
+      console.log(`⚠️  Professor "${g.professor}" não encontrado (turma ${g.turma}, disciplina ${g.discLabel})`);
+    }
+    if (g.professorApoio && !professorApoioId) {
+      console.log(`⚠️  Professor de apoio "${g.professorApoio}" não encontrado (turma ${g.turma}, disciplina ${g.discLabel})`);
+    }
+    await db.insert(turmaDisciplinasTable).values({
+      turmaId,
+      disciplinaId,
+      professorId: professorId ?? null,
+      professorApoioId: professorApoioId ?? null,
+      cargaHorariaSemanalOverride: g.aulas,
+    });
+    turmaDisciplinasCriadas++;
+    if (professorApoioId) coDocenciaGravadas++;
 
-  // ------------------------------------------------------------------
-  // 7. HORÁRIOS — gerados SOMENTE para os pares turma+disciplina com
-  // professor confirmado (TURMA_PROFESSOR_REAL), respeitando o limite
-  // real de Max_Aulas_Dia (ver aviso de schema no topo do arquivo) e
-  // sem conflito de professor entre turmas.
-  // diaSemana: 1=segunda .. 5=sexta | numeroAula: 1 a 6 (manhã, 07:30–11:55)
-  // ------------------------------------------------------------------
-  const slotsOcupadosTurma = new Set<string>();
-  const slotsOcupadosProf = new Set<string>();
-  let totalAulasGeradas = 0;
-
-  for (const atrib of TURMA_PROFESSOR_REAL) {
-    const turma = turmas[atrib.turma];
-    const prof = professores[atrib.professor];
-    const totalAulasSemana = cargaHorariaMatriz(atrib.turma, atrib.codigoSae);
-    const aulasPorDia: Record<number, number> = {};
-    let colocados = 0;
-
-    for (let dia = 1; dia <= 5 && colocados < totalAulasSemana; dia++) {
-      aulasPorDia[dia] = 0;
-      for (let aula = 1; aula <= 6 && colocados < totalAulasSemana; aula++) {
-        if (aulasPorDia[dia] >= atrib.maxAulasDia) break;
-        const chaveTurma = `${turma.id}-${dia}-${aula}`;
-        const chaveProf = `${prof.id}-${dia}-${aula}`;
-        if (slotsOcupadosTurma.has(chaveTurma) || slotsOcupadosProf.has(chaveProf)) continue;
-        slotsOcupadosTurma.add(chaveTurma);
-        slotsOcupadosProf.add(chaveProf);
-        await db.insert(horariosTable).values({
-          escolaId: ESCOLA_ID,
-          turmaId: turma.id,
-          disciplinaId: disciplinaPorCodigo[atrib.codigoSae].id,
-          professorId: prof.id,
-          diaSemana: dia,
-          numeroAula: aula,
-          sala: atrib.turma === "1 Serie Tec ADM" ? "Sala 02" : "Sala 01",
-          versaoGrade: "oficial",
-        });
-        aulasPorDia[dia]++;
-        colocados++;
-        totalAulasGeradas++;
+    if (professorId) {
+      const chave = `${professorId}-${disciplinaId}`;
+      if (!profDisciplinaJaVinculado.has(chave)) {
+        profDisciplinaJaVinculado.add(chave);
+        await db.insert(professorDisciplinasTable).values({ professorId, disciplinaId });
       }
     }
-    if (colocados < totalAulasSemana) {
-      console.log(`⚠️  ${atrib.turma}: só coube ${colocados}/${totalAulasSemana} aula(s) de ${atrib.codigoSae} respeitando o limite de ${atrib.maxAulasDia}/dia em 5 dias — considere abrir mais horários (tarde/mais dias) para essa disciplina.`);
-    }
-  }
-  console.log(`✅ ${totalAulasGeradas} aulas geradas para 6 Ano A, 1 Serie A e 1 Serie Tec ADM (sem conflito de professor, respeitando Max_Aulas_Dia)`);
-
-  // Avisa quais itens da matriz real ainda não têm professor confirmado
-  for (const [turmaNome, matrizChave] of Object.entries(TURMA_MATRIZ_CHAVE)) {
-    const linhas = gruposMatriz.get(matrizChave) ?? [];
-    for (const l of linhas) {
-      const confirmado = TURMA_PROFESSOR_REAL.some((a) => a.turma === turmaNome && a.codigoSae === l.codigoSae);
-      if (!confirmado) {
-        console.log(`⚠️  Sem professor confirmado para o código ${l.codigoSae} em "${turmaNome}" — disciplina está na matriz e vinculada à turma, mas sem aula gerada ainda.`);
+    if (professorApoioId) {
+      const chaveApoio = `${professorApoioId}-${disciplinaId}`;
+      if (!profDisciplinaJaVinculado.has(chaveApoio)) {
+        profDisciplinaJaVinculado.add(chaveApoio);
+        await db.insert(professorDisciplinasTable).values({ professorId: professorApoioId, disciplinaId });
       }
     }
   }
+  console.log(`✅ ${turmaDisciplinasCriadas} vínculos turma+disciplina criados, com professor e carga horária semanal reais`);
+  console.log(`✅ ${coDocenciaGravadas} desses vínculos têm professor de apoio (co-docência real, professorApoioId preenchido)`);
+  console.log(`✅ ${profDisciplinaJaVinculado.size} vínculos professor↔disciplina (professor_disciplinas) criados`);
 
-  // ------------------------------------------------------------------
-  // 8. DISPONIBILIDADE — exemplo: professor indisponível na sexta à tarde
-  // ------------------------------------------------------------------
-  await db.insert(disponibilidadeTable).values({
-    professorId: professores["Carlos Souza"].id,
-    diaSemana: 5,
-    horarioSlot: 6,
-    disponivel: false,
-    motivo: "Curso de formação continuada",
-  });
-  console.log("✅ Exemplo de indisponibilidade docente criado");
 
-  console.log("\n🎉 Seed concluído! O NexGrade já tem dados suficientes para testar:");
-  console.log("   - 3 planos (Gratuito, Pro, Master)");
-  console.log("   - 79 disciplinas com Código SAE real (Ensino Médio + cursos técnicos)");
-  console.log(`   - ${professoresSeed.length} professores (só os confirmados pela escola, sem invenção)`);
-  console.log("   - 5 salas");
-  console.log("   - 3 cursos + 3 matrizes curriculares reais:");
-  console.log("       Ensino Fundamental II · 6º Ano");
-  console.log("       Ensino Médio Regular · 1ª Série");
-  console.log("       Ensino Médio Técnico em Administração · 1ª Série ADM");
-  console.log("   - 3 turmas reais (6 Ano A, 1 Serie A, 1 Serie Tec ADM)");
-  console.log("   - grade de horário gerada só para as combinações turma+disciplina com professor confirmado");
-  console.log("\n⚠️  Reveja os avisos acima: disciplinas da matriz sem professor confirmado ainda, e");
-  console.log("   o gap de schema do Max_Aulas_Dia (não é validado pelo motor de horário/conflitos hoje).\n");
+  console.log("\n🎉 Seed real concluído:");
+  console.log(`   - ${disciplinasInseridas.length} disciplinas (${comCodigo} com código SAE oficial)`);
+  console.log(`   - ${PROFESSORES_REAIS.length} professores reais`);
+  console.log(`   - ${TURMAS_REAIS.length} turmas reais (manhã/tarde/noite)`);
+  console.log(`   - ${turmaDisciplinasCriadas} combinações turma+disciplina com carga horária e professor`);
+  console.log(`   - ${coDocenciaGravadas} aulas de co-docência real gravadas com professorApoioId (as 6 duplas confirmadas: Pedro+Lisiane, Cecília+Ivanir, Ivanir+Silmara, Julio+Juliana, Julio+Matheus, Gilberto+Lisiane)`);
+  console.log("\n⚠️  PENDÊNCIAS (ainda não incluídas neste seed):");
+  console.log("   - Hora-Atividade obrigatória (disponibilidade_professores) — falta o regime de contrato (20h/40h) de cada professor");
+  console.log("   - Grade dia-a-dia (horarios) — rodar o gerador de horário depois deste seed");
+  console.log("   - Códigos SAE das disciplinas novas (recomposição da aprendizagem, técnicas, híbrida etc.)\n");
 
   await pool.end();
 }

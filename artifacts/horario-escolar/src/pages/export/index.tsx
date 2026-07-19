@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useListTurmas, useListProfessores } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,17 @@ function buildUrl(path: string, params: Record<string, string | undefined>) {
   return url.toString();
 }
 
+// [FIX] "Todos os turnos" usava value="" antes -- o componente Select
+// (Radix) reserva string vazia internamente para representar "nada
+// selecionado", então um SelectItem com value="" nunca fica marcado
+// corretamente e o onValueChange não atualiza o estado como esperado.
+// Isso fazia a seleção "não colar" na tela e o PDF sempre sair com o
+// último turno de verdade que tinha sido escolhido antes (Vespertino).
+// Usamos um valor real ("todos") e convertemos pra undefined só na
+// hora de montar a URL da requisição.
+const TURNO_TODOS = "todos";
 const TURNOS = [
-  { value: "", label: "Todos os turnos (misturados)" },
+  { value: TURNO_TODOS, label: "Todos os turnos (misturados)" },
   { value: "matutino", label: "Matutino" },
   { value: "vespertino", label: "Vespertino" },
   { value: "noturno", label: "Noturno" },
@@ -37,7 +46,8 @@ export default function ExportPage() {
   // [NOVO] "turno" filtra o PDF para só um período por vez -- sem isso,
   // turmas de matutino/vespertino/noturno saem misturadas na mesma
   // sequência de páginas, sem nenhuma ordem lógica.
-  const [pdfOpts, setPdfOpts] = useState({ visao: "turma", entidadeId: "", turno: "" });
+  // [FIX] valor inicial agora é o sentinel TURNO_TODOS, não "".
+  const [pdfOpts, setPdfOpts] = useState({ visao: "turma", entidadeId: "", turno: TURNO_TODOS });
 
   const handleDownload = (url: string, filename: string) => {
     const a = document.createElement("a");
@@ -201,7 +211,7 @@ export default function ExportPage() {
               <Select value={pdfOpts.turno} onValueChange={(v) => setPdfOpts((o) => ({ ...o, turno: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {TURNOS.map((t) => <SelectItem key={t.value || "todos"} value={t.value}>{t.label}</SelectItem>)}
+                  {TURNOS.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -215,7 +225,7 @@ export default function ExportPage() {
                   <SelectItem value="">{pdfOpts.visao === "turma" ? "Todas as turmas" : "Todos os professores"}</SelectItem>
                   {pdfOpts.visao === "turma"
                     ? turmas
-                        .filter((t) => !pdfOpts.turno || t.turno === pdfOpts.turno)
+                        .filter((t) => pdfOpts.turno === TURNO_TODOS || t.turno === pdfOpts.turno)
                         .map((t) => <SelectItem key={t.id} value={String(t.id)}>{t.nome}</SelectItem>)
                     : professores.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
                 </SelectContent>
@@ -225,11 +235,12 @@ export default function ExportPage() {
               className="w-full"
               onClick={() => {
                 const param = pdfOpts.visao === "turma" ? "turmaId" : "professorId";
+                const turnoParaEnviar = pdfOpts.turno === TURNO_TODOS ? undefined : pdfOpts.turno;
                 const url = buildUrl(`/api/export/grade-pdf/${pdfOpts.visao}`, {
                   [param]: pdfOpts.entidadeId || undefined,
-                  turno: pdfOpts.turno || undefined,
+                  turno: turnoParaEnviar,
                 });
-                const sufixoTurno = pdfOpts.turno ? `_${pdfOpts.turno}` : "";
+                const sufixoTurno = turnoParaEnviar ? `_${turnoParaEnviar}` : "";
                 handleDownload(url, `grade_por_${pdfOpts.visao}${sufixoTurno}.pdf`);
               }}
             >
@@ -268,4 +279,3 @@ export default function ExportPage() {
     </div>
   );
 }
-

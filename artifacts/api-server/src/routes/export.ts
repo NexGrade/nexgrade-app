@@ -1,4 +1,4 @@
-﻿import { Router } from "express";
+import { Router } from "express";
 import { db } from "@workspace/db";
 import {
   horariosTable, professoresTable, disciplinasTable, turmasTable, disponibilidadeTable,
@@ -11,6 +11,11 @@ import { gerarPdfGradeCompacta, type BlocoGrade } from "../lib/pdf-grade";
 const router = Router();
 
 const DIAS = ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira"];
+
+// [NOVO] Rótulo curto de turno, usado quando um professor dá aula em
+// mais de um turno -- ver comentário em /grade-pdf/professor sobre por
+// que cada turno vira um bloco separado.
+const TURNO_ROTULO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
 
 // [NOVO] Nome oficial da escola, usado no cabeçalho das grades PDF
 // compactas. Fixo por enquanto -- não há campo de "nome da escola"
@@ -256,6 +261,14 @@ router.get("/grade-pdf/turma", async (req, res) => {
 // PDF — Visão por Professor: formato compacto multi-professor por
 // página. Célula combinada "TURMA/SIGLA" numa linha só; Hora-Atividade
 // obrigatória aparece como "HA" destacado.
+//
+// [FIX] Um professor que dá aula em mais de um turno (manhã/tarde/
+// noite) agora gera UM BLOCO POR TURNO, em vez de um bloco só
+// misturando tudo. Motivo: `numeroAula` é reaproveitado em cada turno
+// (aula 1 é 07:30 na manhã, 13:05 na tarde, 18:45 na noite) — um bloco
+// único fazia `pdf-grade.ts` (`slots.find(...)`) colidir aulas de
+// turnos diferentes na mesma célula dia+número, e a primeira encontrada
+// "vencia" silenciosamente, sumindo com as aulas dos outros turnos.
 // ------------------------------------------------------------------
 router.get("/grade-pdf/professor", async (req, res) => {
   const escolaId = getEscolaId(req);
@@ -270,63 +283,58 @@ router.get("/grade-pdf/professor", async (req, res) => {
   ]);
   const professores = professorIdFiltro ? professoresTodos.filter((p) => p.id === professorIdFiltro) : professoresTodos;
 
-  const blocos: (BlocoGrade | null)[] = await Promise.all(professores.map(async (prof) => {
-    const aulasDoProf: BlocoGrade["slots"] = slots
-      .filter((s) => s.professorId === prof.id)
-      .filter((s) => !turnoFiltroProf || turmas.find((t) => t.id === s.turmaId)?.turno === turnoFiltroProf)
-      .map((s) => ({
+  const blocos: BlocoGrade[] = [];
+  for (const prof of professores) {
+    const slotsDoProf = slots.filter((s) => s.professorId === prof.id);
+    const turnosDoProf = [...new Set(
+      slotsDoProf.map((s) => turmas.find((t) => t.id === s.turmaId)?.turno).filter((t): t is string => !!t)
+    )];
+    const turnosParaRenderizar = turnoFiltroProf ? turnosDoProf.filter((t) => t === turnoFiltroProf) : turnosDoProf;
+
+    for (const turno of turnosParaRenderizar) {
+      const slotsDoProfNesseTurno = slotsDoProf.filter((s) => turmas.find((t) => t.id === s.turmaId)?.turno === turno);
+
+      const aulasDoProf: BlocoGrade["slots"] = slotsDoProfNesseTurno.map((s) => ({
         diaSemana: s.diaSemana,
         numeroAula: s.numeroAula,
         linha1: turmas.find((t) => t.id === s.turmaId)?.nome ?? "?",
         linha2: siglaOuFallback(disciplinas.find((d) => d.id === s.disciplinaId)),
       }));
 
-    const turmasDoProf = slots
-      .filter((s) => s.professorId === prof.id)
-      .map((s) => turmas.find((t) => t.id === s.turmaId))
-      .filter((t): t is NonNullable<typeof t> => !!t);
-    const contagemTurno: Record<string, number> = {};
-    turmasDoProf.forEach((t) => { contagemTurno[t.turno] = (contagemTurno[t.turno] ?? 0) + 1; });
-    const turnoPredominante = Object.entries(contagemTurno).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "matutino";
-    const nivelPredominante = turmasDoProf.find((t) => t.turno === turnoPredominante)?.nivelEnsino ?? null;
-    const horariosPorAula = await buscarHorariosPorAula(escolaId, turnoPredominante, nivelPredominante);
+      const nivelPredominante = turmas.find((t) => t.id === slotsDoProfNesseTurno[0]?.turmaId)?.nivelEnsino ?? null;
+      const horariosPorAula = await buscarHorariosPorAula(escolaId, turno, nivelPredominante);
 
-    // "HA" literal, igual ao Urânia — sem linha2 pra não formatar como
-    // célula combinada.
-    const haDoProf: BlocoGrade["slots"] = disponibilidades
-      .filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria)
-      .filter((d) => !aulasDoProf.some((a) => a.diaSemana === d.diaSemana && a.numeroAula === d.horarioSlot))
-      .map((d) => ({
-        diaSemana: d.diaSemana,
-        numeroAula: d.horarioSlot,
-        linha1: "HA",
-        destacado: true,
-      }));
+      // "HA" literal, igual ao Urânia — sem linha2 pra não formatar como
+      // célula combinada. Filtra pelo turno certo (disponibilidade já
+      // guarda o turno direto, não precisa inferir pela turma).
+      const haDoProf: BlocoGrade["slots"] = disponibilidades
+        .filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && d.turno === turno)
+        .filter((d) => !aulasDoProf.some((a) => a.diaSemana === d.diaSemana && a.numeroAula === d.horarioSlot))
+        .map((d) => ({
+          diaSemana: d.diaSemana,
+          numeroAula: d.horarioSlot,
+          linha1: "HA",
+          destacado: true,
+        }));
 
-    if (turnoFiltroProf && aulasDoProf.length === 0) return null;
-    return {
-      rotulo: primeiroNome(prof.nome),
-      horariosPorAula,
-      slots: [...aulasDoProf, ...haDoProf],
-    };
-  }));
+      // Rótulo só mostra o turno quando o professor dá aula em mais de
+      // um (senão fica redundante, ex. "ALINE (Manhã)" toda vez).
+      const rotulo = turnosDoProf.length > 1
+        ? `${primeiroNome(prof.nome)} (${TURNO_ROTULO[turno] ?? turno})`
+        : primeiroNome(prof.nome);
 
-  const blocosValidos = blocos.filter((b): b is BlocoGrade => b !== null);
-  const pdfBytes = await gerarPdfGradeCompacta(NOME_ESCOLA, "Grade Horária por Professor", intervaloSemanaAtual(), blocosValidos);
+      blocos.push({
+        rotulo,
+        horariosPorAula,
+        slots: [...aulasDoProf, ...haDoProf],
+      });
+    }
+  }
+
+  const pdfBytes = await gerarPdfGradeCompacta(NOME_ESCOLA, "Grade Horária por Professor", intervaloSemanaAtual(), blocos);
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", 'attachment; filename="grade_por_professor.pdf"');
   res.send(Buffer.from(pdfBytes));
 });
 
 export default router;
-
-
-
-
-
-
-
-
-
-
-

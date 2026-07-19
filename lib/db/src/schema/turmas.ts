@@ -44,6 +44,17 @@ export const turmaDisciplinasTable = pgTable("turma_disciplinas", {
   // isso. Nulo enquanto a turma não tiver um professor definido pra essa
   // disciplina (ex: antes da distribuição de aulas ser fechada).
   professorId: integer("professor_id").references(() => professoresTable.id, { onDelete: "set null" }),
+  // [NOVO] RF-TUR-03: segundo professor, para os casos reais de
+  // CO-DOCÊNCIA confirmados pela escola — duas pessoas dando a MESMA
+  // aula, no mesmo dia/horário, pra mesma turma (ex.: Recomposição de
+  // Matemática e Recomposição de Língua Portuguesa no Fundamental II,
+  // onde um professor "titular" da disciplina de origem e um professor
+  // de apoio/recomposição dão aula juntos). Nulo na grande maioria das
+  // linhas — só preenchido quando há de fato dois professores na mesma
+  // aula, não uma segunda opção/substituto. `onDelete: "set null"` pelo
+  // mesmo motivo do `professorId` acima: remover o professor de apoio
+  // não deve apagar o vínculo turma+disciplina, só o nome dele.
+  professorApoioId: integer("professor_apoio_id").references(() => professoresTable.id, { onDelete: "set null" }),
   // RF-TUR-02: quando a disciplina veio de uma Matriz Curricular
   // aplicada (ver rota POST /turmas/:id/aplicar-matriz), este campo
   // guarda a carga horária semanal daquela série específica — que tem
