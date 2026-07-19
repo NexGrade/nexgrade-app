@@ -84,11 +84,23 @@ const SelectContent = React.forwardRef<
       {...props}
     >
       <SelectScrollUpButton />
+      {/*
+        [FIX] A viewport estava com a altura travada em
+        `h-[var(--radix-select-trigger-height)]` (a altura do botão que
+        abre o select, ~36px) sempre que `position="popper"` (o padrão).
+        Isso espremia listas longas numa janela minúscula -- como o
+        Radix abre o select já rolado até o item selecionado, os
+        primeiros itens da lista ficavam praticamente inacessíveis
+        rolando (bug conhecido de versões antigas do shadcn/ui). Removida
+        a altura fixa: agora quem limita o tamanho é só o
+        `max-h-[--radix-select-content-available-height]` do
+        SelectContent acima, que usa o espaço real disponível na tela.
+      */}
       <SelectPrimitive.Viewport
         className={cn(
           "p-1",
           position === "popper" &&
-            "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"
+            "w-full min-w-[var(--radix-select-trigger-width)]"
         )}
       >
         {children}
