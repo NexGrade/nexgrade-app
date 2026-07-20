@@ -953,6 +953,8 @@ function AbaConflitos() {
 function AbaExperimental() {
   const { data: expSlots = [], isLoading } = useListHorariosExperimentais({});
   const { data: turmas = [] } = useListTurmas();
+  const { data: disciplinas = [] } = useListDisciplinas();
+  const { data: professores = [] } = useListProfessores();
   const { mutateAsync: deleteExp } = useDeleteHorarioExperimental();
   const { mutateAsync: promover } = usePromoverHorarioExperimental();
   const { mutateAsync: gerar } = useGerarHorario();
@@ -961,6 +963,9 @@ function AbaExperimental() {
 
   const [openGerar, setOpenGerar] = useState(false);
   const [gerando, setGerando] = useState(false);
+  // [NOVO] Qual experimento está com a grade aberta pra visualização --
+  // só um por vez, pra não poluir a tela com várias grades expandidas.
+  const [nomeExpandido, setNomeExpandido] = useState<string | null>(null);
   const [gerarForm, setGerarForm] = useState({
     turmaId: "",
     nomeExperimental: `Experimento-${new Date().toISOString().split("T")[0]}`,
@@ -971,6 +976,7 @@ function AbaExperimental() {
   });
 
   const nomes = [...new Set(expSlots.map((s) => s.nome))];
+  const diasSemanaExp = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
 
   const handleGerar = async () => {
     if (!gerarForm.turmaId) { toast({ title: "Selecione uma turma", variant: "destructive" }); return; }
@@ -991,6 +997,7 @@ function AbaExperimental() {
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
       toast({ title: `Experimento gerado! ${result.slotsGerados} aulas criadas.${result.conflitos.length ? ` ${result.conflitos.length} aviso(s).` : ""}` });
       setOpenGerar(false);
+      setNomeExpandido(gerarForm.nomeExperimental);
     } catch {
       toast({ title: "Erro ao gerar experimento", variant: "destructive" });
     } finally {
@@ -1056,6 +1063,13 @@ function AbaExperimental() {
                       <CardDescription className="mt-1">{slots.length} aulas · Turmas: {turmasNome.join(", ")}</CardDescription>
                     </div>
                     <div className="flex gap-2">
+                      <Button
+                        size="sm" variant="outline" className="gap-1.5"
+                        onClick={() => setNomeExpandido(nomeExpandido === nome ? null : nome)}
+                      >
+                        {nomeExpandido === nome ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                        {nomeExpandido === nome ? "Ocultar grade" : "Ver grade"}
+                      </Button>
                       <Button size="sm" variant="outline" className="border-green-300 text-green-700 hover:bg-green-50 gap-1.5" onClick={() => handlePromover(nome)}>
                         <ArrowUpCircle className="w-3.5 h-3.5" />Promover para oficial
                       </Button>
@@ -1078,6 +1092,61 @@ function AbaExperimental() {
                       );
                     })}
                   </div>
+
+                  {/* [NOVO] Grade visual do experimento -- mesma ideia da
+                      aba Grade (dia x aula), só que lendo de
+                      horarios_experimentais em vez de horarios. Nomes de
+                      disciplina/professor resolvidos aqui na tela porque
+                      a rota de experimentais devolve só os IDs. */}
+                  {nomeExpandido === nome && (
+                    <div className="mt-4 border border-purple-100 rounded-lg overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <div className="min-w-[700px]">
+                          <div className="grid grid-cols-6 border-b border-purple-100 bg-purple-50/60">
+                            <div className="p-2 text-xs font-medium text-muted-foreground text-center border-r border-purple-100">Aula</div>
+                            {diasSemanaExp.map((dia) => (
+                              <div key={dia} className="p-2 text-xs font-semibold text-center border-r border-purple-100 last:border-0">{dia}</div>
+                            ))}
+                          </div>
+                          {Array.from({ length: Math.max(...slots.map((s) => s.numeroAula), 5) }).map((_, rowIndex) => {
+                            const aulaNum = rowIndex + 1;
+                            return (
+                              <div key={aulaNum} className="grid grid-cols-6 border-b border-purple-100 last:border-0">
+                                <div className="p-2 flex items-center justify-center text-xs font-medium text-muted-foreground border-r border-purple-100 bg-purple-50/30">
+                                  {aulaNum}ª
+                                </div>
+                                {Array.from({ length: 5 }).map((_, colIndex) => {
+                                  const slot = slots.find((s) => s.diaSemana === colIndex && s.numeroAula === aulaNum);
+                                  if (!slot) {
+                                    return (
+                                      <div key={`${aulaNum}-${colIndex}`} className="p-1.5 border-r border-purple-100 last:border-0 min-h-[54px] flex items-center justify-center">
+                                        <span className="text-[10px] text-muted-foreground/30">Vago</span>
+                                      </div>
+                                    );
+                                  }
+                                  const disc = disciplinas.find((d) => d.id === slot.disciplinaId);
+                                  const prof = professores.find((p) => p.id === slot.professorId);
+                                  const turmaNome = turmasNome.length > 1 ? turmas.find((t) => t.id === slot.turmaId)?.nome : undefined;
+                                  return (
+                                    <div key={slot.id} className="p-1 border-r border-purple-100 last:border-0">
+                                      <div
+                                        className="h-full rounded p-1.5 border-l-4 text-[10px] leading-tight"
+                                        style={{ backgroundColor: `${disc?.cor ?? "#8E24AA"}15`, borderLeftColor: disc?.cor ?? "#8E24AA" }}
+                                      >
+                                        <div className="font-semibold truncate">{disc?.nome ?? "?"}</div>
+                                        {turmaNome && <div className="text-muted-foreground truncate">{turmaNome}</div>}
+                                        <div className="text-muted-foreground truncate">{prof?.nome ?? "?"}</div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );
