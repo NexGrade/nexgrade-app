@@ -1014,6 +1014,11 @@ function AbaExperimental() {
   // [NOVO] Qual experimento está com a grade aberta pra visualização --
   // só um por vez, pra não poluir a tela com várias grades expandidas.
   const [nomeExpandido, setNomeExpandido] = useState<string | null>(null);
+  // [NOVO] Quando o experimento aberto tem mais de uma turma (lote),
+  // qual turma específica está mostrando a grade -- o grid dia×aula só
+  // faz sentido pra uma turma de cada vez (várias turmas têm aula no
+  // mesmo dia+número, mostrar todas juntas não faz sentido visual).
+  const [turmaExpandidaId, setTurmaExpandidaId] = useState<number | null>(null);
   const [gerarForm, setGerarForm] = useState({
     turmaId: "",
     nomeExperimental: `Experimento-${new Date().toISOString().split("T")[0]}`,
@@ -1023,8 +1028,57 @@ function AbaExperimental() {
     compactarCargaHoraria: false,
   });
 
+  // [NOVO] Geração em massa (turno inteiro ou escola toda), sempre como
+  // experimento -- nunca mexe na grade oficial direto.
+  const [openGerarLote, setOpenGerarLote] = useState(false);
+  const [gerandoLote, setGerandoLote] = useState(false);
+  const [loteForm, setLoteForm] = useState({
+    turno: "matutino",
+    nomeExperimental: `Lote-${new Date().toISOString().split("T")[0]}`,
+    reduzirJanelas: true,
+    fatorPedagogico: false,
+    compactarCargaHoraria: false,
+  });
+
   const nomes = [...new Set(expSlots.map((s) => s.nome))];
   const diasSemanaExp = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
+
+  const handleGerarLote = async () => {
+    if (!loteForm.nomeExperimental.trim()) { toast({ title: "Informe o nome do lote", variant: "destructive" }); return; }
+    setGerandoLote(true);
+    try {
+      const res = await fetch("/api/horarios/gerar-lote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          turno: loteForm.turno,
+          nomeExperimental: loteForm.nomeExperimental,
+          reduzirJanelas: loteForm.reduzirJanelas,
+          fatorPedagogico: loteForm.fatorPedagogico,
+          compactarCargaHoraria: loteForm.compactarCargaHoraria,
+        }),
+      });
+      if (!res.ok) {
+        const erro = await res.json().catch(() => ({}));
+        throw new Error(erro.error ?? "Erro ao gerar em massa");
+      }
+      const result = await res.json();
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
+      toast({
+        title: `Lote gerado! ${result.totalTurmas} turma(s), ${result.totalSlots} aulas criadas.`,
+        description: result.totalConflitos > 0 || result.turmasComErro > 0
+          ? `${result.totalConflitos} aviso(s) de disciplina incompleta, ${result.turmasComErro} turma(s) com erro — confira antes de promover.`
+          : undefined,
+      });
+      setOpenGerarLote(false);
+      setNomeExpandido(loteForm.nomeExperimental);
+      setTurmaExpandidaId(null);
+    } catch (err) {
+      toast({ title: "Erro ao gerar em massa", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+    } finally {
+      setGerandoLote(false);
+    }
+  };
 
   const handleGerar = async () => {
     if (!gerarForm.turmaId) { toast({ title: "Selecione uma turma", variant: "destructive" }); return; }
@@ -1046,6 +1100,7 @@ function AbaExperimental() {
       toast({ title: `Experimento gerado! ${result.slotsGerados} aulas criadas.${result.conflitos.length ? ` ${result.conflitos.length} aviso(s).` : ""}` });
       setOpenGerar(false);
       setNomeExpandido(gerarForm.nomeExperimental);
+      setTurmaExpandidaId(Number(gerarForm.turmaId));
     } catch {
       toast({ title: "Erro ao gerar experimento", variant: "destructive" });
     } finally {
@@ -1054,7 +1109,8 @@ function AbaExperimental() {
   };
 
   const handlePromover = async (nome: string) => {
-    if (!confirm(`Promover "${nome}" para horário oficial? Isso substituirá o horário atual das turmas envolvidas.`)) return;
+    const qtdTurmas = new Set(expSlots.filter((s) => s.nome === nome).map((s) => s.turmaId)).size;
+    if (!confirm(`Promover "${nome}" para horário oficial? Isso substituirá o horário atual de ${qtdTurmas} turma(s) envolvida(s).`)) return;
     try {
       await promover({ nome });
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
@@ -1079,9 +1135,14 @@ function AbaExperimental() {
           <p className="font-medium mb-1">Como funciona o Modo Experimental?</p>
           <p>Gere versões alternativas de horário sem substituir a grade oficial. Compare, ajuste e quando estiver satisfeito, clique em <strong>Promover para oficial</strong> para aplicar.</p>
         </div>
-        <Button onClick={() => setOpenGerar(true)}>
-          <Plus className="w-4 h-4 mr-2" />Novo Experimento
-        </Button>
+        <div className="flex flex-col gap-2 shrink-0">
+          <Button onClick={() => setOpenGerar(true)}>
+            <Plus className="w-4 h-4 mr-2" />Novo Experimento
+          </Button>
+          <Button variant="outline" onClick={() => setOpenGerarLote(true)}>
+            <RefreshCw className="w-4 h-4 mr-2" />Gerar em Massa
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -1098,7 +1159,15 @@ function AbaExperimental() {
         <div className="space-y-4">
           {nomes.map((nome) => {
             const slots = expSlots.filter((s) => s.nome === nome);
-            const turmasNome = [...new Set(slots.map((s) => turmas.find((t) => t.id === s.turmaId)?.nome ?? `Turma #${s.turmaId}`))];
+            const turmaIdsDoLote = [...new Set(slots.map((s) => s.turmaId))];
+            const turmasNome = turmaIdsDoLote.map((id) => turmas.find((t) => t.id === id)?.nome ?? `Turma #${id}`);
+            const ehLote = turmaIdsDoLote.length > 1;
+            // Grade mostrada: se for um lote (várias turmas), filtra só
+            // pela turma escolhida no seletor abaixo -- senão mistura
+            // aulas de turmas diferentes na mesma célula dia+número.
+            const slotsGrade = ehLote
+              ? slots.filter((s) => s.turmaId === turmaExpandidaId)
+              : slots;
             return (
               <Card key={nome} className="border-purple-200">
                 <CardHeader className="pb-3">
@@ -1108,12 +1177,22 @@ function AbaExperimental() {
                         <FlaskConical className="w-4 h-4 text-purple-500" />
                         {nome}
                       </CardTitle>
-                      <CardDescription className="mt-1">{slots.length} aulas · Turmas: {turmasNome.join(", ")}</CardDescription>
+                      <CardDescription className="mt-1">
+                        {slots.length} aulas · {turmaIdsDoLote.length} turma{turmaIdsDoLote.length > 1 ? "s" : ""}
+                        {turmaIdsDoLote.length <= 6 ? `: ${turmasNome.join(", ")}` : ""}
+                      </CardDescription>
                     </div>
                     <div className="flex gap-2">
                       <Button
                         size="sm" variant="outline" className="gap-1.5"
-                        onClick={() => setNomeExpandido(nomeExpandido === nome ? null : nome)}
+                        onClick={() => {
+                          if (nomeExpandido === nome) {
+                            setNomeExpandido(null);
+                          } else {
+                            setNomeExpandido(nome);
+                            setTurmaExpandidaId(ehLote ? null : turmaIdsDoLote[0] ?? null);
+                          }
+                        }}
                       >
                         {nomeExpandido === nome ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                         {nomeExpandido === nome ? "Ocultar grade" : "Ver grade"}
@@ -1147,7 +1226,22 @@ function AbaExperimental() {
                       disciplina/professor resolvidos aqui na tela porque
                       a rota de experimentais devolve só os IDs. */}
                   {nomeExpandido === nome && (
-                    <div className="mt-4 border border-purple-100 rounded-lg overflow-hidden">
+                    <div className="mt-4">
+                      {ehLote && (
+                        <div className="mb-3">
+                          <Label className="text-xs mb-1.5 block">Escolha a turma pra ver a grade dela:</Label>
+                          <SeletorBusca
+                            options={turmaIdsDoLote.map((id) => ({ value: String(id), label: turmas.find((t) => t.id === id)?.nome ?? `Turma #${id}` }))}
+                            value={turmaExpandidaId ? String(turmaExpandidaId) : ""}
+                            onChange={(v) => setTurmaExpandidaId(Number(v))}
+                            placeholder="Selecione a turma"
+                            buscarPlaceholder="Buscar turma..."
+                            className="max-w-xs"
+                          />
+                        </div>
+                      )}
+                      {(!ehLote || turmaExpandidaId) && (
+                    <div className="border border-purple-100 rounded-lg overflow-hidden">
                       <div className="overflow-x-auto">
                         <div className="min-w-[700px]">
                           <div className="grid grid-cols-6 border-b border-purple-100 bg-purple-50/60">
@@ -1156,7 +1250,7 @@ function AbaExperimental() {
                               <div key={dia} className="p-2 text-xs font-semibold text-center border-r border-purple-100 last:border-0">{dia}</div>
                             ))}
                           </div>
-                          {Array.from({ length: Math.max(...slots.map((s) => s.numeroAula), 5) }).map((_, rowIndex) => {
+                          {Array.from({ length: Math.max(...slotsGrade.map((s) => s.numeroAula), 5) }).map((_, rowIndex) => {
                             const aulaNum = rowIndex + 1;
                             return (
                               <div key={aulaNum} className="grid grid-cols-6 border-b border-purple-100 last:border-0">
@@ -1164,7 +1258,7 @@ function AbaExperimental() {
                                   {aulaNum}ª
                                 </div>
                                 {Array.from({ length: 5 }).map((_, colIndex) => {
-                                  const slot = slots.find((s) => s.diaSemana === colIndex && s.numeroAula === aulaNum);
+                                  const slot = slotsGrade.find((s) => s.diaSemana === colIndex && s.numeroAula === aulaNum);
                                   if (!slot) {
                                     return (
                                       <div key={`${aulaNum}-${colIndex}`} className="p-1.5 border-r border-purple-100 last:border-0 min-h-[54px] flex items-center justify-center">
@@ -1174,7 +1268,6 @@ function AbaExperimental() {
                                   }
                                   const disc = disciplinas.find((d) => d.id === slot.disciplinaId);
                                   const prof = professores.find((p) => p.id === slot.professorId);
-                                  const turmaNome = turmasNome.length > 1 ? turmas.find((t) => t.id === slot.turmaId)?.nome : undefined;
                                   return (
                                     <div key={slot.id} className="p-1 border-r border-purple-100 last:border-0">
                                       <div
@@ -1182,7 +1275,6 @@ function AbaExperimental() {
                                         style={{ backgroundColor: `${disc?.cor ?? "#8E24AA"}15`, borderLeftColor: disc?.cor ?? "#8E24AA" }}
                                       >
                                         <div className="font-semibold truncate">{disc?.nome ?? "?"}</div>
-                                        {turmaNome && <div className="text-muted-foreground truncate">{turmaNome}</div>}
                                         <div className="text-muted-foreground truncate">{prof?.nome ?? "?"}</div>
                                       </div>
                                     </div>
@@ -1193,6 +1285,8 @@ function AbaExperimental() {
                           })}
                         </div>
                       </div>
+                    </div>
+                      )}
                     </div>
                   )}
                 </CardContent>
@@ -1237,6 +1331,52 @@ function AbaExperimental() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenGerar(false)}>Cancelar</Button>
             <Button onClick={handleGerar} disabled={gerando}>{gerando ? "Gerando..." : "Gerar Experimento"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* [NOVO] Geração em massa -- turno inteiro ou escola toda, sempre
+          como experimento (nunca mexe na grade oficial direto). */}
+      <Dialog open={openGerarLote} onOpenChange={setOpenGerarLote}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Gerar em Massa</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 rounded-md p-2.5">
+              <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+              Gera a grade de várias turmas de uma vez, como um único experimento. Nada muda na grade oficial até você conferir e clicar em "Promover para oficial". Isso limpa qualquer outro experimento em andamento antes de começar.
+            </div>
+            <div className="space-y-1.5">
+              <Label>Nome do lote *</Label>
+              <Input value={loteForm.nomeExperimental} onChange={(e) => setLoteForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex: Grade-Semana-2026-07-27" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Turno</Label>
+              <Select value={loteForm.turno} onValueChange={(v) => setLoteForm((f) => ({ ...f, turno: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="matutino">Matutino</SelectItem>
+                  <SelectItem value="vespertino">Vespertino</SelectItem>
+                  <SelectItem value="noturno">Noturno</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">A geração em massa sempre é feita por turno (mais rápido e mais seguro de conferir do que a escola inteira de uma vez).</p>
+            </div>
+            <div className="flex items-center justify-between py-1">
+              <Label className="cursor-pointer">Reduzir janelas do professor</Label>
+              <Switch checked={loteForm.reduzirJanelas} onCheckedChange={(v) => setLoteForm((f) => ({ ...f, reduzirJanelas: v }))} />
+            </div>
+            <div className="flex items-center justify-between py-1">
+              <Label className="cursor-pointer">Fator pedagógico (distribuição equilibrada)</Label>
+              <Switch checked={loteForm.fatorPedagogico} onCheckedChange={(v) => setLoteForm((f) => ({ ...f, fatorPedagogico: v }))} />
+            </div>
+            <div className="flex items-center justify-between py-1">
+              <Label className="cursor-pointer">Compactar carga horária</Label>
+              <Switch checked={loteForm.compactarCargaHoraria} onCheckedChange={(v) => setLoteForm((f) => ({ ...f, compactarCargaHoraria: v }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenGerarLote(false)}>Cancelar</Button>
+            <Button onClick={handleGerarLote} disabled={gerandoLote}>{gerandoLote ? "Gerando (pode demorar)..." : "Gerar em Massa"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

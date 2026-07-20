@@ -636,4 +636,86 @@ router.delete("/experimentais/:nome", async (req, res) => {
   res.status(204).send();
 });
 
+// ── GERAÇÃO EM MASSA ─────────────────────────────────────────────────
+
+const GerarLoteBody = z.object({
+  turno: z.enum(["matutino", "vespertino", "noturno"]).optional(),
+  nomeExperimental: z.string().min(1),
+  reduzirJanelas: z.boolean().optional(),
+  fatorPedagogico: z.boolean().optional(),
+  compactarCargaHoraria: z.boolean().optional(),
+});
+
+// [NOVO] Gera a grade de VÁRIAS turmas de uma vez (um turno inteiro, ou
+// a escola inteira se `turno` não for informado), sempre como
+// experimento -- nunca mexe na grade oficial diretamente. Depois de
+// conferir o resultado, o usuário usa o mesmo endpoint de "promover"
+// que já existia (ele já suporta promover várias turmas de um nome só
+// pra oficial de uma vez).
+//
+// Roda SEQUENCIALMENTE (não em paralelo) de propósito: cada chamada a
+// gerarAlgoritmo() lê os slots experimentais já gravados com esse mesmo
+// nome pra saber quais professores já estão ocupados -- se rodasse em
+// paralelo, duas turmas poderiam escalar o mesmo professor no mesmo
+// horário sem nenhuma enxergar a outra.
+//
+// Limpa TODOS os experimentos da escola antes de começar (não só os
+// desse nome) -- evita que um experimento antigo e não relacionado,
+// deixado pra trás, interfira na disponibilidade calculada pro lote
+// novo.
+router.post("/gerar-lote", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const parsed = GerarLoteBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { turno, nomeExperimental, reduzirJanelas, fatorPedagogico, compactarCargaHoraria } = parsed.data;
+
+  let turmasAlvo = await db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
+  if (turno) turmasAlvo = turmasAlvo.filter(t => t.turno === turno);
+
+  if (turmasAlvo.length === 0) {
+    res.status(400).json({ error: turno ? `Nenhuma turma encontrada no turno "${turno}"` : "Nenhuma turma cadastrada" });
+    return;
+  }
+
+  await db.delete(horariosExperimentaisTable).where(eq(horariosExperimentaisTable.escolaId, escolaId));
+
+  const resultados: Array<{ turmaId: number; turmaNome: string; slotsGerados: number; conflitos: string[]; erro?: string }> = [];
+  for (const turma of turmasAlvo) {
+    try {
+      const r = await gerarAlgoritmo({
+        escolaId,
+        turmaId: turma.id,
+        substituir: true,
+        reduzirJanelas: reduzirJanelas ?? true,
+        fatorPedagogico: fatorPedagogico ?? false,
+        compactarCargaHoraria: compactarCargaHoraria ?? false,
+        experimental: true,
+        nomeExperimental,
+      });
+      resultados.push({ turmaId: turma.id, turmaNome: turma.nome, slotsGerados: r.slotsGerados, conflitos: r.conflitos });
+    } catch (err) {
+      resultados.push({
+        turmaId: turma.id, turmaNome: turma.nome, slotsGerados: 0, conflitos: [],
+        erro: err instanceof Error ? err.message : "Erro desconhecido",
+      });
+    }
+  }
+
+  const totalSlots = resultados.reduce((s, r) => s + r.slotsGerados, 0);
+  const totalConflitos = resultados.reduce((s, r) => s + r.conflitos.length, 0);
+  const turmasComErro = resultados.filter(r => r.erro);
+
+  res.json({
+    nomeExperimental,
+    totalTurmas: turmasAlvo.length,
+    totalSlots,
+    totalConflitos,
+    turmasComErro: turmasComErro.length,
+    resultados,
+  });
+});
+
 export default router;
