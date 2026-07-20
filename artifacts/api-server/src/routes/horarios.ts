@@ -227,10 +227,24 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     const cargaSemanal = cargaEfetiva(td, disc);
     const maxGeminadas = maxGeminadasEfetivo(td);
 
-    const profsParaDisc = profDiscs
-      .filter(pd => pd.disciplinaId === td.disciplinaId)
-      .map(pd => professores.find(p => p.id === pd.professorId))
-      .filter(Boolean) as typeof professores;
+    // [FIX] Antes, mesmo quando a turma já tinha um professor
+    // específico vinculado pra essa disciplina (turmaDisciplinasTable.
+    // professorId -- o dado real que veio da secretaria), o gerador
+    // ignorava isso e escolhia entre QUALQUER professor genericamente
+    // ligado à disciplina via professor_disciplinas (que pode incluir
+    // gente que só dá essa matéria em OUTRA turma). Resultado: a grade
+    // gerada podia colocar um professor que nunca deu aula naquela
+    // turma, só porque ele estava livre no horário e "sabe" a matéria
+    // em geral. Agora, se a turma já tem o professor certo definido,
+    // usa só ele -- o pool genérico vira só um fallback pra quando
+    // ainda não há vínculo específico (turma nova, sem professor
+    // definido ainda).
+    const profsParaDisc = td.professorId
+      ? professores.filter(p => p.id === td.professorId)
+      : profDiscs
+          .filter(pd => pd.disciplinaId === td.disciplinaId)
+          .map(pd => professores.find(p => p.id === pd.professorId))
+          .filter(Boolean) as typeof professores;
 
     if (profsParaDisc.length === 0) {
       conflitos.push(`Sem professor habilitado para "${disc.nome}"`);
