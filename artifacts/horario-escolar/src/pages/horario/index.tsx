@@ -450,6 +450,34 @@ function SecaoGeral() {
     );
   }
 
+  // [NOVO] Padrão geral da escola pro limite complementar (professor
+  // com mais de uma disciplina na mesma turma) -- antes só dava pra
+  // configurar professor por professor, na seção "Complementares"
+  // abaixo. Sem preencher aqui, continua sem limite (comportamento de
+  // sempre) pra quem não usa essa opção.
+  const CHAVE_MAX_COMPLEMENTAR = "seed_pr.max_aulas_complementar_padrao";
+  const { data: configComplementar, isLoading: isLoadingComplementar } = useGetConfiguracao(CHAVE_MAX_COMPLEMENTAR, {
+    query: { queryKey: getGetConfiguracaoQueryKey(CHAVE_MAX_COMPLEMENTAR), retry: false },
+  });
+  const [valorComplementar, setValorComplementar] = useState("");
+  const salvarComplementar = useUpsertConfiguracao();
+
+  const valorComplementarAtual = typeof configComplementar?.valor === "number" ? configComplementar.valor : (valorComplementar ? Number(valorComplementar) : undefined);
+
+  function salvarValorComplementar() {
+    if (!valorComplementar) return;
+    salvarComplementar.mutate(
+      { chave: CHAVE_MAX_COMPLEMENTAR, data: { valor: Number(valorComplementar), descricao: "Máximo de aulas por dia com a mesma turma, por padrão, quando um professor dá mais de uma disciplina pra ela e não tem regra específica na seção Complementares." } },
+      {
+        onSuccess: () => {
+          toast({ title: "Padrão salvo!" });
+          queryClient.invalidateQueries({ queryKey: getGetConfiguracaoQueryKey(CHAVE_MAX_COMPLEMENTAR) });
+        },
+        onError: () => toast({ title: "Erro ao salvar", variant: "destructive" }),
+      },
+    );
+  }
+
   return (
     <div className="pt-2">
       <div className="bg-muted/50 rounded-lg p-4">
@@ -469,6 +497,26 @@ function SecaoGeral() {
           </Button>
         </div>
       </div>
+
+      <div className="bg-muted/50 rounded-lg p-4 mt-3">
+        <label className="text-sm font-medium block mb-1">Máximo de aulas por dia com a mesma turma (padrão da escola)</label>
+        <p className="text-xs text-muted-foreground mb-3">
+          Vale pra qualquer professor que dê mais de uma disciplina numa turma e não tenha uma regra específica configurada na seção "Complementares" (por professor, ou por professor+turma). Deixe em branco pra não aplicar limite nenhum por padrão.
+        </p>
+        <div className="flex items-center gap-2">
+          <Input
+            type="number" min={1} max={6}
+            placeholder="sem limite"
+            defaultValue={isLoadingComplementar ? undefined : valorComplementarAtual}
+            onChange={(e) => setValorComplementar(e.target.value)}
+            className="w-24"
+          />
+          <Button size="sm" onClick={salvarValorComplementar} disabled={salvarComplementar.isPending || !valorComplementar}>
+            <Check className="h-3.5 w-3.5 mr-1" /> Salvar
+          </Button>
+        </div>
+      </div>
+
       <p className="text-xs text-amber-600 mt-3">
         Compactação de carga horária e bloqueio de janelas ainda não têm um padrão configurável aqui — hoje são escolhidos a cada geração de horário, na aba de Esquema.
       </p>

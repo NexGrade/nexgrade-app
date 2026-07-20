@@ -50,6 +50,12 @@ export interface GerarOpts {
 
 const CHAVE_MAX_GEMINADAS_PADRAO = "seed_pr.max_aulas_geminadas_padrao";
 const DEFAULT_MAX_GEMINADAS = 2;
+// [NOVO] Padrão da escola inteira pro limite complementar (professor
+// com mais de uma disciplina na mesma turma) -- antes só dava pra
+// configurar por professor (ou por professor+turma). Sem valor
+// configurado aqui, mantém o comportamento antigo (sem limite = "não
+// restringe"), pra não quebrar quem já usa o sistema sem essa opção.
+const CHAVE_MAX_COMPLEMENTAR_PADRAO = "seed_pr.max_aulas_complementar_padrao";
 
 export async function gerarAlgoritmo(opts: GerarOpts) {
   const {
@@ -83,7 +89,7 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
   }
   const aulasPorDiaReal = slotsDoTurno.length;
 
-  const [turmaDiscs, disciplinas, professores, profDiscs, configGeminadas, limitesProfessor] = await Promise.all([
+  const [turmaDiscs, disciplinas, professores, profDiscs, configGeminadas, configComplementarPadrao, limitesProfessor] = await Promise.all([
     db.select().from(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.turmaId, turmaId)),
     db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
     db.select().from(professoresTable)
@@ -92,6 +98,9 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     db.select().from(professorDisciplinasTable),
     db.select().from(configuracoesTable)
       .where(and(eq(configuracoesTable.escolaId, escolaId), eq(configuracoesTable.chave, CHAVE_MAX_GEMINADAS_PADRAO)))
+      .then(r => r[0]),
+    db.select().from(configuracoesTable)
+      .where(and(eq(configuracoesTable.escolaId, escolaId), eq(configuracoesTable.chave, CHAVE_MAX_COMPLEMENTAR_PADRAO)))
       .then(r => r[0]),
     db.select().from(limitesDiariosProfessorTable).where(eq(limitesDiariosProfessorTable.escolaId, escolaId)),
   ]);
@@ -102,11 +111,23 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     ? configGeminadas.valor
     : DEFAULT_MAX_GEMINADAS;
 
+  // [NOVO] Padrão geral da escola pro limite complementar, se
+  // configurado (ver CHAVE_MAX_COMPLEMENTAR_PADRAO acima).
+  const maxComplementarPadrao = typeof configComplementarPadrao?.valor === "number"
+    ? configComplementarPadrao.valor
+    : undefined;
+
+  // [FIX] Adicionada uma camada de prioridade: override específico
+  // (professor+turma) > padrão do professor (turmaId nulo) > NOVO:
+  // padrão geral da escola > sem limite. Antes não existia jeito de
+  // configurar isso pra todo mundo de uma vez -- só professor por
+  // professor.
   function limiteDiarioProfessor(professorId: number): number {
     const especifico = limitesProfessor.find(l => l.professorId === professorId && l.turmaId === turmaId);
     if (especifico) return especifico.maxAulasPorDia;
     const padrao = limitesProfessor.find(l => l.professorId === professorId && l.turmaId === null);
     if (padrao) return padrao.maxAulasPorDia;
+    if (maxComplementarPadrao !== undefined) return maxComplementarPadrao;
     return Infinity;
   }
 
