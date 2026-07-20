@@ -39,26 +39,15 @@ async function enrichSlot(slot: typeof horariosTable.$inferSelect) {
 export interface GerarOpts {
   escolaId: string;
   turmaId: number;
-  // [DEPRECADO] Não é mais usado para decidir quantas aulas por dia
-  // existem — isso agora vem de horario_slots, calculado automaticamente
-  // a partir do turno + nivelEnsino da turma (ver busca de
-  // `aulasPorDiaReal` abaixo). Mantido opcional só para não quebrar
-  // chamadas antigas (ex.: routes/ai.ts) que ainda possam enviar esse
-  // campo — o valor recebido é ignorado.
   aulaspordia?: number;
   substituir: boolean;
   reduzirJanelas: boolean;
   fatorPedagogico: boolean;
-  // Opcional (default false) para não quebrar chamadas existentes de
-  // gerarAlgoritmo feitas antes desta opção existir (ver routes/ai.ts).
   compactarCargaHoraria?: boolean;
   experimental: boolean;
   nomeExperimental?: string;
 }
 
-// Chave de configuração geral (nível "geral" do modelo de distribuição —
-// ver limites_diarios_professor.ts para os níveis "específico" e
-// "complementar"). Mesma convenção já usada em disponibilidade.ts.
 const CHAVE_MAX_GEMINADAS_PADRAO = "seed_pr.max_aulas_geminadas_padrao";
 const DEFAULT_MAX_GEMINADAS = 2;
 
@@ -69,21 +58,11 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
   } = opts;
   const useExperimental = experimental && nomeExperimental;
 
-  // RNF-SEG-04: a turma precisa pertencer à escola do usuário autenticado
-  // antes de qualquer leitura/escrita — todo o restante da função assume
-  // isso para não vazar/alterar dados de outra escola.
   const turma = await db.select().from(turmasTable)
     .where(and(eq(turmasTable.id, turmaId), eq(turmasTable.escolaId, escolaId)))
     .then(r => r[0]);
   if (!turma) throw new Error("Turma não encontrada");
 
-  // [NOVO] A quantidade real de aulas por dia vem de horario_slots, não
-  // mais de um número digitado no formulário — evita o erro comum de
-  // gerar horário noturno pedindo 6 aulas (só existem 5) ou matutino
-  // Fundamental pedindo 6 (só existem 5; só Médio/Técnico tem 6).
-  // Matutino tem dois esquemas reais diferentes dependendo do nível de
-  // ensino da turma; vespertino e noturno são uniformes (nivelEnsino
-  // nulo na tabela).
   if (turma.turno === "matutino" && !turma.nivelEnsino) {
     throw new Error(
       "Esta turma não tem o nível de ensino definido (Fundamental ou Médio/Técnico), necessário para saber se o " +
@@ -119,23 +98,16 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
 
   if (turmaDiscs.length === 0) throw new Error("A turma não tem disciplinas cadastradas");
 
-  // RNF-DIST-01 (nível geral): padrão de aulas geminadas da escola,
-  // usado quando a turma/disciplina não tem override em
-  // turma_disciplinas.maxAulasConsecutivasDia.
   const maxGeminadasPadrao = typeof configGeminadas?.valor === "number"
     ? configGeminadas.valor
     : DEFAULT_MAX_GEMINADAS;
 
-  // RNF-DIST-03 (nível complementar): limite diário de um professor que
-  // leciona mais de uma disciplina na mesma turma. turmaId nulo = padrão
-  // do professor; turmaId preenchido = override específico, com
-  // prioridade sobre o padrão (ver limites_diarios_professor.ts).
   function limiteDiarioProfessor(professorId: number): number {
     const especifico = limitesProfessor.find(l => l.professorId === professorId && l.turmaId === turmaId);
     if (especifico) return especifico.maxAulasPorDia;
     const padrao = limitesProfessor.find(l => l.professorId === professorId && l.turmaId === null);
     if (padrao) return padrao.maxAulasPorDia;
-    return Infinity; // sem limite configurado — não restringe
+    return Infinity;
   }
 
   const professorIds = professores.map(p => p.id);
@@ -143,10 +115,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     ? await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, professorIds))
     : [];
 
-  // RF-ALOC-04 / RF-PROF-04: um professor nunca pode ser alocado num
-  // dia/período em que sua disponibilidade esteja marcada como
-  // indisponível. A tabela só precisa registrar exceções — a ausência de
-  // registro é tratada como disponível (default da coluna `disponivel`).
   const indisponivelProf: Record<string, boolean> = {};
   disponibilidades
     .filter(d => !d.disponivel)
@@ -176,9 +144,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     ? await db.select().from(horariosExperimentaisTable).where(eq(horariosExperimentaisTable.escolaId, escolaId))
     : await db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId));
 
-  // Se `substituir`, a grade atual desta turma não conta como ocupada —
-  // ela vai ser apagada e regravada. Simulamos isso em memória (sem
-  // apagar do banco ainda) filtrando esses slots da checagem de conflito.
   const existingIds = new Set(existing.map(s => s.id));
   const baseSlots = substituir ? allSlots.filter(s => !existingIds.has(s.id)) : allSlots;
 
@@ -194,26 +159,12 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
       ocupadoProf[`${s.professorId}-${s.diaSemana}-${s.numeroAula}`] = true;
     });
 
-  // Correção do bug de "bloqueio de janelas": antes, `aulasProf` era
-  // calculado só a partir de `allSlots` (o banco no início da execução),
-  // então uma disciplina alocada mais cedo NESTA MESMA geração não
-  // contava como "aula adjacente" pra próxima disciplina do loop — ou
-  // seja, numa turma nova (o caso mais comum), o bloqueio de janelas não
-  // fazia nada. Agora `aulasPorProfessorDia` é seedado do banco e
-  // atualizado a cada `alocar()`, refletindo a geração em andamento.
   const aulasPorProfessorDia: Record<number, number[]> = {};
   baseSlots.forEach(s => {
-    // Indexado só por professor; dia/aula ficam guardados juntos como
-    // `dia*100+aula` pra permitir checagem por dia específico abaixo.
     if (!aulasPorProfessorDia[s.professorId]) aulasPorProfessorDia[s.professorId] = [];
     aulasPorProfessorDia[s.professorId].push(s.diaSemana * 100 + s.numeroAula);
   });
 
-  // RNF-DIST-03: contagem de aulas do professor NESTA turma, por dia
-  // (soma todas as disciplinas que ele dá nesta turma) — é o dado que a
-  // regra complementar limita. Reinicia a cada geração porque só conta
-  // o que está sendo alocado agora; combinações antigas já gravadas
-  // entram via `existing` quando `!substituir`.
   const aulasProfessorNaTurmaPorDia: Record<string, number> = {};
   if (!substituir) {
     existing.forEach(s => {
@@ -222,10 +173,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     });
   }
 
-  // RNF-DIST-01 (compactação, nível geral): dias distintos que cada
-  // professor já está lecionando, nesta escola, nesta geração — usado
-  // pra preferir concentrar o professor em menos dias em vez de
-  // espalhar aulas dele pela semana inteira.
   const diasUsadosPorProfessor: Record<number, Set<number>> = {};
   baseSlots.forEach(s => {
     if (!diasUsadosPorProfessor[s.professorId]) diasUsadosPorProfessor[s.professorId] = new Set();
@@ -234,23 +181,12 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
 
   const DIAS = [0, 1, 2, 3, 4];
   const diasBase = fatorPedagogico ? [1, 3, 2, 4, 0] : DIAS;
-  // [ALTERADO] Antes vinha de `opts.aulaspordia` (digitado no
-  // formulário); agora vem de `aulasPorDiaReal`, calculado acima a
-  // partir de horario_slots — reflete o esquema real da turma.
   const AULAS = Array.from({ length: aulasPorDiaReal }, (_, i) => i + 1);
 
-  // RF-TUR-02: a carga horária efetiva de uma disciplina NESTA turma é o
-  // override vindo da Matriz Curricular aplicada (ver
-  // routes/turmas.ts > POST /:id/aplicar-matriz), com fallback para a
-  // carga global de disciplinasTable quando a disciplina foi vinculada
-  // manualmente (turma sem matriz aplicada).
   function cargaEfetiva(td: typeof turmaDiscs[number], disc: typeof disciplinas[number] | undefined): number {
     return td.cargaHorariaSemanalOverride ?? disc?.cargaSemanal ?? 0;
   }
 
-  // RNF-SEED-03: máximo de aulas consecutivas (geminadas) desta
-  // disciplina, nesta turma — override específico com prioridade sobre
-  // o padrão geral da escola (ver maxGeminadasPadrao acima).
   function maxGeminadasEfetivo(td: typeof turmaDiscs[number]): number {
     return td.maxAulasConsecutivasDia ?? maxGeminadasPadrao;
   }
@@ -276,8 +212,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     diasUsadosPorProfessor[professorId].add(dia);
   }
 
-  // Verifica se alocar `professorId` no `dia` respeitaria o limite
-  // complementar (professor com múltiplas disciplinas na mesma turma).
   function respeitaLimiteComplementar(professorId: number, dia: number): boolean {
     const limite = limiteDiarioProfessor(professorId);
     if (limite === Infinity) return true;
@@ -305,10 +239,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
 
     const alocacaoPorDia: Record<number, number> = {};
 
-    // Compactação (nível geral): quando ativa, reordena os dias
-    // preferindo aqueles em que algum dos professores desta disciplina
-    // já está alocado — concentra o professor em menos dias distintos,
-    // em vez de espalhar pela semana.
     let diasOrdenados = diasBase;
     if (compactarCargaHoraria) {
       diasOrdenados = [...diasBase].sort((a, b) => {
@@ -383,11 +313,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     }
   }
 
-  // RNF-ROBUSTEZ-01: gravação atômica. `db.transaction` garante que o
-  // apagar (se `substituir`) e todos os inserts abaixo aconteçam como uma
-  // unidade só — se qualquer insert falhar (ex. queda de conexão no meio),
-  // o Postgres desfaz TUDO sozinho, e a turma mantém a grade anterior
-  // intacta em vez de ficar com metade apagada e metade regravada.
   const gravados = await db.transaction(async (tx) => {
     if (useExperimental) {
       if (substituir) {
@@ -444,9 +369,6 @@ router.post("/gerar", async (req, res) => {
     const result = await gerarAlgoritmo({
       escolaId,
       turmaId: data.turmaId,
-      // [DEPRECADO] aulaspordia nao e mais usado internamente (ver
-      // gerarAlgoritmo) -- mantido apenas para nao quebrar o contrato da
-      // API para clientes antigos que ainda enviem esse campo.
       aulaspordia: data.aulaspordia,
       substituir: data.substituir ?? false,
       reduzirJanelas: data.reduzirJanelas ?? false,
@@ -470,13 +392,46 @@ router.get("/", async (req, res) => {
   }
   const { turmaId, professorId } = parsed.data as { turmaId?: number; professorId?: number };
 
-  let slots = await db.select().from(horariosTable)
-    .where(eq(horariosTable.escolaId, escolaId))
-    .orderBy(horariosTable.diaSemana, horariosTable.numeroAula);
-  if (turmaId) slots = slots.filter(s => s.turmaId === turmaId);
-  if (professorId) slots = slots.filter(s => s.professorId === professorId);
+  // [FIX] Antes: buscava TODOS os horarios da escola, filtrava em
+  // JavaScript, e ainda por cima chamava enrichSlot() individualmente
+  // pra cada linha filtrada -- 3 consultas ao banco (disciplina,
+  // professor, turma) POR AULA, uma de cada vez. Pra um professor com
+  // 20-30 aulas, isso virava 60-90 idas e vindas ao banco só pra montar
+  // uma tela, deixando o carregamento bem lento. Agora filtra direto no
+  // banco (WHERE) e busca disciplinas/professores/turmas em 3 consultas
+  // ÚNICAS (não uma por linha), juntando tudo em memória depois.
+  const condicoes = [eq(horariosTable.escolaId, escolaId)];
+  if (turmaId) condicoes.push(eq(horariosTable.turmaId, turmaId));
+  if (professorId) condicoes.push(eq(horariosTable.professorId, professorId));
 
-  const enriched = await Promise.all(slots.map(enrichSlot));
+  const slots = await db.select().from(horariosTable)
+    .where(and(...condicoes))
+    .orderBy(horariosTable.diaSemana, horariosTable.numeroAula);
+
+  if (slots.length === 0) {
+    res.json([]);
+    return;
+  }
+
+  const disciplinaIds = [...new Set(slots.map(s => s.disciplinaId))];
+  const professorIds = [...new Set(slots.map(s => s.professorId))];
+  const turmaIds = [...new Set(slots.map(s => s.turmaId))];
+
+  const [disciplinas, professores, turmas] = await Promise.all([
+    db.select().from(disciplinasTable).where(inArray(disciplinasTable.id, disciplinaIds)),
+    db.select().from(professoresTable).where(inArray(professoresTable.id, professorIds)),
+    db.select().from(turmasTable).where(inArray(turmasTable.id, turmaIds)),
+  ]);
+  const discMap = new Map(disciplinas.map(d => [d.id, d]));
+  const profMap = new Map(professores.map(p => [p.id, p]));
+  const turmaMap = new Map(turmas.map(t => [t.id, t]));
+
+  const enriched = slots.map(s => ({
+    ...s,
+    disciplina: discMap.get(s.disciplinaId),
+    professor: profMap.get(s.professorId),
+    turma: turmaMap.get(s.turmaId),
+  }));
   res.json(enriched);
 });
 

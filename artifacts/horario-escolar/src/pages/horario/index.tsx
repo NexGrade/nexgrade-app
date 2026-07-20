@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   useListHorarioSlots, useSetHorarioSlotsLote, getListHorarioSlotsQueryKey,
   useListAulasFixas, useCriarAulaFixa, getListAulasFixasQueryKey,
@@ -566,9 +566,17 @@ function SecaoComplementar() {
 function AbaGrade() {
   const [turmaId, setTurmaId] = useState<string>("all");
   const [professorId, setProfessorId] = useState<string>("all");
+  // [NOVO] Filtro por turno -- também usado pra restringir a lista de
+  // turmas do outro filtro (evita rolar por 53 turmas de todo turno
+  // pra achar uma só da noite, por exemplo).
+  const [turno, setTurno] = useState<string>("all");
+  const [gerando, setGerando] = useState(false);
 
   const { data: turmas } = useListTurmas();
   const { data: professores } = useListProfessores();
+  const { mutateAsync: gerar } = useGerarHorario();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const queryParams: any = {};
   if (turmaId !== "all") queryParams.turmaId = Number(turmaId);
@@ -576,6 +584,8 @@ function AbaGrade() {
 
   const { data: horarios, isLoading } = useListHorarios(queryParams);
   const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
+
+  const turmasDoTurno = (turmas ?? []).filter((t) => turno === "all" || t.turno === turno);
 
   const getSlot = (diaSemana: number, numeroAula: number, turmaFilterId?: number) => {
     return horarios?.find((s) =>
@@ -595,14 +605,66 @@ function AbaGrade() {
   const isTurmaSelected = turmaId !== "all";
   const isProfessorSelected = professorId !== "all";
 
+  // [NOVO] Gera a grade oficial (não experimental) da turma selecionada.
+  // Só faz sentido com UMA turma escolhida (o algoritmo é por turma).
+  // Sempre confirma antes, porque com `substituir: true` apaga a grade
+  // atual daquela turma pra recolocar do zero.
+  const handleGerarGrade = async () => {
+    if (!isTurmaSelected) return;
+    const nomeTurma = turmas?.find((t) => String(t.id) === turmaId)?.nome ?? turmaId;
+    if (!confirm(`Gerar a grade de "${nomeTurma}"? Isso substitui a grade atual dessa turma, se já existir.`)) return;
+    setGerando(true);
+    try {
+      const result = await gerar({
+        data: {
+          turmaId: Number(turmaId),
+          substituir: true,
+          reduzirJanelas: true,
+          fatorPedagogico: false,
+          compactarCargaHoraria: false,
+          experimental: false,
+        },
+      });
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios"] });
+      toast({
+        title: `Grade gerada! ${result.slotsGerados} aulas criadas.`,
+        description: result.conflitos.length ? `${result.conflitos.length} aviso(s) — veja a aba Conflitos.` : undefined,
+      });
+    } catch (err) {
+      toast({ title: "Erro ao gerar grade", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+    } finally {
+      setGerando(false);
+    }
+  };
+
   return (
     <div className="space-y-4 pt-2">
       <Card>
         <CardContent className="p-4 flex flex-col md:flex-row gap-4 items-end">
+          <div className="space-y-2 w-full md:w-44">
+            <Label>Filtrar por Turno</Label>
+            <Select
+              value={turno}
+              onValueChange={(v) => {
+                setTurno(v);
+                if (v !== "all" && turmaId !== "all" && turmas?.find((t) => String(t.id) === turmaId)?.turno !== v) {
+                  setTurmaId("all");
+                }
+              }}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Turnos</SelectItem>
+                <SelectItem value="matutino">Matutino</SelectItem>
+                <SelectItem value="vespertino">Vespertino</SelectItem>
+                <SelectItem value="noturno">Noturno</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-2 flex-1 w-full">
             <Label>Filtrar por Turma</Label>
             <SeletorBusca
-              options={[{ value: "all", label: "Todas as Turmas" }, ...(turmas ?? []).map((t) => ({ value: String(t.id), label: t.nome }))]}
+              options={[{ value: "all", label: "Todas as Turmas" }, ...turmasDoTurno.map((t) => ({ value: String(t.id), label: t.nome }))]}
               value={turmaId}
               onChange={(v) => { setTurmaId(v); setProfessorId("all"); }}
               placeholder="Todas as Turmas"
@@ -619,9 +681,21 @@ function AbaGrade() {
               buscarPlaceholder="Buscar professor..."
             />
           </div>
-          <Button variant="outline" onClick={() => { setTurmaId("all"); setProfessorId("all"); }}>Limpar</Button>
+          <Button variant="outline" onClick={() => { setTurmaId("all"); setProfessorId("all"); setTurno("all"); }}>Limpar</Button>
+          {/* [NOVO] Só habilita gerar com UMA turma escolhida -- o
+              algoritmo (gerarAlgoritmo em routes/horarios.ts) opera
+              sempre por turma, não por professor nem pra escola toda. */}
+          <Button onClick={handleGerarGrade} disabled={!isTurmaSelected || gerando}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${gerando ? "animate-spin" : ""}`} />
+            {gerando ? "Gerando..." : "Gerar Grade"}
+          </Button>
         </CardContent>
       </Card>
+      {!isTurmaSelected && (
+        <p className="text-xs text-muted-foreground -mt-2">
+          Selecione uma turma específica pra habilitar o botão "Gerar Grade" (a geração é sempre por turma).
+        </p>
+      )}
 
       {isLoading ? (
         <Skeleton className="h-[500px] w-full" />
@@ -987,23 +1061,3 @@ function AbaExperimental() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
