@@ -80,6 +80,11 @@ export default function HorarioHubPage() {
 
 type Turno = "matutino" | "vespertino" | "noturno";
 
+function paraMinutos(hora: string): number {
+  const [h, m] = hora.split(":").map(Number);
+  return h * 60 + m;
+}
+
 function AbaEsquema() {
   const [turno, setTurno] = useState<Turno>("matutino");
   const [nivelEnsino, setNivelEnsino] = useState<"fundamental" | "medio_tecnico">("fundamental");
@@ -101,10 +106,50 @@ function AbaEsquema() {
     { query: { queryKey: getListHorarioSlotsQueryKey({ turno, nivelEnsino: turno === "matutino" ? nivelEnsino : undefined }) } },
   );
   const salvarLote = useSetHorarioSlotsLote();
+
+  // [FIX] Antes, trocar de turno/nível só ajustava `qtdAulas` (5 ou 6)
+  // pro padrão -- o resto do formulário (horário de início, duração,
+  // intervalo) ficava com o que já estava digitado na tela, mesmo que
+  // aquele turno já tivesse um esquema DIFERENTE salvo de verdade no
+  // banco. Isso fazia, por exemplo, trocar pra "Vespertino" continuar
+  // mostrando "07:30" mesmo a tarde já estando configurada com 13:05 --
+  // e clicar Salvar ali sobrescreveria o esquema certo com um errado.
+  // Agora, quando já existe esquema salvo pro turno/nível selecionado,
+  // o formulário é populado a partir dos dados reais (incluindo
+  // detectar o intervalo a partir do "salto" de horário entre aulas).
   useEffect(() => {
-    const correto = turno !== "matutino" ? 5 : (nivelEnsino === "medio_tecnico" ? 6 : 5);
-    setForm((f) => (f.qtdAulas === correto ? f : { ...f, qtdAulas: correto }));
-  }, [turno, nivelEnsino]);
+    if (isLoading) return;
+    if (slotsExistentes && slotsExistentes.length > 0) {
+      const ordenados = [...slotsExistentes].sort((a, b) => a.numeroAula - b.numeroAula);
+      const primeiro = ordenados[0];
+      let intervaloApos = ordenados.length;
+      let duracaoIntervalo = 20;
+      for (let i = 1; i < ordenados.length; i++) {
+        const anterior = ordenados[i - 1];
+        const atual = ordenados[i];
+        const gap = paraMinutos(atual.horaInicio) - paraMinutos(anterior.horaInicio) - anterior.duracaoMinutos;
+        if (gap > 0) {
+          intervaloApos = i;
+          duracaoIntervalo = gap;
+          break;
+        }
+      }
+      setForm({
+        qtdAulas: ordenados.length,
+        duracao: primeiro.duracaoMinutos,
+        horaInicio: primeiro.horaInicio.slice(0, 5),
+        intervaloApos,
+        duracaoIntervalo,
+      });
+    } else {
+      // Turno/nível sem esquema salvo ainda -- volta pro padrão
+      // sensato (5 aulas, ou 6 se for matutino Médio/Técnico), em vez
+      // de manter o que tinha ficado digitado de outro turno.
+      const qtdPadrao = turno !== "matutino" ? 5 : (nivelEnsino === "medio_tecnico" ? 6 : 5);
+      const horaPadrao = turno === "matutino" ? "07:30" : turno === "vespertino" ? "13:05" : "18:45";
+      setForm({ qtdAulas: qtdPadrao, duracao: 50, horaInicio: horaPadrao, intervaloApos: 3, duracaoIntervalo: 20 });
+    }
+  }, [turno, nivelEnsino, slotsExistentes, isLoading]);
 
   const slotsPreview = Array.from({ length: form.qtdAulas }, (_, i) => {
     const [h, m] = form.horaInicio.split(":").map(Number);
