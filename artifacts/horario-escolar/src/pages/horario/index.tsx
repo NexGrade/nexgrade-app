@@ -582,10 +582,25 @@ function AbaGrade() {
   if (turmaId !== "all") queryParams.turmaId = Number(turmaId);
   if (professorId !== "all") queryParams.professorId = Number(professorId);
 
-  const { data: horarios, isLoading } = useListHorarios(queryParams);
+  const { data: horariosBrutos, isLoading } = useListHorarios(queryParams);
   const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
 
+  const TURNO_ROTULO_AVISO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
   const turmasDoTurno = (turmas ?? []).filter((t) => turno === "all" || t.turno === turno);
+
+  // [FIX] O filtro de Turno antes só restringia a lista de turmas do
+  // dropdown -- não filtrava as AULAS de verdade. Quando um professor
+  // dá aula em mais de um turno, `numeroAula` se repete (aula 1 é
+  // 07:30 de manhã E 13:05 à tarde), então a grade mostrava tudo
+  // misturado, uma turno "vencendo" o outro na mesma célula. Agora
+  // filtra de verdade pelo turno escolhido antes de montar a grade.
+  const horarios = horariosBrutos?.filter((s) => turno === "all" || s.turma?.turno === turno);
+
+  // Turnos que aparecem nos resultados sem filtro de turno -- usado só
+  // pra decidir se precisa avisar o usuário pra escolher um turno
+  // específico (ver aviso abaixo).
+  const turnosNosResultados = [...new Set((horariosBrutos ?? []).map((s) => s.turma?.turno).filter(Boolean))];
+  const precisaEscolherTurno = turno === "all" && professorId !== "all" && turnosNosResultados.length > 1;
 
   const getSlot = (diaSemana: number, numeroAula: number, turmaFilterId?: number) => {
     return horarios?.find((s) =>
@@ -694,6 +709,11 @@ function AbaGrade() {
       {!isTurmaSelected && (
         <p className="text-xs text-muted-foreground -mt-2">
           Selecione uma turma específica pra habilitar o botão "Gerar Grade" (a geração é sempre por turma).
+        </p>
+      )}
+      {precisaEscolherTurno && (
+        <p className="text-xs text-amber-600 -mt-2 font-medium">
+          Este professor dá aula em mais de um turno ({turnosNosResultados.map((t) => TURNO_ROTULO_AVISO[t as string] ?? t).join(", ")}) — selecione um Turno específico acima pra ver a grade sem misturar os horários (o número da aula se repete entre turnos, ex.: aula 1 é 07:30 na manhã e 13:05 na tarde).
         </p>
       )}
 
