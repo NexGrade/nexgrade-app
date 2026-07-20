@@ -187,10 +187,19 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
   });
 
   const aulasProfessorNaTurmaPorDia: Record<string, number> = {};
+  // [NOVO] Rastreia EXATAMENTE quais números de aula (não só a
+  // contagem) cada professor já ocupou nesta turma, por dia -- usado
+  // pra impedir aulas seguidas com a mesma turma (ver
+  // semAulaAdjacenteMesmaTurma abaixo). Só considera slots DESTA
+  // turma, já que "aula seguida com a mesma turma" só faz sentido
+  // dentro da grade de uma turma só.
+  const slotsProfessorNaTurmaPorDia: Record<string, Set<number>> = {};
   if (!substituir) {
     existing.forEach(s => {
       const key = `${s.professorId}-${s.diaSemana}`;
       aulasProfessorNaTurmaPorDia[key] = (aulasProfessorNaTurmaPorDia[key] ?? 0) + 1;
+      if (!slotsProfessorNaTurmaPorDia[key]) slotsProfessorNaTurmaPorDia[key] = new Set();
+      slotsProfessorNaTurmaPorDia[key].add(s.numeroAula);
     });
   }
 
@@ -228,9 +237,23 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
 
     const keyTurmaDia = `${professorId}-${dia}`;
     aulasProfessorNaTurmaPorDia[keyTurmaDia] = (aulasProfessorNaTurmaPorDia[keyTurmaDia] ?? 0) + 1;
+    if (!slotsProfessorNaTurmaPorDia[keyTurmaDia]) slotsProfessorNaTurmaPorDia[keyTurmaDia] = new Set();
+    slotsProfessorNaTurmaPorDia[keyTurmaDia].add(aula);
 
     if (!diasUsadosPorProfessor[professorId]) diasUsadosPorProfessor[professorId] = new Set();
     diasUsadosPorProfessor[professorId].add(dia);
+  }
+
+  // [NOVO] Impede aulas seguidas com a mesma turma: verifica se a aula
+  // imediatamente antes ou depois, NESTE dia e NESTA turma, já está
+  // ocupada por este mesmo professor (em qualquer disciplina). Um
+  // professor pode dar várias disciplinas pra mesma turma no mesmo
+  // dia, só não pode ser uma logo em seguida da outra -- precisa de
+  // pelo menos 1 aula de intervalo entre elas.
+  function semAulaAdjacenteMesmaTurma(professorId: number, dia: number, aula: number): boolean {
+    const slots = slotsProfessorNaTurmaPorDia[`${professorId}-${dia}`];
+    if (!slots) return true;
+    return !slots.has(aula - 1) && !slots.has(aula + 1);
   }
 
   function respeitaLimiteComplementar(professorId: number, dia: number): boolean {
@@ -312,7 +335,8 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
         const profDisponivel = profsParaDisc.find(
           p => !ocupadoProf[`${p.id}-${dia}-${aula}`]
             && !indisponivelProf[`${p.id}-${dia}-${aula}`]
-            && respeitaLimiteComplementar(p.id, dia),
+            && respeitaLimiteComplementar(p.id, dia)
+            && semAulaAdjacenteMesmaTurma(p.id, dia, aula),
         );
         if (!profDisponivel) continue;
 
@@ -333,7 +357,8 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
           const profDisponivel = profsParaDisc.find(
             p => !ocupadoProf[`${p.id}-${dia}-${aula}`]
               && !indisponivelProf[`${p.id}-${dia}-${aula}`]
-              && respeitaLimiteComplementar(p.id, dia),
+              && respeitaLimiteComplementar(p.id, dia)
+              && semAulaAdjacenteMesmaTurma(p.id, dia, aula),
           );
           if (!profDisponivel) continue;
 
