@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { horarioSlotsTable } from "@workspace/db";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, gte } from "drizzle-orm";
 import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 
@@ -18,6 +18,15 @@ import { getEscolaId } from "../lib/escola-id";
 // turno+nivelEnsino como a identidade completa de um esquema, nunca só
 // o turno sozinho — senão salvar o esquema Fundamental do matutino
 // apagaria o esquema Médio/Técnico do mesmo turno (e vice-versa).
+//
+// [NOVO] numeroAula=0 é reservado pra um slot "informativo" fora do
+// esquema oficial (ex.: 18:00 no noturno -- antes do início real da
+// grade, mas onde a escola às vezes marca HA). O assistente de Esquema
+// (wizard) NUNCA envia numeroAula=0 -- ele só lida com 1..N -- então
+// qualquer slot 0 existente é sempre criado manualmente por script,
+// nunca pelo wizard. Por isso o `/lote` abaixo exclui explicitamente
+// numeroAula=0 da substituição em massa: salvar o esquema pelo wizard
+// nunca apaga esse slot informativo sem querer.
 //
 // `horario_slots` tem escolaId próprio (diferente de disponibilidade,
 // que escopa via professorId) — filtragem é direta.
@@ -118,11 +127,17 @@ router.post("/lote", async (req, res) => {
   // vice-versa), já que os dois compartilham o mesmo turno "matutino".
   // Agora a condição inclui nivelEnsino, escopando a substituição só à
   // combinação exata que está sendo salva.
+  //
+  // [NOVO] Também exclui numeroAula=0 da substituição -- ver comentário
+  // no topo do arquivo sobre o slot informativo (ex.: 18:00 no
+  // noturno). O wizard nunca envia 0, então excluir 0 do DELETE garante
+  // que salvar o esquema normal nunca apaga esse slot por acidente.
   await db.delete(horarioSlotsTable)
     .where(and(
       eq(horarioSlotsTable.escolaId, escolaId),
       eq(horarioSlotsTable.turno, parsed.data.turno),
       condicaoNivelEnsino(parsed.data.nivelEnsino),
+      gte(horarioSlotsTable.numeroAula, 1),
     ));
 
   const resultado = await db.insert(horarioSlotsTable)

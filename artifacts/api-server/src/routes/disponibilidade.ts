@@ -30,7 +30,7 @@ const router = Router();
 const DisponibilidadeInput = z.object({
   professorId: z.number().int(),
   diaSemana: z.number().int().min(0).max(6),
-  horarioSlot: z.number().int().min(1),
+  horarioSlot: z.number().int().min(0), // [FIX] min(0) -- slot 0 e reservado pra horarios informativos fora do esquema oficial (ex.: 18:00 no noturno)
   disponivel: z.boolean().default(true),
   motivo: z.string().optional(),
   turno: z.enum(["matutino", "vespertino", "noturno"]).optional(),
@@ -45,7 +45,7 @@ const DisponibilidadeLoteInput = z.object({
   itens: z.array(
     z.object({
       diaSemana: z.number().int().min(0).max(6),
-      horarioSlot: z.number().int().min(1),
+      horarioSlot: z.number().int().min(0), // [FIX] min(0) -- slot 0 e reservado pra horarios informativos fora do esquema oficial (ex.: 18:00 no noturno)
       disponivel: z.boolean().default(true),
       motivo: z.string().optional(),
       turno: z.enum(["matutino", "vespertino", "noturno"]).optional(),
