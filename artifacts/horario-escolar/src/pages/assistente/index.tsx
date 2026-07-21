@@ -106,12 +106,13 @@ export default function AssistentePage() {
             // mostrando "digitando..." pra sempre, mesmo com a conexão
             // já encerrada e um erro real tendo acontecido.
             if (data.error) {
-              const mensagemErro = String(data.error).includes("429")
-                ? "⏳ O Assistente de IA atingiu o limite de uso da camada gratuita por agora. Aguarde um minuto e tente de novo."
-                : `❌ Erro no assistente: ${data.error}`;
+              // [TEMP-DEBUG] Mostrando o erro cru (não resumido) por
+              // enquanto, pra diagnosticar por que a mensagem de limite
+              // continua aparecendo mesmo depois de esperar -- reverter
+              // pra versão amigável assim que confirmado.
               setMensagens(prev => {
                 const copy = [...prev];
-                copy[copy.length - 1] = { role: "assistant", content: mensagemErro };
+                copy[copy.length - 1] = { role: "assistant", content: `🔧 [DEBUG] erro cru: ${String(data.error)}` };
                 return copy;
               });
               continue;
