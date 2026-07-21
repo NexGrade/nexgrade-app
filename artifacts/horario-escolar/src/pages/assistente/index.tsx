@@ -65,7 +65,9 @@ export default function AssistentePage() {
         setAiIndisponivel(true);
         setMensagens(prev => [...prev, {
           role: "assistant",
-          content: "⚠️ O Assistente de IA ainda não está configurado. Adicione sua `OPENAI_API_KEY` nas configurações do projeto (aba Secrets) para habilitar esta funcionalidade.",
+          // [TROCADO] Provedor de IA agora é o Google Gemini (tem camada
+          // gratuita), não mais a OpenAI -- ver artifacts/api-server/src/routes/ai.ts
+          content: "⚠️ O Assistente de IA ainda não está configurado. Adicione sua `GEMINI_API_KEY` nas configurações do projeto (aba Secrets) para habilitar esta funcionalidade.",
         }]);
         setLoading(false);
         return;
@@ -194,7 +196,7 @@ export default function AssistentePage() {
       {aiIndisponivel && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 mb-4 flex items-start gap-2 text-sm text-amber-800">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-          <p>Para usar o Assistente de IA, adicione sua <strong>OPENAI_API_KEY</strong> na aba <strong>Secrets</strong> do projeto. Crie em <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" className="underline">platform.openai.com</a>.</p>
+          <p>Para usar o Assistente de IA, adicione sua <strong>GEMINI_API_KEY</strong> na aba <strong>Secrets</strong> do projeto. Crie em <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="underline">aistudio.google.com</a>.</p>
         </div>
       )}
 

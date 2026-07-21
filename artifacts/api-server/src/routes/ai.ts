@@ -63,7 +63,7 @@ router.get("/conversas/:id/mensagens", async (req, res) => {
   res.json(mensagens);
 });
 
-// ── AÇÕES QUE O ASSISTENTE PODE PROPOR (RF-IA-01) ───────────────────────────
+// ── AÇÕES QUE O ASSISTENTE PODE PROPOR (RF-IA-01) ─────────────────────
 //
 // O modelo nunca escreve no banco diretamente. Quando decide que a
 // mensagem do usuário pede uma ação (não uma pergunta), o backend
@@ -118,11 +118,23 @@ type AcaoPendente =
   | { tipo: "gerar_horario_turma"; payload: { turmaId: number; substituir: boolean } };
 
 // POST /ai/chat
+//
+// [TROCADO] Antes usava a API da OpenAI diretamente (paga desde o
+// primeiro uso). Agora usa o Google Gemini através do endpoint dele
+// compatível com o formato da OpenAI -- por isso o pacote `openai`
+// continua sendo usado como cliente (só muda a `baseURL` e a chave),
+// e todo o resto do código (tool calling, parsing da resposta) fica
+// igual. O Gemini tem camada gratuita com limite de requisições por
+// minuto/dia -- confira os limites atuais em https://ai.google.dev/pricing
+// antes de decidir se serve pro volume de uso da escola. O nome do
+// modelo (`gemini-2.0-flash`) e os limites da camada gratuita podem
+// mudar -- vale conferir https://ai.google.dev/gemini-api/docs/models
+// se algo parar de funcionar no futuro.
 router.post("/chat", async (req, res) => {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     res.status(503).json({
-      error: "Assistente de IA não configurado. Adicione sua OPENAI_API_KEY nas configurações.",
+      error: "Assistente de IA não configurado. Adicione sua GEMINI_API_KEY nas configurações.",
     });
     return;
   }
@@ -181,11 +193,17 @@ Seja direto, útil e use linguagem educacional brasileira.`;
   res.setHeader("X-Conversa-Id", String(cidAtual));
 
   const OpenAI = (await import("openai")).default;
-  const openai = new OpenAI({ apiKey });
+  // [TROCADO] Mesmo cliente `openai`, mas apontando pro endpoint do
+  // Gemini compatível com o formato da OpenAI -- é só isso que muda
+  // pra trocar de provedor.
+  const openai = new OpenAI({
+    apiKey,
+    baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+  });
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gemini-2.0-flash",
       max_tokens: 1024,
       messages: [
         { role: "system", content: systemPrompt },
@@ -255,7 +273,7 @@ Seja direto, útil e use linguagem educacional brasileira.`;
   }
 });
 
-// ── EXECUÇÃO DA AÇÃO CONFIRMADA (RF-IA-03) ──────────────────────────────────
+// ── EXECUÇÃO DA AÇÃO CONFIRMADA (RF-IA-03) ─────────────────────────────
 
 const ExecutarAcaoInput = z.discriminatedUnion("tipo", [
   z.object({
