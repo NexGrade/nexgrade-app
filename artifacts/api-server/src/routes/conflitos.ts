@@ -345,11 +345,18 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
         .filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && d.turno)
         .map((d) => d.turno as string),
     );
+    // [FIX] Antes exigia HA especificamente NO MESMO turno de cada
+    // grupo de aulas. Mas é prática normal da escola um professor com
+    // a grade cheia num turno fazer a HA no turno OPOSTO, no mesmo dia
+    // em que já está lá (ex.: dá aula de manhã, HA à tarde) -- "turno
+    // alternado". Agora só acusa se o professor não tiver HA marcada
+    // em NENHUM turno (sinal real de que a HA dele nunca foi
+    // registrada, não uma diferença legítima de turno alternado).
     Object.entries(turnosComAula).forEach(([turno, total]) => {
-      if (total <= horaAtividadeMesmoTurnoAte && !turnosComHA.has(turno)) {
+      if (total <= horaAtividadeMesmoTurnoAte && turnosComHA.size === 0) {
         conflitos.push({
           tipo: "hora_atividade_turno_incorreto",
-          descricao: `Prof. ${prof.nome} tem ${total} aulas no turno ${turno} (<= ${horaAtividadeMesmoTurnoAte}) mas nenhuma hora-atividade obrigatória marcada nesse mesmo turno`,
+          descricao: `Prof. ${prof.nome} tem ${total} aulas no turno ${turno} (<= ${horaAtividadeMesmoTurnoAte}) mas nenhuma hora-atividade obrigatória marcada em turno nenhum`,
           gravidade: "medio",
           turmaId: null,
           professorId: prof.id,
