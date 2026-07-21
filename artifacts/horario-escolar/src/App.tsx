@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ClerkProvider, SignIn, SignUp, Show, useAuth } from "@clerk/react";
@@ -9,46 +9,54 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Layout } from "@/components/layout";
-import Dashboard from "@/pages/dashboard";
-import ProfessoresList from "@/pages/professores/index";
-import HorarioHubPage from "@/pages/horario/index";
-import ProfessorNovo from "@/pages/professores/novo";
-import ProfessorEditar from "@/pages/professores/id";
-import DisciplinasList from "@/pages/disciplinas/index";
-import TurmasList from "@/pages/turmas/index";
-import TurmaHorario from "@/pages/turmas/horario";
-import SalasList from "@/pages/salas/index";
-import LicencasList from "@/pages/licencas/index";
-import ComunicadosList from "@/pages/comunicados/index";
-import UsuariosList from "@/pages/usuarios/index";
-import AuditList from "@/pages/audit/index";
-import ConfiguracoesList from "@/pages/configuracoes/index";
-import ExportPage from "@/pages/export/index";
-import AssistentePage from "@/pages/assistente/index";
-import ImportarPage from "@/pages/importar/index";
-import PlanosPage from "@/pages/planos/index";
-import MasterPage from "@/pages/master/index";
-import OnboardingPage from "@/pages/onboarding/index";
-import CursosList from "@/pages/cursos/index";
-import DisponibilidadePage from "@/pages/disponibilidade/index";
-import CalendarioEscolarPage from "@/pages/calendario/index";
-import NotFound from "@/pages/not-found";
 
-// [FIX] Ajuste de performance percebida -- 3 mudanças:
-//  - staleTime 30s -> 60s: dado considerado "fresco" por mais tempo,
-//    evita refazer a mesma consulta ao trocar rapidamente entre as
-//    abas internas de uma tela (ex.: os 5 sub-tabs de Horário).
-//  - gcTime adicionado (5min): mantém dados já carregados em memória
-//    por mais tempo mesmo sem uso ativo, evitando o "piscar de
-//    carregando" ao voltar pra uma tela visitada há pouco.
-//  - refetchOnWindowFocus: false -- o padrão do React Query recarrega
-//    TUDO que está na tela toda vez que o usuário troca de aba do
-//    navegador e volta. Pra um app de uso interno (não precisa de dado
-//    em tempo real entre várias pessoas editando ao mesmo tempo), isso
-//    só causa lentidão percebida sem necessidade real. Quem editar algo
-//    ainda vê o resultado na hora (a própria ação já invalida a query
-//    certa); o que deixa de acontecer é o recarregamento automático só
-//    por trocar de aba.
+// [FIX] Divisão do pacote JS (code-splitting) -- antes, todas as ~24
+// telas eram importadas de forma estática aqui no topo, o que fazia o
+// Vite juntar TUDO num chunk só (941 kB / 238 kB gzip no build, com
+// aviso de "chunk grande demais"). Isso significa que abrir qualquer
+// tela — mesmo só "Professores" — baixava o código de todas as outras
+// telas junto. Trocando pra `lazy()`, cada tela vira um arquivo .js
+// separado, baixado só quando a rota é de fato acessada. O `<Suspense>`
+// mais abaixo mostra um esqueleto de carregamento enquanto o arquivo da
+// tela ainda está chegando (só na primeira vez que aquela rota é
+// visitada nessa sessão -- depois fica em cache no navegador).
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const ProfessoresList = lazy(() => import("@/pages/professores/index"));
+const HorarioHubPage = lazy(() => import("@/pages/horario/index"));
+const ProfessorNovo = lazy(() => import("@/pages/professores/novo"));
+const ProfessorEditar = lazy(() => import("@/pages/professores/id"));
+const DisciplinasList = lazy(() => import("@/pages/disciplinas/index"));
+const TurmasList = lazy(() => import("@/pages/turmas/index"));
+const TurmaHorario = lazy(() => import("@/pages/turmas/horario"));
+const SalasList = lazy(() => import("@/pages/salas/index"));
+const LicencasList = lazy(() => import("@/pages/licencas/index"));
+const ComunicadosList = lazy(() => import("@/pages/comunicados/index"));
+const UsuariosList = lazy(() => import("@/pages/usuarios/index"));
+const AuditList = lazy(() => import("@/pages/audit/index"));
+const ConfiguracoesList = lazy(() => import("@/pages/configuracoes/index"));
+const ExportPage = lazy(() => import("@/pages/export/index"));
+const AssistentePage = lazy(() => import("@/pages/assistente/index"));
+const ImportarPage = lazy(() => import("@/pages/importar/index"));
+const PlanosPage = lazy(() => import("@/pages/planos/index"));
+const MasterPage = lazy(() => import("@/pages/master/index"));
+const OnboardingPage = lazy(() => import("@/pages/onboarding/index"));
+const CursosList = lazy(() => import("@/pages/cursos/index"));
+const DisponibilidadePage = lazy(() => import("@/pages/disponibilidade/index"));
+const CalendarioEscolarPage = lazy(() => import("@/pages/calendario/index"));
+const NotFound = lazy(() => import("@/pages/not-found"));
+
+// Esqueleto mostrado enquanto o arquivo .js de uma tela ainda está
+// carregando -- mesmo visual já usado nos gates de autenticação abaixo,
+// pra não introduzir um estilo de loading diferente.
+function PaginaCarregando() {
+  return (
+    <div className="p-6 space-y-4">
+      <Skeleton className="h-10 w-1/3" />
+      <Skeleton className="h-64 w-full" />
+    </div>
+  );
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -215,7 +223,9 @@ function EscolaGate({ component: Component }: { component: React.ComponentType }
 
   return (
     <Layout>
-      <Component />
+      <Suspense fallback={<PaginaCarregando />}>
+        <Component />
+      </Suspense>
     </Layout>
   );
 }
@@ -224,7 +234,9 @@ function OnboardingRoute() {
   return (
     <>
       <Show when="signed-in">
-        <OnboardingPage />
+        <Suspense fallback={<PaginaCarregando />}>
+          <OnboardingPage />
+        </Suspense>
       </Show>
       <Show when="signed-out">
         <Redirect to="/sign-in" />
@@ -271,7 +283,9 @@ function MasterRouteConteudo() {
 
   return (
     <Layout>
-      <MasterPage />
+      <Suspense fallback={<PaginaCarregando />}>
+        <MasterPage />
+      </Suspense>
     </Layout>
   );
 }
@@ -305,7 +319,7 @@ function Router() {
       <Route path="/importar" component={() => <ProtectedRoute component={ImportarPage} />} />
       <Route path="/planos" component={() => <ProtectedRoute component={PlanosPage} />} />
       <Route path="/master" component={MasterRoute} />
-      <Route component={NotFound} />
+      <Route component={() => <Suspense fallback={<PaginaCarregando />}><NotFound /></Suspense>} />
     </Switch>
   );
 }
