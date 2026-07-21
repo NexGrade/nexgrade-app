@@ -1,56 +1,54 @@
 /**
  * RNF-SEED-01: cálculo de Hora-Atividade institucional por turno.
  *
- * Os dois padrões oficiais confirmados (Resolução SEED n.º 7.200/2025,
- * Art. 11, §1º — ver chaves `seed_pr.padrao_20h` e `seed_pr.padrao_40h`
- * em `configuracoes`) têm a MESMA proporção HA-institucional/aulas:
- *
- *   20h: 15 aulas de regência + 5 HA institucional  → 5/15  = 1/3
- *   40h: 30 aulas de regência + 10 HA institucional → 10/30 = 1/3
- *
- * Como a proporção é sempre 1/3 nos dois regimes, dá pra calcular a HA
- * institucional de um professor olhando só as aulas que ele dá NESTA
- * escola — sem precisar saber o regime de contrato completo dele nem
- * quantas aulas tem em outras escolas. Isso também resolve o caso de
- * professor com carga dividida em várias escolas: cada escola calcula
- * a HA institucional dela de forma independente, e a soma bate com o
- * total institucional do regime completo (rateio proporcional).
- *
- * Arredondamento: sempre para CIMA — mas só UMA VEZ, no total geral do
- * professor, não turno por turno. Fazer cada turno arredondar pra cima
- * de forma independente infla o total: 30 aulas divididas em 20 de
- * manhã + 10 à tarde viraria ceil(20/3)=7 + ceil(10/3)=4 = 11 HA, em
- * vez das 10 esperadas pra 30 aulas (ceil(30/3)=10). A correção usa o
- * método dos maiores restos (Hare-Niemeyer): calcula o total geral
- * (arredondado pra cima uma única vez) e distribui esse total entre os
- * turnos proporcionalmente às aulas de cada um, sem que a soma das
- * partes ultrapasse o total. Confirmado com os únicos 3 valores de HA
- * que já vinham preenchidos nos relatórios reais da escola antes deste
- * cálculo existir (ex.: professor com 7 aulas em um turno = 3 HA
- * institucionais, não 2 — 7/3 = 2,33, arredonda pra 3).
+ * [CORRIGIDO] Antes usava uma fórmula aproximada (`ceil(aulas/3)`),
+ * assumindo que a proporção 1/3 valia uniformemente em qualquer ponto.
+ * Isso é falso: a SEED-PR publica uma TABELA oficial de conversão
+ * "Hora-aula Regência → Hora-atividade" (educacao.pr.gov.br, página
+ * "Jornada de Trabalho com horas-atividade"), com saltos irregulares
+ * que não seguem uma fórmula matemática simples -- só bate 1/3 nos
+ * extremos do regime de 40h (30 aulas = 10 HA). Em 17 dos 30 pontos da
+ * tabela, `ceil(aulas/3)` pedia HA A MAIS do que o oficial (ex.: 13
+ * aulas = 4 HA de verdade, não 5; 8 aulas = 2 HA, não 3) -- isso
+ * inflava artificialmente os alertas de "HA insuficiente" no sistema.
+ * Agora a tabela oficial é usada diretamente, por consulta exata.
  *
  * Importante: essa é a HA "institucional" (cumprida na escola, dentro
- * da grade). Existe também HA de "livre escolha" (4h no regime 20h, 8h
- * no regime 40h) que o professor cumpre fora da instituição e portanto
- * NÃO entra na grade nem neste cálculo.
+ * da grade). Existe também HA de "livre escolha" (fora da tabela, fora
+ * da instituição) que NÃO entra na grade nem neste cálculo.
  *
  * Regra de turno (Art. 11, §4º): quando o professor tem até 19 aulas
  * num turno (ver `seed_pr.hora_atividade_mesmo_turno_ate`), a HA dele
  * nesse turno deve ficar concentrada no MESMO turno das aulas — por
  * isso o resultado final ainda é por turno, mesmo calculando o total
- * geral primeiro.
+ * geral primeiro (ver `calcularHoraAtividadePorTurno`).
+ */
+const TABELA_OFICIAL_HA: readonly number[] = [
+  0, // 0 aulas
+  0, 0, 1, 1, 2, 2, 2, 2, 3, 3,   // 1–10
+  4, 4, 4, 4, 5, 5, 5, 6, 6, 6,   // 11–20
+  7, 7, 7, 8, 8, 8, 9, 9, 10, 10, // 21–30
+];
+
+/**
+ * Consulta a tabela oficial pra um número de aulas (0–30, regime de
+ * regência semanal). Acima de 30 (fora da tabela publicada) usa a
+ * proporção 1/3 confirmada nos extremos como fallback, pra nunca
+ * travar o cálculo -- mas isso não deveria acontecer na prática, já
+ * que 30 é o teto de aulas do regime de 40h.
  */
 export function calcularHoraAtividadeInstitucional(aulasNoTurno: number): number {
   if (!aulasNoTurno || aulasNoTurno <= 0) return 0;
+  if (aulasNoTurno <= 30) return TABELA_OFICIAL_HA[Math.round(aulasNoTurno)]!;
   return Math.ceil(aulasNoTurno / 3);
 }
 
 /**
- * Calcula o total geral de HA institucional (arredondado pra cima uma
- * única vez) e distribui esse total entre os turnos, proporcionalmente
- * às aulas de cada um, pelo método dos maiores restos -- garante que a
- * soma das partes seja exatamente igual ao total geral, sem inflar por
- * arredondamento duplicado.
+ * Calcula o total geral de HA institucional (via tabela oficial,
+ * consultada uma única vez pro total) e distribui esse total entre os
+ * turnos, proporcionalmente às aulas de cada um, pelo método dos
+ * maiores restos -- garante que a soma das partes seja exatamente
+ * igual ao total geral, sem inflar por arredondamento duplicado.
  */
 export function calcularHoraAtividadePorTurno(
   aulasPorTurno: Record<string, number>
@@ -64,7 +62,7 @@ export function calcularHoraAtividadePorTurno(
     return zeros;
   }
 
-  const exigidoTotal = Math.ceil(totalAulas / 3);
+  const exigidoTotal = calcularHoraAtividadeInstitucional(totalAulas);
 
   const partes = turnos.map((turno) => {
     const aulas = aulasPorTurno[turno] || 0;

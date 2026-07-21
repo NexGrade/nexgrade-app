@@ -336,7 +336,7 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     if (exigido > 0 && haMarcadas < exigido) {
       conflitos.push({
         tipo: "hora_atividade_insuficiente",
-        descricao: `Prof. ${prof.nome} tem apenas ${haMarcadas}/${exigido} horas-atividade marcadas na disponibilidade (regime confirmado: 30 aulas = 10h-atividade, proporção 1:3)`,
+        descricao: `Prof. ${prof.nome} tem apenas ${haMarcadas}/${exigido} horas-atividade marcadas na disponibilidade (tabela oficial SEED-PR de Jornada de Trabalho)`,
         gravidade: "medio",
         turmaId: null,
         professorId: prof.id,
