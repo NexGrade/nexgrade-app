@@ -11,7 +11,7 @@ import {
   useGetConflitosComSugestoes,
   useListHorariosExperimentais, useDeleteHorarioExperimental, usePromoverHorarioExperimental, useGerarHorario,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -711,6 +711,40 @@ function AbaGrade() {
     );
   };
 
+  // [NOVO] HA institucional não aparecia na grade em tela (só no PDF) --
+  // busca a disponibilidade do professor selecionado pra destacar os
+  // slots marcados como Hora-Atividade obrigatória, do mesmo jeito que
+  // já acontecia no PDF por professor.
+  const professorIdSelecionado = professorId !== "all" ? Number(professorId) : undefined;
+  const { data: disponibilidadeProf } = useQuery({
+    queryKey: ["/api/disponibilidade", professorIdSelecionado],
+    queryFn: async () => {
+      const res = await fetch(`/api/disponibilidade?professorId=${professorIdSelecionado}`);
+      if (!res.ok) throw new Error("Erro ao buscar disponibilidade");
+      return res.json() as Promise<Array<{ diaSemana: number; horarioSlot: number; turno: string | null; horaAtividadeObrigatoria: boolean }>>;
+    },
+    enabled: professorIdSelecionado !== undefined,
+  });
+
+  // Turno "em uso" na grade agora mesmo -- necessário pra saber qual HA
+  // bate com qual célula, já que horarioSlot se repete entre turnos
+  // igual numeroAula. Se uma turma está selecionada, usa o turno dela;
+  // senão usa o filtro de Turno (só chega aqui já resolvido, sem "all",
+  // graças ao aviso de precisaEscolherTurno acima).
+  const turnoEmUso = turmaId !== "all"
+    ? turmas?.find((t) => String(t.id) === turmaId)?.turno
+    : (turno !== "all" ? turno : turnosNosResultados[0]);
+
+  const getHA = (diaSemana: number, numeroAula: number) => {
+    if (!professorIdSelecionado || !disponibilidadeProf) return false;
+    return disponibilidadeProf.some((d) =>
+      d.horaAtividadeObrigatoria &&
+      d.diaSemana === diaSemana &&
+      d.horarioSlot === numeroAula &&
+      (d.turno ?? turnoEmUso) === turnoEmUso,
+    );
+  };
+
   const getMaxAulas = () => {
     if (!horarios || horarios.length === 0) return 5;
     const max = Math.max(...horarios.map((s) => s.numeroAula));
@@ -846,9 +880,22 @@ function AbaGrade() {
                       const slotId = isTurmaSelected ? Number(turmaId) : undefined;
                       const slot = getSlot(colIndex, aulaNum, slotId);
                       if (!slot) {
+                        // [NOVO] Antes esse espaço vazio sempre mostrava
+                        // "Vago", mesmo quando na verdade é Hora-Atividade
+                        // institucional planejada (só não aparecia em
+                        // lugar nenhum da tela, só no PDF). Agora destaca
+                        // com o mesmo visual usado no PDF.
+                        const temHA = isProfessorSelected && getHA(colIndex, aulaNum);
                         return (
-                          <div key={`${aulaNum}-${colIndex}`} className="p-2 border-r border-border last:border-0 bg-background min-h-[100px] flex items-center justify-center">
-                            <span className="text-xs text-muted-foreground/30">Vago</span>
+                          <div
+                            key={`${aulaNum}-${colIndex}`}
+                            className={`p-2 border-r border-border last:border-0 min-h-[100px] flex items-center justify-center ${temHA ? "bg-amber-100" : "bg-background"}`}
+                          >
+                            {temHA ? (
+                              <span className="text-xs font-bold text-amber-700">HA</span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground/30">Vago</span>
+                            )}
                           </div>
                         );
                       }

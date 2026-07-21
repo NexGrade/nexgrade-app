@@ -131,6 +131,18 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     if (!slotsProf[chaveProfTurno]![s.diaSemana]) slotsProf[chaveProfTurno]![s.diaSemana] = [];
     slotsProf[chaveProfTurno]![s.diaSemana]!.push(s.numeroAula);
   });
+  // [FIX] Hora-Atividade institucional (disponibilidade marcada com
+  // horaAtividadeObrigatoria) não contava como slot ocupado -- um
+  // professor com aula, HA, aula (nessa ordem) tinha "1 janela" por
+  // engano, quando não tem buraco nenhum, é HA planejada.
+  disponibilidades
+    .filter(d => d.horaAtividadeObrigatoria && d.turno)
+    .forEach(d => {
+      const chaveProfTurno = `${d.professorId}-${d.turno}`;
+      if (!slotsProf[chaveProfTurno]) slotsProf[chaveProfTurno] = {};
+      if (!slotsProf[chaveProfTurno]![d.diaSemana]) slotsProf[chaveProfTurno]![d.diaSemana] = [];
+      slotsProf[chaveProfTurno]![d.diaSemana]!.push(d.horarioSlot);
+    });
   Object.entries(slotsProf).forEach(([chaveProfTurno, diasMap]) => {
     const profIdStr = chaveProfTurno.split("-")[0];
     Object.entries(diasMap).forEach(([dia, aulas]) => {
