@@ -8,11 +8,12 @@ import {
   useListDisponibilidade,
   useSetDisponibilidadeLote,
   useListHorarioSlots,
+  useListHorarios,
   getListDisponibilidadeQueryKey,
   getListHorarioSlotsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Users, Save, RotateCcw, Lock, CheckCircle2, Info, GraduationCap } from "lucide-react";
+import { Users, Save, RotateCcw, Lock, CheckCircle2, Info, GraduationCap, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SeletorBusca } from "@/components/seletor-busca";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -90,6 +91,22 @@ export default function DisponibilidadePage() {
     { query: { enabled: !!professorIdNum } },
   );
 
+  // [NOVO] Aulas reais do professor (de `horarios`), pra mostrar na
+  // própria grade de disponibilidade quais horários ele já dá aula de
+  // verdade -- só informativo, não interfere no estado editável
+  // (disponível/bloqueado/HA) da célula.
+  const { data: horariosProf = [], isLoading: carregandoHorarios } = useListHorarios(
+    professorIdNum ? { professorId: professorIdNum } : {},
+    { query: { enabled: !!professorIdNum } },
+  );
+  const horariosDoTurno = useMemo(
+    () => horariosProf.filter((h: any) => h.turma?.turno === turno),
+    [horariosProf, turno],
+  );
+  function aulaReal(dia: number, numeroAula: number) {
+    return horariosDoTurno.find((h: any) => h.diaSemana === dia && h.numeroAula === numeroAula);
+  }
+
   const salvarLote = useSetDisponibilidadeLote();
 
   const carregarMatriz = () => {
@@ -135,7 +152,21 @@ export default function DisponibilidadePage() {
 
   const toggle = (dia: number, numeroAula: number) => {
     const key = cellKey(dia, numeroAula);
-    setMatriz((prev) => ({ ...prev, [key]: proximoEstado(prev[key] ?? "disponivel") }));
+    const estadoAtual = matriz[key] ?? "disponivel";
+    const proximo = proximoEstado(estadoAtual);
+    // [NOVO] Se essa célula já tem uma aula real marcada e o próximo
+    // estado seria "bloqueado", avisa antes -- bloquear um horário onde
+    // o professor já dá aula de verdade gera o conflito "professor
+    // indisponível" na aba Conflitos.
+    const real = aulaReal(dia, numeroAula);
+    if (proximo === "bloqueado" && real) {
+      const turmaNome = real.turma?.nome ?? "?";
+      const discNome = real.disciplina?.nome ?? "?";
+      if (!confirm(`Esse horário já tem aula real marcada (${turmaNome} — ${discNome}). Bloquear aqui vai gerar um conflito de "professor indisponível" na grade. Continuar mesmo assim?`)) {
+        return;
+      }
+    }
+    setMatriz((prev) => ({ ...prev, [key]: proximo }));
   };
 
   const bloquearDia = (dia: number) => {
@@ -202,7 +233,7 @@ export default function DisponibilidadePage() {
     }
   };
 
-  const carregando = carregandoProfessores || (!!professorIdNum && (carregandoDisponibilidade || carregandoSlots));
+  const carregando = carregandoProfessores || (!!professorIdNum && (carregandoDisponibilidade || carregandoSlots || carregandoHorarios));
 
   return (
     <div className="space-y-6">
@@ -264,6 +295,10 @@ export default function DisponibilidadePage() {
             <div className="flex items-center gap-1.5">
               <div className="w-4 h-4 rounded bg-amber-100 border border-amber-300" />
               <span className="text-muted-foreground">Hora-Atividade obrigatória</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <BookOpen className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-muted-foreground">Aula real marcada</span>
             </div>
             {totalBloqueios > 0 && (
               <Badge variant="outline" className="text-rose-600 border-rose-200">
@@ -351,12 +386,13 @@ export default function DisponibilidadePage() {
                       </td>
                       {DIAS.map((_, dia) => {
                         const estado = matriz[cellKey(dia, slot.numeroAula)] ?? "disponivel";
+                        const real = aulaReal(dia, slot.numeroAula);
                         return (
                           <td key={dia} className="p-0">
                             <button
                               onClick={() => toggle(dia, slot.numeroAula)}
                               className={cn(
-                                "w-full h-12 rounded-md border-2 transition-all text-xs font-semibold",
+                                "relative w-full h-12 rounded-md border-2 transition-all text-xs font-semibold",
                                 estado === "disponivel" &&
                                   "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100",
                                 estado === "bloqueado" &&
@@ -365,16 +401,22 @@ export default function DisponibilidadePage() {
                                   "bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100",
                               )}
                               title={
-                                estado === "disponivel"
+                                (real ? `Aula real: ${real.turma?.nome ?? "?"} — ${real.disciplina?.nome ?? "?"}. ` : "") +
+                                (estado === "disponivel"
                                   ? "Disponível — clique para bloquear"
                                   : estado === "bloqueado"
                                     ? "Bloqueado — clique para marcar Hora-Atividade obrigatória"
-                                    : "Hora-Atividade obrigatória — clique para liberar"
+                                    : "Hora-Atividade obrigatória — clique para liberar")
                               }
                             >
                               {estado === "disponivel" && "✓"}
                               {estado === "bloqueado" && <Lock className="w-3.5 h-3.5 mx-auto" />}
                               {estado === "ha_obrigatoria" && <GraduationCap className="w-3.5 h-3.5 mx-auto" />}
+                              {real && (
+                                <span className="absolute top-0.5 right-0.5 text-blue-600">
+                                  <BookOpen className="w-2.5 h-2.5" />
+                                </span>
+                              )}
                             </button>
                           </td>
                         );
@@ -388,8 +430,9 @@ export default function DisponibilidadePage() {
             <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 rounded-lg p-3">
               <Info className="w-3.5 h-3.5 shrink-0" />
               Clique numa célula para alternar entre Disponível → Bloqueado → Hora-Atividade obrigatória. Use os
-              botões "Bloquear/Liberar" para afetar um dia inteiro de uma vez. O motor de geração de horários nunca
-              alocará o professor em slots bloqueados ou marcados como Hora-Atividade obrigatória.
+              botões "Bloquear/Liberar" para afetar um dia inteiro de uma vez. O ícone de livro no canto mostra onde o
+              professor já dá aula de verdade (turma + disciplina aparecem ao passar o mouse). O motor de geração de
+              horários nunca alocará o professor em slots bloqueados ou marcados como Hora-Atividade obrigatória.
             </div>
           </CardContent>
         </Card>
