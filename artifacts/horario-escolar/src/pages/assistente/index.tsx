@@ -55,11 +55,13 @@ export default function AssistentePage() {
 
     try {
       const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+      console.log("[DEBUG] enviando pra", `${basePath}/api/ai/chat`);
       const res = await fetch(`${basePath}/api/ai/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mensagem: msg, conversaId }),
       });
+      console.log("[DEBUG] status recebido:", res.status, "content-type:", res.headers.get("content-type"));
 
       if (res.status === 503) {
         setAiIndisponivel(true);
@@ -69,6 +71,14 @@ export default function AssistentePage() {
           // gratuita), não mais a OpenAI -- ver artifacts/api-server/src/routes/ai.ts
           content: "⚠️ O Assistente de IA ainda não está configurado. Adicione sua `GEMINI_API_KEY` nas configurações do projeto (aba Secrets) para habilitar esta funcionalidade.",
         }]);
+        setLoading(false);
+        return;
+      }
+
+      if (!res.ok) {
+        const corpoErro = await res.text().catch(() => "(sem corpo)");
+        console.log("[DEBUG] resposta com erro, status", res.status, "corpo:", corpoErro);
+        setMensagens(prev => [...prev, { role: "assistant", content: `❌ Erro ${res.status} ao chamar o assistente. Detalhe: ${corpoErro.slice(0, 200)}` }]);
         setLoading(false);
         return;
       }
@@ -85,14 +95,17 @@ export default function AssistentePage() {
 
       while (true) {
         const { done, value } = await reader.read();
+        console.log("[DEBUG] chunk lido, done:", done, "bytes:", value?.length ?? 0);
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
+        console.log("[DEBUG] buffer acumulado:", JSON.stringify(buffer));
         const lines = buffer.split("\n");
         buffer = lines.pop() ?? "";
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
           try {
             const data = JSON.parse(line.slice(6));
+            console.log("[DEBUG] evento parseado:", data);
             if (data.content) {
               partial += data.content;
               setMensagens(prev => {
@@ -108,10 +121,14 @@ export default function AssistentePage() {
                 return copy;
               });
             }
-          } catch { /* skip malformed */ }
+          } catch (e) {
+            console.log("[DEBUG] falha ao parsear linha:", JSON.stringify(line), e);
+          }
         }
       }
-    } catch {
+      console.log("[DEBUG] loop de leitura terminou normalmente");
+    } catch (e) {
+      console.log("[DEBUG] excecao capturada:", e);
       setMensagens(prev => [...prev, { role: "assistant", content: "❌ Erro ao conectar com o assistente. Tente novamente." }]);
     } finally {
       setLoading(false);
