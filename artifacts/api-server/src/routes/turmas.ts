@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { turmasTable, turmaDisciplinasTable, horariosTable, disciplinasTable, professoresTable, professorDisciplinasTable, matrizesCurricularesTable, itensMatrizTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import {
   CreateTurmaBody,
   UpdateTurmaBody,
@@ -92,15 +92,21 @@ router.get("/", async (req, res) => {
     .from(turmasTable)
     .where(eq(turmasTable.escolaId, escolaId))
     .orderBy(turmasTable.nome);
-  const result = await Promise.all(
-    turmas.map(async (t) => {
-      const links = await db
-        .select()
-        .from(turmaDisciplinasTable)
-        .where(eq(turmaDisciplinasTable.turmaId, t.id));
-      return { ...t, disciplinaIds: links.map((l) => l.disciplinaId) };
-    })
-  );
+
+  // [FIX] N+1 -- mesmo padrão já corrigido em GET /professores: antes
+  // fazia uma consulta separada por turma (53 turmas = 53 consultas
+  // extras toda vez que essa lista carregava). Agora busca os vínculos
+  // de todas de uma vez e agrupa em memória.
+  const ids = turmas.map((t) => t.id);
+  const links = ids.length
+    ? await db.select().from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, ids))
+    : [];
+  const disciplinaIdsPorTurma = new Map<number, number[]>();
+  links.forEach((l) => {
+    if (!disciplinaIdsPorTurma.has(l.turmaId)) disciplinaIdsPorTurma.set(l.turmaId, []);
+    disciplinaIdsPorTurma.get(l.turmaId)!.push(l.disciplinaId);
+  });
+  const result = turmas.map((t) => ({ ...t, disciplinaIds: disciplinaIdsPorTurma.get(t.id) ?? [] }));
   res.json(result);
 });
 
