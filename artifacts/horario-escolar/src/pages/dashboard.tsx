@@ -21,14 +21,19 @@ export default function Dashboard() {
     );
   }
 
+  // [FIX] "/horarios" e "/conflitos" não existem como rotas -- a rota
+  // real é "/horario" (singular), e "Conflitos" é uma ABA dentro dela
+  // (não uma página própria), causando 404 nos dois. Agora aponta pra
+  // "/horario" com "?tab=..." pra já abrir na aba certa (ver
+  // pages/horario/index.tsx, que agora lê esse parâmetro).
   const statCards = [
     { title: "Professores", value: stats?.totalProfessores ?? 0, icon: Users, color: "text-[#1565C0]", href: "/professores" },
     { title: "Turmas", value: stats?.totalTurmas ?? 0, icon: GraduationCap, color: "text-green-500", href: "/turmas" },
     { title: "Disciplinas", value: stats?.totalDisciplinas ?? 0, icon: BookOpen, color: "text-purple-500", href: "/disciplinas" },
     { title: "Salas", value: stats?.totalSalas ?? 0, icon: Building2, color: "text-cyan-500", href: "/salas" },
-    { title: "Aulas Distribuídas", value: stats?.aulasDistribuidas ?? 0, icon: CheckCircle2, color: "text-emerald-500", href: "/horarios" },
+    { title: "Aulas Distribuídas", value: stats?.aulasDistribuidas ?? 0, icon: CheckCircle2, color: "text-emerald-500", href: "/horario?tab=grade" },
     { title: "Turmas sem Horário", value: stats?.turmasSemHorario ?? 0, icon: CalendarDays, color: stats?.turmasSemHorario ? "text-amber-500" : "text-muted-foreground", href: "/turmas" },
-    { title: "Conflitos Detectados", value: stats?.totalConflitos ?? 0, icon: AlertCircle, color: stats?.totalConflitos ? "text-destructive" : "text-muted-foreground", href: "/conflitos" },
+    { title: "Conflitos Detectados", value: stats?.totalConflitos ?? 0, icon: AlertCircle, color: stats?.totalConflitos ? "text-destructive" : "text-muted-foreground", href: "/horario?tab=conflitos" },
     { title: "Licenças Ativas", value: stats?.licencasAtivas ?? 0, icon: FileText, color: stats?.licencasAtivas ? "text-orange-500" : "text-muted-foreground", href: "/licencas" },
     { title: "Comunicados Não Lidos", value: stats?.comunicadosNaoLidos ?? 0, icon: Bell, color: stats?.comunicadosNaoLidos ? "text-pink-500" : "text-muted-foreground", href: "/comunicados" },
   ];
@@ -42,7 +47,7 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold tracking-tight">Visão Geral</h1>
           <p className="text-muted-foreground mt-1">Bem-vindo(a) ao NexGrade — sistema de gestão de horários.</p>
         </div>
-        <Link href="/horarios">
+        <Link href="/horario?tab=grade">
           <Button>Ver Grade Horária</Button>
         </Link>
       </div>
@@ -54,7 +59,7 @@ export default function Dashboard() {
             <p className="font-semibold mb-0.5">Atenção necessária</p>
             <ul className="list-disc list-inside space-y-0.5 text-amber-700">
               {(stats?.totalConflitos ?? 0) > 0 && (
-                <li><Link href="/conflitos" className="underline">{stats?.totalConflitos} conflito(s) detectado(s)</Link></li>
+                <li><Link href="/horario?tab=conflitos" className="underline">{stats?.totalConflitos} conflito(s) detectado(s)</Link></li>
               )}
               {(stats?.turmasSemHorario ?? 0) > 0 && (
                 <li><Link href="/turmas" className="underline">{stats?.turmasSemHorario} turma(s) sem horário</Link></li>

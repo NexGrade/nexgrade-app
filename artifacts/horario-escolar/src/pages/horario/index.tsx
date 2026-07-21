@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearch } from "wouter";
 import {
   useListHorarioSlots, useSetHorarioSlotsLote, getListHorarioSlotsQueryKey,
   useListAulasFixas, useCriarAulaFixa, getListAulasFixasQueryKey,
@@ -41,7 +42,14 @@ const ABAS = [
 type AbaKey = typeof ABAS[number]["key"];
 
 export default function HorarioHubPage() {
-  const [aba, setAba] = useState<AbaKey>("esquema");
+  // [NOVO] Deep-link pra uma aba específica via "?tab=..." (ex.:
+  // /horario?tab=conflitos) -- usado pelos cards da Visão Geral, que
+  // antes apontavam pra rotas que não existiam ("/horarios",
+  // "/conflitos") e caíam em 404.
+  const search = useSearch();
+  const tabParam = new URLSearchParams(search).get("tab");
+  const abaInicial = (ABAS.some((a) => a.key === tabParam) ? tabParam : "esquema") as AbaKey;
+  const [aba, setAba] = useState<AbaKey>(abaInicial);
 
   return (
     <div className="space-y-6">
