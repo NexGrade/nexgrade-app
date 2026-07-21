@@ -22,7 +22,12 @@ type ConflitoComSugestao = {
   sugestoes: string[];
 };
 
-async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
+// [FIX] Exportada pra ser reutilizada em routes/stats.ts -- antes o
+// dashboard tinha sua PRÓPRIA lógica de detectar "professor duplicado",
+// copiada e colada aqui, sem levar turno em conta (o mesmo bug que já
+// corrigimos aqui). Duas implementações da mesma coisa sempre acabam
+// dessincronizando -- agora só existe uma fonte de verdade.
+export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
   const [slots, professores, disciplinas, turmas, turmaDiscsTodos, profDiscs, salas, configs] = await Promise.all([
     db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
