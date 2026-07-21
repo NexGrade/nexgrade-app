@@ -33,9 +33,8 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     db.select().from(configuracoesTable).where(eq(configuracoesTable.escolaId, escolaId)),
   ]);
 
-  // Parâmetros SEED-PR: usa o valor salvo em `configuracoes` se existir,
-  // senão cai no default confirmado pela Resolução SEED n.º 7.200/2025
-  // (ver scripts/src/seed-config-seed-pr.ts para a fonte de cada um).
+  const turnoPorTurmaId = new Map(turmas.map((t) => [t.id, t.turno]));
+
   function configValor<T>(chave: string, padrao: T): T {
     const cfg = configs.find((c) => c.chave === chave);
     return (cfg?.valor as T) ?? padrao;
@@ -46,14 +45,9 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
   const padrao20h = configValor("seed_pr.padrao_20h", { aulasRegencia: 15, horasAtividade: 9 });
   const padrao40h = configValor("seed_pr.padrao_40h", { aulasRegencia: 30, horasAtividade: 18 });
 
-  // turma_disciplinas não tem coluna própria de escola — é escopada via
-  // turmaId, filtrado aqui pela lista de turmas já restrita à escola atual.
   const turmaIdsDaEscola = new Set(turmas.map(t => t.id));
   const turmaDiscs = turmaDiscsTodos.filter(td => turmaIdsDaEscola.has(td.turmaId));
 
-  // disponibilidade_professores também não tem coluna de escola — é
-  // escopada via professorId, filtrado pela lista de professores da
-  // escola atual.
   const professorIds = professores.map(p => p.id);
   const disponibilidades = professorIds.length
     ? await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, professorIds))
@@ -61,16 +55,19 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
 
   const conflitos: Conflito[] = [];
 
-  // 1. Professor em dois lugares ao mesmo tempo
   const slotProfMap: Record<string, number[]> = {};
   slots.forEach(s => {
-    const key = `${s.professorId}-${s.diaSemana}-${s.numeroAula}`;
+    const turno = turnoPorTurmaId.get(s.turmaId) ?? "desconhecido";
+    const key = `${s.professorId}-${turno}-${s.diaSemana}-${s.numeroAula}`;
     if (!slotProfMap[key]) slotProfMap[key] = [];
     slotProfMap[key]!.push(s.id);
   });
   Object.entries(slotProfMap).forEach(([key, ids]) => {
     if (ids.length > 1) {
-      const [profId, dia, aula] = key.split("-").map(Number);
+      const partes = key.split("-");
+      const profId = Number(partes[0]);
+      const dia = Number(partes[2]);
+      const aula = Number(partes[3]);
       const prof = professores.find(p => p.id === profId);
       conflitos.push({
         tipo: "professor_duplicado",
@@ -84,7 +81,6 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     }
   });
 
-  // 2. Disciplina com carga semanal insuficiente
   const cargaPorTurmaDisc: Record<string, number> = {};
   slots.forEach(s => {
     const key = `${s.turmaId}-${s.disciplinaId}`;
@@ -93,8 +89,6 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
   turmaDiscs.forEach(td => {
     const disc = disciplinas.find(d => d.id === td.disciplinaId);
     if (!disc) return;
-    // RF-TUR-02: mesma regra de precedência do gerador de horário —
-    // override da matriz aplicada, com fallback para a carga global.
     const cargaEsperada = td.cargaHorariaSemanalOverride ?? disc.cargaSemanal;
     const atual = cargaPorTurmaDisc[`${td.turmaId}-${td.disciplinaId}`] ?? 0;
     if (atual < cargaEsperada) {
@@ -111,7 +105,6 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     }
   });
 
-  // 3. Professor ministrando disciplina para qual não está habilitado
   slots.forEach(s => {
     const habilitado = profDiscs.some(pd => pd.professorId === s.professorId && pd.disciplinaId === s.disciplinaId);
     if (!habilitado) {
@@ -130,25 +123,27 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     }
   });
 
-  // 4. Professor com muitas janelas (gaps) no dia
-  const slotsProf: Record<number, Record<number, number[]>> = {};
+  const slotsProf: Record<string, Record<number, number[]>> = {};
   slots.forEach(s => {
-    if (!slotsProf[s.professorId]) slotsProf[s.professorId] = {};
-    if (!slotsProf[s.professorId]![s.diaSemana]) slotsProf[s.professorId]![s.diaSemana] = [];
-    slotsProf[s.professorId]![s.diaSemana]!.push(s.numeroAula);
+    const turno = turnoPorTurmaId.get(s.turmaId) ?? "desconhecido";
+    const chaveProfTurno = `${s.professorId}-${turno}`;
+    if (!slotsProf[chaveProfTurno]) slotsProf[chaveProfTurno] = {};
+    if (!slotsProf[chaveProfTurno]![s.diaSemana]) slotsProf[chaveProfTurno]![s.diaSemana] = [];
+    slotsProf[chaveProfTurno]![s.diaSemana]!.push(s.numeroAula);
   });
-  Object.entries(slotsProf).forEach(([profId, diasMap]) => {
+  Object.entries(slotsProf).forEach(([chaveProfTurno, diasMap]) => {
+    const profIdStr = chaveProfTurno.split("-")[0];
     Object.entries(diasMap).forEach(([dia, aulas]) => {
       const sorted = aulas.sort((a, b) => a - b);
       const janelas = (sorted[sorted.length - 1]! - sorted[0]! + 1) - sorted.length;
       if (janelas >= 2) {
-        const prof = professores.find(p => p.id === Number(profId));
+        const prof = professores.find(p => p.id === Number(profIdStr));
         conflitos.push({
           tipo: "janelas_excessivas",
-          descricao: `Prof. ${prof?.nome ?? profId} tem ${janelas} janela(s) no ${["Seg","Ter","Qua","Qui","Sex"][Number(dia)]}`,
+          descricao: `Prof. ${prof?.nome ?? profIdStr} tem ${janelas} janela(s) no ${["Seg","Ter","Qua","Qui","Sex"][Number(dia)]}`,
           gravidade: janelas >= 3 ? "medio" : "baixo",
           turmaId: null,
-          professorId: Number(profId),
+          professorId: Number(profIdStr),
           diaSemana: Number(dia),
           numeroAula: null,
         });
@@ -156,7 +151,6 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     });
   });
 
-  // 5. Turmas sem nenhum horário gerado
   const turmasComSlot = new Set(slots.map(s => s.turmaId));
   turmas.forEach(t => {
     if (!turmasComSlot.has(t.id)) {
@@ -172,15 +166,14 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     }
   });
 
-  // 6. Professor alocado num dia/período em que sua disponibilidade está
-  // marcada como indisponível (RF-ALOC-04 / RF-PROF-04).
   const indisponibilidadeSet = new Set(
     disponibilidades
       .filter(d => !d.disponivel)
-      .map(d => `${d.professorId}-${d.diaSemana}-${d.horarioSlot}`),
+      .map(d => `${d.professorId}-${d.turno ?? "null"}-${d.diaSemana}-${d.horarioSlot}`),
   );
   slots.forEach(s => {
-    if (indisponibilidadeSet.has(`${s.professorId}-${s.diaSemana}-${s.numeroAula}`)) {
+    const turno = turnoPorTurmaId.get(s.turmaId) ?? "desconhecido";
+    if (indisponibilidadeSet.has(`${s.professorId}-${turno}-${s.diaSemana}-${s.numeroAula}`)) {
       const prof = professores.find(p => p.id === s.professorId);
       const turma = turmas.find(t => t.id === s.turmaId);
       conflitos.push({
@@ -195,9 +188,6 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     }
   });
 
-  // 7. RNF-SEED-02: disciplina exige um tipo de sala (ex. laboratório de
-  // informática, quadra) mas a aula foi alocada em sala de outro tipo
-  // (ou sem sala definida).
   const salaPorNome = new Map(salas.map((s) => [s.nome, s]));
   slots.forEach((s) => {
     const disc = disciplinas.find((d) => d.id === s.disciplinaId);
@@ -217,14 +207,11 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     }
   });
 
-  // 8. RNF-SEED-02: duas turmas usando a mesma sala restrita (tipo ≠
-  // sala_aula comum) no mesmo dia/aula — ex. laboratório ou quadra
-  // ocupados por mais de uma turma ao mesmo tempo.
   const slotSalaMap: Record<string, number[]> = {};
   slots.forEach((s) => {
     if (!s.sala) return;
     const sala = salaPorNome.get(s.sala);
-    if (!sala || sala.tipo === "sala_aula") return; // salas comuns podem repetir nome sem ser o mesmo espaço físico exclusivo
+    if (!sala || sala.tipo === "sala_aula") return;
     const key = `${s.sala}-${s.diaSemana}-${s.numeroAula}`;
     if (!slotSalaMap[key]) slotSalaMap[key] = [];
     slotSalaMap[key]!.push(s.id);
@@ -244,8 +231,6 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     }
   });
 
-  // 9. RNF-SEED-03: mais aulas consecutivas da mesma disciplina, na
-  // mesma turma, no mesmo dia, do que o limite configurado (Max_Aulas_Dia).
   const consecutivasPorTurmaDiscDia: Record<string, number[]> = {};
   slots.forEach((s) => {
     const key = `${s.turmaId}-${s.disciplinaId}-${s.diaSemana}`;
@@ -256,7 +241,6 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     const [turmaId, disciplinaId, dia] = key.split("-").map(Number);
     const td = turmaDiscs.find((t) => t.turmaId === turmaId && t.disciplinaId === disciplinaId);
     const limite = td?.maxAulasConsecutivasDia ?? maxAulasGeminadasPadrao;
-    // conta a maior sequência de números consecutivos em `aulas`
     const ordenado = [...aulas].sort((a, b) => a - b);
     let maiorSequencia = 1;
     let atual = 1;
@@ -279,9 +263,6 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     }
   });
 
-  // 10. RNF-SEED-01: professor ultrapassa o teto semanal de aulas por
-  // turno (Resolução SEED n.º 7.200/2025, art. 11, §3º — 19 no turno da
-  // noite, 24 nos demais).
   const aulasPorProfTurno: Record<string, number> = {};
   slots.forEach((s) => {
     const turma = turmas.find((t) => t.id === s.turmaId);
@@ -306,10 +287,6 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     }
   });
 
-  // 11. RNF-SEED-01: professor não tem horas-atividade suficientes
-  // marcadas na disponibilidade para o padrão dele (20h → 9 unidades de
-  // 50min; 40h → 18 unidades), ou tem HA fora do turno em que dá aula
-  // apesar de ter até 19 aulas nesse turno (art. 11, §4º).
   professores.forEach((prof) => {
     const exigido = prof.cargaHorariaTotal >= 40 ? padrao40h.horasAtividade : padrao20h.horasAtividade;
     const haMarcadas = disponibilidades.filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria).length;
@@ -325,7 +302,6 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
       });
     }
 
-    // Turno(s) em que o professor dá aula, com contagem
     const turnosComAula: Record<string, number> = {};
     slots.filter((s) => s.professorId === prof.id).forEach((s) => {
       const turma = turmas.find((t) => t.id === s.turmaId);
@@ -341,7 +317,7 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
       if (total <= horaAtividadeMesmoTurnoAte && !turnosComHA.has(turno)) {
         conflitos.push({
           tipo: "hora_atividade_turno_incorreto",
-          descricao: `Prof. ${prof.nome} tem ${total} aulas no turno ${turno} (≤ ${horaAtividadeMesmoTurnoAte}) mas nenhuma hora-atividade obrigatória marcada nesse mesmo turno — a Resolução SEED n.º 7.200/2025 (art. 11, §4º) exige que a HA fique concentrada no turno das aulas`,
+          descricao: `Prof. ${prof.nome} tem ${total} aulas no turno ${turno} (<= ${horaAtividadeMesmoTurnoAte}) mas nenhuma hora-atividade obrigatória marcada nesse mesmo turno`,
           gravidade: "medio",
           turmaId: null,
           professorId: prof.id,
@@ -352,10 +328,6 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     });
   });
 
-
-  // 12. Turma sem calendario/trimestres letivos configurados para o ano letivo dela
-  // (LDB Art. 24, I: minimo de 800h anuais distribuidas em pelo menos 200 dias
-  // letivos -- sem o calendario cadastrado nao ha como validar o cumprimento).
   const anosLetivosDasTurmas = [...new Set(turmas.map(t => t.anoLetivo))];
   if (anosLetivosDasTurmas.length > 0) {
     const trimestresCadastrados = await db.select().from(trimestresLetivosTable)
