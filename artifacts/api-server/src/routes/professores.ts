@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { professoresTable, professorDisciplinasTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import {
   CreateProfessorBody,
   UpdateProfessorBody,
@@ -38,15 +38,22 @@ router.get("/", async (req, res) => {
     .from(professoresTable)
     .where(eq(professoresTable.escolaId, escolaId))
     .orderBy(professoresTable.nome);
-  const result = await Promise.all(
-    professores.map(async (p) => {
-      const links = await db
-        .select()
-        .from(professorDisciplinasTable)
-        .where(eq(professorDisciplinasTable.professorId, p.id));
-      return { ...p, disciplinaIds: links.map((l) => l.disciplinaId) };
-    })
-  );
+
+  // [FIX] N+1 -- antes fazia uma consulta separada pra buscar as
+  // disciplinas de CADA professor (84 professores = 84 consultas extras
+  // toda vez que essa lista carregava, e ela é usada em praticamente
+  // toda tela do sistema via useListProfessores). Agora busca os
+  // vínculos de TODOS de uma vez só e agrupa em memória.
+  const ids = professores.map((p) => p.id);
+  const links = ids.length
+    ? await db.select().from(professorDisciplinasTable).where(inArray(professorDisciplinasTable.professorId, ids))
+    : [];
+  const disciplinaIdsPorProfessor = new Map<number, number[]>();
+  links.forEach((l) => {
+    if (!disciplinaIdsPorProfessor.has(l.professorId)) disciplinaIdsPorProfessor.set(l.professorId, []);
+    disciplinaIdsPorProfessor.get(l.professorId)!.push(l.disciplinaId);
+  });
+  const result = professores.map((p) => ({ ...p, disciplinaIds: disciplinaIdsPorProfessor.get(p.id) ?? [] }));
   res.json(result);
 });
 
