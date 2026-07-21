@@ -1,10 +1,11 @@
-﻿import { Link, useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { UserButton } from "@clerk/react";
 import { useMasterWhoami } from "@workspace/api-client-react";
 import {
   LayoutDashboard, Users, BookOpen, GraduationCap, Calendar, CalendarDays,
   Building2, FileText, Bell, Shield, History,
   Settings, Download, Sparkles, Upload, CreditCard, Library, ShieldCheck, Clock,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +16,9 @@ const navGroups = [
       { href: "/dashboard", label: "Visão Geral", icon: LayoutDashboard },
       { href: "/horario", label: "Horário", icon: Calendar },
       { href: "/calendario", label: "Calendário Escolar", icon: CalendarDays },
+      // [NOVO] Carga Horária Cumprida x Exigida ganhou menu próprio,
+      // separado do Calendário Escolar (antes vivia na mesma tela).
+      { href: "/carga-horaria", label: "Carga Horária", icon: BarChart3 },
       { href: "/assistente", label: "Assistente de IA", icon: Sparkles, badge: "IA" },
     ],
   },
@@ -130,6 +134,3 @@ export function Layout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-
-

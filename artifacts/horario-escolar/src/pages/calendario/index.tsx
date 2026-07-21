@@ -1,11 +1,10 @@
 import { useState, useMemo } from "react";
-import { useListCalendarioEscolar, useListTrimestresLetivos, useListCargaHoraria } from "@workspace/api-client-react";
+import { useListCalendarioEscolar, useListTrimestresLetivos } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarDays, GraduationCap, BarChart3, CheckCircle2, AlertTriangle, ChevronLeft, ChevronRight, Circle } from "lucide-react";
+import { CalendarDays, GraduationCap, ChevronLeft, ChevronRight } from "lucide-react";
 
 const TIPO_LABELS: Record<string, { label: string; color: string; dot: string }> = {
   feriado: { label: "Feriado", color: "bg-red-100 text-red-700", dot: "bg-red-500" },
@@ -72,21 +71,8 @@ export default function CalendarioEscolarPage() {
   const [mesAtual, setMesAtual] = useState(() => new Date().getMonth());
   const { data: eventos = [], isLoading: loadingEventos } = useListCalendarioEscolar({ ano });
   const { data: trimestres = [], isLoading: loadingTrimestres } = useListTrimestresLetivos({ ano });
-  const { data: cargaHoraria = [], isLoading: loadingCarga } = useListCargaHoraria({ ano });
 
   const totalDiasLetivos = trimestres.reduce((soma, t) => soma + t.diasLetivos, 0);
-
-  // [FIX] Antes a condicao considerava a lista inteira "sem horario
-  // gerado" só se TODAS as disciplinas do sistema tivessem
-  // totalCumprido = 0 — bastava UMA disciplina de UMA turma ja ter
-  // algum horario gerado (de teste antigo, por exemplo) pra essa
-  // condicao nunca ser verdadeira, e o alarme completo voltava a
-  // aparecer pra todo o resto. Agora a distincao e por LINHA: cada
-  // disciplina que nunca teve horario gerado mostra um badge neutro
-  // "Nao gerado ainda"; só disciplinas que JA tem horario gerado e
-  // mesmo assim estao abaixo do exigido contam como alerta de verdade.
-  const disciplinasComAlertaReal = cargaHoraria.filter((c) => c.totalCumprido > 0 && c.status === "insuficiente");
-  const disciplinasSemGeracao = cargaHoraria.filter((c) => c.totalCumprido === 0);
 
   const eventosPorDia = useMemo(() => {
     const mapa = new Map<string, Evento[]>();
@@ -153,63 +139,6 @@ export default function CalendarioEscolarPage() {
           Total de <strong>{totalDiasLetivos}</strong> dias letivos em {ano}.
         </p>
       )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-[#1565C0]" />
-            Carga Horária Cumprida × Exigida
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loadingCarga ? (
-            <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
-          ) : cargaHoraria.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">Nenhuma turma com disciplinas vinculadas para {ano}.</p>
-          ) : (
-            <>
-              {disciplinasComAlertaReal.length > 0 && (
-                <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-amber-50 text-amber-800 text-sm">
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
-                  {disciplinasComAlertaReal.length} disciplina{disciplinasComAlertaReal.length > 1 ? "s" : ""} com horário gerado, mas abaixo da carga horária exigida no ano.
-                </div>
-              )}
-              {disciplinasSemGeracao.length > 0 && (
-                <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg bg-muted/50 text-muted-foreground text-sm">
-                  <Circle className="w-3.5 h-3.5 shrink-0" />
-                  {disciplinasSemGeracao.length} disciplina{disciplinasSemGeracao.length > 1 ? "s" : ""} ainda sem horário gerado (não conta como insuficiência).
-                </div>
-              )}
-              <div className="divide-y divide-border rounded-lg border border-border/50">
-                {cargaHoraria.map((c) => (
-                  <div key={`${c.turmaId}-${c.disciplinaId}`} className="flex items-center justify-between py-3 px-4">
-                    <div>
-                      <p className="text-sm font-medium">{c.disciplinaNome}</p>
-                      <p className="text-xs text-muted-foreground">{c.turmaNome} · {c.aulasSemanaGrid} aula{c.aulasSemanaGrid !== 1 ? "s" : ""}/semana na grade (exigido: {c.cargaSemanalExigida})</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm text-muted-foreground">{c.totalCumprido} / {c.totalExigido} aulas no ano</span>
-                      {c.totalCumprido === 0 ? (
-                        <Badge variant="outline" className="text-muted-foreground border-border flex items-center gap-1">
-                          <Circle className="w-3 h-3" /> Não gerado
-                        </Badge>
-                      ) : c.status === "ok" ? (
-                        <Badge className="bg-green-100 text-green-700 border-0 flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3" /> OK
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-amber-100 text-amber-700 border-0 flex items-center gap-1">
-                          <AlertTriangle className="w-3 h-3" /> Insuficiente
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
