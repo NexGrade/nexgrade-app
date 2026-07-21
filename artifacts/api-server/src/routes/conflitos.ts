@@ -299,7 +299,12 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     }
   });
 
-  professores.forEach((prof) => {
+  // [FIX] Professores "placeholder" (ex.: os de Híbrida, criados sem
+  // carga horária de verdade -- cargaHorariaTotal=0) estavam sendo
+  // cobrados de 9h de HA institucional como se fossem professores reais
+  // de 20h. Nenhum professor de verdade tem 0h contratada, então usamos
+  // isso como sinal seguro pra pular a checagem de HA só pra eles.
+  professores.filter((prof) => prof.cargaHorariaTotal > 0).forEach((prof) => {
     const exigido = prof.cargaHorariaTotal >= 40 ? padrao40h.horasAtividade : padrao20h.horasAtividade;
     const haMarcadas = disponibilidades.filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria).length;
     if (haMarcadas < exigido) {
