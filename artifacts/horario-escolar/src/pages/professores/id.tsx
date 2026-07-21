@@ -234,8 +234,13 @@ export default function ProfessorEditar() {
 
                   <div className="space-y-3">
                     <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">Distribuição por Dia</h4>
-                    {diasSemana.map((dia, index) => {
-                      const aulas = cargaData.porDia[index] || 0;
+                    {/* [FIX] `cargaData.porDia` vem do backend com chaves
+                        de NOME do dia ("Segunda", "Terça"...), não por
+                        índice numérico -- por isso sempre lia
+                        `undefined` e caía no "|| 0", mostrando 0 pra
+                        todo mundo mesmo com aulas reais cadastradas. */}
+                    {diasSemana.map((dia) => {
+                      const aulas = cargaData.porDia[dia] || 0;
                       return (
                         <div key={dia} className="flex items-center justify-between">
                           <span className="text-sm">{dia}</span>
