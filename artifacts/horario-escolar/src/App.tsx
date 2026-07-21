@@ -1,4 +1,4 @@
-﻿import { useEffect } from "react";
+import { useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ClerkProvider, SignIn, SignUp, Show, useAuth } from "@clerk/react";
@@ -34,8 +34,30 @@ import DisponibilidadePage from "@/pages/disponibilidade/index";
 import CalendarioEscolarPage from "@/pages/calendario/index";
 import NotFound from "@/pages/not-found";
 
+// [FIX] Ajuste de performance percebida -- 3 mudanças:
+//  - staleTime 30s -> 60s: dado considerado "fresco" por mais tempo,
+//    evita refazer a mesma consulta ao trocar rapidamente entre as
+//    abas internas de uma tela (ex.: os 5 sub-tabs de Horário).
+//  - gcTime adicionado (5min): mantém dados já carregados em memória
+//    por mais tempo mesmo sem uso ativo, evitando o "piscar de
+//    carregando" ao voltar pra uma tela visitada há pouco.
+//  - refetchOnWindowFocus: false -- o padrão do React Query recarrega
+//    TUDO que está na tela toda vez que o usuário troca de aba do
+//    navegador e volta. Pra um app de uso interno (não precisa de dado
+//    em tempo real entre várias pessoas editando ao mesmo tempo), isso
+//    só causa lentidão percebida sem necessidade real. Quem editar algo
+//    ainda vê o resultado na hora (a própria ação já invalida a query
+//    certa); o que deixa de acontecer é o recarregamento automático só
+//    por trocar de aba.
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      gcTime: 5 * 60_000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
 });
 
 const clerkPubKey = publishableKeyFromHost(
@@ -322,7 +344,3 @@ function App() {
 }
 
 export default App;
-
-
-
-
