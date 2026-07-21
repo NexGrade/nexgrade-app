@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import { horariosTable, professoresTable, disciplinasTable, turmasTable, turmaDisciplinasTable, professorDisciplinasTable, disponibilidadeTable, salasTable, configuracoesTable, trimestresLetivosTable } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
+import { calcularHoraAtividadePorTurno } from "../lib/hora-atividade";
 
 const router = Router();
 
@@ -42,8 +43,10 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
   const tetoAulasTurno = configValor("seed_pr.teto_aulas_turno", { noturno: 19, diurno: 24 });
   const horaAtividadeMesmoTurnoAte = configValor("seed_pr.hora_atividade_mesmo_turno_ate", 19);
   const maxAulasGeminadasPadrao = configValor("seed_pr.max_aulas_geminadas_padrao", 2);
-  const padrao20h = configValor("seed_pr.padrao_20h", { aulasRegencia: 15, horasAtividade: 9 });
-  const padrao40h = configValor("seed_pr.padrao_40h", { aulasRegencia: 30, horasAtividade: 18 });
+  // [FIX] padrao20h/padrao40h removidos -- não são mais usados agora que
+  // a exigência de HA é calculada proporcionalmente às aulas reais de
+  // cada professor, não por um regime fixo não confirmado (ver seção 11
+  // mais abaixo).
 
   const turmaIdsDaEscola = new Set(turmas.map(t => t.id));
   const turmaDiscs = turmaDiscsTodos.filter(td => turmaIdsDaEscola.has(td.turmaId));
@@ -305,12 +308,30 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
   // de 20h. Nenhum professor de verdade tem 0h contratada, então usamos
   // isso como sinal seguro pra pular a checagem de HA só pra eles.
   professores.filter((prof) => prof.cargaHorariaTotal > 0).forEach((prof) => {
-    const exigido = prof.cargaHorariaTotal >= 40 ? padrao40h.horasAtividade : padrao20h.horasAtividade;
+    const turnosComAula: Record<string, number> = {};
+    slots.filter((s) => s.professorId === prof.id).forEach((s) => {
+      const turma = turmas.find((t) => t.id === s.turmaId);
+      if (!turma) return;
+      turnosComAula[turma.turno] = (turnosComAula[turma.turno] ?? 0) + 1;
+    });
+
+    // [FIX] Antes usava um número FIXO (9 pra "20h", 18 pra "40h") com
+    // base no regime cadastrado -- só que todo professor foi cadastrado
+    // com 20h por padrão, sem confirmar o regime real de cada um (essa
+    // confirmação nunca aconteceu). Isso fazia professor com poucas
+    // aulas (ex.: 8 aulas) ser cobrado de 9 HA, quando pela mesma regra
+    // proporcional já usada em lib/hora-atividade.ts (HA = aulas ÷ 3,
+    // por turno) ele precisaria de bem menos. Agora usa essa fórmula
+    // proporcional em vez do número fixo baseado num regime não
+    // confirmado.
+    const haInstitucionalPorTurno = calcularHoraAtividadePorTurno(turnosComAula);
+    const exigido = Object.values(haInstitucionalPorTurno).reduce((a, b) => a + b, 0);
+
     const haMarcadas = disponibilidades.filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria).length;
-    if (haMarcadas < exigido) {
+    if (exigido > 0 && haMarcadas < exigido) {
       conflitos.push({
         tipo: "hora_atividade_insuficiente",
-        descricao: `Prof. ${prof.nome} (padrão ${prof.cargaHorariaTotal}h) tem apenas ${haMarcadas}/${exigido} horas-atividade marcadas na disponibilidade`,
+        descricao: `Prof. ${prof.nome} tem apenas ${haMarcadas}/${exigido} horas-atividade marcadas na disponibilidade (proporcional às aulas -- regime real ainda não confirmado)`,
         gravidade: "medio",
         turmaId: null,
         professorId: prof.id,
@@ -319,12 +340,6 @@ async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
       });
     }
 
-    const turnosComAula: Record<string, number> = {};
-    slots.filter((s) => s.professorId === prof.id).forEach((s) => {
-      const turma = turmas.find((t) => t.id === s.turmaId);
-      if (!turma) return;
-      turnosComAula[turma.turno] = (turnosComAula[turma.turno] ?? 0) + 1;
-    });
     const turnosComHA = new Set(
       disponibilidades
         .filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && d.turno)
