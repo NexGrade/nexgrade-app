@@ -13,7 +13,7 @@ import { limitadorIA } from "../middlewares/rateLimit";
 const router = Router();
 
 // Chamadas de chat e execução de ação custam dinheiro de verdade (API
-// da OpenAI) — limite mais apertado que o resto da API (ver rateLimit.ts).
+// do Gemini) — limite mais apertado que o resto da API (ver rateLimit.ts).
 router.use(["/chat", "/executar-acao"], limitadorIA);
 
 function getUsuarioId(req: any): string | null {
@@ -76,40 +76,45 @@ router.get("/conversas/:id/mensagens", async (req, res) => {
 
 const DIAS_SEMANA = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
 
+// [TROCADO] Formato de "function declaration" da API NATIVA do Gemini
+// -- confirmado por teste manual (Invoke-RestMethod) que o endpoint
+// compatível com OpenAI (`/v1beta/openai/...`) retorna 429 mesmo com
+// chave válida e modelo existente, enquanto a API nativa
+// (`/v1beta/models/...:generateContent`) funciona normalmente com a
+// mesma chave. Por isso trocamos pra chamar a API nativa direto via
+// fetch, sem SDK e sem a camada de compatibilidade.
 const tools = [
   {
-    type: "function" as const,
-    function: {
-      name: "definir_disponibilidade",
-      description:
-        "Marca um professor como disponível ou indisponível em um dia da semana e período/aula específicos.",
-      parameters: {
-        type: "object",
-        properties: {
-          professorNome: { type: "string", description: "Nome (ou parte do nome) do professor mencionado pelo usuário" },
-          diaSemana: { type: "integer", description: "0=Segunda, 1=Terça, 2=Quarta, 3=Quinta, 4=Sexta, 5=Sábado, 6=Domingo" },
-          horarioSlot: { type: "integer", description: "Número do período/aula dentro do dia, começando em 1" },
-          disponivel: { type: "boolean", description: "true para marcar como disponível, false para indisponível" },
-          motivo: { type: "string", description: "Motivo opcional da indisponibilidade" },
+    functionDeclarations: [
+      {
+        name: "definir_disponibilidade",
+        description:
+          "Marca um professor como disponível ou indisponível em um dia da semana e período/aula específicos.",
+        parameters: {
+          type: "object" as const,
+          properties: {
+            professorNome: { type: "string", description: "Nome (ou parte do nome) do professor mencionado pelo usuário" },
+            diaSemana: { type: "integer", description: "0=Segunda, 1=Terça, 2=Quarta, 3=Quinta, 4=Sexta, 5=Sábado, 6=Domingo" },
+            horarioSlot: { type: "integer", description: "Número do período/aula dentro do dia, começando em 1" },
+            disponivel: { type: "boolean", description: "true para marcar como disponível, false para indisponível" },
+            motivo: { type: "string", description: "Motivo opcional da indisponibilidade" },
+          },
+          required: ["professorNome", "diaSemana", "horarioSlot", "disponivel"],
         },
-        required: ["professorNome", "diaSemana", "horarioSlot", "disponivel"],
       },
-    },
-  },
-  {
-    type: "function" as const,
-    function: {
-      name: "gerar_horario_turma",
-      description: "Gera (ou regenera) automaticamente a grade horária de uma turma específica.",
-      parameters: {
-        type: "object",
-        properties: {
-          turmaNome: { type: "string", description: "Nome da turma mencionada pelo usuário" },
-          substituir: { type: "boolean", description: "Se true, substitui o horário já existente da turma" },
+      {
+        name: "gerar_horario_turma",
+        description: "Gera (ou regenera) automaticamente a grade horária de uma turma específica.",
+        parameters: {
+          type: "object" as const,
+          properties: {
+            turmaNome: { type: "string", description: "Nome da turma mencionada pelo usuário" },
+            substituir: { type: "boolean", description: "Se true, substitui o horário já existente da turma" },
+          },
+          required: ["turmaNome"],
         },
-        required: ["turmaNome"],
       },
-    },
+    ],
   },
 ];
 
@@ -117,19 +122,17 @@ type AcaoPendente =
   | { tipo: "definir_disponibilidade"; payload: { professorId: number; diaSemana: number; horarioSlot: number; disponivel: boolean; motivo?: string } }
   | { tipo: "gerar_horario_turma"; payload: { turmaId: number; substituir: boolean } };
 
+const GEMINI_MODEL = "gemini-2.0-flash";
+
 // POST /ai/chat
 //
-// [TROCADO] Antes usava a API da OpenAI diretamente (paga desde o
-// primeiro uso). Agora usa o Google Gemini através do endpoint dele
-// compatível com o formato da OpenAI -- por isso o pacote `openai`
-// continua sendo usado como cliente (só muda a `baseURL` e a chave),
-// e todo o resto do código (tool calling, parsing da resposta) fica
-// igual. O Gemini tem camada gratuita com limite de requisições por
-// minuto/dia -- confira os limites atuais em https://ai.google.dev/pricing
-// antes de decidir se serve pro volume de uso da escola. O nome do
-// modelo (`gemini-2.0-flash`) e os limites da camada gratuita podem
-// mudar -- vale conferir https://ai.google.dev/gemini-api/docs/models
-// se algo parar de funcionar no futuro.
+// [TROCADO] Chama a API NATIVA do Gemini direto via fetch (endpoint
+// `:generateContent`), não mais via camada de compatibilidade OpenAI
+// -- ver comentário acima da lista `tools`. Isso muda o formato de
+// mensagens (role "model" em vez de "assistant", conteúdo em
+// `parts`/`text`), o system prompt (`systemInstruction` em vez de
+// mensagem de role "system") e o parsing de function call (`parts[].
+// functionCall` em vez de `tool_calls`).
 router.post("/chat", async (req, res) => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -192,37 +195,50 @@ Seja direto, útil e use linguagem educacional brasileira.`;
   res.setHeader("Connection", "keep-alive");
   res.setHeader("X-Conversa-Id", String(cidAtual));
 
-  const OpenAI = (await import("openai")).default;
-  // [TROCADO] Mesmo cliente `openai`, mas apontando pro endpoint do
-  // Gemini compatível com o formato da OpenAI -- é só isso que muda
-  // pra trocar de provedor.
-  const openai = new OpenAI({
-    apiKey,
-    baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
-  });
-
   try {
-    const completion = await openai.chat.completions.create({
-      model: "gemini-2.0-flash",
-      max_tokens: 1024,
-      messages: [
-        { role: "system", content: systemPrompt },
-        ...historico.map(h => ({ role: h.role as "user" | "assistant", content: h.content })),
-        { role: "user", content: mensagem },
-      ],
-      tools,
-      tool_choice: "auto",
-    });
+    // [TROCADO] A API nativa do Gemini usa role "model" pro assistente
+    // (não "assistant"), e o conteúdo vai em `parts: [{ text }]`.
+    const contents = [
+      ...historico.map(h => ({
+        role: h.role === "assistant" ? "model" : "user",
+        parts: [{ text: h.content }],
+      })),
+      { role: "user", parts: [{ text: mensagem }] },
+    ];
 
-    const choice = completion.choices[0];
-    const rawToolCall = choice?.message?.tool_calls?.[0];
-    const toolCall = rawToolCall?.type === "function" ? rawToolCall : undefined;
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents,
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          tools,
+        }),
+      },
+    );
+
+    if (!geminiRes.ok) {
+      const corpoErro = await geminiRes.text().catch(() => "(sem corpo)");
+      throw new Error(`${geminiRes.status} ${geminiRes.statusText}: ${corpoErro.slice(0, 300)}`);
+    }
+
+    const completion = await geminiRes.json() as {
+      candidates?: Array<{
+        content?: { parts?: Array<{ text?: string; functionCall?: { name: string; args: Record<string, unknown> } }> };
+      }>;
+    };
+
+    const parts = completion.candidates?.[0]?.content?.parts ?? [];
+    const functionCallPart = parts.find((p) => p.functionCall)?.functionCall;
+    const textPart = parts.find((p) => p.text)?.text;
 
     let respostaTexto: string;
     let acaoPendente: AcaoPendente | null = null;
 
-    if (toolCall?.function?.name === "definir_disponibilidade") {
-      const args = JSON.parse(toolCall.function.arguments) as {
+    if (functionCallPart?.name === "definir_disponibilidade") {
+      const args = functionCallPart.args as {
         professorNome: string; diaSemana: number; horarioSlot: number; disponivel: boolean; motivo?: string;
       };
       const termo = args.professorNome.trim().toLowerCase();
@@ -241,8 +257,8 @@ Seja direto, útil e use linguagem educacional brasileira.`;
           payload: { professorId: prof.id, diaSemana: args.diaSemana, horarioSlot: args.horarioSlot, disponivel: args.disponivel, motivo: args.motivo },
         };
       }
-    } else if (toolCall?.function?.name === "gerar_horario_turma") {
-      const args = JSON.parse(toolCall.function.arguments) as { turmaNome: string; substituir?: boolean };
+    } else if (functionCallPart?.name === "gerar_horario_turma") {
+      const args = functionCallPart.args as { turmaNome: string; substituir?: boolean };
       const termo = args.turmaNome.trim().toLowerCase();
       const candidatas = turmas.filter(t => t.nome.toLowerCase().includes(termo));
 
@@ -259,7 +275,7 @@ Seja direto, útil e use linguagem educacional brasileira.`;
         };
       }
     } else {
-      respostaTexto = choice?.message?.content ?? "Não consegui gerar uma resposta. Tente reformular a pergunta.";
+      respostaTexto = textPart ?? "Não consegui gerar uma resposta. Tente reformular a pergunta.";
     }
 
     await db.insert(aiMensagensTable).values({ conversaId: cidAtual, role: "assistant", content: respostaTexto });

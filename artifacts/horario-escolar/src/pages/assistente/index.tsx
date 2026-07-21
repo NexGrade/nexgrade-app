@@ -106,13 +106,12 @@ export default function AssistentePage() {
             // mostrando "digitando..." pra sempre, mesmo com a conexão
             // já encerrada e um erro real tendo acontecido.
             if (data.error) {
-              // [TEMP-DEBUG] Mostrando o erro cru de novo pra
-              // finalmente ver o motivo real do 429 persistente do
-              // Gemini -- reverter pra mensagem amigável assim que
-              // resolvido.
+              const mensagemErro = String(data.error).includes("429") || String(data.error).toLowerCase().includes("rate")
+                ? "⏳ O Assistente de IA atingiu o limite de uso da camada gratuita por agora. Aguarde um minuto e tente de novo."
+                : `❌ Erro no assistente: ${data.error}`;
               setMensagens(prev => {
                 const copy = [...prev];
-                copy[copy.length - 1] = { role: "assistant", content: `🔧 [DEBUG] erro cru: ${String(data.error)}` };
+                copy[copy.length - 1] = { role: "assistant", content: mensagemErro };
                 return copy;
               });
               continue;
