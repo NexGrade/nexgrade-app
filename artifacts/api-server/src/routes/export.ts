@@ -38,16 +38,9 @@ function primeiroNome(nomeCompleto: string): string {
 
 // Sigla da disciplina com fallback pro nome truncado, para disciplinas
 // que ainda não tiveram sigla definida manualmente ou gerada em lote.
-// [FIX] O limite era de só 8 caracteres, escolhido sem relação com o
-// espaço real disponível na célula do PDF (que comporta ~25+
-// caracteres nesse tamanho de fonte -- ver truncar() em pdf-grade.ts).
-// Isso cortava nomes de disciplina bem mais do que precisava (ex.:
-// "Introdução à Programação" virava só "INTRODUÇ"). Aumentado pra um
-// limite mais generoso; o próprio pdf-grade.ts ainda aplica seu corte
-// final com reticências se, mesmo assim, não couber na célula.
 function siglaOuFallback(disc: { nome: string; sigla?: string | null } | undefined): string {
   if (!disc) return "?";
-  return disc.sigla?.toUpperCase() ?? disc.nome.slice(0, 20).toUpperCase();
+  return disc.sigla?.toUpperCase() ?? disc.nome.slice(0, 8).toUpperCase();
 }
 
 // [ALTERADO] Antes era `intervaloSemanaAtual()`, sem parâmetro -- só
