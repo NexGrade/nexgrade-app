@@ -26,7 +26,7 @@ import { SeletorBusca } from "@/components/seletor-busca";
 import {
   Check, ArrowRight, ArrowLeft, Lock, ChevronDown, ChevronRight, Plus,
   Calendar, ListChecks, AlertTriangle, FlaskConical,
-  CheckCircle2, RefreshCw, ChevronUp, ArrowUpCircle, Trash2, Clock, Info,
+  CheckCircle2, RefreshCw, ChevronUp, ArrowUpCircle, Trash2, Clock, Info, X,
 } from "lucide-react";
 
 // Hub único de Horário — Esquema > Regras > Grade > Conflitos > Experimental,
@@ -84,7 +84,7 @@ export default function HorarioHubPage() {
   );
 }
 
-// ══════════════════════════════ ABA: ESQUEMA ══════════════════════════════
+// ═══════════════════════════════════════════════ ABA: ESQUEMA ═══════════════════════════════════════════════
 
 type Turno = "matutino" | "vespertino" | "noturno";
 
@@ -115,16 +115,6 @@ function AbaEsquema() {
   );
   const salvarLote = useSetHorarioSlotsLote();
 
-  // [FIX] Antes, trocar de turno/nível só ajustava `qtdAulas` (5 ou 6)
-  // pro padrão -- o resto do formulário (horário de início, duração,
-  // intervalo) ficava com o que já estava digitado na tela, mesmo que
-  // aquele turno já tivesse um esquema DIFERENTE salvo de verdade no
-  // banco. Isso fazia, por exemplo, trocar pra "Vespertino" continuar
-  // mostrando "07:30" mesmo a tarde já estando configurada com 13:05 --
-  // e clicar Salvar ali sobrescreveria o esquema certo com um errado.
-  // Agora, quando já existe esquema salvo pro turno/nível selecionado,
-  // o formulário é populado a partir dos dados reais (incluindo
-  // detectar o intervalo a partir do "salto" de horário entre aulas).
   useEffect(() => {
     if (isLoading) return;
     if (slotsExistentes && slotsExistentes.length > 0) {
@@ -150,9 +140,6 @@ function AbaEsquema() {
         duracaoIntervalo,
       });
     } else {
-      // Turno/nível sem esquema salvo ainda -- volta pro padrão
-      // sensato (5 aulas, ou 6 se for matutino Médio/Técnico), em vez
-      // de manter o que tinha ficado digitado de outro turno.
       const qtdPadrao = turno !== "matutino" ? 5 : (nivelEnsino === "medio_tecnico" ? 6 : 5);
       const horaPadrao = turno === "matutino" ? "07:30" : turno === "vespertino" ? "13:05" : "18:45";
       setForm({ qtdAulas: qtdPadrao, duracao: 50, horaInicio: horaPadrao, intervaloApos: 3, duracaoIntervalo: 20 });
@@ -389,7 +376,7 @@ function AulaFixaForm({ turno, onFechar }: { turno: Turno; onFechar: () => void 
   );
 }
 
-// ══════════════════════════════ ABA: REGRAS ══════════════════════════════
+// ═══════════════════════════════════════════════ ABA: REGRAS ═══════════════════════════════════════════════
 
 const CHAVE_MAX_GEMINADAS = "seed_pr.max_aulas_geminadas_padrao";
 
@@ -458,11 +445,6 @@ function SecaoGeral() {
     );
   }
 
-  // [NOVO] Padrão geral da escola pro limite complementar (professor
-  // com mais de uma disciplina na mesma turma) -- antes só dava pra
-  // configurar professor por professor, na seção "Complementares"
-  // abaixo. Sem preencher aqui, continua sem limite (comportamento de
-  // sempre) pra quem não usa essa opção.
   const CHAVE_MAX_COMPLEMENTAR = "seed_pr.max_aulas_complementar_padrao";
   const { data: configComplementar, isLoading: isLoadingComplementar } = useGetConfiguracao(CHAVE_MAX_COMPLEMENTAR, {
     query: { queryKey: getGetConfiguracaoQueryKey(CHAVE_MAX_COMPLEMENTAR), retry: false },
@@ -662,14 +644,11 @@ function SecaoComplementar() {
   );
 }
 
-// ══════════════════════════════ ABA: GRADE ══════════════════════════════
+// ═══════════════════════════════════════════════ ABA: GRADE ═══════════════════════════════════════════════
 
 function AbaGrade() {
   const [turmaId, setTurmaId] = useState<string>("all");
   const [professorId, setProfessorId] = useState<string>("all");
-  // [NOVO] Filtro por turno -- também usado pra restringir a lista de
-  // turmas do outro filtro (evita rolar por 53 turmas de todo turno
-  // pra achar uma só da noite, por exemplo).
   const [turno, setTurno] = useState<string>("all");
   const [gerando, setGerando] = useState(false);
 
@@ -689,17 +668,8 @@ function AbaGrade() {
   const TURNO_ROTULO_AVISO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
   const turmasDoTurno = (turmas ?? []).filter((t) => turno === "all" || t.turno === turno);
 
-  // [FIX] O filtro de Turno antes só restringia a lista de turmas do
-  // dropdown -- não filtrava as AULAS de verdade. Quando um professor
-  // dá aula em mais de um turno, `numeroAula` se repete (aula 1 é
-  // 07:30 de manhã E 13:05 à tarde), então a grade mostrava tudo
-  // misturado, uma turno "vencendo" o outro na mesma célula. Agora
-  // filtra de verdade pelo turno escolhido antes de montar a grade.
   const horarios = horariosBrutos?.filter((s) => turno === "all" || s.turma?.turno === turno);
 
-  // Turnos que aparecem nos resultados sem filtro de turno -- usado só
-  // pra decidir se precisa avisar o usuário pra escolher um turno
-  // específico (ver aviso abaixo).
   const turnosNosResultados = [...new Set((horariosBrutos ?? []).map((s) => s.turma?.turno).filter(Boolean))];
   const precisaEscolherTurno = turno === "all" && professorId !== "all" && turnosNosResultados.length > 1;
 
@@ -711,10 +681,6 @@ function AbaGrade() {
     );
   };
 
-  // [NOVO] HA institucional não aparecia na grade em tela (só no PDF) --
-  // busca a disponibilidade do professor selecionado pra destacar os
-  // slots marcados como Hora-Atividade obrigatória, do mesmo jeito que
-  // já acontecia no PDF por professor.
   const professorIdSelecionado = professorId !== "all" ? Number(professorId) : undefined;
   const { data: disponibilidadeProf } = useQuery({
     queryKey: ["/api/disponibilidade", professorIdSelecionado],
@@ -726,11 +692,6 @@ function AbaGrade() {
     enabled: professorIdSelecionado !== undefined,
   });
 
-  // Turno "em uso" na grade agora mesmo -- necessário pra saber qual HA
-  // bate com qual célula, já que horarioSlot se repete entre turnos
-  // igual numeroAula. Se uma turma está selecionada, usa o turno dela;
-  // senão usa o filtro de Turno (só chega aqui já resolvido, sem "all",
-  // graças ao aviso de precisaEscolherTurno acima).
   const turnoEmUso = turmaId !== "all"
     ? turmas?.find((t) => String(t.id) === turmaId)?.turno
     : (turno !== "all" ? turno : turnosNosResultados[0]);
@@ -755,10 +716,6 @@ function AbaGrade() {
   const isTurmaSelected = turmaId !== "all";
   const isProfessorSelected = professorId !== "all";
 
-  // [NOVO] Gera a grade oficial (não experimental) da turma selecionada.
-  // Só faz sentido com UMA turma escolhida (o algoritmo é por turma).
-  // Sempre confirma antes, porque com `substituir: true` apaga a grade
-  // atual daquela turma pra recolocar do zero.
   const handleGerarGrade = async () => {
     if (!isTurmaSelected) return;
     const nomeTurma = turmas?.find((t) => String(t.id) === turmaId)?.nome ?? turmaId;
@@ -832,9 +789,6 @@ function AbaGrade() {
             />
           </div>
           <Button variant="outline" onClick={() => { setTurmaId("all"); setProfessorId("all"); setTurno("all"); }}>Limpar</Button>
-          {/* [NOVO] Só habilita gerar com UMA turma escolhida -- o
-              algoritmo (gerarAlgoritmo em routes/horarios.ts) opera
-              sempre por turma, não por professor nem pra escola toda. */}
           <Button onClick={handleGerarGrade} disabled={!isTurmaSelected || gerando}>
             <RefreshCw className={`w-4 h-4 mr-2 ${gerando ? "animate-spin" : ""}`} />
             {gerando ? "Gerando..." : "Gerar Grade"}
@@ -880,11 +834,6 @@ function AbaGrade() {
                       const slotId = isTurmaSelected ? Number(turmaId) : undefined;
                       const slot = getSlot(colIndex, aulaNum, slotId);
                       if (!slot) {
-                        // [NOVO] Antes esse espaço vazio sempre mostrava
-                        // "Vago", mesmo quando na verdade é Hora-Atividade
-                        // institucional planejada (só não aparecia em
-                        // lugar nenhum da tela, só no PDF). Agora destaca
-                        // com o mesmo visual usado no PDF.
                         const temHA = isProfessorSelected && getHA(colIndex, aulaNum);
                         return (
                           <div
@@ -935,7 +884,7 @@ function AbaGrade() {
   );
 }
 
-// ══════════════════════════════ ABA: CONFLITOS ══════════════════════════════
+// ═══════════════════════════════════════════════ ABA: CONFLITOS ═══════════════════════════════════════════════
 
 const GRAVIDADE_CONFIG = {
   critico: { label: "Crítico", color: "bg-red-100 text-red-700 border-red-200", dot: "bg-red-500" },
@@ -1051,7 +1000,21 @@ function AbaConflitos() {
   );
 }
 
-// ══════════════════════════════ ABA: EXPERIMENTAL ══════════════════════════════
+// ═══════════════════════════════════════════════ ABA: EXPERIMENTAL ═══════════════════════════════════════════════
+
+// [NOVO] Detalhe por turma que já vinha na resposta da API
+// (POST /api/horarios/gerar-lote -> `resultados`), mas não era
+// exibido em lugar nenhum -- só o resumo agregado (total de turmas,
+// total de conflitos) aparecia no toast. Sem isso, não dava pra saber
+// QUAL disciplina ficou incompleta em QUAL turma sem ir direto no
+// DevTools. Agora fica visível na própria tela, junto do card do lote.
+type DetalheTurmaLote = {
+  turmaId: number;
+  turmaNome: string;
+  slotsGerados: number;
+  conflitos: string[];
+  erro?: string;
+};
 
 function AbaExperimental() {
   const { data: expSlots = [], isLoading } = useListHorariosExperimentais({});
@@ -1066,13 +1029,7 @@ function AbaExperimental() {
 
   const [openGerar, setOpenGerar] = useState(false);
   const [gerando, setGerando] = useState(false);
-  // [NOVO] Qual experimento está com a grade aberta pra visualização --
-  // só um por vez, pra não poluir a tela com várias grades expandidas.
   const [nomeExpandido, setNomeExpandido] = useState<string | null>(null);
-  // [NOVO] Quando o experimento aberto tem mais de uma turma (lote),
-  // qual turma específica está mostrando a grade -- o grid dia×aula só
-  // faz sentido pra uma turma de cada vez (várias turmas têm aula no
-  // mesmo dia+número, mostrar todas juntas não faz sentido visual).
   const [turmaExpandidaId, setTurmaExpandidaId] = useState<number | null>(null);
   const [gerarForm, setGerarForm] = useState({
     turmaId: "",
@@ -1083,8 +1040,6 @@ function AbaExperimental() {
     compactarCargaHoraria: false,
   });
 
-  // [NOVO] Geração em massa (turno inteiro ou escola toda), sempre como
-  // experimento -- nunca mexe na grade oficial direto.
   const [openGerarLote, setOpenGerarLote] = useState(false);
   const [gerandoLote, setGerandoLote] = useState(false);
   const [loteForm, setLoteForm] = useState({
@@ -1094,6 +1049,9 @@ function AbaExperimental() {
     fatorPedagogico: false,
     compactarCargaHoraria: false,
   });
+  // [NOVO] Detalhes por turma do último lote gerado -- ver comentário
+  // no tipo DetalheTurmaLote acima.
+  const [detalhesLote, setDetalhesLote] = useState<{ nomeExperimental: string; resultados: DetalheTurmaLote[] } | null>(null);
 
   const nomes = [...new Set(expSlots.map((s) => s.nome))];
   const diasSemanaExp = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
@@ -1122,9 +1080,13 @@ function AbaExperimental() {
       toast({
         title: `Lote gerado! ${result.totalTurmas} turma(s), ${result.totalSlots} aulas criadas.`,
         description: result.totalConflitos > 0 || result.turmasComErro > 0
-          ? `${result.totalConflitos} aviso(s) de disciplina incompleta, ${result.turmasComErro} turma(s) com erro — confira antes de promover.`
+          ? `${result.totalConflitos} aviso(s) de disciplina incompleta, ${result.turmasComErro} turma(s) com erro — confira o detalhe abaixo antes de promover.`
           : undefined,
       });
+      // [NOVO] Guarda o detalhe por turma (result.resultados) pra
+      // exibir na tela -- antes essa informação só existia na resposta
+      // da API, sem nenhum jeito de ver sem abrir o DevTools.
+      setDetalhesLote({ nomeExperimental: loteForm.nomeExperimental, resultados: result.resultados ?? [] });
       setOpenGerarLote(false);
       setNomeExpandido(loteForm.nomeExperimental);
       setTurmaExpandidaId(null);
@@ -1200,6 +1162,57 @@ function AbaExperimental() {
         </div>
       </div>
 
+      {/* [NOVO] Detalhe por turma do último lote gerado -- turmas com
+          disciplina incompleta ou erro aparecem destacadas, pra dar
+          exatamente a informação que faltava antes ("quais horários
+          vagos e por quê") sem precisar abrir o DevTools. */}
+      {detalhesLote && (
+        <Card className="border-amber-200 bg-amber-50/40">
+          <CardHeader className="pb-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                  Detalhe do lote "{detalhesLote.nomeExperimental}"
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  Turmas com aviso (disciplina não alocada por completo) ou erro aparecem abaixo. Turmas sem nenhuma linha aqui foram alocadas 100%.
+                </CardDescription>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setDetalhesLote(null)}>
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0 space-y-2">
+            {detalhesLote.resultados.filter((r) => r.conflitos.length > 0 || r.erro).length === 0 ? (
+              <p className="text-sm text-green-700 flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4" /> Todas as turmas foram alocadas sem avisos.
+              </p>
+            ) : (
+              detalhesLote.resultados
+                .filter((r) => r.conflitos.length > 0 || r.erro)
+                .map((r) => (
+                  <div key={r.turmaId} className="bg-background rounded-md border border-amber-200 p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-sm">{r.turmaNome}</span>
+                      <span className="text-xs text-muted-foreground">{r.slotsGerados} aula(s) alocada(s)</span>
+                    </div>
+                    {r.erro && <p className="text-xs text-destructive mt-1">{r.erro}</p>}
+                    {r.conflitos.length > 0 && (
+                      <ul className="mt-1.5 space-y-0.5">
+                        {r.conflitos.map((c, i) => (
+                          <li key={i} className="text-xs text-amber-800">• {c}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {isLoading ? (
         <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)}</div>
       ) : nomes.length === 0 ? (
@@ -1217,9 +1230,6 @@ function AbaExperimental() {
             const turmaIdsDoLote = [...new Set(slots.map((s) => s.turmaId))];
             const turmasNome = turmaIdsDoLote.map((id) => turmas.find((t) => t.id === id)?.nome ?? `Turma #${id}`);
             const ehLote = turmaIdsDoLote.length > 1;
-            // Grade mostrada: se for um lote (várias turmas), filtra só
-            // pela turma escolhida no seletor abaixo -- senão mistura
-            // aulas de turmas diferentes na mesma célula dia+número.
             const slotsGrade = ehLote
               ? slots.filter((s) => s.turmaId === turmaExpandidaId)
               : slots;
@@ -1275,11 +1285,6 @@ function AbaExperimental() {
                     })}
                   </div>
 
-                  {/* [NOVO] Grade visual do experimento -- mesma ideia da
-                      aba Grade (dia x aula), só que lendo de
-                      horarios_experimentais em vez de horarios. Nomes de
-                      disciplina/professor resolvidos aqui na tela porque
-                      a rota de experimentais devolve só os IDs. */}
                   {nomeExpandido === nome && (
                     <div className="mt-4">
                       {ehLote && (
@@ -1390,8 +1395,6 @@ function AbaExperimental() {
         </DialogContent>
       </Dialog>
 
-      {/* [NOVO] Geração em massa -- turno inteiro ou escola toda, sempre
-          como experimento (nunca mexe na grade oficial direto). */}
       <Dialog open={openGerarLote} onOpenChange={setOpenGerarLote}>
         <DialogContent>
           <DialogHeader><DialogTitle>Gerar em Massa</DialogTitle></DialogHeader>
