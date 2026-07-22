@@ -808,9 +808,77 @@ function AbaGrade() {
 
       {isLoading ? (
         <Skeleton className="h-[500px] w-full" />
+      ) : !isTurmaSelected && !isProfessorSelected && turno !== "all" ? (
+        // [NOVO] Visão por turno: mostra todas as turmas do turno
+        // selecionado empilhadas, cada uma com a própria mini-grade
+        // dia×aula -- antes só existia essa visão consolidada no PDF
+        // (Exportar → Grade em PDF). Reaproveita os dados que
+        // `horarios` já traz quando só o turno está filtrado (sem
+        // turma/professor específico).
+        turmasDoTurno.length === 0 ? (
+          <Card className="p-12 text-center text-muted-foreground">
+            <p>Nenhuma turma cadastrada nesse turno.</p>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {turmasDoTurno.map((t) => {
+              const slotsDaTurma = (horarios ?? []).filter((s) => s.turmaId === t.id);
+              const maxAulaTurma = slotsDaTurma.length > 0 ? Math.max(...slotsDaTurma.map((s) => s.numeroAula), 5) : 5;
+              return (
+                <Card key={t.id} className="overflow-hidden">
+                  <div className="py-2.5 px-4 bg-muted/40 border-b border-border flex items-center justify-between">
+                    <span className="text-sm font-semibold">{t.nome}</span>
+                    <span className="text-xs text-muted-foreground">{slotsDaTurma.length} aula(s)</span>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <div className="min-w-[700px]">
+                      <div className="grid grid-cols-6 border-b border-border bg-muted/20">
+                        <div className="p-2 text-xs font-medium text-muted-foreground text-center border-r border-border">Aula</div>
+                        {diasSemana.map((dia) => (
+                          <div key={dia} className="p-2 text-xs font-semibold text-center border-r border-border last:border-0">{dia}</div>
+                        ))}
+                      </div>
+                      {Array.from({ length: maxAulaTurma }).map((_, rowIndex) => {
+                        const aulaNum = rowIndex + 1;
+                        return (
+                          <div key={aulaNum} className="grid grid-cols-6 border-b border-border last:border-0">
+                            <div className="p-1.5 flex items-center justify-center text-xs font-medium text-muted-foreground border-r border-border bg-muted/10">
+                              {aulaNum}ª
+                            </div>
+                            {Array.from({ length: 5 }).map((_, colIndex) => {
+                              const slot = slotsDaTurma.find((s) => s.diaSemana === colIndex && s.numeroAula === aulaNum);
+                              if (!slot) {
+                                return (
+                                  <div key={`${aulaNum}-${colIndex}`} className="p-1 border-r border-border last:border-0 min-h-[46px] flex items-center justify-center">
+                                    <span className="text-[10px] text-muted-foreground/30">–</span>
+                                  </div>
+                                );
+                              }
+                              return (
+                                <div key={slot.id} className="p-1 border-r border-border last:border-0">
+                                  <div
+                                    className="h-full rounded p-1 border-l-4 text-[10px] leading-tight"
+                                    style={{ backgroundColor: `${slot.disciplina?.cor}15`, borderLeftColor: slot.disciplina?.cor || "var(--primary)" }}
+                                  >
+                                    <div className="font-semibold truncate">{slot.disciplina?.nome}</div>
+                                    <div className="text-muted-foreground truncate">{slot.professor?.nome}</div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        )
       ) : !isTurmaSelected && !isProfessorSelected ? (
         <Card className="p-12 text-center text-muted-foreground">
-          <p>Selecione uma turma ou professor para visualizar a grade.</p>
+          <p>Selecione uma turma, um professor, ou um Turno específico para visualizar a grade.</p>
           <p className="text-sm mt-2">({horarios?.length || 0} aulas alocadas no total)</p>
         </Card>
       ) : (
