@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearch } from "wouter";
+import { useSearch, Link } from "wouter";
 import {
   useListHorarioSlots, useSetHorarioSlotsLote, getListHorarioSlotsQueryKey,
   useListAulasFixas, useCriarAulaFixa, getListAulasFixasQueryKey,
@@ -970,10 +970,20 @@ function AbaConflitos() {
                         <CardTitle className="text-sm font-medium mt-1">{item.conflito.descricao}</CardTitle>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="shrink-0 text-xs gap-1" onClick={() => setExpanded(isOpen ? null : idx)}>
-                      {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                      {isOpen ? "Ocultar" : "Ver sugestões"}
-                    </Button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {item.conflito.professorId != null && (
+                        <Link href={`/professores/${item.conflito.professorId}`}>
+                          <Button variant="outline" size="sm" className="text-xs gap-1">
+                            Ver professor
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </Button>
+                        </Link>
+                      )}
+                      <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => setExpanded(isOpen ? null : idx)}>
+                        {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                        {isOpen ? "Ocultar" : "Ver sugestões"}
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 {isOpen && (
