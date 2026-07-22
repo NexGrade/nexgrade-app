@@ -972,9 +972,9 @@ function AbaConflitos() {
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {item.conflito.professorId != null && (
-                        <Link href={`/professores/${item.conflito.professorId}`}>
+                        <Link href={`/disponibilidade?professorId=${item.conflito.professorId}`}>
                           <Button variant="outline" size="sm" className="text-xs gap-1">
-                            Ver professor
+                            Ver disponibilidade
                             <ArrowRight className="w-3.5 h-3.5" />
                           </Button>
                         </Link>
