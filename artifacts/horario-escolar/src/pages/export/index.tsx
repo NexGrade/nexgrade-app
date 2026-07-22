@@ -31,6 +31,15 @@ const TURNOS = [
   { value: "noturno", label: "Noturno" },
 ];
 
+// [NOVO] A grade em si nunca muda de uma semana pra outra (é um modelo
+// recorrente por dia-da-semana, não por data) -- mas a escola manda o
+// PDF pros professores toda semana, e às vezes prepara com
+// antecedência pra semana seguinte. Esse seletor só controla a DATA
+// impressa no cabeçalho do PDF (ver `intervaloSemana` em
+// api-server/src/routes/export.ts), não o conteúdo da grade.
+const SEMANA_ATUAL = "atual";
+const SEMANA_PROXIMA = "proxima";
+
 export default function ExportPage() {
   const { data: turmas = [] } = useListTurmas();
   const { data: professores = [] } = useListProfessores();
@@ -47,11 +56,13 @@ export default function ExportPage() {
   // turmas de matutino/vespertino/noturno saem misturadas na mesma
   // sequência de páginas, sem nenhuma ordem lógica.
   // [FIX] valor inicial agora é o sentinel TURNO_TODOS, não "".
-  const [pdfOpts, setPdfOpts] = useState({ visao: "turma", entidadeId: "", turno: TURNO_TODOS });
+  // [NOVO] "semana" controla a data impressa no cabeçalho -- ver
+  // comentário acima de SEMANA_ATUAL/SEMANA_PROXIMA.
+  const [pdfOpts, setPdfOpts] = useState({ visao: "turma", entidadeId: "", turno: TURNO_TODOS, semana: SEMANA_ATUAL });
   // [NOVO] Relatório de Carga Horária por Professor -- resumo (total de
   // aulas + HA institucional + turmas/disciplinas por período), não a
   // grade dia-a-dia.
-  const [cargaOpts, setCargaOpts] = useState({ professorId: "" });
+  const [cargaOpts, setCargaOpts] = useState({ professorId: "", semana: SEMANA_ATUAL });
 
   const handleDownload = (url: string, filename: string) => {
     const a = document.createElement("a");
@@ -219,6 +230,20 @@ export default function ExportPage() {
                 </SelectContent>
               </Select>
             </div>
+            {/* [NOVO] Data impressa no cabeçalho do PDF -- não muda o
+                conteúdo da grade (que é sempre a mesma, recorrente), só
+                qual semana aparece escrita no topo. Útil quando o PDF é
+                preparado com antecedência pra semana seguinte. */}
+            <div className="space-y-1.5">
+              <Label>Semana (data no cabeçalho)</Label>
+              <Select value={pdfOpts.semana} onValueChange={(v) => setPdfOpts((o) => ({ ...o, semana: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={SEMANA_ATUAL}>Semana atual</SelectItem>
+                  <SelectItem value={SEMANA_PROXIMA}>Semana que vem</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-1.5">
               <Label>{pdfOpts.visao === "turma" ? "Turma (opcional)" : "Professor (opcional)"}</Label>
               <Select value={pdfOpts.entidadeId} onValueChange={(v) => setPdfOpts((o) => ({ ...o, entidadeId: v }))}>
@@ -243,9 +268,11 @@ export default function ExportPage() {
                 const url = buildUrl(`/api/export/grade-pdf/${pdfOpts.visao}`, {
                   [param]: pdfOpts.entidadeId || undefined,
                   turno: turnoParaEnviar,
+                  semana: pdfOpts.semana === SEMANA_PROXIMA ? SEMANA_PROXIMA : undefined,
                 });
                 const sufixoTurno = turnoParaEnviar ? `_${turnoParaEnviar}` : "";
-                handleDownload(url, `grade_por_${pdfOpts.visao}${sufixoTurno}.pdf`);
+                const sufixoSemana = pdfOpts.semana === SEMANA_PROXIMA ? "_proxima_semana" : "";
+                handleDownload(url, `grade_por_${pdfOpts.visao}${sufixoTurno}${sufixoSemana}.pdf`);
               }}
             >
               <Download className="w-4 h-4 mr-2" />Baixar PDF
@@ -272,14 +299,28 @@ export default function ExportPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-1.5">
+              <Label>Semana (data no cabeçalho)</Label>
+              <Select value={cargaOpts.semana} onValueChange={(v) => setCargaOpts((o) => ({ ...o, semana: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={SEMANA_ATUAL}>Semana atual</SelectItem>
+                  <SelectItem value={SEMANA_PROXIMA}>Semana que vem</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Button
               className="w-full"
               onClick={() => {
-                const url = buildUrl("/api/export/relatorio-carga-pdf", { professorId: cargaOpts.professorId || undefined });
+                const url = buildUrl("/api/export/relatorio-carga-pdf", {
+                  professorId: cargaOpts.professorId || undefined,
+                  semana: cargaOpts.semana === SEMANA_PROXIMA ? SEMANA_PROXIMA : undefined,
+                });
                 const sufixo = cargaOpts.professorId
                   ? `_${professores.find((p) => String(p.id) === cargaOpts.professorId)?.nome ?? cargaOpts.professorId}`
                   : "";
-                handleDownload(url, `relatorio_carga_professores${sufixo}.pdf`);
+                const sufixoSemana = cargaOpts.semana === SEMANA_PROXIMA ? "_proxima_semana" : "";
+                handleDownload(url, `relatorio_carga_professores${sufixo}${sufixoSemana}.pdf`);
               }}
             >
               <Download className="w-4 h-4 mr-2" />Baixar Relatório de Carga

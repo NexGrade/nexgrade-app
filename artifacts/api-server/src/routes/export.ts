@@ -43,18 +43,33 @@ function siglaOuFallback(disc: { nome: string; sigla?: string | null } | undefin
   return disc.sigla?.toUpperCase() ?? disc.nome.slice(0, 8).toUpperCase();
 }
 
-// Intervalo da semana atual no formato "DD/MM A DD/MM", igual ao
-// cabeçalho usado pelo Urânia ("22/06 A 26/06").
-function intervaloSemanaAtual(): string {
+// [ALTERADO] Antes era `intervaloSemanaAtual()`, sem parâmetro -- só
+// calculava a semana corrente. A grade em si (dias/aulas) nunca mudou
+// de uma semana pra outra (é um modelo recorrente, não por data), mas
+// a escola manda o PDF pros professores toda semana e precisa que o
+// cabeçalho mostre a data certa: às vezes a semana atual, às vezes a
+// próxima (quando o PDF é preparado com antecedência). `offsetSemanas`
+// desloca o cálculo em semanas inteiras: 0 = semana atual (padrão,
+// mantém compatibilidade com quem já chamava sem esse parâmetro),
+// 1 = semana que vem, -1 = semana passada, etc.
+function intervaloSemana(offsetSemanas: number): string {
   const hoje = new Date();
   const diaSemana = hoje.getDay(); // 0 = domingo
   const offsetSegunda = diaSemana === 0 ? -6 : 1 - diaSemana;
   const segunda = new Date(hoje);
-  segunda.setDate(hoje.getDate() + offsetSegunda);
+  segunda.setDate(hoje.getDate() + offsetSegunda + offsetSemanas * 7);
   const sexta = new Date(segunda);
   sexta.setDate(segunda.getDate() + 4);
   const fmt = (d: Date) => `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
   return `${fmt(segunda)} A ${fmt(sexta)}`;
+}
+
+// [NOVO] Lê o parâmetro `?semana=` da query string e converte pro
+// offset numérico que `intervaloSemana` espera. Aceita "atual"
+// (padrão, quando o parâmetro não vem) ou "proxima". Qualquer outro
+// valor cai no padrão (semana atual), sem quebrar a rota.
+function lerOffsetSemana(req: { query: { semana?: unknown } }): number {
+  return req.query.semana === "proxima" ? 1 : 0;
 }
 
 async function buscarHorariosPorAula(
@@ -209,6 +224,10 @@ router.get("/relatorio-seed", async (req, res) => {
 // PDF — Visão por Turma: formato compacto multi-turma por página
 // (padrão real do Urânia). Sigla da disciplina + primeiro nome do
 // professor em cada célula, horário real na coluna "Hor".
+//
+// [NOVO] Aceita `?semana=proxima` pra mostrar a data da semana seguinte
+// no cabeçalho -- ver comentário em `intervaloSemana` acima. A grade em
+// si é sempre a mesma (recorrente); só a data impressa muda.
 // ------------------------------------------------------------------
 router.get("/grade-pdf/turma", async (req, res) => {
   const escolaId = getEscolaId(req);
@@ -253,7 +272,7 @@ router.get("/grade-pdf/turma", async (req, res) => {
     })(),
   })));
 
-  const pdfBytes = await gerarPdfGradeCompacta(NOME_ESCOLA, "Grade Horária por Turma", intervaloSemanaAtual(), blocos);
+  const pdfBytes = await gerarPdfGradeCompacta(NOME_ESCOLA, "Grade Horária por Turma", intervaloSemana(lerOffsetSemana(req)), blocos);
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", 'attachment; filename="grade_por_turma.pdf"');
   res.send(Buffer.from(pdfBytes));
@@ -263,6 +282,9 @@ router.get("/grade-pdf/turma", async (req, res) => {
 // PDF — Visão por Professor: formato compacto multi-professor por
 // página. Célula combinada "TURMA/SIGLA" numa linha só; Hora-Atividade
 // obrigatória aparece como "HA" destacado.
+//
+// [NOVO] Também aceita `?semana=proxima` -- ver comentário na rota
+// /grade-pdf/turma acima.
 //
 // [FIX] Um professor que dá aula em mais de um turno (manhã/tarde/
 // noite) agora gera UM BLOCO POR TURNO, em vez de um bloco só
@@ -333,7 +355,7 @@ router.get("/grade-pdf/professor", async (req, res) => {
     }
   }
 
-  const pdfBytes = await gerarPdfGradeCompacta(NOME_ESCOLA, "Grade Horária por Professor", intervaloSemanaAtual(), blocos);
+  const pdfBytes = await gerarPdfGradeCompacta(NOME_ESCOLA, "Grade Horária por Professor", intervaloSemana(lerOffsetSemana(req)), blocos);
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", 'attachment; filename="grade_por_professor.pdf"');
   res.send(Buffer.from(pdfBytes));
@@ -344,6 +366,8 @@ router.get("/grade-pdf/professor", async (req, res) => {
 // dia-a-dia) mostrando, por professor e por período, o total de aulas,
 // a Hora-Atividade institucional e a lista de turmas/disciplinas.
 // Filtro opcional por professor; sem filtro, lista todos.
+//
+// [NOVO] Também aceita `?semana=proxima`.
 // ------------------------------------------------------------------
 router.get("/relatorio-carga-pdf", async (req, res) => {
   const escolaId = getEscolaId(req);
@@ -393,7 +417,7 @@ router.get("/relatorio-carga-pdf", async (req, res) => {
     return { nome: prof.nome, totalGeralAulas: slotsDoProf.length, totalGeralHa, periodos };
   });
 
-  const pdfBytes = await gerarPdfCargaProfessores(NOME_ESCOLA, intervaloSemanaAtual(), relatorio);
+  const pdfBytes = await gerarPdfCargaProfessores(NOME_ESCOLA, intervaloSemana(lerOffsetSemana(req)), relatorio);
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", 'attachment; filename="relatorio_carga_professores.pdf"');
   res.send(Buffer.from(pdfBytes));
