@@ -1,16 +1,17 @@
-﻿import { useGetTurma, useGetTurmaHorario, useGerarHorario, getGetTurmaHorarioQueryKey, useListCursos, useListMatrizesCurriculares, getListMatrizesCurricularesQueryKey, useAplicarMatrizTurma, getGetTurmaQueryKey } from "@workspace/api-client-react";
+import { useGetTurma, useGetTurmaHorario, useGerarHorario, getGetTurmaHorarioQueryKey, useListCursos, useListMatrizesCurriculares, getListMatrizesCurricularesQueryKey, useAplicarMatrizTurma, getGetTurmaQueryKey } from "@workspace/api-client-react";
 import { useParams } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, AlertTriangle, BookOpen, Settings2 } from "lucide-react";
+import { Sparkles, AlertTriangle, BookOpen, Settings2, GripVertical } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -47,6 +48,20 @@ export default function TurmaHorario() {
     compactarCargaHoraria: false,
   });
 
+  // [NOVO] Arrastar-e-soltar pra trocar duas aulas de horário na grade
+  // desta turma, sem precisar regenerar tudo. Reaproveita o mesmo
+  // padrão de fetch manual usado no Assistente de IA (não depende do
+  // Orval ter sido regerado pra incluir o endpoint novo /trocar).
+  const [arrastandoId, setArrastandoId] = useState<number | null>(null);
+  const [dragOverKey, setDragOverKey] = useState<string | null>(null);
+  const [trocando, setTrocando] = useState(false);
+  const [conflitoPendente, setConflitoPendente] = useState<{
+    origemId: number;
+    diaSemana: number;
+    numeroAula: number;
+    mensagens: string[];
+  } | null>(null);
+
   const handleGerarHorario = () => {
     gerarHorario.mutate(
       {
@@ -79,6 +94,51 @@ export default function TurmaHorario() {
         }
       }
     );
+  };
+
+  // [NOVO] Chama POST /api/horarios/trocar. Se o backend detectar
+  // conflito (professor já ocupado em outra turma, ou marcado
+  // indisponível) e `forcar` não tiver sido passado, ele responde 409
+  // com a lista de mensagens -- guardamos isso em `conflitoPendente`
+  // pra mostrar um diálogo de confirmação, em vez de aplicar a troca
+  // silenciosamente.
+  const executarTroca = async (origemId: number, diaSemana: number, numeroAula: number, forcar = false) => {
+    setTrocando(true);
+    try {
+      const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+      const res = await fetch(`${basePath}/api/horarios/trocar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ origemId, diaSemana, numeroAula, forcar }),
+      });
+
+      if (res.status === 409) {
+        const data = await res.json();
+        setConflitoPendente({ origemId, diaSemana, numeroAula, mensagens: data.conflitos ?? [data.error] });
+        return;
+      }
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast({ title: "Não foi possível trocar", description: data.error ?? "Erro desconhecido", variant: "destructive" });
+        return;
+      }
+
+      toast({ title: "Horário atualizado" });
+      setConflitoPendente(null);
+      queryClient.invalidateQueries({ queryKey: getGetTurmaHorarioQueryKey(turmaId) });
+    } catch {
+      toast({ title: "Erro ao conectar com o servidor", variant: "destructive" });
+    } finally {
+      setTrocando(false);
+    }
+  };
+
+  const handleDrop = (diaSemana: number, numeroAula: number) => {
+    setDragOverKey(null);
+    if (arrastandoId == null) return;
+    executarTroca(arrastandoId, diaSemana, numeroAula);
+    setArrastandoId(null);
   };
 
   // [FIX] Retorna TODOS os horarios do slot (nao so o primeiro) -- em
@@ -202,6 +262,11 @@ export default function TurmaHorario() {
 
       <MatrizCurricularCard turmaId={turmaId} matrizCurricularIdAtual={turma?.matrizCurricularId ?? null} />
 
+      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+        <GripVertical className="h-3.5 w-3.5" />
+        Arraste uma aula e solte em outro horário pra trocar (ou mover pra um horário vago).
+      </p>
+
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
           <div className="min-w-[800px]">
@@ -224,30 +289,66 @@ export default function TurmaHorario() {
                     const slotsAqui = getSlots(colIndex, aulaNum);
                     const slot = slotsAqui[0];
                     const nomesProfessores = slotsAqui.map(s => s.professor?.nome || "Sem professor").join(" + ");
+                    const cellKey = `${colIndex}-${aulaNum}`;
+                    // Co-docência (mais de um professor no mesmo slot) não
+                    // é suportada na troca por arrastar -- ver comentário
+                    // no backend (routes/horarios.ts, rota /trocar).
+                    const podeArrastar = slotsAqui.length === 1;
+                    const podeReceberDrop = slotsAqui.length <= 1 && arrastandoId != null;
+                    const emDrag = arrastandoId != null && slot?.id === arrastandoId;
 
                     if (!slot) {
                       return (
-                        <div key={`${aulaNum}-${colIndex}`} className="p-2 border-r border-border last:border-0 bg-background hover:bg-muted/30 transition-colors min-h-[100px] flex items-center justify-center">
+                        <div
+                          key={`${aulaNum}-${colIndex}`}
+                          onDragOver={(e) => { if (podeReceberDrop) { e.preventDefault(); setDragOverKey(cellKey); } }}
+                          onDragLeave={() => setDragOverKey((k) => (k === cellKey ? null : k))}
+                          onDrop={(e) => { e.preventDefault(); handleDrop(colIndex, aulaNum); }}
+                          className={cn(
+                            "p-2 border-r border-border last:border-0 bg-background hover:bg-muted/30 transition-colors min-h-[100px] flex items-center justify-center",
+                            dragOverKey === cellKey && "bg-primary/10 ring-2 ring-inset ring-primary/40",
+                          )}
+                        >
                           <span className="text-xs text-muted-foreground/30">Vago</span>
                         </div>
                       );
                     }
 
                     return (
-                      <div key={slot.id} className="p-2 border-r border-border last:border-0 relative group">
+                      <div
+                        key={slot.id}
+                        onDragOver={(e) => { if (podeReceberDrop) { e.preventDefault(); setDragOverKey(cellKey); } }}
+                        onDragLeave={() => setDragOverKey((k) => (k === cellKey ? null : k))}
+                        onDrop={(e) => { e.preventDefault(); handleDrop(colIndex, aulaNum); }}
+                        className={cn(
+                          "p-2 border-r border-border last:border-0 relative group",
+                          dragOverKey === cellKey && "bg-primary/10 ring-2 ring-inset ring-primary/40 rounded-md",
+                        )}
+                      >
                         <div
-                          className="h-full rounded-md p-3 flex flex-col justify-between shadow-sm transition-transform hover:-translate-y-0.5 border"
+                          draggable={podeArrastar}
+                          onDragStart={() => setArrastandoId(slot.id)}
+                          onDragEnd={() => setArrastandoId(null)}
+                          className={cn(
+                            "h-full rounded-md p-3 flex flex-col justify-between shadow-sm transition-transform border",
+                            podeArrastar ? "cursor-grab active:cursor-grabbing hover:-translate-y-0.5" : "cursor-not-allowed",
+                            emDrag && "opacity-40",
+                          )}
                           style={{
                             backgroundColor: `${slot.disciplina?.cor}15`, // 15% opacity
                             borderColor: `${slot.disciplina?.cor}30`, // 30% opacity
                             borderLeftWidth: '4px',
                             borderLeftColor: slot.disciplina?.cor || 'var(--primary)'
                           }}
+                          title={podeArrastar ? "Arraste pra trocar de horário" : "Co-docência: troca por arrastar não suportada aqui"}
                         >
-                          <div>
+                          <div className="flex items-start justify-between gap-1">
                             <div className="font-bold text-sm line-clamp-2 leading-tight" style={{ color: slot.disciplina?.cor ? `${slot.disciplina.cor}dd` : 'inherit' }}>
                               {slot.disciplina?.nome}
                             </div>
+                            {podeArrastar && (
+                              <GripVertical className="h-3.5 w-3.5 shrink-0 text-foreground/20 group-hover:text-foreground/40 transition-colors" />
+                            )}
                           </div>
 
                           <div className="mt-2 text-xs font-medium text-foreground/80 flex items-center gap-1.5">
@@ -264,6 +365,38 @@ export default function TurmaHorario() {
           </div>
         </div>
       </Card>
+
+      <Dialog open={conflitoPendente != null} onOpenChange={(open) => { if (!open) setConflitoPendente(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-4 w-4" />
+              Conflito ao trocar horário
+            </DialogTitle>
+            <DialogDescription>
+              Essa troca criaria os seguintes problemas de agenda:
+            </DialogDescription>
+          </DialogHeader>
+
+          <ul className="list-disc pl-5 text-sm space-y-1.5">
+            {conflitoPendente?.mensagens.map((m, i) => <li key={i}>{m}</li>)}
+          </ul>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConflitoPendente(null)}>Cancelar</Button>
+            <Button
+              variant="destructive"
+              disabled={trocando}
+              onClick={() => {
+                if (!conflitoPendente) return;
+                executarTroca(conflitoPendente.origemId, conflitoPendente.diaSemana, conflitoPendente.numeroAula, true);
+              }}
+            >
+              {trocando ? "Aplicando..." : "Trocar mesmo assim"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -369,7 +502,3 @@ function MatrizCurricularCard({
     </Card>
   );
 }
-
-
-
-
