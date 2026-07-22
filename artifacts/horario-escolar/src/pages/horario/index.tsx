@@ -824,6 +824,18 @@ function AbaGrade() {
             {turmasDoTurno.map((t) => {
               const slotsDaTurma = (horarios ?? []).filter((s) => s.turmaId === t.id);
               const maxAulaTurma = slotsDaTurma.length > 0 ? Math.max(...slotsDaTurma.map((s) => s.numeroAula), 5) : 5;
+              // [FIX] Turno noturno tem um slot informativo em
+              // numeroAula=0 (18:00, antes do início oficial às
+              // 18:45) -- ver criar-slot-1800-noite.ts e
+              // buscarHorariosPorAula em export.ts, que já trata isso
+              // no PDF. Uma turma nunca tem AULA de verdade nesse
+              // horário (é conceito de disponibilidade/HA do
+              // professor, não de turma), então a linha aparece
+              // sempre vazia aqui -- mas precisa aparecer, pra bater
+              // com a realidade da grade impressa.
+              const numerosAula = turno === "noturno"
+                ? [0, ...Array.from({ length: maxAulaTurma }, (_, i) => i + 1)]
+                : Array.from({ length: maxAulaTurma }, (_, i) => i + 1);
               return (
                 <Card key={t.id} className="overflow-hidden">
                   <div className="py-2.5 px-4 bg-muted/40 border-b border-border flex items-center justify-between">
@@ -838,12 +850,11 @@ function AbaGrade() {
                           <div key={dia} className="p-2 text-xs font-semibold text-center border-r border-border last:border-0">{dia}</div>
                         ))}
                       </div>
-                      {Array.from({ length: maxAulaTurma }).map((_, rowIndex) => {
-                        const aulaNum = rowIndex + 1;
+                      {numerosAula.map((aulaNum) => {
                         return (
                           <div key={aulaNum} className="grid grid-cols-6 border-b border-border last:border-0">
                             <div className="p-1.5 flex items-center justify-center text-xs font-medium text-muted-foreground border-r border-border bg-muted/10">
-                              {aulaNum}ª
+                              {aulaNum === 0 ? "18:00" : `${aulaNum}ª`}
                             </div>
                             {Array.from({ length: 5 }).map((_, colIndex) => {
                               const slot = slotsDaTurma.find((s) => s.diaSemana === colIndex && s.numeroAula === aulaNum);
