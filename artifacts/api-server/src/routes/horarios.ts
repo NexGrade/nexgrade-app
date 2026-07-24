@@ -34,7 +34,7 @@ async function enrichSlot(slot: typeof horariosTable.$inferSelect) {
   return { ...slot, disciplina, professor, turma };
 }
 
-// ── ALGORITHM ──────────────────────────────────────────────────────────
+// ── ALGORITHM ────────────────────────────────────────────────────────
 
 export interface GerarOpts {
   escolaId: string;
@@ -50,11 +50,6 @@ export interface GerarOpts {
 
 const CHAVE_MAX_GEMINADAS_PADRAO = "seed_pr.max_aulas_geminadas_padrao";
 const DEFAULT_MAX_GEMINADAS = 2;
-// [NOVO] Padrão da escola inteira pro limite complementar (professor
-// com mais de uma disciplina na mesma turma) -- antes só dava pra
-// configurar por professor (ou por professor+turma). Sem valor
-// configurado aqui, mantém o comportamento antigo (sem limite = "não
-// restringe"), pra não quebrar quem já usa o sistema sem essa opção.
 const CHAVE_MAX_COMPLEMENTAR_PADRAO = "seed_pr.max_aulas_complementar_padrao";
 
 export async function gerarAlgoritmo(opts: GerarOpts) {
@@ -111,17 +106,10 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     ? configGeminadas.valor
     : DEFAULT_MAX_GEMINADAS;
 
-  // [NOVO] Padrão geral da escola pro limite complementar, se
-  // configurado (ver CHAVE_MAX_COMPLEMENTAR_PADRAO acima).
   const maxComplementarPadrao = typeof configComplementarPadrao?.valor === "number"
     ? configComplementarPadrao.valor
     : undefined;
 
-  // [FIX] Adicionada uma camada de prioridade: override específico
-  // (professor+turma) > padrão do professor (turmaId nulo) > NOVO:
-  // padrão geral da escola > sem limite. Antes não existia jeito de
-  // configurar isso pra todo mundo de uma vez -- só professor por
-  // professor.
   function limiteDiarioProfessor(professorId: number): number {
     const especifico = limitesProfessor.find(l => l.professorId === professorId && l.turmaId === turmaId);
     if (especifico) return especifico.maxAulasPorDia;
@@ -187,12 +175,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
   });
 
   const aulasProfessorNaTurmaPorDia: Record<string, number> = {};
-  // [NOVO] Rastreia EXATAMENTE quais números de aula (não só a
-  // contagem) cada professor já ocupou nesta turma, por dia -- usado
-  // pra impedir aulas seguidas com a mesma turma (ver
-  // semAulaAdjacenteMesmaTurma abaixo). Só considera slots DESTA
-  // turma, já que "aula seguida com a mesma turma" só faz sentido
-  // dentro da grade de uma turma só.
   const slotsProfessorNaTurmaPorDia: Record<string, Set<number>> = {};
   if (!substituir) {
     existing.forEach(s => {
@@ -244,12 +226,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     diasUsadosPorProfessor[professorId].add(dia);
   }
 
-  // [NOVO] Impede aulas seguidas com a mesma turma: verifica se a aula
-  // imediatamente antes ou depois, NESTE dia e NESTA turma, já está
-  // ocupada por este mesmo professor (em qualquer disciplina). Um
-  // professor pode dar várias disciplinas pra mesma turma no mesmo
-  // dia, só não pode ser uma logo em seguida da outra -- precisa de
-  // pelo menos 1 aula de intervalo entre elas.
   function semAulaAdjacenteMesmaTurma(professorId: number, dia: number, aula: number): boolean {
     const slots = slotsProfessorNaTurmaPorDia[`${professorId}-${dia}`];
     if (!slots) return true;
@@ -271,18 +247,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     const cargaSemanal = cargaEfetiva(td, disc);
     const maxGeminadas = maxGeminadasEfetivo(td);
 
-    // [FIX] Antes, mesmo quando a turma já tinha um professor
-    // específico vinculado pra essa disciplina (turmaDisciplinasTable.
-    // professorId -- o dado real que veio da secretaria), o gerador
-    // ignorava isso e escolhia entre QUALQUER professor genericamente
-    // ligado à disciplina via professor_disciplinas (que pode incluir
-    // gente que só dá essa matéria em OUTRA turma). Resultado: a grade
-    // gerada podia colocar um professor que nunca deu aula naquela
-    // turma, só porque ele estava livre no horário e "sabe" a matéria
-    // em geral. Agora, se a turma já tem o professor certo definido,
-    // usa só ele -- o pool genérico vira só um fallback pra quando
-    // ainda não há vínculo específico (turma nova, sem professor
-    // definido ainda).
     const profsParaDisc = td.professorId
       ? professores.filter(p => p.id === td.professorId)
       : profDiscs
@@ -405,7 +369,7 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
   return { slotsGerados: gravados.length, conflitos, horario: enriched };
 }
 
-// ── ROUTES ─────────────────────────────────────────────────────────────
+// ── ROUTES ───────────────────────────────────────────────────────────
 
 router.post("/gerar", async (req, res) => {
   const escolaId = getEscolaId(req);
@@ -452,14 +416,6 @@ router.get("/", async (req, res) => {
   }
   const { turmaId, professorId } = parsed.data as { turmaId?: number; professorId?: number };
 
-  // [FIX] Antes: buscava TODOS os horarios da escola, filtrava em
-  // JavaScript, e ainda por cima chamava enrichSlot() individualmente
-  // pra cada linha filtrada -- 3 consultas ao banco (disciplina,
-  // professor, turma) POR AULA, uma de cada vez. Pra um professor com
-  // 20-30 aulas, isso virava 60-90 idas e vindas ao banco só pra montar
-  // uma tela, deixando o carregamento bem lento. Agora filtra direto no
-  // banco (WHERE) e busca disciplinas/professores/turmas em 3 consultas
-  // ÚNICAS (não uma por linha), juntando tudo em memória depois.
   const condicoes = [eq(horariosTable.escolaId, escolaId)];
   if (turmaId) condicoes.push(eq(horariosTable.turmaId, turmaId));
   if (professorId) condicoes.push(eq(horariosTable.professorId, professorId));
@@ -550,7 +506,7 @@ router.delete("/:id", async (req, res) => {
   res.status(204).send();
 });
 
-// ── EXPERIMENTAIS ──────────────────────────────────────────────────────
+// ── EXPERIMENTAIS ────────────────────────────────────────────────────
 
 const ExpInput = z.object({
   nome: z.string().min(1),
@@ -605,19 +561,6 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
 
   const turmaIds = [...new Set(expSlots.map(s => s.turmaId))];
 
-  // [FIX CRÍTICO] Antes: apagava a grade oficial de TODAS as turmas
-  // primeiro, e só depois inseria as aulas novas UMA POR UMA (uma
-  // requisição ao banco por aula, em sequência) -- nada disso dentro
-  // de uma transação. Com lotes grandes (centenas de aulas, dezenas de
-  // turmas), essa sequência de inserções demora o suficiente pra
-  // requisição HTTP ou a conexão cair no meio do caminho -- e como o
-  // DELETE já tinha sido feito e comitado antes de começar a inserir,
-  // turmas ficavam com a grade apagada e NUNCA recriada (exatamente o
-  // "turma sem horário" que apareceu em produção). Agora: tudo dentro
-  // de UMA transação (só confirma no banco se TUDO funcionar, sem
-  // deixar meio-caminho gravado) e a inserção é em лote único (uma
-  // única instrução SQL com todas as linhas), não uma de cada vez --
-  // muito mais rápido e sem essa janela de risco.
   const linhas = expSlots.map((s) => ({
     escolaId,
     turmaId: s.turmaId,
@@ -649,7 +592,7 @@ router.delete("/experimentais/:nome", async (req, res) => {
   res.status(204).send();
 });
 
-// ── GERAÇÃO EM MASSA ───────────────────────────────────────────────────
+// ── GERAÇÃO EM MASSA ─────────────────────────────────────────────────
 
 const GerarLoteBody = z.object({
   turno: z.enum(["matutino", "vespertino", "noturno"]).optional(),
@@ -659,23 +602,6 @@ const GerarLoteBody = z.object({
   compactarCargaHoraria: z.boolean().optional(),
 });
 
-// [NOVO] Gera a grade de VÁRIAS turmas de uma vez (um turno inteiro, ou
-// a escola inteira se `turno` não for informado), sempre como
-// experimento -- nunca mexe na grade oficial diretamente. Depois de
-// conferir o resultado, o usuário usa o mesmo endpoint de "promover"
-// que já existia (ele já suporta promover várias turmas de um nome só
-// pra oficial de uma vez).
-//
-// Roda SEQUENCIALMENTE (não em paralelo) de propósito: cada chamada a
-// gerarAlgoritmo() lê os slots experimentais já gravados com esse mesmo
-// nome pra saber quais professores já estão ocupados -- se rodasse em
-// paralelo, duas turmas poderiam escalar o mesmo professor no mesmo
-// horário sem nenhuma enxergar a outra.
-//
-// Limpa TODOS os experimentos da escola antes de começar (não só os
-// desse nome) -- evita que um experimento antigo e não relacionado,
-// deixado pra trás, interfira na disponibilidade calculada pro lote
-// novo.
 router.post("/gerar-lote", async (req, res) => {
   const escolaId = getEscolaId(req);
   const parsed = GerarLoteBody.safeParse(req.body);
@@ -731,16 +657,6 @@ router.post("/gerar-lote", async (req, res) => {
   });
 });
 
-// [NOVO] Regenera SÓ as turmas em que um professor específico está
-// envolvido (por aula já alocada, ou por vínculo em turma_disciplinas
-// mesmo sem aula ainda) -- útil quando a disponibilidade de um único
-// professor muda e não faz sentido regenerar o turno inteiro (que
-// mexeria em turmas sem nenhuma relação com ele) nem ir turma por
-// turma manualmente.
-//
-// Grava direto na grade oficial (não experimental), mesmo padrão já
-// usado pelo botão "Gerar Horário Automático" em Turmas → Horário --
-// o frontend pede confirmação antes de chamar.
 const GerarProfessorBody = z.object({
   professorId: z.number().int(),
   reduzirJanelas: z.boolean().optional(),
@@ -782,15 +698,6 @@ router.post("/gerar-professor", async (req, res) => {
     return;
   }
 
-  // [FIX CRÍTICO] Antes, gravava DIRETO na grade oficial (experimental:
-  // false), sem nenhuma chance de revisão antes de aplicar -- foi essa
-  // escolha que causou o incidente de hoje (uma mudança pontual de
-  // disponibilidade acabou gerando dezenas de conflitos novos em
-  // turmas sem relação nenhuma com o professor, e só foi descoberto
-  // DEPOIS de já estar em produção). Agora usa o mesmo fluxo seguro do
-  // resto do sistema (Modo Experimental): grava num experimento com
-  // nome próprio, e quem chamou decide se revisa e promove, ou
-  // descarta sem nenhum efeito na grade oficial.
   const nomeExperimental = `Regen-${professor.nome.split(" ")[0]}-${new Date().toISOString().split("T")[0]}`;
 
   const resultados: Array<{ turmaId: number; turmaNome: string; slotsGerados: number; conflitos: string[]; erro?: string }> = [];
@@ -825,31 +732,6 @@ router.post("/gerar-professor", async (req, res) => {
   });
 });
 
-// [NOVO] Correção CIRÚRGICA: dado um professor, encontra só as aulas
-// dele que estão em conflito com a disponibilidade ATUAL (marcada como
-// indisponível) e move CADA UMA dessas aulas especificamente pra um
-// horário livre válido -- sem regenerar a turma inteira, sem tocar em
-// nenhuma outra aula que não estivesse em conflito.
-//
-// Motivo de existir: o incidente descrito no comentário de
-// /gerar-professor (uma simples mudança de disponibilidade de UMA
-// professora acabou levando a regenerar turmas inteiras, depois turnos
-// inteiros) aconteceu porque a única ferramenta disponível pra
-// resolver um conflito era "regenerar tudo de novo". Isso aqui é o
-// oposto: o menor blast radius possível -- só as aulas realmente
-// afetadas mudam de lugar, e cada mudança é uma atualização de uma
-// linha só (não delete+insert em massa).
-//
-// Simplificação assumida (documentada aqui de propósito): a busca por
-// um horário de destino verifica as restrições DURAS (professor não
-// pode estar em duas turmas ao mesmo tempo, não pode estar marcado
-// indisponível, o horário tem que estar vago na turma) mas NÃO
-// reverifica o limite de aulas geminadas nem a regra de "sem aula
-// adjacente na mesma turma" no destino -- like o objetivo é resolver
-// o conflito crítico (professor indisponível/duplicado) sem introduzir
-// um conflito NOVO do mesmo tipo, aceitando que um conflito mais brando
-// (geminadas) possa aparecer eventualmente e precise de ajuste manual
-// depois.
 const CorrigirProfessorBody = z.object({
   professorId: z.number().int(),
 });
@@ -901,9 +783,6 @@ router.post("/corrigir-professor", async (req, res) => {
   const movidas: Array<{ turmaId: number; turmaNome: string; disciplinaId: number; de: { dia: number; aula: number }; para: { dia: number; aula: number } }> = [];
   const naoResolvidas: Array<{ turmaId: number; turmaNome: string; disciplinaId: number; dia: number; aula: number; motivo: string }> = [];
 
-  // Estado em memória, atualizado a cada aula movida -- pra não sugerir
-  // dois destinos iguais nem esbarrar em algo que a gente mesmo acabou
-  // de mover na mesma chamada.
   const ocupadoProfAtual = new Set(
     todosSlotsDaEscola.map((s) => `${s.professorId}-${turnoPorTurmaId.get(s.turmaId) ?? "desconhecido"}-${s.diaSemana}-${s.numeroAula}`),
   );
@@ -960,6 +839,215 @@ router.post("/corrigir-professor", async (req, res) => {
   }
 
   res.json({ professorId, professorNome: professor.nome, movidas, naoResolvidas });
+});
+
+// ── GERAÇÃO COM CP-SAT (OR-Tools) ───────────────────────────────────
+//
+// Chama o microserviço Python (cpsat-service/, deployado como Web
+// Service separado no Render) que resolve a grade com o solver CP-SAT
+// em vez do heurístico acima. Validado com dados reais dos 3 turnos
+// antes desta integração (ver spike-cp-sat/) -- todos OPTIMAL em
+// menos de 1s.
+//
+// Sempre grava como EXPERIMENTO (nunca direto na grade oficial), pelo
+// mesmo motivo documentado em /gerar-professor: é motor novo, ainda
+// não testado em produção com a escola real, então qualquer resultado
+// precisa passar por revisão humana antes de virar oficial (via
+// /experimentais/:nome/promover, que já existe).
+//
+// Limitação assumida aqui (mesma do script de export que gerou os
+// dados de validação): usa TODOS os slots de horário do turno sem
+// diferenciar por nível de ensino -- se o matutino tiver turmas de
+// Fundamental E Médio com esquemas de aula diferentes ao mesmo tempo,
+// isso pode precisar de ajuste antes de usar em produção real.
+
+const CPSAT_SERVICE_URL = process.env.CPSAT_SERVICE_URL || "https://nexgrade-cpsat.onrender.com";
+
+const GerarCpsatBody = z.object({
+  turno: z.enum(["matutino", "vespertino", "noturno"]),
+  nomeExperimental: z.string().min(1),
+  tempoLimiteS: z.number().int().positive().optional(),
+});
+
+router.post("/gerar-cpsat", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const parsed = GerarCpsatBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { turno, nomeExperimental, tempoLimiteS } = parsed.data;
+
+  const turmasDoTurno = await db.select().from(turmasTable)
+    .where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.turno, turno)));
+  if (turmasDoTurno.length === 0) {
+    res.status(400).json({ error: `Nenhuma turma encontrada no turno "${turno}"` });
+    return;
+  }
+  const turmaIds = turmasDoTurno.map((t) => t.id);
+
+  const [turmaDiscsTodos, disciplinas, professoresTodos, disponibilidades, horarioSlotsTurno] = await Promise.all([
+    db.select().from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, turmaIds)),
+    db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
+    db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
+    db.select().from(disponibilidadeTable),
+    db.select().from(horarioSlotsTable).where(and(eq(horarioSlotsTable.escolaId, escolaId), eq(horarioSlotsTable.turno, turno))),
+  ]);
+
+  if (turmaDiscsTodos.length === 0) {
+    res.status(400).json({ error: "Nenhuma disciplina cadastrada para as turmas deste turno" });
+    return;
+  }
+
+  const disciplinaMap = new Map(disciplinas.map((d) => [d.id, d]));
+  const professorMap = new Map(professoresTodos.map((p) => [p.id, p]));
+  const turmaMap = new Map(turmasDoTurno.map((t) => [t.id, t]));
+
+  // Chave usada pra mapear a resposta do CP-SAT (que só devolve nomes,
+  // não IDs) de volta pros IDs reais do banco. Mesma convenção usada
+  // em scripts/exportar-dados-cpsat.ts, já validada com dados reais.
+  const chaveParaIds = new Map<string, { turmaId: number; disciplinaId: number }>();
+  const nomeParaProfessorId = new Map<string, number>();
+  professoresTodos.forEach((p) => nomeParaProfessorId.set(p.nome, p.id));
+
+  const disciplinasTurma = turmaDiscsTodos
+    .filter((td) => td.professorId != null)
+    .map((td) => {
+      const turma = turmaMap.get(td.turmaId)!;
+      const disc = disciplinaMap.get(td.disciplinaId);
+      const prof = professorMap.get(td.professorId!);
+      const codigoSae = disc?.codigoSae ?? disc?.sigla ?? String(td.disciplinaId);
+      chaveParaIds.set(`${turma.nome}||${codigoSae}`, { turmaId: td.turmaId, disciplinaId: td.disciplinaId });
+      return {
+        turma: turma.nome,
+        codigoSae,
+        nome: disc?.nome ?? `Disciplina #${td.disciplinaId}`,
+        aulasSemana: td.cargaHorariaSemanalOverride ?? disc?.cargaSemanal ?? 0,
+        professor: prof?.nome ?? `Professor #${td.professorId}`,
+        maxAulasDia: td.maxAulasConsecutivasDia ?? 2,
+      };
+    })
+    .filter((d) => d.aulasSemana > 0);
+
+  if (disciplinasTurma.length === 0) {
+    res.status(400).json({ error: "Nenhuma disciplina com carga horária > 0 e professor definido para este turno" });
+    return;
+  }
+
+  const professorIdsUsados = new Set(turmaDiscsTodos.map((td) => td.professorId).filter((id): id is number => id != null));
+  const bloqueiosProfessor = disponibilidades
+    .filter((d) => professorIdsUsados.has(d.professorId) && !d.disponivel && (d.turno === turno || d.turno == null))
+    .map((d) => ({
+      professor: professorMap.get(d.professorId)?.nome ?? `Professor #${d.professorId}`,
+      dia: d.diaSemana,
+      aula: d.horarioSlot,
+    }));
+
+  const aulasPorDia = horarioSlotsTurno.length > 0
+    ? Math.max(...horarioSlotsTurno.map((s) => s.numeroAula))
+    : 6;
+
+  const payload = {
+    turno,
+    aulasPorDia,
+    turmas: turmasDoTurno.map((t) => ({ nome: t.nome, turno: t.turno })),
+    disciplinasTurma,
+    bloqueiosProfessor,
+    tempoLimiteS: tempoLimiteS ?? 120,
+  };
+
+  let resultado: {
+    status: string;
+    otimo: boolean;
+    viavel: boolean;
+    tempoResolucaoS: number;
+    mensagem?: string;
+    aulas: Array<{ turma: string; codigoSae: string; disciplina: string; professor: string; dia: number; aula: number }>;
+  };
+
+  try {
+    const controller = new AbortController();
+    const timeoutMs = ((tempoLimiteS ?? 120) + 30) * 1000;
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    const response = await fetch(`${CPSAT_SERVICE_URL}/gerar-grade`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errBody = await response.text();
+      throw new Error(`Serviço CP-SAT respondeu ${response.status}: ${errBody}`);
+    }
+    resultado = await response.json();
+  } catch (err) {
+    res.status(502).json({
+      error: "Não foi possível gerar a grade com o motor CP-SAT.",
+      detalhe: err instanceof Error ? err.message : String(err),
+      dica: "Verifique se o serviço nexgrade-cpsat está no ar (pode estar hibernado se estiver no free tier do Render).",
+    });
+    return;
+  }
+
+  if (!resultado.viavel) {
+    res.status(422).json({
+      error: "INVIÁVEL",
+      status: resultado.status,
+      mensagem: resultado.mensagem ?? "Não existe grade possível com os dados atuais.",
+    });
+    return;
+  }
+
+  await db.delete(horariosExperimentaisTable).where(eq(horariosExperimentaisTable.escolaId, escolaId));
+
+  const linhasParaGravar: Array<{
+    escolaId: string; nome: string; turmaId: number; disciplinaId: number;
+    professorId: number; diaSemana: number; numeroAula: number;
+  }> = [];
+  const naoMapeadas: typeof resultado.aulas = [];
+
+  for (const aula of resultado.aulas) {
+    const ids = chaveParaIds.get(`${aula.turma}||${aula.codigoSae}`);
+    const professorId = nomeParaProfessorId.get(aula.professor);
+    if (!ids || !professorId) {
+      naoMapeadas.push(aula);
+      continue;
+    }
+    linhasParaGravar.push({
+      escolaId,
+      nome: nomeExperimental,
+      turmaId: ids.turmaId,
+      disciplinaId: ids.disciplinaId,
+      professorId,
+      diaSemana: aula.dia,
+      numeroAula: aula.aula,
+    });
+  }
+
+  if (linhasParaGravar.length === 0) {
+    res.status(500).json({
+      error: "O CP-SAT devolveu uma grade, mas nenhuma aula pôde ser mapeada de volta para os IDs do banco.",
+      naoMapeadas,
+    });
+    return;
+  }
+
+  const gravados = await db.insert(horariosExperimentaisTable).values(linhasParaGravar).returning();
+
+  res.json({
+    nomeExperimental,
+    turno,
+    status: resultado.status,
+    otimo: resultado.otimo,
+    tempoResolucaoS: resultado.tempoResolucaoS,
+    totalTurmas: turmasDoTurno.length,
+    totalSlots: gravados.length,
+    naoMapeadas: naoMapeadas.length,
+    ...(naoMapeadas.length > 0 ? { detalheNaoMapeadas: naoMapeadas } : {}),
+    mensagem: `Grade gerada como experimento "${nomeExperimental}". Revise e use POST /experimentais/${nomeExperimental}/promover para aplicar como oficial.`,
+  });
 });
 
 export default router;
