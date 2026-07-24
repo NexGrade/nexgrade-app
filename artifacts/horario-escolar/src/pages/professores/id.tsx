@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { CalendarClock, ArrowRight, RefreshCw, AlertTriangle, CheckCircle2, X } from "lucide-react";
+import { CalendarClock, ArrowRight, RefreshCw, AlertTriangle, CheckCircle2, X, Wrench } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MultiSelectBusca } from "@/components/multi-select-busca";
 
@@ -54,6 +54,13 @@ export default function ProfessorEditar() {
 
   // [NOVO] Estado da regeneração escopada a este professor.
   const [regenerando, setRegenerando] = useState(false);
+  // [NOVO] Estado da correção cirúrgica (POST /api/horarios/corrigir-professor).
+  const [corrigindo, setCorrigindo] = useState(false);
+  const [resultadoCorrecao, setResultadoCorrecao] = useState<{
+    movidas: Array<{ turmaId: number; turmaNome: string; disciplinaId: number; de: { dia: number; aula: number }; para: { dia: number; aula: number } }>;
+    naoResolvidas: Array<{ turmaId: number; turmaNome: string; disciplinaId: number; dia: number; aula: number; motivo: string }>;
+    mensagem?: string;
+  } | null>(null);
   const [detalheRegeneracao, setDetalheRegeneracao] = useState<{ nomeExperimental: string; totalTurmas: number; resultados: DetalheTurmaRegeneracao[] } | null>(null);
 
   const form = useForm<ProfessorFormValues>({
@@ -139,6 +146,44 @@ export default function ProfessorEditar() {
       toast({ title: "Erro ao conectar com o servidor", variant: "destructive" });
     } finally {
       setRegenerando(false);
+    }
+  };
+
+  // [NOVO] Correção cirúrgica: move só as aulas deste professor que
+  // estão em conflito com a disponibilidade atual, pra um horário
+  // livre válido -- sem regenerar nada mais. Grava direto (não é uma
+  // prévia) porque o blast radius é mínimo: só aulas que JÁ estavam em
+  // conflito mudam de lugar, cada uma como uma atualização de uma
+  // linha só.
+  const handleCorrigirConflitos = async () => {
+    setCorrigindo(true);
+    setResultadoCorrecao(null);
+    try {
+      const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+      const res = await fetch(`${basePath}/api/horarios/corrigir-professor`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ professorId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast({ title: "Não foi possível corrigir", description: data.error ?? "Erro desconhecido", variant: "destructive" });
+        return;
+      }
+      if (data.mensagem) {
+        toast({ title: data.mensagem });
+      } else {
+        toast({
+          title: `${data.movidas.length} aula(s) corrigida(s)${data.naoResolvidas.length > 0 ? `, ${data.naoResolvidas.length} sem solução automática` : ""}.`,
+        });
+      }
+      setResultadoCorrecao({ movidas: data.movidas, naoResolvidas: data.naoResolvidas, mensagem: data.mensagem });
+      queryClient.invalidateQueries({ queryKey: ["/api/horarios"] });
+      queryClient.invalidateQueries({ queryKey: ["professor-carga", professorId] as const });
+    } catch {
+      toast({ title: "Erro ao conectar com o servidor", variant: "destructive" });
+    } finally {
+      setCorrigindo(false);
     }
   };
 
@@ -405,6 +450,54 @@ export default function ProfessorEditar() {
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
+            </CardContent>
+          </Card>
+
+          {/* [NOVO] Correção cirúrgica -- resolve só as aulas deste
+              professor que estão em conflito com a disponibilidade
+              atual, movendo cada uma pro primeiro horário livre válido
+              na mesma turma. É a opção recomendada primeiro: muito
+              menor risco que "Regenerar Horário" (que refaz a turma
+              inteira do zero). */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Wrench className="w-4 h-4 text-[#1565C0]" />
+                Corrigir Conflitos (recomendado)
+              </CardTitle>
+              <CardDescription>
+                Move só as aulas de {professor?.nome ?? "este professor"} que ficaram em conflito com a disponibilidade atual — sem regenerar a turma inteira nem mexer em aulas que já estavam certas.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                className="w-full justify-between"
+                onClick={handleCorrigirConflitos}
+                disabled={corrigindo}
+              >
+                {corrigindo ? "Corrigindo..." : "Corrigir conflitos deste professor"}
+                <Wrench className={`w-4 h-4 ${corrigindo ? "animate-pulse" : ""}`} />
+              </Button>
+              {resultadoCorrecao && !resultadoCorrecao.mensagem && (
+                <div className="mt-3 space-y-2">
+                  {resultadoCorrecao.movidas.length > 0 && (
+                    <div className="text-xs text-green-700 bg-green-50 border border-green-200 rounded-md p-2.5 space-y-1">
+                      <p className="font-medium flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> {resultadoCorrecao.movidas.length} aula(s) movida(s):</p>
+                      {resultadoCorrecao.movidas.map((m, i) => (
+                        <p key={i}>• {m.turmaNome}: {diasSemana[m.de.dia]} {m.de.aula}ª → {diasSemana[m.para.dia]} {m.para.aula}ª</p>
+                      ))}
+                    </div>
+                  )}
+                  {resultadoCorrecao.naoResolvidas.length > 0 && (
+                    <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-2.5 space-y-1">
+                      <p className="font-medium flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> {resultadoCorrecao.naoResolvidas.length} sem solução automática — precisa de ajuste manual:</p>
+                      {resultadoCorrecao.naoResolvidas.map((n, i) => (
+                        <p key={i}>• {n.turmaNome}: {diasSemana[n.dia]} {n.aula}ª — {n.motivo}</p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 

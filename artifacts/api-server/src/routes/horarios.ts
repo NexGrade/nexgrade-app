@@ -825,4 +825,141 @@ router.post("/gerar-professor", async (req, res) => {
   });
 });
 
+// [NOVO] Correção CIRÚRGICA: dado um professor, encontra só as aulas
+// dele que estão em conflito com a disponibilidade ATUAL (marcada como
+// indisponível) e move CADA UMA dessas aulas especificamente pra um
+// horário livre válido -- sem regenerar a turma inteira, sem tocar em
+// nenhuma outra aula que não estivesse em conflito.
+//
+// Motivo de existir: o incidente descrito no comentário de
+// /gerar-professor (uma simples mudança de disponibilidade de UMA
+// professora acabou levando a regenerar turmas inteiras, depois turnos
+// inteiros) aconteceu porque a única ferramenta disponível pra
+// resolver um conflito era "regenerar tudo de novo". Isso aqui é o
+// oposto: o menor blast radius possível -- só as aulas realmente
+// afetadas mudam de lugar, e cada mudança é uma atualização de uma
+// linha só (não delete+insert em massa).
+//
+// Simplificação assumida (documentada aqui de propósito): a busca por
+// um horário de destino verifica as restrições DURAS (professor não
+// pode estar em duas turmas ao mesmo tempo, não pode estar marcado
+// indisponível, o horário tem que estar vago na turma) mas NÃO
+// reverifica o limite de aulas geminadas nem a regra de "sem aula
+// adjacente na mesma turma" no destino -- like o objetivo é resolver
+// o conflito crítico (professor indisponível/duplicado) sem introduzir
+// um conflito NOVO do mesmo tipo, aceitando que um conflito mais brando
+// (geminadas) possa aparecer eventualmente e precise de ajuste manual
+// depois.
+const CorrigirProfessorBody = z.object({
+  professorId: z.number().int(),
+});
+
+router.post("/corrigir-professor", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const parsed = CorrigirProfessorBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { professorId } = parsed.data;
+
+  const professor = await db.select().from(professoresTable)
+    .where(and(eq(professoresTable.id, professorId), eq(professoresTable.escolaId, escolaId)))
+    .then((r) => r[0]);
+  if (!professor) {
+    res.status(404).json({ error: "Professor não encontrado" });
+    return;
+  }
+
+  const [todosSlotsDaEscola, disponibilidades, turmasDaEscola, horarioSlotsTodos] = await Promise.all([
+    db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
+    db.select().from(disponibilidadeTable).where(eq(disponibilidadeTable.professorId, professorId)),
+    db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
+    db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId)),
+  ]);
+
+  const turnoPorTurmaId = new Map(turmasDaEscola.map((t) => [t.id, t.turno]));
+  const slotsDoProf = todosSlotsDaEscola.filter((s) => s.professorId === professorId);
+
+  const indisponivelSet = new Set(
+    disponibilidades.filter((d) => !d.disponivel).map((d) => `${d.turno ?? "null"}-${d.diaSemana}-${d.horarioSlot}`),
+  );
+
+  const conflitantes = slotsDoProf.filter((s) => {
+    const turno = turnoPorTurmaId.get(s.turmaId) ?? "desconhecido";
+    return indisponivelSet.has(`${turno}-${s.diaSemana}-${s.numeroAula}`);
+  });
+
+  if (conflitantes.length === 0) {
+    res.json({
+      professorId, professorNome: professor.nome, movidas: [], naoResolvidas: [],
+      mensagem: "Nenhuma aula deste professor está em conflito com a disponibilidade atual — nada pra corrigir.",
+    });
+    return;
+  }
+
+  const movidas: Array<{ turmaId: number; turmaNome: string; disciplinaId: number; de: { dia: number; aula: number }; para: { dia: number; aula: number } }> = [];
+  const naoResolvidas: Array<{ turmaId: number; turmaNome: string; disciplinaId: number; dia: number; aula: number; motivo: string }> = [];
+
+  // Estado em memória, atualizado a cada aula movida -- pra não sugerir
+  // dois destinos iguais nem esbarrar em algo que a gente mesmo acabou
+  // de mover na mesma chamada.
+  const ocupadoProfAtual = new Set(
+    todosSlotsDaEscola.map((s) => `${s.professorId}-${turnoPorTurmaId.get(s.turmaId) ?? "desconhecido"}-${s.diaSemana}-${s.numeroAula}`),
+  );
+  const ocupadoTurmaAtual = new Set(todosSlotsDaEscola.map((s) => `${s.turmaId}-${s.diaSemana}-${s.numeroAula}`));
+
+  const DIAS = [0, 1, 2, 3, 4];
+
+  for (const slot of conflitantes) {
+    const turma = turmasDaEscola.find((t) => t.id === slot.turmaId);
+    const turno = turnoPorTurmaId.get(slot.turmaId) ?? "desconhecido";
+    const nivel = turma?.nivelEnsino ?? null;
+    const aulasDoTurno = horarioSlotsTodos
+      .filter((hs) => hs.turno === turno && (turno !== "matutino" || hs.nivelEnsino === nivel))
+      .map((hs) => hs.numeroAula)
+      .filter((n) => n >= 1);
+
+    let destino: { dia: number; aula: number } | null = null;
+    for (const dia of DIAS) {
+      for (const aula of aulasDoTurno) {
+        if (dia === slot.diaSemana && aula === slot.numeroAula) continue;
+        const chaveProf = `${professorId}-${turno}-${dia}-${aula}`;
+        const chaveTurma = `${slot.turmaId}-${dia}-${aula}`;
+        if (ocupadoProfAtual.has(chaveProf)) continue;
+        if (ocupadoTurmaAtual.has(chaveTurma)) continue;
+        if (indisponivelSet.has(`${turno}-${dia}-${aula}`)) continue;
+        destino = { dia, aula };
+        break;
+      }
+      if (destino) break;
+    }
+
+    if (!destino) {
+      naoResolvidas.push({
+        turmaId: slot.turmaId, turmaNome: turma?.nome ?? String(slot.turmaId),
+        disciplinaId: slot.disciplinaId, dia: slot.diaSemana, aula: slot.numeroAula,
+        motivo: "Não encontrei nenhum horário livre nessa turma, na semana toda, em que o professor esteja disponível.",
+      });
+      continue;
+    }
+
+    await db.update(horariosTable)
+      .set({ diaSemana: destino.dia, numeroAula: destino.aula })
+      .where(eq(horariosTable.id, slot.id));
+
+    ocupadoProfAtual.delete(`${professorId}-${turno}-${slot.diaSemana}-${slot.numeroAula}`);
+    ocupadoProfAtual.add(`${professorId}-${turno}-${destino.dia}-${destino.aula}`);
+    ocupadoTurmaAtual.delete(`${slot.turmaId}-${slot.diaSemana}-${slot.numeroAula}`);
+    ocupadoTurmaAtual.add(`${slot.turmaId}-${destino.dia}-${destino.aula}`);
+
+    movidas.push({
+      turmaId: slot.turmaId, turmaNome: turma?.nome ?? String(slot.turmaId),
+      disciplinaId: slot.disciplinaId, de: { dia: slot.diaSemana, aula: slot.numeroAula }, para: destino,
+    });
+  }
+
+  res.json({ professorId, professorNome: professor.nome, movidas, naoResolvidas });
+});
+
 export default router;
