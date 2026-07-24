@@ -718,4 +718,85 @@ router.post("/gerar-lote", async (req, res) => {
   });
 });
 
+// [NOVO] Regenera SÓ as turmas em que um professor específico está
+// envolvido (por aula já alocada, ou por vínculo em turma_disciplinas
+// mesmo sem aula ainda) -- útil quando a disponibilidade de um único
+// professor muda e não faz sentido regenerar o turno inteiro (que
+// mexeria em turmas sem nenhuma relação com ele) nem ir turma por
+// turma manualmente.
+//
+// Grava direto na grade oficial (não experimental), mesmo padrão já
+// usado pelo botão "Gerar Horário Automático" em Turmas → Horário --
+// o frontend pede confirmação antes de chamar.
+const GerarProfessorBody = z.object({
+  professorId: z.number().int(),
+  reduzirJanelas: z.boolean().optional(),
+  fatorPedagogico: z.boolean().optional(),
+  compactarCargaHoraria: z.boolean().optional(),
+});
+
+router.post("/gerar-professor", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const parsed = GerarProfessorBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { professorId, reduzirJanelas, fatorPedagogico, compactarCargaHoraria } = parsed.data;
+
+  const professor = await db.select().from(professoresTable)
+    .where(and(eq(professoresTable.id, professorId), eq(professoresTable.escolaId, escolaId)))
+    .then(r => r[0]);
+  if (!professor) {
+    res.status(404).json({ error: "Professor não encontrado" });
+    return;
+  }
+
+  const [slotsAtuais, vinculos, turmasDaEscola] = await Promise.all([
+    db.select({ turmaId: horariosTable.turmaId }).from(horariosTable)
+      .where(and(eq(horariosTable.escolaId, escolaId), eq(horariosTable.professorId, professorId))),
+    db.select({ turmaId: turmaDisciplinasTable.turmaId }).from(turmaDisciplinasTable)
+      .where(eq(turmaDisciplinasTable.professorId, professorId)),
+    db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
+  ]);
+
+  const turmaIdsValidosDaEscola = new Set(turmasDaEscola.map((t) => t.id));
+  const turmaIds = [...new Set([...slotsAtuais.map((s) => s.turmaId), ...vinculos.map((v) => v.turmaId)])]
+    .filter((id) => turmaIdsValidosDaEscola.has(id));
+
+  if (turmaIds.length === 0) {
+    res.status(400).json({ error: "Este professor não está vinculado a nenhuma turma (nem por aula já alocada, nem por disciplina cadastrada)" });
+    return;
+  }
+
+  const resultados: Array<{ turmaId: number; turmaNome: string; slotsGerados: number; conflitos: string[]; erro?: string }> = [];
+  for (const turmaId of turmaIds) {
+    const turma = turmasDaEscola.find((t) => t.id === turmaId);
+    try {
+      const r = await gerarAlgoritmo({
+        escolaId,
+        turmaId,
+        substituir: true,
+        reduzirJanelas: reduzirJanelas ?? true,
+        fatorPedagogico: fatorPedagogico ?? false,
+        compactarCargaHoraria: compactarCargaHoraria ?? false,
+        experimental: false,
+      });
+      resultados.push({ turmaId, turmaNome: turma?.nome ?? String(turmaId), slotsGerados: r.slotsGerados, conflitos: r.conflitos });
+    } catch (err) {
+      resultados.push({
+        turmaId, turmaNome: turma?.nome ?? String(turmaId), slotsGerados: 0, conflitos: [],
+        erro: err instanceof Error ? err.message : "Erro desconhecido",
+      });
+    }
+  }
+
+  res.json({
+    professorId,
+    professorNome: professor.nome,
+    totalTurmas: turmaIds.length,
+    resultados,
+  });
+});
+
 export default router;

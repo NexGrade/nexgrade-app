@@ -13,8 +13,8 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { CalendarClock, ArrowRight } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { CalendarClock, ArrowRight, RefreshCw, AlertTriangle, CheckCircle2, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MultiSelectBusca } from "@/components/multi-select-busca";
 
 const professorSchema = z.object({
@@ -29,6 +29,17 @@ type ProfessorFormValues = z.infer<typeof professorSchema>;
 
 const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
 
+// [NOVO] Resultado por turma da regeneração escopada a este professor
+// (POST /api/horarios/gerar-professor) -- mesmo padrão de detalhe já
+// usado no Modo Experimental pra geração em lote, reaproveitado aqui.
+type DetalheTurmaRegeneracao = {
+  turmaId: number;
+  turmaNome: string;
+  slotsGerados: number;
+  conflitos: string[];
+  erro?: string;
+};
+
 export default function ProfessorEditar() {
   const { id } = useParams();
   const professorId = Number(id);
@@ -40,6 +51,10 @@ export default function ProfessorEditar() {
   const { data: cargaData, isLoading: isLoadingCarga } = useGetProfessorCarga(professorId, { query: { enabled: !!professorId, queryKey: ["professor-carga", professorId] as const } });
   const updateProfessor = useUpdateProfessor();
   const { data: disciplinas } = useListDisciplinas();
+
+  // [NOVO] Estado da regeneração escopada a este professor.
+  const [regenerando, setRegenerando] = useState(false);
+  const [detalheRegeneracao, setDetalheRegeneracao] = useState<{ totalTurmas: number; resultados: DetalheTurmaRegeneracao[] } | null>(null);
 
   const form = useForm<ProfessorFormValues>({
     resolver: zodResolver(professorSchema),
@@ -91,6 +106,42 @@ export default function ProfessorEditar() {
     });
   };
 
+  // [NOVO] Regenera só as turmas em que este professor está envolvido
+  // (POST /api/horarios/gerar-professor) -- pede confirmação antes,
+  // já que grava direto na grade oficial de cada turma (mesmo aviso
+  // do botão "Gerar Horário Automático" em Turmas → Horário: substitui
+  // a grade inteira daquelas turmas, não só as aulas deste professor).
+  const handleRegenerarTurmasDoProfessor = async () => {
+    if (!confirm(`Regenerar a grade de todas as turmas de ${professor?.nome ?? "este professor"}? Isso substitui a grade OFICIAL inteira de cada turma envolvida (não só as aulas dele/dela).`)) return;
+    setRegenerando(true);
+    setDetalheRegeneracao(null);
+    try {
+      const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+      const res = await fetch(`${basePath}/api/horarios/gerar-professor`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ professorId, reduzirJanelas: true, fatorPedagogico: false, compactarCargaHoraria: false }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast({ title: "Não foi possível regenerar", description: data.error ?? "Erro desconhecido", variant: "destructive" });
+        return;
+      }
+      const totalConflitos = data.resultados.reduce((s: number, r: DetalheTurmaRegeneracao) => s + r.conflitos.length, 0);
+      toast({
+        title: `Grade regenerada! ${data.totalTurmas} turma(s) atualizada(s).`,
+        description: totalConflitos > 0 ? `${totalConflitos} aviso(s) — confira o detalhe abaixo.` : undefined,
+      });
+      setDetalheRegeneracao({ totalTurmas: data.totalTurmas, resultados: data.resultados });
+      queryClient.invalidateQueries({ queryKey: ["/api/horarios"] });
+      queryClient.invalidateQueries({ queryKey: ["professor-carga", professorId] as const });
+    } catch {
+      toast({ title: "Erro ao conectar com o servidor", variant: "destructive" });
+    } finally {
+      setRegenerando(false);
+    }
+  };
+
   if (isLoadingProfessor) {
     return <div className="space-y-4 max-w-2xl mx-auto">
       <Skeleton className="h-10 w-1/3" />
@@ -106,7 +157,7 @@ export default function ProfessorEditar() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardContent className="pt-6">
               <Form {...form}>
@@ -210,6 +261,56 @@ export default function ProfessorEditar() {
               </Form>
             </CardContent>
           </Card>
+
+          {/* [NOVO] Detalhe por turma da última regeneração escopada a
+              este professor -- mesmo padrão do card usado no Modo
+              Experimental, adaptado pra essa ação. */}
+          {detalheRegeneracao && (
+            <Card className="border-amber-200 bg-amber-50/40">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+                      Detalhe da regeneração ({detalheRegeneracao.totalTurmas} turma(s))
+                    </CardTitle>
+                    <CardDescription className="mt-1">
+                      Turmas com aviso (disciplina não alocada por completo) ou erro aparecem abaixo. Turmas sem nenhuma linha aqui foram alocadas 100%.
+                    </CardDescription>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => setDetalheRegeneracao(null)}>
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0 space-y-2">
+                {detalheRegeneracao.resultados.filter((r) => r.conflitos.length > 0 || r.erro).length === 0 ? (
+                  <p className="text-sm text-green-700 flex items-center gap-1.5">
+                    <CheckCircle2 className="h-4 w-4" /> Todas as turmas foram alocadas sem avisos.
+                  </p>
+                ) : (
+                  detalheRegeneracao.resultados
+                    .filter((r) => r.conflitos.length > 0 || r.erro)
+                    .map((r) => (
+                      <div key={r.turmaId} className="bg-background rounded-md border border-amber-200 p-3">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm">{r.turmaNome}</span>
+                          <span className="text-xs text-muted-foreground">{r.slotsGerados} aula(s) alocada(s)</span>
+                        </div>
+                        {r.erro && <p className="text-xs text-destructive mt-1">{r.erro}</p>}
+                        {r.conflitos.length > 0 && (
+                          <ul className="mt-1.5 space-y-0.5">
+                            {r.conflitos.map((c, i) => (
+                              <li key={i} className="text-xs text-amber-800">• {c}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ))
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <div className="space-y-6">
@@ -296,6 +397,36 @@ export default function ProfessorEditar() {
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
+            </CardContent>
+          </Card>
+
+          {/* [NOVO] Regenera só as turmas em que este professor está
+              envolvido -- útil depois de atualizar a disponibilidade
+              dele/dela, sem precisar regenerar o turno inteiro nem ir
+              turma por turma manualmente. */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <RefreshCw className="w-4 h-4 text-[#1565C0]" />
+                Regenerar Horário
+              </CardTitle>
+              <CardDescription>
+                Regera automaticamente só as turmas em que {professor?.nome ?? "este professor"} dá aula (ou está vinculado por disciplina) — sem mexer nas demais turmas da escola.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                variant="outline"
+                className="w-full justify-between"
+                onClick={handleRegenerarTurmasDoProfessor}
+                disabled={regenerando}
+              >
+                {regenerando ? "Regenerando..." : "Regenerar turmas deste professor"}
+                <RefreshCw className={`w-4 h-4 ${regenerando ? "animate-spin" : ""}`} />
+              </Button>
+              <p className="text-xs text-muted-foreground mt-2">
+                Atenção: substitui a grade oficial inteira de cada turma envolvida (não só as aulas dele/dela).
+              </p>
             </CardContent>
           </Card>
         </div>
