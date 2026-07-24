@@ -54,7 +54,7 @@ export default function ProfessorEditar() {
 
   // [NOVO] Estado da regeneração escopada a este professor.
   const [regenerando, setRegenerando] = useState(false);
-  const [detalheRegeneracao, setDetalheRegeneracao] = useState<{ totalTurmas: number; resultados: DetalheTurmaRegeneracao[] } | null>(null);
+  const [detalheRegeneracao, setDetalheRegeneracao] = useState<{ nomeExperimental: string; totalTurmas: number; resultados: DetalheTurmaRegeneracao[] } | null>(null);
 
   const form = useForm<ProfessorFormValues>({
     resolver: zodResolver(professorSchema),
@@ -106,13 +106,14 @@ export default function ProfessorEditar() {
     });
   };
 
-  // [NOVO] Regenera só as turmas em que este professor está envolvido
-  // (POST /api/horarios/gerar-professor) -- pede confirmação antes,
-  // já que grava direto na grade oficial de cada turma (mesmo aviso
-  // do botão "Gerar Horário Automático" em Turmas → Horário: substitui
-  // a grade inteira daquelas turmas, não só as aulas deste professor).
+  // [FIX CRÍTICO] Antes gravava DIRETO na grade oficial -- foi essa
+  // escolha que causou o incidente descrito no backend (ver comentário
+  // em routes/horarios.ts, POST /gerar-professor). Agora o backend
+  // sempre grava num experimento; aqui só precisamos apontar o usuário
+  // pro Modo Experimental pra revisar e decidir se promove. Sem
+  // confirm() antes, já que essa ação não altera mais a grade oficial
+  // sozinha -- é só uma prévia.
   const handleRegenerarTurmasDoProfessor = async () => {
-    if (!confirm(`Regenerar a grade de todas as turmas de ${professor?.nome ?? "este professor"}? Isso substitui a grade OFICIAL inteira de cada turma envolvida (não só as aulas dele/dela).`)) return;
     setRegenerando(true);
     setDetalheRegeneracao(null);
     try {
@@ -124,17 +125,16 @@ export default function ProfessorEditar() {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast({ title: "Não foi possível regenerar", description: data.error ?? "Erro desconhecido", variant: "destructive" });
+        toast({ title: "Não foi possível gerar a prévia", description: data.error ?? "Erro desconhecido", variant: "destructive" });
         return;
       }
       const totalConflitos = data.resultados.reduce((s: number, r: DetalheTurmaRegeneracao) => s + r.conflitos.length, 0);
       toast({
-        title: `Grade regenerada! ${data.totalTurmas} turma(s) atualizada(s).`,
-        description: totalConflitos > 0 ? `${totalConflitos} aviso(s) — confira o detalhe abaixo.` : undefined,
+        title: `Prévia gerada: "${data.nomeExperimental}" (${data.totalTurmas} turma(s))`,
+        description: `${totalConflitos > 0 ? `${totalConflitos} aviso(s). ` : ""}Nada mudou na grade oficial ainda — revise em Horário → Modo Experimental e promova só se estiver bom.`,
       });
-      setDetalheRegeneracao({ totalTurmas: data.totalTurmas, resultados: data.resultados });
-      queryClient.invalidateQueries({ queryKey: ["/api/horarios"] });
-      queryClient.invalidateQueries({ queryKey: ["professor-carga", professorId] as const });
+      setDetalheRegeneracao({ nomeExperimental: data.nomeExperimental, totalTurmas: data.totalTurmas, resultados: data.resultados });
+      queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
     } catch {
       toast({ title: "Erro ao conectar com o servidor", variant: "destructive" });
     } finally {
@@ -262,9 +262,11 @@ export default function ProfessorEditar() {
             </CardContent>
           </Card>
 
-          {/* [NOVO] Detalhe por turma da última regeneração escopada a
-              este professor -- mesmo padrão do card usado no Modo
-              Experimental, adaptado pra essa ação. */}
+          {/* [FIX] Antes esse card dava a entender que a mudança já
+              tinha sido aplicada na grade oficial. Agora é sempre só
+              uma PRÉVIA (experimento) -- deixa isso explícito e leva
+              pro Modo Experimental pra revisar e promover, em vez de
+              aplicar direto daqui. */}
           {detalheRegeneracao && (
             <Card className="border-amber-200 bg-amber-50/40">
               <CardHeader className="pb-3">
@@ -272,10 +274,10 @@ export default function ProfessorEditar() {
                   <div>
                     <CardTitle className="text-sm font-medium flex items-center gap-2">
                       <AlertTriangle className="h-4 w-4 text-amber-600" />
-                      Detalhe da regeneração ({detalheRegeneracao.totalTurmas} turma(s))
+                      Prévia gerada ({detalheRegeneracao.totalTurmas} turma(s)) — nada aplicado ainda
                     </CardTitle>
                     <CardDescription className="mt-1">
-                      Turmas com aviso (disciplina não alocada por completo) ou erro aparecem abaixo. Turmas sem nenhuma linha aqui foram alocadas 100%.
+                      Turmas com aviso (disciplina não alocada por completo) ou erro aparecem abaixo. Isso ainda NÃO mudou a grade oficial — revise em Horário → Modo Experimental (experimento "{detalheRegeneracao.nomeExperimental}") e promova só se estiver bom.
                     </CardDescription>
                   </div>
                   <Button variant="ghost" size="sm" onClick={() => setDetalheRegeneracao(null)}>
@@ -284,6 +286,12 @@ export default function ProfessorEditar() {
                 </div>
               </CardHeader>
               <CardContent className="pt-0 space-y-2">
+                <Link href="/horario?tab=experimental">
+                  <Button variant="outline" size="sm" className="gap-1.5 mb-2">
+                    Ir pro Modo Experimental
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                </Link>
                 {detalheRegeneracao.resultados.filter((r) => r.conflitos.length > 0 || r.erro).length === 0 ? (
                   <p className="text-sm text-green-700 flex items-center gap-1.5">
                     <CheckCircle2 className="h-4 w-4" /> Todas as turmas foram alocadas sem avisos.
@@ -400,18 +408,20 @@ export default function ProfessorEditar() {
             </CardContent>
           </Card>
 
-          {/* [NOVO] Regenera só as turmas em que este professor está
-              envolvido -- útil depois de atualizar a disponibilidade
-              dele/dela, sem precisar regenerar o turno inteiro nem ir
-              turma por turma manualmente. */}
+          {/* [FIX] Antes gravava direto na grade oficial. Agora só gera
+              uma PRÉVIA (experimento) das turmas em que este professor
+              está envolvido -- útil depois de atualizar a
+              disponibilidade dele/dela, sem precisar regenerar o
+              turno inteiro nem ir turma por turma manualmente, mas
+              sempre com chance de revisar antes de aplicar. */}
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <RefreshCw className="w-4 h-4 text-[#1565C0]" />
-                Regenerar Horário
+                Regenerar Horário (prévia)
               </CardTitle>
               <CardDescription>
-                Regera automaticamente só as turmas em que {professor?.nome ?? "este professor"} dá aula (ou está vinculado por disciplina) — sem mexer nas demais turmas da escola.
+                Gera uma prévia (experimento) só das turmas em que {professor?.nome ?? "este professor"} dá aula (ou está vinculado por disciplina) — sem mexer nas demais turmas da escola, e sem alterar a grade oficial até você revisar e promover.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -421,11 +431,11 @@ export default function ProfessorEditar() {
                 onClick={handleRegenerarTurmasDoProfessor}
                 disabled={regenerando}
               >
-                {regenerando ? "Regenerando..." : "Regenerar turmas deste professor"}
+                {regenerando ? "Gerando prévia..." : "Gerar prévia das turmas deste professor"}
                 <RefreshCw className={`w-4 h-4 ${regenerando ? "animate-spin" : ""}`} />
               </Button>
               <p className="text-xs text-muted-foreground mt-2">
-                Atenção: substitui a grade oficial inteira de cada turma envolvida (não só as aulas dele/dela).
+                Não altera a grade oficial sozinho — a prévia fica em Horário → Modo Experimental até você decidir promover.
               </p>
             </CardContent>
           </Card>

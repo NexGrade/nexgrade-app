@@ -604,27 +604,40 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
   }
 
   const turmaIds = [...new Set(expSlots.map(s => s.turmaId))];
-  for (const turmaId of turmaIds) {
-    await db.delete(horariosTable)
-      .where(and(eq(horariosTable.turmaId, turmaId), eq(horariosTable.escolaId, escolaId)));
-  }
 
-  const inserted: typeof horariosTable.$inferSelect[] = [];
-  for (const s of expSlots) {
-    const [slot] = await db.insert(horariosTable).values({
-      escolaId,
-      turmaId: s.turmaId,
-      disciplinaId: s.disciplinaId,
-      professorId: s.professorId,
-      diaSemana: s.diaSemana,
-      numeroAula: s.numeroAula,
-      sala: s.sala,
-    }).returning();
-    inserted.push(slot);
-  }
+  // [FIX CRÍTICO] Antes: apagava a grade oficial de TODAS as turmas
+  // primeiro, e só depois inseria as aulas novas UMA POR UMA (uma
+  // requisição ao banco por aula, em sequência) -- nada disso dentro
+  // de uma transação. Com lotes grandes (centenas de aulas, dezenas de
+  // turmas), essa sequência de inserções demora o suficiente pra
+  // requisição HTTP ou a conexão cair no meio do caminho -- e como o
+  // DELETE já tinha sido feito e comitado antes de começar a inserir,
+  // turmas ficavam com a grade apagada e NUNCA recriada (exatamente o
+  // "turma sem horário" que apareceu em produção). Agora: tudo dentro
+  // de UMA transação (só confirma no banco se TUDO funcionar, sem
+  // deixar meio-caminho gravado) e a inserção é em лote único (uma
+  // única instrução SQL com todas as linhas), não uma de cada vez --
+  // muito mais rápido e sem essa janela de risco.
+  const linhas = expSlots.map((s) => ({
+    escolaId,
+    turmaId: s.turmaId,
+    disciplinaId: s.disciplinaId,
+    professorId: s.professorId,
+    diaSemana: s.diaSemana,
+    numeroAula: s.numeroAula,
+    sala: s.sala,
+  }));
 
-  await db.delete(horariosExperimentaisTable)
-    .where(and(eq(horariosExperimentaisTable.nome, nome), eq(horariosExperimentaisTable.escolaId, escolaId)));
+  const inserted = await db.transaction(async (tx) => {
+    for (const turmaId of turmaIds) {
+      await tx.delete(horariosTable)
+        .where(and(eq(horariosTable.turmaId, turmaId), eq(horariosTable.escolaId, escolaId)));
+    }
+    const gravados = await tx.insert(horariosTable).values(linhas).returning();
+    await tx.delete(horariosExperimentaisTable)
+      .where(and(eq(horariosExperimentaisTable.nome, nome), eq(horariosExperimentaisTable.escolaId, escolaId)));
+    return gravados;
+  });
 
   res.json({ slotsGerados: inserted.length, conflitos: [], horario: [] });
 });
@@ -769,6 +782,17 @@ router.post("/gerar-professor", async (req, res) => {
     return;
   }
 
+  // [FIX CRÍTICO] Antes, gravava DIRETO na grade oficial (experimental:
+  // false), sem nenhuma chance de revisão antes de aplicar -- foi essa
+  // escolha que causou o incidente de hoje (uma mudança pontual de
+  // disponibilidade acabou gerando dezenas de conflitos novos em
+  // turmas sem relação nenhuma com o professor, e só foi descoberto
+  // DEPOIS de já estar em produção). Agora usa o mesmo fluxo seguro do
+  // resto do sistema (Modo Experimental): grava num experimento com
+  // nome próprio, e quem chamou decide se revisa e promove, ou
+  // descarta sem nenhum efeito na grade oficial.
+  const nomeExperimental = `Regen-${professor.nome.split(" ")[0]}-${new Date().toISOString().split("T")[0]}`;
+
   const resultados: Array<{ turmaId: number; turmaNome: string; slotsGerados: number; conflitos: string[]; erro?: string }> = [];
   for (const turmaId of turmaIds) {
     const turma = turmasDaEscola.find((t) => t.id === turmaId);
@@ -780,7 +804,8 @@ router.post("/gerar-professor", async (req, res) => {
         reduzirJanelas: reduzirJanelas ?? true,
         fatorPedagogico: fatorPedagogico ?? false,
         compactarCargaHoraria: compactarCargaHoraria ?? false,
-        experimental: false,
+        experimental: true,
+        nomeExperimental,
       });
       resultados.push({ turmaId, turmaNome: turma?.nome ?? String(turmaId), slotsGerados: r.slotsGerados, conflitos: r.conflitos });
     } catch (err) {
@@ -794,6 +819,7 @@ router.post("/gerar-professor", async (req, res) => {
   res.json({
     professorId,
     professorNome: professor.nome,
+    nomeExperimental,
     totalTurmas: turmaIds.length,
     resultados,
   });
