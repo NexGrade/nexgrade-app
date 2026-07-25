@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import { db } from "@workspace/db";
 import {
   professoresTable, turmasTable, disciplinasTable,
@@ -122,7 +122,7 @@ type AcaoPendente =
   | { tipo: "definir_disponibilidade"; payload: { professorId: number; diaSemana: number; horarioSlot: number; disponivel: boolean; motivo?: string } }
   | { tipo: "gerar_horario_turma"; payload: { turmaId: number; substituir: boolean } };
 
-const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_MODEL = "gemini-3-flash-preview";
 
 // POST /ai/chat
 //
