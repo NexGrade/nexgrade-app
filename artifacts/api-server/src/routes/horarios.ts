@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import { db } from "@workspace/db";
 import {
   horariosTable,
@@ -886,12 +886,13 @@ router.post("/gerar-cpsat", async (req, res) => {
   }
   const turmaIds = turmasDoTurno.map((t) => t.id);
 
-  const [turmaDiscsTodos, disciplinas, professoresTodos, disponibilidades, horarioSlotsTurno] = await Promise.all([
+  const [turmaDiscsTodos, disciplinas, professoresTodos, disponibilidades, horarioSlotsTurno, profDiscsTodos] = await Promise.all([
     db.select().from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, turmaIds)),
     db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
     db.select().from(disponibilidadeTable),
     db.select().from(horarioSlotsTable).where(and(eq(horarioSlotsTable.escolaId, escolaId), eq(horarioSlotsTable.turno, turno))),
+    db.select().from(professorDisciplinasTable),
   ]);
 
   if (turmaDiscsTodos.length === 0) {
@@ -910,12 +911,38 @@ router.post("/gerar-cpsat", async (req, res) => {
   const nomeParaProfessorId = new Map<string, number>();
   professoresTodos.forEach((p) => nomeParaProfessorId.set(p.nome, p.id));
 
+  // [FIX] Quando turma_disciplinas.professorId e nulo (caso das aulas
+  // "Hibrida", entre outras), o motor heuristico ja resolve isso via
+  // professor_disciplinas (vinculo generico professor<->disciplina).
+  // O CP-SAT precisa do mesmo fallback -- sem ele, a linha inteira era
+  // descartada e a aula sumia da grade gerada (constatado comparando
+  // com a carga horaria real do PDF da escola: toda turma com entrada
+  // "Hibrida" ficava faltando exatamente 1 aula). Quando ha mais de um
+  // candidato no pool generico, prioriza o professor cujo nome contem
+  // "(<nome da turma>)" -- convencao ja usada nos professores virtuais
+  // Hibrida (1NB), Hibrida (2NB) etc. -- e cai pro primeiro candidato
+  // do pool se nao achar esse padrao.
+  function resolverProfessor(td: typeof turmaDiscsTodos[number], turma: typeof turmasDoTurno[number]) {
+    if (td.professorId != null) return professorMap.get(td.professorId) ?? null;
+    const candidatos = profDiscsTodos
+      .filter((pd) => pd.disciplinaId === td.disciplinaId)
+      .map((pd) => professorMap.get(pd.professorId))
+      .filter((p): p is NonNullable<typeof p> => p != null);
+    const porNomeTurma = candidatos.find((p) => p.nome.includes(`(${turma.nome})`));
+    return porNomeTurma ?? candidatos[0] ?? null;
+  }
+
+  const semProfessorResolvido: Array<{ turma: string; disciplina: string }> = [];
+
   const disciplinasTurma = turmaDiscsTodos
-    .filter((td) => td.professorId != null)
     .map((td) => {
       const turma = turmaMap.get(td.turmaId)!;
       const disc = disciplinaMap.get(td.disciplinaId);
-      const prof = professorMap.get(td.professorId!);
+      const prof = resolverProfessor(td, turma);
+      if (!prof) {
+        semProfessorResolvido.push({ turma: turma.nome, disciplina: disc?.nome ?? `Disciplina #${td.disciplinaId}` });
+        return null;
+      }
       const codigoSae = disc?.codigoSae ?? disc?.sigla ?? String(td.disciplinaId);
       chaveParaIds.set(`${turma.nome}||${codigoSae}`, { turmaId: td.turmaId, disciplinaId: td.disciplinaId });
       return {
@@ -923,10 +950,11 @@ router.post("/gerar-cpsat", async (req, res) => {
         codigoSae,
         nome: disc?.nome ?? `Disciplina #${td.disciplinaId}`,
         aulasSemana: td.cargaHorariaSemanalOverride ?? disc?.cargaSemanal ?? 0,
-        professor: prof?.nome ?? `Professor #${td.professorId}`,
+        professor: prof.nome,
         maxAulasDia: td.maxAulasConsecutivasDia ?? 2,
       };
     })
+    .filter((d): d is NonNullable<typeof d> => d !== null)
     .filter((d) => d.aulasSemana > 0);
 
   if (disciplinasTurma.length === 0) {
@@ -934,7 +962,7 @@ router.post("/gerar-cpsat", async (req, res) => {
     return;
   }
 
-  const professorIdsUsados = new Set(turmaDiscsTodos.map((td) => td.professorId).filter((id): id is number => id != null));
+  const professorIdsUsados = new Set(disciplinasTurma.map((d) => nomeParaProfessorId.get(d.professor)).filter((id): id is number => id != null));
   const bloqueiosProfessor = disponibilidades
     .filter((d) => professorIdsUsados.has(d.professorId) && !d.disponivel && (d.turno === turno || d.turno == null))
     .map((d) => ({
@@ -1045,7 +1073,9 @@ router.post("/gerar-cpsat", async (req, res) => {
     totalTurmas: turmasDoTurno.length,
     totalSlots: gravados.length,
     naoMapeadas: naoMapeadas.length,
+    semProfessorResolvido: semProfessorResolvido.length,
     ...(naoMapeadas.length > 0 ? { detalheNaoMapeadas: naoMapeadas } : {}),
+    ...(semProfessorResolvido.length > 0 ? { detalheSemProfessorResolvido: semProfessorResolvido } : {}),
     mensagem: `Grade gerada como experimento "${nomeExperimental}". Revise e use POST /experimentais/${nomeExperimental}/promover para aplicar como oficial.`,
   });
 });
