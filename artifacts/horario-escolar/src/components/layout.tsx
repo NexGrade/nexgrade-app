@@ -120,8 +120,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
           ))}
           <div className="pt-2 mt-2 border-t border-border">
             <div className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground">
-              <UserButton afterSignOutUrl="/" />
-              <span className="flex-1">Minha conta</span>
+              <span className="w-4 h-4 shrink-0 flex items-center justify-center">
+                <UserButton
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      rootBox: "w-4 h-4",
+                      userButtonBox: "w-4 h-4",
+                      userButtonTrigger: "w-4 h-4",
+                      userButtonAvatarBox: "w-4 h-4",
+                    },
+                  }}
+                />
+              </span>
+              <span className="flex-1 whitespace-nowrap">Minha conta</span>
             </div>
           </div>
         </nav>
