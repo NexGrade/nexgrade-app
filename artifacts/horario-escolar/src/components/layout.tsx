@@ -1,4 +1,4 @@
-import { Link, useLocation } from "wouter";
+﻿import { Link, useLocation } from "wouter";
 import { UserButton } from "@clerk/react";
 import { useMasterWhoami } from "@workspace/api-client-react";
 import {
@@ -118,12 +118,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           ))}
+          <div className="pt-2 mt-2 border-t border-border">
+            <div className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground">
+              <UserButton afterSignOutUrl="/" />
+              <span className="flex-1">Minha conta</span>
+            </div>
+          </div>
         </nav>
       </aside>
       <main className="flex-1 flex flex-col min-w-0">
         <header className="h-16 flex items-center px-8 border-b border-border bg-card gap-4">
           <div className="flex-1" />
-          <UserButton />
         </header>
         <div className="flex-1 overflow-auto p-8">
           <div className="max-w-6xl mx-auto">
