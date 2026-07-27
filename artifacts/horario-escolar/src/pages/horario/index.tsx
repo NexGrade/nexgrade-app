@@ -1284,16 +1284,24 @@ function AbaExperimental() {
           <p className="font-medium mb-1">Como funciona o Modo Experimental?</p>
           <p>Gere versões alternativas de horário sem substituir a grade oficial. Compare, ajuste e quando estiver satisfeito, clique em <strong>Promover para oficial</strong> para aplicar.</p>
         </div>
-        <div className="flex flex-col gap-2 shrink-0">
-          <Button onClick={() => setOpenGerar(true)}>
-            <Plus className="w-4 h-4 mr-2" />Novo Experimento
-          </Button>
-          <Button variant="outline" onClick={() => setOpenGerarLote(true)}>
-            <RefreshCw className="w-4 h-4 mr-2" />Gerar em Massa
-          </Button>
-          <Button variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50" onClick={() => setOpenGerarCpsat(true)}>
-            <Sparkles className="w-4 h-4 mr-2" />Gerar com CP-SAT (Beta)
-          </Button>
+        <div className="flex flex-col gap-3 shrink-0 items-stretch w-56">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Motor heurístico (rápido)</p>
+            <div className="flex flex-col gap-2">
+              <Button className="w-full justify-start" onClick={() => setOpenGerar(true)}>
+                <Plus className="w-4 h-4 mr-2" />Nova turma
+              </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => setOpenGerarLote(true)}>
+                <RefreshCw className="w-4 h-4 mr-2" />Turno inteiro
+              </Button>
+            </div>
+          </div>
+          <div className="pt-2 border-t">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-blue-700 mb-1.5">Motor CP-SAT (preciso, mais lento)</p>
+            <Button variant="outline" className="w-full justify-start border-blue-300 text-blue-700 hover:bg-blue-50" onClick={() => setOpenGerarCpsat(true)}>
+              <Sparkles className="w-4 h-4 mr-2" />Turno inteiro (Beta)
+            </Button>
+          </div>
         </div>
       </div>
 
