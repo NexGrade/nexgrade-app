@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useAuth } from "@clerk/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ const SUGESTOES = [
 ];
 
 export default function AssistentePage() {
+  const { getToken } = useAuth();
   const queryClient = useQueryClient();
   const [mensagens, setMensagens] = useState<Msg[]>([
     {
@@ -55,9 +57,22 @@ export default function AssistentePage() {
 
     try {
       const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+      // [FIX] Essa chamada usava fetch() sem nenhum cabeçalho de
+      // autenticação -- a API exige token Bearer (Clerk não usa cookie
+      // de sessão aqui), então toda mensagem pro assistente vinha
+      // como 401 sem ninguém perceber (o catch genérico virava só
+      // "Erro ao conectar com o assistente"). Não dá pra trocar por
+      // customFetch aqui porque essa resposta é streaming (lida aos
+      // poucos via reader) e customFetch só sabe processar o corpo
+      // inteiro de uma vez -- por isso pega o token direto do Clerk
+      // e anexa na mão, mantendo o fetch() cru.
+      const token = await getToken();
       const res = await fetch(`${basePath}/api/ai/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ mensagem: msg, conversaId }),
       });
 
@@ -145,9 +160,13 @@ export default function AssistentePage() {
     setExecutandoAcao(true);
     try {
       const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+      const token = await getToken();
       const res = await fetch(`${basePath}/api/ai/executar-acao`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ tipo: acao.tipo, payload: acao.payload, conversaId }),
       });
       const data = await res.json();

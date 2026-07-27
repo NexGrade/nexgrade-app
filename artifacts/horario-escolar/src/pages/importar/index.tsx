@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { customFetch } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -58,15 +59,18 @@ export default function ImportarPage() {
     setLoadingPreview(true);
     setResultado(null);
     try {
-      const res = await fetch(`${basePath}/api/importar/preview`, {
+      // [FIX] fetch() sem token Bearer -- API sempre voltava 401 antes
+      // de sequer processar o CSV. customFetch já anexa o token.
+      const data = await customFetch<Preview>(`${basePath}/api/importar/preview`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ csv, tipo }),
+        responseType: "json",
       });
-      const data = await res.json();
-      if (!res.ok) { toast({ title: data.error, variant: "destructive" }); return; }
       setPreview(data);
-    } catch { toast({ title: "Erro ao processar CSV", variant: "destructive" }); }
+    } catch (err) {
+      toast({ title: err instanceof Error ? err.message : "Erro ao processar CSV", variant: "destructive" });
+    }
     finally { setLoadingPreview(false); }
   };
 
@@ -74,19 +78,23 @@ export default function ImportarPage() {
     if (!preview) return;
     setLoadingImport(true);
     try {
-      const res = await fetch(`${basePath}/api/importar/confirmar`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ csv, tipo }),
-      });
-      const data = await res.json();
-      if (!res.ok) { toast({ title: data.error, variant: "destructive" }); return; }
+      const data = await customFetch<{ importados: number; erros: string[]; total: number }>(
+        `${basePath}/api/importar/confirmar`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ csv, tipo }),
+          responseType: "json",
+        },
+      );
       setResultado(data);
       setPreview(null);
       setCsv("");
       await queryClient.invalidateQueries();
       toast({ title: `✅ ${data.importados} registro(s) importado(s) com sucesso!` });
-    } catch { toast({ title: "Erro ao importar", variant: "destructive" }); }
+    } catch (err) {
+      toast({ title: err instanceof Error ? err.message : "Erro ao importar", variant: "destructive" });
+    }
     finally { setLoadingImport(false); }
   };
 

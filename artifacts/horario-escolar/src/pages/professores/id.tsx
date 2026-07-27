@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useGetProfessor, useUpdateProfessor, getGetProfessorQueryKey, useListDisciplinas, getListProfessoresQueryKey, useGetProfessorCarga } from "@workspace/api-client-react";
+import { useGetProfessor, useUpdateProfessor, getGetProfessorQueryKey, useListDisciplinas, getListProfessoresQueryKey, useGetProfessorCarga, customFetch } from "@workspace/api-client-react";
 import { Link, useLocation, useParams } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -125,16 +125,18 @@ export default function ProfessorEditar() {
     setDetalheRegeneracao(null);
     try {
       const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
-      const res = await fetch(`${basePath}/api/horarios/gerar-professor`, {
+      // [FIX] fetch() sem token Bearer -- voltava 401 antes de gerar
+      // qualquer prévia. customFetch já anexa o token.
+      const data = await customFetch<{
+        nomeExperimental: string;
+        totalTurmas: number;
+        resultados: DetalheTurmaRegeneracao[];
+      }>(`${basePath}/api/horarios/gerar-professor`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ professorId, reduzirJanelas: true, fatorPedagogico: false, compactarCargaHoraria: false }),
+        responseType: "json",
       });
-      const data = await res.json();
-      if (!res.ok) {
-        toast({ title: "Não foi possível gerar a prévia", description: data.error ?? "Erro desconhecido", variant: "destructive" });
-        return;
-      }
       const totalConflitos = data.resultados.reduce((s: number, r: DetalheTurmaRegeneracao) => s + r.conflitos.length, 0);
       toast({
         title: `Prévia gerada: "${data.nomeExperimental}" (${data.totalTurmas} turma(s))`,
@@ -142,8 +144,8 @@ export default function ProfessorEditar() {
       });
       setDetalheRegeneracao({ nomeExperimental: data.nomeExperimental, totalTurmas: data.totalTurmas, resultados: data.resultados });
       queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
-    } catch {
-      toast({ title: "Erro ao conectar com o servidor", variant: "destructive" });
+    } catch (err) {
+      toast({ title: "Não foi possível gerar a prévia", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
     } finally {
       setRegenerando(false);
     }
@@ -160,16 +162,16 @@ export default function ProfessorEditar() {
     setResultadoCorrecao(null);
     try {
       const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
-      const res = await fetch(`${basePath}/api/horarios/corrigir-professor`, {
+      const data = await customFetch<{
+        movidas: Array<{ turmaId: number; turmaNome: string; disciplinaId: number; de: { dia: number; aula: number }; para: { dia: number; aula: number } }>;
+        naoResolvidas: Array<{ turmaId: number; turmaNome: string; disciplinaId: number; dia: number; aula: number; motivo: string }>;
+        mensagem?: string;
+      }>(`${basePath}/api/horarios/corrigir-professor`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ professorId }),
+        responseType: "json",
       });
-      const data = await res.json();
-      if (!res.ok) {
-        toast({ title: "Não foi possível corrigir", description: data.error ?? "Erro desconhecido", variant: "destructive" });
-        return;
-      }
       if (data.mensagem) {
         toast({ title: data.mensagem });
       } else {
@@ -180,8 +182,8 @@ export default function ProfessorEditar() {
       setResultadoCorrecao({ movidas: data.movidas, naoResolvidas: data.naoResolvidas, mensagem: data.mensagem });
       queryClient.invalidateQueries({ queryKey: ["/api/horarios"] });
       queryClient.invalidateQueries({ queryKey: ["professor-carga", professorId] as const });
-    } catch {
-      toast({ title: "Erro ao conectar com o servidor", variant: "destructive" });
+    } catch (err) {
+      toast({ title: "Não foi possível corrigir", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
     } finally {
       setCorrigindo(false);
     }

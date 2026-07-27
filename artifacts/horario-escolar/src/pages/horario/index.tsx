@@ -10,6 +10,7 @@ import {
   useListHorarios,
   useGetConflitosComSugestoes,
   useListHorariosExperimentais, useDeleteHorarioExperimental, usePromoverHorarioExperimental, useGerarHorario,
+  customFetch,
 } from "@workspace/api-client-react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -684,11 +685,14 @@ function AbaGrade() {
   const professorIdSelecionado = professorId !== "all" ? Number(professorId) : undefined;
   const { data: disponibilidadeProf } = useQuery({
     queryKey: ["/api/disponibilidade", professorIdSelecionado],
-    queryFn: async () => {
-      const res = await fetch(`/api/disponibilidade?professorId=${professorIdSelecionado}`);
-      if (!res.ok) throw new Error("Erro ao buscar disponibilidade");
-      return res.json() as Promise<Array<{ diaSemana: number; horarioSlot: number; turno: string | null; horaAtividadeObrigatoria: boolean }>>;
-    },
+    queryFn: async () =>
+      // [FIX] fetch() sem token Bearer -- voltava 401, e o "HA"
+      // (Hora-Atividade) simplesmente nunca aparecia destacado na
+      // grade por professor. customFetch já anexa o token.
+      customFetch<Array<{ diaSemana: number; horarioSlot: number; turno: string | null; horaAtividadeObrigatoria: boolean }>>(
+        `/api/disponibilidade?professorId=${professorIdSelecionado}`,
+        { responseType: "json" },
+      ),
     enabled: professorIdSelecionado !== undefined,
   });
 
@@ -1167,7 +1171,15 @@ function AbaExperimental() {
     if (!loteForm.nomeExperimental.trim()) { toast({ title: "Informe o nome do lote", variant: "destructive" }); return; }
     setGerandoLote(true);
     try {
-      const res = await fetch("/api/horarios/gerar-lote", {
+      // [FIX] fetch() sem token Bearer -- "Gerar em Massa" voltava 401
+      // antes de gerar qualquer coisa. customFetch já anexa o token.
+      const result = await customFetch<{
+        totalTurmas: number;
+        totalSlots: number;
+        totalConflitos: number;
+        turmasComErro: number;
+        resultados?: DetalheTurmaLote[];
+      }>("/api/horarios/gerar-lote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1177,12 +1189,8 @@ function AbaExperimental() {
           fatorPedagogico: loteForm.fatorPedagogico,
           compactarCargaHoraria: loteForm.compactarCargaHoraria,
         }),
+        responseType: "json",
       });
-      if (!res.ok) {
-        const erro = await res.json().catch(() => ({}));
-        throw new Error(erro.error ?? "Erro ao gerar em massa");
-      }
-      const result = await res.json();
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
       toast({
         title: `Lote gerado! ${result.totalTurmas} turma(s), ${result.totalSlots} aulas criadas.`,
@@ -1209,19 +1217,21 @@ function AbaExperimental() {
     if (!cpsatTurmaForm.nomeExperimental.trim()) { toast({ title: "Informe o nome do experimento", variant: "destructive" }); return; }
     setGerandoCpsatTurma(true);
     try {
-      const res = await fetch("/api/horarios/gerar-cpsat", {
+      // [FIX] fetch() sem token Bearer -- "Turma (Beta)" voltava 401
+      // desde que foi criada hoje. customFetch já anexa o token.
+      const result = await customFetch<{
+        totalSlots: number;
+        status: string;
+        tempoResolucaoS: number;
+      }>("/api/horarios/gerar-cpsat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           turmaId: Number(cpsatTurmaForm.turmaId),
           nomeExperimental: cpsatTurmaForm.nomeExperimental,
         }),
+        responseType: "json",
       });
-      if (!res.ok) {
-        const erro = await res.json().catch(() => ({}));
-        throw new Error(erro.error ?? erro.detalhe ?? "Erro ao gerar com CP-SAT");
-      }
-      const result = await res.json();
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
       toast({
         title: `Grade CP-SAT gerada! ${result.totalSlots} aulas criadas.`,
@@ -1243,19 +1253,23 @@ function AbaExperimental() {
     if (!cpsatForm.nomeExperimental.trim()) { toast({ title: "Informe o nome do experimento", variant: "destructive" }); return; }
     setGerandoCpsat(true);
     try {
-      const res = await fetch("/api/horarios/gerar-cpsat", {
+      // [FIX] fetch() sem token Bearer -- "Turno inteiro (Beta)"
+      // voltava 401 antes de gerar qualquer coisa. customFetch já
+      // anexa o token.
+      const result = await customFetch<{
+        totalTurmas: number;
+        totalSlots: number;
+        status: string;
+        tempoResolucaoS: number;
+      }>("/api/horarios/gerar-cpsat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           turno: cpsatForm.turno,
           nomeExperimental: cpsatForm.nomeExperimental,
         }),
+        responseType: "json",
       });
-      if (!res.ok) {
-        const erro = await res.json().catch(() => ({}));
-        throw new Error(erro.error ?? erro.detalhe ?? "Erro ao gerar com CP-SAT");
-      }
-      const result = await res.json();
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
       toast({
         title: `Grade CP-SAT gerada! ${result.totalTurmas} turma(s), ${result.totalSlots} aulas criadas.`,
