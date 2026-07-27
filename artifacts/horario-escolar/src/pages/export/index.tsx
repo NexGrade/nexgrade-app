@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useListTurmas, useListProfessores } from "@workspace/api-client-react";
+import { useListTurmas, useListProfessores, customFetch } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -69,6 +69,10 @@ export default function ExportPage() {
   // precisar em vez de ficar ocupando espaço permanente na navegação.
   const [cargaHorariaOpts, setCargaHorariaOpts] = useState({ ano: String(new Date().getFullYear()) });
 
+  // Só cria o link e clica -- espera receber uma URL já pronta pra
+  // baixar (seja um blob local, seja uma URL de servidor que NÃO
+  // precise de autenticação). Mantido separado de baixarArquivo abaixo
+  // porque handleSeedDownload já monta o próprio blob na mão.
   const handleDownload = (url: string, filename: string) => {
     const a = document.createElement("a");
     a.href = url;
@@ -79,12 +83,35 @@ export default function ExportPage() {
     toast({ title: `Download iniciado: ${filename}` });
   };
 
+  // [FIX] Todo download de PDF/CSV daqui pra baixo passava direto um
+  // <a href="/api/..."> pro navegador clicar sozinho -- isso é uma
+  // NAVEGAÇÃO, não uma chamada autenticada, então nunca carregava o
+  // token Bearer que o Clerk exige (a API não usa cookie de sessão).
+  // Resultado: toda tentativa de baixar um relatório voltava
+  // "Não autenticado" e o Chrome mostrava "arquivo não disponível no
+  // site". `customFetch` já sabe anexar o token sozinho (mesmo
+  // mecanismo usado em toda chamada normal da tela) -- busca o arquivo
+  // como blob primeiro, e só então cria o link e clica.
+  const baixarArquivo = async (url: string, filename: string) => {
+    try {
+      const blob = await customFetch<Blob>(url, { responseType: "blob" });
+      const objUrl = URL.createObjectURL(blob);
+      handleDownload(objUrl, filename);
+      URL.revokeObjectURL(objUrl);
+    } catch (err) {
+      toast({
+        title: "Erro ao baixar arquivo",
+        description: err instanceof Error ? err.message : undefined,
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSeedDownload = async () => {
     setLoadingSeed(true);
     try {
       const url = buildUrl("/api/export/relatorio-seed", { estado: seedEstado });
-      const res = await fetch(url);
-      const data = await res.json();
+      const data = await customFetch<unknown>(url, { responseType: "json" });
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
       const objUrl = URL.createObjectURL(blob);
       handleDownload(objUrl, `relatorio_seed_${seedEstado}_${new Date().getFullYear()}.json`);
@@ -145,7 +172,7 @@ export default function ExportPage() {
               // o navegador baixava conteúdo JSON com extensão .csv, e
               // o Excel tentava (e falhava) interpretar como CSV.
               const extensao = gradeOpts.formato === "json" ? "json" : "csv";
-              handleDownload(url, `grade_horaria.${extensao}`);
+              baixarArquivo(url, `grade_horaria.${extensao}`);
             }}>
               <Download className="w-4 h-4 mr-2" />Baixar Grade Horária
             </Button>
@@ -195,7 +222,7 @@ export default function ExportPage() {
                 mes: pontoOpts.mes,
                 ano: pontoOpts.ano,
               });
-              handleDownload(url, `ponto_professores_${pontoOpts.mes}_${pontoOpts.ano}.csv`);
+              baixarArquivo(url, `ponto_professores_${pontoOpts.mes}_${pontoOpts.ano}.csv`);
             }}>
               <Download className="w-4 h-4 mr-2" />Baixar Controle de Ponto
             </Button>
@@ -277,7 +304,7 @@ export default function ExportPage() {
                 });
                 const sufixoTurno = turnoParaEnviar ? `_${turnoParaEnviar}` : "";
                 const sufixoSemana = pdfOpts.semana === SEMANA_PROXIMA ? "_proxima_semana" : "";
-                handleDownload(url, `grade_por_${pdfOpts.visao}${sufixoTurno}${sufixoSemana}.pdf`);
+                baixarArquivo(url, `grade_por_${pdfOpts.visao}${sufixoTurno}${sufixoSemana}.pdf`);
               }}
             >
               <Download className="w-4 h-4 mr-2" />Baixar PDF
@@ -325,7 +352,7 @@ export default function ExportPage() {
                   ? `_${professores.find((p) => String(p.id) === cargaOpts.professorId)?.nome ?? cargaOpts.professorId}`
                   : "";
                 const sufixoSemana = cargaOpts.semana === SEMANA_PROXIMA ? "_proxima_semana" : "";
-                handleDownload(url, `relatorio_carga_professores${sufixo}${sufixoSemana}.pdf`);
+                baixarArquivo(url, `relatorio_carga_professores${sufixo}${sufixoSemana}.pdf`);
               }}
             >
               <Download className="w-4 h-4 mr-2" />Baixar Relatório de Carga
@@ -355,7 +382,7 @@ export default function ExportPage() {
               className="w-full"
               onClick={() => {
                 const url = buildUrl("/api/export/carga-horaria-pdf", { ano: cargaHorariaOpts.ano });
-                handleDownload(url, `carga_horaria_${cargaHorariaOpts.ano}.pdf`);
+                baixarArquivo(url, `carga_horaria_${cargaHorariaOpts.ano}.pdf`);
               }}
             >
               <Download className="w-4 h-4 mr-2" />Baixar Carga Horária
