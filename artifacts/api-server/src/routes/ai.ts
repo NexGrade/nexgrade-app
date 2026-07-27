@@ -1,7 +1,7 @@
 ﻿import { Router } from "express";
 import { db } from "@workspace/db";
 import {
-  professoresTable, turmasTable, disciplinasTable,
+  professoresTable, turmasTable, disciplinasTable, horariosTable,
   aiConversasTable, aiMensagensTable, disponibilidadeTable, auditLogsTable,
 } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
@@ -114,6 +114,18 @@ const tools = [
           required: ["turmaNome"],
         },
       },
+      // [NOVO] Primeira ferramenta de CONSULTA (só leitura) do
+      // assistente -- as duas de cima só propõem uma ação futura, essa
+      // busca dado real da grade já montada. Diferente delas, o
+      // resultado precisa voltar pro Gemini numa segunda chamada (ver
+      // bloco "Segunda chamada" mais abaixo) pra virar texto em
+      // português, em vez do backend já saber a resposta de antemão.
+      {
+        name: "consultar_janelas_professores",
+        description:
+          "Consulta quantas 'janelas' (períodos vagos entre duas aulas no mesmo dia) cada professor tem na grade horária já montada. Use quando o usuário perguntar sobre janelas, buracos, tempo ocioso ou distribuição ruim de horário dos professores.",
+        parameters: { type: "object" as const, properties: {} },
+      },
     ],
   },
 ];
@@ -121,6 +133,52 @@ const tools = [
 type AcaoPendente =
   | { tipo: "definir_disponibilidade"; payload: { professorId: number; diaSemana: number; horarioSlot: number; disponivel: boolean; motivo?: string } }
   | { tipo: "gerar_horario_turma"; payload: { turmaId: number; substituir: boolean } };
+
+// [NOVO] Mesma lógica de "janela" (buraco entre aulas no mesmo dia) já
+// usada visualmente na aba Grade/Modo Experimental do front -- aqui
+// calculada uma vez pra escola inteira, pra alimentar a ferramenta de
+// consulta do assistente. Considera só do primeiro ao último horário
+// ocupado do professor naquele dia (não conta antes/depois como
+// janela, só o que está "no meio").
+async function calcularJanelasProfessores(escolaId: string) {
+  const [slots, profs] = await Promise.all([
+    db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
+    db.select({ id: professoresTable.id, nome: professoresTable.nome })
+      .from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
+  ]);
+
+  const porProf = new Map<number, typeof slots>();
+  slots.forEach((s) => {
+    if (!porProf.has(s.professorId)) porProf.set(s.professorId, []);
+    porProf.get(s.professorId)!.push(s);
+  });
+
+  return profs
+    .map((p) => {
+      const slotsProf = porProf.get(p.id) ?? [];
+      const porDia = new Map<number, number[]>();
+      slotsProf.forEach((s) => {
+        if (!porDia.has(s.diaSemana)) porDia.set(s.diaSemana, []);
+        porDia.get(s.diaSemana)!.push(s.numeroAula);
+      });
+
+      let totalJanelas = 0;
+      const detalhePorDia: Record<string, number> = {};
+      for (const [dia, aulas] of porDia.entries()) {
+        const ordenado = [...aulas].sort((a, b) => a - b);
+        const min = ordenado[0]!;
+        const max = ordenado[ordenado.length - 1]!;
+        const ocupados = new Set(ordenado);
+        let janelasDoDia = 0;
+        for (let i = min; i <= max; i++) if (!ocupados.has(i)) janelasDoDia++;
+        if (janelasDoDia > 0) detalhePorDia[DIAS_SEMANA[dia] ?? `dia ${dia}`] = janelasDoDia;
+        totalJanelas += janelasDoDia;
+      }
+
+      return { professor: p.nome, totalAulas: slotsProf.length, totalJanelas, detalhePorDia };
+    })
+    .sort((a, b) => b.totalJanelas - a.totalJanelas);
+}
 
 const GEMINI_MODEL = "gemini-3.5-flash";
 
@@ -167,7 +225,7 @@ CONTEXTO DA ESCOLA:
 - Disciplinas (${disciplinas.length}): ${disciplinas.map(d => `${d.nome} (${d.cargaSemanal}x/sem)`).slice(0, 10).join(", ")}
 
 Você pode:
-1. Responder perguntas sobre a grade horária e situação da escola
+1. Responder perguntas sobre a grade horária e situação da escola — use a ferramenta consultar_janelas_professores quando a pergunta for sobre janelas/buracos/tempo ocioso dos professores, em vez de responder de memória.
 2. Sugerir como distribuir disciplinas ou professores
 3. Identificar conflitos e propor soluções
 4. Executar duas ações concretas, sempre chamando a função correspondente: marcar disponibilidade de um professor, ou gerar o horário de uma turma. Você NUNCA aplica a ação diretamente — o sistema sempre pede confirmação ao usuário antes.
@@ -274,6 +332,50 @@ Seja direto, útil e use linguagem educacional brasileira.`;
           payload: { turmaId: turma.id, substituir: args.substituir ?? false },
         };
       }
+    } else if (functionCallPart?.name === "consultar_janelas_professores") {
+      // [NOVO] Ferramenta de CONSULTA -- diferente das duas acima, não
+      // propõe ação nenhuma, só busca dado real e devolve pro Gemini
+      // formular a resposta em português. Precisa de uma SEGUNDA
+      // chamada à API: a primeira só disse "quero chamar essa função",
+      // a segunda manda o resultado de volta e pede a resposta final.
+      const janelas = await calcularJanelasProfessores(escolaId);
+
+      const contentsComResultado = [
+        ...contents,
+        { role: "model", parts: [{ functionCall: functionCallPart }] },
+        {
+          role: "function",
+          parts: [{
+            functionResponse: {
+              name: "consultar_janelas_professores",
+              response: { janelas: janelas.slice(0, 30) },
+            },
+          }],
+        },
+      ];
+
+      const segundaRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: contentsComResultado,
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            tools,
+          }),
+        },
+      );
+
+      if (!segundaRes.ok) {
+        const corpoErro = await segundaRes.text().catch(() => "(sem corpo)");
+        throw new Error(`${segundaRes.status} ${segundaRes.statusText}: ${corpoErro.slice(0, 300)}`);
+      }
+
+      const segundaCompletion = await segundaRes.json() as typeof completion;
+      const segundaParts = segundaCompletion.candidates?.[0]?.content?.parts ?? [];
+      respostaTexto = segundaParts.find((p) => p.text)?.text
+        ?? "Consultei os dados, mas não consegui formular uma resposta. Tente reformular a pergunta.";
     } else {
       respostaTexto = textPart ?? "Não consegui gerar uma resposta. Tente reformular a pergunta.";
     }
