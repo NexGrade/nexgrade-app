@@ -2,7 +2,9 @@
 import { customFetch } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Zap, Crown, Shield } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { CheckCircle2, Zap, Crown, Shield, Copy, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Plano = {
@@ -32,8 +34,18 @@ function formatPreco(centavos: number) {
 }
 
 export default function PlanosPage() {
+  const { toast } = useToast();
   const [planos, setPlanos] = useState<Plano[]>([]);
   const [loading, setLoading] = useState(true);
+  // [FIX] Botão "Assinar" dependia de window.open(mailto:) -- além de
+  // ser bloqueado como pop-up (já corrigido antes), mesmo depois de
+  // corrigido só funciona se o computador tiver um app de e-mail
+  // padrão configurado, o que não é garantido (confirmado: "Launched
+  // external handler" no console, mas nada abre). Agora mostra uma
+  // caixa com o e-mail pra copiar -- sempre funciona, não depende de
+  // nada instalado -- mantendo um link mailto: real como atalho
+  // opcional pra quem tiver e-mail configurado.
+  const [planoInteresse, setPlanoInteresse] = useState<string | null>(null);
 
   useEffect(() => {
     // [FIX] Mesmo bug corrigido em pages/export/index.tsx: essa
@@ -118,16 +130,7 @@ export default function PlanosPage() {
                     variant={isPro ? "default" : "outline"}
                     onClick={() => {
                       if (plano.preco === 0) return;
-                      // [FIX] window.open(..., "_blank") pra um link
-                      // mailto: é tratado como pop-up por vários
-                      // navegadores e bloqueado silenciosamente -- sem
-                      // aviso nenhum, o clique parecia não fazer nada.
-                      // window.location.href navega direto (não abre
-                      // aba nova), o que o navegador nunca bloqueia
-                      // pra mailto:, e entrega pro cliente de e-mail
-                      // padrão do sistema.
-                      window.location.href =
-                        "mailto:contato@nexuscoretecnologia.com.br?subject=Interesse no plano " + plano.nome;
+                      setPlanoInteresse(plano.nome);
                     }}
                   >
                     {plano.preco === 0 ? "Plano atual" : `Assinar ${plano.nome}`}
@@ -142,6 +145,41 @@ export default function PlanosPage() {
       <p className="text-center text-sm text-muted-foreground">
         Período de avaliação de 30 dias gratuito em todos os planos pagos. Cancele a qualquer momento.
       </p>
+
+      <Dialog open={planoInteresse !== null} onOpenChange={(open) => !open && setPlanoInteresse(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-[#1565C0]" />
+              Assinar plano {planoInteresse}
+            </DialogTitle>
+            <DialogDescription>
+              Entre em contato com a gente pra ativar. Copia o e-mail abaixo ou, se preferir, use o link pra abrir direto no seu aplicativo de e-mail.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-3">
+            <span className="flex-1 text-sm font-medium">contato@nexuscoretecnologia.com.br</span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                navigator.clipboard.writeText("contato@nexuscoretecnologia.com.br");
+                toast({ title: "E-mail copiado!" });
+              }}
+            >
+              <Copy className="w-3.5 h-3.5 mr-1.5" />Copiar
+            </Button>
+          </div>
+          <DialogFooter className="sm:justify-start">
+            <a
+              href={`mailto:contato@nexuscoretecnologia.com.br?subject=${encodeURIComponent(`Interesse no plano ${planoInteresse}`)}`}
+              className="text-sm text-[#1565C0] hover:underline"
+            >
+              ou abrir no meu aplicativo de e-mail →
+            </a>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
