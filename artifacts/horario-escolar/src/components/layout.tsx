@@ -1,11 +1,11 @@
-﻿import { Link, useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { UserButton } from "@clerk/react";
 import { useMasterWhoami } from "@workspace/api-client-react";
 import {
   LayoutDashboard, Users, BookOpen, GraduationCap, Calendar, CalendarDays,
   Building2, FileText, Bell, Shield, History,
   Settings, Download, Sparkles, Upload, CreditCard, Library, ShieldCheck, Clock,
-  BarChart3,
+  BarChart3, SlidersHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +27,12 @@ const navGroups = [
     items: [
       { href: "/professores", label: "Professores", icon: Users },
       { href: "/disponibilidade", label: "Disponibilidade", icon: Clock },
+      // [NOVO] Página já existia pronta em disco, só nunca tinha sido
+      // ligada nem ao App.tsx nem ao menu -- achada na faxina de código
+      // órfão. Cada escola configura suas próprias regras (máximo de
+      // aulas geminadas, limites por disciplina/turma, limites por
+      // professor) que o gerador de horário usa.
+      { href: "/regras-distribuicao", label: "Regras de Distribuição", icon: SlidersHorizontal },
       { href: "/disciplinas", label: "Disciplinas", icon: BookOpen },
       { href: "/cursos", label: "Cursos e Matriz Curricular", icon: Library },
       { href: "/turmas", label: "Turmas", icon: GraduationCap },
