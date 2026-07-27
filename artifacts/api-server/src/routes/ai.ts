@@ -241,15 +241,19 @@ async function pedirRespostaComResultadoFuncao(
   apiKey: string,
   contents: unknown[],
   systemPrompt: string,
-  functionCallPart: { name: string; args: Record<string, unknown> },
+  functionCallFullPart: { functionCall?: { name: string; args: Record<string, unknown> }; thoughtSignature?: string },
   resultado: unknown,
 ): Promise<string> {
+  const nomeFuncao = functionCallFullPart.functionCall!.name;
   const contentsComResultado = [
     ...contents,
-    { role: "model", parts: [{ functionCall: functionCallPart }] },
+    // Ecoa o part ORIGINAL (com thoughtSignature, se veio) em vez de
+    // reconstruir só com { functionCall: ... } -- ver comentário sobre
+    // thought_signature acima, onde `parts` é montado.
+    { role: "model", parts: [functionCallFullPart] },
     {
       role: "function",
-      parts: [{ functionResponse: { name: functionCallPart.name, response: resultado as Record<string, unknown> } }],
+      parts: [{ functionResponse: { name: nomeFuncao, response: resultado as Record<string, unknown> } }],
     },
   ];
 
@@ -383,12 +387,26 @@ Seja direto, útil e use linguagem educacional brasileira.`;
 
     const completion = await geminiRes.json() as {
       candidates?: Array<{
-        content?: { parts?: Array<{ text?: string; functionCall?: { name: string; args: Record<string, unknown> } }> };
+        content?: {
+          parts?: Array<{
+            text?: string;
+            functionCall?: { name: string; args: Record<string, unknown> };
+            // [NOVO] Modelos Gemini com "thinking" (2.5+) agora exigem
+            // devolver esse campo junto quando a chamada de função é
+            // ecoada de volta numa segunda mensagem -- sem ele, a API
+            // recusa com 400 "missing a thought_signature". Vem como
+            // campo IRMÃO de functionCall dentro do mesmo part, não
+            // dentro dele -- por isso precisamos guardar o part
+            // INTEIRO, não só o `.functionCall` de dentro.
+            thoughtSignature?: string;
+          }>;
+        };
       }>;
     };
 
     const parts = completion.candidates?.[0]?.content?.parts ?? [];
-    const functionCallPart = parts.find((p) => p.functionCall)?.functionCall;
+    const functionCallFullPart = parts.find((p) => p.functionCall);
+    const functionCallPart = functionCallFullPart?.functionCall;
     const textPart = parts.find((p) => p.text)?.text;
 
     let respostaTexto: string;
@@ -434,14 +452,14 @@ Seja direto, útil e use linguagem educacional brasileira.`;
     } else if (functionCallPart?.name === "consultar_janelas_professores") {
       const janelas = await calcularJanelasProfessores(escolaId);
       respostaTexto = await pedirRespostaComResultadoFuncao(
-        apiKey, contents, systemPrompt, functionCallPart, { janelas: janelas.slice(0, 30) },
+        apiKey, contents, systemPrompt, functionCallFullPart!, { janelas: janelas.slice(0, 30) },
       );
     } else if (functionCallPart?.name === "consultar_turmas_sem_horario") {
       const dados = await consultarTurmasSemHorario(escolaId);
-      respostaTexto = await pedirRespostaComResultadoFuncao(apiKey, contents, systemPrompt, functionCallPart, dados);
+      respostaTexto = await pedirRespostaComResultadoFuncao(apiKey, contents, systemPrompt, functionCallFullPart!, dados);
     } else if (functionCallPart?.name === "consultar_distribuicao_semanal") {
       const dados = await consultarDistribuicaoSemanal(escolaId);
-      respostaTexto = await pedirRespostaComResultadoFuncao(apiKey, contents, systemPrompt, functionCallPart, dados);
+      respostaTexto = await pedirRespostaComResultadoFuncao(apiKey, contents, systemPrompt, functionCallFullPart!, dados);
     } else {
       respostaTexto = textPart ?? "Não consegui gerar uma resposta. Tente reformular a pergunta.";
     }
