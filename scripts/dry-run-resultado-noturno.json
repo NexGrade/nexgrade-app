@@ -1,0 +1,1511 @@
+{
+  "resolvidas": [
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 599,
+      "professorNome": "Anderson",
+      "diaSemana": 1,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 599,
+      "professorNome": "Anderson",
+      "diaSemana": 2,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 599,
+      "professorNome": "Anderson",
+      "diaSemana": 0,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 599,
+      "professorNome": "Anderson",
+      "diaSemana": 1,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 599,
+      "professorNome": "Anderson",
+      "diaSemana": 2,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 599,
+      "professorNome": "Anderson",
+      "diaSemana": 0,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 599,
+      "professorNome": "Anderson",
+      "diaSemana": 0,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 599,
+      "professorNome": "Anderson",
+      "diaSemana": 1,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 599,
+      "professorNome": "Anderson",
+      "diaSemana": 2,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 599,
+      "professorNome": "Anderson",
+      "diaSemana": 0,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 599,
+      "professorNome": "Anderson",
+      "diaSemana": 2,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 602,
+      "professorNome": "Antonio Silva",
+      "diaSemana": 1,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 602,
+      "professorNome": "Antonio Silva",
+      "diaSemana": 2,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 602,
+      "professorNome": "Antonio Silva",
+      "diaSemana": 3,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 602,
+      "professorNome": "Antonio Silva",
+      "diaSemana": 4,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 602,
+      "professorNome": "Antonio Silva",
+      "diaSemana": 1,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 602,
+      "professorNome": "Antonio Silva",
+      "diaSemana": 2,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 602,
+      "professorNome": "Antonio Silva",
+      "diaSemana": 4,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 602,
+      "professorNome": "Antonio Silva",
+      "diaSemana": 2,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 602,
+      "professorNome": "Antonio Silva",
+      "diaSemana": 4,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 602,
+      "professorNome": "Antonio Silva",
+      "diaSemana": 2,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 602,
+      "professorNome": "Antonio Silva",
+      "diaSemana": 3,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 602,
+      "professorNome": "Antonio Silva",
+      "diaSemana": 4,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 602,
+      "professorNome": "Antonio Silva",
+      "diaSemana": 1,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 602,
+      "professorNome": "Antonio Silva",
+      "diaSemana": 2,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 602,
+      "professorNome": "Antonio Silva",
+      "diaSemana": 3,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 602,
+      "professorNome": "Antonio Silva",
+      "diaSemana": 4,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1645,
+      "disciplinaNome": "Educação Financeira",
+      "professorId": 603,
+      "professorNome": "Arnaldo",
+      "diaSemana": 3,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1645,
+      "disciplinaNome": "Educação Financeira",
+      "professorId": 603,
+      "professorNome": "Arnaldo",
+      "diaSemana": 4,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1645,
+      "disciplinaNome": "Educação Financeira",
+      "professorId": 603,
+      "professorNome": "Arnaldo",
+      "diaSemana": 3,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1644,
+      "disciplinaNome": "Educação Digital",
+      "professorId": 603,
+      "professorNome": "Arnaldo",
+      "diaSemana": 4,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1645,
+      "disciplinaNome": "Educação Financeira",
+      "professorId": 603,
+      "professorNome": "Arnaldo",
+      "diaSemana": 4,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1716,
+      "disciplinaNome": "Técnicas Integradas",
+      "professorId": 603,
+      "professorNome": "Arnaldo",
+      "diaSemana": 4,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1645,
+      "disciplinaNome": "Educação Financeira",
+      "professorId": 603,
+      "professorNome": "Arnaldo",
+      "diaSemana": 3,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1645,
+      "disciplinaNome": "Educação Financeira",
+      "professorId": 603,
+      "professorNome": "Arnaldo",
+      "diaSemana": 4,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 604,
+      "professorNome": "Carlos",
+      "diaSemana": 2,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1704,
+      "disciplinaNome": "Recomposição da Aprendizagem - Matemática",
+      "professorId": 604,
+      "professorNome": "Carlos",
+      "diaSemana": 3,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 604,
+      "professorNome": "Carlos",
+      "diaSemana": 2,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 604,
+      "professorNome": "Carlos",
+      "diaSemana": 3,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 604,
+      "professorNome": "Carlos",
+      "diaSemana": 1,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 604,
+      "professorNome": "Carlos",
+      "diaSemana": 2,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 604,
+      "professorNome": "Carlos",
+      "diaSemana": 3,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 604,
+      "professorNome": "Carlos",
+      "diaSemana": 0,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 604,
+      "professorNome": "Carlos",
+      "diaSemana": 1,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 604,
+      "professorNome": "Carlos",
+      "diaSemana": 2,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1704,
+      "disciplinaNome": "Recomposição da Aprendizagem - Matemática",
+      "professorId": 604,
+      "professorNome": "Carlos",
+      "diaSemana": 3,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1687,
+      "disciplinaNome": "Matemática",
+      "professorId": 604,
+      "professorNome": "Carlos",
+      "diaSemana": 0,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1704,
+      "disciplinaNome": "Recomposição da Aprendizagem - Matemática",
+      "professorId": 604,
+      "professorNome": "Carlos",
+      "diaSemana": 1,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1704,
+      "disciplinaNome": "Recomposição da Aprendizagem - Matemática",
+      "professorId": 604,
+      "professorNome": "Carlos",
+      "diaSemana": 2,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1632,
+      "disciplinaNome": "Biologia 2",
+      "professorId": 608,
+      "professorNome": "Cleide",
+      "diaSemana": 1,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1632,
+      "disciplinaNome": "Biologia 2",
+      "professorId": 608,
+      "professorNome": "Cleide",
+      "diaSemana": 1,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1670,
+      "disciplinaNome": "História",
+      "professorId": 611,
+      "professorNome": "Daiane",
+      "diaSemana": 4,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1670,
+      "disciplinaNome": "História",
+      "professorId": 611,
+      "professorNome": "Daiane",
+      "diaSemana": 4,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1671,
+      "disciplinaNome": "História 1",
+      "professorId": 611,
+      "professorNome": "Daiane",
+      "diaSemana": 4,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1670,
+      "disciplinaNome": "História",
+      "professorId": 611,
+      "professorNome": "Daiane",
+      "diaSemana": 4,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1670,
+      "disciplinaNome": "História",
+      "professorId": 611,
+      "professorNome": "Daiane",
+      "diaSemana": 4,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1664,
+      "disciplinaNome": "Geografia 1",
+      "professorId": 613,
+      "professorNome": "Dorival",
+      "diaSemana": 2,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1663,
+      "disciplinaNome": "Geografia",
+      "professorId": 613,
+      "professorNome": "Dorival",
+      "diaSemana": 0,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1663,
+      "disciplinaNome": "Geografia",
+      "professorId": 613,
+      "professorNome": "Dorival",
+      "diaSemana": 2,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1663,
+      "disciplinaNome": "Geografia",
+      "professorId": 613,
+      "professorNome": "Dorival",
+      "diaSemana": 2,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1663,
+      "disciplinaNome": "Geografia",
+      "professorId": 613,
+      "professorNome": "Dorival",
+      "diaSemana": 2,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1682,
+      "disciplinaNome": "Língua Estrangeira Moderna - Inglês",
+      "professorId": 619,
+      "professorNome": "Eliane",
+      "diaSemana": 1,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1682,
+      "disciplinaNome": "Língua Estrangeira Moderna - Inglês",
+      "professorId": 619,
+      "professorNome": "Eliane",
+      "diaSemana": 3,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1682,
+      "disciplinaNome": "Língua Estrangeira Moderna - Inglês",
+      "professorId": 619,
+      "professorNome": "Eliane",
+      "diaSemana": 1,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1682,
+      "disciplinaNome": "Língua Estrangeira Moderna - Inglês",
+      "professorId": 619,
+      "professorNome": "Eliane",
+      "diaSemana": 3,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1682,
+      "disciplinaNome": "Língua Estrangeira Moderna - Inglês",
+      "professorId": 619,
+      "professorNome": "Eliane",
+      "diaSemana": 1,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1682,
+      "disciplinaNome": "Língua Estrangeira Moderna - Inglês",
+      "professorId": 619,
+      "professorNome": "Eliane",
+      "diaSemana": 3,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1682,
+      "disciplinaNome": "Língua Estrangeira Moderna - Inglês",
+      "professorId": 619,
+      "professorNome": "Eliane",
+      "diaSemana": 1,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1682,
+      "disciplinaNome": "Língua Estrangeira Moderna - Inglês",
+      "professorId": 619,
+      "professorNome": "Eliane",
+      "diaSemana": 3,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1682,
+      "disciplinaNome": "Língua Estrangeira Moderna - Inglês",
+      "professorId": 619,
+      "professorNome": "Eliane",
+      "diaSemana": 1,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1682,
+      "disciplinaNome": "Língua Estrangeira Moderna - Inglês",
+      "professorId": 619,
+      "professorNome": "Eliane",
+      "diaSemana": 3,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1646,
+      "disciplinaNome": "Educação Física",
+      "professorId": 622,
+      "professorNome": "Elisangela",
+      "diaSemana": 0,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1646,
+      "disciplinaNome": "Educação Física",
+      "professorId": 622,
+      "professorNome": "Elisangela",
+      "diaSemana": 1,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1646,
+      "disciplinaNome": "Educação Física",
+      "professorId": 622,
+      "professorNome": "Elisangela",
+      "diaSemana": 2,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1646,
+      "disciplinaNome": "Educação Física",
+      "professorId": 622,
+      "professorNome": "Elisangela",
+      "diaSemana": 0,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1646,
+      "disciplinaNome": "Educação Física",
+      "professorId": 622,
+      "professorNome": "Elisangela",
+      "diaSemana": 1,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1646,
+      "disciplinaNome": "Educação Física",
+      "professorId": 622,
+      "professorNome": "Elisangela",
+      "diaSemana": 2,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1646,
+      "disciplinaNome": "Educação Física",
+      "professorId": 622,
+      "professorNome": "Elisangela",
+      "diaSemana": 2,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1646,
+      "disciplinaNome": "Educação Física",
+      "professorId": 622,
+      "professorNome": "Elisangela",
+      "diaSemana": 1,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1646,
+      "disciplinaNome": "Educação Física",
+      "professorId": 622,
+      "professorNome": "Elisangela",
+      "diaSemana": 2,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1646,
+      "disciplinaNome": "Educação Física",
+      "professorId": 622,
+      "professorNome": "Elisangela",
+      "diaSemana": 0,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1646,
+      "disciplinaNome": "Educação Física",
+      "professorId": 622,
+      "professorNome": "Elisangela",
+      "diaSemana": 1,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1646,
+      "disciplinaNome": "Educação Física",
+      "professorId": 622,
+      "professorNome": "Elisangela",
+      "diaSemana": 2,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1705,
+      "disciplinaNome": "Recursos Humanos",
+      "professorId": 624,
+      "professorNome": "Felipe",
+      "diaSemana": 3,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1700,
+      "disciplinaNome": "Projeto de Vida",
+      "professorId": 624,
+      "professorNome": "Felipe",
+      "diaSemana": 0,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1700,
+      "disciplinaNome": "Projeto de Vida",
+      "professorId": 624,
+      "professorNome": "Felipe",
+      "diaSemana": 3,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1657,
+      "disciplinaNome": "Finanças Empresariais",
+      "professorId": 624,
+      "professorNome": "Felipe",
+      "diaSemana": 0,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1651,
+      "disciplinaNome": "Estratégias de Marketing",
+      "professorId": 624,
+      "professorNome": "Felipe",
+      "diaSemana": 3,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1645,
+      "disciplinaNome": "Educação Financeira",
+      "professorId": 630,
+      "professorNome": "Geverson",
+      "diaSemana": 3,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1645,
+      "disciplinaNome": "Educação Financeira",
+      "professorId": 630,
+      "professorNome": "Geverson",
+      "diaSemana": 3,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1694,
+      "disciplinaNome": "Princípios Econômicos",
+      "professorId": 632,
+      "professorNome": "Gleiciane",
+      "diaSemana": 4,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1703,
+      "disciplinaNome": "Recomposição da Aprendizagem - Língua Portuguesa",
+      "professorId": 632,
+      "professorNome": "Gleiciane",
+      "diaSemana": 4,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1703,
+      "disciplinaNome": "Recomposição da Aprendizagem - Língua Portuguesa",
+      "professorId": 632,
+      "professorNome": "Gleiciane",
+      "diaSemana": 4,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1669,
+      "disciplinaNome": "Hibrida",
+      "professorId": 690,
+      "professorNome": "Híbrida (1NB)",
+      "diaSemana": 2,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1669,
+      "disciplinaNome": "Hibrida",
+      "professorId": 691,
+      "professorNome": "Híbrida (2NB)",
+      "diaSemana": 0,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1669,
+      "disciplinaNome": "Hibrida",
+      "professorId": 692,
+      "professorNome": "Híbrida (2NC)",
+      "diaSemana": 0,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 639,
+      "professorNome": "Ivete",
+      "diaSemana": 1,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1703,
+      "disciplinaNome": "Recomposição da Aprendizagem - Língua Portuguesa",
+      "professorId": 639,
+      "professorNome": "Ivete",
+      "diaSemana": 4,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 639,
+      "professorNome": "Ivete",
+      "diaSemana": 4,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 639,
+      "professorNome": "Ivete",
+      "diaSemana": 1,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 639,
+      "professorNome": "Ivete",
+      "diaSemana": 4,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1703,
+      "disciplinaNome": "Recomposição da Aprendizagem - Língua Portuguesa",
+      "professorId": 639,
+      "professorNome": "Ivete",
+      "diaSemana": 4,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 639,
+      "professorNome": "Ivete",
+      "diaSemana": 0,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1684,
+      "disciplinaNome": "Língua Portuguesa e Literatura",
+      "professorId": 639,
+      "professorNome": "Ivete",
+      "diaSemana": 4,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1660,
+      "disciplinaNome": "Física",
+      "professorId": 643,
+      "professorNome": "João Lucas",
+      "diaSemana": 0,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1660,
+      "disciplinaNome": "Física",
+      "professorId": 643,
+      "professorNome": "João Lucas",
+      "diaSemana": 0,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1660,
+      "disciplinaNome": "Física",
+      "professorId": 643,
+      "professorNome": "João Lucas",
+      "diaSemana": 1,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1660,
+      "disciplinaNome": "Física",
+      "professorId": 643,
+      "professorNome": "João Lucas",
+      "diaSemana": 0,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1660,
+      "disciplinaNome": "Física",
+      "professorId": 643,
+      "professorNome": "João Lucas",
+      "diaSemana": 1,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1660,
+      "disciplinaNome": "Física",
+      "professorId": 643,
+      "professorNome": "João Lucas",
+      "diaSemana": 0,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1660,
+      "disciplinaNome": "Física",
+      "professorId": 643,
+      "professorNome": "João Lucas",
+      "diaSemana": 1,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1624,
+      "disciplinaNome": "Arte",
+      "professorId": 667,
+      "professorNome": "Roberval",
+      "diaSemana": 4,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1624,
+      "disciplinaNome": "Arte",
+      "professorId": 667,
+      "professorNome": "Roberval",
+      "diaSemana": 0,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1624,
+      "disciplinaNome": "Arte",
+      "professorId": 667,
+      "professorNome": "Roberval",
+      "diaSemana": 4,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1624,
+      "disciplinaNome": "Arte",
+      "professorId": 667,
+      "professorNome": "Roberval",
+      "diaSemana": 3,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1624,
+      "disciplinaNome": "Arte",
+      "professorId": 667,
+      "professorNome": "Roberval",
+      "diaSemana": 4,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1625,
+      "disciplinaNome": "Arte 2",
+      "professorId": 667,
+      "professorNome": "Roberval",
+      "diaSemana": 0,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1624,
+      "disciplinaNome": "Arte",
+      "professorId": 667,
+      "professorNome": "Roberval",
+      "diaSemana": 4,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1625,
+      "disciplinaNome": "Arte 2",
+      "professorId": 667,
+      "professorNome": "Roberval",
+      "diaSemana": 0,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1624,
+      "disciplinaNome": "Arte",
+      "professorId": 667,
+      "professorNome": "Roberval",
+      "diaSemana": 3,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1624,
+      "disciplinaNome": "Arte",
+      "professorId": 667,
+      "professorNome": "Roberval",
+      "diaSemana": 4,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1631,
+      "disciplinaNome": "Biologia",
+      "professorId": 669,
+      "professorNome": "Rodrigo",
+      "diaSemana": 2,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1631,
+      "disciplinaNome": "Biologia",
+      "professorId": 669,
+      "professorNome": "Rodrigo",
+      "diaSemana": 2,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1631,
+      "disciplinaNome": "Biologia",
+      "professorId": 669,
+      "professorNome": "Rodrigo",
+      "diaSemana": 2,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1631,
+      "disciplinaNome": "Biologia",
+      "professorId": 669,
+      "professorNome": "Rodrigo",
+      "diaSemana": 2,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1656,
+      "disciplinaNome": "Filosofia",
+      "professorId": 675,
+      "professorNome": "Sypriano",
+      "diaSemana": 0,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1656,
+      "disciplinaNome": "Filosofia",
+      "professorId": 675,
+      "professorNome": "Sypriano",
+      "diaSemana": 1,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1656,
+      "disciplinaNome": "Filosofia",
+      "professorId": 675,
+      "professorNome": "Sypriano",
+      "diaSemana": 1,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1656,
+      "disciplinaNome": "Filosofia",
+      "professorId": 675,
+      "professorNome": "Sypriano",
+      "diaSemana": 0,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1675,
+      "disciplinaNome": "Informática Empresarial",
+      "professorId": 676,
+      "professorNome": "Tiago",
+      "diaSemana": 0,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1693,
+      "disciplinaNome": "Princ. de Administração",
+      "professorId": 676,
+      "professorNome": "Tiago",
+      "diaSemana": 4,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1688,
+      "disciplinaNome": "Matemática 2",
+      "professorId": 676,
+      "professorNome": "Tiago",
+      "diaSemana": 4,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1702,
+      "disciplinaNome": "Química 1",
+      "professorId": 677,
+      "professorNome": "Viviane",
+      "diaSemana": 0,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1701,
+      "disciplinaNome": "Química",
+      "professorId": 677,
+      "professorNome": "Viviane",
+      "diaSemana": 3,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1662,
+      "disciplinaNome": "Física 3",
+      "professorId": 677,
+      "professorNome": "Viviane",
+      "diaSemana": 0,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1701,
+      "disciplinaNome": "Química",
+      "professorId": 677,
+      "professorNome": "Viviane",
+      "diaSemana": 1,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1702,
+      "disciplinaNome": "Química 1",
+      "professorId": 677,
+      "professorNome": "Viviane",
+      "diaSemana": 2,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 382,
+      "turmaNome": "1NF ADM",
+      "disciplinaId": 1701,
+      "disciplinaNome": "Química",
+      "professorId": 677,
+      "professorNome": "Viviane",
+      "diaSemana": 3,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1644,
+      "disciplinaNome": "Educação Digital",
+      "professorId": 677,
+      "professorNome": "Viviane",
+      "diaSemana": 0,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1661,
+      "disciplinaNome": "Física 2",
+      "professorId": 677,
+      "professorNome": "Viviane",
+      "diaSemana": 1,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1662,
+      "disciplinaNome": "Física 3",
+      "professorId": 677,
+      "professorNome": "Viviane",
+      "diaSemana": 2,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1644,
+      "disciplinaNome": "Educação Digital",
+      "professorId": 677,
+      "professorNome": "Viviane",
+      "diaSemana": 3,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 381,
+      "turmaNome": "1NB",
+      "disciplinaId": 1701,
+      "disciplinaNome": "Química",
+      "professorId": 677,
+      "professorNome": "Viviane",
+      "diaSemana": 1,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 393,
+      "turmaNome": "3NB",
+      "disciplinaId": 1661,
+      "disciplinaNome": "Física 2",
+      "professorId": 677,
+      "professorNome": "Viviane",
+      "diaSemana": 3,
+      "numeroAula": 5
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1711,
+      "disciplinaNome": "Sociologia",
+      "professorId": 681,
+      "professorNome": "Willian",
+      "diaSemana": 0,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1712,
+      "disciplinaNome": "Sociologia 1",
+      "professorId": 681,
+      "professorNome": "Willian",
+      "diaSemana": 3,
+      "numeroAula": 1
+    },
+    {
+      "turmaId": 388,
+      "turmaNome": "2NB",
+      "disciplinaId": 1711,
+      "disciplinaNome": "Sociologia",
+      "professorId": 681,
+      "professorNome": "Willian",
+      "diaSemana": 3,
+      "numeroAula": 2
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1711,
+      "disciplinaNome": "Sociologia",
+      "professorId": 681,
+      "professorNome": "Willian",
+      "diaSemana": 0,
+      "numeroAula": 3
+    },
+    {
+      "turmaId": 389,
+      "turmaNome": "2NC",
+      "disciplinaId": 1711,
+      "disciplinaNome": "Sociologia",
+      "professorId": 681,
+      "professorNome": "Willian",
+      "diaSemana": 3,
+      "numeroAula": 4
+    },
+    {
+      "turmaId": 394,
+      "turmaNome": "3NC",
+      "disciplinaId": 1712,
+      "disciplinaNome": "Sociologia 1",
+      "professorId": 681,
+      "professorNome": "Willian",
+      "diaSemana": 3,
+      "numeroAula": 5
+    }
+  ],
+  "problemas": [],
+  "resumo": {
+    "iguais": 147,
+    "diferentes": 0,
+    "novos": 3,
+    "removidos": 0
+  }
+}
