@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Download, FileText, Table, BarChart3, FileDown, ClipboardList } from "lucide-react";
+import { Download, FileText, Table, BarChart3, FileDown, ClipboardList, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 function buildUrl(path: string, params: Record<string, string | undefined>) {
@@ -63,6 +63,11 @@ export default function ExportPage() {
   // aulas + HA institucional + turmas/disciplinas por período), não a
   // grade dia-a-dia.
   const [cargaOpts, setCargaOpts] = useState({ professorId: "", semana: SEMANA_ATUAL });
+  // [NOVO] Carga Horária Cumprida x Exigida virou relatório sob demanda
+  // em vez de tela fixa no menu (ver pages/carga-horaria removida) --
+  // mesmo dado, mesma consulta, agora em PDF pra consultar quando
+  // precisar em vez de ficar ocupando espaço permanente na navegação.
+  const [cargaHorariaOpts, setCargaHorariaOpts] = useState({ ano: String(new Date().getFullYear()) });
 
   const handleDownload = (url: string, filename: string) => {
     const a = document.createElement("a");
@@ -324,6 +329,36 @@ export default function ExportPage() {
               }}
             >
               <Download className="w-4 h-4 mr-2" />Baixar Relatório de Carga
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Carga Horária Cumprida x Exigida */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <TrendingUp className="w-4 h-4" /> Carga Horária Cumprida × Exigida
+            </CardTitle>
+            <CardDescription>PDF por turma com cada disciplina, quanto já foi cumprido no ano x o total exigido -- pra checar antecipadamente se alguma vai fechar o ano devendo aula.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-1.5 w-40">
+              <Label>Ano letivo</Label>
+              <Select value={cargaHorariaOpts.ano} onValueChange={(v) => setCargaHorariaOpts({ ano: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2026">2026</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              className="w-full"
+              onClick={() => {
+                const url = buildUrl("/api/export/carga-horaria-pdf", { ano: cargaHorariaOpts.ano });
+                handleDownload(url, `carga_horaria_${cargaHorariaOpts.ano}.pdf`);
+              }}
+            >
+              <Download className="w-4 h-4 mr-2" />Baixar Carga Horária
             </Button>
           </CardContent>
         </Card>

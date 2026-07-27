@@ -2,12 +2,13 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import {
   horariosTable, professoresTable, disciplinasTable, turmasTable, disponibilidadeTable,
-  horarioSlotsTable,
+  horarioSlotsTable, turmaDisciplinasTable, trimestresLetivosTable, matrizesCurricularesTable, itensMatrizTable,
 } from "@workspace/db";
 import { and, eq, isNull } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
 import { gerarPdfGradeCompacta, type BlocoGrade } from "../lib/pdf-grade";
 import { gerarPdfCargaProfessores, type RelatorioProfessor } from "../lib/pdf-carga-professor";
+import { gerarPdfCargaHoraria, type TurmaCargaHoraria } from "../lib/pdf-carga-horaria";
 
 const router = Router();
 
@@ -420,6 +421,82 @@ router.get("/relatorio-carga-pdf", async (req, res) => {
   const pdfBytes = await gerarPdfCargaProfessores(NOME_ESCOLA, intervaloSemana(lerOffsetSemana(req)), relatorio);
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", 'attachment; filename="relatorio_carga_professores.pdf"');
+  res.send(Buffer.from(pdfBytes));
+});
+
+
+// ------------------------------------------------------------------
+// PDF — Carga Horária Cumprida × Exigida: mesma consulta usada em
+// GET /api/calendario-escolar/carga-horaria (agrupamento por trimestre
+// + status), só que devolvida como PDF em vez de JSON, agrupada por
+// turma. Pensada pra consulta pontual (baixa, guarda, confere depois)
+// em vez de ficar como tela fixa no menu.
+// ------------------------------------------------------------------
+router.get("/carga-horaria-pdf", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const ano = req.query.ano ? Number(req.query.ano) : new Date().getFullYear();
+  const [turmasTodas, turmaDiscsTodos, disciplinas, slots, trimestres, matrizes, itensMatrizTodos] = await Promise.all([
+    db.select().from(turmasTable).where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.anoLetivo, ano))),
+    db.select().from(turmaDisciplinasTable),
+    db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
+    db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
+    db.select().from(trimestresLetivosTable).where(and(eq(trimestresLetivosTable.escolaId, escolaId), eq(trimestresLetivosTable.ano, ano))),
+    db.select().from(matrizesCurricularesTable).where(eq(matrizesCurricularesTable.escolaId, escolaId)),
+    db.select().from(itensMatrizTable),
+  ]);
+
+  const turmaIds = new Set(turmasTodas.map((t) => t.id));
+  const turmaDiscs = turmaDiscsTodos.filter((td) => turmaIds.has(td.turmaId));
+
+  const porTurma = new Map<number, TurmaCargaHoraria>();
+  turmasTodas.forEach((t) => porTurma.set(t.id, { turma: t.nome, itens: [] }));
+
+  turmaDiscs.forEach((td) => {
+    const turma = turmasTodas.find((t) => t.id === td.turmaId);
+    const disc = disciplinas.find((d) => d.id === td.disciplinaId);
+    if (!turma || !disc) return;
+
+    let cargaSemanalExigida = td.cargaHorariaSemanalOverride;
+    if (cargaSemanalExigida == null && turma.matrizCurricularId) {
+      const matriz = matrizes.find((m) => m.id === turma.matrizCurricularId);
+      if (matriz) {
+        const item = itensMatrizTodos.find((im) => im.matrizCurricularId === matriz.id && im.disciplinaId === disc.id);
+        if (item) cargaSemanalExigida = item.cargaHorariaSemanal;
+      }
+    }
+    if (cargaSemanalExigida == null) cargaSemanalExigida = disc.cargaSemanal;
+
+    const aulasSemanaGrid = slots.filter((h) => h.turmaId === turma.id && h.disciplinaId === disc.id).length;
+
+    let totalCumprido = 0;
+    let totalExigido = 0;
+    trimestres.forEach((t) => {
+      const semanasLetivas = t.diasLetivos / 5;
+      totalCumprido += Math.round(aulasSemanaGrid * semanasLetivas);
+      totalExigido += Math.round((cargaSemanalExigida as number) * semanasLetivas);
+    });
+
+    const status: "ok" | "insuficiente" | "nao_gerado" =
+      aulasSemanaGrid === 0 ? "nao_gerado" : totalCumprido >= totalExigido ? "ok" : "insuficiente";
+
+    porTurma.get(turma.id)?.itens.push({
+      disciplina: disc.nome,
+      cargaSemanalExigida,
+      aulasSemanaGrid,
+      totalCumprido,
+      totalExigido,
+      status,
+    });
+  });
+
+  const turmasComItens = [...porTurma.values()]
+    .filter((t) => t.itens.length > 0)
+    .sort((a, b) => a.turma.localeCompare(b.turma, "pt-BR"));
+  turmasComItens.forEach((t) => t.itens.sort((a, b) => a.disciplina.localeCompare(b.disciplina, "pt-BR")));
+
+  const pdfBytes = await gerarPdfCargaHoraria(NOME_ESCOLA, ano, turmasComItens);
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="carga_horaria_${ano}.pdf"`);
   res.send(Buffer.from(pdfBytes));
 });
 

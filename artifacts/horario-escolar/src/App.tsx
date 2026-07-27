@@ -43,9 +43,6 @@ const OnboardingPage = lazy(() => import("@/pages/onboarding/index"));
 const CursosList = lazy(() => import("@/pages/cursos/index"));
 const DisponibilidadePage = lazy(() => import("@/pages/disponibilidade/index"));
 const CalendarioEscolarPage = lazy(() => import("@/pages/calendario/index"));
-// [NOVO] Carga Horária Cumprida x Exigida ganhou menu próprio, separado
-// do Calendário Escolar (antes vivia dentro da mesma tela).
-const CargaHorariaPage = lazy(() => import("@/pages/carga-horaria/index"));
 // [NOVO] Página já existia em disco (completa e funcional -- usa hooks
 // reais de configuração/turmas/professores/limites diários), mas nunca
 // tinha sido ligada nem no App.tsx nem no menu. Achado na faxina de
@@ -319,7 +316,6 @@ function Router() {
       <Route path="/licencas" component={() => <ProtectedRoute component={LicencasList} />} />
       <Route path="/comunicados" component={() => <ProtectedRoute component={ComunicadosList} />} />
       <Route path="/calendario" component={() => <ProtectedRoute component={CalendarioEscolarPage} />} />
-      <Route path="/carga-horaria" component={() => <ProtectedRoute component={CargaHorariaPage} />} />
       <Route path="/regras-distribuicao" component={() => <ProtectedRoute component={RegrasDistribuicaoPage} />} />
       <Route path="/usuarios" component={() => <ProtectedRoute component={UsuariosList} />} />
       <Route path="/audit" component={() => <ProtectedRoute component={AuditList} />} />
