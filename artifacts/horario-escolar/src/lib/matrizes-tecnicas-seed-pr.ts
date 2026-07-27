@@ -34,6 +34,14 @@
 // Língua Espanhola (Parte Diversificada, 4h/semana) é de matrícula facultativa
 // para o aluno — incluída aqui como item não-obrigatório.
 
+// [ATUALIZADO] Agora cobre as DUAS formas de oferta técnica da SEED-PR:
+// - "concomitante_intercomplementar" (IN 005/2026, 27 cursos, códigos 4700-4817)
+// - "integrada" (IN 001/2026, 35 cursos, códigos 2501-2542)
+// Um mesmo nome de curso pode existir nas duas formas com grades DIFERENTES
+// (ex: "Técnico em Farmácia" integrada x concomitante) — por isso cada
+// template carrega `formaOferta`, e o casamento automático em cursos/index.tsx
+// agora filtra por formaOferta do curso além do nome, evitando ambiguidade.
+
 export interface ItemMatrizTecnica {
   nome: string;
   categoria: "FGB" | "IFA" | "APF" | "PD";
@@ -45,6 +53,7 @@ export interface MatrizTecnicaTemplate {
   codigo: string;
   curso: string;
   eixo: string;
+  formaOferta: "integrada" | "concomitante_intercomplementar";
   series: { serieAno: string; itens: ItemMatrizTecnica[] }[];
 }
 
@@ -53,6 +62,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4801",
     curso: "Técnico em Automação Industrial",
     eixo: "controle_processos_industriais",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -128,6 +138,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4805",
     curso: "Técnico em Eletroeletrônica",
     eixo: "controle_processos_industriais",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -198,6 +209,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4806",
     curso: "Técnico em Eletromecânica",
     eixo: "controle_processos_industriais",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -268,6 +280,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4807",
     curso: "Técnico em Eletrônica",
     eixo: "controle_processos_industriais",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -336,6 +349,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4816",
     curso: "Técnico em Eletrotécnica",
     eixo: "controle_processos_industriais",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -406,6 +420,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4810",
     curso: "Técnico em Manutenção Automotiva",
     eixo: "controle_processos_industriais",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -473,6 +488,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4811",
     curso: "Técnico em Manutenção de Máquinas Industriais na forma concomitante",
     eixo: "controle_processos_industriais",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -539,6 +555,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4812",
     curso: "Técnico em Mecânica",
     eixo: "controle_processos_industriais",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -608,6 +625,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4813",
     curso: "Técnico em Mecatrônica",
     eixo: "controle_processos_industriais",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -685,6 +703,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4809",
     curso: "Técnico em Logística",
     eixo: "gestao_negocios",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -749,6 +768,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4803",
     curso: "Técnico em Desenvolvimento de Sistemas na forma concomitante",
     eixo: "informacao_comunicacao",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -818,6 +838,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4808",
     curso: "Técnico em Informática",
     eixo: "informacao_comunicacao",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -886,6 +907,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4804",
     curso: "Técnico em Edificações",
     eixo: "infraestrutura",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -953,6 +975,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4800",
     curso: "Técnico em Alimentos",
     eixo: "producao_alimenticia",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -1027,6 +1050,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4802",
     curso: "Técnico em Biotecnologia",
     eixo: "producao_industrial",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -1097,6 +1121,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4814",
     curso: "Técnico em Química",
     eixo: "producao_industrial",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -1169,6 +1194,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4815",
     curso: "Técnico em Vestuário",
     eixo: "producao_industrial",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -1234,6 +1260,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4817",
     curso: "Técnico em Inteligência Artificial",
     eixo: "?",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -1302,6 +1329,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4700",
     curso: "Técnico em Análises Clínicas",
     eixo: "ambiente_saude",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -1373,6 +1401,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4702",
     curso: "Técnico em Estética",
     eixo: "ambiente_saude",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -1446,6 +1475,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4703",
     curso: "Técnico em Farmácia",
     eixo: "ambiente_saude",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -1514,6 +1544,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4707",
     curso: "Técnico em Nutrição e Dietética",
     eixo: "ambiente_saude",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -1584,6 +1615,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4701",
     curso: "Técnico em Design Gráfico",
     eixo: "producao_cultural_design",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -1658,6 +1690,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4708",
     curso: "Técnico em Produção de Moda",
     eixo: "producao_cultural_design",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -1728,6 +1761,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4709",
     curso: "Técnico em Segurança do Trabalho",
     eixo: "seguranca",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -1797,6 +1831,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4704",
     curso: "Técnico em Gastronomia",
     eixo: "turismo_hospitalidade_lazer",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -1863,6 +1898,7 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
     codigo: "4705",
     curso: "Técnico em Guia de Turismo",
     eixo: "turismo_hospitalidade_lazer",
+    formaOferta: "concomitante_intercomplementar",
     series: [
       {
         serieAno: "1ª Série",
@@ -1921,6 +1957,2394 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
           { nome: "Prática profissional de guia regional", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
           { nome: "Prática profissional de guia de excursão nacional", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
           { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2537",
+    curso: "Técnico em Estética",
+    eixo: "ambiente_saude",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Anatomia e fisiologia humana I", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Biossegurança", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Elemento de gestão e marketing", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Saúde e bem-estar", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Técnica de estética capilar", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Reflexoterapias", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Anatomia e fisiologia humana II", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Eletroestética facial e corporal", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Massoterapia aplicada a estética", categoria: "APF", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Cosmetologia", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Noções de patologia", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Técnicas de estética corporal", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Técnicas de estética facial", categoria: "APF", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Microagulhamento", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2538",
+    curso: "Técnico em Farmácia",
+    eixo: "ambiente_saude",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Redação técnica", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Empreendedorismo", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Dispensação de produtos farmacêuticos e correlatos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Farmácia hospitalar", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Farmacologia I", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Fundamentos de farmácia", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Saúde pública", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Bases biológicas aplicadas a saúde", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Redação técnica", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Biossegurança e segurança do trabalho", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Dispensação de produtos farmacêuticos e correlatos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Farmacologia II", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Fundamentos da fisiopatologia", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Toxicologia", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Química aplicada", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Bases biológicas aplicadas a saúde", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Controle de qualidade", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Farmacotécnica", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Homeopatia e fitoterapia", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Microbiologia e parasitologia básica", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Primeiros socorros", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2539",
+    curso: "Técnico em Meio Ambiente",
+    eixo: "controle_processos_industriais",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Análise, controle e química ambiental", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Gestão de recursos naturais", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Educação ambiental", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Gestão de resíduos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Informática aplicada", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sistema de gestão ambiental", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Educação ambiental I", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Estudos de impactos e riscos ambientais", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Análise, controle e química ambiental I", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Gestão de recursos naturais I", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Gestão de resíduos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Metodologia científica e comunicação", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Sistema de gestão ambiental", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Estudos de impactos e riscos ambientais", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Metodologia científica e comunicação I", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Análise, controle e química ambiental I", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Gestão de recursos naturais I", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Gestão de resíduos", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Legislação e segurança ambiental", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2540",
+    curso: "Técnico em Prótese Dentária",
+    eixo: "ambiente_saude",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Anatomia e fisiologia da cabeça", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Anatomia e escultura dental", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Higiene e segurança do trabalho", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Materiais e equipamentos odontológicos", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Prótese fixa", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Prótese parcial removível", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Prótese total", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Anatomia e escultura dental", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Prótese fixa", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Prótese ortodôntica", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Prótese parcial removível", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Prótese total", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Organização e administração laboratorial", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Prótese fixa", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Prótese ortodôntica", categoria: "APF", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Prótese parcial removível", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2541",
+    curso: "Técnico em Saúde Bucal",
+    eixo: "ambiente_saude",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Anatomia bucal", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Materiais odontológicos", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Nutrição aplicada", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Odontologia preventiva e social", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Organização e administração em saúde bucal", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Psicologia aplicada", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Técnicas de instrumentação em odontologia", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Biossegurança e controle biológico", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Materiais odontológicos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Odontologia preventiva e social", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Radiologia odontológica", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Técnicas de instrumentação em odontologia", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Técnicas restauradoras", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Patologia bucal", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Emergência odontológica", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Odontologia preventiva e social", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Técnicas de instrumentação em odontologia", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Técnicas restauradoras", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2528",
+    curso: "Técnico em Eletroeletrônica",
+    eixo: "controle_processos_industriais",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Desenho elétrico", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Conservação de energia e eficiência energética", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Eletricidade", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Instalações elétricas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Saúde e segurança do trabalho", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Eletrônica analógica", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Controlador lógico programável", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Equipamentos e máquinas elétricas", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Sistemas eletrônicos", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Eletrônica analógica", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Eletrônica digital", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Redes industriais", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Sistemas microcontrolados", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2529",
+    curso: "Técnico em Eletromecânica",
+    eixo: "controle_processos_industriais",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Mecânica", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Eletricidade", categoria: "APF", cargaHorariaSemanal: 5, obrigatoria: true },
+          { nome: "Gestão ambiental", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Projetos em eletromecânica", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Segurança do trabalho", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Manutenção de máquinas e equipamentos", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Mecânica", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Eletricidade", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Eletrônica", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Instalações elétricas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Processos de fabricação", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Projetos em eletromecânica", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Automação industrial", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Mecânica", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Eletrônica", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Máquinas elétricas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Processos de fabricação", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Projetos em eletromecânica", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Sistemas hidráulicos e pneumáticos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2530",
+    curso: "Técnico em Eletrônica",
+    eixo: "controle_processos_industriais",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Desenho elétrico", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Eletricidade", categoria: "APF", cargaHorariaSemanal: 6, obrigatoria: true },
+          { nome: "Gestão industrial", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Segurança do trabalho", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Automação industrial", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Eletrônica", categoria: "APF", cargaHorariaSemanal: 5, obrigatoria: true },
+          { nome: "Redes industriais", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sistemas eletrônicos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Automação industrial", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Máquinas elétricas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sistemas digitais", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sistemas hidráulicos e pneumáticos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Telecomunicações", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2531",
+    curso: "Técnico em Eletrotécnica",
+    eixo: "controle_processos_industriais",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Desenho técnico", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Eletricidade", categoria: "APF", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Instalações elétricas", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Segurança e controle ambiental", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Projetos elétricos", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Eletricidade", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Eletrônica", categoria: "APF", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Equipamentos e comandos", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Projetos elétricos", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Acionamento de máquinas", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Automação industrial", categoria: "APF", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Máquinas elétricas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2532",
+    curso: "Técnico em Manutenção Automotiva",
+    eixo: "controle_processos_industriais",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Tecnologia mecânica dos materiais", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Gestão industrial", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Mecânica e manutenção", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Metrologia", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Segurança do trabalho e controle ambiental", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Eletricidade", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Mecânica automobilística", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Motores de combustão interna", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Processos de fabricação", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Desenho mecânico", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Eletricidade automotiva", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Eletrônica automotiva", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Sistemas hidráulicos e pneumáticos", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2533",
+    curso: "Técnico em Mecânica",
+    eixo: "controle_processos_industriais",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Tecnologia mecânica", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Introdução a mecânica", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Manutenção de máquinas e equipamentos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Mecânica", categoria: "APF", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Segurança do trabalho", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Desenho mecânico", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Mecânica", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Processos de fabricação", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Resistência dos materiais", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Eletromecânica", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Processos de fabricação", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Projetos mecânicos", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Resistência dos materiais", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2534",
+    curso: "Técnico em Mecatrônica",
+    eixo: "controle_processos_industriais",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Tecnologia dos materiais", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Eletricidade", categoria: "APF", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Gestão industrial", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Informática", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Saúde e segurança do trabalho", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Projetos", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Automação e robótica", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Eletrônica", categoria: "APF", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Sistemas hidráulicos e pneumáticos", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Controle de processos industriais", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Acionamento de máquinas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Automação e robótica", categoria: "APF", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Eletrônica", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2535",
+    curso: "Técnico em Sistemas de Energia Renovável Integrado ao Ensino",
+    eixo: "controle_processos_industriais",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Tipos de energia renovável", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Eletricidade", categoria: "APF", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Gestão ambiental", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Segurança do trabalho", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Conservação de energia e eficiência energética", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Eletrônica", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Instrumentação e medidas de energia", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Instalações elétricas", categoria: "APF", cargaHorariaSemanal: 4, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Meteorologia aplicada", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Automação", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Máquinas mecânicas", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Projetos e instalações de sistemas de energia renovável", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2511",
+    curso: "Técnico em Administração",
+    eixo: "gestao_negocios",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Informática empresarial", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Princípios econômicos", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Finanças empresariais", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Princípios de administração", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Recursos humanos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Estratégias de marketing", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Técnicas integradas", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Informática empresarial", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Comunicação e vendas", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Princípios econômicos", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Finanças empresariais", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Liderança organizacional e gestão de pessoas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Recursos humanos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Estratégias de marketing", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Técnicas integradas", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Informática empresarial", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Comunicação e vendas", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Finanças empresariais", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Liderança organizacional e gestão de pessoas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Produção, logística e qualidade", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Técnicas integradas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2510",
+    curso: "Técnico em Bioeconomia",
+    eixo: "recursos_naturais",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Gestão e empreendedorismo", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Liderança e associativismo", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Marketing aplicado ao consumo sustentável", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Tecnologias sociais e identidade territorial", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sustentabilidade", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Gestão da atividade turística", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Técnicas de produção animal e vegetal", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Gestão e empreendedorismo", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Liderança e associativismo", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sustentabilidade", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Cadeias produtivas e agroindústria", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Soluções sustentáveis", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Gestão da atividade turística", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Técnicas de produção animal e vegetal", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Gestão e empreendedorismo", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Liderança e associativismo", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Tecnologias sociais e identidade territorial", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Cadeias produtivas e agroindústria", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Soluções sustentáveis", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Roteirização turística", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Gestão da atividade turística", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2513",
+    curso: "Técnico em Logística",
+    eixo: "gestao_negocios",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Operações contábeis e tributação", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Tecnologia de informação aplicada", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Marketing logístico", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Armazenagem e gestão de estoque", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Canais de distribuição", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Gestão de qualidade total", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Logística integrada e sustentabilidade", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Operações contábeis e tributação", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Tecnologia de informação aplicada", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Marketing logístico", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Armazenagem e gestão de estoque", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Canais de distribuição", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Transportes e seguros", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Gestão de qualidade total", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Operações contábeis e tributação", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Planejamento empresarial e logístico", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Marketing logístico", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Transportes e seguros", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Logística internacional", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Empreendedorismo e plano de negócio", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Legislação aplicada", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2512",
+    curso: "Técnico em Marketing",
+    eixo: "gestao_negocios",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Técnicas de venda e marketing de varejo", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Planejamento de marketing", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Fundamentos do marketing", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Tecnologias digitais aplicadas ao marketing", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Comunicação de marketing", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Segmentação e posicionamento de marketing", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Marketing de conteúdo", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Técnicas de venda e marketing de varejo", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Planejamento de marketing", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Tecnologias digitais aplicadas ao marketing", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Análise de mercado e comportamento do consumidor", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Relações interpessoais", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Comunicação de marketing", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Pesquisa de marketing", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Legislação aplicada ao marketing", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Marketing digital", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Planejamento de marketing", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Pesquisa de marketing", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Logística e canais de distribuição de marketing", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Análise de dados aplicada ao marketing", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Legislação aplicada ao marketing", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "E-commerce", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Marketing de conteúdo", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2507",
+    curso: "Técnico em Desenvolvimento de Sistemas",
+    eixo: "informacao_comunicacao",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Análise e método para sistemas", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Introdução à computação", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Lógica computacional", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Introdução à programação", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Banco de dados I", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Inovação tecnológica e empreendedorismo", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Programação back- end I", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Programação front- end", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Banco de dados II", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Técnicas integradas", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Programação back- end II", categoria: "APF", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Programação mobile", categoria: "APF", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Banco de dados III", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2508",
+    curso: "Técnico em Manutenção e Suporte em Informática Integrado ao Ensino",
+    eixo: "informacao_comunicacao",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Informática I", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Fundamentos e arquitetura de computadores I", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Instalação e manutenção de computadores I", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Lógica de programação", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sistemas operacionais", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Instalação e manutenção de computadores II", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Fundamentos e arquitetura de computadores II", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Gestão comercial I", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Informática II", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Redes", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Gestão comercial II", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Banco de dados", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Documentação técnica", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Instalação e manutenção de computadores III", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Internet", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2509",
+    curso: "Técnico em Programação de Jogos Digitais",
+    eixo: "informacao_comunicacao",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Lógica computacional", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Banco de dados", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Ciências da computação", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Fundamentos da programação de jogos digitais", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Produção audiovisual", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Análise e projetos de jogos digitais I", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Game e design", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Programação de jogos digitais I", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Análise e projetos de jogos digitais II", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Programação de jogos digitais II", categoria: "APF", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Programação mobile aplicada a jogos digitais", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Programação web aplicada a jogos digitais", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2515",
+    curso: "Técnico em Edificações",
+    eixo: "infraestrutura",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Sistemas estruturais", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Introdução à construção civil", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Materiais de construção", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Projetos em construção civil", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Segurança do trabalho na construção civil", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Topografia", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Sistemas estruturais", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Controle e proteção ambiental", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Administração de obras", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Instalações prediais", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Mecânica dos solos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Projetos em construção civil", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Técnicas construtivas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Sistemas estruturais", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Controle e proteção ambiental", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Administração de obras", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Instalações elétricas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Instalações hidráulicas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Projetos em construção civil", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Técnicas construtivas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2516",
+    curso: "Técnico em Portos",
+    eixo: "infraestrutura",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Gestão ambiental", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Higiene e segurança do trabalho", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Informática", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Espanhol técnico", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Operações com cargas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Administração portuária", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Higiene e segurança do trabalho", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Operações com cargas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Regulamentação aduaneira", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Transporte marítimo", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Legislação portuária", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Logística de cargas", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Operações com cargas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Regulamentação aduaneira", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Transporte marítimo", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2501",
+    curso: "Técnico em Alimentos",
+    eixo: "producao_alimenticia",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Microbiologia dos alimentos", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Nutrição e saúde", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Conservação de alimentos", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Novas tecnologias", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Prática de higienização e legislação dos alimentos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Tecnologias de processamento vegetal", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Microbiologia dos alimentos", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Nutrição e saúde", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Análise de alimentos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Bioquímica de alimentos", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Novas tecnologias", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Tecnologias de lacticínios", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Tecnologias de processamento vegetal", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Microbiologia dos alimentos", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Nutrição e saúde", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Bioquímica de alimentos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Química dos alimentos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Segurança do trabalho e controle ambiental", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Tecnologias de carnes e derivados", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2514",
+    curso: "Técnico em Teatro",
+    eixo: "producao_cultural_design",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Iluminação, cenografia e sonoplastia", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Laboratório de montagem teatral", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Expressão corporal", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Improvisação teatral", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Indumentária e caracterização", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Interpretação teatral", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Técnicas de expressão vocal", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Iluminação, cenografia e sonoplastia", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Laboratório de montagem teatral", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Expressão corporal", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Improvisação teatral", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Interpretação teatral", categoria: "APF", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Técnicas de expressão vocal", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Iluminação, cenografia e sonoplastia", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Laboratório de montagem teatral", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Indumentária e caracterização", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Interpretação teatral", categoria: "APF", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Organização e produção teatral", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Técnicas de expressão vocal", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2517",
+    curso: "Técnico em Biotecnologia",
+    eixo: "producao_industrial",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Fundamentos da biotecnologia", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Bioquímica", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Bromatologia", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Gestão da qualidade", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Microbiologia industrial", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química analítica aplicada", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Bioquímica", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Processos agroindustriais", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Análise ambiental", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química analítica aplicada", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Processos industriais", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Microbiologia industrial", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Processos agroindustriais", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química analítica aplicada", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2518",
+    curso: "Técnico em Planejamento e Controle da Produção Integrado ao",
+    eixo: "gestao_negocios",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Indústria 4.0", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Planejamento da produção", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Tecnologia da informação e comunicação", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Gestão organizacional", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Gestão de projetos e processos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Programação e monitoramento da produção", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Planejamento da produção", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Gestão organizacional", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Gestão de projetos e processos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Saúde e segurança do trabalho", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Sustentabilidade nos processos de produção", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Programação e monitoramento da produção I", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Gestão das equipes de trabalho", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Processos de manutenção e melhoria da produção", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Gestão da produção e qualidade", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2519",
+    curso: "Técnico em Química",
+    eixo: "producao_industrial",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Legislação e normas", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química aplicada ao meio ambiente", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Processos industriais", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química analítica", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química inorgânica", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química orgânica", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Físico-química", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Processos industriais", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Química analítica", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química inorgânica", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Química orgânica", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Físico-química", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Processos industriais", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Química analítica", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química inorgânica", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Química orgânica", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2520",
+    curso: "Técnico em Vestuário",
+    eixo: "producao_industrial",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "História da moda, arte e cultura", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Segurança e saúde ocupacional", categoria: "IFA", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Desenho técnico", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Design e criação do vestuário", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Materiais têxteis e aviamentos", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Fundamentos da indústria e do vestuário", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Informática aplicada", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Máquinas e equipamentos do vestuário", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Modelagem e produção industrial", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Risco e corte da confecção industrial", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Planejamento e controle da produção do vestuário", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Design e criação do vestuário", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Máquinas e equipamentos do vestuário", categoria: "APF", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Modelagem e produção industrial", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2523",
+    curso: "Técnico em Agronegócio",
+    eixo: "recursos_naturais",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Administração e economia rural", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Cadeias produtivas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Liderança organizacional e gestão de pessoas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Tecnologias emergentes", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Legislação agrária e ambiental", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Práticas sustentáveis", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Marketing e mercado agrícola", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Cadeias produtivas I", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Liderança organizacional e gestão de pessoas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Empreendedorismo", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Administração e economia rural I", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Cooperativismo", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Técnicas integradas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Empreendedorismo II", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Cadeias produtivas", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Tecnologias emergentes", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Logística", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Práticas sustentáveis", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Administração e economia rural I", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Marketing e mercado agrícola", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Técnicas integradas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2502",
+    curso: "Técnico em Agenciamento de Viagens",
+    eixo: "turismo_hospitalidade_lazer",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Gestão de empresas turísticas", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Fundamentos do turismo e da hospitalidade", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Produtos e serviços turísticos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Agências de viagens", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Tecnologia da informação aplicada ao turismo", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Aspectos geográficos, culturais, históricos e turísticos do Paraná", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Produtos e serviços turísticos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Agências de viagens", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Comunicação e atendimento ao cliente", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Planejamento de roteiros turísticos", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Aspectos geográficos e históricos do turismo brasileiro", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Patrimônio, museu e turismo cultural", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Marketing aplicado ao turismo", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Prática profissional em agenciamento de viagem", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Relações interpessoais", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2503",
+    curso: "Técnico em Gastronomia",
+    eixo: "turismo_hospitalidade_lazer",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "História, arte e cultura dos alimentos", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Cozinha brasileira", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Cozinha fria", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Habilidades básicas em cozinha", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Panificação e confeitaria", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Higiene e segurança alimentar", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Cozinha brasileira", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Cozinha internacional", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Habilidades básicas em cozinha", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Panificação e confeitaria", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Gestão e negócios na gastronomia", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Cozinha internacional", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Cozinha vegetariana e restritiva", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Segurança do trabalho e saúde ocupacional", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Organização de eventos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Marketing na gastronomia", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2504",
+    curso: "Técnico em Guia de Turismo Nacional e Regional Integrado ao",
+    eixo: "turismo_hospitalidade_lazer",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Empreendedorismo e inovação", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Fundamentos do turismo e da hospitalidade", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Teoria e técnica", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Patrimônio histórico- cultural e turismo", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Primeiros socorros", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Aspectos geográficos e históricos do turismo brasileiro", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Fundamentos do turismo e da hospitalidade", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Teoria e técnica", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Tecnologia da informação aplicada ao turismo", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Técnicas de comunicação", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Aspectos geográficos e históricos do turismo brasileiro", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Teoria e técnica", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Legislação aplicada ao turismo", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Conversação língua inglesa", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Técnicas de comunicação", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2505",
+    curso: "Técnico em Hospedagem",
+    eixo: "turismo_hospitalidade_lazer",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Gestão de eventos", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Introdução ao turismo e a hospitalidade", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Meios de hospedagem", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Gestão de reservas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Administração nos meios de hospedagem", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Aspectos geográficos, culturais, históricos e turísticos do Paraná", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Relações interpessoais", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Introdução a gestão de alimentos e bebidas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Rotina de recepção e atendimento ao cliente", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Tecnologia da informação aplicada a hospedagem", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Aspectos geográficos e históricos do turismo brasileiro", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Rotinas de governança e manutenção", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Marketing hoteleiro e mídias digitais", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Legislação aplicada aos meios de hospedagem", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Empreendedorismo e inovação na hospedagem", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2506",
+    curso: "Técnico em Lazer",
+    eixo: "turismo_hospitalidade_lazer",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Liderança e gestão de empresas", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Recreação e ludicidade", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Lazer e cultura digital", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Práticas em lazer", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Noções de primeiros socorros", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Música e lazer", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Práticas em lazer", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Produção e gestão cultural", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Teoria do lazer", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Lazer e inclusão", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Lazer e artes visuais", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Contação de histórias", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Turismo", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Produção de eventos", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Técnicas integradas", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "2542",
+    curso: "Técnico em Inteligência Artificial e Dados",
+    eixo: "informacao_comunicacao",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Tecnologia e inovação", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Programação com Python 1", categoria: "APF", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Inteligência artificial e prompts", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Ciências de dados", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Técnicas integradas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Tecnologia e inovação", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Técnicas integradas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Programação com Python 2", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Banco de dados aplicado", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Aprendizado de máquina (Machine Learning)", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação midiática", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true }
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
+          { nome: "Tecnologia e inovação", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Técnicas integradas", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Programação avançada", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Segurança digital", categoria: "APF", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Redes neurais e aprendizado profundo (Deep Learning)", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Visualização de dados", categoria: "APF", cargaHorariaSemanal: 2, obrigatoria: true }
         ],
       }
     ],

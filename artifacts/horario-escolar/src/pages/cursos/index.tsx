@@ -319,7 +319,14 @@ export default function CursosList() {
                     </AlertDialogContent>
                   </AlertDialog>
                 </button>
-                {isOpen && <MatrizesDoCurso cursoId={curso.id} nivelCurso={curso.nivel} nomeCurso={curso.nome} />}
+                {isOpen && (
+                  <MatrizesDoCurso
+                    cursoId={curso.id}
+                    nivelCurso={curso.nivel}
+                    nomeCurso={curso.nome}
+                    formaOfertaCurso={(curso as any).formaOferta}
+                  />
+                )}
               </Card>
             );
           })}
@@ -337,9 +344,11 @@ export default function CursosList() {
   );
 }
 
-// ── Nível 2: Matrizes do curso ──────────────────────────────────────────
+// ── Nível 2: Matrizes do curso ─────────────────────────────────────────────
 
-function MatrizesDoCurso({ cursoId, nivelCurso, nomeCurso }: { cursoId: number; nivelCurso: string; nomeCurso: string }) {
+function MatrizesDoCurso({
+  cursoId, nivelCurso, nomeCurso, formaOfertaCurso,
+}: { cursoId: number; nivelCurso: string; nomeCurso: string; formaOfertaCurso?: string | null }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: matrizes, isLoading } = useListMatrizesCurriculares(cursoId, {
@@ -480,7 +489,13 @@ function MatrizesDoCurso({ cursoId, nivelCurso, nomeCurso }: { cursoId: number; 
       )}
 
       {modeloAberto && (
-        <AplicarModeloOficial cursoId={cursoId} nivelCurso={nivelCurso} nomeCurso={nomeCurso} onFechar={() => setModeloAberto(false)} />
+        <AplicarModeloOficial
+          cursoId={cursoId}
+          nivelCurso={nivelCurso}
+          nomeCurso={nomeCurso}
+          formaOfertaCurso={formaOfertaCurso}
+          onFechar={() => setModeloAberto(false)}
+        />
       )}
     </div>
   );
@@ -496,7 +511,14 @@ function normalizar(s: string) {
     .trim();
 }
 
-function AplicarModeloOficial({ cursoId, nivelCurso, nomeCurso, onFechar }: { cursoId: number; nivelCurso: string; nomeCurso: string; onFechar: () => void }) {
+const FORMA_OFERTA_LABEL: Record<string, string> = {
+  integrada: "Integrada",
+  concomitante_intercomplementar: "Concomitante Intercomplementar",
+};
+
+function AplicarModeloOficial({
+  cursoId, nivelCurso, nomeCurso, formaOfertaCurso, onFechar,
+}: { cursoId: number; nivelCurso: string; nomeCurso: string; formaOfertaCurso?: string | null; onFechar: () => void }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: disciplinas } = useListDisciplinas();
@@ -513,10 +535,25 @@ function AplicarModeloOficial({ cursoId, nivelCurso, nomeCurso, onFechar }: { cu
   const modeloGeral = templatesGerais.find((m) => m.id === modeloId);
   const serieGeral = modeloGeral?.series[Number(serieIdx)];
 
-  // ── Técnico: casa pelo nome do curso, deixa trocar manualmente ──
-  const matchAutomatico = MATRIZES_TECNICAS_SEED_PR_2026.find(
+  // ── Técnico: casa pelo nome do curso E pela forma de oferta, deixa trocar manualmente ──
+  // [NOVO] Um mesmo nome de curso pode existir em mais de uma forma de oferta
+  // (ex: "Técnico em Farmácia" integrada x concomitante intercomplementar) com
+  // grades diferentes — por isso o casamento automático agora exige nome E
+  // formaOferta batendo. Se o curso não tiver formaOferta definida, mostra
+  // todas as opções compatíveis com o nome, mas pede confirmação manual.
+  const candidatosPorNome = MATRIZES_TECNICAS_SEED_PR_2026.filter(
     (t) => normalizar(t.curso) === normalizar(nomeCurso),
   );
+  const matchAutomatico = formaOfertaCurso
+    ? candidatosPorNome.find((t) => t.formaOferta === formaOfertaCurso)
+    : candidatosPorNome.length === 1
+      ? candidatosPorNome[0]
+      : undefined;
+
+  const listaParaSelecionar = formaOfertaCurso
+    ? MATRIZES_TECNICAS_SEED_PR_2026.filter((t) => t.formaOferta === formaOfertaCurso)
+    : MATRIZES_TECNICAS_SEED_PR_2026;
+
   const [codigoTecnico, setCodigoTecnico] = useState(matchAutomatico?.codigo ?? "");
   const [serieIdxTec, setSerieIdxTec] = useState("");
   const modeloTecnico = MATRIZES_TECNICAS_SEED_PR_2026.find((t) => t.codigo === codigoTecnico);
@@ -577,20 +614,27 @@ function AplicarModeloOficial({ cursoId, nivelCurso, nomeCurso, onFechar }: { cu
 
         {ehTecnico ? (
           <div className="space-y-3">
+            {!formaOfertaCurso && candidatosPorNome.length > 1 && (
+              <p className="text-[11px] text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
+                Esse curso não tem "Forma de oferta" definida e existe mais de um modelo oficial com esse nome — escolha manualmente o certo abaixo.
+              </p>
+            )}
             <div>
               <label className="text-xs text-muted-foreground block mb-1">Curso técnico (matriz 2026)</label>
               <Select value={codigoTecnico} onValueChange={(v) => { setCodigoTecnico(v); setSerieIdxTec(""); }}>
                 <SelectTrigger><SelectValue placeholder="Selecione o curso técnico" /></SelectTrigger>
                 <SelectContent>
-                  {MATRIZES_TECNICAS_SEED_PR_2026.map((t) => (
-                    <SelectItem key={t.codigo} value={t.codigo}>{t.curso} (código {t.codigo})</SelectItem>
+                  {listaParaSelecionar.map((t) => (
+                    <SelectItem key={t.codigo} value={t.codigo}>
+                      {t.curso} — {FORMA_OFERTA_LABEL[t.formaOferta] ?? t.formaOferta} (código {t.codigo})
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               {matchAutomatico && codigoTecnico === matchAutomatico.codigo && (
-                <p className="text-[11px] text-green-700 mt-1">✓ Casado automaticamente pelo nome do curso.</p>
+                <p className="text-[11px] text-green-700 mt-1">✓ Casado automaticamente pelo nome e forma de oferta do curso.</p>
               )}
-              {!matchAutomatico && (
+              {!matchAutomatico && candidatosPorNome.length === 0 && (
                 <p className="text-[11px] text-amber-600 mt-1">
                   Não achamos um modelo oficial com esse nome exato — escolha manualmente o curso técnico correspondente, se houver.
                 </p>
@@ -709,7 +753,7 @@ function CodigoSereEditor({ cursoId, matriz }: { cursoId: number; matriz: { id: 
   );
 }
 
-// ── Nível 3: Itens da matriz, por categoria ─────────────────────────────
+// ── Nível 3: Itens da matriz, por categoria ─────────────────────────────────
 
 function ItensDaMatriz({ cursoId, matriz }: { cursoId: number; matriz: { id: number; serieAno: string; itens: any[] } }) {
   const [modalCopiaAberto, setModalCopiaAberto] = useState(false);
@@ -840,7 +884,7 @@ function AdicionarItemForm({ cursoId, matrizId }: { cursoId: number; matrizId: n
   );
 }
 
-// ── Modal: copiar matriz aplicada para outras turmas ────────────────────
+// ── Modal: copiar matriz aplicada para outras turmas ────────────────────────
 
 function ModalCopiarMatriz({ matrizId, onFechar }: { matrizId: number; onFechar: () => void }) {
   const [selecionadas, setSelecionadas] = useState<number[]>([]);
