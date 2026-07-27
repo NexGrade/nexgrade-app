@@ -118,7 +118,16 @@ export default function PlanosPage() {
                     variant={isPro ? "default" : "outline"}
                     onClick={() => {
                       if (plano.preco === 0) return;
-                      window.open("mailto:contato@nexuscoretecnologia.com.br?subject=Interesse no plano " + plano.nome, "_blank");
+                      // [FIX] window.open(..., "_blank") pra um link
+                      // mailto: é tratado como pop-up por vários
+                      // navegadores e bloqueado silenciosamente -- sem
+                      // aviso nenhum, o clique parecia não fazer nada.
+                      // window.location.href navega direto (não abre
+                      // aba nova), o que o navegador nunca bloqueia
+                      // pra mailto:, e entrega pro cliente de e-mail
+                      // padrão do sistema.
+                      window.location.href =
+                        "mailto:contato@nexuscoretecnologia.com.br?subject=Interesse no plano " + plano.nome;
                     }}
                   >
                     {plano.preco === 0 ? "Plano atual" : `Assinar ${plano.nome}`}
