@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState } from "react";
+import { customFetch } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Zap, Crown, Shield } from "lucide-react";
@@ -33,13 +34,18 @@ function formatPreco(centavos: number) {
 export default function PlanosPage() {
   const [planos, setPlanos] = useState<Plano[]>([]);
   const [loading, setLoading] = useState(true);
-  const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
   useEffect(() => {
-    fetch(`${basePath}/api/escolas/planos`)
-      .then(r => r.json())
-      .then(data => { setPlanos(data); setLoading(false); })
-      .catch(() => setLoading(false));
+    // [FIX] Mesmo bug corrigido em pages/export/index.tsx: essa
+    // chamada usava `fetch()` puro, sem o token Bearer que a API
+    // exige (não usa cookie de sessão). Voltava 401, e o corpo do
+    // erro (`{ error: "..." }`, um objeto) ia direto pro
+    // `setPlanos(data)` -- planos deixava de ser array e o
+    // `.map()` mais abaixo quebrava a tela inteira. `customFetch`
+    // já anexa o token sozinho, igual toda chamada normal da API.
+    customFetch<Plano[]>("/api/escolas/planos", { responseType: "json" })
+      .then((data) => { setPlanos(Array.isArray(data) ? data : []); setLoading(false); })
+      .catch(() => { setPlanos([]); setLoading(false); });
   }, []);
 
   const features = (p: Plano) => [
@@ -66,6 +72,10 @@ export default function PlanosPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[1,2,3].map(i => <div key={i} className="h-96 rounded-xl bg-muted animate-pulse" />)}
         </div>
+      ) : planos.length === 0 ? (
+        <p className="text-center text-sm text-muted-foreground py-12">
+          Não foi possível carregar os planos agora. Tenta recarregar a página.
+        </p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
           {planos.map(plano => {
