@@ -126,6 +126,18 @@ const tools = [
           "Consulta quantas 'janelas' (períodos vagos entre duas aulas no mesmo dia) cada professor tem na grade horária já montada. Use quando o usuário perguntar sobre janelas, buracos, tempo ocioso ou distribuição ruim de horário dos professores.",
         parameters: { type: "object" as const, properties: {} },
       },
+      {
+        name: "consultar_turmas_sem_horario",
+        description:
+          "Lista quais turmas ainda não têm nenhuma aula gerada na grade horária. Use quando o usuário perguntar quantas/quais turmas estão sem horário, incompletas ou pendentes de geração.",
+        parameters: { type: "object" as const, properties: {} },
+      },
+      {
+        name: "consultar_distribuicao_semanal",
+        description:
+          "Consulta quantas aulas estão alocadas em cada dia da semana (e por turno), pra avaliar se a distribuição da grade está equilibrada. Use quando o usuário perguntar sobre a distribuição de aulas na semana, dias mais cheios/vazios, ou balanceamento da grade.",
+        parameters: { type: "object" as const, properties: {} },
+      },
     ],
   },
 ];
@@ -180,6 +192,93 @@ async function calcularJanelasProfessores(escolaId: string) {
     .sort((a, b) => b.totalJanelas - a.totalJanelas);
 }
 
+// [NOVO] Mesma lógica já usada em routes/stats.ts pro card "Turmas sem
+// Horário" da Visão Geral -- aqui devolve também os NOMES (o card só
+// mostrava o número), que é o que o assistente precisa pra responder
+// "quais" turmas, não só "quantas".
+async function consultarTurmasSemHorario(escolaId: string) {
+  const [turmas, horarios] = await Promise.all([
+    db.select({ id: turmasTable.id, nome: turmasTable.nome, turno: turmasTable.turno })
+      .from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
+    db.select({ turmaId: horariosTable.turmaId }).from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
+  ]);
+  const turmasComHorario = new Set(horarios.map((h) => h.turmaId));
+  const semHorario = turmas.filter((t) => !turmasComHorario.has(t.id));
+  return {
+    totalTurmas: turmas.length,
+    totalSemHorario: semHorario.length,
+    turmasSemHorario: semHorario.map((t) => ({ nome: t.nome, turno: t.turno })),
+  };
+}
+
+// [NOVO] Total de aulas alocadas por dia da semana e por turno -- pra
+// responder se a grade está "equilibrada" (ex: sexta muito mais vazia
+// que segunda) sem o usuário precisar abrir a aba Grade e contar na mão.
+async function consultarDistribuicaoSemanal(escolaId: string) {
+  const [horarios, turmas] = await Promise.all([
+    db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
+    db.select({ id: turmasTable.id, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
+  ]);
+  const turmaTurno = new Map(turmas.map((t) => [t.id, t.turno]));
+  const porDia: Record<string, number> = {};
+  const porDiaETurno: Record<string, Record<string, number>> = {};
+  horarios.forEach((h) => {
+    const dia = DIAS_SEMANA[h.diaSemana] ?? `dia ${h.diaSemana}`;
+    const turno = turmaTurno.get(h.turmaId) ?? "desconhecido";
+    porDia[dia] = (porDia[dia] ?? 0) + 1;
+    porDiaETurno[dia] = porDiaETurno[dia] ?? {};
+    porDiaETurno[dia]![turno] = (porDiaETurno[dia]![turno] ?? 0) + 1;
+  });
+  return { totalAulas: horarios.length, porDia, porDiaETurno };
+}
+
+// [NOVO] Ferramentas de consulta (leitura) sempre precisam de uma
+// SEGUNDA chamada ao Gemini: a primeira só pede "quero chamar essa
+// função", essa aqui manda o resultado de volta e pede a resposta
+// final em português. Extraído numa função só porque agora são 3
+// ferramentas de consulta usando exatamente o mesmo padrão.
+async function pedirRespostaComResultadoFuncao(
+  apiKey: string,
+  contents: unknown[],
+  systemPrompt: string,
+  functionCallPart: { name: string; args: Record<string, unknown> },
+  resultado: unknown,
+): Promise<string> {
+  const contentsComResultado = [
+    ...contents,
+    { role: "model", parts: [{ functionCall: functionCallPart }] },
+    {
+      role: "function",
+      parts: [{ functionResponse: { name: functionCallPart.name, response: resultado as Record<string, unknown> } }],
+    },
+  ];
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: contentsComResultado,
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        tools,
+      }),
+    },
+  );
+
+  if (!res.ok) {
+    const corpoErro = await res.text().catch(() => "(sem corpo)");
+    throw new Error(`${res.status} ${res.statusText}: ${corpoErro.slice(0, 300)}`);
+  }
+
+  const completion = await res.json() as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
+  const parts = completion.candidates?.[0]?.content?.parts ?? [];
+  return parts.find((p) => p.text)?.text
+    ?? "Consultei os dados, mas não consegui formular uma resposta. Tente reformular a pergunta.";
+}
+
 const GEMINI_MODEL = "gemini-3.5-flash";
 
 // POST /ai/chat
@@ -225,7 +324,7 @@ CONTEXTO DA ESCOLA:
 - Disciplinas (${disciplinas.length}): ${disciplinas.map(d => `${d.nome} (${d.cargaSemanal}x/sem)`).slice(0, 10).join(", ")}
 
 Você pode:
-1. Responder perguntas sobre a grade horária e situação da escola — use a ferramenta consultar_janelas_professores quando a pergunta for sobre janelas/buracos/tempo ocioso dos professores, em vez de responder de memória.
+1. Responder perguntas sobre a grade horária e situação da escola — use consultar_janelas_professores (janelas/buracos de professor), consultar_turmas_sem_horario (turmas sem grade gerada) ou consultar_distribuicao_semanal (equilíbrio de aulas entre os dias) quando a pergunta se encaixar em alguma dessas, em vez de responder de memória.
 2. Sugerir como distribuir disciplinas ou professores
 3. Identificar conflitos e propor soluções
 4. Executar duas ações concretas, sempre chamando a função correspondente: marcar disponibilidade de um professor, ou gerar o horário de uma turma. Você NUNCA aplica a ação diretamente — o sistema sempre pede confirmação ao usuário antes.
@@ -333,49 +432,16 @@ Seja direto, útil e use linguagem educacional brasileira.`;
         };
       }
     } else if (functionCallPart?.name === "consultar_janelas_professores") {
-      // [NOVO] Ferramenta de CONSULTA -- diferente das duas acima, não
-      // propõe ação nenhuma, só busca dado real e devolve pro Gemini
-      // formular a resposta em português. Precisa de uma SEGUNDA
-      // chamada à API: a primeira só disse "quero chamar essa função",
-      // a segunda manda o resultado de volta e pede a resposta final.
       const janelas = await calcularJanelasProfessores(escolaId);
-
-      const contentsComResultado = [
-        ...contents,
-        { role: "model", parts: [{ functionCall: functionCallPart }] },
-        {
-          role: "function",
-          parts: [{
-            functionResponse: {
-              name: "consultar_janelas_professores",
-              response: { janelas: janelas.slice(0, 30) },
-            },
-          }],
-        },
-      ];
-
-      const segundaRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: contentsComResultado,
-            systemInstruction: { parts: [{ text: systemPrompt }] },
-            tools,
-          }),
-        },
+      respostaTexto = await pedirRespostaComResultadoFuncao(
+        apiKey, contents, systemPrompt, functionCallPart, { janelas: janelas.slice(0, 30) },
       );
-
-      if (!segundaRes.ok) {
-        const corpoErro = await segundaRes.text().catch(() => "(sem corpo)");
-        throw new Error(`${segundaRes.status} ${segundaRes.statusText}: ${corpoErro.slice(0, 300)}`);
-      }
-
-      const segundaCompletion = await segundaRes.json() as typeof completion;
-      const segundaParts = segundaCompletion.candidates?.[0]?.content?.parts ?? [];
-      respostaTexto = segundaParts.find((p) => p.text)?.text
-        ?? "Consultei os dados, mas não consegui formular uma resposta. Tente reformular a pergunta.";
+    } else if (functionCallPart?.name === "consultar_turmas_sem_horario") {
+      const dados = await consultarTurmasSemHorario(escolaId);
+      respostaTexto = await pedirRespostaComResultadoFuncao(apiKey, contents, systemPrompt, functionCallPart, dados);
+    } else if (functionCallPart?.name === "consultar_distribuicao_semanal") {
+      const dados = await consultarDistribuicaoSemanal(escolaId);
+      respostaTexto = await pedirRespostaComResultadoFuncao(apiKey, contents, systemPrompt, functionCallPart, dados);
     } else {
       respostaTexto = textPart ?? "Não consegui gerar uma resposta. Tente reformular a pergunta.";
     }
