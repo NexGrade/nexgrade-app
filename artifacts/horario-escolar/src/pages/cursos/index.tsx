@@ -222,7 +222,15 @@ export default function CursosList() {
                         const c = sugestoes.find((s) => s.nome === v);
                         if (!c) return;
                         form.setValue("nome", c.nome, { shouldValidate: true });
-                        if (c.cbo) form.setValue("codigoCurso", c.cbo, { shouldValidate: true });
+                        // [CORRIGIDO] Antes preenchia codigoCurso com o CBO (c.cbo) —
+                        // CBO é código de OCUPAÇÃO (Classificação Brasileira de
+                        // Ocupações), não é o código oficial do curso na SEED-PR.
+                        // Misturar os dois gerava cadastros com "código do curso"
+                        // sem sentido (ex: "3251-15" em vez do código real, tipo
+                        // "2538"). O CBO já aparece só como referência no texto de
+                        // cada opção da lista; o campo de código fica em branco
+                        // pra a escola preencher com o código de curso de verdade,
+                        // se souber.
                       }}
                     >
                       <SelectTrigger><SelectValue placeholder="Selecionar curso da lista oficial..." /></SelectTrigger>
@@ -249,7 +257,7 @@ export default function CursosList() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Código do curso (opcional)</FormLabel>
-                      <FormControl><Input placeholder="Ex.: 2341" {...field} /></FormControl>
+                      <FormControl><Input placeholder="Ex.: 2341 — código oficial SEED-PR, não é o CBO" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
