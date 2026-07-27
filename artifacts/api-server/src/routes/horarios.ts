@@ -864,9 +864,12 @@ router.post("/corrigir-professor", async (req, res) => {
 const CPSAT_SERVICE_URL = process.env.CPSAT_SERVICE_URL || "https://nexgrade-cpsat.onrender.com";
 
 const GerarCpsatBody = z.object({
-  turno: z.enum(["matutino", "vespertino", "noturno"]),
+  turno: z.enum(["matutino", "vespertino", "noturno"]).optional(),
+  turmaId: z.number().int().positive().optional(),
   nomeExperimental: z.string().min(1),
   tempoLimiteS: z.number().int().positive().optional(),
+}).refine((data) => (data.turno != null) !== (data.turmaId != null), {
+  message: "Informe turno OU turmaId (exatamente um dos dois, não os dois nem nenhum).",
 });
 
 router.post("/gerar-cpsat", async (req, res) => {
@@ -876,13 +879,31 @@ router.post("/gerar-cpsat", async (req, res) => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { turno, nomeExperimental, tempoLimiteS } = parsed.data;
+  const { turno: turnoInformado, turmaId, nomeExperimental, tempoLimiteS } = parsed.data;
 
-  const turmasDoTurno = await db.select().from(turmasTable)
-    .where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.turno, turno)));
-  if (turmasDoTurno.length === 0) {
-    res.status(400).json({ error: `Nenhuma turma encontrada no turno "${turno}"` });
-    return;
+  let turno: "matutino" | "vespertino" | "noturno";
+  let turmasDoTurno: (typeof turmasTable.$inferSelect)[];
+
+  if (turmaId != null) {
+    // Escopo por turma única -- confirma que a turma existe E pertence
+    // a esta escola antes de qualquer outra coisa (mesma checagem de
+    // segurança que o modo por turno já fazia via escolaId).
+    const [turmaEscolhida] = await db.select().from(turmasTable)
+      .where(and(eq(turmasTable.id, turmaId), eq(turmasTable.escolaId, escolaId)));
+    if (!turmaEscolhida) {
+      res.status(400).json({ error: `Turma #${turmaId} não encontrada para esta escola.` });
+      return;
+    }
+    turmasDoTurno = [turmaEscolhida];
+    turno = turmaEscolhida.turno as "matutino" | "vespertino" | "noturno";
+  } else {
+    turno = turnoInformado!;
+    turmasDoTurno = await db.select().from(turmasTable)
+      .where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.turno, turno)));
+    if (turmasDoTurno.length === 0) {
+      res.status(400).json({ error: `Nenhuma turma encontrada no turno "${turno}"` });
+      return;
+    }
   }
   const turmaIds = turmasDoTurno.map((t) => t.id);
 
@@ -1009,7 +1030,7 @@ router.post("/gerar-cpsat", async (req, res) => {
       const errBody = await response.text();
       throw new Error(`Serviço CP-SAT respondeu ${response.status}: ${errBody}`);
     }
-    resultado = await response.json();
+    resultado = (await response.json()) as typeof resultado;
   } catch (err) {
     res.status(502).json({
       error: "Não foi possível gerar a grade com o motor CP-SAT.",

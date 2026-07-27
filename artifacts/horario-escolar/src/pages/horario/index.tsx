@@ -1147,6 +1147,15 @@ function AbaExperimental() {
     turno: "matutino",
     nomeExperimental: `CPSAT-${new Date().toISOString().split("T")[0]}`,
   });
+  // [NOVO] Mesmo motor CP-SAT, mas por turma única (antes só existia
+  // por turno inteiro) -- espelha o par "Turma / Turno inteiro" que já
+  // existe do lado do motor heurístico.
+  const [openGerarCpsatTurma, setOpenGerarCpsatTurma] = useState(false);
+  const [gerandoCpsatTurma, setGerandoCpsatTurma] = useState(false);
+  const [cpsatTurmaForm, setCpsatTurmaForm] = useState({
+    turmaId: "",
+    nomeExperimental: `CPSAT-${new Date().toISOString().split("T")[0]}`,
+  });
   // [NOVO] Detalhes por turma do último lote gerado -- ver comentário
   // no tipo DetalheTurmaLote acima.
   const [detalhesLote, setDetalhesLote] = useState<{ nomeExperimental: string; resultados: DetalheTurmaLote[] } | null>(null);
@@ -1192,6 +1201,41 @@ function AbaExperimental() {
       toast({ title: "Erro ao gerar em massa", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
     } finally {
       setGerandoLote(false);
+    }
+  };
+
+  const handleGerarCpsatTurma = async () => {
+    if (!cpsatTurmaForm.turmaId) { toast({ title: "Selecione uma turma", variant: "destructive" }); return; }
+    if (!cpsatTurmaForm.nomeExperimental.trim()) { toast({ title: "Informe o nome do experimento", variant: "destructive" }); return; }
+    setGerandoCpsatTurma(true);
+    try {
+      const res = await fetch("/api/horarios/gerar-cpsat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          turmaId: Number(cpsatTurmaForm.turmaId),
+          nomeExperimental: cpsatTurmaForm.nomeExperimental,
+        }),
+      });
+      if (!res.ok) {
+        const erro = await res.json().catch(() => ({}));
+        throw new Error(erro.error ?? erro.detalhe ?? "Erro ao gerar com CP-SAT");
+      }
+      const result = await res.json();
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
+      toast({
+        title: `Grade CP-SAT gerada! ${result.totalSlots} aulas criadas.`,
+        description: result.status === "OPTIMAL"
+          ? `Solucao otima em ${result.tempoResolucaoS}s (sem janelas evitaveis).`
+          : `Status: ${result.status}. Confira antes de promover.`,
+      });
+      setOpenGerarCpsatTurma(false);
+      setNomeExpandido(cpsatTurmaForm.nomeExperimental);
+      setTurmaExpandidaId(Number(cpsatTurmaForm.turmaId));
+    } catch (err) {
+      toast({ title: "Erro ao gerar com CP-SAT", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+    } finally {
+      setGerandoCpsatTurma(false);
     }
   };
 
@@ -1289,7 +1333,7 @@ function AbaExperimental() {
             <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Motor heurístico (rápido)</p>
             <div className="flex flex-col gap-2">
               <Button className="w-full justify-start" onClick={() => setOpenGerar(true)}>
-                <Plus className="w-4 h-4 mr-2" />Nova turma
+                <Plus className="w-4 h-4 mr-2" />Turma
               </Button>
               <Button variant="outline" className="w-full justify-start" onClick={() => setOpenGerarLote(true)}>
                 <RefreshCw className="w-4 h-4 mr-2" />Turno inteiro
@@ -1298,9 +1342,14 @@ function AbaExperimental() {
           </div>
           <div className="pt-2 border-t">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-blue-700 mb-1.5">Motor CP-SAT (preciso, mais lento)</p>
-            <Button variant="outline" className="w-full justify-start border-blue-300 text-blue-700 hover:bg-blue-50" onClick={() => setOpenGerarCpsat(true)}>
-              <Sparkles className="w-4 h-4 mr-2" />Turno inteiro (Beta)
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button variant="outline" className="w-full justify-start border-blue-300 text-blue-700 hover:bg-blue-50" onClick={() => setOpenGerarCpsatTurma(true)}>
+                <Sparkles className="w-4 h-4 mr-2" />Turma (Beta)
+              </Button>
+              <Button variant="outline" className="w-full justify-start border-blue-300 text-blue-700 hover:bg-blue-50" onClick={() => setOpenGerarCpsat(true)}>
+                <Sparkles className="w-4 h-4 mr-2" />Turno inteiro (Beta)
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -1582,9 +1631,36 @@ function AbaExperimental() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={openGerarCpsatTurma} onOpenChange={setOpenGerarCpsatTurma}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Gerar com CP-SAT — Turma (Beta)</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md p-2.5">
+              <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
+              Usa o motor CP-SAT (OR-Tools) em vez do gerador heurístico -- mais preciso pra eliminar janelas na grade dos professores. Grava sempre como experimento; nada muda na grade oficial até você promover.
+            </div>
+            <div className="space-y-1.5">
+              <Label>Nome do experimento *</Label>
+              <Input value={cpsatTurmaForm.nomeExperimental} onChange={(e) => setCpsatTurmaForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex: CPSAT-Turma-2026-07-27" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Turma *</Label>
+              <Select value={cpsatTurmaForm.turmaId} onValueChange={(v) => setCpsatTurmaForm((f) => ({ ...f, turmaId: v }))}>
+                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                <SelectContent>{turmas.map((t) => <SelectItem key={t.id} value={String(t.id)}>{t.nome}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenGerarCpsatTurma(false)}>Cancelar</Button>
+            <Button onClick={handleGerarCpsatTurma} disabled={gerandoCpsatTurma}>{gerandoCpsatTurma ? "Gerando (pode levar até 2 min)..." : "Gerar com CP-SAT"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={openGerarCpsat} onOpenChange={setOpenGerarCpsat}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Gerar com CP-SAT (Beta)</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Gerar com CP-SAT — Turno inteiro (Beta)</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md p-2.5">
               <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
