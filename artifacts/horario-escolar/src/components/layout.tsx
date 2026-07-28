@@ -91,7 +91,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="h-16 flex items-center px-5 border-b border-border">
           <NexGradeLogo />
         </div>
-        <nav className="flex-1 py-3 px-3 space-y-5 overflow-y-auto">
+        <nav className="flex-1 py-3 px-3 pb-6 space-y-5 overflow-y-auto">
           {grupos.map((group) => (
             <div key={group.label}>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-3 mb-1">
