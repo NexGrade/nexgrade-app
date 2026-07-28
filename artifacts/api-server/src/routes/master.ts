@@ -1,8 +1,9 @@
 import { Router } from "express";
+import { clerkClient } from "@clerk/express";
 import { db } from "@workspace/db";
 import {
   escolasTable, planosTable, professoresTable, turmasTable,
-  horariosTable, aiMensagensTable, usuariosTable,
+  horariosTable, aiMensagensTable,
 } from "@workspace/db";
 import { eq, and, count } from "drizzle-orm";
 import { z } from "zod";
@@ -133,14 +134,20 @@ router.patch("/planos/:id", async (req, res) => {
 
 router.get("/metrics", async (_req, res) => {
   const [
-    escolas, professores, turmas, horarios, mensagensIA, usuarios,
+    escolas, professores, turmas, horarios, mensagensIA, totalContasClerk,
   ] = await Promise.all([
     db.select().from(escolasTable),
     db.select({ n: count() }).from(professoresTable).then((r) => r[0]?.n ?? 0),
     db.select({ n: count() }).from(turmasTable).then((r) => r[0]?.n ?? 0),
     db.select({ n: count() }).from(horariosTable).then((r) => r[0]?.n ?? 0),
     db.select({ n: count() }).from(aiMensagensTable).where(eq(aiMensagensTable.role, "user")).then((r) => r[0]?.n ?? 0),
-    db.select({ n: count() }).from(usuariosTable).then((r) => r[0]?.n ?? 0),
+    // [FIX] "totalUsuarios" contava a tabela `usuarios` -- que não é
+    // "quem acessa a plataforma", é uma feature separada de convidar
+    // colegas de trabalho pra uma escola (tela "Usuários" no menu de
+    // Sistema), opcional e raramente usada. Isso fazia a métrica
+    // mostrar "0" mesmo com contas reais logando via Clerk todo dia.
+    // clerkClient.users.getCount() conta as contas de verdade.
+    clerkClient.users.getCount(),
   ]);
 
   const hoje = new Date();
@@ -156,7 +163,7 @@ router.get("/metrics", async (_req, res) => {
     totalProfessores: professores,
     totalTurmas: turmas,
     totalAulasDistribuidas: horarios,
-    totalUsuarios: usuarios,
+    totalUsuarios: totalContasClerk,
     mensagensEnviadasParaIA: mensagensIA,
   });
 });
