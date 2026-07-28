@@ -59,9 +59,7 @@ const navGroups = [
 function NexGradeLogo() {
   return (
     <div className="flex items-center gap-2.5">
-      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#1565C0] to-[#0D47A1] flex items-center justify-center shrink-0 shadow-sm">
-        <span className="text-white font-black text-[13px] leading-none">N</span>
-      </div>
+      <img src="/logo.svg" alt="NexGrade" className="w-7 h-7 rounded-lg shrink-0 shadow-sm" />
       <div className="leading-none">
         <span className="font-bold text-[15px] tracking-tight text-foreground font-heading">NexGrade</span>
         <span className="block text-[10px] text-muted-foreground font-medium tracking-wide -mt-0.5">by Nexus Core Tecnologia</span>

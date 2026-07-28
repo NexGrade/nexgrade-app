@@ -146,9 +146,7 @@ function SignInPage() {
       <div className="w-full max-w-sm space-y-4">
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-2 mb-1">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1565C0] to-[#0D47A1] flex items-center justify-center">
-              <span className="text-white font-black text-sm">N</span>
-            </div>
+            <img src="/logo.svg" alt="NexGrade" className="w-8 h-8 rounded-lg" />
             <h1 className="text-2xl font-bold text-slate-900 font-heading">NexGrade</h1>
           </div>
           <p className="text-slate-500 text-sm mt-1">Sistema de Gestão de Horários Escolares</p>
@@ -165,9 +163,7 @@ function SignUpPage() {
       <div className="w-full max-w-sm space-y-4">
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-2 mb-1">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1565C0] to-[#0D47A1] flex items-center justify-center">
-              <span className="text-white font-black text-sm">N</span>
-            </div>
+            <img src="/logo.svg" alt="NexGrade" className="w-8 h-8 rounded-lg" />
             <h1 className="text-2xl font-bold text-slate-900 font-heading">NexGrade</h1>
           </div>
           <p className="text-slate-500 text-sm mt-1">Crie sua conta para começar</p>
