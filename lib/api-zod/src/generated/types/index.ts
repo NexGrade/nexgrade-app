@@ -95,6 +95,7 @@ export * from './listCargaHorariaParams';
 export * from './listComunicadosParams';
 export * from './listDisponibilidadeParams';
 export * from './listHorariosExperimentaisParams';
+export * from './listHorarioSlotsNivelEnsino';
 export * from './listHorarioSlotsParams';
 export * from './listHorarioSlotsTurno';
 export * from './listHorariosParams';

@@ -10,6 +10,7 @@ import {
   useListHorarioSlots,
   useListHorarios,
   getListDisponibilidadeQueryKey,
+  getListHorariosQueryKey,
   getListHorarioSlotsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -88,7 +89,7 @@ export default function DisponibilidadePage() {
 
   const { data: disponibilidadeRows = [], isLoading: carregandoDisponibilidade } = useListDisponibilidade(
     { professorId: professorIdNum },
-    { query: { enabled: !!professorIdNum } },
+    { query: { enabled: !!professorIdNum, queryKey: getListDisponibilidadeQueryKey({ professorId: professorIdNum }) } },
   );
 
   // [NOVO] Aulas reais do professor (de `horarios`), pra mostrar na
@@ -97,7 +98,7 @@ export default function DisponibilidadePage() {
   // (disponível/bloqueado/HA) da célula.
   const { data: horariosProf = [], isLoading: carregandoHorarios } = useListHorarios(
     professorIdNum ? { professorId: professorIdNum } : {},
-    { query: { enabled: !!professorIdNum } },
+    { query: { enabled: !!professorIdNum, queryKey: getListHorariosQueryKey(professorIdNum ? { professorId: professorIdNum } : {}) } },
   );
   const horariosDoTurno = useMemo(
     () => horariosProf.filter((h: any) => h.turma?.turno === turno),

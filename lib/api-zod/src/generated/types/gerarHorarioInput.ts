@@ -16,6 +16,7 @@ export interface GerarHorarioInput {
   substituir?: boolean;
   reduzirJanelas?: boolean;
   fatorPedagogico?: boolean;
+  compactarCargaHoraria?: boolean;
   experimental?: boolean;
   nomeExperimental?: string;
 }

@@ -620,6 +620,7 @@ export const GerarHorarioBody = zod.object({
   "substituir": zod.boolean().optional(),
   "reduzirJanelas": zod.boolean().optional(),
   "fatorPedagogico": zod.boolean().optional(),
+  "compactarCargaHoraria": zod.boolean().optional(),
   "experimental": zod.boolean().optional(),
   "nomeExperimental": zod.string().optional()
 })
@@ -974,7 +975,8 @@ export const DeleteDisponibilidadeResponse = zod.void()
 
 
 export const ListHorarioSlotsQueryParams = zod.object({
-  "turno": zod.enum(['matutino', 'vespertino', 'noturno']).optional()
+  "turno": zod.enum(['matutino', 'vespertino', 'noturno']).optional(),
+  "nivelEnsino": zod.enum(['fundamental', 'medio_tecnico']).optional()
 })
 
 

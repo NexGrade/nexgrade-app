@@ -6,6 +6,7 @@ import {
   useUpdateDisciplina,
   getListDisciplinasQueryKey,
   useListDisciplinasCatalogo,
+  getListDisciplinasCatalogoQueryKey,
   useAdicionarDisciplinasCatalogoSelecionadas,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -528,7 +529,7 @@ export default function DisciplinasList() {
 function DialogCatalogo({ disciplinasDaEscola }: { disciplinasDaEscola: any[] }) {
   const [open, setOpen] = useState(false);
   const [selecionadas, setSelecionadas] = useState<number[]>([]);
-  const { data: catalogo, isLoading } = useListDisciplinasCatalogo({ query: { enabled: open } });
+  const { data: catalogo, isLoading } = useListDisciplinasCatalogo({ query: { enabled: open, queryKey: getListDisciplinasCatalogoQueryKey() } });
   const adicionar = useAdicionarDisciplinasCatalogoSelecionadas();
   const queryClient = useQueryClient();
   const { toast } = useToast();

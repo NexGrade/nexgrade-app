@@ -403,7 +403,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/HorarioSlot"
 
-  # â”€â”€ HORÃRIOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # â”€â”€ HORÁRIOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /horarios:
     get:
       operationId: listHorarios
@@ -694,6 +694,11 @@ paths:
           schema:
             type: string
             enum: [matutino, vespertino, noturno]
+        - name: nivelEnsino
+          in: query
+          schema:
+            type: string
+            enum: [fundamental, medio_tecnico]
       responses:
         "200":
           description: Lista
@@ -804,7 +809,7 @@ paths:
         "204":
           description: Removida
 
-  # â”€â”€ LIMITES DIÃRIOS PROFESSOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # â”€â”€ LIMITES DIÁRIOS PROFESSOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /limites-diarios-professor:
     get:
       operationId: listLimitesDiariosProfessor
@@ -1439,7 +1444,7 @@ paths:
         "204":
           description: Removido
 
-  # â”€â”€ USUÃRIOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # â”€â”€ USUÁRIOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /usuarios:
     get:
       operationId: listUsuarios
@@ -1935,6 +1940,7 @@ components:
         substituir: { type: boolean }
         reduzirJanelas: { type: boolean }
         fatorPedagogico: { type: boolean }
+        compactarCargaHoraria: { type: boolean }
         experimental: { type: boolean }
         nomeExperimental: { type: string }
 

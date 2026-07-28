@@ -5,8 +5,10 @@
  * GradeEscolar â€” Sistema Completo de GestÃ£o de HorÃ¡rios Escolares
  * OpenAPI spec version: 0.2.0
  */
+import type { ListHorarioSlotsNivelEnsino } from './listHorarioSlotsNivelEnsino';
 import type { ListHorarioSlotsTurno } from './listHorarioSlotsTurno';
 
 export type ListHorarioSlotsParams = {
 turno?: ListHorarioSlotsTurno;
+nivelEnsino?: ListHorarioSlotsNivelEnsino;
 };

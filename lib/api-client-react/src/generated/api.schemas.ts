@@ -331,6 +331,7 @@ export interface GerarHorarioInput {
   substituir?: boolean;
   reduzirJanelas?: boolean;
   fatorPedagogico?: boolean;
+  compactarCargaHoraria?: boolean;
   experimental?: boolean;
   nomeExperimental?: string;
 }
@@ -1181,6 +1182,7 @@ professorId?: number;
 
 export type ListHorarioSlotsParams = {
 turno?: ListHorarioSlotsTurno;
+nivelEnsino?: ListHorarioSlotsNivelEnsino;
 };
 
 export type ListHorarioSlotsTurno = typeof ListHorarioSlotsTurno[keyof typeof ListHorarioSlotsTurno];
@@ -1190,6 +1192,14 @@ export const ListHorarioSlotsTurno = {
   matutino: 'matutino',
   vespertino: 'vespertino',
   noturno: 'noturno',
+} as const;
+
+export type ListHorarioSlotsNivelEnsino = typeof ListHorarioSlotsNivelEnsino[keyof typeof ListHorarioSlotsNivelEnsino];
+
+
+export const ListHorarioSlotsNivelEnsino = {
+  fundamental: 'fundamental',
+  medio_tecnico: 'medio_tecnico',
 } as const;
 
 export type ListAulasFixasParams = {
