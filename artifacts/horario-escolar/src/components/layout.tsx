@@ -86,7 +86,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     location === href || (href !== "/dashboard" && location.startsWith(href));
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
+    <div className="h-screen flex w-full bg-background overflow-hidden">
       <aside className="w-64 border-r border-border bg-card flex flex-col">
         <div className="h-16 flex items-center px-5 border-b border-border">
           <NexGradeLogo />
