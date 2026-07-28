@@ -31,6 +31,10 @@ const ESTADOS_BR = [
 
 const onboardingSchema = z.object({
   nomeFantasia: z.string().min(2, "Informe o nome da escola"),
+  // [NOVO] RNF-SEG: obrigatório de propósito -- dificulta cadastro
+  // descartável/em massa. Aceita com ou sem pontuação (12.345.678/0001-90
+  // ou 12345678000190) -- só conta os dígitos, não valida na Receita.
+  cnpj: z.string().refine((v) => v.replace(/\D/g, "").length === 14, "Informe um CNPJ válido (14 dígitos)"),
   cidade: z.string().optional(),
   estado: z.string().min(2),
   modalidade: z.enum(["regular", "tecnica", "eja", "normal_magisterio"]),
@@ -50,7 +54,7 @@ export default function OnboardingPage() {
 
   const form = useForm<OnboardingFormValues>({
     resolver: zodResolver(onboardingSchema),
-    defaultValues: { nomeFantasia: "", cidade: "", estado: "PR", modalidade: "regular" },
+    defaultValues: { nomeFantasia: "", cnpj: "", cidade: "", estado: "PR", modalidade: "regular" },
   });
 
   function onSubmit(data: OnboardingFormValues) {
@@ -100,6 +104,20 @@ export default function OnboardingPage() {
                       <FormLabel>Nome da escola</FormLabel>
                       <FormControl>
                         <Input placeholder="Ex.: Colégio Estadual Exemplo" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="cnpj"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CNPJ</FormLabel>
+                      <FormControl>
+                        <Input placeholder="00.000.000/0001-00" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -183,7 +201,15 @@ export default function OnboardingPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {planos?.map((plano) => {
                         const Icone = ICONES_PLANO[plano.nome as keyof typeof ICONES_PLANO] ?? Shield;
-                        const gratuito = plano.preco === 0;
+                        // [FIX] Campo renomeado de "preco" pra "precoMensal"
+                        // no backend hoje -- o tipo gerado pelo Orval ainda
+                        // não foi regenerado (fica desatualizado até rodar
+                        // o codegen de novo), então `plano.preco` compila
+                        // sem erro mas vem sempre undefined em runtime,
+                        // fazendo esse indicador nunca marcar o gratuito
+                        // como selecionado. Acesso via cast até a próxima
+                        // regeneração do client.
+                        const gratuito = (plano as unknown as { precoMensal: number }).precoMensal === 0;
                         return (
                           <div
                             key={plano.id}
