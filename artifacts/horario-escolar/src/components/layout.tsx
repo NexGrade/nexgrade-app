@@ -121,7 +121,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           ))}
-          <div className="pt-2 mt-2 border-t border-border">
+          <div className="pt-4 mt-2 border-t border-border">
             <div className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground">
               <span className="w-6 h-6 shrink-0 flex items-center justify-center">
                 <UserButton
