@@ -5,6 +5,7 @@ import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
 import router from "./routes";
 import healthRouter from "./routes/health";
+import stripeWebhookRouter from "./routes/stripe-webhook";
 import { logger } from "./lib/logger";
 import { requireAuth } from "./middlewares/requireAuth";
 import { limitadorGeral } from "./middlewares/rateLimit";
@@ -38,6 +39,15 @@ app.use(
 );
 
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
+
+// RF-BILLING: montado ANTES de express.json() de propósito -- a
+// verificação de assinatura do Stripe (dentro de stripe-webhook.ts)
+// exige o corpo CRU da requisição, não o JSON já interpretado. Também
+// fica FORA do requireAuth: quem chama essa rota é o servidor do
+// Stripe, não um usuário logado com sessão Clerk; a autenticidade da
+// chamada é garantida pela assinatura verificada dentro da rota, não
+// por token.
+app.use("/api/stripe/webhook", express.raw({ type: "application/json" }), stripeWebhookRouter);
 
 // RNF-SEG-01/03: `origin: true` refletia qualquer origem de volta no
 // cabeçalho de resposta, e com `credentials: true` isso permite que

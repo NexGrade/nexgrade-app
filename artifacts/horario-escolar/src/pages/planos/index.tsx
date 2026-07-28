@@ -60,6 +60,27 @@ export default function PlanosPage() {
   // nada instalado -- mantendo um link mailto: real como atalho
   // opcional pra quem tiver e-mail configurado.
   const [planoInteresse, setPlanoInteresse] = useState<string | null>(null);
+  const [checkoutLoadingId, setCheckoutLoadingId] = useState<number | null>(null);
+
+  const iniciarCheckout = async (plano: Plano) => {
+    setCheckoutLoadingId(plano.id);
+    try {
+      const { url } = await customFetch<{ url: string }>("/api/escolas/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planoId: plano.id, periodicidade }),
+        responseType: "json",
+      });
+      window.location.href = url;
+    } catch (err) {
+      toast({
+        title: "Não foi possível iniciar o pagamento",
+        description: err instanceof Error ? err.message : undefined,
+        variant: "destructive",
+      });
+      setCheckoutLoadingId(null);
+    }
+  };
 
   useEffect(() => {
     // [FIX] Mesmo bug corrigido em pages/export/index.tsx: essa
@@ -173,13 +194,26 @@ export default function PlanosPage() {
                   <Button
                     className={cn("w-full mt-4", isPro ? "" : "variant-outline")}
                     variant={isPro ? "default" : "outline"}
+                    disabled={checkoutLoadingId === plano.id}
                     onClick={() => {
                       if (plano.precoMensal === 0) return;
-                      setPlanoInteresse(`${plano.nome} (${periodicidade === "anual" ? "anual" : "mensal"})`);
+                      iniciarCheckout(plano);
                     }}
                   >
-                    {plano.precoMensal === 0 ? "Plano atual" : `Assinar ${plano.nome}`}
+                    {plano.precoMensal === 0
+                      ? "Plano atual"
+                      : checkoutLoadingId === plano.id
+                        ? "Abrindo pagamento..."
+                        : `Assinar ${plano.nome}`}
                   </Button>
+                  {plano.precoMensal > 0 && (
+                    <button
+                      onClick={() => setPlanoInteresse(`${plano.nome} (${periodicidade === "anual" ? "anual" : "mensal"})`)}
+                      className="text-xs text-muted-foreground hover:text-foreground hover:underline text-center"
+                    >
+                      ou fale com a gente antes
+                    </button>
+                  )}
                 </CardContent>
               </Card>
             );
