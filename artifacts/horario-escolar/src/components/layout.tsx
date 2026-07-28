@@ -125,7 +125,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground">
               <span className="w-4 h-4 shrink-0 flex items-center justify-center">
                 <UserButton
-                  afterSignOutUrl="/"
                   appearance={{
                     elements: {
                       rootBox: "w-4 h-4",

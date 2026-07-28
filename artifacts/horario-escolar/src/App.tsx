@@ -349,6 +349,12 @@ function App() {
       routerPush={(to) => window.history.pushState(null, "", to)}
       routerReplace={(to) => window.history.replaceState(null, "", to)}
       appearance={clerkAppearance}
+      // [FIX] Em versões recentes do Clerk (6.x), afterSignOutUrl saiu
+      // de ser prop do <UserButton> individual e passou a ser opção
+      // global do provider -- faz sentido, já que é comportamento de
+      // navegação do app inteiro, não de um botão específico. Movido
+      // de components/layout.tsx pra cá.
+      afterSignOutUrl="/"
     >
       <ApiAuthBridge />
       <QueryClientProvider client={queryClient}>
