@@ -546,19 +546,25 @@ function AplicarModeloOficial({
   // esse modal abre (já que o componente só monta nesse momento), não
   // no carregamento inicial da página. react-query cacheia entre
   // aberturas do modal, então só busca de verdade na primeira vez.
-  const { data: matrizesTecnicas, isLoading: carregandoTecnicas } = useQuery({
+  const { data: matrizesTecnicas, isLoading: carregandoTecnicas, error: erroTecnicas } = useQuery({
     queryKey: ["/matrizes-oficiais/tecnicas"],
     queryFn: () => customFetch<MatrizTecnicaTemplate[]>("/api/matrizes-oficiais/tecnicas", { responseType: "json" }),
     enabled: ehTecnico,
     staleTime: 10 * 60_000,
+    retry: false,
   });
-  const { data: matrizesGerais, isLoading: carregandoGerais } = useQuery({
+  const { data: matrizesGerais, isLoading: carregandoGerais, error: erroGerais } = useQuery({
     queryKey: ["/matrizes-oficiais/gerais"],
     queryFn: () => customFetch<MatrizOficialTemplate[]>("/api/matrizes-oficiais/gerais", { responseType: "json" }),
     enabled: !ehTecnico,
     staleTime: 10 * 60_000,
+    retry: false,
   });
   const carregandoModelos = ehTecnico ? carregandoTecnicas : carregandoGerais;
+  // [NOVO] Sem acesso (trial vencido, sem plano pago) -- a API devolve
+  // 403 nesse caso. `retry: false` acima evita ficar tentando de novo
+  // à toa quando o motivo é permissão, não falha de rede.
+  const semAcesso = Boolean(ehTecnico ? erroTecnicas : erroGerais);
 
   // ── Fundamental / Médio: escolhe modalidade + série ──
   const templatesGerais = (matrizesGerais ?? []).filter((m) => m.nivel === nivelCurso);
@@ -649,6 +655,13 @@ function AplicarModeloOficial({
             <Skeleton className="h-9 w-full" />
             <Skeleton className="h-9 w-full" />
           </div>
+        ) : semAcesso ? (
+          <div className="text-sm bg-amber-50 border border-amber-200 rounded-md p-3 space-y-2">
+            <p className="text-amber-800">
+              O catálogo de matrizes oficiais SEED-PR fica disponível durante o período de avaliação ou em planos pagos.
+            </p>
+            <a href="/planos" className="text-[#1565C0] font-medium hover:underline text-xs">Ver planos →</a>
+          </div>
         ) : ehTecnico ? (
           <div className="space-y-3">
             {!formaOfertaCurso && candidatosPorNome.length > 1 && (
@@ -729,7 +742,7 @@ function AplicarModeloOficial({
 
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="outline" onClick={onFechar}>Cancelar</Button>
-          <Button onClick={aplicar} disabled={!itensParaAplicar || aplicando || carregandoModelos}>
+          <Button onClick={aplicar} disabled={!itensParaAplicar || aplicando || carregandoModelos || semAcesso}>
             {aplicando ? "Aplicando..." : "Aplicar modelo"}
           </Button>
         </div>

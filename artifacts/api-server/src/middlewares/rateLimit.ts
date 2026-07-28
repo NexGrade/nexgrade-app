@@ -62,3 +62,20 @@ export const limitadorCadastro = rateLimit({
   validate: { keyGeneratorIpFallback: false },
   message: { error: "Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente." },
 });
+
+// [NOVO] RNF-SEG: limite específico pra rotas que servem dado sensível
+// e caro de reconstruir (ex: catálogo de matrizes oficiais SEED-PR).
+// Mais generoso que o de cadastro (uso normal da tela às vezes chama
+// mais de uma vez em sessões diferentes), mas bem mais apertado que o
+// geral -- um script tentando raspar o catálogo inteiro repetidamente
+// esbarra aqui rápido; uso humano normal nunca chega perto do limite
+// (o front já cacheia a resposta por 10 minutos).
+export const limitadorConsultaSensivel = rateLimit({
+  windowMs: 10 * 60_000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: chavePorUsuario,
+  validate: { keyGeneratorIpFallback: false },
+  message: { error: "Muitas consultas em pouco tempo. Aguarde alguns minutos e tente novamente." },
+});
