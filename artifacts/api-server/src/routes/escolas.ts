@@ -5,6 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import Stripe from "stripe";
 import { getEscolaId } from "../lib/escola-id";
+import { limitadorCadastro } from "../middlewares/rateLimit";
 
 // URL do frontend, usada nos redirecionamentos de volta do Stripe
 // (sucesso/cancelamento) -- variável de ambiente com fallback pro
@@ -80,12 +81,23 @@ router.get("/me", async (req, res) => {
 });
 
 // POST /escolas — cria/atualiza escola (onboarding)
-router.post("/", async (req, res) => {
+router.post("/", limitadorCadastro, async (req, res) => {
   const escolaId = getEscolaId(req);
   const { nomeFantasia, cnpj, cidade, estado, modalidade } = req.body;
 
   if (!nomeFantasia?.trim()) {
     res.status(400).json({ error: "Nome da escola obrigatório" });
+    return;
+  }
+
+  const existing = await db.select().from(escolasTable).where(eq(escolasTable.id, escolaId)).then(r => r[0]);
+
+  // RNF-SEG: CNPJ obrigatório só em CADASTRO NOVO -- dificulta cadastro
+  // descartável/em massa sem barrar quem já tinha conta antes dessa
+  // exigência existir (não força CNPJ retroativamente em quem já
+  // estava usando o sistema sem esse dado preenchido).
+  if (!existing && !cnpj?.trim()) {
+    res.status(400).json({ error: "CNPJ é obrigatório para cadastrar uma escola nova." });
     return;
   }
 
@@ -99,7 +111,6 @@ router.post("/", async (req, res) => {
     planoId = planoGratuito.id;
   }
 
-  const existing = await db.select().from(escolasTable).where(eq(escolasTable.id, escolaId)).then(r => r[0]);
   if (existing) {
     const [updated] = await db
       .update(escolasTable)
@@ -126,7 +137,7 @@ const CheckoutInput = z.object({
   periodicidade: z.enum(["mensal", "anual"]),
 });
 
-router.post("/checkout", async (req, res) => {
+router.post("/checkout", limitadorCadastro, async (req, res) => {
   const escolaId = getEscolaId(req);
   const parsed = CheckoutInput.safeParse(req.body);
   if (!parsed.success) {
