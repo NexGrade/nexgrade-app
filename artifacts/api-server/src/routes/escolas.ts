@@ -10,7 +10,7 @@ const router = Router();
 const PLANOS_SEED = [
   {
     nome: "Gratuito",
-    preco: 0,
+    precoMensal: 0,
     maxProfessores: 10,
     maxTurmas: 5,
     temIA: false,
@@ -19,7 +19,8 @@ const PLANOS_SEED = [
   },
   {
     nome: "Pro",
-    preco: 9700, // R$ 97,00 em centavos
+    precoMensal: 9700, // R$ 97,00/mês em centavos
+    precoAnual: 97000, // R$ 970,00/ano (10 meses -- 2 meses grátis)
     maxProfessores: 100,
     maxTurmas: 50,
     temIA: true,
@@ -28,7 +29,8 @@ const PLANOS_SEED = [
   },
   {
     nome: "Master",
-    preco: 24700, // R$ 247,00
+    precoMensal: 18000, // R$ 180,00/mês
+    precoAnual: 180000, // R$ 1.800,00/ano (10 meses -- 2 meses grátis; posicionado perto do concorrente ~R$1.900/ano)
     maxProfessores: 9999,
     maxTurmas: 9999,
     temIA: true,
@@ -84,7 +86,7 @@ router.post("/", async (req, res) => {
   let planoId: number | undefined;
   const planoGratuito = await db.select().from(planosTable).where(eq(planosTable.nome, "Gratuito")).then(r => r[0]);
   if (!planoGratuito) {
-    const [p] = await db.insert(planosTable).values({ nome: "Gratuito", preco: 0, maxProfessores: 10, maxTurmas: 5, temIA: false, temExport: true, temImport: false, ativo: true }).returning();
+    const [p] = await db.insert(planosTable).values({ nome: "Gratuito", precoMensal: 0, maxProfessores: 10, maxTurmas: 5, temIA: false, temExport: true, temImport: false, ativo: true }).returning();
     planoId = p.id;
   } else {
     planoId = planoGratuito.id;

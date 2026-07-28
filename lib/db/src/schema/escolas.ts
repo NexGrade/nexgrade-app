@@ -5,7 +5,12 @@ import { z } from "zod/v4";
 export const planosTable = pgTable("planos", {
   id: serial("id").primaryKey(),
   nome: text("nome").notNull(),
-  preco: integer("preco").notNull().default(0),
+  // [RENOMEADO] Era só "preco" -- agora "precoMensal" pra ficar
+  // simétrico com precoAnual (RF-BILLING: plano anual com desconto).
+  precoMensal: integer("preco_mensal").notNull().default(0),
+  // Nulo pro plano Gratuito (não tem opção anual) e enquanto o plano
+  // pago ainda não teve o valor anual definido.
+  precoAnual: integer("preco_anual"),
   maxProfessores: integer("max_professores").notNull().default(10),
   maxTurmas: integer("max_turmas").notNull().default(5),
   temIA: boolean("tem_ia").notNull().default(false),
@@ -13,7 +18,12 @@ export const planosTable = pgTable("planos", {
   temImport: boolean("tem_import").notNull().default(false),
   ativo: boolean("ativo").notNull().default(true),
   visivelPublicamente: boolean("visivel_publicamente").notNull().default(true),
-  stripePriceId: text("stripe_price_id"),
+  // [RENOMEADO/NOVO] Era um único "stripePriceId" -- o Stripe usa um
+  // Price ID diferente por periodicidade dentro do mesmo Product
+  // (RF-BILLING). Ambos nulos até você colar os price_... do Stripe
+  // pelo Painel Master, depois de criar o produto lá.
+  stripePriceIdMensal: text("stripe_price_id_mensal"),
+  stripePriceIdAnual: text("stripe_price_id_anual"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -30,6 +40,12 @@ export const escolasTable = pgTable("escolas", {
   stripeSubscriptionId: text("stripe_subscription_id"),
   planoAtivo: boolean("plano_ativo").notNull().default(true),
   trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }),
+  // [NOVO] Marca escolas isentas de cobrança/bloqueio -- caso do
+  // Mário Braga (piloto). Fora do fluxo normal de trial/pagamento,
+  // pra nenhum bloqueio automático encostar nela por engano, mesmo
+  // que o trial "vença" no meio do piloto. `false` por padrão pra
+  // toda escola nova/existente.
+  isenta: boolean("isenta").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

@@ -27,18 +27,24 @@ router.use(requireMaster);
 const EscolaUpdateInput = z.object({
   planoId: z.number().int().nullable().optional(),
   planoAtivo: z.boolean().optional(),
+  // [NOVO] Isenta a escola de qualquer bloqueio por trial vencido/sem
+  // assinatura ativa -- uso pontual (ex: escola piloto), não faz parte
+  // do fluxo normal de cadastro.
+  isenta: z.boolean().optional(),
 });
 
 const PlanoInput = z.object({
   nome: z.string().min(1),
-  preco: z.number().int().min(0).default(0),
+  precoMensal: z.number().int().min(0).default(0),
+  precoAnual: z.number().int().min(0).nullable().optional(),
   maxProfessores: z.number().int().min(1).default(10),
   maxTurmas: z.number().int().min(1).default(5),
   temIA: z.boolean().default(false),
   temExport: z.boolean().default(false),
   temImport: z.boolean().default(false),
   ativo: z.boolean().default(true),
-  stripePriceId: z.string().optional(),
+  stripePriceIdMensal: z.string().optional(),
+  stripePriceIdAnual: z.string().optional(),
 });
 
 // ── ESCOLAS ──────────────────────────────────────────────────────────────────
@@ -94,7 +100,7 @@ router.patch("/escolas/:id", async (req, res) => {
 // ── PLANOS ───────────────────────────────────────────────────────────────────
 
 router.get("/planos", async (_req, res) => {
-  const planos = await db.select().from(planosTable).orderBy(planosTable.preco);
+  const planos = await db.select().from(planosTable).orderBy(planosTable.precoMensal);
   res.json(planos);
 });
 

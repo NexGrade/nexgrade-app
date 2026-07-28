@@ -10,7 +10,8 @@ import { cn } from "@/lib/utils";
 type Plano = {
   id: number;
   nome: string;
-  preco: number;
+  precoMensal: number;
+  precoAnual: number | null;
   maxProfessores: number;
   maxTurmas: number;
   temIA: boolean;
@@ -28,14 +29,27 @@ const BADGE = {
   Pro: { label: "Mais popular", color: "bg-[#1565C0] text-white" },
 };
 
-function formatPreco(centavos: number) {
+function formatPreco(centavos: number, periodicidade: "mensal" | "anual") {
   if (centavos === 0) return "Gratuito";
-  return `R$ ${(centavos / 100).toFixed(0).replace(".", ",")}/mês`;
+  const valor = (centavos / 100).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  return periodicidade === "anual" ? `R$ ${valor}/ano` : `R$ ${valor}/mês`;
+}
+
+// Quantos meses o cliente "ganha de graça" pagando anual em vez de
+// mensal -- ex: mensal 97 x 12 = 1164; anual 970 -> economiza 194,
+// que é quase 2 meses (194/97 ≈ 2). Calculado, não fixo, pra não
+// desatualizar se o desconto mudar.
+function mesesGratis(precoMensal: number, precoAnual: number | null): number | null {
+  if (!precoAnual || precoMensal === 0) return null;
+  const economiaAnual = precoMensal * 12 - precoAnual;
+  const meses = Math.round(economiaAnual / precoMensal);
+  return meses > 0 ? meses : null;
 }
 
 export default function PlanosPage() {
   const { toast } = useToast();
   const [planos, setPlanos] = useState<Plano[]>([]);
+  const [periodicidade, setPeriodicidade] = useState<"mensal" | "anual">("mensal");
   const [loading, setLoading] = useState(true);
   // [FIX] Botão "Assinar" dependia de window.open(mailto:) -- além de
   // ser bloqueado como pop-up (já corrigido antes), mesmo depois de
@@ -80,6 +94,30 @@ export default function PlanosPage() {
         </p>
       </div>
 
+      <div className="flex items-center justify-center gap-2">
+        <button
+          onClick={() => setPeriodicidade("mensal")}
+          className={cn(
+            "text-sm font-medium px-4 py-1.5 rounded-full transition-colors",
+            periodicidade === "mensal" ? "bg-[#1565C0] text-white" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          Mensal
+        </button>
+        <button
+          onClick={() => setPeriodicidade("anual")}
+          className={cn(
+            "text-sm font-medium px-4 py-1.5 rounded-full transition-colors flex items-center gap-1.5",
+            periodicidade === "anual" ? "bg-[#1565C0] text-white" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          Anual
+          <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full", periodicidade === "anual" ? "bg-white/20" : "bg-emerald-100 text-emerald-700")}>
+            2 meses grátis
+          </span>
+        </button>
+      </div>
+
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[1,2,3].map(i => <div key={i} className="h-96 rounded-xl bg-muted animate-pulse" />)}
@@ -108,7 +146,14 @@ export default function PlanosPage() {
                   </div>
                   <CardTitle className="text-xl">{plano.nome}</CardTitle>
                   <div className="mt-2">
-                    <span className="text-3xl font-bold">{formatPreco(plano.preco)}</span>
+                    <span className="text-3xl font-bold">
+                      {formatPreco(periodicidade === "anual" && plano.precoAnual ? plano.precoAnual : plano.precoMensal, periodicidade === "anual" && plano.precoAnual ? "anual" : "mensal")}
+                    </span>
+                    {periodicidade === "anual" && plano.precoAnual && (
+                      <p className="text-xs text-emerald-600 mt-1">
+                        equivalente a {formatPreco(Math.round(plano.precoAnual / 12), "mensal")} — economize {mesesGratis(plano.precoMensal, plano.precoAnual)} meses/ano
+                      </p>
+                    )}
                   </div>
                   <CardDescription className="mt-1">
                     {plano.nome === "Gratuito" && "Para começar e experimentar"}
@@ -129,11 +174,11 @@ export default function PlanosPage() {
                     className={cn("w-full mt-4", isPro ? "" : "variant-outline")}
                     variant={isPro ? "default" : "outline"}
                     onClick={() => {
-                      if (plano.preco === 0) return;
-                      setPlanoInteresse(plano.nome);
+                      if (plano.precoMensal === 0) return;
+                      setPlanoInteresse(`${plano.nome} (${periodicidade === "anual" ? "anual" : "mensal"})`);
                     }}
                   >
-                    {plano.preco === 0 ? "Plano atual" : `Assinar ${plano.nome}`}
+                    {plano.precoMensal === 0 ? "Plano atual" : `Assinar ${plano.nome}`}
                   </Button>
                 </CardContent>
               </Card>
