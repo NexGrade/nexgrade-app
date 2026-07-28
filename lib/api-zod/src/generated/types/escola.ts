@@ -20,7 +20,13 @@ export interface Escola {
   planoId?: number | null;
   /** @nullable */
   clerkOrgId?: string | null;
+  /** @nullable */
+  stripeCustomerId?: string | null;
+  /** @nullable */
+  stripeSubscriptionId?: string | null;
   planoAtivo: boolean;
   /** @nullable */
   trialEndsAt?: Date | null;
+  /** Escola isenta de bloqueio por trial vencido/sem assinatura ativa (ex: piloto). */
+  isenta?: boolean;
 }

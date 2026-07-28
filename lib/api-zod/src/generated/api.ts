@@ -1158,14 +1158,16 @@ export const DeleteLimiteDiarioProfessorResponse = zod.void()
 export const ListPlanosResponseItem = zod.object({
   "id": zod.number(),
   "nome": zod.string(),
-  "preco": zod.number().describe('PreÃ§o mensal em centavos. 0 = plano gratuito (Piloto).'),
+  "precoMensal": zod.number().describe('Preço mensal em centavos. 0 = plano gratuito (Piloto).'),
+  "precoAnual": zod.number().nullish().describe('Preço anual em centavos, com desconto. Nulo enquanto não configurado.'),
   "maxProfessores": zod.number(),
   "maxTurmas": zod.number(),
   "temIA": zod.boolean(),
   "temExport": zod.boolean(),
   "temImport": zod.boolean(),
   "ativo": zod.boolean(),
-  "stripePriceId": zod.string().nullish().describe('Preenchido apenas quando a cobranÃ§a via Stripe for habilitada (fase de expansÃ£o SaaS).')
+  "stripePriceIdMensal": zod.string().nullish().describe('Price ID do Stripe pro plano mensal.'),
+  "stripePriceIdAnual": zod.string().nullish().describe('Price ID do Stripe pro plano anual.')
 })
 export const ListPlanosResponse = zod.array(ListPlanosResponseItem)
 
@@ -1182,14 +1184,16 @@ export const GetEscolaAtualResponse = zod.object({
   "plano": zod.object({
   "id": zod.number(),
   "nome": zod.string(),
-  "preco": zod.number().describe('PreÃ§o mensal em centavos. 0 = plano gratuito (Piloto).'),
+  "precoMensal": zod.number().describe('Preço mensal em centavos. 0 = plano gratuito (Piloto).'),
+  "precoAnual": zod.number().nullish().describe('Preço anual em centavos, com desconto. Nulo enquanto não configurado.'),
   "maxProfessores": zod.number(),
   "maxTurmas": zod.number(),
   "temIA": zod.boolean(),
   "temExport": zod.boolean(),
   "temImport": zod.boolean(),
   "ativo": zod.boolean(),
-  "stripePriceId": zod.string().nullish().describe('Preenchido apenas quando a cobranÃ§a via Stripe for habilitada (fase de expansÃ£o SaaS).')
+  "stripePriceIdMensal": zod.string().nullish().describe('Price ID do Stripe pro plano mensal.'),
+  "stripePriceIdAnual": zod.string().nullish().describe('Price ID do Stripe pro plano anual.')
 }).optional()
 })
 
@@ -1216,8 +1220,11 @@ export const CadastrarEscolaResponse = zod.object({
   "modalidade": zod.enum(['regular', 'tecnica', 'eja', 'normal_magisterio']),
   "planoId": zod.number().nullish(),
   "clerkOrgId": zod.string().nullish(),
+  "stripeCustomerId": zod.string().nullish(),
+  "stripeSubscriptionId": zod.string().nullish(),
   "planoAtivo": zod.boolean(),
-  "trialEndsAt": zod.coerce.date().nullish()
+  "trialEndsAt": zod.coerce.date().nullish(),
+  "isenta": zod.boolean().optional().describe('Escola isenta de bloqueio por trial vencido\/sem assinatura ativa (ex: piloto).')
 })
 
 
@@ -1235,20 +1242,25 @@ export const ListEscolasMasterResponseItem = zod.object({
   "modalidade": zod.enum(['regular', 'tecnica', 'eja', 'normal_magisterio']),
   "planoId": zod.number().nullish(),
   "clerkOrgId": zod.string().nullish(),
+  "stripeCustomerId": zod.string().nullish(),
+  "stripeSubscriptionId": zod.string().nullish(),
   "planoAtivo": zod.boolean(),
-  "trialEndsAt": zod.coerce.date().nullish()
+  "trialEndsAt": zod.coerce.date().nullish(),
+  "isenta": zod.boolean().optional().describe('Escola isenta de bloqueio por trial vencido\/sem assinatura ativa (ex: piloto).')
 }).and(zod.object({
   "plano": zod.union([zod.object({
   "id": zod.number(),
   "nome": zod.string(),
-  "preco": zod.number().describe('PreÃ§o mensal em centavos. 0 = plano gratuito (Piloto).'),
+  "precoMensal": zod.number().describe('Preço mensal em centavos. 0 = plano gratuito (Piloto).'),
+  "precoAnual": zod.number().nullish().describe('Preço anual em centavos, com desconto. Nulo enquanto não configurado.'),
   "maxProfessores": zod.number(),
   "maxTurmas": zod.number(),
   "temIA": zod.boolean(),
   "temExport": zod.boolean(),
   "temImport": zod.boolean(),
   "ativo": zod.boolean(),
-  "stripePriceId": zod.string().nullish().describe('Preenchido apenas quando a cobranÃ§a via Stripe for habilitada (fase de expansÃ£o SaaS).')
+  "stripePriceIdMensal": zod.string().nullish().describe('Price ID do Stripe pro plano mensal.'),
+  "stripePriceIdAnual": zod.string().nullish().describe('Price ID do Stripe pro plano anual.')
 }),zod.null()]).optional(),
   "totalProfessores": zod.number(),
   "totalTurmas": zod.number()
@@ -1262,7 +1274,8 @@ export const UpdateEscolaMasterParams = zod.object({
 
 export const UpdateEscolaMasterBody = zod.object({
   "planoId": zod.number().nullish(),
-  "planoAtivo": zod.boolean().optional()
+  "planoAtivo": zod.boolean().optional(),
+  "isenta": zod.boolean().optional()
 })
 
 export const UpdateEscolaMasterResponse = zod.object({
@@ -1274,29 +1287,36 @@ export const UpdateEscolaMasterResponse = zod.object({
   "modalidade": zod.enum(['regular', 'tecnica', 'eja', 'normal_magisterio']),
   "planoId": zod.number().nullish(),
   "clerkOrgId": zod.string().nullish(),
+  "stripeCustomerId": zod.string().nullish(),
+  "stripeSubscriptionId": zod.string().nullish(),
   "planoAtivo": zod.boolean(),
-  "trialEndsAt": zod.coerce.date().nullish()
+  "trialEndsAt": zod.coerce.date().nullish(),
+  "isenta": zod.boolean().optional().describe('Escola isenta de bloqueio por trial vencido\/sem assinatura ativa (ex: piloto).')
 })
 
 
 export const ListPlanosMasterResponseItem = zod.object({
   "id": zod.number(),
   "nome": zod.string(),
-  "preco": zod.number().describe('PreÃ§o mensal em centavos. 0 = plano gratuito (Piloto).'),
+  "precoMensal": zod.number().describe('Preço mensal em centavos. 0 = plano gratuito (Piloto).'),
+  "precoAnual": zod.number().nullish().describe('Preço anual em centavos, com desconto. Nulo enquanto não configurado.'),
   "maxProfessores": zod.number(),
   "maxTurmas": zod.number(),
   "temIA": zod.boolean(),
   "temExport": zod.boolean(),
   "temImport": zod.boolean(),
   "ativo": zod.boolean(),
-  "stripePriceId": zod.string().nullish().describe('Preenchido apenas quando a cobranÃ§a via Stripe for habilitada (fase de expansÃ£o SaaS).')
+  "stripePriceIdMensal": zod.string().nullish().describe('Price ID do Stripe pro plano mensal.'),
+  "stripePriceIdAnual": zod.string().nullish().describe('Price ID do Stripe pro plano anual.')
 })
 export const ListPlanosMasterResponse = zod.array(ListPlanosMasterResponseItem)
 
 
 
-export const createPlanoBodyPrecoDefault = 0;
-export const createPlanoBodyPrecoMin = 0;
+export const createPlanoBodyPrecoMensalDefault = 0;
+export const createPlanoBodyPrecoMensalMin = 0;
+
+export const createPlanoBodyPrecoAnualMin = 0;
 
 export const createPlanoBodyMaxProfessoresDefault = 10;
 
@@ -1309,27 +1329,31 @@ export const createPlanoBodyAtivoDefault = true;
 
 export const CreatePlanoBody = zod.object({
   "nome": zod.string().min(1),
-  "preco": zod.number().min(createPlanoBodyPrecoMin).default(createPlanoBodyPrecoDefault),
+  "precoMensal": zod.number().min(createPlanoBodyPrecoMensalMin).default(createPlanoBodyPrecoMensalDefault),
+  "precoAnual": zod.number().min(createPlanoBodyPrecoAnualMin).nullish(),
   "maxProfessores": zod.number().min(1).default(createPlanoBodyMaxProfessoresDefault),
   "maxTurmas": zod.number().min(1).default(createPlanoBodyMaxTurmasDefault),
   "temIA": zod.boolean().default(createPlanoBodyTemIADefault),
   "temExport": zod.boolean().default(createPlanoBodyTemExportDefault),
   "temImport": zod.boolean().default(createPlanoBodyTemImportDefault),
   "ativo": zod.boolean().default(createPlanoBodyAtivoDefault),
-  "stripePriceId": zod.string().optional()
+  "stripePriceIdMensal": zod.string().optional(),
+  "stripePriceIdAnual": zod.string().optional()
 })
 
 export const CreatePlanoResponse = zod.object({
   "id": zod.number(),
   "nome": zod.string(),
-  "preco": zod.number().describe('PreÃ§o mensal em centavos. 0 = plano gratuito (Piloto).'),
+  "precoMensal": zod.number().describe('Preço mensal em centavos. 0 = plano gratuito (Piloto).'),
+  "precoAnual": zod.number().nullish().describe('Preço anual em centavos, com desconto. Nulo enquanto não configurado.'),
   "maxProfessores": zod.number(),
   "maxTurmas": zod.number(),
   "temIA": zod.boolean(),
   "temExport": zod.boolean(),
   "temImport": zod.boolean(),
   "ativo": zod.boolean(),
-  "stripePriceId": zod.string().nullish().describe('Preenchido apenas quando a cobranÃ§a via Stripe for habilitada (fase de expansÃ£o SaaS).')
+  "stripePriceIdMensal": zod.string().nullish().describe('Price ID do Stripe pro plano mensal.'),
+  "stripePriceIdAnual": zod.string().nullish().describe('Price ID do Stripe pro plano anual.')
 })
 
 
@@ -1338,8 +1362,10 @@ export const UpdatePlanoParams = zod.object({
 })
 
 
-export const updatePlanoBodyPrecoDefault = 0;
-export const updatePlanoBodyPrecoMin = 0;
+export const updatePlanoBodyPrecoMensalDefault = 0;
+export const updatePlanoBodyPrecoMensalMin = 0;
+
+export const updatePlanoBodyPrecoAnualMin = 0;
 
 export const updatePlanoBodyMaxProfessoresDefault = 10;
 
@@ -1352,27 +1378,31 @@ export const updatePlanoBodyAtivoDefault = true;
 
 export const UpdatePlanoBody = zod.object({
   "nome": zod.string().min(1),
-  "preco": zod.number().min(updatePlanoBodyPrecoMin).default(updatePlanoBodyPrecoDefault),
+  "precoMensal": zod.number().min(updatePlanoBodyPrecoMensalMin).default(updatePlanoBodyPrecoMensalDefault),
+  "precoAnual": zod.number().min(updatePlanoBodyPrecoAnualMin).nullish(),
   "maxProfessores": zod.number().min(1).default(updatePlanoBodyMaxProfessoresDefault),
   "maxTurmas": zod.number().min(1).default(updatePlanoBodyMaxTurmasDefault),
   "temIA": zod.boolean().default(updatePlanoBodyTemIADefault),
   "temExport": zod.boolean().default(updatePlanoBodyTemExportDefault),
   "temImport": zod.boolean().default(updatePlanoBodyTemImportDefault),
   "ativo": zod.boolean().default(updatePlanoBodyAtivoDefault),
-  "stripePriceId": zod.string().optional()
+  "stripePriceIdMensal": zod.string().optional(),
+  "stripePriceIdAnual": zod.string().optional()
 })
 
 export const UpdatePlanoResponse = zod.object({
   "id": zod.number(),
   "nome": zod.string(),
-  "preco": zod.number().describe('PreÃ§o mensal em centavos. 0 = plano gratuito (Piloto).'),
+  "precoMensal": zod.number().describe('Preço mensal em centavos. 0 = plano gratuito (Piloto).'),
+  "precoAnual": zod.number().nullish().describe('Preço anual em centavos, com desconto. Nulo enquanto não configurado.'),
   "maxProfessores": zod.number(),
   "maxTurmas": zod.number(),
   "temIA": zod.boolean(),
   "temExport": zod.boolean(),
   "temImport": zod.boolean(),
   "ativo": zod.boolean(),
-  "stripePriceId": zod.string().nullish().describe('Preenchido apenas quando a cobranÃ§a via Stripe for habilitada (fase de expansÃ£o SaaS).')
+  "stripePriceIdMensal": zod.string().nullish().describe('Price ID do Stripe pro plano mensal.'),
+  "stripePriceIdAnual": zod.string().nullish().describe('Price ID do Stripe pro plano anual.')
 })
 
 

@@ -10,4 +10,5 @@ export interface EscolaMasterUpdateInput {
   /** @nullable */
   planoId?: number | null;
   planoAtivo?: boolean;
+  isenta?: boolean;
 }

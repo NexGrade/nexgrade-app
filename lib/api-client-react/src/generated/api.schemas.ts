@@ -767,8 +767,13 @@ export interface AtualizarCodigoMatrizInput {
 export interface Plano {
   id: number;
   nome: string;
-  /** PreÃ§o mensal em centavos. 0 = plano gratuito (Piloto). */
-  preco: number;
+  /** Preço mensal em centavos. 0 = plano gratuito (Piloto). */
+  precoMensal: number;
+  /**
+     * Preço anual em centavos, com desconto. Nulo enquanto não configurado.
+     * @nullable
+     */
+  precoAnual?: number | null;
   maxProfessores: number;
   maxTurmas: number;
   temIA: boolean;
@@ -776,10 +781,15 @@ export interface Plano {
   temImport: boolean;
   ativo: boolean;
   /**
-     * Preenchido apenas quando a cobranÃ§a via Stripe for habilitada (fase de expansÃ£o SaaS).
+     * Price ID do Stripe pro plano mensal.
      * @nullable
      */
-  stripePriceId?: string | null;
+  stripePriceIdMensal?: string | null;
+  /**
+     * Price ID do Stripe pro plano anual.
+     * @nullable
+     */
+  stripePriceIdAnual?: string | null;
 }
 
 export type EscolaModalidade = typeof EscolaModalidade[keyof typeof EscolaModalidade];
@@ -805,9 +815,15 @@ export interface Escola {
   planoId?: number | null;
   /** @nullable */
   clerkOrgId?: string | null;
+  /** @nullable */
+  stripeCustomerId?: string | null;
+  /** @nullable */
+  stripeSubscriptionId?: string | null;
   planoAtivo: boolean;
   /** @nullable */
   trialEndsAt?: string | null;
+  /** Escola isenta de bloqueio por trial vencido/sem assinatura ativa (ex: piloto). */
+  isenta?: boolean;
 }
 
 export interface EscolaAtual {
@@ -1137,13 +1153,19 @@ export interface EscolaMasterUpdateInput {
   /** @nullable */
   planoId?: number | null;
   planoAtivo?: boolean;
+  isenta?: boolean;
 }
 
 export interface PlanoInput {
   /** @minLength 1 */
   nome: string;
   /** @minimum 0 */
-  preco?: number;
+  precoMensal?: number;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  precoAnual?: number | null;
   /** @minimum 1 */
   maxProfessores?: number;
   /** @minimum 1 */
@@ -1152,7 +1174,8 @@ export interface PlanoInput {
   temExport?: boolean;
   temImport?: boolean;
   ativo?: boolean;
-  stripePriceId?: string;
+  stripePriceIdMensal?: string;
+  stripePriceIdAnual?: string;
 }
 
 export interface MasterMetrics {

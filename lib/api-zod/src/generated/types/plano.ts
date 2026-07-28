@@ -9,8 +9,13 @@
 export interface Plano {
   id: number;
   nome: string;
-  /** PreÃ§o mensal em centavos. 0 = plano gratuito (Piloto). */
-  preco: number;
+  /** Preço mensal em centavos. 0 = plano gratuito (Piloto). */
+  precoMensal: number;
+  /**
+     * Preço anual em centavos, com desconto. Nulo enquanto não configurado.
+     * @nullable
+     */
+  precoAnual?: number | null;
   maxProfessores: number;
   maxTurmas: number;
   temIA: boolean;
@@ -18,8 +23,13 @@ export interface Plano {
   temImport: boolean;
   ativo: boolean;
   /**
-     * Preenchido apenas quando a cobranÃ§a via Stripe for habilitada (fase de expansÃ£o SaaS).
+     * Price ID do Stripe pro plano mensal.
      * @nullable
      */
-  stripePriceId?: string | null;
+  stripePriceIdMensal?: string | null;
+  /**
+     * Price ID do Stripe pro plano anual.
+     * @nullable
+     */
+  stripePriceIdAnual?: string | null;
 }

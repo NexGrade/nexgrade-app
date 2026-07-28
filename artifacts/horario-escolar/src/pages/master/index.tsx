@@ -12,13 +12,14 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import {
-  Building2, Users, GraduationCap, CalendarDays, Sparkles, ShieldCheck, Plus,
+  Building2, Users, GraduationCap, CalendarDays, Sparkles, ShieldCheck, Plus, Pencil,
 } from "lucide-react";
 
 // RF-MASTER-01 a RF-MASTER-03: painel administrativo da plataforma —
@@ -96,8 +97,15 @@ function MetricasCards() {
   );
 }
 
-function formatPreco(centavos: number) {
-  return centavos === 0 ? "Gratuito" : `R$ ${(centavos / 100).toFixed(0)}/mês`;
+// [FIX] "preco" foi renomeado pra "precoMensal" no schema (RF-BILLING),
+// junto com precoAnual novo. Essa função agora mostra os dois quando o
+// anual existir.
+function formatPreco(precoMensal: number, precoAnual?: number | null) {
+  if (precoMensal === 0) return "Gratuito";
+  const mensal = `R$ ${(precoMensal / 100).toFixed(2).replace(".", ",")}/mês`;
+  if (!precoAnual) return mensal;
+  const anual = `R$ ${(precoAnual / 100).toFixed(2).replace(".", ",")}/ano`;
+  return `${mensal} · ${anual}`;
 }
 
 function EscolasTable() {
@@ -116,6 +124,23 @@ function EscolasTable() {
           queryClient.invalidateQueries({ queryKey: getListEscolasMasterQueryKey() });
         },
         onError: () => toast({ title: "Erro ao atualizar a escola", variant: "destructive" }),
+      },
+    );
+  }
+
+  // [NOVO] Isenta = fora do fluxo normal de trial/cobrança -- nenhuma
+  // trava de acesso por vencimento de trial ou falta de plano pago
+  // encosta nessa escola (ver routes/matrizes-oficiais.ts no backend,
+  // que já checa esse campo). Uso: escola piloto, parceria, cortesia.
+  function alternarIsenta(id: string, isenta: boolean) {
+    atualizar.mutate(
+      { id, data: { isenta } },
+      {
+        onSuccess: () => {
+          toast({ title: isenta ? "Escola marcada como isenta" : "Isenção removida" });
+          queryClient.invalidateQueries({ queryKey: getListEscolasMasterQueryKey() });
+        },
+        onError: () => toast({ title: "Erro ao atualizar isenção", variant: "destructive" }),
       },
     );
   }
@@ -147,6 +172,7 @@ function EscolasTable() {
               <TableHead className="text-center">Professores</TableHead>
               <TableHead className="text-center">Turmas</TableHead>
               <TableHead className="text-center">Status</TableHead>
+              <TableHead className="text-center">Isenta</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -162,7 +188,7 @@ function EscolasTable() {
                   >
                     <option value="">Sem plano</option>
                     {planos?.map((p) => (
-                      <option key={p.id} value={p.id}>{p.nome} ({formatPreco(p.preco)})</option>
+                      <option key={p.id} value={p.id}>{p.nome} ({formatPreco(p.precoMensal, p.precoAnual)})</option>
                     ))}
                   </select>
                 </TableCell>
@@ -176,11 +202,14 @@ function EscolasTable() {
                     </Badge>
                   </div>
                 </TableCell>
+                <TableCell className="text-center">
+                  <Switch checked={(e as any).isenta ?? false} onCheckedChange={(v) => alternarIsenta(e.id, v)} />
+                </TableCell>
               </TableRow>
             ))}
             {escolas?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                   Nenhuma escola cadastrada na plataforma ainda.
                 </TableCell>
               </TableRow>
@@ -192,14 +221,121 @@ function EscolasTable() {
   );
 }
 
+// [NOVO] Estado do formulário em reais (mais fácil de digitar) --
+// convertido pra centavos só na hora de mandar pro backend.
+type PlanoFormState = {
+  nome: string;
+  precoMensalReais: string;
+  precoAnualReais: string;
+  maxProfessores: number;
+  maxTurmas: number;
+  temIA: boolean;
+  temExport: boolean;
+  temImport: boolean;
+  ativo: boolean;
+  stripePriceIdMensal: string;
+  stripePriceIdAnual: string;
+};
+
+const FORM_VAZIO: PlanoFormState = {
+  nome: "", precoMensalReais: "0", precoAnualReais: "",
+  maxProfessores: 10, maxTurmas: 5,
+  temIA: false, temExport: false, temImport: false, ativo: true,
+  stripePriceIdMensal: "", stripePriceIdAnual: "",
+};
+
+function reaisParaCentavos(v: string): number {
+  const n = Number(v.replace(",", "."));
+  return Number.isFinite(n) ? Math.round(n * 100) : 0;
+}
+
+// [NOVO] Formulário compartilhado entre "Novo plano" e "Editar plano"
+// -- antes só existia criação, sem jeito de editar preço/Price ID de
+// um plano depois de criado (precisava de script direto no banco).
+function PlanoFormDialog({
+  aberto, onOpenChange, titulo, valorInicial, aoSalvar, salvando,
+}: {
+  aberto: boolean;
+  onOpenChange: (v: boolean) => void;
+  titulo: string;
+  valorInicial: PlanoFormState;
+  aoSalvar: (v: PlanoFormState) => void;
+  salvando: boolean;
+}) {
+  const [form, setForm] = useState(valorInicial);
+
+  return (
+    <Dialog open={aberto} onOpenChange={(v) => { setForm(valorInicial); onOpenChange(v); }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{titulo}</DialogTitle>
+          <DialogDescription>Preço em reais. Price ID vem do painel do Stripe (Catálogo de produtos → preço do produto).</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <Input placeholder="Nome do plano" value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Preço mensal (R$)</Label>
+              <Input type="text" inputMode="decimal" value={form.precoMensalReais}
+                onChange={(e) => setForm({ ...form, precoMensalReais: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Preço anual (R$, opcional)</Label>
+              <Input type="text" inputMode="decimal" placeholder="deixe em branco se não tiver" value={form.precoAnualReais}
+                onChange={(e) => setForm({ ...form, precoAnualReais: e.target.value })} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Máx. professores</Label>
+              <Input type="number" value={form.maxProfessores} onChange={(e) => setForm({ ...form, maxProfessores: Number(e.target.value) })} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Máx. turmas</Label>
+              <Input type="number" value={form.maxTurmas} onChange={(e) => setForm({ ...form, maxTurmas: Number(e.target.value) })} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Price ID Stripe (mensal)</Label>
+              <Input placeholder="price_..." value={form.stripePriceIdMensal} onChange={(e) => setForm({ ...form, stripePriceIdMensal: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Price ID Stripe (anual)</Label>
+              <Input placeholder="price_..." value={form.stripePriceIdAnual} onChange={(e) => setForm({ ...form, stripePriceIdAnual: e.target.value })} />
+            </div>
+          </div>
+          <div className="flex items-center gap-6 pt-1">
+            <label className="flex items-center gap-2 text-sm">
+              <Switch checked={form.temIA} onCheckedChange={(v) => setForm({ ...form, temIA: v })} /> Assistente de IA
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <Switch checked={form.temExport} onCheckedChange={(v) => setForm({ ...form, temExport: v })} /> Exportar
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <Switch checked={form.temImport} onCheckedChange={(v) => setForm({ ...form, temImport: v })} /> Importar
+            </label>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={() => aoSalvar(form)} disabled={salvando || !form.nome.trim()}>
+            {salvando ? "Salvando..." : "Salvar"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function PlanosTable() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: planos, isLoading } = useListPlanosMaster({ query: { queryKey: getListPlanosMasterQueryKey() } });
   const atualizar = useUpdatePlano();
-  const [novo, setNovo] = useState({ nome: "", preco: 0, maxProfessores: 10, maxTurmas: 5 });
-  const [dialogAberto, setDialogAberto] = useState(false);
   const criar = useCreatePlano();
+
+  const [dialogNovoAberto, setDialogNovoAberto] = useState(false);
+  const [planoEditando, setPlanoEditando] = useState<number | null>(null);
 
   function alternarAtivo(id: number, ativo: boolean, nome: string) {
     atualizar.mutate(
@@ -214,15 +350,29 @@ function PlanosTable() {
     );
   }
 
-  function criarPlano() {
-    if (!novo.nome.trim()) return;
+  function montarPayload(form: PlanoFormState) {
+    return {
+      nome: form.nome.trim(),
+      precoMensal: reaisParaCentavos(form.precoMensalReais),
+      precoAnual: form.precoAnualReais.trim() ? reaisParaCentavos(form.precoAnualReais) : null,
+      maxProfessores: form.maxProfessores,
+      maxTurmas: form.maxTurmas,
+      temIA: form.temIA,
+      temExport: form.temExport,
+      temImport: form.temImport,
+      ativo: form.ativo,
+      ...(form.stripePriceIdMensal.trim() ? { stripePriceIdMensal: form.stripePriceIdMensal.trim() } : {}),
+      ...(form.stripePriceIdAnual.trim() ? { stripePriceIdAnual: form.stripePriceIdAnual.trim() } : {}),
+    };
+  }
+
+  function criarPlano(form: PlanoFormState) {
     criar.mutate(
-      { data: novo },
+      { data: montarPayload(form) as any },
       {
         onSuccess: () => {
           toast({ title: "Plano criado" });
-          setDialogAberto(false);
-          setNovo({ nome: "", preco: 0, maxProfessores: 10, maxTurmas: 5 });
+          setDialogNovoAberto(false);
           queryClient.invalidateQueries({ queryKey: getListPlanosMasterQueryKey() });
         },
         onError: () => toast({ title: "Erro ao criar plano", variant: "destructive" }),
@@ -230,35 +380,34 @@ function PlanosTable() {
     );
   }
 
+  function salvarEdicao(id: number, form: PlanoFormState) {
+    atualizar.mutate(
+      { id, data: montarPayload(form) as any },
+      {
+        onSuccess: () => {
+          toast({ title: "Plano atualizado" });
+          setPlanoEditando(null);
+          queryClient.invalidateQueries({ queryKey: getListPlanosMasterQueryKey() });
+        },
+        onError: () => toast({ title: "Erro ao salvar o plano", variant: "destructive" }),
+      },
+    );
+  }
+
   if (isLoading) return <Skeleton className="h-64 w-full" />;
+
+  const planoEmEdicao = planos?.find((p) => p.id === planoEditando);
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Planos</CardTitle>
-          <CardDescription>Preço, limites e recursos de cada plano da plataforma.</CardDescription>
+          <CardDescription>Preço, limites, recursos e Price ID do Stripe de cada plano da plataforma.</CardDescription>
         </div>
-        <Dialog open={dialogAberto} onOpenChange={setDialogAberto}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="gap-1.5"><Plus className="w-4 h-4" /> Novo plano</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>Novo plano</DialogTitle></DialogHeader>
-            <div className="space-y-3">
-              <Input placeholder="Nome do plano" value={novo.nome} onChange={(e) => setNovo({ ...novo, nome: e.target.value })} />
-              <Input type="number" placeholder="Preço mensal em centavos (0 = gratuito)" value={novo.preco}
-                onChange={(e) => setNovo({ ...novo, preco: Number(e.target.value) })} />
-              <Input type="number" placeholder="Máximo de professores" value={novo.maxProfessores}
-                onChange={(e) => setNovo({ ...novo, maxProfessores: Number(e.target.value) })} />
-              <Input type="number" placeholder="Máximo de turmas" value={novo.maxTurmas}
-                onChange={(e) => setNovo({ ...novo, maxTurmas: Number(e.target.value) })} />
-            </div>
-            <DialogFooter>
-              <Button onClick={criarPlano} disabled={criar.isPending}>{criar.isPending ? "Criando..." : "Criar plano"}</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <Button size="sm" className="gap-1.5" onClick={() => setDialogNovoAberto(true)}>
+          <Plus className="w-4 h-4" /> Novo plano
+        </Button>
       </CardHeader>
       <CardContent>
         <Table>
@@ -266,19 +415,25 @@ function PlanosTable() {
             <TableRow>
               <TableHead>Plano</TableHead>
               <TableHead>Preço</TableHead>
+              <TableHead>Price ID (mensal / anual)</TableHead>
               <TableHead className="text-center">Máx. Professores</TableHead>
               <TableHead className="text-center">Máx. Turmas</TableHead>
               <TableHead className="text-center">IA</TableHead>
               <TableHead className="text-center">Export</TableHead>
               <TableHead className="text-center">Import</TableHead>
               <TableHead className="text-center">Ativo</TableHead>
+              <TableHead className="text-center">Editar</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {planos?.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.nome}</TableCell>
-                <TableCell>{formatPreco(p.preco)}</TableCell>
+                <TableCell className="text-xs">{formatPreco(p.precoMensal, p.precoAnual)}</TableCell>
+                <TableCell className="text-[11px] font-mono text-muted-foreground">
+                  {p.stripePriceIdMensal ? p.stripePriceIdMensal.slice(0, 14) + "…" : "—"} /{" "}
+                  {p.stripePriceIdAnual ? p.stripePriceIdAnual.slice(0, 14) + "…" : "—"}
+                </TableCell>
                 <TableCell className="text-center">{p.maxProfessores}</TableCell>
                 <TableCell className="text-center">{p.maxTurmas}</TableCell>
                 <TableCell className="text-center">{p.temIA ? "✓" : "—"}</TableCell>
@@ -287,11 +442,48 @@ function PlanosTable() {
                 <TableCell className="text-center">
                   <Switch checked={p.ativo} onCheckedChange={(v) => alternarAtivo(p.id, v, p.nome)} />
                 </TableCell>
+                <TableCell className="text-center">
+                  <Button size="icon" variant="ghost" onClick={() => setPlanoEditando(p.id)}>
+                    <Pencil className="w-3.5 h-3.5" />
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </CardContent>
+
+      <PlanoFormDialog
+        aberto={dialogNovoAberto}
+        onOpenChange={setDialogNovoAberto}
+        titulo="Novo plano"
+        valorInicial={FORM_VAZIO}
+        salvando={criar.isPending}
+        aoSalvar={criarPlano}
+      />
+
+      {planoEmEdicao && (
+        <PlanoFormDialog
+          aberto={planoEditando !== null}
+          onOpenChange={(v) => !v && setPlanoEditando(null)}
+          titulo={`Editar ${planoEmEdicao.nome}`}
+          salvando={atualizar.isPending}
+          aoSalvar={(form) => salvarEdicao(planoEmEdicao.id, form)}
+          valorInicial={{
+            nome: planoEmEdicao.nome,
+            precoMensalReais: (planoEmEdicao.precoMensal / 100).toString(),
+            precoAnualReais: planoEmEdicao.precoAnual ? (planoEmEdicao.precoAnual / 100).toString() : "",
+            maxProfessores: planoEmEdicao.maxProfessores,
+            maxTurmas: planoEmEdicao.maxTurmas,
+            temIA: planoEmEdicao.temIA,
+            temExport: planoEmEdicao.temExport,
+            temImport: planoEmEdicao.temImport,
+            ativo: planoEmEdicao.ativo,
+            stripePriceIdMensal: planoEmEdicao.stripePriceIdMensal ?? "",
+            stripePriceIdAnual: planoEmEdicao.stripePriceIdAnual ?? "",
+          }}
+        />
+      )}
     </Card>
   );
 }

@@ -2210,18 +2210,20 @@ components:
           type: ["string", "null"]
     Plano:
       type: object
-      required: [id, nome, preco, maxProfessores, maxTurmas, temIA, temExport, temImport, ativo]
+      required: [id, nome, precoMensal, maxProfessores, maxTurmas, temIA, temExport, temImport, ativo]
       properties:
         id: { type: integer }
         nome: { type: string }
-        preco: { type: integer, description: "PreÃ§o mensal em centavos. 0 = plano gratuito (Piloto)." }
+        precoMensal: { type: integer, description: "Preço mensal em centavos. 0 = plano gratuito (Piloto)." }
+        precoAnual: { type: ["integer", "null"], description: "Preço anual em centavos, com desconto. Nulo enquanto não configurado." }
         maxProfessores: { type: integer }
         maxTurmas: { type: integer }
         temIA: { type: boolean }
         temExport: { type: boolean }
         temImport: { type: boolean }
         ativo: { type: boolean }
-        stripePriceId: { type: ["string", "null"], description: "Preenchido apenas quando a cobranÃ§a via Stripe for habilitada (fase de expansÃ£o SaaS)." }
+        stripePriceIdMensal: { type: ["string", "null"], description: "Price ID do Stripe pro plano mensal." }
+        stripePriceIdAnual: { type: ["string", "null"], description: "Price ID do Stripe pro plano anual." }
 
     Escola:
       type: object
@@ -2235,8 +2237,11 @@ components:
         modalidade: { type: string, enum: [regular, tecnica, eja, normal_magisterio] }
         planoId: { type: ["integer", "null"] }
         clerkOrgId: { type: ["string", "null"] }
+        stripeCustomerId: { type: ["string", "null"] }
+        stripeSubscriptionId: { type: ["string", "null"] }
         planoAtivo: { type: boolean }
         trialEndsAt: { type: ["string", "null"], format: date-time }
+        isenta: { type: boolean, description: "Escola isenta de bloqueio por trial vencido/sem assinatura ativa (ex: piloto)." }
 
     EscolaAtual:
       type: object
@@ -2487,20 +2492,23 @@ components:
       properties:
         planoId: { type: ["integer", "null"] }
         planoAtivo: { type: boolean }
+        isenta: { type: boolean }
 
     PlanoInput:
       type: object
       required: [nome]
       properties:
         nome: { type: string, minLength: 1 }
-        preco: { type: integer, minimum: 0, default: 0 }
+        precoMensal: { type: integer, minimum: 0, default: 0 }
+        precoAnual: { type: ["integer", "null"], minimum: 0 }
         maxProfessores: { type: integer, minimum: 1, default: 10 }
         maxTurmas: { type: integer, minimum: 1, default: 5 }
         temIA: { type: boolean, default: false }
         temExport: { type: boolean, default: false }
         temImport: { type: boolean, default: false }
         ativo: { type: boolean, default: true }
-        stripePriceId: { type: string }
+        stripePriceIdMensal: { type: string }
+        stripePriceIdAnual: { type: string }
 
     MasterMetrics:
       type: object
