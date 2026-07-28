@@ -4,8 +4,9 @@ import {
   useCreateMatrizCurricular, useDeleteMatrizCurricular, useUpdateMatrizCurricular,
   useAdicionarItemMatriz, useRemoverItemMatriz,
   useListDisciplinas, useCreateDisciplina, useListTurmas, useAplicarMatrizTurma,
+  customFetch,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Library, ChevronDown, ChevronRight, Copy, Check, X } from "lucide-react";
@@ -27,8 +28,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CURSOS_TECNICOS_POR_EIXO } from "@/lib/cursos-tecnicos-cnct";
-import { MATRIZES_OFICIAIS_SEED_PR } from "@/lib/matrizes-oficiais-seed-pr";
-import { MATRIZES_TECNICAS_SEED_PR_2026 } from "@/lib/matrizes-tecnicas-seed-pr";
+import type { MatrizOficialTemplate, MatrizTecnicaTemplate } from "@/lib/matrizes-tipos";
 import { useListaFiltrada } from "@/hooks/use-lista-filtrada";
 import { CampoBusca } from "@/components/campo-busca";
 
@@ -370,9 +370,14 @@ function MatrizesDoCurso({
   const [criandoMatriz, setCriandoMatriz] = useState(false);
   const [modeloAberto, setModeloAberto] = useState(false);
 
-  const temModelosOficiais = nivelCurso === "tecnico"
-    ? MATRIZES_TECNICAS_SEED_PR_2026.length > 0
-    : MATRIZES_OFICIAIS_SEED_PR.some((m) => m.nivel === nivelCurso);
+  // [ALTERADO] Antes checava os arrays de dados inteiros (importados
+  // direto no bundle). Agora os dados só são buscados quando o modal
+  // abre (ver AplicarModeloOficial abaixo) -- então aqui só decide se
+  // o botão aparece, sem precisar baixar o catálogo pra isso. Todo
+  // nível usado no app (fundamental, medio, tecnico) tem modelo
+  // oficial disponível; se um caso específico não tiver, o próprio
+  // modal já avisa "não achamos um modelo oficial" ao abrir.
+  const temModelosOficiais = true;
 
   function criar() {
     if (!novaSerie.trim()) return;
@@ -536,8 +541,27 @@ function AplicarModeloOficial({
 
   const ehTecnico = nivelCurso === "tecnico";
 
+  // [ALTERADO] Os dados das matrizes oficiais (antes importados direto
+  // do bundle) agora vêm de uma rota autenticada -- só carregam quando
+  // esse modal abre (já que o componente só monta nesse momento), não
+  // no carregamento inicial da página. react-query cacheia entre
+  // aberturas do modal, então só busca de verdade na primeira vez.
+  const { data: matrizesTecnicas, isLoading: carregandoTecnicas } = useQuery({
+    queryKey: ["/matrizes-oficiais/tecnicas"],
+    queryFn: () => customFetch<MatrizTecnicaTemplate[]>("/api/matrizes-oficiais/tecnicas", { responseType: "json" }),
+    enabled: ehTecnico,
+    staleTime: 10 * 60_000,
+  });
+  const { data: matrizesGerais, isLoading: carregandoGerais } = useQuery({
+    queryKey: ["/matrizes-oficiais/gerais"],
+    queryFn: () => customFetch<MatrizOficialTemplate[]>("/api/matrizes-oficiais/gerais", { responseType: "json" }),
+    enabled: !ehTecnico,
+    staleTime: 10 * 60_000,
+  });
+  const carregandoModelos = ehTecnico ? carregandoTecnicas : carregandoGerais;
+
   // ── Fundamental / Médio: escolhe modalidade + série ──
-  const templatesGerais = MATRIZES_OFICIAIS_SEED_PR.filter((m) => m.nivel === nivelCurso);
+  const templatesGerais = (matrizesGerais ?? []).filter((m) => m.nivel === nivelCurso);
   const [modeloId, setModeloId] = useState("");
   const [serieIdx, setSerieIdx] = useState("");
   const modeloGeral = templatesGerais.find((m) => m.id === modeloId);
@@ -549,7 +573,7 @@ function AplicarModeloOficial({
   // grades diferentes — por isso o casamento automático agora exige nome E
   // formaOferta batendo. Se o curso não tiver formaOferta definida, mostra
   // todas as opções compatíveis com o nome, mas pede confirmação manual.
-  const candidatosPorNome = MATRIZES_TECNICAS_SEED_PR_2026.filter(
+  const candidatosPorNome = (matrizesTecnicas ?? []).filter(
     (t) => normalizar(t.curso) === normalizar(nomeCurso),
   );
   const matchAutomatico = formaOfertaCurso
@@ -559,12 +583,12 @@ function AplicarModeloOficial({
       : undefined;
 
   const listaParaSelecionar = formaOfertaCurso
-    ? MATRIZES_TECNICAS_SEED_PR_2026.filter((t) => t.formaOferta === formaOfertaCurso)
-    : MATRIZES_TECNICAS_SEED_PR_2026;
+    ? (matrizesTecnicas ?? []).filter((t) => t.formaOferta === formaOfertaCurso)
+    : (matrizesTecnicas ?? []);
 
   const [codigoTecnico, setCodigoTecnico] = useState(matchAutomatico?.codigo ?? "");
   const [serieIdxTec, setSerieIdxTec] = useState("");
-  const modeloTecnico = MATRIZES_TECNICAS_SEED_PR_2026.find((t) => t.codigo === codigoTecnico);
+  const modeloTecnico = (matrizesTecnicas ?? []).find((t) => t.codigo === codigoTecnico);
   const serieTecnica = modeloTecnico?.series[Number(serieIdxTec)];
 
   const itensParaAplicar = ehTecnico ? serieTecnica?.itens : serieGeral?.itens;
@@ -620,7 +644,12 @@ function AplicarModeloOficial({
           Preenche a matriz inteira automaticamente com as disciplinas e cargas horárias oficiais. Disciplinas que ainda não existem no seu cadastro são criadas sozinhas.
         </p>
 
-        {ehTecnico ? (
+        {carregandoModelos ? (
+          <div className="space-y-3">
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-9 w-full" />
+          </div>
+        ) : ehTecnico ? (
           <div className="space-y-3">
             {!formaOfertaCurso && candidatosPorNome.length > 1 && (
               <p className="text-[11px] text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
@@ -700,7 +729,7 @@ function AplicarModeloOficial({
 
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="outline" onClick={onFechar}>Cancelar</Button>
-          <Button onClick={aplicar} disabled={!itensParaAplicar || aplicando}>
+          <Button onClick={aplicar} disabled={!itensParaAplicar || aplicando || carregandoModelos}>
             {aplicando ? "Aplicando..." : "Aplicar modelo"}
           </Button>
         </div>

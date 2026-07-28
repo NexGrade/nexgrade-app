@@ -1,4 +1,4 @@
-﻿import { Router, type IRouter } from "express";
+import { Router, type IRouter } from "express";
 import professoresRouter from "./professores";
 import disciplinasRouter from "./disciplinas";
 import disciplinasCatalogoRouter from "./disciplinas-catalogo";
@@ -23,6 +23,7 @@ import calendarioEscolarRouter from "./calendario-escolar";
 import horarioSlotsRouter from "./horario-slots";
 import aulasFixasRouter from "./aulas-fixas";
 import limitesDiariosProfessorRouter from "./limites-diarios-professor";
+import matrizesOficiaisRouter from "./matrizes-oficiais";
 
 const router: IRouter = Router();
 
@@ -50,7 +51,6 @@ router.use("/calendario-escolar", calendarioEscolarRouter);
 router.use("/horario-slots", horarioSlotsRouter);
 router.use("/aulas-fixas", aulasFixasRouter);
 router.use("/limites-diarios-professor", limitesDiariosProfessorRouter);
+router.use("/matrizes-oficiais", matrizesOficiaisRouter);
 
 export default router;
-
-
