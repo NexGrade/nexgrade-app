@@ -257,18 +257,11 @@ async function pedirRespostaComResultadoFuncao(
     },
   ];
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: contentsComResultado,
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        tools,
-      }),
-    },
-  );
+  const res = await chamarGemini(apiKey, {
+    contents: contentsComResultado,
+    systemInstruction: { parts: [{ text: systemPrompt }] },
+    tools,
+  });
 
   if (!res.ok) {
     const corpoErro = await res.text().catch(() => "(sem corpo)");
@@ -283,7 +276,45 @@ async function pedirRespostaComResultadoFuncao(
     ?? "Consultei os dados, mas não consegui formular uma resposta. Tente reformular a pergunta.";
 }
 
-const GEMINI_MODEL = "gemini-3.5-flash";
+// [NOVO] Lista de modelos, do preferido pro mais antigo -- se o
+// principal devolver 503 (sobrecarga temporária do lado do Google,
+// não erro nosso), tenta o próximo da lista automaticamente antes de
+// desistir. Mesmo padrão de fallback já usado em cpsat-service/main.py
+// pra explicar inviabilidade.
+const GEMINI_MODELOS_FALLBACK = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-2.0-flash"];
+
+// [NOVO] Centraliza a chamada à API do Gemini com fallback de modelo.
+// Os dois pontos do arquivo que chamavam `fetch` direto (chat
+// principal e a segunda chamada pós-ferramenta) foram trocados por
+// esta função, pra não duplicar a lógica de retry duas vezes.
+async function chamarGemini(apiKey: string, body: unknown): Promise<Response> {
+  let ultimaResposta: Response | null = null;
+  let ultimoErro: unknown;
+
+  for (const modelo of GEMINI_MODELOS_FALLBACK) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
+      );
+      if (res.ok) return res;
+      // Só troca de modelo quando o motivo é sobrecarga (503) -- outros
+      // erros (400 de payload malformado, 401 de chave inválida) não
+      // seriam resolvidos trocando de modelo, então devolve na hora.
+      if (res.status !== 503) return res;
+      ultimaResposta = res;
+    } catch (err) {
+      ultimoErro = err;
+    }
+  }
+
+  if (ultimaResposta) return ultimaResposta;
+  throw ultimoErro instanceof Error ? ultimoErro : new Error("Todos os modelos Gemini indisponíveis no momento.");
+}
 
 // POST /ai/chat
 //
@@ -367,18 +398,11 @@ Seja direto, útil e use linguagem educacional brasileira.`;
       { role: "user", parts: [{ text: mensagem }] },
     ];
 
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents,
-          systemInstruction: { parts: [{ text: systemPrompt }] },
-          tools,
-        }),
-      },
-    );
+    const geminiRes = await chamarGemini(apiKey, {
+      contents,
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      tools,
+    });
 
     if (!geminiRes.ok) {
       const corpoErro = await geminiRes.text().catch(() => "(sem corpo)");
