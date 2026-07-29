@@ -1,7 +1,7 @@
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect, useRef, lazy, Suspense } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ClerkProvider, SignIn, SignUp, Show, useAuth } from "@clerk/react";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { ClerkProvider, SignIn, SignUp, Show, useAuth, OrganizationSwitcher } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
 import { useGetEscolaAtual, getGetEscolaAtualQueryKey, useMasterWhoami, getMasterWhoamiQueryKey, setAuthTokenGetter } from "@workspace/api-client-react";
@@ -337,6 +337,69 @@ function ApiAuthBridge() {
   return null;
 }
 
+// [NOVO] Invalida todo o cache do React Query quando o usuario troca de
+// organizacao (escola) no OrganizationSwitcher global. Sem isso, trocar
+// de escola no seletor nao atualizaria os dados na tela -- cada hook
+// (useListProfessores, useGetEscolaAtual, etc.) continuaria mostrando o
+// resultado em cache da escola anterior ate o staleTime de 60s expirar
+// sozinho. orgId vindo do useAuth() reflete a organizacao ativa da
+// sessao Clerk em tempo real.
+function OrgSwitchWatcher() {
+  const { orgId } = useAuth();
+  const queryClient = useQueryClient();
+  const orgIdAnterior = useRef(orgId);
+
+  useEffect(() => {
+    if (orgIdAnterior.current !== orgId) {
+      orgIdAnterior.current = orgId;
+      queryClient.invalidateQueries();
+    }
+  }, [orgId, queryClient]);
+
+  return null;
+}
+
+// [NOVO] Barra fixa, sempre visivel para qualquer usuario logado --
+// inclusive nas telas de /onboarding e nos gates de carregamento, que
+// ficam FORA do <Layout> (o Layout so renderiza depois que o EscolaGate
+// confirma que ha uma escola cadastrada). Antes desta barra, nao havia
+// nenhuma forma de trocar de organizacao (escola) pela interface: quem
+// tivesse mais de uma Organization no Clerk (ex: administrador da
+// Nexus Core testando varias escolas, ou futuramente um cliente com
+// mais de uma unidade) ficava sem jeito de escolher, e o app sempre
+// caia no fallback de "nenhuma escola encontrada" -> /onboarding.
+//
+// hidePersonal={true}: o NexGrade e 100% multi-tenant por Organization
+// (escola = Organization). Sem isso, o switcher tambem ofereceria
+// "conta pessoal" como opcao, que resolve para orgId=null no backend
+// (getEscolaId cai no fallback de userId) -- exatamente o cenario que
+// gerava o bug de isolamento corrigido nesta sessao. Forcar apenas
+// Organizations evita reabrir esse buraco pela interface.
+function GlobalTopBar() {
+  return (
+    <Show when="signed-in">
+      <div className="h-14 shrink-0 flex items-center justify-between px-5 border-b border-border bg-card">
+        <div className="flex items-center gap-2">
+          <img src="/logo.svg" alt="NexGrade" className="w-6 h-6 rounded-md shrink-0" />
+          <span className="text-sm font-semibold text-foreground font-heading hidden sm:inline">NexGrade</span>
+        </div>
+        <OrganizationSwitcher
+          hidePersonal
+          afterCreateOrganizationUrl={`${basePath}/onboarding`}
+          afterSelectOrganizationUrl={`${basePath}/dashboard`}
+          afterLeaveOrganizationUrl={`${basePath}/onboarding`}
+          appearance={{
+            elements: {
+              rootBox: "flex items-center",
+              organizationSwitcherTrigger: "px-3 py-1.5 rounded-md border border-slate-200 text-sm text-slate-700 hover:bg-slate-50",
+            },
+          }}
+        />
+      </div>
+    </Show>
+  );
+}
+
 function App() {
   return (
     <ClerkProvider
@@ -355,8 +418,14 @@ function App() {
       <ApiAuthBridge />
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
+          <OrgSwitchWatcher />
           <WouterRouter base={basePath}>
-            <Router />
+            <div className="h-screen flex flex-col overflow-hidden">
+              <GlobalTopBar />
+              <div className="flex-1 min-h-0">
+                <Router />
+              </div>
+            </div>
           </WouterRouter>
           <Toaster />
         </TooltipProvider>

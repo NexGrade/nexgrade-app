@@ -73,7 +73,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // RF-MASTER: o link só aparece pra quem de fato é administrador da
   // plataforma — a checagem real de acesso continua sendo feita no
   // backend (requireMaster) e na rota (MasterGate em App.tsx); isto
-  // aqui é só para não poluir o menu de quem não precisa dele.
+  // aqui só é para não poluir o menu de quem não precisa dele.
   const { data: whoami } = useMasterWhoami();
 
   const grupos = whoami?.isMaster
@@ -84,7 +84,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
     location === href || (href !== "/dashboard" && location.startsWith(href));
 
   return (
-    <div className="h-screen flex w-full bg-background overflow-hidden">
+    // [FIX] h-screen -> h-full: este container agora vive dentro do
+    // wrapper flex "flex-1 min-h-0" do App.tsx, abaixo da GlobalTopBar
+    // fixa (seletor de organizacao). Usar h-screen aqui faria este bloco
+    // assumir a altura da JANELA INTEIRA, ignorando o espaco ja ocupado
+    // pela barra de cima, e gerar uma barra de rolagem dupla. h-full
+    // faz este bloco preencher exatamente o espaco restante que o
+    // container pai (flex-1) calculou para ele.
+    <div className="h-full flex w-full bg-background overflow-hidden">
       <aside className="w-64 border-r border-border bg-card flex flex-col">
         <div className="h-16 flex items-center px-5 border-b border-border">
           <NexGradeLogo />
