@@ -28,7 +28,7 @@ const NOME_ESCOLA = "C.E. Prof. Mário B.T. Braga";
 
 function toCSV(headers: string[], rows: string[][]): string {
   const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
-  return [headers.map(escape), ...rows.map(r => r.map(escape))].map(r => r.join(",")).join("\n");
+  return [headers.map(escape), ...rows.map(r => r.map(escape))].map(r => r.join(";")).join("\n");
 }
 
 // Primeiro nome apenas (ex.: "Anderson Silva" -> "ANDERSON") -- formato
