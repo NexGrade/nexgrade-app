@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+﻿import { useState, useRef } from "react";
 import { customFetch } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,18 +10,18 @@ import { Upload, FileText, CheckCircle2, AlertCircle, Download } from "lucide-re
 import { useQueryClient } from "@tanstack/react-query";
 
 const MODELOS = {
-  professores: `nome,email,cpf,matricula,cargaHorariaTotal
-João Silva,joao@escola.edu.br,123.456.789-00,MAT001,20
-Maria Santos,maria@escola.edu.br,987.654.321-00,MAT002,24`,
-  turmas: `nome,serie,turno,anoLetivo
-1A,1º Ano EF,matutino,2026
-2B,2º Ano EF,vespertino,2026
-3EM,3º Ano EM,matutino,2026`,
-  disciplinas: `nome,cargaSemanal,cor
-Matemática,4,#6366f1
-Português,4,#ec4899
-Ciências,2,#10b981
-História,2,#f59e0b`,
+  professores: `nome;email;cpf;matricula;cargaHorariaTotal
+João Silva;joao@escola.edu.br;123.456.789-00;MAT001;20
+Maria Santos;maria@escola.edu.br;987.654.321-00;MAT002;24`,
+  turmas: `nome;serie;turno;anoLetivo
+1A;1º Ano EF;matutino;2026
+2B;2º Ano EF;vespertino;2026
+3EM;3º Ano EM;matutino;2026`,
+  disciplinas: `nome;cargaSemanal;cor
+Matemática;4;#6366f1
+Português;4;#ec4899
+Ciências;2;#10b981
+História;2;#f59e0b`,
 };
 
 type Preview = {
@@ -91,7 +91,7 @@ export default function ImportarPage() {
       setPreview(null);
       setCsv("");
       await queryClient.invalidateQueries();
-      toast({ title: `✅ ${data.importados} registro(s) importado(s) com sucesso!` });
+      toast({ title: ` ${data.importados} registro(s) importado(s) com sucesso!` });
     } catch (err) {
       toast({ title: err instanceof Error ? err.message : "Erro ao importar", variant: "destructive" });
     }
@@ -99,7 +99,9 @@ export default function ImportarPage() {
   };
 
   const downloadModelo = () => {
-    const blob = new Blob([MODELOS[tipo as keyof typeof MODELOS]], { type: "text/csv" });
+    const conteudo = MODELOS[tipo as keyof typeof MODELOS];
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + conteudo], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url; a.download = `modelo_${tipo}.csv`;
@@ -235,9 +237,9 @@ export default function ImportarPage() {
             <Card className="border-amber-200 bg-amber-50/20">
               <CardContent className="pt-4 text-xs text-amber-800 space-y-1">
                 <p className="font-semibold flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />Dicas</p>
-                <p>• Use vírgula (,) ou ponto-e-vírgula (;) como separador</p>
+                <p>• Use ponto-e-vírgula (;) como separador</p>
                 <p>• A primeira linha deve ser o cabeçalho</p>
-                <p>• Encoding: UTF-8 (sem BOM)</p>
+                <p>• Encoding: UTF-8 (com ou sem BOM, ambos funcionam)</p>
                 <p>• Dados duplicados são ignorados automaticamente</p>
               </CardContent>
             </Card>
