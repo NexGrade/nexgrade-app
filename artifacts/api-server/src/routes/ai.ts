@@ -281,7 +281,7 @@ async function pedirRespostaComResultadoFuncao(
 // não erro nosso), tenta o próximo da lista automaticamente antes de
 // desistir. Mesmo padrão de fallback já usado em cpsat-service/main.py
 // pra explicar inviabilidade.
-const GEMINI_MODELOS_FALLBACK = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-2.0-flash"];
+const GEMINI_MODELOS_FALLBACK = ["gemini-3.5-flash", "gemini-2.0-flash"];
 
 // [NOVO] Centraliza a chamada à API do Gemini com fallback de modelo.
 // Os dois pontos do arquivo que chamavam `fetch` direto (chat
@@ -305,7 +305,7 @@ async function chamarGemini(apiKey: string, body: unknown): Promise<Response> {
       // Só troca de modelo quando o motivo é sobrecarga (503) -- outros
       // erros (400 de payload malformado, 401 de chave inválida) não
       // seriam resolvidos trocando de modelo, então devolve na hora.
-      if (res.status !== 503) return res;
+      if (res.status !== 503 && res.status !== 404) return res;
       ultimaResposta = res;
     } catch (err) {
       ultimoErro = err;
