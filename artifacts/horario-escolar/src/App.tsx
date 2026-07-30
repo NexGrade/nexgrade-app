@@ -341,36 +341,41 @@ function ApiAuthBridge() {
 // global, forca um RELOAD COMPLETO da pagina para /dashboard em vez de
 // uma navegacao "leve" via useLocation().
 //
-// [FIX] A primeira versao usava navigate("/dashboard") do Wouter +
-// queryClient.invalidateQueries() -- funcionava trocando PRA uma
-// organizacao sem escola (ia pro /onboarding corretamente), mas
-// trocando DE VOLTA pra uma organizacao com escola ja cadastrada, a
-// tela continuava presa em /onboarding. Causa provavel: corrida entre
-// o Clerk atualizar o token de sessao (que carrega o orgId ativo) e o
-// React Query refazer a busca de useGetEscolaAtual -- a busca podia
-// disparar com um token que ainda carregava o orgId antigo por uma
-// fracao de segundo, recebendo "cadastrada: false" errado. Um reload
-// completo elimina essa corrida por completo: o token e buscado do
-// zero, sem cache nenhum de query ou de sessao no meio do caminho.
+// [FIX v2] A versao anterior causava um LOOP INFINITO de reload
+// ("piscando", nunca carregava). Causa: o efeito rodava antes do Clerk
+// terminar de carregar (isLoaded ainda false), quando orgId ainda e
+// `undefined`. Esse `undefined` virava o "valor de referencia" errado.
+// Assim que o Clerk terminava de carregar de verdade e orgId mudava de
+// `undefined` para o valor real, o watcher interpretava isso como uma
+// troca de organizacao genuina e recarregava a pagina -- e a cada
+// reload o mesmo ciclo se repetia, para sempre. A correcao: so grava o
+// valor de referencia depois que `isLoaded` (do proprio useAuth) vier
+// true, ou seja, depois que o Clerk realmente terminou de resolver a
+// sessao. So a partir dai uma mudanca de orgId conta como troca real.
+//
+// [FIX v1, mantido] A ideia de reload completo (em vez de navegacao
+// leve via Wouter) segue valida: evita a corrida entre o Clerk
+// atualizar o token de sessao (que carrega o orgId ativo) e o React
+// Query refazer a busca de useGetEscolaAtual, que fazia a tela ficar
+// presa em /onboarding mesmo trocando de volta pra uma organizacao com
+// escola ja cadastrada.
 function OrgSwitchWatcher() {
-  const { orgId } = useAuth();
-  const orgIdAnterior = useRef(orgId);
-  const primeiraExecucao = useRef(true);
+  const { orgId, isLoaded } = useAuth();
+  const orgIdReferencia = useRef<string | null | undefined>(undefined);
+  const referenciaDefinida = useRef(false);
 
   useEffect(() => {
-    // Ignora a primeira resolucao do orgId (carregamento inicial da
-    // pagina) -- so reage a trocas de verdade, feitas depois que o app
-    // ja estava aberto.
-    if (primeiraExecucao.current) {
-      primeiraExecucao.current = false;
-      orgIdAnterior.current = orgId;
+    if (!isLoaded) return;
+    if (!referenciaDefinida.current) {
+      referenciaDefinida.current = true;
+      orgIdReferencia.current = orgId;
       return;
     }
-    if (orgIdAnterior.current !== orgId) {
-      orgIdAnterior.current = orgId;
+    if (orgIdReferencia.current !== orgId) {
+      orgIdReferencia.current = orgId;
       window.location.href = `${basePath}/dashboard`;
     }
-  }, [orgId]);
+  }, [orgId, isLoaded]);
 
   return null;
 }
