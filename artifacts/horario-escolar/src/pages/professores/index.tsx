@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useListProfessores, useDeleteProfessor, getListProfessoresQueryKey, useListDisciplinas } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -157,7 +157,7 @@ export default function ProfessoresList() {
                     <h3 className="font-semibold text-lg">{professor.nome}</h3>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {(professor.disciplinaIds ?? []).slice(0, 3).map((id: number) => (
-                        <Badge key={id} variant="outline" className="text-xs">{nomeDisciplina(id)}</Badge>
+                        <Badge key={id} variant="outline" className="text-xs whitespace-normal text-left h-auto py-0.5">{nomeDisciplina(id)}</Badge>
                       ))}
                       {(professor.disciplinaIds ?? []).length > 3 && (
                         <Badge variant="outline" className="text-xs">+{professor.disciplinaIds!.length - 3}</Badge>
@@ -200,7 +200,7 @@ export default function ProfessoresList() {
                 <span className="font-medium truncate">{professor.nome}</span>
                 <div className="flex flex-wrap gap-1 min-w-0">
                   {(professor.disciplinaIds ?? []).slice(0, 3).map((id: number) => (
-                    <Badge key={id} variant="outline" className="text-[10px]">{nomeDisciplina(id)}</Badge>
+                    <Badge key={id} variant="outline" className="text-[10px] whitespace-normal text-left h-auto py-0.5">{nomeDisciplina(id)}</Badge>
                   ))}
                   {(professor.disciplinaIds ?? []).length > 3 && (
                     <Badge variant="outline" className="text-[10px]">+{professor.disciplinaIds!.length - 3}</Badge>
