@@ -526,7 +526,7 @@ export default function ProfessorEditar() {
                 onClick={handleRegenerarTurmasDoProfessor}
                 disabled={regenerando}
               >
-                {regenerando ? "Gerando prévia..." : "Gerar prévia das turmas deste professor"}
+                <span className="whitespace-normal text-left">{regenerando ? "Gerando prévia..." : "Gerar prévia das turmas deste professor"}</span>
                 <RefreshCw className={`w-4 h-4 ${regenerando ? "animate-spin" : ""}`} />
               </Button>
               <p className="text-xs text-muted-foreground mt-2">
