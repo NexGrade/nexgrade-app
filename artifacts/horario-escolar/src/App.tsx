@@ -450,7 +450,14 @@ function App() {
             <div className="h-screen flex flex-col overflow-hidden">
               <OrgSwitchWatcher />
               <GlobalTopBar />
-              <div className="flex-1 min-h-0">
+              {/* [FIX] overflow-auto adicionado aqui -- paginas que NAO usam
+                  o <Layout> (onboarding, sign-in, sign-up, not-found) nao
+                  tem rolagem propria (o <Layout> tem a sua, em
+                  "flex-1 overflow-auto p-8" dentro de components/layout.tsx).
+                  Sem overflow-auto neste wrapper, conteudo mais alto que a
+                  tela (ex: o formulario inteiro de /onboarding) ficava sem
+                  jeito de rolar ate o fim. */}
+              <div className="flex-1 min-h-0 overflow-auto">
                 <Router />
               </div>
             </div>
