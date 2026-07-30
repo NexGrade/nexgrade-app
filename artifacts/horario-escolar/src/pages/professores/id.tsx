@@ -419,7 +419,7 @@ export default function ProfessorEditar() {
                       <h4 className="text-sm font-medium text-muted-foreground pb-1">Disciplinas que leciona</h4>
                       <div className="flex flex-wrap gap-1.5">
                         {disciplinasUnicas.map((d) => (
-                          <Badge key={d.id} variant="outline">{d.nome}</Badge>
+                          <Badge key={d.id} variant="outline" className="whitespace-normal text-left h-auto py-1">{d.nome}</Badge>
                         ))}
                       </div>
                     </div>
@@ -477,7 +477,7 @@ export default function ProfessorEditar() {
                 onClick={handleCorrigirConflitos}
                 disabled={corrigindo}
               >
-                {corrigindo ? "Corrigindo..." : "Corrigir conflitos deste professor"}
+                <span className="whitespace-normal text-left">{corrigindo ? "Corrigindo..." : "Corrigir conflitos deste professor"}</span>
                 <Wrench className={`w-4 h-4 ${corrigindo ? "animate-pulse" : ""}`} />
               </Button>
               {resultadoCorrecao && !resultadoCorrecao.mensagem && (

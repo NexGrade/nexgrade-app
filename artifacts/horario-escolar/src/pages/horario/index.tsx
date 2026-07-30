@@ -1047,7 +1047,7 @@ function AbaConflitos() {
                       <span className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${g.dot}`} />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <Badge className={`border text-xs ${g.color}`}>{g.label}</Badge>
+                          <Badge className={`border text-xs whitespace-normal ${g.color}`}>{g.label}</Badge>
                           <span className="text-xs text-muted-foreground">{TIPO_LABELS[item.conflito.tipo] ?? item.conflito.tipo}</span>
                         </div>
                         <CardTitle className="text-sm font-medium mt-1">{item.conflito.descricao}</CardTitle>
