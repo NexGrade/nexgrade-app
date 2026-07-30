@@ -1,4 +1,4 @@
-﻿import { Router } from "express";
+import { Router } from "express";
 import { db } from "@workspace/db";
 import {
   professoresTable, turmasTable, disciplinasTable, horariosTable,
@@ -76,69 +76,85 @@ router.get("/conversas/:id/mensagens", async (req, res) => {
 
 const DIAS_SEMANA = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
 
-// [TROCADO] Formato de "function declaration" da API NATIVA do Gemini
-// -- confirmado por teste manual (Invoke-RestMethod) que o endpoint
-// compatível com OpenAI (`/v1beta/openai/...`) retorna 429 mesmo com
-// chave válida e modelo existente, enquanto a API nativa
-// (`/v1beta/models/...:generateContent`) funciona normalmente com a
-// mesma chave. Por isso trocamos pra chamar a API nativa direto via
-// fetch, sem SDK e sem a camada de compatibilidade.
+// [TROCADO 2] O Gemini 2.0/2.5-flash e a API :generateContent (usada
+// antes aqui) foram descontinuados pelo Google em 2026 -- ver
+// https://ai.google.dev/gemini-api/docs/deprecations. A substituicao
+// oficial recomendada pelo proprio erro 404 do Google e a "Interactions
+// API" (endpoint /v1beta/interactions), usada pelos modelos da serie
+// Gemini 3.x. Isso mudou TRES coisas em cascata:
+//   1. Formato de tool declaration: lista plana de objetos
+//      { type: "function", name, description, parameters }, em vez de
+//      [{ functionDeclarations: [...] }].
+//   2. Formato de mensagem: `input` (string ou array de "steps"
+//      tipados: user_input / function_result), em vez de `contents`
+//      (array de { role, parts }). NAO existe mais role "function" --
+//      resultado de function call agora e um step tipo "function_result"
+//      com call_id, nao uma mensagem com role especial.
+//   3. Formato de resposta: `interaction.steps[]` (cada um com `type`,
+//      e para function_call: `name`/`arguments`/`id`), com atalho
+//      `interaction.output_text` para o texto final, em vez de
+//      `candidates[0].content.parts[]`.
+// O antigo mecanismo manual de thought_signature (echo do part inteiro
+// de volta pro modelo) tambem sumiu -- a doc da Interactions API diz
+// que isso agora e tratado automaticamente pela propria API pros
+// modelos da serie Gemini 3.
 const tools = [
   {
-    functionDeclarations: [
-      {
-        name: "definir_disponibilidade",
-        description:
-          "Marca um professor como disponível ou indisponível em um dia da semana e período/aula específicos.",
-        parameters: {
-          type: "object" as const,
-          properties: {
-            professorNome: { type: "string", description: "Nome (ou parte do nome) do professor mencionado pelo usuário" },
-            diaSemana: { type: "integer", description: "0=Segunda, 1=Terça, 2=Quarta, 3=Quinta, 4=Sexta, 5=Sábado, 6=Domingo" },
-            horarioSlot: { type: "integer", description: "Número do período/aula dentro do dia, começando em 1" },
-            disponivel: { type: "boolean", description: "true para marcar como disponível, false para indisponível" },
-            motivo: { type: "string", description: "Motivo opcional da indisponibilidade" },
-          },
-          required: ["professorNome", "diaSemana", "horarioSlot", "disponivel"],
-        },
+    type: "function" as const,
+    name: "definir_disponibilidade",
+    description:
+      "Marca um professor como disponível ou indisponível em um dia da semana e período/aula específicos.",
+    parameters: {
+      type: "object" as const,
+      properties: {
+        professorNome: { type: "string", description: "Nome (ou parte do nome) do professor mencionado pelo usuário" },
+        diaSemana: { type: "integer", description: "0=Segunda, 1=Terça, 2=Quarta, 3=Quinta, 4=Sexta, 5=Sábado, 6=Domingo" },
+        horarioSlot: { type: "integer", description: "Número do período/aula dentro do dia, começando em 1" },
+        disponivel: { type: "boolean", description: "true para marcar como disponível, false para indisponível" },
+        motivo: { type: "string", description: "Motivo opcional da indisponibilidade" },
       },
-      {
-        name: "gerar_horario_turma",
-        description: "Gera (ou regenera) automaticamente a grade horária de uma turma específica.",
-        parameters: {
-          type: "object" as const,
-          properties: {
-            turmaNome: { type: "string", description: "Nome da turma mencionada pelo usuário" },
-            substituir: { type: "boolean", description: "Se true, substitui o horário já existente da turma" },
-          },
-          required: ["turmaNome"],
-        },
+      required: ["professorNome", "diaSemana", "horarioSlot", "disponivel"],
+    },
+  },
+  {
+    type: "function" as const,
+    name: "gerar_horario_turma",
+    description: "Gera (ou regenera) automaticamente a grade horária de uma turma específica.",
+    parameters: {
+      type: "object" as const,
+      properties: {
+        turmaNome: { type: "string", description: "Nome da turma mencionada pelo usuário" },
+        substituir: { type: "boolean", description: "Se true, substitui o horário já existente da turma" },
       },
-      // [NOVO] Primeira ferramenta de CONSULTA (só leitura) do
-      // assistente -- as duas de cima só propõem uma ação futura, essa
-      // busca dado real da grade já montada. Diferente delas, o
-      // resultado precisa voltar pro Gemini numa segunda chamada (ver
-      // bloco "Segunda chamada" mais abaixo) pra virar texto em
-      // português, em vez do backend já saber a resposta de antemão.
-      {
-        name: "consultar_janelas_professores",
-        description:
-          "Consulta quantas 'janelas' (períodos vagos entre duas aulas no mesmo dia) cada professor tem na grade horária já montada. Use quando o usuário perguntar sobre janelas, buracos, tempo ocioso ou distribuição ruim de horário dos professores.",
-        parameters: { type: "object" as const, properties: {} },
-      },
-      {
-        name: "consultar_turmas_sem_horario",
-        description:
-          "Lista quais turmas ainda não têm nenhuma aula gerada na grade horária. Use quando o usuário perguntar quantas/quais turmas estão sem horário, incompletas ou pendentes de geração.",
-        parameters: { type: "object" as const, properties: {} },
-      },
-      {
-        name: "consultar_distribuicao_semanal",
-        description:
-          "Consulta quantas aulas estão alocadas em cada dia da semana (e por turno), pra avaliar se a distribuição da grade está equilibrada. Use quando o usuário perguntar sobre a distribuição de aulas na semana, dias mais cheios/vazios, ou balanceamento da grade.",
-        parameters: { type: "object" as const, properties: {} },
-      },
-    ],
+      required: ["turmaNome"],
+    },
+  },
+  // [NOVO] Primeira ferramenta de CONSULTA (só leitura) do assistente --
+  // as duas de cima só propõem uma ação futura, essa busca dado real da
+  // grade já montada. Diferente delas, o resultado precisa voltar pro
+  // Gemini numa segunda chamada (ver pedirRespostaComResultadoFuncao)
+  // pra virar texto em português, em vez do backend já saber a resposta
+  // de antemão.
+  {
+    type: "function" as const,
+    name: "consultar_janelas_professores",
+    description:
+      "Consulta quantas 'janelas' (períodos vagos entre duas aulas no mesmo dia) cada professor tem na grade horária já montada. Use quando o usuário perguntar sobre janelas, buracos, tempo ocioso ou distribuição ruim de horário dos professores.",
+    parameters: { type: "object" as const, properties: {} },
+  },
+  {
+    type: "function" as const,
+    name: "consultar_turmas_sem_horario",
+    description:
+      "Lista quais turmas ainda não têm nenhuma aula gerada na grade horária. Use quando o usuário perguntar quantas/quais turmas estão sem horário, incompletas ou pendentes de geração.",
+    parameters: { type: "object" as const, properties: {} },
+  },
+  {
+    type: "function" as const,
+    name: "consultar_distribuicao_semanal",
+    description:
+      "Consulta quantas aulas estão alocadas em cada dia da semana (e por turno), pra avaliar se a distribuição da grade está equilibrada. Use quando o usuário perguntar sobre a distribuição de aulas na semana, dias mais cheios/vazios, ou balanceamento da grade.",
+    parameters: { type: "object" as const, properties: {} },
   },
 ];
 
@@ -232,35 +248,56 @@ async function consultarDistribuicaoSemanal(escolaId: string) {
   return { totalAulas: horarios.length, porDia, porDiaETurno };
 }
 
+// Formato de um step de function_call na resposta da Interactions API.
+type StepFunctionCall = { type: "function_call"; id: string; name: string; arguments: Record<string, unknown> };
+// Formato de resposta da Interactions API -- so os campos que usamos.
+type InteractionResponse = {
+  id: string;
+  output_text?: string;
+  steps?: Array<
+    | StepFunctionCall
+    | { type: string; content?: Array<{ type?: string; text?: string }> }
+  >;
+};
+
+function extrairFunctionCall(interaction: InteractionResponse): StepFunctionCall | undefined {
+  return interaction.steps?.find((s): s is StepFunctionCall => s.type === "function_call");
+}
+
+function extrairTexto(interaction: InteractionResponse): string | undefined {
+  if (interaction.output_text) return interaction.output_text;
+  for (const step of interaction.steps ?? []) {
+    if ("content" in step && step.content) {
+      const textoPart = step.content.find((c) => c.text);
+      if (textoPart?.text) return textoPart.text;
+    }
+  }
+  return undefined;
+}
+
 // [NOVO] Ferramentas de consulta (leitura) sempre precisam de uma
 // SEGUNDA chamada ao Gemini: a primeira só pede "quero chamar essa
-// função", essa aqui manda o resultado de volta e pede a resposta
+// função", essa aqui manda o resultado de volta (via
+// previous_interaction_id + step function_result) e pede a resposta
 // final em português. Extraído numa função só porque agora são 3
 // ferramentas de consulta usando exatamente o mesmo padrão.
 async function pedirRespostaComResultadoFuncao(
   apiKey: string,
-  contents: unknown[],
-  systemPrompt: string,
-  functionCallFullPart: { functionCall?: { name: string; args: Record<string, unknown> }; thoughtSignature?: string },
+  previousInteractionId: string,
+  functionCall: StepFunctionCall,
   resultado: unknown,
 ): Promise<string> {
-  const nomeFuncao = functionCallFullPart.functionCall!.name;
-  const contentsComResultado = [
-    ...contents,
-    // Ecoa o part ORIGINAL (com thoughtSignature, se veio) em vez de
-    // reconstruir só com { functionCall: ... } -- ver comentário sobre
-    // thought_signature acima, onde `parts` é montado.
-    { role: "model", parts: [functionCallFullPart] },
-    {
-      role: "function",
-      parts: [{ functionResponse: { name: nomeFuncao, response: resultado as Record<string, unknown> } }],
-    },
-  ];
-
   const res = await chamarGemini(apiKey, {
-    contents: contentsComResultado,
-    systemInstruction: { parts: [{ text: systemPrompt }] },
+    previous_interaction_id: previousInteractionId,
     tools,
+    input: [
+      {
+        type: "function_result",
+        name: functionCall.name,
+        call_id: functionCall.id,
+        result: [{ type: "text", text: JSON.stringify(resultado) }],
+      },
+    ],
   });
 
   if (!res.ok) {
@@ -268,43 +305,51 @@ async function pedirRespostaComResultadoFuncao(
     throw new Error(`${res.status} ${res.statusText}: ${corpoErro.slice(0, 300)}`);
   }
 
-  const completion = await res.json() as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
-  const parts = completion.candidates?.[0]?.content?.parts ?? [];
-  return parts.find((p) => p.text)?.text
+  const interaction = (await res.json()) as InteractionResponse;
+  return extrairTexto(interaction)
     ?? "Consultei os dados, mas não consegui formular uma resposta. Tente reformular a pergunta.";
 }
 
 // [NOVO] Lista de modelos, do preferido pro mais antigo -- se o
-// principal devolver 503 (sobrecarga temporária do lado do Google,
-// não erro nosso), tenta o próximo da lista automaticamente antes de
-// desistir. Mesmo padrão de fallback já usado em cpsat-service/main.py
-// pra explicar inviabilidade.
+// principal devolver 503 (sobrecarga temporária do lado do Google, não
+// erro nosso) ou 404 (modelo descontinuado -- acontece com frequência,
+// o Google vem desligando modelos), tenta o próximo da lista
+// automaticamente antes de desistir. Nomes confirmados em
+// https://ai.google.dev/gemini-api/docs/models em 30/07/2026 -- revisar
+// essa lista se voltar a dar 404 no futuro (o Google costuma avisar
+// deprecação com 2 semanas de antecedência, mas nem sempre a gente
+// vê o aviso a tempo).
 const GEMINI_MODELOS_FALLBACK = ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-2.5-flash-lite"];
 
 // [NOVO] Centraliza a chamada à API do Gemini com fallback de modelo.
-// Os dois pontos do arquivo que chamavam `fetch` direto (chat
-// principal e a segunda chamada pós-ferramenta) foram trocados por
-// esta função, pra não duplicar a lógica de retry duas vezes.
-async function chamarGemini(apiKey: string, body: unknown): Promise<Response> {
+// Os dois pontos do arquivo que chamavam `fetch` direto (chat principal
+// e a segunda chamada pós-ferramenta) foram trocados por esta função,
+// pra não duplicar a lógica de retry duas vezes.
+//
+// [TROCADO 2] Endpoint mudou de /v1beta/models/{modelo}:generateContent
+// (com a chave na query string ?key=) para /v1beta/interactions (com a
+// chave no header x-goog-api-key, como documentado nos exemplos REST
+// da Interactions API) -- e o nome do modelo agora entra DENTRO do
+// corpo da requisição (campo "model"), não mais na URL.
+async function chamarGemini(apiKey: string, body: Record<string, unknown>): Promise<Response> {
   let ultimaResposta: Response | null = null;
   let ultimoErro: unknown;
 
   for (const modelo of GEMINI_MODELOS_FALLBACK) {
     try {
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/interactions`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
+          headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+          body: JSON.stringify({ ...body, model: modelo }),
         },
       );
       if (res.ok) return res;
-      // Só troca de modelo quando o motivo é sobrecarga (503) -- outros
-      // erros (400 de payload malformado, 401 de chave inválida) não
-      // seriam resolvidos trocando de modelo, então devolve na hora.
+      // Só troca de modelo quando o motivo é sobrecarga (503) ou modelo
+      // descontinuado (404) -- outros erros (400 de payload malformado,
+      // 401 de chave inválida) não seriam resolvidos trocando de
+      // modelo, então devolve na hora.
       if (res.status !== 503 && res.status !== 404) return res;
       ultimaResposta = res;
     } catch (err) {
@@ -318,13 +363,14 @@ async function chamarGemini(apiKey: string, body: unknown): Promise<Response> {
 
 // POST /ai/chat
 //
-// [TROCADO] Chama a API NATIVA do Gemini direto via fetch (endpoint
-// `:generateContent`), não mais via camada de compatibilidade OpenAI
-// -- ver comentário acima da lista `tools`. Isso muda o formato de
-// mensagens (role "model" em vez de "assistant", conteúdo em
-// `parts`/`text`), o system prompt (`systemInstruction` em vez de
-// mensagem de role "system") e o parsing de function call (`parts[].
-// functionCall` em vez de `tool_calls`).
+// [TROCADO 2] Ver comentário grande acima da lista `tools` explicando a
+// migração completa pra Interactions API. Resumo do que muda aqui
+// especificamente: `contents` (array de mensagens role/parts) virou
+// `input` (uma string ou array de steps tipados); não existe mais
+// "systemInstruction" documentado pra essa API nova -- pra não
+// arriscar um nome de campo incorreto, o contexto da escola (que antes
+// ia em systemInstruction) agora é embutido no próprio texto de
+// `input`, junto com o histórico da conversa.
 router.post("/chat", async (req, res) => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -388,19 +434,18 @@ Seja direto, útil e use linguagem educacional brasileira.`;
   res.setHeader("X-Conversa-Id", String(cidAtual));
 
   try {
-    // [TROCADO] A API nativa do Gemini usa role "model" pro assistente
-    // (não "assistant"), e o conteúdo vai em `parts: [{ text }]`.
-    const contents = [
-      ...historico.map(h => ({
-        role: h.role === "assistant" ? "model" : "user",
-        parts: [{ text: h.content }],
-      })),
-      { role: "user", parts: [{ text: mensagem }] },
-    ];
+    // [TROCADO 2] Contexto da escola + histórico da conversa + mensagem
+    // atual, tudo embutido num texto só (ver comentário acima da rota
+    // sobre não arriscar o nome do campo de system prompt). O histórico
+    // fica em formato "Usuário: ... / Assistente: ..." simples, que
+    // qualquer modelo Gemini lê bem como transcript de conversa.
+    const contextoHistorico = historico.length
+      ? historico.map(h => `${h.role === "assistant" ? "Assistente" : "Usuário"}: ${h.content}`).join("\n") + "\n"
+      : "";
+    const inputTexto = `${systemPrompt}\n\n--- CONVERSA ---\n${contextoHistorico}Usuário: ${mensagem}`;
 
     const geminiRes = await chamarGemini(apiKey, {
-      contents,
-      systemInstruction: { parts: [{ text: systemPrompt }] },
+      input: inputTexto,
       tools,
     });
 
@@ -409,35 +454,15 @@ Seja direto, útil e use linguagem educacional brasileira.`;
       throw new Error(`${geminiRes.status} ${geminiRes.statusText}: ${corpoErro.slice(0, 300)}`);
     }
 
-    const completion = await geminiRes.json() as {
-      candidates?: Array<{
-        content?: {
-          parts?: Array<{
-            text?: string;
-            functionCall?: { name: string; args: Record<string, unknown> };
-            // [NOVO] Modelos Gemini com "thinking" (2.5+) agora exigem
-            // devolver esse campo junto quando a chamada de função é
-            // ecoada de volta numa segunda mensagem -- sem ele, a API
-            // recusa com 400 "missing a thought_signature". Vem como
-            // campo IRMÃO de functionCall dentro do mesmo part, não
-            // dentro dele -- por isso precisamos guardar o part
-            // INTEIRO, não só o `.functionCall` de dentro.
-            thoughtSignature?: string;
-          }>;
-        };
-      }>;
-    };
-
-    const parts = completion.candidates?.[0]?.content?.parts ?? [];
-    const functionCallFullPart = parts.find((p) => p.functionCall);
-    const functionCallPart = functionCallFullPart?.functionCall;
-    const textPart = parts.find((p) => p.text)?.text;
+    const interaction = (await geminiRes.json()) as InteractionResponse;
+    const functionCall = extrairFunctionCall(interaction);
+    const textoDireto = extrairTexto(interaction);
 
     let respostaTexto: string;
     let acaoPendente: AcaoPendente | null = null;
 
-    if (functionCallPart?.name === "definir_disponibilidade") {
-      const args = functionCallPart.args as {
+    if (functionCall?.name === "definir_disponibilidade") {
+      const args = functionCall.arguments as {
         professorNome: string; diaSemana: number; horarioSlot: number; disponivel: boolean; motivo?: string;
       };
       const termo = args.professorNome.trim().toLowerCase();
@@ -456,8 +481,8 @@ Seja direto, útil e use linguagem educacional brasileira.`;
           payload: { professorId: prof.id, diaSemana: args.diaSemana, horarioSlot: args.horarioSlot, disponivel: args.disponivel, motivo: args.motivo },
         };
       }
-    } else if (functionCallPart?.name === "gerar_horario_turma") {
-      const args = functionCallPart.args as { turmaNome: string; substituir?: boolean };
+    } else if (functionCall?.name === "gerar_horario_turma") {
+      const args = functionCall.arguments as { turmaNome: string; substituir?: boolean };
       const termo = args.turmaNome.trim().toLowerCase();
       const candidatas = turmas.filter(t => t.nome.toLowerCase().includes(termo));
 
@@ -473,19 +498,19 @@ Seja direto, útil e use linguagem educacional brasileira.`;
           payload: { turmaId: turma.id, substituir: args.substituir ?? false },
         };
       }
-    } else if (functionCallPart?.name === "consultar_janelas_professores") {
+    } else if (functionCall?.name === "consultar_janelas_professores") {
       const janelas = await calcularJanelasProfessores(escolaId);
       respostaTexto = await pedirRespostaComResultadoFuncao(
-        apiKey, contents, systemPrompt, functionCallFullPart!, { janelas: janelas.slice(0, 30) },
+        apiKey, interaction.id, functionCall, { janelas: janelas.slice(0, 30) },
       );
-    } else if (functionCallPart?.name === "consultar_turmas_sem_horario") {
+    } else if (functionCall?.name === "consultar_turmas_sem_horario") {
       const dados = await consultarTurmasSemHorario(escolaId);
-      respostaTexto = await pedirRespostaComResultadoFuncao(apiKey, contents, systemPrompt, functionCallFullPart!, dados);
-    } else if (functionCallPart?.name === "consultar_distribuicao_semanal") {
+      respostaTexto = await pedirRespostaComResultadoFuncao(apiKey, interaction.id, functionCall, dados);
+    } else if (functionCall?.name === "consultar_distribuicao_semanal") {
       const dados = await consultarDistribuicaoSemanal(escolaId);
-      respostaTexto = await pedirRespostaComResultadoFuncao(apiKey, contents, systemPrompt, functionCallFullPart!, dados);
+      respostaTexto = await pedirRespostaComResultadoFuncao(apiKey, interaction.id, functionCall, dados);
     } else {
-      respostaTexto = textPart ?? "Não consegui gerar uma resposta. Tente reformular a pergunta.";
+      respostaTexto = textoDireto ?? "Não consegui gerar uma resposta. Tente reformular a pergunta.";
     }
 
     await db.insert(aiMensagensTable).values({ conversaId: cidAtual, role: "assistant", content: respostaTexto });
@@ -501,6 +526,8 @@ Seja direto, útil e use linguagem educacional brasileira.`;
 });
 
 // ── EXECUÇÃO DA AÇÃO CONFIRMADA (RF-IA-03) ─────────────────────────────
+// [NAO MUDOU] Esta rota nunca fala com o Gemini -- so aplica no banco a
+// acao que o usuario ja confirmou. Preservada 100% identica.
 
 const ExecutarAcaoInput = z.discriminatedUnion("tipo", [
   z.object({
