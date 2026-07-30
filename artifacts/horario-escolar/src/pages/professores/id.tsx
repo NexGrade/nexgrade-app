@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+﻿import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useGetProfessor, useUpdateProfessor, getGetProfessorQueryKey, useListDisciplinas, getListProfessoresQueryKey, useGetProfessorCarga, customFetch } from "@workspace/api-client-react";
@@ -369,7 +369,7 @@ export default function ProfessorEditar() {
         </div>
 
         <div className="space-y-6">
-          <Card className="sticky top-6">
+          <Card>
             <CardHeader>
               <CardTitle>Carga Horária</CardTitle>
               <CardDescription>Total de aulas semanais que o professor tem na escola.</CardDescription>
