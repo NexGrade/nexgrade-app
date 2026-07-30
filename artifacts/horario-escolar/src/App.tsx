@@ -413,6 +413,15 @@ function GlobalTopBar() {
         <OrganizationSwitcher
           hidePersonal
           appearance={{
+            // [NOVO] colorMutedForeground mais escuro que o padrao do tema
+            // (#64748b, definido em clerkAppearance acima) -- so aqui, sem
+            // afetar o SignIn/SignUp nem outros componentes do Clerk. O
+            // Clerk usa essa cor pro texto de organizacoes NAO selecionadas
+            // dentro do popover do seletor, que ficava com contraste baixo
+            // demais pra leitura confortavel.
+            variables: {
+              colorMutedForeground: "#475569",
+            },
             elements: {
               rootBox: "flex items-center",
               organizationSwitcherTrigger: "px-3 py-1.5 rounded-md border border-slate-200 text-sm text-slate-700 hover:bg-slate-50",
