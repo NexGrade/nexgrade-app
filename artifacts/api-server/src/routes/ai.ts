@@ -494,6 +494,7 @@ Seja direto, útil e use linguagem educacional brasileira.`;
     res.write(`data: ${JSON.stringify({ done: true, conversaId: cidAtual, acaoPendente })}\n\n`);
     res.end();
   } catch (err: any) {
+    console.error("Erro no assistente de IA:", err.message);
     res.write(`data: ${JSON.stringify({ error: err.message ?? "Erro na IA" })}\n\n`);
     res.end();
   }
