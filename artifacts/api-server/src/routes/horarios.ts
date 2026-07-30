@@ -259,6 +259,14 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
       continue;
     }
 
+    // [NOVO] Segundo professor (co-docencia confirmada pela escola --
+    // ver comentario em schema/turmas.ts sobre professorApoioId). Quando
+    // definido, toda vez que o titular for alocado num slot, o apoio
+    // TAMBEM precisa estar livre naquele mesmo slot -- e os dois ganham
+    // uma linha propria em horarios (ver alocar() abaixo), pra que a
+    // carga horaria de ambos seja contabilizada corretamente.
+    const profApoio = td.professorApoioId ? professores.find((p) => p.id === td.professorApoioId) : undefined;
+
     const alocacaoPorDia: Record<number, number> = {};
 
     let diasOrdenados = diasBase;
@@ -300,11 +308,18 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
           p => !ocupadoProf[`${p.id}-${dia}-${aula}`]
             && !indisponivelProf[`${p.id}-${dia}-${aula}`]
             && respeitaLimiteComplementar(p.id, dia)
-            && semAulaAdjacenteMesmaTurma(p.id, dia, aula),
+            && semAulaAdjacenteMesmaTurma(p.id, dia, aula)
+            && (!profApoio || (
+              !ocupadoProf[`${profApoio.id}-${dia}-${aula}`]
+              && !indisponivelProf[`${profApoio.id}-${dia}-${aula}`]
+              && respeitaLimiteComplementar(profApoio.id, dia)
+              && semAulaAdjacenteMesmaTurma(profApoio.id, dia, aula)
+            )),
         );
         if (!profDisponivel) continue;
 
         alocar(td.disciplinaId, profDisponivel.id, dia, aula);
+        if (profApoio) alocar(td.disciplinaId, profApoio.id, dia, aula);
         alocadas++;
         alocacaoPorDia[dia] = jaNesteDia + 1;
         break;
@@ -322,11 +337,18 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
             p => !ocupadoProf[`${p.id}-${dia}-${aula}`]
               && !indisponivelProf[`${p.id}-${dia}-${aula}`]
               && respeitaLimiteComplementar(p.id, dia)
-              && semAulaAdjacenteMesmaTurma(p.id, dia, aula),
+              && semAulaAdjacenteMesmaTurma(p.id, dia, aula)
+            && (!profApoio || (
+              !ocupadoProf[`${profApoio.id}-${dia}-${aula}`]
+              && !indisponivelProf[`${profApoio.id}-${dia}-${aula}`]
+              && respeitaLimiteComplementar(profApoio.id, dia)
+              && semAulaAdjacenteMesmaTurma(profApoio.id, dia, aula)
+            )),
           );
           if (!profDisponivel) continue;
 
           alocar(td.disciplinaId, profDisponivel.id, dia, aula);
+        if (profApoio) alocar(td.disciplinaId, profApoio.id, dia, aula);
           alocadas++;
         }
       }
