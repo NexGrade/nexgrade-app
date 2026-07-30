@@ -46,6 +46,13 @@ export interface GerarOpts {
   compactarCargaHoraria?: boolean;
   experimental: boolean;
   nomeExperimental?: string;
+  // [NOVO] Quando definido, a regeneracao fica restrita as disciplinas
+  // deste professor (titular OU apoio) nesta turma -- as demais
+  // disciplinas/professores da turma ficam intocados. Usado por
+  // POST /gerar-professor pra evitar que regenerar as turmas de UM
+  // professor apague/realoque as aulas de TODOS os outros professores
+  // que dividem essas mesmas turmas.
+  apenasProfessorId?: number;
 }
 
 const CHAVE_MAX_GEMINADAS_PADRAO = "seed_pr.max_aulas_geminadas_padrao";
@@ -102,6 +109,15 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
 
   if (turmaDiscs.length === 0) throw new Error("A turma não tem disciplinas cadastradas");
 
+  // [NOVO] Ver comentario em GerarOpts.apenasProfessorId.
+  const turmaDiscsAlvo = opts.apenasProfessorId
+    ? turmaDiscs.filter((td) => td.professorId === opts.apenasProfessorId || td.professorApoioId === opts.apenasProfessorId)
+    : turmaDiscs;
+  if (opts.apenasProfessorId && turmaDiscsAlvo.length === 0) {
+    throw new Error("Este professor não tem nenhuma disciplina vinculada nesta turma.");
+  }
+  const discIdsAlvo = new Set(turmaDiscsAlvo.map((td) => td.disciplinaId));
+
   const maxGeminadasPadrao = typeof configGeminadas?.valor === "number"
     ? configGeminadas.valor
     : DEFAULT_MAX_GEMINADAS;
@@ -153,7 +169,10 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     ? await db.select().from(horariosExperimentaisTable).where(eq(horariosExperimentaisTable.escolaId, escolaId))
     : await db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId));
 
-  const existingIds = new Set(existing.map(s => s.id));
+  const existingEscopado = opts.apenasProfessorId
+    ? existing.filter((s) => discIdsAlvo.has(s.disciplinaId))
+    : existing;
+  const existingIds = new Set(existingEscopado.map(s => s.id));
   const baseSlots = substituir ? allSlots.filter(s => !existingIds.has(s.id)) : allSlots;
 
   if (!substituir) {
@@ -203,7 +222,7 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     return td.maxAulasConsecutivasDia ?? maxGeminadasPadrao;
   }
 
-  const discOrdenadas = [...turmaDiscs].sort((a, b) => {
+  const discOrdenadas = [...turmaDiscsAlvo].sort((a, b) => {
     const da = disciplinas.find(d => d.id === a.disciplinaId);
     const db2 = disciplinas.find(d => d.id === b.disciplinaId);
     return cargaEfetiva(b, db2) - cargaEfetiva(a, da);
@@ -362,12 +381,19 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
   const gravados = await db.transaction(async (tx) => {
     if (useExperimental) {
       if (substituir) {
-        await tx.delete(horariosExperimentaisTable)
-          .where(and(
-            eq(horariosExperimentaisTable.turmaId, turmaId),
-            eq(horariosExperimentaisTable.nome, nomeExperimental!),
-            eq(horariosExperimentaisTable.escolaId, escolaId),
-          ));
+        const condicaoDeleteExp = opts.apenasProfessorId
+          ? and(
+              eq(horariosExperimentaisTable.turmaId, turmaId),
+              eq(horariosExperimentaisTable.nome, nomeExperimental!),
+              eq(horariosExperimentaisTable.escolaId, escolaId),
+              inArray(horariosExperimentaisTable.disciplinaId, [...discIdsAlvo]),
+            )
+          : and(
+              eq(horariosExperimentaisTable.turmaId, turmaId),
+              eq(horariosExperimentaisTable.nome, nomeExperimental!),
+              eq(horariosExperimentaisTable.escolaId, escolaId),
+            );
+        await tx.delete(horariosExperimentaisTable).where(condicaoDeleteExp);
       }
       if (slotsParaGravar.length === 0) return [];
       const linhas = slotsParaGravar.map(s => ({ escolaId, nome: nomeExperimental!, turmaId, ...s }));
@@ -375,8 +401,10 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     }
 
     if (substituir) {
-      await tx.delete(horariosTable)
-        .where(and(eq(horariosTable.turmaId, turmaId), eq(horariosTable.escolaId, escolaId)));
+      const condicaoDelete = opts.apenasProfessorId
+        ? and(eq(horariosTable.turmaId, turmaId), eq(horariosTable.escolaId, escolaId), inArray(horariosTable.disciplinaId, [...discIdsAlvo]))
+        : and(eq(horariosTable.turmaId, turmaId), eq(horariosTable.escolaId, escolaId));
+      await tx.delete(horariosTable).where(condicaoDelete);
     }
     if (slotsParaGravar.length === 0) return [];
     const linhas = slotsParaGravar.map(s => ({ escolaId, turmaId, ...s }));
@@ -735,6 +763,7 @@ router.post("/gerar-professor", async (req, res) => {
         compactarCargaHoraria: compactarCargaHoraria ?? false,
         experimental: true,
         nomeExperimental,
+        apenasProfessorId: professorId,
       });
       resultados.push({ turmaId, turmaNome: turma?.nome ?? String(turmaId), slotsGerados: r.slotsGerados, conflitos: r.conflitos });
     } catch (err) {
