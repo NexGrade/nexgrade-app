@@ -1,6 +1,6 @@
 import { useEffect, useRef, lazy, Suspense } from "react";
-import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
-import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ClerkProvider, SignIn, SignUp, Show, useAuth, OrganizationSwitcher } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
@@ -337,37 +337,30 @@ function ApiAuthBridge() {
   return null;
 }
 
-// [NOVO] Invalida todo o cache do React Query e navega para /dashboard
-// quando o usuario troca de organizacao (escola) no OrganizationSwitcher
-// global. Precisa estar DENTRO do <WouterRouter> (ver App() abaixo) para
-// que useLocation() funcione -- useLocation e o hook de navegacao do
-// proprio Wouter, nao do Clerk.
+// [NOVO] Ao trocar de organizacao (escola) no OrganizationSwitcher
+// global, forca um RELOAD COMPLETO da pagina para /dashboard em vez de
+// uma navegacao "leve" via useLocation().
 //
-// [FIX] A navegacao NAO pode depender das props afterSelectOrganizationUrl
-// / afterCreateOrganizationUrl do <OrganizationSwitcher> (ver GlobalTopBar
-// abaixo, onde essas props foram removidas de proposito). O ClerkProvider
-// esta configurado com routerPush/routerReplace customizados que so
-// chamam window.history.pushState/replaceState diretamente -- isso muda
-// a URL da barra de enderecos, mas NAO avisa o Wouter que a rota mudou
-// (pushState nao dispara nenhum evento que o Wouter escute). Resultado:
-// o Clerk "navegava" tecnicamente, mas a tela continuava renderizando o
-// componente da rota antiga (ex: preso em /onboarding mesmo trocando de
-// organizacao). Usar o setter do useLocation() do proprio Wouter aqui
-// evita esse descompasso -- e o mesmo mecanismo que qualquer <Link>
-// do Wouter usa por baixo dos panos.
+// [FIX] A primeira versao usava navigate("/dashboard") do Wouter +
+// queryClient.invalidateQueries() -- funcionava trocando PRA uma
+// organizacao sem escola (ia pro /onboarding corretamente), mas
+// trocando DE VOLTA pra uma organizacao com escola ja cadastrada, a
+// tela continuava presa em /onboarding. Causa provavel: corrida entre
+// o Clerk atualizar o token de sessao (que carrega o orgId ativo) e o
+// React Query refazer a busca de useGetEscolaAtual -- a busca podia
+// disparar com um token que ainda carregava o orgId antigo por uma
+// fracao de segundo, recebendo "cadastrada: false" errado. Um reload
+// completo elimina essa corrida por completo: o token e buscado do
+// zero, sem cache nenhum de query ou de sessao no meio do caminho.
 function OrgSwitchWatcher() {
   const { orgId } = useAuth();
-  const queryClient = useQueryClient();
-  const [, navigate] = useLocation();
   const orgIdAnterior = useRef(orgId);
   const primeiraExecucao = useRef(true);
 
   useEffect(() => {
     // Ignora a primeira resolucao do orgId (carregamento inicial da
     // pagina) -- so reage a trocas de verdade, feitas depois que o app
-    // ja estava aberto. Sem isso, todo carregamento de pagina forcaria
-    // um redirect pra /dashboard, mesmo que o usuario tivesse acessado
-    // um link direto pra outra tela (ex: /professores).
+    // ja estava aberto.
     if (primeiraExecucao.current) {
       primeiraExecucao.current = false;
       orgIdAnterior.current = orgId;
@@ -375,10 +368,9 @@ function OrgSwitchWatcher() {
     }
     if (orgIdAnterior.current !== orgId) {
       orgIdAnterior.current = orgId;
-      queryClient.invalidateQueries();
-      navigate("/dashboard");
+      window.location.href = `${basePath}/dashboard`;
     }
-  }, [orgId, queryClient, navigate]);
+  }, [orgId]);
 
   return null;
 }
@@ -410,10 +402,9 @@ function GlobalTopBar() {
         {/* [FIX] Props afterCreateOrganizationUrl/afterSelectOrganizationUrl/
             afterLeaveOrganizationUrl removidas -- elas navegam atraves do
             routerPush customizado do ClerkProvider (window.history.pushState),
-            que nao avisa o Wouter da mudanca de rota (ver comentario em
-            OrgSwitchWatcher acima). A navegacao apos trocar de organizacao
-            agora e responsabilidade exclusiva do OrgSwitchWatcher, que usa
-            o useLocation() do proprio Wouter. */}
+            que nao avisa nem o Wouter nem o React da mudanca de rota. A
+            navegacao apos trocar de organizacao agora e feita via reload
+            completo pelo OrgSwitchWatcher (ver comentario acima). */}
         <OrganizationSwitcher
           hidePersonal
           appearance={{
@@ -446,10 +437,10 @@ function App() {
       <ApiAuthBridge />
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          {/* [FIX] OrgSwitchWatcher movido para DENTRO do <WouterRouter> --
-              useLocation() (hook de navegacao do Wouter) so funciona em
-              componentes que estao dentro do contexto do Router. Antes
-              estava fora, o que teria quebrado a chamada do hook. */}
+          {/* OrgSwitchWatcher fica aqui dentro por conveniencia -- nao tem
+              mais dependencia estrita do Wouter (usa window.location.href
+              para o reload, nao useLocation), mas manter perto do Router
+              deixa claro que o proposito dele e reagir a navegacao. */}
           <WouterRouter base={basePath}>
             <div className="h-screen flex flex-col overflow-hidden">
               <OrgSwitchWatcher />
