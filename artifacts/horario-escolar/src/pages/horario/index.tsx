@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useSearch, Link } from "wouter";
 import {
   useListHorarioSlots, useSetHorarioSlotsLote, getListHorarioSlotsQueryKey,
@@ -647,11 +647,267 @@ function SecaoComplementar() {
 
 // ═══════════════════════════════════════════════ ABA: GRADE ═══════════════════════════════════════════════
 
+// [NOVO] Formulário de aula manual avulsa -- POST /api/horarios já
+// existia na API (verifica slot ocupado antes de inserir, retorna 409
+// se já tiver aula ali), mas não tinha nenhum jeito de chamar essa
+// rota pela tela. Suporta professor de apoio opcional (co-docência),
+// gravando duas linhas (uma por professor) no mesmo slot -- mesmo
+// padrão que o motor gerador (gerarAlgoritmo) já usa pra isso.
+// [NOVO] Dados de uma aula existente, usados pra pré-preencher o
+// formulário em modo edição -- inclui os IDs das linhas atuais em
+// horariosTable (uma por professor, no caso de co-docência), pra
+// serem apagadas antes de gravar a versão editada.
+type AulaExistente = {
+  idsParaExcluir: number[];
+  turmaId: number;
+  disciplinaId: number;
+  professorId: number;
+  professorApoioId?: number;
+};
+
+function DialogAdicionarAula({
+  open, onOpenChange, turmaIdFixa, diaSemanaFixo, numeroAulaFixo, aulaExistente,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  turmaIdFixa?: number;
+  diaSemanaFixo?: number;
+  numeroAulaFixo?: number;
+  // [NOVO] Quando preenchido, o dialog abre em modo edição: campos
+  // pré-carregados com a aula atual, e salvar apaga as linhas antigas
+  // (idsParaExcluir) antes de criar as novas.
+  aulaExistente?: AulaExistente;
+}) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { data: turmas } = useListTurmas();
+  const { data: disciplinas } = useListDisciplinas();
+  const { data: professores } = useListProfessores();
+
+  const [turmaId, setTurmaId] = useState("");
+  const [disciplinaId, setDisciplinaId] = useState("");
+  const [professorId, setProfessorId] = useState("");
+  const [temApoio, setTemApoio] = useState(false);
+  const [professorApoioId, setProfessorApoioId] = useState("");
+  const [diaSemana, setDiaSemana] = useState("0");
+  const [numeroAula, setNumeroAula] = useState("1");
+  const [salvando, setSalvando] = useState(false);
+
+  const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
+  const emEdicao = !!aulaExistente;
+
+  // Repopula os campos fixos toda vez que o dialog abre (célula
+  // clicada na grade define turma/dia/aula; o resto começa vazio --
+  // ou pré-preenchido com a aula existente, em modo edição).
+  useEffect(() => {
+    if (!open) return;
+    setTurmaId(aulaExistente ? String(aulaExistente.turmaId) : (turmaIdFixa ? String(turmaIdFixa) : ""));
+    setDiaSemana(diaSemanaFixo !== undefined ? String(diaSemanaFixo) : "0");
+    setNumeroAula(numeroAulaFixo !== undefined ? String(numeroAulaFixo) : "1");
+    if (aulaExistente) {
+      setDisciplinaId(String(aulaExistente.disciplinaId));
+      setProfessorId(String(aulaExistente.professorId));
+      setTemApoio(!!aulaExistente.professorApoioId);
+      setProfessorApoioId(aulaExistente.professorApoioId ? String(aulaExistente.professorApoioId) : "");
+    } else {
+      setDisciplinaId("");
+      setProfessorId("");
+      setTemApoio(false);
+      setProfessorApoioId("");
+    }
+  }, [open, turmaIdFixa, diaSemanaFixo, numeroAulaFixo, aulaExistente]);
+
+  async function salvar() {
+    if (!turmaId || !disciplinaId || !professorId) {
+      toast({ title: "Preencha turma, disciplina e professor", variant: "destructive" });
+      return;
+    }
+    if (temApoio && !professorApoioId) {
+      toast({ title: "Selecione o professor de apoio, ou desative a opção de co-docência", variant: "destructive" });
+      return;
+    }
+    setSalvando(true);
+    try {
+      // [NOVO] Em modo edição, apaga as linhas antigas primeiro. Se a
+      // criação da nova falhar depois (ex.: 409 por algum motivo), o
+      // slot fica vazio em vez de duplicado -- pior cenário aceitável
+      // aqui é "sumiu, refaça", nunca "ficou com dado duplicado".
+      if (emEdicao) {
+        for (const id of aulaExistente!.idsParaExcluir) {
+          await customFetch(`/api/horarios/${id}`, { method: "DELETE" });
+        }
+      }
+      const base = {
+        turmaId: Number(turmaId),
+        disciplinaId: Number(disciplinaId),
+        diaSemana: Number(diaSemana),
+        numeroAula: Number(numeroAula),
+      };
+      await customFetch("/api/horarios", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...base, professorId: Number(professorId) }),
+        responseType: "json",
+      });
+      if (temApoio) {
+        await customFetch("/api/horarios", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...base, professorId: Number(professorApoioId) }),
+          responseType: "json",
+        });
+      }
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios"] });
+      toast({ title: emEdicao ? "Aula atualizada!" : (temApoio ? "Aula adicionada com os dois professores!" : "Aula adicionada!") });
+      onOpenChange(false);
+    } catch (err) {
+      // 409 do backend = já existe aula nesse slot pra essa turma.
+      toast({
+        title: emEdicao ? "Erro ao salvar edição" : "Erro ao adicionar aula",
+        description: err instanceof Error ? err.message : "Já existe uma aula nesse horário para essa turma — apague a existente antes, se quiser substituir.",
+        variant: "destructive",
+      });
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>{emEdicao ? "Editar aula" : "Adicionar aula manual"}</DialogTitle></DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Turma *</Label>
+              <Select value={turmaId} onValueChange={setTurmaId} disabled={!!turmaIdFixa || emEdicao}>
+                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                <SelectContent>{turmas?.map((t) => <SelectItem key={t.id} value={String(t.id)}>{t.nome}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Disciplina *</Label>
+              <Select value={disciplinaId} onValueChange={setDisciplinaId}>
+                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                <SelectContent>{disciplinas?.map((d) => <SelectItem key={d.id} value={String(d.id)}>{d.nome}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Dia da semana *</Label>
+              <Select value={diaSemana} onValueChange={setDiaSemana} disabled={diaSemanaFixo !== undefined}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{diasSemana.map((d, i) => <SelectItem key={i} value={String(i)}>{d}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Número da aula *</Label>
+              <Input
+                type="number" min={0} max={8} value={numeroAula}
+                onChange={(e) => setNumeroAula(e.target.value)}
+                disabled={numeroAulaFixo !== undefined}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Professor (titular) *</Label>
+            <Select value={professorId} onValueChange={setProfessorId}>
+              <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+              <SelectContent>{professores?.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center justify-between py-1 border-t pt-3">
+            <div>
+              <Label className="cursor-pointer">Aula com dois professores (co-docência)</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">Ex.: professor titular + professor de apoio/recomposição dando a mesma aula.</p>
+            </div>
+            <Switch checked={temApoio} onCheckedChange={setTemApoio} />
+          </div>
+
+          {temApoio && (
+            <div className="space-y-1.5">
+              <Label>Professor de apoio *</Label>
+              <Select value={professorApoioId} onValueChange={setProfessorApoioId}>
+                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                <SelectContent>{professores?.filter((p) => String(p.id) !== professorId).map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 rounded-md p-2.5">
+            <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+            Grava direto na grade oficial. Se já existir uma aula nesse exato horário pra essa turma, a inclusão é bloqueada — apague a aula existente primeiro, se for o caso.
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={salvar} disabled={salvando}>
+            {salvando ? "Salvando..." : (emEdicao ? "Salvar edição" : "Adicionar aula")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// [NOVO] Popup leve que abre ao clicar numa célula JÁ OCUPADA da
+// grade -- mostra a aula (ou as duas, se for co-docência) e oferece
+// Editar/Excluir. Fica separado do DialogAdicionarAula porque a
+// necessidade aqui é só "ver o que tem e decidir o que fazer", não um
+// formulário completo.
+function DialogDetalheAula({
+  open, onOpenChange, slots, disciplinaNome, onEditar, onExcluir, excluindo,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  slots: Array<{ id: number; professorNome: string }>;
+  disciplinaNome: string;
+  onEditar: () => void;
+  onExcluir: () => void;
+  excluindo: boolean;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>{disciplinaNome}</DialogTitle></DialogHeader>
+        <div className="space-y-2 py-2">
+          {slots.map((s) => (
+            <div key={s.id} className="text-sm bg-muted/50 rounded px-3 py-2">{s.professorNome}</div>
+          ))}
+          {slots.length > 1 && (
+            <p className="text-xs text-muted-foreground">Aula com co-docência — os dois professores acima dão essa aula juntos.</p>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" className="text-destructive hover:text-destructive" onClick={onExcluir} disabled={excluindo}>
+            <Trash2 className="h-3.5 w-3.5 mr-1" /> {excluindo ? "Excluindo..." : (slots.length > 1 ? "Excluir aula (os dois)" : "Excluir aula")}
+          </Button>
+          <Button onClick={onEditar}>Editar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function AbaGrade() {
   const [turmaId, setTurmaId] = useState<string>("all");
   const [professorId, setProfessorId] = useState<string>("all");
   const [turno, setTurno] = useState<string>("all");
   const [gerando, setGerando] = useState(false);
+
+  // [NOVO] Estado do dialog de aula manual -- ver DialogAdicionarAula
+  // acima. `celulaClicada` guarda dia/aula quando o usuário clica numa
+  // célula "Vago" da grade, pra pré-preencher o formulário.
+  const [openAdicionar, setOpenAdicionar] = useState(false);
+  const [celulaClicada, setCelulaClicada] = useState<{ dia: number; aula: number } | null>(null);
+  const [aulaParaEditar, setAulaParaEditar] = useState<AulaExistente | undefined>(undefined);
+
+  // [NOVO] Popup de detalhe/editar/excluir pra célula já ocupada.
+  const [openDetalhe, setOpenDetalhe] = useState(false);
+  const [detalheSlots, setDetalheSlots] = useState<Array<{ id: number; disciplinaId: number; professorId: number; professorNome: string }>>([]);
+  const [detalheTurmaId, setDetalheTurmaId] = useState<number | undefined>(undefined);
+  const [excluindo, setExcluindo] = useState(false);
 
   const { data: turmas } = useListTurmas();
   const { data: professores } = useListProfessores();
@@ -676,6 +932,20 @@ function AbaGrade() {
 
   const getSlot = (diaSemana: number, numeroAula: number, turmaFilterId?: number) => {
     return horarios?.find((s) =>
+      s.diaSemana === diaSemana &&
+      s.numeroAula === numeroAula &&
+      (!turmaFilterId || s.turmaId === turmaFilterId),
+    );
+  };
+
+  // [NOVO] Igual ao getSlot, mas retorna TODOS os professores desse
+  // slot -- necessário pra co-docência (duas linhas em horariosTable,
+  // mesma turma+dia+aula, professor_id diferente). getSlot() sozinho
+  // só acha o primeiro e sempre foi assim pra exibição na grade; essa
+  // versão é usada especificamente no clique da célula, pra edição e
+  // exclusão saberem sobre as duas linhas.
+  const getSlots = (diaSemana: number, numeroAula: number, turmaFilterId?: number) => {
+    return (horarios ?? []).filter((s) =>
       s.diaSemana === diaSemana &&
       s.numeroAula === numeroAula &&
       (!turmaFilterId || s.turmaId === turmaFilterId),
@@ -748,6 +1018,74 @@ function AbaGrade() {
     }
   };
 
+  // [NOVO] Abre o dialog já com turma (se selecionada) + dia/aula da
+  // célula clicada. Só faz sentido clicar numa célula vazia quando uma
+  // turma específica está selecionada (senão não dá pra saber pra
+  // qual turma é a aula).
+  function abrirAdicionarNaCelula(dia: number, aula: number) {
+    if (!isTurmaSelected) {
+      toast({ title: "Selecione uma turma específica primeiro", description: "Pra adicionar aula clicando na célula, é preciso saber de qual turma é.", variant: "destructive" });
+      return;
+    }
+    setCelulaClicada({ dia, aula });
+    setOpenAdicionar(true);
+  }
+
+  function abrirAdicionarGeral() {
+    setCelulaClicada(null);
+    setAulaParaEditar(undefined);
+    setOpenAdicionar(true);
+  }
+
+  // [FIX] Clique agora funciona nas duas visões (por turma OU por
+  // professor) -- cada linha em `horarios` já carrega o próprio
+  // turmaId, então não precisamos da turma estar selecionada no
+  // filtro pra saber de qual turma é a aula clicada. Antes disso só
+  // funcionava com turma selecionada, o que deixava a visão "por
+  // professor" (provavelmente a mais usada pra ajustes pontuais) sem
+  // a funcionalidade.
+  function abrirDetalheNaCelula(dia: number, aula: number, turmaIdDaCelula: number) {
+    const slots = getSlots(dia, aula, turmaIdDaCelula);
+    if (slots.length === 0) return;
+    setCelulaClicada({ dia, aula });
+    setDetalheTurmaId(turmaIdDaCelula);
+    setDetalheSlots(slots.map((s) => ({
+      id: s.id, disciplinaId: s.disciplinaId, professorId: s.professorId,
+      professorNome: s.professor?.nome ?? `Professor #${s.professorId}`,
+    })));
+    setOpenDetalhe(true);
+  }
+
+  function handleEditarAula() {
+    setOpenDetalhe(false);
+    setAulaParaEditar({
+      idsParaExcluir: detalheSlots.map((s) => s.id),
+      turmaId: detalheTurmaId!,
+      disciplinaId: detalheSlots[0].disciplinaId,
+      professorId: detalheSlots[0].professorId,
+      professorApoioId: detalheSlots[1]?.professorId,
+    });
+    setOpenAdicionar(true);
+  }
+
+  async function handleExcluirAula() {
+    const nomes = detalheSlots.map((s) => s.professorNome).join(" + ");
+    if (!confirm(`Excluir esta aula (${nomes})? Essa ação não pode ser desfeita.`)) return;
+    setExcluindo(true);
+    try {
+      for (const s of detalheSlots) {
+        await customFetch(`/api/horarios/${s.id}`, { method: "DELETE" });
+      }
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios"] });
+      toast({ title: "Aula excluída." });
+      setOpenDetalhe(false);
+    } catch (err) {
+      toast({ title: "Erro ao excluir aula", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+    } finally {
+      setExcluindo(false);
+    }
+  }
+
   return (
     <div className="space-y-4 pt-2">
       <Card>
@@ -793,6 +1131,10 @@ function AbaGrade() {
             />
           </div>
           <Button variant="outline" onClick={() => { setTurmaId("all"); setProfessorId("all"); setTurno("all"); }}>Limpar</Button>
+          <Button variant="outline" onClick={abrirAdicionarGeral}>
+            <Plus className="w-4 h-4 mr-2" />
+            Adicionar aula manual
+          </Button>
           <Button onClick={handleGerarGrade} disabled={!isTurmaSelected || gerando}>
             <RefreshCw className={`w-4 h-4 mr-2 ${gerando ? "animate-spin" : ""}`} />
             {gerando ? "Gerando..." : "Gerar Grade"}
@@ -801,7 +1143,7 @@ function AbaGrade() {
       </Card>
       {!isTurmaSelected && (
         <p className="text-xs text-muted-foreground -mt-2">
-          Selecione uma turma específica pra habilitar o botão "Gerar Grade" (a geração é sempre por turma).
+          Selecione uma turma específica pra habilitar o botão "Gerar Grade" (a geração é sempre por turma) e pra poder adicionar aula manual clicando direto numa célula vazia da grade.
         </p>
       )}
       {precisaEscolherTurno && (
@@ -919,22 +1261,38 @@ function AbaGrade() {
                       if (!slot) {
                         const temHA = isProfessorSelected && getHA(colIndex, aulaNum);
                         return (
-                          <div
+                          <button
                             key={`${aulaNum}-${colIndex}`}
-                            className={`p-2 border-r border-border last:border-0 min-h-[100px] flex items-center justify-center ${temHA ? "bg-amber-100" : "bg-background"}`}
+                            type="button"
+                            onClick={() => abrirAdicionarNaCelula(colIndex, aulaNum)}
+                            className={`p-2 border-r border-border last:border-0 min-h-[100px] flex items-center justify-center w-full group transition-colors ${temHA ? "bg-amber-100" : "bg-background hover:bg-muted/40"}`}
                           >
                             {temHA ? (
                               <span className="text-xs font-bold text-amber-700">HA</span>
                             ) : (
-                              <span className="text-xs text-muted-foreground/30">Vago</span>
+                              <span className="text-xs text-muted-foreground/30 group-hover:text-primary group-hover:font-medium flex items-center gap-1">
+                                <Plus className="h-3 w-3 opacity-0 group-hover:opacity-100" />
+                                Vago
+                              </span>
                             )}
-                          </div>
+                          </button>
                         );
                       }
+                      // [FIX] Clique habilitado sempre (não só quando
+                      // turma selecionada) -- cada slot já carrega o
+                      // próprio turmaId, então funciona também na
+                      // visão "por professor".
                       return (
-                        <div key={slot.id} className="p-2 border-r border-border last:border-0">
+                        <div
+                          key={slot.id}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => abrirDetalheNaCelula(colIndex, aulaNum, slot.turmaId)}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") abrirDetalheNaCelula(colIndex, aulaNum, slot.turmaId); }}
+                          className="p-2 border-r border-border last:border-0 cursor-pointer"
+                        >
                           <div
-                            className="h-full rounded-md p-3 flex flex-col justify-between border shadow-sm"
+                            className="h-full rounded-md p-3 flex flex-col justify-between border shadow-sm transition-shadow hover:shadow-md"
                             style={{
                               backgroundColor: `${slot.disciplina?.cor}15`,
                               borderColor: `${slot.disciplina?.cor}30`,
@@ -963,6 +1321,29 @@ function AbaGrade() {
           </div>
         </Card>
       )}
+
+      <DialogAdicionarAula
+        open={openAdicionar}
+        onOpenChange={(v) => { setOpenAdicionar(v); if (!v) setAulaParaEditar(undefined); }}
+        turmaIdFixa={isTurmaSelected ? Number(turmaId) : undefined}
+        diaSemanaFixo={celulaClicada?.dia}
+        numeroAulaFixo={celulaClicada?.aula}
+        aulaExistente={aulaParaEditar}
+      />
+
+      <DialogDetalheAula
+        open={openDetalhe}
+        onOpenChange={setOpenDetalhe}
+        slots={detalheSlots}
+        disciplinaNome={
+          detalheSlots.length > 0
+            ? (horarios?.find((h) => h.id === detalheSlots[0].id)?.disciplina?.nome ?? "Aula")
+            : "Aula"
+        }
+        onEditar={handleEditarAula}
+        onExcluir={handleExcluirAula}
+        excluindo={excluindo}
+      />
     </div>
   );
 }
