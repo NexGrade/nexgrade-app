@@ -296,43 +296,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     // carga horaria de ambos seja contabilizada corretamente.
     const profApoio = td.professorApoioId ? professores.find((p) => p.id === td.professorApoioId) : undefined;
 
-    // [DEBUG TEMPORARIO] Diagnostico de co-docencia -- varre a semana
-    // inteira e loga, PRA CADA slot, o motivo detalhado de bloqueio
-    // tanto do titular quanto do apoio (versao 2, motivo do titular
-    // agora detalhado em vez de um rotulo generico). Remover depois de
-    // diagnosticar.
-    if (profApoio) {
-      const diasDebug = [0, 1, 2, 3, 4];
-      const aulasDebug = Array.from({ length: aulasPorDiaReal }, (_, i) => i + 1);
-      const livresDebug: string[] = [];
-      const motivosDebug: Record<string, string[]> = {};
-      for (const diaD of diasDebug) {
-        for (const aulaD of aulasDebug) {
-          const chaveD = `${diaD}-${aulaD}`;
-          const motivos: string[] = [];
-          for (const p of profsParaDisc) {
-            if (ocupadoProf[`${p.id}-${diaD}-${aulaD}`]) motivos.push(`titular-ocupado(${p.nome})`);
-            if (indisponivelComTurno(p.id, diaD, aulaD)) motivos.push(`titular-bloqueado-disponibilidade(${p.nome})`);
-            if (!respeitaLimiteComplementar(p.id, diaD)) motivos.push(`titular-limite-diario(${p.nome})`);
-            if (!semAulaAdjacenteMesmaTurma(p.id, diaD, aulaD)) motivos.push(`titular-aula-adjacente(${p.nome})`);
-          }
-          if (ocupadoProf[`${profApoio.id}-${diaD}-${aulaD}`]) motivos.push("apoio-ocupado");
-          if (indisponivelComTurno(profApoio.id, diaD, aulaD)) motivos.push("apoio-bloqueado-disponibilidade");
-          if (!respeitaLimiteComplementar(profApoio.id, diaD)) motivos.push("apoio-limite-diario");
-          if (!semAulaAdjacenteMesmaTurma(profApoio.id, diaD, aulaD)) motivos.push("apoio-aula-adjacente");
-          if (motivos.length === 0) {
-            livresDebug.push(chaveD);
-          } else {
-            motivosDebug[chaveD] = motivos;
-          }
-        }
-      }
-      console.log(
-        `[CO-DOCENCIA DEBUG v2] turma=${turmaId} turno=${turma.turno} disc=${td.disciplinaId} titular=[${profsParaDisc.map((p) => p.nome).join(",")}] apoio=${profApoio.nome} cargaSemanal=${cargaEfetiva(td, disc)} slotsLivres=${JSON.stringify(livresDebug)}`,
-      );
-      console.log(`[CO-DOCENCIA DEBUG v2] motivos dos bloqueados: ${JSON.stringify(motivosDebug)}`);
-    }
-
     const alocacaoPorDia: Record<number, number> = {};
 
     let diasOrdenados = diasBase;
