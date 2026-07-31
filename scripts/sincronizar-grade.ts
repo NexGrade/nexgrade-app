@@ -1,4 +1,4 @@
-﻿// Sincroniza a grade OFICIAL de um turno com os dados extraídos do PDF
+// Sincroniza a grade OFICIAL de um turno com os dados extraídos do PDF
 // real da escola (fonte de verdade). Pede confirmação antes de gravar.
 //
 // Como rodar:
@@ -85,7 +85,7 @@ const ABREV_PARA_NOME: Record<string, string> = {
   "ORGAN.": "lid org e ges de pessoas",
   "TECEMP": "in tec e empreendedorismo",
 
-  // â”€â”€ Vespertino (variacoes sem ponto de siglas ja conhecidas + novas) â”€â”€
+  // — Vespertino (variacoes sem ponto de siglas ja conhecidas + novas) —
   "EDFIS": "educacao fisica",
   "INGL": "lingua estrangeira moderna - ingles",
   "LPORT": "lingua portuguesa e literatura",
@@ -184,6 +184,31 @@ function perguntar(pergunta: string): Promise<string> {
   return new Promise((resolve) => rl.question(pergunta, (resp) => { rl.close(); resolve(resp); }));
 }
 
+// [NOVO] Retry automático pra ECONNRESET -- constatado em 2026-07-31
+// que o Session Pooler (ou a rede local) às vezes derruba alguma das
+// conexões abertas em paralelo pelo Promise.all inicial (professores,
+// horarios, etc.), sem relação com senha/credencial -- a query chega
+// a rodar e autenticar, só cai no meio da leitura. 3 tentativas com
+// pequeno intervalo cobre esse tipo de instabilidade pontual sem
+// precisar o usuário rodar o comando de novo manualmente.
+async function comRetry<T>(fn: () => Promise<T>, tentativas = 3, descricao = "consulta"): Promise<T> {
+  let ultimoErro: unknown;
+  for (let i = 1; i <= tentativas; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      ultimoErro = err;
+      const isConnReset = err instanceof Error && (
+        err.message.includes("ECONNRESET") || (err.cause instanceof Error && err.cause.message.includes("ECONNRESET"))
+      );
+      if (!isConnReset || i === tentativas) throw err;
+      console.log(`  [retry ${i}/${tentativas - 1}] Conexão caiu em "${descricao}" (ECONNRESET) -- tentando de novo em 2s...`);
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  }
+  throw ultimoErro;
+}
+
 function resolverDisciplinaAmbigua(
   abrev: string,
   disciplinaPorNomeNorm: Map<string, { id: number; nome: string; codigoSae: string | null }>,
@@ -199,18 +224,33 @@ function resolverDisciplinaAmbigua(
 }
 
 async function main() {
-  const escolaId = "escola_default";
+  // [FIX] Trocado de "escola_default" (valor legado, pré-migração
+  // multi-tenant) para o Org ID real da escola piloto (C.E. Prof.
+  // Mário B.T. Braga) no Clerk. Constatado em 2026-07-31 que o valor
+  // antigo não bate mais com nenhuma linha em turmasTable desde a
+  // migração para Clerk Organizations (ver comentário sobre
+  // getEscolaId()/orgId no histórico do projeto) -- o script rodava
+  // sem erro, mas a busca de turmas sempre voltava vazia, fazendo
+  // TODAS as aulas do JSON serem reportadas como "Turma não
+  // encontrada", mesmo sendo turmas reais e existentes no banco.
+  const escolaId = "org_3HCMsuYeAwkggR1dxXNzEdzNaX8";
   const AULAS_EXTRAIDAS: Array<{
     professor: string; dia: number; diaLabel: string; numeroAula: number;
     hora: string; turmaCodigo: string; disciplinaAbrev: string;
   }> = JSON.parse(readFileSync(CAMINHO_JSON, "utf-8"));
 
-  const [turmasDoTurno, disciplinas, professores, horariosAtuais] = await Promise.all([
-    db.select().from(turmasTable).where(and(eq(turmasTable.turno, TURNO), eq(turmasTable.escolaId, escolaId))),
-    db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
-    db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
-    db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
-  ]);
+  // [FIX] Trocado de Promise.all (4 conexões simultâneas) para
+  // sequencial -- constatado em 2026-07-31 que a rede local da Simone
+  // (provável antivírus/firewall/VPN) reseta alguma das conexões TCP
+  // abertas em paralelo pro pooler do Supabase, sempre numa query
+  // diferente a cada tentativa. Rodando uma de cada vez (uma única
+  // conexão do pool em uso por vez) elimina a concorrência como causa,
+  // ao custo de ser um pouco mais lento -- aceitável pra um script que
+  // roda manualmente, não em produção.
+  const turmasDoTurno = await comRetry(() => db.select().from(turmasTable).where(and(eq(turmasTable.turno, TURNO), eq(turmasTable.escolaId, escolaId))), 3, "turmas");
+  const disciplinas = await comRetry(() => db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)), 3, "disciplinas");
+  const professores = await comRetry(() => db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)), 3, "professores");
+  const horariosAtuais = await comRetry(() => db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)), 3, "horarios");
 
   const turmaPorNome = new Map(turmasDoTurno.map((t) => [normalizar(t.nome), t]));
   const disciplinaPorNomeNorm = new Map(disciplinas.map((d) => [normalizar(d.nome), d]));
@@ -288,8 +328,25 @@ async function main() {
     process.exit(1);
   }
 
-  const chave = (h: { turmaId: number; diaSemana: number; numeroAula: number }) =>
-    `${h.turmaId}-${h.diaSemana}-${h.numeroAula}`;
+  // [FIX] A chave usada pra identificar cada "aula" precisa incluir o
+  // professorId -- não só turma+dia+numeroAula. Sem isso, casos de
+  // co-docencia (recomposicao em dupla: titular + apoio dando a MESMA
+  // aula, mesmo dia/horario) tinham a segunda linha silenciosamente
+  // sobrescrita pela primeira ao entrar num Map (Map nao aceita
+  // chaves duplicadas) -- a aula do segundo professor simplesmente
+  // desaparecia do resultado final, sem nenhum aviso. Constatado em
+  // 2026-07-31 comparando aulas_matutino.json/aulas_vespertino.json
+  // contra o PDF real: toda disciplina de recomposicao em dupla tem
+  // duas entradas no JSON pro mesmo turma+dia+aula, uma por professor.
+  //
+  // Efeito colateral corrigido de bonus: `atuaisMap` (comparação com o
+  // que já está gravado em horariosTable) tinha o MESMO problema --
+  // se já existissem duas linhas no banco pro mesmo slot (dois
+  // professores), a chave antiga também colapsava as duas em uma só
+  // na hora de montar o Map, o que podia mascarar remoções/alterações
+  // indevidas nesses casos.
+  const chave = (h: { turmaId: number; diaSemana: number; numeroAula: number; professorId: number }) =>
+    `${h.turmaId}-${h.diaSemana}-${h.numeroAula}-${h.professorId}`;
   const atuaisMap = new Map(horariosAtuaisDoTurno.map((h) => [chave(h), h]));
   const novasMap = new Map(resolvidas.map((r) => [chave(r), r]));
 
@@ -300,12 +357,47 @@ async function main() {
   for (const [k, nova] of novasMap) {
     const atual = atuaisMap.get(k);
     if (!atual) paraInserir.push(nova);
-    else if (atual.disciplinaId !== nova.disciplinaId || atual.professorId !== nova.professorId) {
+    else if (atual.disciplinaId !== nova.disciplinaId) {
+      // professorId já faz parte da chave, então só disciplinaId pode
+      // divergir aqui pra uma linha que "bate" no mesmo slot+professor.
       paraAtualizar.push({ id: atual.id, nova });
     }
   }
   for (const [k, atual] of atuaisMap) {
     if (!novasMap.has(k)) paraRemoverIds.push(atual.id);
+  }
+
+  // [NOVO] Aviso específico pra duplas de co-docência que aparecem no
+  // JSON mas ainda não estavam confirmadas em nenhum lugar do sistema
+  // (ver scripts/src/seed.ts -- lista das 6 duplas originais). Não
+  // bloqueia a sincronização, só chama atenção pra revisar com a
+  // coordenação antes de confirmar.
+  const DUPLAS_CONFIRMADAS = new Set([
+    "lisiane|pedro", "cecilia|ivanir", "ivanir|silmara",
+    "juliana|julio", "julio|matheus", "gilberto|lisiane",
+    // Confirmadas com a Simone em 2026-07-31, junto com o fix da
+    // chave de dedup (co-docência de recomposição da aprendizagem).
+    "andre|lisiane", "andre|pedro",
+  ]);
+  const grupoPorSlot = new Map<string, LinhaResolvida[]>();
+  for (const r of resolvidas) {
+    const slotKey = `${r.turmaId}-${r.diaSemana}-${r.numeroAula}`;
+    if (!grupoPorSlot.has(slotKey)) grupoPorSlot.set(slotKey, []);
+    grupoPorSlot.get(slotKey)!.push(r);
+  }
+  const duplasNaoConfirmadas: string[] = [];
+  for (const linhas of grupoPorSlot.values()) {
+    if (linhas.length < 2) continue;
+    const nomes = linhas.map((l) => normalizar(l.professorNome).split(" ")[0]).sort();
+    const chaveDupla = nomes.join("|");
+    if (!DUPLAS_CONFIRMADAS.has(chaveDupla)) {
+      const desc = `${linhas[0].turmaNome} | ${["Seg", "Ter", "Qua", "Qui", "Sex"][linhas[0].diaSemana]} aula ${linhas[0].numeroAula} | ${linhas.map((l) => l.professorNome).join(" + ")} (${linhas[0].disciplinaNome})`;
+      if (!duplasNaoConfirmadas.includes(desc)) duplasNaoConfirmadas.push(desc);
+    }
+  }
+  if (duplasNaoConfirmadas.length > 0) {
+    console.log("\n⚠ DUPLAS DE CO-DOCÊNCIA NÃO CONFIRMADAS (revisar com a coordenação antes de aplicar):");
+    for (const d of duplasNaoConfirmadas) console.log(`  ? ${d}`);
   }
 
   console.log(`\nInserções: ${paraInserir.length} | Atualizações: ${paraAtualizar.length} | Remoções: ${paraRemoverIds.length}`);

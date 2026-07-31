@@ -87,15 +87,36 @@ function perguntar(pergunta: string): Promise<string> {
   return new Promise((resolve) => rl.question(pergunta, (resp) => { rl.close(); resolve(resp); }));
 }
 
-async function main() {
-  const escolaId = "escola_default";
+// [NOVO] Ver comentário equivalente em scripts/sincronizar-grade.ts.
+async function comRetry<T>(fn: () => Promise<T>, tentativas = 3, descricao = "consulta"): Promise<T> {
+  let ultimoErro: unknown;
+  for (let i = 1; i <= tentativas; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      ultimoErro = err;
+      const isConnReset = err instanceof Error && (
+        err.message.includes("ECONNRESET") || (err.cause instanceof Error && err.cause.message.includes("ECONNRESET"))
+      );
+      if (!isConnReset || i === tentativas) throw err;
+      console.log(`  [retry ${i}/${tentativas - 1}] Conexão caiu em "${descricao}" (ECONNRESET) -- tentando de novo em 2s...`);
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  }
+  throw ultimoErro;
+}
 
-  const [turmasNoturno, disciplinas, professores, horariosAtuais] = await Promise.all([
-    db.select().from(turmasTable).where(and(eq(turmasTable.turno, "noturno"), eq(turmasTable.escolaId, escolaId))),
-    db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
-    db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
-    db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
-  ]);
+async function main() {
+  // [FIX] Ver comentário equivalente em scripts/sincronizar-grade.ts.
+  const escolaId = "org_3HCMsuYeAwkggR1dxXNzEdzNaX8";
+
+  // [FIX] Ver comentário equivalente em scripts/sincronizar-grade.ts --
+  // sequencial em vez de Promise.all pra eliminar concorrência de
+  // conexões como causa do ECONNRESET.
+  const turmasNoturno = await comRetry(() => db.select().from(turmasTable).where(and(eq(turmasTable.turno, "noturno"), eq(turmasTable.escolaId, escolaId))), 3, "turmas");
+  const disciplinas = await comRetry(() => db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)), 3, "disciplinas");
+  const professores = await comRetry(() => db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)), 3, "professores");
+  const horariosAtuais = await comRetry(() => db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)), 3, "horarios");
 
   const turmaPorNome = new Map(turmasNoturno.map((t) => [normalizar(t.nome), t]));
   const disciplinaPorNomeNorm = new Map(disciplinas.map((d) => [normalizar(d.nome), d]));
@@ -154,8 +175,12 @@ async function main() {
     process.exit(1);
   }
 
-  const chave = (h: { turmaId: number; diaSemana: number; numeroAula: number }) =>
-    `${h.turmaId}-${h.diaSemana}-${h.numeroAula}`;
+  // [FIX] Ver comentário equivalente em scripts/sincronizar-grade.ts --
+  // a chave agora inclui professorId pra não colapsar co-docência
+  // (recomposicao em dupla: titular + apoio no mesmo turma+dia+aula)
+  // num Map, o que fazia a segunda linha desaparecer silenciosamente.
+  const chave = (h: { turmaId: number; diaSemana: number; numeroAula: number; professorId: number }) =>
+    `${h.turmaId}-${h.diaSemana}-${h.numeroAula}-${h.professorId}`;
   const atuaisMap = new Map(horariosAtuaisNoturno.map((h) => [chave(h), h]));
   const novasMap = new Map(resolvidas.map((r) => [chave(r), r]));
 
@@ -166,12 +191,41 @@ async function main() {
   for (const [k, nova] of novasMap) {
     const atual = atuaisMap.get(k);
     if (!atual) paraInserir.push(nova);
-    else if (atual.disciplinaId !== nova.disciplinaId || atual.professorId !== nova.professorId) {
+    else if (atual.disciplinaId !== nova.disciplinaId) {
       paraAtualizar.push({ id: atual.id, nova });
     }
   }
   for (const [k, atual] of atuaisMap) {
     if (!novasMap.has(k)) paraRemoverIds.push(atual.id);
+  }
+
+  // [NOVO] Mesmo aviso de dupla-não-confirmada do sincronizar-grade.ts.
+  const DUPLAS_CONFIRMADAS = new Set([
+    "lisiane|pedro", "cecilia|ivanir", "ivanir|silmara",
+    "juliana|julio", "julio|matheus", "gilberto|lisiane",
+    // Confirmadas com a Simone em 2026-07-31, junto com o fix da
+    // chave de dedup (co-docência de recomposição da aprendizagem).
+    "andre|lisiane", "andre|pedro",
+  ]);
+  const grupoPorSlot = new Map<string, LinhaResolvida[]>();
+  for (const r of resolvidas) {
+    const slotKey = `${r.turmaId}-${r.diaSemana}-${r.numeroAula}`;
+    if (!grupoPorSlot.has(slotKey)) grupoPorSlot.set(slotKey, []);
+    grupoPorSlot.get(slotKey)!.push(r);
+  }
+  const duplasNaoConfirmadas: string[] = [];
+  for (const linhas of grupoPorSlot.values()) {
+    if (linhas.length < 2) continue;
+    const nomes = linhas.map((l) => normalizar(l.professorNome).split(" ")[0]).sort();
+    const chaveDupla = nomes.join("|");
+    if (!DUPLAS_CONFIRMADAS.has(chaveDupla)) {
+      const desc = `${linhas[0].turmaNome} | ${["Seg", "Ter", "Qua", "Qui", "Sex"][linhas[0].diaSemana]} aula ${linhas[0].numeroAula} | ${linhas.map((l) => l.professorNome).join(" + ")} (${linhas[0].disciplinaNome})`;
+      if (!duplasNaoConfirmadas.includes(desc)) duplasNaoConfirmadas.push(desc);
+    }
+  }
+  if (duplasNaoConfirmadas.length > 0) {
+    console.log("\n⚠ DUPLAS DE CO-DOCÊNCIA NÃO CONFIRMADAS (revisar com a coordenação antes de aplicar):");
+    for (const d of duplasNaoConfirmadas) console.log(`  ? ${d}`);
   }
 
   console.log("=".repeat(70));
