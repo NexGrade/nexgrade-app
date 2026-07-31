@@ -144,8 +144,18 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
   disponibilidades
     .filter(d => !d.disponivel)
     .forEach(d => {
-      indisponivelProf[`${d.professorId}-${d.diaSemana}-${d.horarioSlot}`] = true;
+      const chaveTurnoDisp = d.turno ?? "null";
+      indisponivelProf[`${d.professorId}-${chaveTurnoDisp}-${d.diaSemana}-${d.horarioSlot}`] = true;
     });
+  // [FIX] Helper que checa indisponibilidade respeitando o turno DESTA
+  // turma -- olha primeiro o bloqueio especifico do turno, e tambem o
+  // bloqueio "universal" (turno null, registros antigos).
+  function indisponivelComTurno(professorId: number, dia: number, aula: number): boolean {
+    return !!(
+      indisponivelProf[`${professorId}-${turma.turno}-${dia}-${aula}`]
+      || indisponivelProf[`${professorId}-null-${dia}-${aula}`]
+    );
+  }
 
   const conflitos: string[] = [];
   const slotsParaGravar: Array<{
@@ -287,10 +297,10 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     const profApoio = td.professorApoioId ? professores.find((p) => p.id === td.professorApoioId) : undefined;
 
     // [DEBUG TEMPORARIO] Diagnostico de co-docencia -- varre a semana
-    // inteira e loga quais horarios passariam em TODAS as checagens
-    // (titular disponivel E apoio disponivel), no estado ATUAL de
-    // ocupacao (que ja reflete turmas anteriores deste mesmo lote).
-    // Remover depois de diagnosticar.
+    // inteira e loga, PRA CADA slot, o motivo detalhado de bloqueio
+    // tanto do titular quanto do apoio (versao 2, motivo do titular
+    // agora detalhado em vez de um rotulo generico). Remover depois de
+    // diagnosticar.
     if (profApoio) {
       const diasDebug = [0, 1, 2, 3, 4];
       const aulasDebug = Array.from({ length: aulasPorDiaReal }, (_, i) => i + 1);
@@ -300,16 +310,14 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
         for (const aulaD of aulasDebug) {
           const chaveD = `${diaD}-${aulaD}`;
           const motivos: string[] = [];
-          const titularOk = profsParaDisc.some((p) => {
-            const ok = !ocupadoProf[`${p.id}-${diaD}-${aulaD}`]
-              && !indisponivelProf[`${p.id}-${diaD}-${aulaD}`]
-              && respeitaLimiteComplementar(p.id, diaD)
-              && semAulaAdjacenteMesmaTurma(p.id, diaD, aulaD);
-            return ok;
-          });
-          if (!titularOk) motivos.push("titular-indisponivel");
+          for (const p of profsParaDisc) {
+            if (ocupadoProf[`${p.id}-${diaD}-${aulaD}`]) motivos.push(`titular-ocupado(${p.nome})`);
+            if (indisponivelComTurno(p.id, diaD, aulaD)) motivos.push(`titular-bloqueado-disponibilidade(${p.nome})`);
+            if (!respeitaLimiteComplementar(p.id, diaD)) motivos.push(`titular-limite-diario(${p.nome})`);
+            if (!semAulaAdjacenteMesmaTurma(p.id, diaD, aulaD)) motivos.push(`titular-aula-adjacente(${p.nome})`);
+          }
           if (ocupadoProf[`${profApoio.id}-${diaD}-${aulaD}`]) motivos.push("apoio-ocupado");
-          if (indisponivelProf[`${profApoio.id}-${diaD}-${aulaD}`]) motivos.push("apoio-bloqueado-disponibilidade");
+          if (indisponivelComTurno(profApoio.id, diaD, aulaD)) motivos.push("apoio-bloqueado-disponibilidade");
           if (!respeitaLimiteComplementar(profApoio.id, diaD)) motivos.push("apoio-limite-diario");
           if (!semAulaAdjacenteMesmaTurma(profApoio.id, diaD, aulaD)) motivos.push("apoio-aula-adjacente");
           if (motivos.length === 0) {
@@ -320,9 +328,9 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
         }
       }
       console.log(
-        `[CO-DOCENCIA DEBUG] turma=${turmaId} disc=${td.disciplinaId} titular=[${profsParaDisc.map((p) => p.nome).join(",")}] apoio=${profApoio.nome} cargaSemanal=${cargaEfetiva(td, disc)} slotsLivres=${JSON.stringify(livresDebug)}`,
+        `[CO-DOCENCIA DEBUG v2] turma=${turmaId} turno=${turma.turno} disc=${td.disciplinaId} titular=[${profsParaDisc.map((p) => p.nome).join(",")}] apoio=${profApoio.nome} cargaSemanal=${cargaEfetiva(td, disc)} slotsLivres=${JSON.stringify(livresDebug)}`,
       );
-      console.log(`[CO-DOCENCIA DEBUG] motivos dos bloqueados: ${JSON.stringify(motivosDebug)}`);
+      console.log(`[CO-DOCENCIA DEBUG v2] motivos dos bloqueados: ${JSON.stringify(motivosDebug)}`);
     }
 
     const alocacaoPorDia: Record<number, number> = {};
@@ -364,12 +372,12 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
 
         const profDisponivel = profsParaDisc.find(
           p => !ocupadoProf[`${p.id}-${dia}-${aula}`]
-            && !indisponivelProf[`${p.id}-${dia}-${aula}`]
+            && !indisponivelComTurno(p.id, dia, aula)
             && respeitaLimiteComplementar(p.id, dia)
             && semAulaAdjacenteMesmaTurma(p.id, dia, aula)
             && (!profApoio || (
               !ocupadoProf[`${profApoio.id}-${dia}-${aula}`]
-              && !indisponivelProf[`${profApoio.id}-${dia}-${aula}`]
+              && !indisponivelComTurno(profApoio.id, dia, aula)
               && respeitaLimiteComplementar(profApoio.id, dia)
               && semAulaAdjacenteMesmaTurma(profApoio.id, dia, aula)
             )),
@@ -393,12 +401,12 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
           if (ocupadoSlot[slotKey]) continue;
           const profDisponivel = profsParaDisc.find(
             p => !ocupadoProf[`${p.id}-${dia}-${aula}`]
-              && !indisponivelProf[`${p.id}-${dia}-${aula}`]
+              && !indisponivelComTurno(p.id, dia, aula)
               && respeitaLimiteComplementar(p.id, dia)
               && semAulaAdjacenteMesmaTurma(p.id, dia, aula)
             && (!profApoio || (
               !ocupadoProf[`${profApoio.id}-${dia}-${aula}`]
-              && !indisponivelProf[`${profApoio.id}-${dia}-${aula}`]
+              && !indisponivelComTurno(profApoio.id, dia, aula)
               && respeitaLimiteComplementar(profApoio.id, dia)
               && semAulaAdjacenteMesmaTurma(profApoio.id, dia, aula)
             )),
