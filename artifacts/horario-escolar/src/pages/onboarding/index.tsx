@@ -5,25 +5,20 @@ import { z } from "zod";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  useListPlanos,
   useCadastrarEscola,
   getGetEscolaAtualQueryKey,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2, Shield, Zap, Crown } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 // RF-ESC-01: primeiro cadastro da escola logo após o login. O projeto
-// entra sempre no plano Piloto (gratuito) — os demais planos já aparecem
-// aqui, mas ficam marcados como "em breve" até a cobrança (Stripe) ser
-// habilitada numa fase de expansão SaaS futura.
+// entra sempre no plano Piloto (gratuito). A seleção de planos pagos foi
+// removida do onboarding (cobrança desativada); todo cadastro novo é
+// automaticamente Piloto.
 const ESTADOS_BR = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB",
   "PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
@@ -42,14 +37,11 @@ const onboardingSchema = z.object({
 
 type OnboardingFormValues = z.infer<typeof onboardingSchema>;
 
-const ICONES_PLANO = { Gratuito: Shield, Pro: Zap, Master: Crown } as const;
-
 export default function OnboardingPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: planos, isLoading: carregandoPlanos } = useListPlanos();
   const cadastrarEscola = useCadastrarEscola();
 
   const form = useForm<OnboardingFormValues>({
@@ -188,63 +180,6 @@ export default function OnboardingPage() {
                     </FormItem>
                   )}
                 />
-
-                <div className="pt-2">
-                  <h3 className="text-sm font-medium mb-3">Seu plano inicial</h3>
-                  {carregandoPlanos ? (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {[1, 2, 3].map((i) => (
-                        <Skeleton key={i} className="h-28 w-full" />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {planos?.map((plano) => {
-                        const Icone = ICONES_PLANO[plano.nome as keyof typeof ICONES_PLANO] ?? Shield;
-                        // [FIX] Campo renomeado de "preco" pra "precoMensal"
-                        // no backend hoje -- o tipo gerado pelo Orval ainda
-                        // não foi regenerado (fica desatualizado até rodar
-                        // o codegen de novo), então `plano.preco` compila
-                        // sem erro mas vem sempre undefined em runtime,
-                        // fazendo esse indicador nunca marcar o gratuito
-                        // como selecionado. Acesso via cast até a próxima
-                        // regeneração do client.
-                        const gratuito = (plano as unknown as { precoMensal: number }).precoMensal === 0;
-                        return (
-                          <div
-                            key={plano.id}
-                            className={cn(
-                              "rounded-lg border p-4 space-y-2",
-                              gratuito ? "border-[#42A5F5] ring-2 ring-[#1565C0]/20 bg-[#1565C0]/5" : "opacity-70",
-                            )}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2 font-medium">
-                                <Icone className="w-4 h-4" />
-                                {plano.nome}
-                              </div>
-                              {gratuito ? (
-                                <Badge className="bg-[#1565C0]">Selecionado</Badge>
-                              ) : (
-                                <Badge variant="outline">Em breve</Badge>
-                              )}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              Até {plano.maxProfessores >= 9999 ? "ilimitados" : plano.maxProfessores} professores ·{" "}
-                              {plano.maxTurmas >= 9999 ? "turmas ilimitadas" : `${plano.maxTurmas} turmas`}
-                            </p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    Todo novo cadastro começa no plano Piloto, gratuito, enquanto o NexGrade está em fase de
-                    validação com escolas parceiras. Você poderá migrar de plano quando a assinatura for
-                    habilitada.
-                  </p>
-                </div>
 
                 <div className="flex justify-end pt-4 border-t">
                   <Button type="submit" size="lg" disabled={cadastrarEscola.isPending}>
