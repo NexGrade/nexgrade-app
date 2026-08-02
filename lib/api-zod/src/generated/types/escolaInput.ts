@@ -14,4 +14,6 @@ export interface EscolaInput {
   cidade?: string;
   estado?: string;
   modalidade?: EscolaInputModalidade;
+  emailContato?: string;
+  telefoneContato?: string;
 }

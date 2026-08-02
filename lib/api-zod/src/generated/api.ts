@@ -1208,7 +1208,9 @@ export const CadastrarEscolaBody = zod.object({
   "cnpj": zod.string().optional(),
   "cidade": zod.string().optional(),
   "estado": zod.string().default(cadastrarEscolaBodyEstadoDefault),
-  "modalidade": zod.enum(['regular', 'tecnica', 'eja', 'normal_magisterio']).default(cadastrarEscolaBodyModalidadeDefault)
+  "modalidade": zod.enum(['regular', 'tecnica', 'eja', 'normal_magisterio']).default(cadastrarEscolaBodyModalidadeDefault),
+  "emailContato": zod.string().email().optional(),
+  "telefoneContato": zod.string().optional()
 })
 
 export const CadastrarEscolaResponse = zod.object({
@@ -1222,9 +1224,29 @@ export const CadastrarEscolaResponse = zod.object({
   "clerkOrgId": zod.string().nullish(),
   "stripeCustomerId": zod.string().nullish(),
   "stripeSubscriptionId": zod.string().nullish(),
+  "emailContato": zod.string().nullish().describe('Usado pelo Asaas pra notificar a escola (boleto\/PIX) automaticamente.'),
+  "telefoneContato": zod.string().nullish(),
+  "asaasCustomerId": zod.string().nullish(),
+  "asaasSubscriptionId": zod.string().nullish(),
+  "asaasStatusAssinatura": zod.union([zod.literal('em_dia'),zod.literal('pendente'),zod.literal('atrasada'),zod.literal('cancelada'),zod.literal(null)]).nullish().describe('Alimentado pelo webhook do Asaas a cada evento de cobrança.'),
+  "asaasProximoVencimento": zod.coerce.date().nullish(),
   "planoAtivo": zod.boolean(),
   "trialEndsAt": zod.coerce.date().nullish(),
   "isenta": zod.boolean().optional().describe('Escola isenta de bloqueio por trial vencido\/sem assinatura ativa (ex: piloto).')
+})
+
+
+/**
+ * Cria (ou reaproveita) o Customer no Asaas e abre uma Subscription pro plano escolhido. O Asaas notifica a escola automaticamente por e-mail/WhatsApp com o boleto/PIX da primeira cobranca.
+ */
+export const CriarAssinaturaAsaasBody = zod.object({
+  "planoId": zod.number(),
+  "periodicidade": zod.enum(['mensal', 'anual'])
+})
+
+export const CriarAssinaturaAsaasResponse = zod.object({
+  "mensagem": zod.string(),
+  "asaasSubscriptionId": zod.string()
 })
 
 
@@ -1244,6 +1266,12 @@ export const ListEscolasMasterResponseItem = zod.object({
   "clerkOrgId": zod.string().nullish(),
   "stripeCustomerId": zod.string().nullish(),
   "stripeSubscriptionId": zod.string().nullish(),
+  "emailContato": zod.string().nullish().describe('Usado pelo Asaas pra notificar a escola (boleto\/PIX) automaticamente.'),
+  "telefoneContato": zod.string().nullish(),
+  "asaasCustomerId": zod.string().nullish(),
+  "asaasSubscriptionId": zod.string().nullish(),
+  "asaasStatusAssinatura": zod.union([zod.literal('em_dia'),zod.literal('pendente'),zod.literal('atrasada'),zod.literal('cancelada'),zod.literal(null)]).nullish().describe('Alimentado pelo webhook do Asaas a cada evento de cobrança.'),
+  "asaasProximoVencimento": zod.coerce.date().nullish(),
   "planoAtivo": zod.boolean(),
   "trialEndsAt": zod.coerce.date().nullish(),
   "isenta": zod.boolean().optional().describe('Escola isenta de bloqueio por trial vencido\/sem assinatura ativa (ex: piloto).')
@@ -1275,7 +1303,9 @@ export const UpdateEscolaMasterParams = zod.object({
 export const UpdateEscolaMasterBody = zod.object({
   "planoId": zod.number().nullish(),
   "planoAtivo": zod.boolean().optional(),
-  "isenta": zod.boolean().optional()
+  "isenta": zod.boolean().optional(),
+  "emailContato": zod.string().email().nullish(),
+  "telefoneContato": zod.string().nullish()
 })
 
 export const UpdateEscolaMasterResponse = zod.object({
@@ -1289,6 +1319,42 @@ export const UpdateEscolaMasterResponse = zod.object({
   "clerkOrgId": zod.string().nullish(),
   "stripeCustomerId": zod.string().nullish(),
   "stripeSubscriptionId": zod.string().nullish(),
+  "emailContato": zod.string().nullish().describe('Usado pelo Asaas pra notificar a escola (boleto\/PIX) automaticamente.'),
+  "telefoneContato": zod.string().nullish(),
+  "asaasCustomerId": zod.string().nullish(),
+  "asaasSubscriptionId": zod.string().nullish(),
+  "asaasStatusAssinatura": zod.union([zod.literal('em_dia'),zod.literal('pendente'),zod.literal('atrasada'),zod.literal('cancelada'),zod.literal(null)]).nullish().describe('Alimentado pelo webhook do Asaas a cada evento de cobrança.'),
+  "asaasProximoVencimento": zod.coerce.date().nullish(),
+  "planoAtivo": zod.boolean(),
+  "trialEndsAt": zod.coerce.date().nullish(),
+  "isenta": zod.boolean().optional().describe('Escola isenta de bloqueio por trial vencido\/sem assinatura ativa (ex: piloto).')
+})
+
+
+/**
+ * Cancela a assinatura da escola no Asaas (chamada de API real) e reflete o cancelamento no banco. Encerra a cobrança recorrente de verdade -- diferente de só marcar planoAtivo=false.
+ */
+export const CancelarAssinaturaAsaasMasterParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const CancelarAssinaturaAsaasMasterResponse = zod.object({
+  "id": zod.string(),
+  "nomeFantasia": zod.string(),
+  "cnpj": zod.string().nullish(),
+  "cidade": zod.string().nullish(),
+  "estado": zod.string(),
+  "modalidade": zod.enum(['regular', 'tecnica', 'eja', 'normal_magisterio']),
+  "planoId": zod.number().nullish(),
+  "clerkOrgId": zod.string().nullish(),
+  "stripeCustomerId": zod.string().nullish(),
+  "stripeSubscriptionId": zod.string().nullish(),
+  "emailContato": zod.string().nullish().describe('Usado pelo Asaas pra notificar a escola (boleto\/PIX) automaticamente.'),
+  "telefoneContato": zod.string().nullish(),
+  "asaasCustomerId": zod.string().nullish(),
+  "asaasSubscriptionId": zod.string().nullish(),
+  "asaasStatusAssinatura": zod.union([zod.literal('em_dia'),zod.literal('pendente'),zod.literal('atrasada'),zod.literal('cancelada'),zod.literal(null)]).nullish().describe('Alimentado pelo webhook do Asaas a cada evento de cobrança.'),
+  "asaasProximoVencimento": zod.coerce.date().nullish(),
   "planoAtivo": zod.boolean(),
   "trialEndsAt": zod.coerce.date().nullish(),
   "isenta": zod.boolean().optional().describe('Escola isenta de bloqueio por trial vencido\/sem assinatura ativa (ex: piloto).')

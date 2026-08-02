@@ -33,6 +33,13 @@ const onboardingSchema = z.object({
   cidade: z.string().optional(),
   estado: z.string().min(2),
   modalidade: z.enum(["regular", "tecnica", "eja", "normal_magisterio"]),
+  // [NOVO] RF-BILLING-ASAAS: opcionais aqui de propósito -- a escola
+  // começa no Piloto gratuito e não precisa disso ainda. Só vira
+  // obrigatório na hora de assinar um plano pago (ver validação em
+  // routes/escolas.ts, rota POST /assinatura-asaas). Pode ser
+  // preenchido depois em Configurações ou pelo Painel Master.
+  emailContato: z.string().email("E-mail inválido").optional().or(z.literal("")),
+  telefoneContato: z.string().optional(),
 });
 
 type OnboardingFormValues = z.infer<typeof onboardingSchema>;
@@ -46,12 +53,18 @@ export default function OnboardingPage() {
 
   const form = useForm<OnboardingFormValues>({
     resolver: zodResolver(onboardingSchema),
-    defaultValues: { nomeFantasia: "", cnpj: "", cidade: "", estado: "PR", modalidade: "regular" },
+    defaultValues: { nomeFantasia: "", cnpj: "", cidade: "", estado: "PR", modalidade: "regular", emailContato: "", telefoneContato: "" },
   });
 
   function onSubmit(data: OnboardingFormValues) {
     cadastrarEscola.mutate(
-      { data },
+      {
+        data: {
+          ...data,
+          emailContato: data.emailContato?.trim() || undefined,
+          telefoneContato: data.telefoneContato?.trim() || undefined,
+        },
+      },
       {
         onSuccess: () => {
           toast({ title: "Escola cadastrada! Você está no plano Piloto (gratuito)." });
@@ -180,6 +193,39 @@ export default function OnboardingPage() {
                     </FormItem>
                   )}
                 />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="emailContato"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>E-mail de contato</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="secretaria@escola.pr.gov.br" {...field} />
+                        </FormControl>
+                        <p className="text-xs text-muted-foreground">
+                          Usado pra enviar boleto/PIX quando você assinar um plano pago. Pode preencher depois.
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="telefoneContato"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>WhatsApp de contato</FormLabel>
+                        <FormControl>
+                          <Input placeholder="(41) 99999-9999" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <div className="flex justify-end pt-4 border-t">
                   <Button type="submit" size="lg" disabled={cadastrarEscola.isPending}>

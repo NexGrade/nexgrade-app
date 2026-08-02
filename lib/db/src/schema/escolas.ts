@@ -38,6 +38,26 @@ export const escolasTable = pgTable("escolas", {
   clerkOrgId: text("clerk_org_id").unique(),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
+  // [NOVO] RF-BILLING-ASAAS: contato usado pelo Asaas pra notificar a
+  // escola automaticamente (e-mail/WhatsApp com o boleto ou PIX da
+  // assinatura) -- sem isso, o Customer criado no Asaas fica sem meio
+  // de receber a cobrança. Preenchido no onboarding ou depois pelo
+  // Painel Master, antes de ativar a assinatura.
+  emailContato: text("email_contato"),
+  telefoneContato: text("telefone_contato"),
+  // [NOVO] RF-BILLING-ASAAS: substituem stripeCustomerId/
+  // stripeSubscriptionId como billing provider ativo -- os campos do
+  // Stripe acima ficam intactos (não usados) até a migração completa
+  // de dados ser decidida.
+  asaasCustomerId: text("asaas_customer_id"),
+  asaasSubscriptionId: text("asaas_subscription_id"),
+  // [NOVO] RF-BILLING-ASAAS: alimentados pelo webhook (routes/
+  // asaas-webhook.ts) a cada evento de cobrança -- refletem o status
+  // real da última cobrança da assinatura, pra exibir no Painel
+  // Master (badge "Em dia"/"Atrasada"/"Cancelada" + data de
+  // vencimento), no mesmo modelo do Nex Reserva.
+  asaasStatusAssinatura: text("asaas_status_assinatura"), // "em_dia" | "atrasada" | "cancelada"
+  asaasProximoVencimento: timestamp("asaas_proximo_vencimento", { withTimezone: true }),
   planoAtivo: boolean("plano_ativo").notNull().default(true),
   trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }),
   // [NOVO] Marca escolas isentas de cobrança/bloqueio -- caso do

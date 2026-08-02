@@ -19,3 +19,4 @@ export * from "./enums";
 export * from "./horarios_slots";
 export * from "./limites_diarios_professor";
 export * from "./disciplinas-catalogo";
+export * from "./asaas-webhook-eventos";

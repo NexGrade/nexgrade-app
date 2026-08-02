@@ -909,6 +909,28 @@ paths:
               schema:
                 $ref: "#/components/schemas/Escola"
 
+  /escolas/assinatura-asaas:
+    post:
+      operationId: criarAssinaturaAsaas
+      tags: [escolas]
+      description: >
+        Cria (ou reaproveita) o Customer no Asaas e abre uma Subscription pro
+        plano escolhido. O Asaas notifica a escola automaticamente por
+        e-mail/WhatsApp com o boleto/PIX da primeira cobranca.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssinaturaAsaasInput"
+      responses:
+        "200":
+          description: Assinatura criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssinaturaAsaasResponse"
+
   # â”€â”€ PAINEL MASTER SAAS (RF-MASTER-01 a RF-MASTER-03) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   # Opera fora do isolamento por escola de propÃ³sito â€” administra todas as
   # escolas da plataforma. Ver middlewares/requireMaster.ts.
@@ -966,6 +988,34 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Escola"
+
+  /master/escolas/{id}/cancelar-assinatura-asaas:
+    post:
+      operationId: cancelarAssinaturaAsaasMaster
+      tags: [master]
+      description: >
+        Cancela a assinatura da escola no Asaas (chamada de API real) e
+        reflete o cancelamento no banco. Encerra a cobrança recorrente de
+        verdade -- diferente de só marcar planoAtivo=false.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Assinatura cancelada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Escola"
+        "400":
+          description: Escola não tem assinatura Asaas ativa
+        "404":
+          description: Escola não encontrada
+        "502":
+          description: Falha ao cancelar no Asaas
 
   /master/planos:
     get:
@@ -2239,6 +2289,12 @@ components:
         clerkOrgId: { type: ["string", "null"] }
         stripeCustomerId: { type: ["string", "null"] }
         stripeSubscriptionId: { type: ["string", "null"] }
+        emailContato: { type: ["string", "null"], description: "Usado pelo Asaas pra notificar a escola (boleto/PIX) automaticamente." }
+        telefoneContato: { type: ["string", "null"] }
+        asaasCustomerId: { type: ["string", "null"] }
+        asaasSubscriptionId: { type: ["string", "null"] }
+        asaasStatusAssinatura: { type: ["string", "null"], enum: [em_dia, pendente, atrasada, cancelada, null], description: "Alimentado pelo webhook do Asaas a cada evento de cobrança." }
+        asaasProximoVencimento: { type: ["string", "null"], format: date-time }
         planoAtivo: { type: boolean }
         trialEndsAt: { type: ["string", "null"], format: date-time }
         isenta: { type: boolean, description: "Escola isenta de bloqueio por trial vencido/sem assinatura ativa (ex: piloto)." }
@@ -2267,6 +2323,8 @@ components:
         cidade: { type: string }
         estado: { type: string, default: "SP" }
         modalidade: { type: string, enum: [regular, tecnica, eja, normal_magisterio], default: regular }
+        emailContato: { type: string, format: email }
+        telefoneContato: { type: string }
 
     Licenca:
       type: object
@@ -2493,6 +2551,22 @@ components:
         planoId: { type: ["integer", "null"] }
         planoAtivo: { type: boolean }
         isenta: { type: boolean }
+        emailContato: { type: ["string", "null"], format: email }
+        telefoneContato: { type: ["string", "null"] }
+
+    AssinaturaAsaasInput:
+      type: object
+      required: [planoId, periodicidade]
+      properties:
+        planoId: { type: integer }
+        periodicidade: { type: string, enum: [mensal, anual] }
+
+    AssinaturaAsaasResponse:
+      type: object
+      required: [mensagem, asaasSubscriptionId]
+      properties:
+        mensagem: { type: string }
+        asaasSubscriptionId: { type: string }
 
     PlanoInput:
       type: object

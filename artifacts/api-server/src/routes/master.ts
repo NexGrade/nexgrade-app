@@ -9,6 +9,7 @@ import { eq, and, count } from "drizzle-orm";
 import { z } from "zod";
 import { isMaster, requireMaster } from "../middlewares/requireMaster";
 import { registrarAuditoria } from "../lib/audit";
+import { cancelarSubscription } from "../lib/asaas";
 
 // RF-MASTER-01 a RF-MASTER-03: cadastro/ativação de escolas, gestão de
 // planos, métricas de uso da plataforma. Ver requireMaster.ts para como
@@ -32,6 +33,11 @@ const EscolaUpdateInput = z.object({
   // assinatura ativa -- uso pontual (ex: escola piloto), não faz parte
   // do fluxo normal de cadastro.
   isenta: z.boolean().optional(),
+  // [NOVO] RF-BILLING-ASAAS: editável pelo Master pra escolas que não
+  // preencheram no onboarding (ex: cadastradas antes desse campo
+  // existir) -- sem isso, a rota de assinatura Asaas fica bloqueada.
+  emailContato: z.string().email().nullable().optional(),
+  telefoneContato: z.string().nullable().optional(),
 });
 
 const PlanoInput = z.object({
@@ -94,6 +100,44 @@ router.patch("/escolas/:id", async (req, res) => {
   });
 
   res.json(escola);
+});
+
+// POST /escolas/:id/cancelar-assinatura-asaas — cancela a assinatura
+// no Asaas (chamada de API real, igual ao botão "Cancelar" do Nex
+// Reserva) e reflete o cancelamento no banco. Diferente de só marcar
+// planoAtivo=false: se não cancelar no Asaas também, ele continua
+// gerando cobrança todo ciclo.
+router.post("/escolas/:id/cancelar-assinatura-asaas", async (req, res) => {
+  const id = req.params.id!;
+  const escola = await db.select().from(escolasTable).where(eq(escolasTable.id, id)).then((r) => r[0]);
+  if (!escola) {
+    res.status(404).json({ error: "Escola não encontrada" });
+    return;
+  }
+  if (!escola.asaasSubscriptionId) {
+    res.status(400).json({ error: "Esta escola não tem assinatura Asaas ativa." });
+    return;
+  }
+
+  try {
+    await cancelarSubscription(escola.asaasSubscriptionId);
+  } catch (err) {
+    console.error("Erro ao cancelar assinatura no Asaas:", err instanceof Error ? err.message : err);
+    res.status(502).json({ error: "Não foi possível cancelar a assinatura no Asaas. Tente novamente." });
+    return;
+  }
+
+  const [atualizada] = await db.update(escolasTable)
+    .set({ planoAtivo: false, asaasStatusAssinatura: "cancelada", updatedAt: new Date() })
+    .where(eq(escolasTable.id, id))
+    .returning();
+
+  await registrarAuditoria({
+    req, escolaId: id, entidade: "escolas", entidadeId: 0,
+    acao: "alteracao", dadosAnteriores: escola, dadosNovos: atualizada,
+  });
+
+  res.json(atualizada);
 });
 
 // ── PLANOS ───────────────────────────────────────────────────────────────────

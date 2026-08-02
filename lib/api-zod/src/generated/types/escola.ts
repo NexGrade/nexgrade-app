@@ -5,6 +5,7 @@
  * GradeEscolar â€” Sistema Completo de GestÃ£o de HorÃ¡rios Escolares
  * OpenAPI spec version: 0.2.0
  */
+import type { EscolaAsaasStatusAssinatura } from './escolaAsaasStatusAssinatura';
 import type { EscolaModalidade } from './escolaModalidade';
 
 export interface Escola {
@@ -24,6 +25,24 @@ export interface Escola {
   stripeCustomerId?: string | null;
   /** @nullable */
   stripeSubscriptionId?: string | null;
+  /**
+     * Usado pelo Asaas pra notificar a escola (boleto/PIX) automaticamente.
+     * @nullable
+     */
+  emailContato?: string | null;
+  /** @nullable */
+  telefoneContato?: string | null;
+  /** @nullable */
+  asaasCustomerId?: string | null;
+  /** @nullable */
+  asaasSubscriptionId?: string | null;
+  /**
+     * Alimentado pelo webhook do Asaas a cada evento de cobrança.
+     * @nullable
+     */
+  asaasStatusAssinatura?: EscolaAsaasStatusAssinatura;
+  /** @nullable */
+  asaasProximoVencimento?: Date | null;
   planoAtivo: boolean;
   /** @nullable */
   trialEndsAt?: Date | null;

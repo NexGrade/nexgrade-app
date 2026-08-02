@@ -23,6 +23,8 @@ import type {
   AdicionarDisciplinasCatalogoInput,
   AdicionarDisciplinasCatalogoResponse,
   AplicarMatrizInput,
+  AssinaturaAsaasInput,
+  AssinaturaAsaasResponse,
   AtualizarCodigoMatrizInput,
   AuditLog,
   AulaFixa,
@@ -3561,6 +3563,73 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getCadastrarEscolaMutationOptions(options));
     }
 
+export const getCriarAssinaturaAsaasUrl = () => {
+
+
+
+
+  return `/api/escolas/assinatura-asaas`
+}
+
+/**
+ * Cria (ou reaproveita) o Customer no Asaas e abre uma Subscription pro plano escolhido. O Asaas notifica a escola automaticamente por e-mail/WhatsApp com o boleto/PIX da primeira cobranca.
+ */
+export const criarAssinaturaAsaas = async (assinaturaAsaasInput: AssinaturaAsaasInput, options?: RequestInit): Promise<AssinaturaAsaasResponse> => {
+
+  return customFetch<AssinaturaAsaasResponse>(getCriarAssinaturaAsaasUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(assinaturaAsaasInput)
+  }
+);}
+
+
+
+
+export const getCriarAssinaturaAsaasMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof criarAssinaturaAsaas>>, TError,{data: BodyType<AssinaturaAsaasInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof criarAssinaturaAsaas>>, TError,{data: BodyType<AssinaturaAsaasInput>}, TContext> => {
+
+const mutationKey = ['criarAssinaturaAsaas'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof criarAssinaturaAsaas>>, {data: BodyType<AssinaturaAsaasInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  criarAssinaturaAsaas(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CriarAssinaturaAsaasMutationResult = NonNullable<Awaited<ReturnType<typeof criarAssinaturaAsaas>>>
+    export type CriarAssinaturaAsaasMutationBody = BodyType<AssinaturaAsaasInput>
+    export type CriarAssinaturaAsaasMutationError = ErrorType<unknown>
+
+    export const useCriarAssinaturaAsaas = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof criarAssinaturaAsaas>>, TError,{data: BodyType<AssinaturaAsaasInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof criarAssinaturaAsaas>>,
+        TError,
+        {data: BodyType<AssinaturaAsaasInput>},
+        TContext
+      > => {
+      return useMutation(getCriarAssinaturaAsaasMutationOptions(options));
+    }
+
 export const getMasterWhoamiUrl = () => {
 
 
@@ -3766,6 +3835,73 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getUpdateEscolaMasterMutationOptions(options));
+    }
+
+export const getCancelarAssinaturaAsaasMasterUrl = (id: string,) => {
+
+
+
+
+  return `/api/master/escolas/${id}/cancelar-assinatura-asaas`
+}
+
+/**
+ * Cancela a assinatura da escola no Asaas (chamada de API real) e reflete o cancelamento no banco. Encerra a cobrança recorrente de verdade -- diferente de só marcar planoAtivo=false.
+ */
+export const cancelarAssinaturaAsaasMaster = async (id: string, options?: RequestInit): Promise<Escola> => {
+
+  return customFetch<Escola>(getCancelarAssinaturaAsaasMasterUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getCancelarAssinaturaAsaasMasterMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelarAssinaturaAsaasMaster>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof cancelarAssinaturaAsaasMaster>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['cancelarAssinaturaAsaasMaster'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancelarAssinaturaAsaasMaster>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  cancelarAssinaturaAsaasMaster(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CancelarAssinaturaAsaasMasterMutationResult = NonNullable<Awaited<ReturnType<typeof cancelarAssinaturaAsaasMaster>>>
+
+    export type CancelarAssinaturaAsaasMasterMutationError = ErrorType<void>
+
+    export const useCancelarAssinaturaAsaasMaster = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelarAssinaturaAsaasMaster>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof cancelarAssinaturaAsaasMaster>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getCancelarAssinaturaAsaasMasterMutationOptions(options));
     }
 
 export const getListPlanosMasterUrl = () => {

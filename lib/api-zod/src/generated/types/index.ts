@@ -9,6 +9,9 @@
 export * from './adicionarDisciplinasCatalogoInput';
 export * from './adicionarDisciplinasCatalogoResponse';
 export * from './aplicarMatrizInput';
+export * from './assinaturaAsaasInput';
+export * from './assinaturaAsaasInputPeriodicidade';
+export * from './assinaturaAsaasResponse';
 export * from './atualizarCodigoMatrizInput';
 export * from './auditLog';
 export * from './aulaFixa';
@@ -48,6 +51,7 @@ export * from './disponibilidadeLoteInputItensItem';
 export * from './disponibilidadeLoteInputItensItemTurno';
 export * from './disponibilidadeTurno';
 export * from './escola';
+export * from './escolaAsaasStatusAssinatura';
 export * from './escolaAtual';
 export * from './escolaComMetricas';
 export * from './escolaInput';

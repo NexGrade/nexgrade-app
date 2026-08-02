@@ -5,6 +5,7 @@ import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
 import router from "./routes";
 import healthRouter from "./routes/health";
+import asaasWebhookRouter from "./routes/asaas-webhook";
 import { logger } from "./lib/logger";
 import { requireAuth } from "./middlewares/requireAuth";
 import { limitadorGeral } from "./middlewares/rateLimit";
@@ -82,6 +83,14 @@ app.use(
 // Healthcheck fica público (monitoramento de infraestrutura não tem
 // sessão de usuário) — montado antes do requireAuth, de propósito.
 app.use("/api", healthRouter);
+
+// RF-BILLING-ASAAS: também público, fora do requireAuth -- quem chama
+// é o servidor do Asaas, não um usuário logado. Diferente do antigo
+// webhook do Stripe, não precisa de express.raw() aqui: a validação é
+// por header customizado (asaas-access-token), não por assinatura HMAC
+// sobre o corpo cru da requisição -- então o express.json() já
+// aplicado acima (linha ~70) funciona normalmente.
+app.use("/api/asaas/webhook", asaasWebhookRouter);
 
 // RNF-SEG-03: a partir daqui, toda rota de negócio exige sessão Clerk
 // válida. clerkMiddleware() sozinho não bloqueia requisição sem token —

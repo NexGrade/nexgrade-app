@@ -802,6 +802,20 @@ export const EscolaModalidade = {
   normal_magisterio: 'normal_magisterio',
 } as const;
 
+/**
+ * Alimentado pelo webhook do Asaas a cada evento de cobrança.
+ * @nullable
+ */
+export type EscolaAsaasStatusAssinatura = typeof EscolaAsaasStatusAssinatura[keyof typeof EscolaAsaasStatusAssinatura] | null;
+
+
+export const EscolaAsaasStatusAssinatura = {
+  em_dia: 'em_dia',
+  pendente: 'pendente',
+  atrasada: 'atrasada',
+  cancelada: 'cancelada',
+} as const;
+
 export interface Escola {
   id: string;
   nomeFantasia: string;
@@ -819,6 +833,24 @@ export interface Escola {
   stripeCustomerId?: string | null;
   /** @nullable */
   stripeSubscriptionId?: string | null;
+  /**
+     * Usado pelo Asaas pra notificar a escola (boleto/PIX) automaticamente.
+     * @nullable
+     */
+  emailContato?: string | null;
+  /** @nullable */
+  telefoneContato?: string | null;
+  /** @nullable */
+  asaasCustomerId?: string | null;
+  /** @nullable */
+  asaasSubscriptionId?: string | null;
+  /**
+     * Alimentado pelo webhook do Asaas a cada evento de cobrança.
+     * @nullable
+     */
+  asaasStatusAssinatura?: EscolaAsaasStatusAssinatura;
+  /** @nullable */
+  asaasProximoVencimento?: string | null;
   planoAtivo: boolean;
   /** @nullable */
   trialEndsAt?: string | null;
@@ -858,6 +890,8 @@ export interface EscolaInput {
   cidade?: string;
   estado?: string;
   modalidade?: EscolaInputModalidade;
+  emailContato?: string;
+  telefoneContato?: string;
 }
 
 export type LicencaTipo = typeof LicencaTipo[keyof typeof LicencaTipo];
@@ -1154,6 +1188,28 @@ export interface EscolaMasterUpdateInput {
   planoId?: number | null;
   planoAtivo?: boolean;
   isenta?: boolean;
+  /** @nullable */
+  emailContato?: string | null;
+  /** @nullable */
+  telefoneContato?: string | null;
+}
+
+export type AssinaturaAsaasInputPeriodicidade = typeof AssinaturaAsaasInputPeriodicidade[keyof typeof AssinaturaAsaasInputPeriodicidade];
+
+
+export const AssinaturaAsaasInputPeriodicidade = {
+  mensal: 'mensal',
+  anual: 'anual',
+} as const;
+
+export interface AssinaturaAsaasInput {
+  planoId: number;
+  periodicidade: AssinaturaAsaasInputPeriodicidade;
+}
+
+export interface AssinaturaAsaasResponse {
+  mensagem: string;
+  asaasSubscriptionId: string;
 }
 
 export interface PlanoInput {

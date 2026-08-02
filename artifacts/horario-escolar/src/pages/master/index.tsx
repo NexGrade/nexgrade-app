@@ -4,6 +4,12 @@ import {
   useListEscolasMaster, useUpdateEscolaMaster, getListEscolasMasterQueryKey,
   useListPlanosMaster, useCreatePlano, useUpdatePlano, getListPlanosMasterQueryKey,
   useGetMasterMetrics, getGetMasterMetricsQueryKey,
+  // [ATENÇÃO] Nome do hook a confirmar depois de rodar o codegen do
+  // Orval pra rota nova POST /master/escolas/:id/cancelar-assinatura-
+  // asaas -- o Orval deriva o nome do operationId do OpenAPI, então
+  // pode sair diferente do que estou assumindo aqui. Ajustar o import
+  // (e as duas referências abaixo) se o nome gerado for outro.
+  useCancelarAssinaturaAsaasMaster,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,7 +25,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import {
-  Building2, Users, GraduationCap, CalendarDays, Sparkles, ShieldCheck, Plus, Pencil,
+  Building2, Users, GraduationCap, CalendarDays, Sparkles, ShieldCheck, Plus, Pencil, XCircle,
 } from "lucide-react";
 
 // RF-MASTER-01 a RF-MASTER-03: painel administrativo da plataforma —
@@ -108,12 +114,68 @@ function formatPreco(precoMensal: number, precoAnual?: number | null) {
   return `${mensal} · ${anual}`;
 }
 
+// [NOVO] RF-BILLING-ASAAS: traduz o status bruto salvo pelo webhook
+// (routes/asaas-webhook.ts) pro badge exibido, no mesmo modelo do
+// Painel Central do Nex Reserva.
+function badgeAssinatura(status: string | null | undefined) {
+  switch (status) {
+    case "em_dia": return { label: "Em dia", className: "bg-[#1565C0] text-white" };
+    case "atrasada": return { label: "Atrasada", variant: "destructive" as const };
+    case "cancelada": return { label: "Cancelada", variant: "secondary" as const };
+    case "pendente": return { label: "Pendente", variant: "outline" as const };
+    default: return { label: "Sem assinatura", variant: "outline" as const };
+  }
+}
+
+function formatVencimento(data: string | null | undefined) {
+  if (!data) return "—";
+  return new Date(data).toLocaleDateString("pt-BR");
+}
+
 function EscolasTable() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: escolas, isLoading } = useListEscolasMaster({ query: { queryKey: getListEscolasMasterQueryKey() } });
   const { data: planos } = useListPlanosMaster({ query: { queryKey: getListPlanosMasterQueryKey() } });
   const atualizar = useUpdateEscolaMaster();
+  const cancelarAssinatura = useCancelarAssinaturaAsaasMaster();
+  const [escolaEditandoContato, setEscolaEditandoContato] = useState<string | null>(null);
+
+  function salvarContato(id: string, emailContato: string, telefoneContato: string) {
+    atualizar.mutate(
+      {
+        id,
+        data: {
+          emailContato: emailContato.trim() || null,
+          telefoneContato: telefoneContato.trim() || null,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast({ title: "Contato atualizado" });
+          setEscolaEditandoContato(null);
+          queryClient.invalidateQueries({ queryKey: getListEscolasMasterQueryKey() });
+        },
+        onError: () => toast({ title: "Erro ao atualizar o contato", variant: "destructive" }),
+      },
+    );
+  }
+
+  function cancelarAssinaturaDaEscola(id: string, nomeFantasia: string) {
+    if (!window.confirm(`Cancelar a assinatura Asaas de "${nomeFantasia}"? Isso encerra a cobrança recorrente de verdade, não é reversível por aqui.`)) {
+      return;
+    }
+    cancelarAssinatura.mutate(
+      { id },
+      {
+        onSuccess: () => {
+          toast({ title: "Assinatura cancelada no Asaas" });
+          queryClient.invalidateQueries({ queryKey: getListEscolasMasterQueryKey() });
+        },
+        onError: () => toast({ title: "Erro ao cancelar a assinatura", variant: "destructive" }),
+      },
+    );
+  }
 
   function alternarAtiva(id: string, planoAtivo: boolean) {
     atualizar.mutate(
@@ -168,11 +230,14 @@ function EscolasTable() {
             <TableRow>
               <TableHead>Escola</TableHead>
               <TableHead>Cidade/UF</TableHead>
+              <TableHead>Contato</TableHead>
               <TableHead>Plano</TableHead>
               <TableHead className="text-center">Professores</TableHead>
               <TableHead className="text-center">Turmas</TableHead>
               <TableHead className="text-center">Status</TableHead>
+              <TableHead className="text-center">Assinatura</TableHead>
               <TableHead className="text-center">Isenta</TableHead>
+              <TableHead className="text-center">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -180,6 +245,17 @@ function EscolasTable() {
               <TableRow key={e.id}>
                 <TableCell className="font-medium">{e.nomeFantasia}</TableCell>
                 <TableCell className="text-muted-foreground">{e.cidade ?? "—"}/{e.estado}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1.5">
+                    <div className="text-xs">
+                      <div>{(e as any).emailContato ?? <span className="text-muted-foreground">sem e-mail</span>}</div>
+                      <div className="text-muted-foreground">{(e as any).telefoneContato ?? "sem telefone"}</div>
+                    </div>
+                    <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => setEscolaEditandoContato(e.id)}>
+                      <Pencil className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </TableCell>
                 <TableCell>
                   <select
                     className="text-sm border rounded-md px-2 py-1 bg-background"
@@ -205,11 +281,41 @@ function EscolasTable() {
                 <TableCell className="text-center">
                   <Switch checked={(e as any).isenta ?? false} onCheckedChange={(v) => alternarIsenta(e.id, v)} />
                 </TableCell>
+                <TableCell className="text-center">
+                  {(() => {
+                    const badge = badgeAssinatura((e as any).asaasStatusAssinatura);
+                    return (
+                      <div className="flex flex-col items-center gap-0.5">
+                        <Badge className={"className" in badge ? badge.className : undefined} variant={"variant" in badge ? badge.variant : undefined}>
+                          {badge.label}
+                        </Badge>
+                        <span className="text-[11px] text-muted-foreground">
+                          Vence {formatVencimento((e as any).asaasProximoVencimento)}
+                        </span>
+                      </div>
+                    );
+                  })()}
+                </TableCell>
+                <TableCell className="text-center">
+                  {(e as any).asaasSubscriptionId ? (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive hover:text-destructive gap-1"
+                      disabled={cancelarAssinatura.isPending}
+                      onClick={() => cancelarAssinaturaDaEscola(e.id, e.nomeFantasia)}
+                    >
+                      <XCircle className="w-3.5 h-3.5" /> Cancelar
+                    </Button>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
             {escolas?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                   Nenhuma escola cadastrada na plataforma ainda.
                 </TableCell>
               </TableRow>
@@ -217,7 +323,57 @@ function EscolasTable() {
           </TableBody>
         </Table>
       </CardContent>
+
+      {escolaEditandoContato && (
+        <ContatoDialog
+          escola={escolas!.find((e) => e.id === escolaEditandoContato)!}
+          salvando={atualizar.isPending}
+          onOpenChange={(v) => !v && setEscolaEditandoContato(null)}
+          onSalvar={salvarContato}
+        />
+      )}
     </Card>
+  );
+}
+
+// [NOVO] RF-BILLING-ASAAS: edição de e-mail/telefone pelo Master, pra
+// escolas cadastradas antes desse campo existir no onboarding -- sem
+// isso a rota de assinatura Asaas fica bloqueada pra elas.
+function ContatoDialog({
+  escola, salvando, onOpenChange, onSalvar,
+}: {
+  escola: { id: string; nomeFantasia: string; emailContato?: string | null; telefoneContato?: string | null };
+  salvando: boolean;
+  onOpenChange: (v: boolean) => void;
+  onSalvar: (id: string, emailContato: string, telefoneContato: string) => void;
+}) {
+  const [email, setEmail] = useState(escola.emailContato ?? "");
+  const [telefone, setTelefone] = useState(escola.telefoneContato ?? "");
+
+  return (
+    <Dialog open onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Contato — {escola.nomeFantasia}</DialogTitle>
+          <DialogDescription>Usado pelo Asaas pra notificar a escola com boleto/PIX das cobranças.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <Label className="text-xs">E-mail</Label>
+            <Input type="email" placeholder="secretaria@escola.pr.gov.br" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">WhatsApp</Label>
+            <Input placeholder="(41) 99999-9999" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={() => onSalvar(escola.id, email, telefone)} disabled={salvando || (!email.trim() && !telefone.trim())}>
+            {salvando ? "Salvando..." : "Salvar"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
