@@ -44,8 +44,6 @@ const PlanoInput = z.object({
   temExport: z.boolean().default(false),
   temImport: z.boolean().default(false),
   ativo: z.boolean().default(true),
-  stripePriceIdMensal: z.string().optional(),
-  stripePriceIdAnual: z.string().optional(),
 });
 
 // ── ESCOLAS ──────────────────────────────────────────────────────────────────

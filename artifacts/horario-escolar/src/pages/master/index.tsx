@@ -233,15 +233,12 @@ type PlanoFormState = {
   temExport: boolean;
   temImport: boolean;
   ativo: boolean;
-  stripePriceIdMensal: string;
-  stripePriceIdAnual: string;
 };
 
 const FORM_VAZIO: PlanoFormState = {
   nome: "", precoMensalReais: "0", precoAnualReais: "",
   maxProfessores: 10, maxTurmas: 5,
   temIA: false, temExport: false, temImport: false, ativo: true,
-  stripePriceIdMensal: "", stripePriceIdAnual: "",
 };
 
 function reaisParaCentavos(v: string): number {
@@ -250,7 +247,7 @@ function reaisParaCentavos(v: string): number {
 }
 
 // [NOVO] Formulário compartilhado entre "Novo plano" e "Editar plano"
-// -- antes só existia criação, sem jeito de editar preço/Price ID de
+// -- antes só existia criação, sem jeito de editar preço/limites de
 // um plano depois de criado (precisava de script direto no banco).
 function PlanoFormDialog({
   aberto, onOpenChange, titulo, valorInicial, aoSalvar, salvando,
@@ -269,7 +266,7 @@ function PlanoFormDialog({
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{titulo}</DialogTitle>
-          <DialogDescription>Preço em reais. Price ID vem do painel do Stripe (Catálogo de produtos → preço do produto).</DialogDescription>
+          <DialogDescription>Preço em reais.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <Input placeholder="Nome do plano" value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
@@ -293,16 +290,6 @@ function PlanoFormDialog({
             <div className="space-y-1">
               <Label className="text-xs">Máx. turmas</Label>
               <Input type="number" value={form.maxTurmas} onChange={(e) => setForm({ ...form, maxTurmas: Number(e.target.value) })} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">Price ID Stripe (mensal)</Label>
-              <Input placeholder="price_..." value={form.stripePriceIdMensal} onChange={(e) => setForm({ ...form, stripePriceIdMensal: e.target.value })} />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Price ID Stripe (anual)</Label>
-              <Input placeholder="price_..." value={form.stripePriceIdAnual} onChange={(e) => setForm({ ...form, stripePriceIdAnual: e.target.value })} />
             </div>
           </div>
           <div className="flex items-center gap-6 pt-1">
@@ -361,8 +348,6 @@ function PlanosTable() {
       temExport: form.temExport,
       temImport: form.temImport,
       ativo: form.ativo,
-      ...(form.stripePriceIdMensal.trim() ? { stripePriceIdMensal: form.stripePriceIdMensal.trim() } : {}),
-      ...(form.stripePriceIdAnual.trim() ? { stripePriceIdAnual: form.stripePriceIdAnual.trim() } : {}),
     };
   }
 
@@ -403,7 +388,7 @@ function PlanosTable() {
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Planos</CardTitle>
-          <CardDescription>Preço, limites, recursos e Price ID do Stripe de cada plano da plataforma.</CardDescription>
+          <CardDescription>Preço, limites e recursos de cada plano da plataforma.</CardDescription>
         </div>
         <Button size="sm" className="gap-1.5" onClick={() => setDialogNovoAberto(true)}>
           <Plus className="w-4 h-4" /> Novo plano
@@ -415,7 +400,6 @@ function PlanosTable() {
             <TableRow>
               <TableHead>Plano</TableHead>
               <TableHead>Preço</TableHead>
-              <TableHead>Price ID (mensal / anual)</TableHead>
               <TableHead className="text-center">Máx. Professores</TableHead>
               <TableHead className="text-center">Máx. Turmas</TableHead>
               <TableHead className="text-center">IA</TableHead>
@@ -430,10 +414,6 @@ function PlanosTable() {
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.nome}</TableCell>
                 <TableCell className="text-xs">{formatPreco(p.precoMensal, p.precoAnual)}</TableCell>
-                <TableCell className="text-[11px] font-mono text-muted-foreground">
-                  {p.stripePriceIdMensal ? p.stripePriceIdMensal.slice(0, 14) + "…" : "—"} /{" "}
-                  {p.stripePriceIdAnual ? p.stripePriceIdAnual.slice(0, 14) + "…" : "—"}
-                </TableCell>
                 <TableCell className="text-center">{p.maxProfessores}</TableCell>
                 <TableCell className="text-center">{p.maxTurmas}</TableCell>
                 <TableCell className="text-center">{p.temIA ? "✓" : "—"}</TableCell>
@@ -479,8 +459,6 @@ function PlanosTable() {
             temExport: planoEmEdicao.temExport,
             temImport: planoEmEdicao.temImport,
             ativo: planoEmEdicao.ativo,
-            stripePriceIdMensal: planoEmEdicao.stripePriceIdMensal ?? "",
-            stripePriceIdAnual: planoEmEdicao.stripePriceIdAnual ?? "",
           }}
         />
       )}

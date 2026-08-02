@@ -1,0 +1,1054 @@
+{
+  "matutino": {
+    "Adalgisa O F G": {
+      "dias_bloqueados": [
+        "Quarta",
+        "Sexta"
+      ],
+      "ha_slots": []
+    },
+    "Alan": {
+      "dias_bloqueados": [
+        "Terca",
+        "Quarta",
+        "Quinta",
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Segunda",
+          5
+        ]
+      ]
+    },
+    "Alexandro": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Terca",
+        "Quinta",
+        "Sexta"
+      ],
+      "ha_slots": []
+    },
+    "Alvaro": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Quinta",
+          4
+        ]
+      ]
+    },
+    "Andreia M": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Terca",
+        "Quarta"
+      ],
+      "ha_slots": []
+    },
+    "Angela M S": {
+      "dias_bloqueados": [
+        "Quarta"
+      ],
+      "ha_slots": [
+        [
+          "Terca",
+          6
+        ],
+        [
+          "Quinta",
+          6
+        ],
+        [
+          "Sexta",
+          6
+        ]
+      ]
+    },
+    "Camila Fortunato": {
+      "dias_bloqueados": [
+        "Terca"
+      ],
+      "ha_slots": [
+        [
+          "Segunda",
+          2
+        ],
+        [
+          "Quarta",
+          3
+        ],
+        [
+          "Quarta",
+          4
+        ]
+      ]
+    },
+    "Camila P": {
+      "dias_bloqueados": [
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Segunda",
+          3
+        ],
+        [
+          "Quarta",
+          4
+        ],
+        [
+          "Quinta",
+          3
+        ]
+      ]
+    },
+    "Cesar Bispo": {
+      "dias_bloqueados": [
+        "Quarta",
+        "Quinta"
+      ],
+      "ha_slots": []
+    },
+    "Cinara": {
+      "dias_bloqueados": [],
+      "ha_slots": [
+        [
+          "Segunda",
+          1
+        ],
+        [
+          "Terca",
+          1
+        ],
+        [
+          "Terca",
+          4
+        ],
+        [
+          "Quarta",
+          5
+        ],
+        [
+          "Quinta",
+          4
+        ],
+        [
+          "Sexta",
+          3
+        ]
+      ]
+    },
+    "Cinthia": {
+      "dias_bloqueados": [
+        "Terca",
+        "Quarta",
+        "Quinta",
+        "Sexta"
+      ],
+      "ha_slots": []
+    },
+    "Cristiane V": {
+      "dias_bloqueados": [],
+      "ha_slots": [
+        [
+          "Segunda",
+          6
+        ],
+        [
+          "Terca",
+          6
+        ],
+        [
+          "Quarta",
+          6
+        ],
+        [
+          "Quinta",
+          6
+        ],
+        [
+          "Sexta",
+          6
+        ]
+      ]
+    },
+    "Cynthia Benvenuti": {
+      "dias_bloqueados": [
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Terca",
+          3
+        ],
+        [
+          "Terca",
+          4
+        ],
+        [
+          "Terca",
+          5
+        ],
+        [
+          "Terca",
+          6
+        ],
+        [
+          "Quarta",
+          5
+        ],
+        [
+          "Quarta",
+          6
+        ]
+      ]
+    },
+    "Deilza S B K": {
+      "dias_bloqueados": [],
+      "ha_slots": [
+        [
+          "Terca",
+          2
+        ],
+        [
+          "Terca",
+          4
+        ],
+        [
+          "Terca",
+          5
+        ],
+        [
+          "Terca",
+          6
+        ],
+        [
+          "Quarta",
+          2
+        ],
+        [
+          "Quinta",
+          5
+        ]
+      ]
+    },
+    "Eucledio L K": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Quarta",
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Terca",
+          2
+        ],
+        [
+          "Quinta",
+          5
+        ]
+      ]
+    },
+    "Fernanda B Luz": {
+      "dias_bloqueados": [
+        "Quinta",
+        "Sexta"
+      ],
+      "ha_slots": []
+    },
+    "Gabryelle": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Terca"
+      ],
+      "ha_slots": [
+        [
+          "Quarta",
+          2
+        ],
+        [
+          "Quinta",
+          2
+        ],
+        [
+          "Sexta",
+          2
+        ]
+      ]
+    },
+    "Gilvani": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Terca",
+        "Quarta",
+        "Quinta"
+      ],
+      "ha_slots": [
+        [
+          "Sexta",
+          4
+        ]
+      ]
+    },
+    "Jeniffer": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Quinta",
+        "Sexta"
+      ],
+      "ha_slots": []
+    },
+    "Joao Jordano": {
+      "dias_bloqueados": [
+        "Terca",
+        "Quarta",
+        "Quinta",
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Segunda",
+          5
+        ],
+        [
+          "Segunda",
+          6
+        ]
+      ]
+    },
+    "Joao M S N": {
+      "dias_bloqueados": [],
+      "ha_slots": [
+        [
+          "Terca",
+          5
+        ],
+        [
+          "Quarta",
+          5
+        ],
+        [
+          "Sexta",
+          5
+        ]
+      ]
+    },
+    "Jose S. F": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Quarta"
+      ],
+      "ha_slots": [
+        [
+          "Sexta",
+          2
+        ],
+        [
+          "Sexta",
+          5
+        ]
+      ]
+    },
+    "Karoline": {
+      "dias_bloqueados": [],
+      "ha_slots": [
+        [
+          "Segunda",
+          4
+        ],
+        [
+          "Terca",
+          4
+        ],
+        [
+          "Terca",
+          5
+        ],
+        [
+          "Quarta",
+          4
+        ],
+        [
+          "Quinta",
+          2
+        ]
+      ]
+    },
+    "Lincon": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Terca",
+          4
+        ],
+        [
+          "Quarta",
+          4
+        ]
+      ]
+    },
+    "Lucas": {
+      "dias_bloqueados": [],
+      "ha_slots": [
+        [
+          "Segunda",
+          2
+        ],
+        [
+          "Quinta",
+          2
+        ]
+      ]
+    },
+    "Lucimeire F N C": {
+      "dias_bloqueados": [
+        "Quinta"
+      ],
+      "ha_slots": [
+        [
+          "Terca",
+          1
+        ],
+        [
+          "Terca",
+          2
+        ],
+        [
+          "Terca",
+          3
+        ]
+      ]
+    },
+    "Luiz Felipe": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Quarta",
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Terca",
+          5
+        ],
+        [
+          "Terca",
+          6
+        ],
+        [
+          "Quinta",
+          6
+        ]
+      ]
+    },
+    "Marcia Rosa": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Quarta",
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Terca",
+          3
+        ],
+        [
+          "Quinta",
+          5
+        ]
+      ]
+    },
+    "Michelle": {
+      "dias_bloqueados": [
+        "Quarta",
+        "Quinta",
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Terca",
+          4
+        ]
+      ]
+    },
+    "Rachel M B": {
+      "dias_bloqueados": [
+        "Quinta"
+      ],
+      "ha_slots": [
+        [
+          "Segunda",
+          1
+        ],
+        [
+          "Segunda",
+          2
+        ],
+        [
+          "Terca",
+          2
+        ],
+        [
+          "Quarta",
+          3
+        ],
+        [
+          "Quarta",
+          5
+        ],
+        [
+          "Quarta",
+          6
+        ],
+        [
+          "Sexta",
+          4
+        ]
+      ]
+    },
+    "Rosemeire B S": {
+      "dias_bloqueados": [
+        "Segunda"
+      ],
+      "ha_slots": [
+        [
+          "Terca",
+          6
+        ],
+        [
+          "Quinta",
+          6
+        ],
+        [
+          "Sexta",
+          6
+        ]
+      ]
+    },
+    "Sharon C S": {
+      "dias_bloqueados": [
+        "Segunda"
+      ],
+      "ha_slots": [
+        [
+          "Terca",
+          5
+        ],
+        [
+          "Quarta",
+          3
+        ],
+        [
+          "Quinta",
+          1
+        ],
+        [
+          "Sexta",
+          1
+        ]
+      ]
+    },
+    "Taisson": {
+      "dias_bloqueados": [
+        "Quarta",
+        "Quinta",
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Segunda",
+          5
+        ],
+        [
+          "Segunda",
+          6
+        ],
+        [
+          "Terca",
+          6
+        ]
+      ]
+    },
+    "Ticiane": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Terca",
+        "Quinta",
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Quarta",
+          2
+        ]
+      ]
+    },
+    "Will": {
+      "dias_bloqueados": [
+        "Terca",
+        "Quarta",
+        "Quinta"
+      ],
+      "ha_slots": [
+        [
+          "Segunda",
+          3
+        ]
+      ]
+    }
+  },
+  "vespertino": {
+    "Adalgisa O F G": {
+      "dias_bloqueados": [],
+      "ha_slots": [
+        [
+          "Terca",
+          3
+        ],
+        [
+          "Quinta",
+          4
+        ],
+        [
+          "Sexta",
+          1
+        ]
+      ]
+    },
+    "Alex S G": {
+      "dias_bloqueados": [],
+      "ha_slots": [
+        [
+          "Terca",
+          2
+        ],
+        [
+          "Terca",
+          3
+        ]
+      ]
+    },
+    "Alvaro": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Quinta",
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Terca",
+          3
+        ]
+      ]
+    },
+    "Andreia M": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Terca",
+        "Quarta",
+        "Quinta"
+      ],
+      "ha_slots": [
+        [
+          "Sexta",
+          5
+        ]
+      ]
+    },
+    "Angela M S": {
+      "dias_bloqueados": [
+        "Quarta"
+      ],
+      "ha_slots": [
+        [
+          "Quinta",
+          3
+        ],
+        [
+          "Quinta",
+          4
+        ],
+        [
+          "Quinta",
+          5
+        ]
+      ]
+    },
+    "Antonio": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Quarta",
+        "Quinta"
+      ],
+      "ha_slots": [
+        [
+          "Terca",
+          1
+        ],
+        [
+          "Terca",
+          2
+        ]
+      ]
+    },
+    "Camila F.": {
+      "dias_bloqueados": [],
+      "ha_slots": []
+    },
+    "Camila P": {
+      "dias_bloqueados": [
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Segunda",
+          4
+        ],
+        [
+          "Terca",
+          3
+        ]
+      ]
+    },
+    "Cesar Bispo": {
+      "dias_bloqueados": [
+        "Terca",
+        "Quinta"
+      ],
+      "ha_slots": [
+        [
+          "Segunda",
+          3
+        ],
+        [
+          "Segunda",
+          4
+        ],
+        [
+          "Segunda",
+          5
+        ],
+        [
+          "Quarta",
+          3
+        ]
+      ]
+    },
+    "Cinara": {
+      "dias_bloqueados": [
+        "Terca",
+        "Quinta",
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Segunda",
+          1
+        ]
+      ]
+    },
+    "Cinthia": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Terca",
+        "Quinta",
+        "Sexta"
+      ],
+      "ha_slots": []
+    },
+    "Cristiane V": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Terca",
+        "Quarta"
+      ],
+      "ha_slots": [
+        [
+          "Sexta",
+          1
+        ],
+        [
+          "Sexta",
+          2
+        ]
+      ]
+    },
+    "Deilza S B K": {
+      "dias_bloqueados": [
+        "Quarta",
+        "Quinta",
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Segunda",
+          3
+        ]
+      ]
+    },
+    "Eucledio L K": {
+      "dias_bloqueados": [
+        "Terca",
+        "Quinta",
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Segunda",
+          1
+        ]
+      ]
+    },
+    "Fernanda B Luz": {
+      "dias_bloqueados": [
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Segunda",
+          2
+        ]
+      ]
+    },
+    "Gabryelle": {
+      "dias_bloqueados": [
+        "Segunda"
+      ],
+      "ha_slots": [
+        [
+          "Sexta",
+          1
+        ],
+        [
+          "Sexta",
+          2
+        ]
+      ]
+    },
+    "Gilvani": {
+      "dias_bloqueados": [],
+      "ha_slots": [
+        [
+          "Terca",
+          1
+        ],
+        [
+          "Terca",
+          2
+        ],
+        [
+          "Terca",
+          3
+        ],
+        [
+          "Terca",
+          4
+        ],
+        [
+          "Terca",
+          5
+        ]
+      ]
+    },
+    "Israel": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Terca",
+          5
+        ]
+      ]
+    },
+    "Joao Jordano": {
+      "dias_bloqueados": [
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Segunda",
+          5
+        ]
+      ]
+    },
+    "Joao M S N": {
+      "dias_bloqueados": [
+        "Segunda"
+      ],
+      "ha_slots": [
+        [
+          "Sexta",
+          4
+        ],
+        [
+          "Sexta",
+          5
+        ]
+      ]
+    },
+    "Karoline": {
+      "dias_bloqueados": [
+        "Terca",
+        "Quarta",
+        "Quinta",
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Segunda",
+          1
+        ]
+      ]
+    },
+    "Lucas": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Terca"
+      ],
+      "ha_slots": [
+        [
+          "Quarta",
+          3
+        ],
+        [
+          "Quinta",
+          3
+        ],
+        [
+          "Sexta",
+          2
+        ],
+        [
+          "Sexta",
+          3
+        ]
+      ]
+    },
+    "Lucimeire F N C": {
+      "dias_bloqueados": [
+        "Quarta"
+      ],
+      "ha_slots": [
+        [
+          "Segunda",
+          1
+        ],
+        [
+          "Segunda",
+          2
+        ],
+        [
+          "Quinta",
+          1
+        ],
+        [
+          "Quinta",
+          2
+        ]
+      ]
+    },
+    "Luiz Felipe": {
+      "dias_bloqueados": [],
+      "ha_slots": [
+        [
+          "Quinta",
+          1
+        ]
+      ]
+    },
+    "Marcia Rosa": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Quarta"
+      ],
+      "ha_slots": [
+        [
+          "Terca",
+          4
+        ]
+      ]
+    },
+    "Rachel M B": {
+      "dias_bloqueados": [
+        "Quinta"
+      ],
+      "ha_slots": []
+    },
+    "Rosemeire B S": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Sexta"
+      ],
+      "ha_slots": [
+        [
+          "Terca",
+          2
+        ],
+        [
+          "Quarta",
+          4
+        ],
+        [
+          "Quinta",
+          3
+        ],
+        [
+          "Quinta",
+          4
+        ]
+      ]
+    },
+    "Sharon C S": {
+      "dias_bloqueados": [
+        "Segunda",
+        "Quarta"
+      ],
+      "ha_slots": [
+        [
+          "Terca",
+          1
+        ],
+        [
+          "Terca",
+          3
+        ],
+        [
+          "Quinta",
+          1
+        ]
+      ]
+    },
+    "Taisson": {
+      "dias_bloqueados": [
+        "Quarta",
+        "Quinta"
+      ],
+      "ha_slots": [
+        [
+          "Segunda",
+          2
+        ]
+      ]
+    }
+  },
+  "dia_index": {
+    "Segunda": 0,
+    "Terca": 1,
+    "Quarta": 2,
+    "Quinta": 3,
+    "Sexta": 4
+  },
+  "slots_por_turno": {
+    "matutino": 6,
+    "vespertino": 5
+  }
+}

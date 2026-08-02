@@ -45,14 +45,12 @@ export const limitadorIA = rateLimit({
   message: { error: "Muitas mensagens ao Assistente de IA em pouco tempo. Aguarde um momento." },
 });
 
-// [NOVO] RNF-SEG: limite específico pro onboarding (POST /escolas) e
-// pro checkout do Stripe (POST /escolas/checkout) -- são rotas que
-// criam registro/sessão de pagamento, diferentes de uma leitura comum.
-// O limite geral (300/min) já cobre abuso grosseiro, mas esse aqui é
-// bem mais apertado de propósito: uma conta legítima nunca precisa
-// (re)cadastrar a escola ou abrir sessão de checkout dezenas de vezes
-// por minuto -- só um script tentando criar cadastros/sessões em massa
-// faria isso.
+// [NOVO] RNF-SEG: limite específico pro onboarding (POST /escolas) --
+// rota que cria registro, diferente de uma leitura comum. O limite
+// geral (300/min) já cobre abuso grosseiro, mas esse aqui é bem mais
+// apertado de propósito: uma conta legítima nunca precisa (re)cadastrar
+// a escola dezenas de vezes por minuto -- só um script tentando criar
+// cadastros em massa faria isso.
 export const limitadorCadastro = rateLimit({
   windowMs: 10 * 60_000,
   limit: 8,
