@@ -56,3 +56,6 @@ Thumbs.db
 
 # Dumps de código para sessões de debug
 *.txt
+
+# zips temporarios de transferencia de arquivos
+*.zip
