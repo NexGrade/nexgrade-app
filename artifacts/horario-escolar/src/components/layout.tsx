@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, BookOpen, GraduationCap, Calendar, CalendarDays,
   Building2, FileText, Bell, Shield, History,
   Settings, Download, Sparkles, Upload, CreditCard, Library, ShieldCheck, Clock,
-  SlidersHorizontal,
+  SlidersHorizontal, Landmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -48,7 +48,8 @@ const navGroups = [
     label: "Sistema",
     items: [
       { href: "/export", label: "Exportar Dados", icon: Download },
-      { href: "/planos", label: "Planos & Billing", icon: CreditCard },
+      { href: "/dados-escola", label: "Dados da Escola", icon: Landmark },
+      { href: "/assinatura", label: "Assinatura", icon: CreditCard },
       { href: "/usuarios", label: "Usuários", icon: Shield },
       { href: "/audit", label: "Histórico", icon: History },
       { href: "/configuracoes", label: "Configurações", icon: Settings },
