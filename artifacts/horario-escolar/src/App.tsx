@@ -34,6 +34,7 @@ const ComunicadosList = lazy(() => import("@/pages/comunicados/index"));
 const UsuariosList = lazy(() => import("@/pages/usuarios/index"));
 const AuditList = lazy(() => import("@/pages/audit/index"));
 const ConfiguracoesList = lazy(() => import("@/pages/configuracoes/index"));
+const ConformidadeSeedPrPage = lazy(() => import("@/pages/configuracoes/seed-pr"));
 const ExportPage = lazy(() => import("@/pages/export/index"));
 const AssistentePage = lazy(() => import("@/pages/assistente/index"));
 const ImportarPage = lazy(() => import("@/pages/importar/index"));
@@ -316,6 +317,7 @@ function Router() {
       <Route path="/usuarios" component={() => <ProtectedRoute component={UsuariosList} />} />
       <Route path="/audit" component={() => <ProtectedRoute component={AuditList} />} />
       <Route path="/configuracoes" component={() => <ProtectedRoute component={ConfiguracoesList} />} />
+      <Route path="/configuracoes/seed-pr" component={() => <ProtectedRoute component={ConformidadeSeedPrPage} />} />
       <Route path="/export" component={() => <ProtectedRoute component={ExportPage} />} />
       <Route path="/assistente" component={() => <ProtectedRoute component={AssistentePage} />} />
       <Route path="/importar" component={() => <ProtectedRoute component={ImportarPage} />} />
