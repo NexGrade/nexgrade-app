@@ -854,12 +854,17 @@ export interface Escola {
   /** @nullable */
   stripeSubscriptionId?: string | null;
   /**
-     * Usado pelo Asaas pra notificar a escola (boleto/PIX) automaticamente.
+     * E-mail de contato geral da escola.
      * @nullable
      */
   emailContato?: string | null;
   /** @nullable */
   telefoneContato?: string | null;
+  /**
+     * E-mail específico usado pelo Asaas pra notificar a escola (boleto/PIX). Cai pra emailContato quando vazio.
+     * @nullable
+     */
+  emailCobranca?: string | null;
   /** @nullable */
   asaasCustomerId?: string | null;
   /** @nullable */
@@ -902,6 +907,8 @@ export interface EscolaAtual {
   emailContato?: string | null;
   /** @nullable */
   telefoneContato?: string | null;
+  /** @nullable */
+  emailCobranca?: string | null;
   plano?: Plano;
 }
 
@@ -924,6 +931,7 @@ export interface EscolaInput {
   modalidade?: EscolaInputModalidade;
   emailContato?: string;
   telefoneContato?: string;
+  emailCobranca?: string;
   codigoInep?: string;
   nre?: string;
   /** Lista separada por vírgula, ex: 'matutino,vespertino'. */
@@ -1229,6 +1237,8 @@ export interface EscolaMasterUpdateInput {
   emailContato?: string | null;
   /** @nullable */
   telefoneContato?: string | null;
+  /** @nullable */
+  emailCobranca?: string | null;
 }
 
 export type AssinaturaAsaasInputPeriodicidade = typeof AssinaturaAsaasInputPeriodicidade[keyof typeof AssinaturaAsaasInputPeriodicidade];

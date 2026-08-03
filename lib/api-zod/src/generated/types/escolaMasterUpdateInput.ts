@@ -15,4 +15,6 @@ export interface EscolaMasterUpdateInput {
   emailContato?: string | null;
   /** @nullable */
   telefoneContato?: string | null;
+  /** @nullable */
+  emailCobranca?: string | null;
 }

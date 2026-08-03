@@ -78,7 +78,7 @@ router.get("/me", async (req, res) => {
 // POST /escolas — cria/atualiza escola (onboarding)
 router.post("/", limitadorCadastro, async (req, res) => {
   const escolaId = getEscolaId(req);
-  const { nomeFantasia, cnpj, cidade, estado, modalidade, emailContato, telefoneContato, codigoInep, nre, turnosOfertados, resolucaoSeedPr } = req.body;
+  const { nomeFantasia, cnpj, cidade, estado, modalidade, emailContato, telefoneContato, emailCobranca, codigoInep, nre, turnosOfertados, resolucaoSeedPr } = req.body;
 
   if (!nomeFantasia?.trim()) {
     res.status(400).json({ error: "Nome da escola obrigatório" });
@@ -113,6 +113,7 @@ router.post("/", limitadorCadastro, async (req, res) => {
         nomeFantasia, cnpj, cidade, estado: estado ?? "SP", modalidade: modalidade ?? "regular",
         emailContato: emailContato ?? existing.emailContato,
         telefoneContato: telefoneContato ?? existing.telefoneContato,
+        emailCobranca: emailCobranca ?? existing.emailCobranca,
         codigoInep: codigoInep ?? existing.codigoInep,
         nre: nre ?? existing.nre,
         turnosOfertados: turnosOfertados ?? existing.turnosOfertados,
@@ -129,7 +130,7 @@ router.post("/", limitadorCadastro, async (req, res) => {
       .insert(escolasTable)
       .values({
         id: escolaId, nomeFantasia, cnpj, cidade, estado: estado ?? "SP", modalidade: modalidade ?? "regular",
-        emailContato, telefoneContato, codigoInep, nre, turnosOfertados, resolucaoSeedPr,
+        emailContato, telefoneContato, emailCobranca, codigoInep, nre, turnosOfertados, resolucaoSeedPr,
         planoId, planoAtivo: true, trialEndsAt,
       })
       .returning();
@@ -165,10 +166,14 @@ router.post("/assinatura-asaas", limitadorCadastro, async (req, res) => {
     res.status(400).json({ error: "CNPJ da escola é obrigatório para gerar a cobrança." });
     return;
   }
-  if (!escola.emailContato?.trim() && !escola.telefoneContato?.trim()) {
-    res.status(400).json({ error: "Cadastre um e-mail ou telefone de contato antes de assinar um plano." });
+  if (!escola.emailCobranca?.trim() && !escola.emailContato?.trim() && !escola.telefoneContato?.trim()) {
+    res.status(400).json({ error: "Cadastre um e-mail de cobrança (ou ao menos um contato) antes de assinar um plano." });
     return;
   }
+  // RF-BILLING-ASAAS: prioriza o e-mail específico de cobrança sobre o
+  // e-mail de contato geral -- nem sempre é a mesma caixa de entrada
+  // que recebe boleto e que atende a secretaria no dia a dia.
+  const emailParaAsaas = escola.emailCobranca?.trim() || escola.emailContato?.trim() || undefined;
 
   const plano = await db.select().from(planosTable).where(eq(planosTable.id, planoId)).then(r => r[0]);
   if (!plano) {
@@ -190,7 +195,7 @@ router.post("/assinatura-asaas", limitadorCadastro, async (req, res) => {
       const customer = await criarOuReaproveitarCustomer({
         name: escola.nomeFantasia,
         cpfCnpj: escola.cnpj,
-        email: escola.emailContato ?? undefined,
+        email: emailParaAsaas,
         mobilePhone: escola.telefoneContato ?? undefined,
         externalReference: escola.id,
       });

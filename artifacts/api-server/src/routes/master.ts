@@ -38,6 +38,7 @@ const EscolaUpdateInput = z.object({
   // existir) -- sem isso, a rota de assinatura Asaas fica bloqueada.
   emailContato: z.string().email().nullable().optional(),
   telefoneContato: z.string().nullable().optional(),
+  emailCobranca: z.string().email().nullable().optional(),
 });
 
 const PlanoInput = z.object({

@@ -52,6 +52,8 @@ export default function DadosEscolaPage() {
   const [nre, setNre] = useState("");
   const [turnos, setTurnos] = useState<string[]>([]);
   const [resolucaoSeedPr, setResolucaoSeedPr] = useState("");
+  const [emailContato, setEmailContato] = useState("");
+  const [telefoneContato, setTelefoneContato] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -66,6 +68,8 @@ export default function DadosEscolaPage() {
       const turnosStr = (escolaAtual as any).turnosOfertados as string | null | undefined;
       setTurnos(turnosStr ? turnosStr.split(",").map((t) => t.trim()).filter(Boolean) : []);
       setResolucaoSeedPr((escolaAtual as any).resolucaoSeedPr ?? "");
+      setEmailContato((escolaAtual as any).emailContato ?? "");
+      setTelefoneContato((escolaAtual as any).telefoneContato ?? "");
     }
   }, [escolaAtual]);
 
@@ -84,11 +88,6 @@ export default function DadosEscolaPage() {
     }
     setSaving(true);
     try {
-      // [NOTA] emailContato/telefoneContato não são enviados aqui de
-      // propósito -- o backend preserva o valor existente quando eles
-      // vêm undefined (ver routes/escolas.ts), então essa tela não
-      // precisa conhecer nem arriscar sobrescrever o contato de
-      // cobrança, que é gerenciado em Assinatura.
       await cadastrarEscola.mutateAsync({
         data: {
           nomeFantasia: nomeFantasia.trim(),
@@ -100,6 +99,8 @@ export default function DadosEscolaPage() {
           nre: nre.trim() || undefined,
           turnosOfertados: turnos.length > 0 ? turnos.join(",") : undefined,
           resolucaoSeedPr: resolucaoSeedPr.trim() || undefined,
+          emailContato: emailContato.trim() || undefined,
+          telefoneContato: telefoneContato.trim() || undefined,
         },
       });
       await queryClient.invalidateQueries({ queryKey: getGetEscolaAtualQueryKey() });
@@ -163,6 +164,16 @@ export default function DadosEscolaPage() {
                   {MODALIDADES.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>E-mail de contato</Label>
+                <Input type="email" value={emailContato} onChange={(e) => setEmailContato(e.target.value)} placeholder="secretaria@escola.pr.gov.br" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>WhatsApp de contato</Label>
+                <Input value={telefoneContato} onChange={(e) => setTelefoneContato(e.target.value)} placeholder="(41) 99999-9999" />
+              </div>
             </div>
           </CardContent>
         </Card>

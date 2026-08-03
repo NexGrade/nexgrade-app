@@ -16,6 +16,7 @@ export interface EscolaInput {
   modalidade?: EscolaInputModalidade;
   emailContato?: string;
   telefoneContato?: string;
+  emailCobranca?: string;
   codigoInep?: string;
   nre?: string;
   /** Lista separada por vírgula, ex: 'matutino,vespertino'. */

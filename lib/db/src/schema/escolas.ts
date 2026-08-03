@@ -57,6 +57,8 @@ export const escolasTable = pgTable("escolas", {
   // Painel Master, antes de ativar a assinatura.
   emailContato: text("email_contato"),
   telefoneContato: text("telefone_contato"),
+  emailCobranca: text("email_cobranca"),
+  
   // [NOVO] RF-BILLING-ASAAS: substituem stripeCustomerId/
   // stripeSubscriptionId como billing provider ativo -- os campos do
   // Stripe acima ficam intactos (não usados) até a migração completa

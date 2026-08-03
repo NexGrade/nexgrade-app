@@ -46,12 +46,17 @@ export interface Escola {
   /** @nullable */
   stripeSubscriptionId?: string | null;
   /**
-     * Usado pelo Asaas pra notificar a escola (boleto/PIX) automaticamente.
+     * E-mail de contato geral da escola.
      * @nullable
      */
   emailContato?: string | null;
   /** @nullable */
   telefoneContato?: string | null;
+  /**
+     * E-mail específico usado pelo Asaas pra notificar a escola (boleto/PIX). Cai pra emailContato quando vazio.
+     * @nullable
+     */
+  emailCobranca?: string | null;
   /** @nullable */
   asaasCustomerId?: string | null;
   /** @nullable */

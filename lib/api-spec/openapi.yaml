@@ -2293,8 +2293,9 @@ components:
         clerkOrgId: { type: ["string", "null"] }
         stripeCustomerId: { type: ["string", "null"] }
         stripeSubscriptionId: { type: ["string", "null"] }
-        emailContato: { type: ["string", "null"], description: "Usado pelo Asaas pra notificar a escola (boleto/PIX) automaticamente." }
+        emailContato: { type: ["string", "null"], description: "E-mail de contato geral da escola." }
         telefoneContato: { type: ["string", "null"] }
+        emailCobranca: { type: ["string", "null"], description: "E-mail específico usado pelo Asaas pra notificar a escola (boleto/PIX). Cai pra emailContato quando vazio." }
         asaasCustomerId: { type: ["string", "null"] }
         asaasSubscriptionId: { type: ["string", "null"] }
         asaasStatusAssinatura: { type: ["string", "null"], enum: [em_dia, pendente, atrasada, cancelada, null], description: "Alimentado pelo webhook do Asaas a cada evento de cobrança." }
@@ -2321,6 +2322,7 @@ components:
         trialEndsAt: { type: ["string", "null"], format: date-time }
         emailContato: { type: ["string", "null"] }
         telefoneContato: { type: ["string", "null"] }
+        emailCobranca: { type: ["string", "null"] }
         plano:
           $ref: "#/components/schemas/Plano"
 
@@ -2335,6 +2337,7 @@ components:
         modalidade: { type: string, enum: [regular, tecnica, eja, normal_magisterio], default: regular }
         emailContato: { type: string, format: email }
         telefoneContato: { type: string }
+        emailCobranca: { type: string, format: email }
         codigoInep: { type: string }
         nre: { type: string }
         turnosOfertados: { type: string, description: "Lista separada por vírgula, ex: 'matutino,vespertino'." }
@@ -2567,6 +2570,7 @@ components:
         isenta: { type: boolean }
         emailContato: { type: ["string", "null"], format: email }
         telefoneContato: { type: ["string", "null"] }
+        emailCobranca: { type: ["string", "null"], format: email }
 
     AssinaturaAsaasInput:
       type: object

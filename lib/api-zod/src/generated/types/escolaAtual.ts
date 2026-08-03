@@ -31,5 +31,7 @@ export interface EscolaAtual {
   emailContato?: string | null;
   /** @nullable */
   telefoneContato?: string | null;
+  /** @nullable */
+  emailCobranca?: string | null;
   plano?: Plano;
 }

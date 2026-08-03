@@ -37,13 +37,13 @@ export default function AssinaturaPage() {
   const { data: escolaAtual } = useGetEscolaAtual({ query: { queryKey: getGetEscolaAtualQueryKey() } });
   const cadastrarEscola = useCadastrarEscola();
 
-  const [emailContato, setEmailContato] = useState("");
+  const [emailCobranca, setEmailCobranca] = useState("");
   const [telefoneContato, setTelefoneContato] = useState("");
   const [savingContato, setSavingContato] = useState(false);
 
   useEffect(() => {
     if (escolaAtual) {
-      setEmailContato((escolaAtual as any).emailContato ?? "");
+      setEmailCobranca((escolaAtual as any).emailCobranca ?? "");
       setTelefoneContato((escolaAtual as any).telefoneContato ?? "");
     }
   }, [escolaAtual]);
@@ -59,7 +59,7 @@ export default function AssinaturaPage() {
           cidade: escolaAtual.cidade ?? undefined,
           estado: escolaAtual.estado,
           modalidade: escolaAtual.modalidade as any,
-          emailContato: emailContato.trim() || undefined,
+          emailCobranca: emailCobranca.trim() || undefined,
           telefoneContato: telefoneContato.trim() || undefined,
         },
       });
@@ -130,12 +130,15 @@ export default function AssinaturaPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2"><Receipt className="w-4 h-4" /> Contato para Cobrança</CardTitle>
-            <CardDescription>Usado pelo Asaas pra enviar o boleto/PIX quando você assinar um plano pago.</CardDescription>
+            <CardDescription>
+              Usado especificamente pelo Asaas pra enviar o boleto/PIX. Pode ser diferente do e-mail de contato
+              geral (esse fica em <Link href="/dados-escola" className="underline underline-offset-2">Dados da Escola</Link>).
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
-              <Label>E-mail</Label>
-              <Input type="email" placeholder="secretaria@escola.pr.gov.br" value={emailContato} onChange={(e) => setEmailContato(e.target.value)} />
+              <Label>E-mail de cobrança</Label>
+              <Input type="email" placeholder="financeiro@escola.pr.gov.br" value={emailCobranca} onChange={(e) => setEmailCobranca(e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label>WhatsApp</Label>
@@ -144,7 +147,7 @@ export default function AssinaturaPage() {
             <Button
               size="sm"
               onClick={handleSaveContato}
-              disabled={savingContato || !escolaAtual || (!emailContato.trim() && !telefoneContato.trim())}
+              disabled={savingContato || !escolaAtual || (!emailCobranca.trim() && !telefoneContato.trim())}
             >
               <Save className="w-3.5 h-3.5 mr-2" />
               {savingContato ? "Salvando..." : "Salvar contato"}
