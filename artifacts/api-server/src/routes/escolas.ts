@@ -78,7 +78,7 @@ router.get("/me", async (req, res) => {
 // POST /escolas — cria/atualiza escola (onboarding)
 router.post("/", limitadorCadastro, async (req, res) => {
   const escolaId = getEscolaId(req);
-  const { nomeFantasia, cnpj, cidade, estado, modalidade, emailContato, telefoneContato } = req.body;
+  const { nomeFantasia, cnpj, cidade, estado, modalidade, emailContato, telefoneContato, codigoInep, nre, turnosOfertados, resolucaoSeedPr } = req.body;
 
   if (!nomeFantasia?.trim()) {
     res.status(400).json({ error: "Nome da escola obrigatório" });
@@ -113,6 +113,10 @@ router.post("/", limitadorCadastro, async (req, res) => {
         nomeFantasia, cnpj, cidade, estado: estado ?? "SP", modalidade: modalidade ?? "regular",
         emailContato: emailContato ?? existing.emailContato,
         telefoneContato: telefoneContato ?? existing.telefoneContato,
+        codigoInep: codigoInep ?? existing.codigoInep,
+        nre: nre ?? existing.nre,
+        turnosOfertados: turnosOfertados ?? existing.turnosOfertados,
+        resolucaoSeedPr: resolucaoSeedPr ?? existing.resolucaoSeedPr,
         updatedAt: new Date(),
       })
       .where(eq(escolasTable.id, escolaId))
@@ -125,7 +129,8 @@ router.post("/", limitadorCadastro, async (req, res) => {
       .insert(escolasTable)
       .values({
         id: escolaId, nomeFantasia, cnpj, cidade, estado: estado ?? "SP", modalidade: modalidade ?? "regular",
-        emailContato, telefoneContato, planoId, planoAtivo: true, trialEndsAt,
+        emailContato, telefoneContato, codigoInep, nre, turnosOfertados, resolucaoSeedPr,
+        planoId, planoAtivo: true, trialEndsAt,
       })
       .returning();
     res.status(201).json(created);

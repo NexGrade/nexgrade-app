@@ -17,6 +17,26 @@ export interface Escola {
   cidade?: string | null;
   estado: string;
   modalidade: EscolaModalidade;
+  /**
+     * Código INEP oficial da escola perante o MEC.
+     * @nullable
+     */
+  codigoInep?: string | null;
+  /**
+     * Núcleo Regional de Educação (SEED-PR) ou equivalente estadual.
+     * @nullable
+     */
+  nre?: string | null;
+  /**
+     * Lista separada por vírgula, ex: 'matutino,vespertino'.
+     * @nullable
+     */
+  turnosOfertados?: string | null;
+  /**
+     * Número da resolução SEED-PR (ou equivalente estadual) que rege a escola.
+     * @nullable
+     */
+  resolucaoSeedPr?: string | null;
   /** @nullable */
   planoId?: number | null;
   /** @nullable */

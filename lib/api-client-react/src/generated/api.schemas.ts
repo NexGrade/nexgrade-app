@@ -825,6 +825,26 @@ export interface Escola {
   cidade?: string | null;
   estado: string;
   modalidade: EscolaModalidade;
+  /**
+     * Código INEP oficial da escola perante o MEC.
+     * @nullable
+     */
+  codigoInep?: string | null;
+  /**
+     * Núcleo Regional de Educação (SEED-PR) ou equivalente estadual.
+     * @nullable
+     */
+  nre?: string | null;
+  /**
+     * Lista separada por vírgula, ex: 'matutino,vespertino'.
+     * @nullable
+     */
+  turnosOfertados?: string | null;
+  /**
+     * Número da resolução SEED-PR (ou equivalente estadual) que rege a escola.
+     * @nullable
+     */
+  resolucaoSeedPr?: string | null;
   /** @nullable */
   planoId?: number | null;
   /** @nullable */
@@ -867,6 +887,14 @@ export interface EscolaAtual {
   cidade?: string | null;
   estado?: string;
   modalidade?: string;
+  /** @nullable */
+  codigoInep?: string | null;
+  /** @nullable */
+  nre?: string | null;
+  /** @nullable */
+  turnosOfertados?: string | null;
+  /** @nullable */
+  resolucaoSeedPr?: string | null;
   planoAtivo?: boolean;
   /** @nullable */
   trialEndsAt?: string | null;
@@ -896,6 +924,11 @@ export interface EscolaInput {
   modalidade?: EscolaInputModalidade;
   emailContato?: string;
   telefoneContato?: string;
+  codigoInep?: string;
+  nre?: string;
+  /** Lista separada por vírgula, ex: 'matutino,vespertino'. */
+  turnosOfertados?: string;
+  resolucaoSeedPr?: string;
 }
 
 export type LicencaTipo = typeof LicencaTipo[keyof typeof LicencaTipo];

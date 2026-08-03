@@ -16,6 +16,14 @@ export interface EscolaAtual {
   cidade?: string | null;
   estado?: string;
   modalidade?: string;
+  /** @nullable */
+  codigoInep?: string | null;
+  /** @nullable */
+  nre?: string | null;
+  /** @nullable */
+  turnosOfertados?: string | null;
+  /** @nullable */
+  resolucaoSeedPr?: string | null;
   planoAtivo?: boolean;
   /** @nullable */
   trialEndsAt?: Date | null;

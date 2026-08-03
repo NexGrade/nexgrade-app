@@ -2285,6 +2285,10 @@ components:
         cidade: { type: ["string", "null"] }
         estado: { type: string }
         modalidade: { type: string, enum: [regular, tecnica, eja, normal_magisterio] }
+        codigoInep: { type: ["string", "null"], description: "Código INEP oficial da escola perante o MEC." }
+        nre: { type: ["string", "null"], description: "Núcleo Regional de Educação (SEED-PR) ou equivalente estadual." }
+        turnosOfertados: { type: ["string", "null"], description: "Lista separada por vírgula, ex: 'matutino,vespertino'." }
+        resolucaoSeedPr: { type: ["string", "null"], description: "Número da resolução SEED-PR (ou equivalente estadual) que rege a escola." }
         planoId: { type: ["integer", "null"] }
         clerkOrgId: { type: ["string", "null"] }
         stripeCustomerId: { type: ["string", "null"] }
@@ -2309,6 +2313,10 @@ components:
         cidade: { type: ["string", "null"] }
         estado: { type: string }
         modalidade: { type: string }
+        codigoInep: { type: ["string", "null"] }
+        nre: { type: ["string", "null"] }
+        turnosOfertados: { type: ["string", "null"] }
+        resolucaoSeedPr: { type: ["string", "null"] }
         planoAtivo: { type: boolean }
         trialEndsAt: { type: ["string", "null"], format: date-time }
         emailContato: { type: ["string", "null"] }
@@ -2327,6 +2335,10 @@ components:
         modalidade: { type: string, enum: [regular, tecnica, eja, normal_magisterio], default: regular }
         emailContato: { type: string, format: email }
         telefoneContato: { type: string }
+        codigoInep: { type: string }
+        nre: { type: string }
+        turnosOfertados: { type: string, description: "Lista separada por vírgula, ex: 'matutino,vespertino'." }
+        resolucaoSeedPr: { type: string }
 
     Licenca:
       type: object

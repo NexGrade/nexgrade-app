@@ -34,6 +34,18 @@ export const escolasTable = pgTable("escolas", {
   cidade: text("cidade"),
   estado: text("estado").notNull().default("SP"),
   modalidade: text("modalidade").notNull().default("regular"),
+  // [NOVO] Identificação oficial da escola perante o MEC/SEED --
+  // usados em relatórios oficiais e para diferenciar escolas com nome
+  // fantasia parecido. Opcionais: nem toda escola (ex: escola nova em
+  // fase de cadastro) tem esses dados no ato do onboarding.
+  codigoInep: text("codigo_inep"),
+  nre: text("nre"), // Núcleo Regional de Educação (SEED-PR) ou equivalente estadual
+  // Armazenado como texto separado por vírgula (ex: "matutino,vespertino")
+  // em vez de array do Postgres, pra manter consistência com o resto
+  // do schema (nenhuma outra coluna usa array) e simplificar leitura/
+  // escrita sem precisar de driver específico pra tipo array.
+  turnosOfertados: text("turnos_ofertados"),
+  resolucaoSeedPr: text("resolucao_seed_pr"),
   planoId: integer("plano_id").references(() => planosTable.id),
   clerkOrgId: text("clerk_org_id").unique(),
   stripeCustomerId: text("stripe_customer_id"),
