@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import {
   horariosTable, professoresTable, disciplinasTable, turmasTable, disponibilidadeTable,
   horarioSlotsTable, turmaDisciplinasTable, trimestresLetivosTable, matrizesCurricularesTable, itensMatrizTable,
+  escolasTable,
 } from "@workspace/db";
 import { and, eq, isNull } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
@@ -20,11 +21,23 @@ const DIAS = ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "
 const TURNO_ROTULO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
 const ORDEM_TURNO = ["matutino", "vespertino", "noturno"];
 
-// [NOVO] Nome oficial da escola, usado no cabeçalho das grades PDF
-// compactas. Fixo por enquanto -- não há campo de "nome da escola"
-// configurável na plataforma ainda; se um dia a NexGrade atender mais
-// de uma escola, isso precisa vir de escolasTable em vez de constante.
-const NOME_ESCOLA = "C.E. Prof. Mário B.T. Braga";
+// [FIX] RF-EXPORT-MULTITENANT: antes disso era uma constante fixa
+// ("C.E. Prof. Mário B.T. Braga") -- sobra de quando o sistema era
+// single-tenant, antes de existir mais de uma escola na plataforma.
+// Com duas escolas reais agora (piloto + Arlinda), qualquer escola que
+// exportasse um PDF via /grade-pdf ou /carga-* via essa constante
+// recebia o nome do PILOTO no cabeçalho, não o nome dela mesma --
+// bug de vazamento de identidade entre tenants (a grade em si já era
+// filtrada certo por escolaId em todo lugar; só o texto do cabeçalho
+// que ficou hardcoded). Busca o nome real da escola da requisição.
+async function buscarNomeEscola(escolaId: string): Promise<string> {
+  const escola = await db
+    .select({ nomeFantasia: escolasTable.nomeFantasia })
+    .from(escolasTable)
+    .where(eq(escolasTable.id, escolaId))
+    .then((r) => r[0]);
+  return escola?.nomeFantasia ?? "Escola";
+}
 
 function toCSV(headers: string[], rows: string[][]): string {
   const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
@@ -273,7 +286,7 @@ router.get("/grade-pdf/turma", async (req, res) => {
     })(),
   })));
 
-  const pdfBytes = await gerarPdfGradeCompacta(NOME_ESCOLA, "Grade Horária por Turma", intervaloSemana(lerOffsetSemana(req)), blocos);
+  const pdfBytes = await gerarPdfGradeCompacta(await buscarNomeEscola(escolaId), "Grade Horária por Turma", intervaloSemana(lerOffsetSemana(req)), blocos);
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", 'attachment; filename="grade_por_turma.pdf"');
   res.send(Buffer.from(pdfBytes));
@@ -356,7 +369,7 @@ router.get("/grade-pdf/professor", async (req, res) => {
     }
   }
 
-  const pdfBytes = await gerarPdfGradeCompacta(NOME_ESCOLA, "Grade Horária por Professor", intervaloSemana(lerOffsetSemana(req)), blocos);
+  const pdfBytes = await gerarPdfGradeCompacta(await buscarNomeEscola(escolaId), "Grade Horária por Professor", intervaloSemana(lerOffsetSemana(req)), blocos);
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", 'attachment; filename="grade_por_professor.pdf"');
   res.send(Buffer.from(pdfBytes));
@@ -418,7 +431,7 @@ router.get("/relatorio-carga-pdf", async (req, res) => {
     return { nome: prof.nome, totalGeralAulas: slotsDoProf.length, totalGeralHa, periodos };
   });
 
-  const pdfBytes = await gerarPdfCargaProfessores(NOME_ESCOLA, intervaloSemana(lerOffsetSemana(req)), relatorio);
+  const pdfBytes = await gerarPdfCargaProfessores(await buscarNomeEscola(escolaId), intervaloSemana(lerOffsetSemana(req)), relatorio);
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", 'attachment; filename="relatorio_carga_professores.pdf"');
   res.send(Buffer.from(pdfBytes));
@@ -494,7 +507,7 @@ router.get("/carga-horaria-pdf", async (req, res) => {
     .sort((a, b) => a.turma.localeCompare(b.turma, "pt-BR"));
   turmasComItens.forEach((t) => t.itens.sort((a, b) => a.disciplina.localeCompare(b.disciplina, "pt-BR")));
 
-  const pdfBytes = await gerarPdfCargaHoraria(NOME_ESCOLA, ano, turmasComItens);
+  const pdfBytes = await gerarPdfCargaHoraria(await buscarNomeEscola(escolaId), ano, turmasComItens);
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", `attachment; filename="carga_horaria_${ano}.pdf"`);
   res.send(Buffer.from(pdfBytes));
