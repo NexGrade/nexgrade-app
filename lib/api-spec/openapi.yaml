@@ -2311,6 +2311,8 @@ components:
         modalidade: { type: string }
         planoAtivo: { type: boolean }
         trialEndsAt: { type: ["string", "null"], format: date-time }
+        emailContato: { type: ["string", "null"] }
+        telefoneContato: { type: ["string", "null"] }
         plano:
           $ref: "#/components/schemas/Plano"
 

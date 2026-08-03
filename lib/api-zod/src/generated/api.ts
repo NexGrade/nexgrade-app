@@ -1181,6 +1181,8 @@ export const GetEscolaAtualResponse = zod.object({
   "modalidade": zod.string().optional(),
   "planoAtivo": zod.boolean().optional(),
   "trialEndsAt": zod.coerce.date().nullish(),
+  "emailContato": zod.string().nullish(),
+  "telefoneContato": zod.string().nullish(),
   "plano": zod.object({
   "id": zod.number(),
   "nome": zod.string(),

@@ -870,6 +870,10 @@ export interface EscolaAtual {
   planoAtivo?: boolean;
   /** @nullable */
   trialEndsAt?: string | null;
+  /** @nullable */
+  emailContato?: string | null;
+  /** @nullable */
+  telefoneContato?: string | null;
   plano?: Plano;
 }
 
