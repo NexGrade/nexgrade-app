@@ -1,13 +1,16 @@
-import { useState } from "react";
-import { useListConfiguracoes, useUpsertConfiguracao } from "@workspace/api-client-react";
+import { useState, useEffect } from "react";
+import {
+  useListConfiguracoes, useUpsertConfiguracao,
+  useCadastrarEscola, useGetEscolaAtual, getGetEscolaAtualQueryKey,
+} from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Save, ShieldCheck } from "lucide-react";
+import { Settings, Save, ShieldCheck, Receipt } from "lucide-react";
 
 const ESTADOS_BR = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"
@@ -46,6 +49,54 @@ export default function ConfiguracoesList() {
   const [saving, setSaving] = useState(false);
   const [seedForm, setSeedForm] = useState<Record<string, unknown>>({});
   const [savingSeed, setSavingSeed] = useState(false);
+
+  // [NOVO] RF-BILLING-ASAAS: contato usado pelo Asaas pra notificar a
+  // escola (boleto/PIX) -- mora na tabela escolas, não em
+  // configuracoes (chave/valor), por isso reaproveita a mesma rota
+  // POST /escolas que o onboarding usa (ela já sabe atualizar uma
+  // escola existente). Manda o registro completo de volta -- não só
+  // e-mail/telefone -- pra não arriscar zerar nomeFantasia/cnpj/etc
+  // caso a rota não preserve campos omitidos.
+  const { data: escolaAtual } = useGetEscolaAtual({ query: { queryKey: getGetEscolaAtualQueryKey() } });
+  const cadastrarEscola = useCadastrarEscola();
+  const [emailContato, setEmailContato] = useState("");
+  const [telefoneContato, setTelefoneContato] = useState("");
+  const [savingContato, setSavingContato] = useState(false);
+
+  useEffect(() => {
+    if (escolaAtual) {
+      setEmailContato((escolaAtual as any).emailContato ?? "");
+      setTelefoneContato((escolaAtual as any).telefoneContato ?? "");
+    }
+  }, [escolaAtual]);
+
+  const handleSaveContato = async () => {
+    if (!escolaAtual?.nomeFantasia) return;
+    setSavingContato(true);
+    try {
+      await cadastrarEscola.mutateAsync({
+        data: {
+          nomeFantasia: escolaAtual.nomeFantasia,
+          cnpj: (escolaAtual as any).cnpj ?? undefined,
+          cidade: escolaAtual.cidade ?? undefined,
+          estado: escolaAtual.estado,
+          modalidade: escolaAtual.modalidade as any,
+          emailContato: emailContato.trim() || undefined,
+          telefoneContato: telefoneContato.trim() || undefined,
+        },
+      });
+      await queryClient.invalidateQueries({ queryKey: getGetEscolaAtualQueryKey() });
+      toast({ title: "Contato de cobrança salvo!" });
+    } catch (err) {
+      toast({
+        title: "Erro ao salvar o contato",
+        description: err instanceof Error ? err.message : undefined,
+        variant: "destructive",
+      });
+    } finally {
+      setSavingContato(false);
+    }
+  };
 
   const getVal = (chave: string): string => {
     const override = form[chave];
@@ -146,6 +197,31 @@ export default function ConfiguracoesList() {
                 </SelectContent>
               </Select>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2"><Receipt className="w-4 h-4" /> Contato para Cobrança</CardTitle>
+            <CardDescription>Usado pelo Asaas pra enviar o boleto/PIX quando você assinar um plano pago.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>E-mail</Label>
+              <Input type="email" placeholder="secretaria@escola.pr.gov.br" value={emailContato} onChange={e => setEmailContato(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>WhatsApp</Label>
+              <Input placeholder="(41) 99999-9999" value={telefoneContato} onChange={e => setTelefoneContato(e.target.value)} />
+            </div>
+            <Button
+              size="sm"
+              onClick={handleSaveContato}
+              disabled={savingContato || !escolaAtual || (!emailContato.trim() && !telefoneContato.trim())}
+            >
+              <Save className="w-3.5 h-3.5 mr-2" />
+              {savingContato ? "Salvando..." : "Salvar contato"}
+            </Button>
           </CardContent>
         </Card>
 
