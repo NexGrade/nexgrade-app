@@ -1,4 +1,4 @@
-﻿import { Router } from "express";
+import { Router } from "express";
 import { db } from "@workspace/db";
 import {
   horariosTable,
@@ -80,8 +80,11 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
   const condicaoNivel = turma.turno === "matutino"
     ? eq(horarioSlotsTable.nivelEnsino, turma.nivelEnsino!)
     : isNull(horarioSlotsTable.nivelEnsino);
+  // [FIX] Adicionado filtro escolaId: sem ele, escolas diferentes que configuraram
+  // turnos com número de períodos distinto compartilhavam o mesmo conjunto de slots,
+  // fazendo AULAS ter mais linhas do que o turno desta escola realmente define.
   const slotsDoTurno = await db.select().from(horarioSlotsTable)
-    .where(and(eq(horarioSlotsTable.turno, turma.turno), condicaoNivel));
+    .where(and(eq(horarioSlotsTable.escolaId, escolaId), eq(horarioSlotsTable.turno, turma.turno), condicaoNivel));
   if (slotsDoTurno.length === 0) {
     throw new Error(
       `Nenhum esquema de horário configurado para o turno "${turma.turno}"` +
@@ -89,7 +92,10 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
       ". Configure o esquema de horários antes de gerar.",
     );
   }
-  const aulasPorDiaReal = slotsDoTurno.length;
+  // [FIX] Domínio EXPLÍCITO: conjunto exato de numeroAula do banco, não um
+  // intervalo implícito 1..N derivado do length. Se os slots tiverem lacunas
+  // (ex.: 1,2,3,5 sem o 4), o Set reflete isso. Guarda para validação cruzada.
+  const AULAS_VALIDAS_TURMA = new Set(slotsDoTurno.map(s => s.numeroAula).filter(n => n >= 1));
 
   const [turmaDiscs, disciplinas, professores, profDiscs, configGeminadas, configComplementarPadrao, limitesProfessor] = await Promise.all([
     db.select().from(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.turmaId, turmaId)),
@@ -222,7 +228,11 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
 
   const DIAS = [0, 1, 2, 3, 4];
   const diasBase = fatorPedagogico ? [1, 3, 2, 4, 0] : DIAS;
-  const AULAS = Array.from({ length: aulasPorDiaReal }, (_, i) => i + 1);
+  // [FIX] AULAS derivado do Set explícito (não de um range 1..N baseado no
+  // length da query). Domínio fechado: qualquer código que tente usar um
+  // período fora deste array estará operando num slot que não existe na
+  // configuração real da escola -- a função alocar() vai lançar erro.
+  const AULAS = [...AULAS_VALIDAS_TURMA].sort((a, b) => a - b);
 
   function cargaEfetiva(td: typeof turmaDiscs[number], disc: typeof disciplinas[number] | undefined): number {
     return td.cargaHorariaSemanalOverride ?? disc?.cargaSemanal ?? 0;
@@ -239,6 +249,16 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
   });
 
   function alocar(disciplinaId: number, professorId: number, dia: number, aula: number) {
+    // [FIX] Guard interno: impede silenciosamente que qualquer caminho do
+    // algoritmo grave um período que não existe no esquema desta turma.
+    // Transforma falha silenciosa em erro explícito e rastreável.
+    if (!AULAS_VALIDAS_TURMA.has(aula)) {
+      throw new Error(
+        `[BUG] Tentativa de alocar período ${aula} que não existe no esquema da turma ` +
+        `(períodos válidos: ${[...AULAS_VALIDAS_TURMA].sort((a,b)=>a-b).join(", ")}). ` +
+        `Disciplina ${disciplinaId}, professor ${professorId}, dia ${dia}.`,
+      );
+    }
     slotsParaGravar.push({ disciplinaId, professorId, diaSemana: dia, numeroAula: aula });
     ocupadoSlot[`${dia}-${aula}`] = true;
     ocupadoProf[`${professorId}-${dia}-${aula}`] = true;
@@ -315,7 +335,9 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
       let aulasOrdem = [...AULAS];
 
       if (reduzirJanelas) {
-        aulasOrdem = AULAS.sort((a, b) => {
+        // [FIX] Era AULAS.sort() — mutava o array global. Agora [...AULAS].sort()
+        // cria cópia temporária; AULAS permanece imutável para todas as disciplinas.
+        aulasOrdem = [...AULAS].sort((a, b) => {
           const adjA = profsParaDisc.some(p => {
             const aulas = aulasPorProfessorDia[p.id] ?? [];
             return aulas.includes(dia * 100 + (a - 1)) || aulas.includes(dia * 100 + (a + 1));
@@ -427,6 +449,57 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
 
   const enriched = await Promise.all((gravados as typeof horariosTable.$inferSelect[]).map(enrichSlot));
   return { slotsGerados: gravados.length, conflitos, horario: enriched };
+}
+
+// ── VALIDAÇÃO DE DOMÍNIO DE PERÍODO ──────────────────────────────────
+//
+// [FIX] Funções de validação de domínio: garantem que qualquer período
+// gravado manualmente nas rotas de escrita pertence ao conjunto real de
+// slots configurados para o turno+nivelEnsino da turma — mesma garantia
+// estrutural que o CP-SAT fornece por construção no motor automático.
+//
+// Causa raiz documentada: turma "2B" (matutino Médio, 6 aulas/dia) recebeu
+// slots com numero_aula até 11 porque o heurístico usava o length da query
+// de horario_slots sem filtrar por escolaId+nivelEnsino. Esta função impede
+// a mesma classe de falha nas inserções manuais e na promoção de experimentos.
+
+async function periodosValidosDaTurma(
+  turmaId: number,
+  escolaId: string,
+): Promise<Set<number>> {
+  const turma = await db.select().from(turmasTable)
+    .where(and(eq(turmasTable.id, turmaId), eq(turmasTable.escolaId, escolaId)))
+    .then(r => r[0]);
+  if (!turma) return new Set();
+
+  const condicaoNivel = turma.turno === "matutino" && turma.nivelEnsino
+    ? eq(horarioSlotsTable.nivelEnsino, turma.nivelEnsino as "fundamental" | "medio_tecnico")
+    : isNull(horarioSlotsTable.nivelEnsino);
+
+  const slots = await db.select().from(horarioSlotsTable)
+    .where(and(eq(horarioSlotsTable.escolaId, escolaId), eq(horarioSlotsTable.turno, turma.turno), condicaoNivel));
+
+  return new Set(slots.map(s => s.numeroAula).filter(n => n >= 1));
+}
+
+async function assertPeriodoValido(
+  turmaId: number,
+  numeroAula: number,
+  escolaId: string,
+): Promise<{ ok: true } | { ok: false; erro: string; periodosValidos: number[] }> {
+  const validos = await periodosValidosDaTurma(turmaId, escolaId);
+  if (validos.size === 0) {
+    return { ok: false, erro: "Turma sem esquema de horários configurado. Configure o esquema antes de inserir slots.", periodosValidos: [] };
+  }
+  if (!validos.has(numeroAula)) {
+    const lista = [...validos].sort((a, b) => a - b);
+    return {
+      ok: false,
+      erro: `Período ${numeroAula} não existe no esquema desta turma. Períodos válidos: ${lista.join(", ")}.`,
+      periodosValidos: lista,
+    };
+  }
+  return { ok: true };
 }
 
 // ── ROUTES ───────────────────────────────────────────────────────────
@@ -549,6 +622,15 @@ router.post("/", async (req, res) => {
     return;
   }
 
+  // [FIX] Validação de domínio: bloqueia inserção manual de período inexistente
+  // no esquema desta turma — a mesma classe de falha que gerou dados inválidos
+  // silenciosamente no incidente documentado (turma 2B, períodos 7–11).
+  const validacao = await assertPeriodoValido(data.turmaId, data.numeroAula, escolaId);
+  if (!validacao.ok) {
+    res.status(422).json({ error: validacao.erro, periodosValidos: validacao.periodosValidos });
+    return;
+  }
+
   const [slot] = await db.insert(horariosTable).values({ ...data, escolaId }).returning();
   const enriched = await enrichSlot(slot);
   res.status(201).json(enriched);
@@ -574,7 +656,9 @@ const ExpInput = z.object({
   disciplinaId: z.number().int(),
   professorId: z.number().int(),
   diaSemana: z.number().int().min(0).max(4),
-  numeroAula: z.number().int().min(1).max(8),
+  // [FIX] Removido .max(8) hardcoded — o limite real varia por turno/nível de ensino.
+  // Validação dinâmica feita por assertPeriodoValido() logo após o parse do body.
+  numeroAula: z.number().int().min(1),
   sala: z.string().optional(),
 });
 
@@ -604,6 +688,13 @@ router.post("/experimentais", async (req, res) => {
     return;
   }
 
+  // [FIX] Validação de domínio na inserção manual de slot experimental
+  const validacaoExp = await assertPeriodoValido(parsed.data.turmaId, parsed.data.numeroAula, escolaId);
+  if (!validacaoExp.ok) {
+    res.status(422).json({ error: validacaoExp.erro, periodosValidos: validacaoExp.periodosValidos });
+    return;
+  }
+
   const [slot] = await db.insert(horariosExperimentaisTable).values({ ...parsed.data, escolaId }).returning();
   res.status(201).json(slot);
 });
@@ -620,6 +711,31 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
   }
 
   const turmaIds = [...new Set(expSlots.map(s => s.turmaId))];
+
+  // [FIX] Validação de domínio em lote antes de promover: garante que nenhum
+  // slot do experimento tem um período que não existe no esquema atual da turma.
+  // Valida cada turmaId UMA vez (via Set de períodos do banco), não slot por slot.
+  const periodosPorTurma = new Map<number, Set<number>>();
+  for (const tid of turmaIds) {
+    periodosPorTurma.set(tid, await periodosValidosDaTurma(tid, escolaId));
+  }
+  const violacoes = expSlots.filter(s => {
+    const validos = periodosPorTurma.get(s.turmaId);
+    return validos && validos.size > 0 && !validos.has(s.numeroAula);
+  });
+  if (violacoes.length > 0) {
+    res.status(422).json({
+      error: "Não é possível promover: o experimento contém slots com períodos inválidos para o esquema atual da turma.",
+      violacoes: violacoes.map(s => ({
+        turmaId: s.turmaId,
+        disciplinaId: s.disciplinaId,
+        diaSemana: s.diaSemana,
+        numeroAula: s.numeroAula,
+        periodosValidos: [...(periodosPorTurma.get(s.turmaId) ?? [])].sort((a, b) => a - b),
+      })),
+    });
+    return;
+  }
 
   const linhas = expSlots.map((s) => ({
     escolaId,

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { horariosTable, professoresTable, disciplinasTable, turmasTable, turmaDisciplinasTable, professorDisciplinasTable, disponibilidadeTable, salasTable, configuracoesTable, trimestresLetivosTable } from "@workspace/db";
-import { eq, inArray } from "drizzle-orm";
+import { horariosTable, professoresTable, disciplinasTable, turmasTable, turmaDisciplinasTable, professorDisciplinasTable, disponibilidadeTable, salasTable, configuracoesTable, trimestresLetivosTable, horarioSlotsTable } from "@workspace/db";
+import { eq, inArray, and, isNull } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
 import { calcularHoraAtividadePorTurno } from "../lib/hora-atividade";
 
@@ -62,6 +62,63 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     : [];
 
   const conflitos: Conflito[] = [];
+
+  // ── NOVO: Verificação de domínio de período ─────────────────────────
+  // [FIX CRÍTICO] Detecta slots com numero_aula fora do domínio oficial
+  // da turma — o tipo exato de dado fisicamente impossível gerado pelo
+  // motor heurístico no incidente documentado na Seção 4 do relatório
+  // técnico (C.E. Arlinda Ferreira Creplive, turma 2B, números de aula
+  // até 11 numa turma com máximo de 6 por dia).
+  //
+  // O CP-SAT torna essa classe de violação estruturalmente impossível
+  // por construção. Esta checagem continua sendo executada como camada
+  // de defesa enquanto o motor heurístico coexiste com o CP-SAT, e
+  // como auditoria permanente da grade em produção.
+  const combinacoesUnicas = [...new Set(turmas.map(t => `${t.turno}|${t.nivelEnsino ?? ""}`))]
+    .map(k => {
+      const [turno, nivel] = k.split("|");
+      return { turno: turno!, nivelEnsino: nivel || null };
+    });
+
+  const periodosValidosPorTurma = new Map<number, Set<number>>();
+  await Promise.all(
+    combinacoesUnicas.map(async ({ turno, nivelEnsino }) => {
+      const condicaoNivel = turno === "matutino" && nivelEnsino
+        ? eq(horarioSlotsTable.nivelEnsino, nivelEnsino as "fundamental" | "medio_tecnico")
+        : isNull(horarioSlotsTable.nivelEnsino);
+      const slotsDoTurno = await db.select().from(horarioSlotsTable)
+        .where(and(
+          eq(horarioSlotsTable.escolaId, escolaId),
+          eq(horarioSlotsTable.turno, turno as "matutino" | "vespertino" | "noturno"),
+          condicaoNivel,
+        ));
+      const periodosValidos = new Set(slotsDoTurno.filter(s => s.numeroAula >= 1).map(s => s.numeroAula));
+      turmas
+        .filter(t => t.turno === turno && (t.nivelEnsino ?? null) === nivelEnsino)
+        .forEach(t => periodosValidosPorTurma.set(t.id, periodosValidos));
+    }),
+  );
+
+  slots.forEach(s => {
+    const periodosValidos = periodosValidosPorTurma.get(s.turmaId);
+    if (!periodosValidos || periodosValidos.size === 0) return;
+    if (!periodosValidos.has(s.numeroAula)) {
+      const turma = turmas.find(t => t.id === s.turmaId);
+      const disc = disciplinas.find(d => d.id === s.disciplinaId);
+      const prof = professores.find(p => p.id === s.professorId);
+      const periodosStr = [...periodosValidos].sort((a, b) => a - b).join(", ");
+      conflitos.push({
+        tipo: "periodo_invalido",
+        descricao: `Turma "${turma?.nome ?? s.turmaId}": aula de "${disc?.nome ?? s.disciplinaId}" (Prof. ${prof?.nome ?? s.professorId}) está no ${["Seg","Ter","Qua","Qui","Sex"][s.diaSemana ?? 0]}, período ${s.numeroAula}, que não existe no esquema desta turma (períodos válidos: ${periodosStr})`,
+        gravidade: "critico",
+        turmaId: s.turmaId,
+        professorId: s.professorId,
+        diaSemana: s.diaSemana,
+        numeroAula: s.numeroAula,
+      });
+    }
+  });
+  // ────────────────────────────────────────────────────────────────────
 
   const slotProfMap: Record<string, number[]> = {};
   slots.forEach(s => {
@@ -396,6 +453,12 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
 
 function gerarSugestoes(conflito: Conflito): string[] {
   switch (conflito.tipo) {
+    case "periodo_invalido":
+      return [
+        "Este slot foi gravado com um número de período que não existe no esquema atual da turma — use 'Substituir tudo' ou o motor CP-SAT para regenerar a grade, ambos garantem que nenhum período inválido é gerado",
+        "Se o esquema de horários foi alterado recentemente (ex.: de 5 para 6 períodos), todos os slots anteriores ao novo esquema precisam ser removidos e regenerados",
+        "Você pode remover manualmente este slot específico no editor de grade e reinserir no período correto",
+      ];
     case "professor_duplicado":
       return [
         "Remova um dos slots conflitantes manualmente ou regenere o horário com 'Substituir tudo'",
