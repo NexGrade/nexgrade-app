@@ -1,4 +1,4 @@
-import os
+ï»¿import os
 from fastapi import FastAPI, HTTPException
 from google import genai
 from .solver import gerar_grade
@@ -9,18 +9,18 @@ api_key = os.getenv("GEMINI_API_KEY", "").strip().strip('"').strip("'")
 gemini_client = genai.Client(api_key=api_key) if api_key else None
 
 def gerar_diagnostico_fallback(dados_requisicao: dict, log_solver: str = "") -> str:
-    """Gera uma explicação pedagógica local clara quando o serviço de IA externa falha."""
+    """Gera uma explicaï¿½ï¿½o pedagï¿½gica local clara quando o serviï¿½o de IA externa falha."""
     disciplinas = dados_requisicao.get('disciplinasTurma', [])
     aulas_dia = dados_requisicao.get('aulasPorDia', 5)
     
-    # Exemplo simples de análise do conflito no teste (10 aulas solicitadas em 5 dias de 1 aula/dia)
+    # Exemplo simples de anï¿½lise do conflito no teste (10 aulas solicitadas em 5 dias de 1 aula/dia)
     tot_aulas = sum(d.get('aulasSemana', 0) for d in disciplinas)
     capacidade_semana = aulas_dia * 5
     
-    msg = "### ?? Diagnóstico da Inviabilidade Horária\n\n"
-    msg += f"1. **Problema Principal:** A carga horária solicitada ({tot_aulas} aulas/semana) excede a capacidade máxima do turno no formato atual ({capacidade_semana} slots/semana).\n"
-    msg += f"2. **Gargalo:** Configuração de {aulas_dia} aula(s) por dia limite para {len(disciplinas)} disciplina(s).\n"
-    msg += "3. **Recomendação:** Aumente o número de 'aulas por dia' nas configurações do turno ou reduza a carga horária semanal das disciplinas."
+    msg = "### ?? Diagnï¿½stico da Inviabilidade Horï¿½ria\n\n"
+    msg += f"1. **Problema Principal:** A carga horï¿½ria solicitada ({tot_aulas} aulas/semana) excede a capacidade mï¿½xima do turno no formato atual ({capacidade_semana} slots/semana).\n"
+    msg += f"2. **Gargalo:** Configuraï¿½ï¿½o de {aulas_dia} aula(s) por dia limite para {len(disciplinas)} disciplina(s).\n"
+    msg += "3. **Recomendaï¿½ï¿½o:** Aumente o nï¿½mero de 'aulas por dia' nas configuraï¿½ï¿½es do turno ou reduza a carga horï¿½ria semanal das disciplinas."
     
     return msg
 
@@ -29,20 +29,20 @@ def explicar_inviabilidade_com_gemini(dados_requisicao: dict, log_solver: str = 
         return gerar_diagnostico_fallback(dados_requisicao, log_solver)
     
     prompt = f"""
-    Você é um assistente especialista em logística pedagógica.
-    O motor CP-SAT retornou status INVIÁVEL.
+    Vocï¿½ ï¿½ um assistente especialista em logï¿½stica pedagï¿½gica.
+    O motor CP-SAT retornou status INVIï¿½VEL.
 
-    Analise os dados e explique em linguagem simples qual é o conflito e como corrigir:
+    Analise os dados e explique em linguagem simples qual ï¿½ o conflito e como corrigir:
     - Turno: {dados_requisicao.get('turno')}
     - Aulas por Dia: {dados_requisicao.get('aulasPorDia')}
     - Turmas: {dados_requisicao.get('turmas')}
     - Disciplinas: {dados_requisicao.get('disciplinasTurma')}
     - Log: {log_solver}
     
-    Forneça 3 tópicos curtos:
+    Forneï¿½a 3 tï¿½picos curtos:
     1. Problema Principal
     2. Gargalo
-    3. Recomendação
+    3. Recomendaï¿½ï¿½o
     """
     
     # Tenta usar os nomes de modelos suportados na nova biblioteca google-genai
@@ -58,7 +58,7 @@ def explicar_inviabilidade_com_gemini(dados_requisicao: dict, log_solver: str = 
         except Exception:
             continue
             
-    # Se todos falharem ou derem erro de permissão/projeto, usa o fallback local
+    # Se todos falharem ou derem erro de permissï¿½o/projeto, usa o fallback local
     return gerar_diagnostico_fallback(dados_requisicao, log_solver)
 
 @app.api_route("/", methods=["GET", "HEAD"])
@@ -93,4 +93,5 @@ def gerar_grade_endpoint(payload: dict):
         return resultado
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
