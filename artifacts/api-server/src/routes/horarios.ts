@@ -53,6 +53,11 @@ export interface GerarOpts {
   // professor apague/realoque as aulas de TODOS os outros professores
   // que dividem essas mesmas turmas.
   apenasProfessorId?: number;
+  // [FIX] Permite ao chamador forcar uma ordem de dias especifica (usado
+  // por gerarAlgoritmoMelhorTentativa pra tentar varias ordens e ficar
+  // com a que tiver menos conflitos). Quando ausente, usa o padrao
+  // (fatorPedagogico ou Segunda->Sexta).
+  diasBaseOverride?: number[];
 }
 
 const CHAVE_MAX_GEMINADAS_PADRAO = "seed_pr.max_aulas_geminadas_padrao";
@@ -227,7 +232,7 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
   });
 
   const DIAS = [0, 1, 2, 3, 4];
-  const diasBase = fatorPedagogico ? [1, 3, 2, 4, 0] : DIAS;
+  const diasBase = opts.diasBaseOverride ?? (fatorPedagogico ? [1, 3, 2, 4, 0] : DIAS);
   // [FIX] AULAS derivado do Set explícito (não de um range 1..N baseado no
   // length da query). Domínio fechado: qualquer código que tente usar um
   // período fora deste array estará operando num slot que não existe na
@@ -504,6 +509,58 @@ async function assertPeriodoValido(
 
 // ── ROUTES ───────────────────────────────────────────────────────────
 
+// [FIX] O motor heuristico e guloso e sem backtracking: uma vez que
+// ocupa um horario, nunca desfaz -- entao a ORDEM em que os dias sao
+// percorridos decide quem sobra sem aula (normalmente sexta-feira, ja
+// que a ordem padrao e sempre Segunda->Sexta). Esta funcao roda o
+// algoritmo varias vezes com ordens de dia diferentes (incluindo
+// embaralhadas) e fica so com a tentativa que tiver menos conflitos --
+// da pro heuristico uma segunda chance sem reescrever a logica de
+// alocacao em si, que ja foi validada.
+function embaralharDias(array: number[]): number[] {
+  const copia = [...array];
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+  }
+  return copia;
+}
+
+export async function gerarAlgoritmoMelhorTentativa(opts: GerarOpts, tentativas = 6) {
+  const ordensBase: number[][] = [
+    [0, 1, 2, 3, 4], // padrao: Segunda -> Sexta
+    [1, 3, 2, 4, 0], // fator pedagogico
+  ];
+  while (ordensBase.length < tentativas) {
+    ordensBase.push(embaralharDias([0, 1, 2, 3, 4]));
+  }
+
+  let melhor: Awaited<ReturnType<typeof gerarAlgoritmo>> | null = null;
+  let melhorOrdem: number[] | null = null;
+
+  for (const ordem of ordensBase) {
+    const resultado = await gerarAlgoritmo({ ...opts, diasBaseOverride: ordem });
+    if (
+      !melhor ||
+      resultado.conflitos.length < melhor.conflitos.length ||
+      (resultado.conflitos.length === melhor.conflitos.length && resultado.slotsGerados > melhor.slotsGerados)
+    ) {
+      melhor = resultado;
+      melhorOrdem = ordem;
+    }
+  }
+
+  // Garante que o banco fique exatamente no estado da MELHOR tentativa,
+  // nao da ultima que rodou (cada chamada acima ja grava no banco --
+  // essa chamada extra so roda quando a melhor tentativa NAO foi a
+  // ultima do loop, pra corrigir o estado final).
+  if (melhorOrdem && melhorOrdem !== ordensBase[ordensBase.length - 1]) {
+    melhor = await gerarAlgoritmo({ ...opts, diasBaseOverride: melhorOrdem });
+  }
+
+  return melhor!;
+}
+
 router.post("/gerar", async (req, res) => {
   const escolaId = getEscolaId(req);
   const parsed = GerarHorarioBody.safeParse(req.body);
@@ -523,7 +580,7 @@ router.post("/gerar", async (req, res) => {
   };
 
   try {
-    const result = await gerarAlgoritmo({
+    const result = await gerarAlgoritmoMelhorTentativa({
       escolaId,
       turmaId: data.turmaId,
       aulaspordia: data.aulaspordia,
@@ -805,7 +862,7 @@ router.post("/gerar-lote", async (req, res) => {
   const resultados: Array<{ turmaId: number; turmaNome: string; slotsGerados: number; conflitos: string[]; erro?: string }> = [];
   for (const turma of turmasAlvo) {
     try {
-      const r = await gerarAlgoritmo({
+      const r = await gerarAlgoritmoMelhorTentativa({
         escolaId,
         turmaId: turma.id,
         substituir: true,
