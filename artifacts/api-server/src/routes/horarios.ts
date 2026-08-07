@@ -444,42 +444,49 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     slotsProfessorNaTurmaPorDia[keyTurmaDia]?.delete(aula);
   }
 
-  for (const falt of faltantes) {
-    let restante = falt.faltam;
-    if (restante <= 0) continue;
-    const ocupadosSnapshot = [...slotsParaGravar];
-    for (const ocupante of ocupadosSnapshot) {
-      if (restante <= 0) break;
-      if (ocupante.disciplinaId === falt.disciplinaId) continue;
-      const dia = ocupante.diaSemana, aula = ocupante.numeroAula;
+  let houveTroca = true;
+  let rodadasReparo = 0;
+  const LIMITE_RODADAS_REPARO = 5;
+  while (houveTroca && rodadasReparo < LIMITE_RODADAS_REPARO) {
+    houveTroca = false;
+    rodadasReparo++;
+    for (const falt of faltantes) {
+      if (falt.faltam <= 0) continue;
+      const ocupadosSnapshot = [...slotsParaGravar];
+      for (const ocupante of ocupadosSnapshot) {
+        if (falt.faltam <= 0) break;
+        if (ocupante.disciplinaId === falt.disciplinaId) continue;
+        const dia = ocupante.diaSemana, aula = ocupante.numeroAula;
 
-      const profFalt = falt.profsParaDisc.find(p => (
-        (!ocupadoProf[`${p.id}-${dia}-${aula}`] || p.id === ocupante.professorId)
-        && !indisponivelComTurno(p.id, dia, aula)
-        && respeitaLimiteComplementar(p.id, dia)
-        && semAulaAdjacenteMesmaTurma(p.id, dia, aula)
-      ));
-      if (!profFalt) continue;
+        const profFalt = falt.profsParaDisc.find(p => (
+          (!ocupadoProf[`${p.id}-${dia}-${aula}`] || p.id === ocupante.professorId)
+          && !indisponivelComTurno(p.id, dia, aula)
+          && respeitaLimiteComplementar(p.id, dia)
+          && semAulaAdjacenteMesmaTurma(p.id, dia, aula)
+        ));
+        if (!profFalt) continue;
 
-      let novoSlot: { dia: number; aula: number } | null = null;
-      for (const dia2 of DIAS) {
-        if (novoSlot) break;
-        for (const aula2 of AULAS) {
-          if (dia2 === dia && aula2 === aula) continue;
-          if (ocupadoSlot[`${dia2}-${aula2}`]) continue;
-          if (ocupadoProf[`${ocupante.professorId}-${dia2}-${aula2}`]) continue;
-          if (indisponivelComTurno(ocupante.professorId, dia2, aula2)) continue;
-          if (!respeitaLimiteComplementar(ocupante.professorId, dia2)) continue;
-          novoSlot = { dia: dia2, aula: aula2 };
-          break;
+        let novoSlot: { dia: number; aula: number } | null = null;
+        for (const dia2 of DIAS) {
+          if (novoSlot) break;
+          for (const aula2 of AULAS) {
+            if (dia2 === dia && aula2 === aula) continue;
+            if (ocupadoSlot[`${dia2}-${aula2}`]) continue;
+            if (ocupadoProf[`${ocupante.professorId}-${dia2}-${aula2}`]) continue;
+            if (indisponivelComTurno(ocupante.professorId, dia2, aula2)) continue;
+            if (!respeitaLimiteComplementar(ocupante.professorId, dia2)) continue;
+            novoSlot = { dia: dia2, aula: aula2 };
+            break;
+          }
         }
-      }
-      if (!novoSlot) continue;
+        if (!novoSlot) continue;
 
-      desalocar(ocupante.disciplinaId, ocupante.professorId, dia, aula);
-      alocar(falt.disciplinaId, profFalt.id, dia, aula);
-      alocar(ocupante.disciplinaId, ocupante.professorId, novoSlot.dia, novoSlot.aula);
-      restante--;
+        desalocar(ocupante.disciplinaId, ocupante.professorId, dia, aula);
+        alocar(falt.disciplinaId, profFalt.id, dia, aula);
+        alocar(ocupante.disciplinaId, ocupante.professorId, novoSlot.dia, novoSlot.aula);
+        falt.faltam--;
+        houveTroca = true;
+      }
     }
   }
 
