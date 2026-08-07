@@ -795,7 +795,12 @@ router.post("/gerar-lote", async (req, res) => {
     return;
   }
 
-  await db.delete(horariosExperimentaisTable).where(eq(horariosExperimentaisTable.escolaId, escolaId));
+  const turmaIdsAlvo = turmasAlvo.map((t) => t.id);
+  await db.delete(horariosExperimentaisTable).where(and(
+    eq(horariosExperimentaisTable.escolaId, escolaId),
+    eq(horariosExperimentaisTable.nome, nomeExperimental),
+    inArray(horariosExperimentaisTable.turmaId, turmaIdsAlvo),
+  ));
 
   const resultados: Array<{ turmaId: number; turmaNome: string; slotsGerados: number; conflitos: string[]; erro?: string }> = [];
   for (const turma of turmasAlvo) {
@@ -1226,7 +1231,11 @@ router.post("/gerar-cpsat", async (req, res) => {
     return;
   }
 
-  await db.delete(horariosExperimentaisTable).where(eq(horariosExperimentaisTable.escolaId, escolaId));
+  await db.delete(horariosExperimentaisTable).where(and(
+    eq(horariosExperimentaisTable.escolaId, escolaId),
+    eq(horariosExperimentaisTable.nome, nomeExperimental),
+    inArray(horariosExperimentaisTable.turmaId, turmaIds),
+  ));
 
   const linhasParaGravar: Array<{
     escolaId: string; nome: string; turmaId: number; disciplinaId: number;
