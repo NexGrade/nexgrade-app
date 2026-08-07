@@ -293,6 +293,14 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     return atual < limite;
   }
 
+  const faltantes: Array<{
+    disciplinaId: number;
+    profsParaDisc: typeof professores;
+    profApoio: typeof professores[number] | undefined;
+    faltam: number;
+    maxGeminadas: number;
+  }> = [];
+
   for (const td of discOrdenadas) {
     const disc = disciplinas.find(d => d.id === td.disciplinaId);
     if (!disc) continue;
@@ -412,6 +420,66 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
 
     if (alocadas < cargaSemanal) {
       conflitos.push(`Apenas ${alocadas}/${cargaSemanal} aulas alocadas para "${disc.nome}"`);
+      if (!profApoio) {
+        faltantes.push({ disciplinaId: td.disciplinaId, profsParaDisc, profApoio, faltam: cargaSemanal - alocadas, maxGeminadas });
+      }
+    }
+  }
+
+  // [NOVO] Passo de reparo: quando uma disciplina nao fecha a carga,
+  // tenta trocar de lugar com uma aula ja alocada de OUTRA disciplina --
+  // move essa outra aula pra um horario vago que sirva pra ela, e libera
+  // o lugar pra disciplina que faltava. So troca quando os DOIS lados
+  // ficam validos -- nunca degrada uma disciplina que ja estava completa.
+  function desalocar(disciplinaId: number, professorId: number, dia: number, aula: number) {
+    const idx = slotsParaGravar.findIndex(
+      s => s.disciplinaId === disciplinaId && s.professorId === professorId && s.diaSemana === dia && s.numeroAula === aula,
+    );
+    if (idx === -1) return;
+    slotsParaGravar.splice(idx, 1);
+    delete ocupadoSlot[`${dia}-${aula}`];
+    delete ocupadoProf[`${professorId}-${dia}-${aula}`];
+    const keyTurmaDia = `${professorId}-${dia}`;
+    if (aulasProfessorNaTurmaPorDia[keyTurmaDia]) aulasProfessorNaTurmaPorDia[keyTurmaDia]--;
+    slotsProfessorNaTurmaPorDia[keyTurmaDia]?.delete(aula);
+  }
+
+  for (const falt of faltantes) {
+    let restante = falt.faltam;
+    if (restante <= 0) continue;
+    const ocupadosSnapshot = [...slotsParaGravar];
+    for (const ocupante of ocupadosSnapshot) {
+      if (restante <= 0) break;
+      if (ocupante.disciplinaId === falt.disciplinaId) continue;
+      const dia = ocupante.diaSemana, aula = ocupante.numeroAula;
+
+      const profFalt = falt.profsParaDisc.find(p => (
+        (!ocupadoProf[`${p.id}-${dia}-${aula}`] || p.id === ocupante.professorId)
+        && !indisponivelComTurno(p.id, dia, aula)
+        && respeitaLimiteComplementar(p.id, dia)
+        && semAulaAdjacenteMesmaTurma(p.id, dia, aula)
+      ));
+      if (!profFalt) continue;
+
+      let novoSlot: { dia: number; aula: number } | null = null;
+      for (const dia2 of DIAS) {
+        if (novoSlot) break;
+        for (const aula2 of AULAS) {
+          if (dia2 === dia && aula2 === aula) continue;
+          if (ocupadoSlot[`${dia2}-${aula2}`]) continue;
+          if (ocupadoProf[`${ocupante.professorId}-${dia2}-${aula2}`]) continue;
+          if (indisponivelComTurno(ocupante.professorId, dia2, aula2)) continue;
+          if (!respeitaLimiteComplementar(ocupante.professorId, dia2)) continue;
+          novoSlot = { dia: dia2, aula: aula2 };
+          break;
+        }
+      }
+      if (!novoSlot) continue;
+
+      desalocar(ocupante.disciplinaId, ocupante.professorId, dia, aula);
+      alocar(falt.disciplinaId, profFalt.id, dia, aula);
+      alocar(ocupante.disciplinaId, ocupante.professorId, novoSlot.dia, novoSlot.aula);
+      restante--;
     }
   }
 
