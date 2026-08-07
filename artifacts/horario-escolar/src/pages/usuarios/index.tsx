@@ -185,8 +185,8 @@ export default function UsuariosList() {
                     <Badge variant="outline">{perfilLabel(usuario.perfil)}</Badge>
                     {!usuario.ativo && <Badge variant="secondary">Inativo</Badge>}
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                    <Mail className="w-3.5 h-3.5" />{usuario.email}
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1 min-w-0">
+                    <Mail className="w-3.5 h-3.5 shrink-0" /><span className="truncate">{usuario.email}</span>
                   </div>
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(usuario)}>

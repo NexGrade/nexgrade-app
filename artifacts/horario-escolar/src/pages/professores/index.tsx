@@ -173,7 +173,7 @@ export default function ProfessoresList() {
                 </div>
                 <div className="space-y-1 text-sm text-muted-foreground">
                   {professor.email && (
-                    <div className="flex items-center gap-2"><Mail className="w-3.5 h-3.5" />{professor.email}</div>
+                    <div className="flex items-center gap-2 min-w-0"><Mail className="w-3.5 h-3.5 shrink-0" /><span className="truncate">{professor.email}</span></div>
                   )}
                   {professor.telefone && (
                     <div className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" />{professor.telefone}</div>
