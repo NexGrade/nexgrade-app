@@ -1166,13 +1166,51 @@ router.post("/gerar-cpsat", async (req, res) => {
   }
 
   const professorIdsUsados = new Set(disciplinasTurma.map((d) => nomeParaProfessorId.get(d.professor)).filter((id): id is number => id != null));
-  const bloqueiosProfessor = disponibilidades
+  const bloqueiosDisponibilidade = disponibilidades
     .filter((d) => professorIdsUsados.has(d.professorId) && !d.disponivel && (d.turno === turno || d.turno == null))
     .map((d) => ({
       professor: professorMap.get(d.professorId)?.nome ?? `Professor #${d.professorId}`,
       dia: d.diaSemana,
       aula: d.horarioSlot,
     }));
+
+  // [FIX] Bloqueia tambem os horarios em que o professor JA esta
+  // comprometido em OUTRA turma do mesmo turno -- seja na grade oficial
+  // ja promovida, seja em outro experimento ainda ativo. Sem isso, gerar
+  // turma por turma (modo "Turma (Beta)") cria conflitos de professor
+  // entre turmas, porque cada chamada resolve isoladamente sem saber
+  // nada sobre as demais.
+  const outrasTurmasDoTurno = await db.select({ id: turmasTable.id })
+    .from(turmasTable)
+    .where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.turno, turno)));
+  const outrasTurmaIds = outrasTurmasDoTurno.map((t) => t.id).filter((id) => !turmaIds.includes(id));
+
+  let bloqueiosOutrasTurmas: Array<{ professor: string; dia: number; aula: number }> = [];
+  if (outrasTurmaIds.length > 0 && professorIdsUsados.size > 0) {
+    const [ocupadosOficial, ocupadosExperimental] = await Promise.all([
+      db.select({ professorId: horariosTable.professorId, dia: horariosTable.diaSemana, aula: horariosTable.numeroAula })
+        .from(horariosTable)
+        .where(and(
+          eq(horariosTable.escolaId, escolaId),
+          inArray(horariosTable.turmaId, outrasTurmaIds),
+          inArray(horariosTable.professorId, [...professorIdsUsados]),
+        )),
+      db.select({ professorId: horariosExperimentaisTable.professorId, dia: horariosExperimentaisTable.diaSemana, aula: horariosExperimentaisTable.numeroAula })
+        .from(horariosExperimentaisTable)
+        .where(and(
+          eq(horariosExperimentaisTable.escolaId, escolaId),
+          inArray(horariosExperimentaisTable.turmaId, outrasTurmaIds),
+          inArray(horariosExperimentaisTable.professorId, [...professorIdsUsados]),
+        )),
+    ]);
+    bloqueiosOutrasTurmas = [...ocupadosOficial, ...ocupadosExperimental].map((o) => ({
+      professor: professorMap.get(o.professorId!)?.nome ?? `Professor #${o.professorId}`,
+      dia: o.dia,
+      aula: o.aula,
+    }));
+  }
+
+  const bloqueiosProfessor = [...bloqueiosDisponibilidade, ...bloqueiosOutrasTurmas];
 
   const aulasPorDia = horarioSlotsTurno.length > 0
     ? Math.max(...horarioSlotsTurno.map((s) => s.numeroAula))
