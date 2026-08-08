@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, time } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, time, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { nivelEnsinoEnum } from "./turmas";
@@ -34,6 +34,13 @@ export const horarioSlotsTable = pgTable("horario_slots", {
   numeroAula: integer("numero_aula").notNull(), // 1ª aula, 2ª aula, etc. — bate com horariosTable.numeroAula
   horaInicio: time("hora_inicio").notNull(),
   duracaoMinutos: integer("duracao_minutos").notNull().default(50),
+  // [NOVO] Fonte da verdade sobre se este periodo e aula de verdade ou
+  // so um horario de entrada/intervalo que ocupa um numero de aula no
+  // grid (ex.: periodo 0 do noturno no Mario Braga). Antes disso era
+  // assumido via "numeroAula >= 1" espalhado pelo codigo, que quebrou
+  // quando a Arlinda cadastrou um periodo 0 que E aula de verdade --
+  // agora e explicito por escola em vez de um numero magico universal.
+  letivo: boolean("letivo").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 export const insertHorarioSlotSchema = createInsertSchema(horarioSlotsTable).omit({ id: true, createdAt: true });

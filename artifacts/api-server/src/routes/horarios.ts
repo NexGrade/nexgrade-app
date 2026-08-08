@@ -100,7 +100,7 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
   // [FIX] Domínio EXPLÍCITO: conjunto exato de numeroAula do banco, não um
   // intervalo implícito 1..N derivado do length. Se os slots tiverem lacunas
   // (ex.: 1,2,3,5 sem o 4), o Set reflete isso. Guarda para validação cruzada.
-  const AULAS_VALIDAS_TURMA = new Set(slotsDoTurno.map(s => s.numeroAula).filter(n => n >= 1));
+  const AULAS_VALIDAS_TURMA = new Set(slotsDoTurno.filter(s => s.letivo).map(s => s.numeroAula));
 
   const [turmaDiscs, disciplinas, professores, profDiscs, configGeminadas, configComplementarPadrao, limitesProfessor] = await Promise.all([
     db.select().from(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.turmaId, turmaId)),
@@ -559,7 +559,7 @@ async function periodosValidosDaTurma(
   const slots = await db.select().from(horarioSlotsTable)
     .where(and(eq(horarioSlotsTable.escolaId, escolaId), eq(horarioSlotsTable.turno, turma.turno), condicaoNivel));
 
-  return new Set(slots.map(s => s.numeroAula).filter(n => n >= 1));
+  return new Set(slots.filter(s => s.letivo).map(s => s.numeroAula));
 }
 
 async function assertPeriodoValido(
@@ -1109,9 +1109,8 @@ router.post("/corrigir-professor", async (req, res) => {
     const turno = turnoPorTurmaId.get(slot.turmaId) ?? "desconhecido";
     const nivel = turma?.nivelEnsino ?? null;
     const aulasDoTurno = horarioSlotsTodos
-      .filter((hs) => hs.turno === turno && (turno !== "matutino" || hs.nivelEnsino === nivel))
-      .map((hs) => hs.numeroAula)
-      .filter((n) => n >= 1);
+      .filter((hs) => hs.turno === turno && (turno !== "matutino" || hs.nivelEnsino === nivel) && hs.letivo)
+      .map((hs) => hs.numeroAula);
 
     let destino: { dia: number; aula: number } | null = null;
     for (const dia of DIAS) {
