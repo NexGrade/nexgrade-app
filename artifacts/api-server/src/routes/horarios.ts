@@ -1266,6 +1266,18 @@ router.post("/gerar-cpsat", async (req, res) => {
     return porNomeTurma ?? candidatos[0] ?? null;
   }
 
+  // [FIX] Antes usava um numero fixo (2) como fallback quando a
+  // disciplina nao tinha maxAulasConsecutivasDia proprio -- ignorava a
+  // configuracao real da escola (seed_pr.max_aulas_geminadas_padrao),
+  // que pode ser diferente (ex.: Arlinda usa 3). Isso travava o CP-SAT
+  // como "INVIAVEL" sempre que uma disciplina precisava de mais aulas
+  // seguidas num dia do que o fallback fixo permitia, mesmo dentro do
+  // limite real configurado pela escola.
+  const configGeminadasCpsat = await db.select().from(configuracoesTable)
+    .where(and(eq(configuracoesTable.escolaId, escolaId), eq(configuracoesTable.chave, CHAVE_MAX_GEMINADAS_PADRAO)))
+    .then((r) => r[0]);
+  const maxGeminadasPadraoCpsat = typeof configGeminadasCpsat?.valor === "number" ? configGeminadasCpsat.valor : 2;
+
   const semProfessorResolvido: Array<{ turma: string; disciplina: string }> = [];
 
   const disciplinasTurma = turmaDiscsTodos
@@ -1285,7 +1297,7 @@ router.post("/gerar-cpsat", async (req, res) => {
         nome: disc?.nome ?? `Disciplina #${td.disciplinaId}`,
         aulasSemana: td.cargaHorariaSemanalOverride ?? disc?.cargaSemanal ?? 0,
         professor: prof.nome,
-        maxAulasDia: td.maxAulasConsecutivasDia ?? 2,
+        maxAulasDia: td.maxAulasConsecutivasDia ?? maxGeminadasPadraoCpsat,
       };
     })
     .filter((d): d is NonNullable<typeof d> => d !== null)
