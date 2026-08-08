@@ -12,6 +12,7 @@ import {
   limitesDiariosProfessorTable,
   configuracoesTable,
   horarioSlotsTable,
+  itensMatrizTable,
 } from "@workspace/db";
 import { eq, and, inArray, isNull } from "drizzle-orm";
 import {
@@ -1220,13 +1221,15 @@ router.post("/gerar-cpsat", async (req, res) => {
   }
   const turmaIds = turmasDoTurno.map((t) => t.id);
 
-  const [turmaDiscsTodos, disciplinas, professoresTodos, disponibilidades, horarioSlotsTurno, profDiscsTodos] = await Promise.all([
+  const matrizIdsAlvo = [...new Set(turmasDoTurno.map((t) => t.matrizCurricularId).filter((id): id is number => id != null))];
+  const [turmaDiscsTodos, disciplinas, professoresTodos, disponibilidades, horarioSlotsTurno, profDiscsTodos, itensMatrizTodos] = await Promise.all([
     db.select().from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, turmaIds)),
     db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
     db.select().from(disponibilidadeTable),
     db.select().from(horarioSlotsTable).where(and(eq(horarioSlotsTable.escolaId, escolaId), eq(horarioSlotsTable.turno, turno))),
     db.select().from(professorDisciplinasTable),
+    matrizIdsAlvo.length > 0 ? db.select().from(itensMatrizTable).where(inArray(itensMatrizTable.matrizCurricularId, matrizIdsAlvo)) : Promise.resolve([]),
   ]);
 
   if (turmaDiscsTodos.length === 0) {
@@ -1235,6 +1238,17 @@ router.post("/gerar-cpsat", async (req, res) => {
   }
 
   const disciplinaMap = new Map(disciplinas.map((d) => [d.id, d]));
+  // [FIX] Fonte da verdade pra carga horaria semanal de uma disciplina
+  // NUMA TURMA especifica e itens_matriz (a matriz curricular daquela
+  // turma), nao disciplinas.cargaSemanal -- que e so um valor generico
+  // da disciplina, sem relacao com a matriz de nenhuma turma em
+  // particular. Usar o generico direto fazia o CP-SAT tentar encaixar
+  // uma carga totalmente errada sempre que o generico da disciplina
+  // nao batia com a matriz real da turma (ex.: Lingua Portuguesa
+  // generico=2h vs real da 3D TEC=4h -- confirmado no payload real
+  // enviado ao solver, que causava INFEASIBLE sem relacao com
+  // disponibilidade nenhuma).
+  const itensMatrizMap = new Map(itensMatrizTodos.map((im) => [`${im.matrizCurricularId}-${im.disciplinaId}`, im]));
   const professorMap = new Map(professoresTodos.map((p) => [p.id, p]));
   const turmaMap = new Map(turmasDoTurno.map((t) => [t.id, t]));
 
@@ -1295,7 +1309,7 @@ router.post("/gerar-cpsat", async (req, res) => {
         turma: turma.nome,
         codigoSae,
         nome: disc?.nome ?? `Disciplina #${td.disciplinaId}`,
-        aulasSemana: td.cargaHorariaSemanalOverride ?? disc?.cargaSemanal ?? 0,
+        aulasSemana: td.cargaHorariaSemanalOverride ?? itensMatrizMap.get(`${turma.matrizCurricularId}-${td.disciplinaId}`)?.cargaHorariaSemanal ?? disc?.cargaSemanal ?? 0,
         professor: prof.nome,
         maxAulasDia: td.maxAulasConsecutivasDia ?? maxGeminadasPadraoCpsat,
       };
@@ -1367,8 +1381,6 @@ router.post("/gerar-cpsat", async (req, res) => {
     bloqueiosProfessor,
     tempoLimiteS: tempoLimiteS ?? 120,
   };
-  // [TEMP-DEBUG] log temporario pra diagnosticar 3D TEC -- remover depois
-  console.log("[DEBUG-CPSAT-PAYLOAD]", JSON.stringify(payload));
 
   let resultado: {
     status: string;
