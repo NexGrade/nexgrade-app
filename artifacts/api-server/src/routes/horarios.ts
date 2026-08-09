@@ -1381,6 +1381,8 @@ router.post("/gerar-cpsat", async (req, res) => {
     bloqueiosProfessor,
     tempoLimiteS: tempoLimiteS ?? 120,
   };
+  // [TEMP-DEBUG] log temporario pra diagnosticar 3D TEC -- remover depois
+  console.log("[DEBUG-CPSAT-PAYLOAD]", JSON.stringify(payload));
 
   let resultado: {
     status: string;
