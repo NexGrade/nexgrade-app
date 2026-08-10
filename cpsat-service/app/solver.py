@@ -23,6 +23,11 @@ class DisciplinaTurma:
     aulas_semana: int
     professor: str
     max_aulas_dia: int
+    # [FIX] Limite de aula pra turmas de nivel de ensino diferente
+    # dentro do mesmo turno (ex.: Fundamental=5 aulas/dia,
+    # Medio/Tecnico=6 aulas/dia no mesmo matutino). None = usa
+    # aulas_por_dia do turno inteiro (comportamento antigo).
+    ultima_aula_turma: int | None = None
 
 
 def resolver(
@@ -87,6 +92,15 @@ def resolver(
             if dt.professor == prof and 1 <= aula <= aulas_por_dia:
                 model.Add(aula_var[(dt_idx, dia, aula)] == 0)
 
+    # limite de aula por nivel de ensino da turma (ex.: Fundamental com
+    # menos aulas por dia que Medio/Tecnico no mesmo turno)
+    for dt_idx, dt in enumerate(disciplinas_turma):
+        if dt.ultima_aula_turma is None or dt.ultima_aula_turma >= aulas_por_dia:
+            continue
+        for dia in range(len(DIAS)):
+            for aula in range(dt.ultima_aula_turma + 1, aulas_por_dia + 1):
+                model.Add(aula_var[(dt_idx, dia, aula)] == 0)
+
     # OBJETIVO — minimizar janelas (buracos) por turma/dia
     penalidades = []
     for turma in turmas_nomes:
@@ -135,6 +149,7 @@ def gerar_grade(
             aulas_semana=d["aulasSemana"],
             professor=d["professor"],
             max_aulas_dia=d["maxAulasDia"],
+            ultima_aula_turma=d.get("ultimaAulaTurma"),
         )
         for d in disciplinas_turma_raw
     ]
