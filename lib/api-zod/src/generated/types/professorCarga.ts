@@ -5,20 +5,10 @@
  * GradeEscolar â€” Sistema Completo de GestÃ£o de HorÃ¡rios Escolares
  * OpenAPI spec version: 0.2.0
  */
-import type { ProfessorCargaBloqueiosResumoPorTurno } from './professorCargaBloqueiosResumoPorTurno';
-import type { ProfessorCargaHaAlocadaPorTurno } from './professorCargaHaAlocadaPorTurno';
-import type { ProfessorCargaHaInstitucionalPorTurno } from './professorCargaHaInstitucionalPorTurno';
 import type { ProfessorCargaPorDia } from './professorCargaPorDia';
-import type { ProfessorCargaPorTurno } from './professorCargaPorTurno';
 
 export interface ProfessorCarga {
   professorId: number;
   totalAulas: number;
   porDia: ProfessorCargaPorDia;
-  porTurno?: ProfessorCargaPorTurno;
-  haInstitucionalPorTurno?: ProfessorCargaHaInstitucionalPorTurno;
-  haInstitucionalTotal?: number;
-  haAlocadaPorTurno?: ProfessorCargaHaAlocadaPorTurno;
-  /** Resumo legivel dos horarios bloqueados do professor por turno, ex: Bloqueado Seg (3,4) e Qua (todas). */
-  bloqueiosResumoPorTurno?: ProfessorCargaBloqueiosResumoPorTurno;
 }

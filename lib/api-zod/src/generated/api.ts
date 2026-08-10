@@ -108,12 +108,7 @@ export const GetProfessorCargaParams = zod.object({
 export const GetProfessorCargaResponse = zod.object({
   "professorId": zod.number(),
   "totalAulas": zod.number(),
-  "porDia": zod.record(zod.string(), zod.number()),
-  "porTurno": zod.record(zod.string(), zod.number()).optional(),
-  "haInstitucionalPorTurno": zod.record(zod.string(), zod.number()).optional(),
-  "haInstitucionalTotal": zod.number().optional(),
-  "haAlocadaPorTurno": zod.record(zod.string(), zod.number()).optional(),
-  "bloqueiosResumoPorTurno": zod.record(zod.string(), zod.string()).optional().describe('Resumo legivel dos horarios bloqueados do professor por turno, ex: Bloqueado Seg (3,4) e Qua (todas).')
+  "porDia": zod.record(zod.string(), zod.number())
 })
 
 

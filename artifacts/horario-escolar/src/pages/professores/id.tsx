@@ -27,7 +27,6 @@ const professorSchema = z.object({
 
 type ProfessorFormValues = z.infer<typeof professorSchema>;
 
-const TURNO_ROTULO_PROFESSOR: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
 const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
 
 // [NOVO] Resultado por turma da regeneração escopada a este professor
@@ -414,20 +413,6 @@ export default function ProfessorEditar() {
                       );
                     })}
                   </div>
-
-                  {cargaData.bloqueiosResumoPorTurno && Object.keys(cargaData.bloqueiosResumoPorTurno).length > 0 && (
-                    <div className="space-y-2 pt-2 border-t">
-                      <h4 className="text-sm font-medium text-muted-foreground pb-1">Disponibilidade</h4>
-                      <div className="space-y-1.5">
-                        {Object.entries(cargaData.bloqueiosResumoPorTurno).map(([turno, resumo]) => (
-                          <div key={turno} className="text-sm">
-                            <span className="font-medium">{TURNO_ROTULO_PROFESSOR[turno] ?? turno}:</span>{" "}
-                            <span className="text-muted-foreground">{resumo}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
 
                   {disciplinasUnicas.length > 0 && (
                     <div className="space-y-2 pt-2 border-t">

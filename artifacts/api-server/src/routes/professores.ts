@@ -168,21 +168,6 @@ router.delete("/:id", async (req, res) => {
   res.status(204).send();
 });
 
-// [FEATURE] Mesma logica de routes/export.ts -- resumo compacto dos
-// horarios bloqueados de um professor num turno, agrupado por dia.
-const DIAS_ABREV_CARGA = ["Seg", "Ter", "Qua", "Qui", "Sex"];
-function resumoBloqueiosProfessor(bloqueios: Array<{ dia: number; aula: number }>): string {
-  if (bloqueios.length === 0) return "Sem restricoes registradas";
-  const porDia = new Map<number, number[]>();
-  for (const b of bloqueios) {
-    if (!porDia.has(b.dia)) porDia.set(b.dia, []);
-    porDia.get(b.dia)!.push(b.aula);
-  }
-  const partes = [...porDia.entries()]
-    .sort((a, b) => a[0] - b[0])
-    .map(([dia, aulas]) => `${DIAS_ABREV_CARGA[dia] ?? dia}a (${aulas.sort((x, y) => x - y).join(",")}a)`);
-  return `Bloqueado: ${partes.join(" - ")}`;
-}
 router.get("/:id/carga", async (req, res) => {
   const escolaId = getEscolaId(req);
   const parsed = GetProfessorCargaParams.safeParse({ id: Number(req.params.id) });
@@ -235,29 +220,10 @@ router.get("/:id/carga", async (req, res) => {
     haAlocadaPorTurno[turno] = (haAlocadaPorTurno[turno] ?? 0) + 1;
   });
 
-  // [FEATURE] Disponibilidade geral (nao so HA) por turno, resumida --
-  // pedido pra mostrar carga horaria e disponibilidade juntas na tela
-  // de edicao do professor, mesmo padrao usado no relatorio de PDF em
-  // routes/export.ts.
-  const bloqueiosGerais = await db
-    .select()
-    .from(disponibilidadeTable)
-    .where(and(eq(disponibilidadeTable.professorId, parsed.data.id), eq(disponibilidadeTable.disponivel, false)));
-  const bloqueiosPorTurnoMapa = new Map<string, Array<{ dia: number; aula: number }>>();
-  bloqueiosGerais.forEach((d) => {
-    const turno = d.turno ?? "indefinido";
-    if (!bloqueiosPorTurnoMapa.has(turno)) bloqueiosPorTurnoMapa.set(turno, []);
-    bloqueiosPorTurnoMapa.get(turno)!.push({ dia: d.diaSemana, aula: d.horarioSlot });
-  });
-  const bloqueiosResumoPorTurno: Record<string, string> = {};
-  for (const [turno, bloqueios] of bloqueiosPorTurnoMapa) {
-    bloqueiosResumoPorTurno[turno] = resumoBloqueiosProfessor(bloqueios);
-  }
   res.json({
     professorId: parsed.data.id,
     totalAulas: slots.length,
     porDia,
-    bloqueiosResumoPorTurno,
     // Campos novos abaixo — mantidos junto do payload antigo (porDia,
     // totalAulas) pra não quebrar nenhum client já existente.
     porTurno,
