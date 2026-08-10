@@ -37,14 +37,28 @@ const MARGEM = 30;
 const ALTURA_CABECALHO_PAGINA = 46;
 const ALTURA_RODAPE = 14;
 
+// [FIX] Blindagem contra caractere corrompido em qualquer texto que
+// vai pro PDF (nome de escola, titulo do documento, etc). A fonte
+// padrao do pdf-lib (WinAnsiEncoding) so desenha um conjunto limitado
+// de caracteres -- se um campo no banco tiver sofrido corrupcao de
+// encoding em algum momento (ex.: import antigo com charset errado),
+// ele guarda um caractere de substituicao (U+FFFD) que faz o pdf-lib
+// lancar excecao na hora de desenhar, derrubando a exportacao inteira
+// com erro 500 -- mesmo que o resto dos dados esteja perfeito. Achado
+// via caso real: nome_fantasia do Mario Braga tinha um U+FFFD no lugar
+// do "a" de "Mario", quebrando os 4 geradores de PDF que usam
+// buscarNomeEscola. Aplica em qualquer escola, nao so nesse caso.
+export function sanitizarTextoPdf(texto: string): string {
+  return texto.replace(/[\uFFFD]/g, "").replace(/[^\x20-\x7E\xA0-\xFF]/g, "?");
+}
 function truncar(texto: string, max: number): string {
   return texto.length > max ? texto.slice(0, max - 1) + "…" : texto;
 }
 
 function desenharCabecalhoPagina(page: PDFPage, fontBold: PDFFont, font: PDFFont, nomeEscola: string, tituloDocumento: string, intervaloData: string) {
   page.drawRectangle({ x: 0, y: ALTURA - ALTURA_CABECALHO_PAGINA, width: LARGURA, height: ALTURA_CABECALHO_PAGINA, color: AZUL_ESCURO });
-  page.drawText(nomeEscola, { x: MARGEM, y: ALTURA - 20, size: 12, font: fontBold, color: BRANCO });
-  page.drawText(tituloDocumento, { x: MARGEM, y: ALTURA - 36, size: 9, font, color: rgb(0.85, 0.9, 1) });
+  page.drawText(sanitizarTextoPdf(nomeEscola), { x: MARGEM, y: ALTURA - 20, size: 12, font: fontBold, color: BRANCO });
+  page.drawText(sanitizarTextoPdf(tituloDocumento), { x: MARGEM, y: ALTURA - 36, size: 9, font, color: rgb(0.85, 0.9, 1) });
   const larguraData = fontBold.widthOfTextAtSize(intervaloData, 10);
   page.drawText(intervaloData, { x: LARGURA - MARGEM - larguraData, y: ALTURA - 27, size: 10, font: fontBold, color: BRANCO });
 }

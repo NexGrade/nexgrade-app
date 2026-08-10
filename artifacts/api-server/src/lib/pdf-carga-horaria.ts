@@ -35,9 +35,16 @@ function truncar(texto: string, max: number): string {
   return texto.length > max ? texto.slice(0, max - 1) + "…" : texto;
 }
 
+// [FIX] Blindagem contra caractere corrompido em qualquer texto do
+// PDF -- ver explicacao completa em pdf-grade.ts (mesmo padrao,
+// achado via caso real: nome_fantasia com U+FFFD quebrando os 4
+// geradores de PDF que usam buscarNomeEscola).
+function sanitizarTextoPdf(texto: string): string {
+  return texto.replace(/[\uFFFD]/g, "").replace(/[^\x20-\x7E\xA0-\xFF]/g, "?");
+}
 function desenharCabecalhoPagina(page: PDFPage, fontBold: PDFFont, font: PDFFont, nomeEscola: string, ano: number) {
   page.drawRectangle({ x: 0, y: ALTURA - ALTURA_CABECALHO_PAGINA, width: LARGURA, height: ALTURA_CABECALHO_PAGINA, color: AZUL_ESCURO });
-  page.drawText(nomeEscola, { x: MARGEM, y: ALTURA - 20, size: 12, font: fontBold, color: BRANCO });
+  page.drawText(sanitizarTextoPdf(nomeEscola), { x: MARGEM, y: ALTURA - 20, size: 12, font: fontBold, color: BRANCO });
   page.drawText("Carga Horária Cumprida × Exigida por Disciplina e Turma", { x: MARGEM, y: ALTURA - 36, size: 9, font, color: rgb(0.85, 0.9, 1) });
   const rotuloAno = `Ano letivo ${ano}`;
   const larguraAno = fontBold.widthOfTextAtSize(rotuloAno, 10);
