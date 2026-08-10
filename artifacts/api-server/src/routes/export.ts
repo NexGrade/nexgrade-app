@@ -44,7 +44,7 @@ function resumoBloqueios(bloqueios: Array<{ dia: number; aula: number }>): strin
   }
   const partes = [...porDia.entries()]
     .sort((a, b) => a[0] - b[0])
-    .map(([dia, aulas]) => `${DIAS_ABREV[dia] ?? dia}a (${aulas.sort((x, y) => x - y).join(",")}a)`);
+    .map(([dia, aulas]) => `${DIAS_ABREV[dia] ?? dia} (${aulas.sort((x, y) => x - y).join(",")})`);
   return `Bloqueado: ${partes.join(" - ")}`;
 }
 async function buscarNomeEscola(escolaId: string): Promise<string> {
