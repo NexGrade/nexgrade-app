@@ -38,10 +38,27 @@ export interface ProfessorUpdate {
 
 export type ProfessorCargaPorDia = {[key: string]: number};
 
+export type ProfessorCargaPorTurno = {[key: string]: number};
+
+export type ProfessorCargaHaInstitucionalPorTurno = {[key: string]: number};
+
+export type ProfessorCargaHaAlocadaPorTurno = {[key: string]: number};
+
+/**
+ * Resumo legivel dos horarios bloqueados do professor por turno, ex: Bloqueado Seg (3,4) e Qua (todas).
+ */
+export type ProfessorCargaBloqueiosResumoPorTurno = {[key: string]: string};
+
 export interface ProfessorCarga {
   professorId: number;
   totalAulas: number;
   porDia: ProfessorCargaPorDia;
+  porTurno?: ProfessorCargaPorTurno;
+  haInstitucionalPorTurno?: ProfessorCargaHaInstitucionalPorTurno;
+  haInstitucionalTotal?: number;
+  haAlocadaPorTurno?: ProfessorCargaHaAlocadaPorTurno;
+  /** Resumo legivel dos horarios bloqueados do professor por turno, ex: Bloqueado Seg (3,4) e Qua (todas). */
+  bloqueiosResumoPorTurno?: ProfessorCargaBloqueiosResumoPorTurno;
 }
 
 /**
