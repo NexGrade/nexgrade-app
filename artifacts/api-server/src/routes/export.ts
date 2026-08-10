@@ -30,6 +30,23 @@ const ORDEM_TURNO = ["matutino", "vespertino", "noturno"];
 // bug de vazamento de identidade entre tenants (a grade em si já era
 // filtrada certo por escolaId em todo lugar; só o texto do cabeçalho
 // que ficou hardcoded). Busca o nome real da escola da requisição.
+// [FEATURE] Monta um resumo compacto dos horarios bloqueados de um
+// professor num turno, agrupado por dia -- ex.: "Seg (3,4) e Qua
+// (todas)". Usado no relatorio de carga horaria por professor pra
+// mostrar carga E disponibilidade juntas.
+const DIAS_ABREV = ["Seg", "Ter", "Qua", "Qui", "Sex"];
+function resumoBloqueios(bloqueios: Array<{ dia: number; aula: number }>): string {
+  if (bloqueios.length === 0) return "Sem restricoes registradas";
+  const porDia = new Map<number, number[]>();
+  for (const b of bloqueios) {
+    if (!porDia.has(b.dia)) porDia.set(b.dia, []);
+    porDia.get(b.dia)!.push(b.aula);
+  }
+  const partes = [...porDia.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([dia, aulas]) => `${DIAS_ABREV[dia] ?? dia}a (${aulas.sort((x, y) => x - y).join(",")}a)`);
+  return `Bloqueado: ${partes.join(" - ")}`;
+}
 async function buscarNomeEscola(escolaId: string): Promise<string> {
   const escola = await db
     .select({ nomeFantasia: escolasTable.nomeFantasia })
@@ -423,7 +440,15 @@ router.get("/relatorio-carga-pdf", async (req, res) => {
       });
       const itens = [...grupos.values()].sort((a, b) => a.turma.localeCompare(b.turma, "pt-BR"));
 
-      return { turno, totalAulas: slotsTurno.length, haInstitucional: haTurno, itens };
+      // [FEATURE] Resumo de disponibilidade por turno -- pedido pra
+      // acompanhar carga horaria e disponibilidade juntas no mesmo
+      // relatorio, sem precisar abrir a tela de Disponibilidade separada
+      // pra cada professor.
+      const bloqueiosTurno = disponibilidades
+        .filter((d) => d.professorId === prof.id && d.turno === turno && !d.disponivel)
+        .map((d) => ({ dia: d.diaSemana, aula: d.horarioSlot }));
+      const bloqueiosResumo = resumoBloqueios(bloqueiosTurno);
+      return { turno, totalAulas: slotsTurno.length, haInstitucional: haTurno, itens, bloqueiosResumo };
     });
 
     const totalGeralHa = disponibilidades.filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria).length;

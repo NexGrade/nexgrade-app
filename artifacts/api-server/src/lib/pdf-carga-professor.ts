@@ -18,6 +18,9 @@ export type PeriodoCargaProfessor = {
   totalAulas: number;
   haInstitucional: number;
   itens: ItemCargaProfessor[];
+  // [FEATURE] Resumo compacto dos horarios bloqueados do professor
+  // nesse turno -- ex.: "Bloqueado: Seg (3,4) - Qua (todas)".
+  bloqueiosResumo?: string;
 };
 export type RelatorioProfessor = {
   nome: string;
@@ -61,6 +64,7 @@ function alturaDoProfessor(rel: RelatorioProfessor): number {
     altura += 16; // subtítulo do período
     altura += 14; // cabeçalho da mini-tabela
     altura += periodo.itens.length * 13; // linhas
+    if (periodo.bloqueiosResumo) altura += 12; // [FEATURE] linha de disponibilidade
     if (periodo.haInstitucional > 0) altura += 13; // linha de HA destacada
     altura += 18; // [FIX] respiro entre períodos -- 6pt colava o texto do
     // próximo período quase em cima da borda da tabela anterior; 18pt dá
@@ -115,6 +119,11 @@ function desenharProfessor(page: PDFPage, font: PDFFont, fontBold: PDFFont, rel:
       page.drawText("Hora-Atividade institucional", { x: colDiscX + 3, y: y - 10, size: 7.5, font: fontBold, color: PRETO });
       page.drawText(String(periodo.haInstitucional), { x: colAulasX + 3, y: y - 10, size: 7.5, font: fontBold, color: PRETO });
       y -= 13;
+    }
+    if (periodo.bloqueiosResumo) {
+      y -= 10;
+      page.drawText(sanitizarTextoPdf(periodo.bloqueiosResumo), { x: MARGEM + 8, y, size: 7.5, font, color: CINZA_ESCURO });
+      y -= 2;
     }
 
     y -= 18;
