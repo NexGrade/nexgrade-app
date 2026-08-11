@@ -1277,7 +1277,7 @@ router.post("/gerar-cpsat", async (req, res) => {
       .map((pd) => professorMap.get(pd.professorId))
       .filter((p): p is NonNullable<typeof p> => p != null);
     const porNomeTurma = candidatos.find((p) => p.nome.includes(`(${turma.nome})`));
-    return porNomeTurma ?? candidatos[0] ?? null;
+    return porNomeTurma ?? null;
   }
 
   // [FIX] Antes usava um numero fixo (2) como fallback quando a
