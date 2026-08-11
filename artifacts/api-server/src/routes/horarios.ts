@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import { db } from "@workspace/db";
 import {
   horariosTable,
@@ -1178,6 +1178,31 @@ router.post("/corrigir-professor", async (req, res) => {
 
 const CPSAT_SERVICE_URL = process.env.CPSAT_SERVICE_URL || "https://nexgrade-cpsat.onrender.com";
 
+// [FIX-COLDSTART] "Esquenta" o servico nexgrade-cpsat antes de mandar
+// uma carga pesada -- ver comentario no topo deste arquivo/patch. Faz
+// um GET leve em /api/healthz repetidamente ate ele responder OK ou
+// ate estourar o prazo maximo; nunca lanca erro, so retorna mais cedo
+// se conseguir confirmar que o servico esta acordado (o timeout da
+// chamada principal continua sendo a rede de seguranca final).
+async function aguardarCpsatServiceAcordado(maxEsperaMs = 90_000): Promise<void> {
+  const inicio = Date.now();
+  while (Date.now() - inicio < maxEsperaMs) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const response = await fetch(`${CPSAT_SERVICE_URL}/api/healthz`, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (response.ok) return;
+    } catch {
+      // Ainda hibernado/acordando (ou instavel) -- tenta de novo.
+    }
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+  }
+  // Nao conseguiu confirmar dentro do prazo -- segue mesmo assim; a
+  // chamada principal tem seu proprio timeout e retry, e vai reportar
+  // o erro adequado se o servico realmente estiver fora do ar.
+}
+
 const GerarCpsatBody = z.object({
   turno: z.enum(["matutino", "vespertino", "noturno"]).optional(),
   turmaId: z.number().int().positive().optional(),
@@ -1366,29 +1391,51 @@ async function runCpsatGeneration(
     aulas: Array<{ turma: string; codigoSae: string; disciplina: string; professor: string; dia: number; aula: number }>;
   };
 
-  try {
-    const controller = new AbortController();
-    const timeoutMs = ((tempoLimiteS ?? 120) + 30) * 1000;
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-    const response = await fetch(`${CPSAT_SERVICE_URL}/gerar-grade`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
+  // [FIX-COLDSTART] Da tempo do servico acordar antes da carga
+  // pesada -- ver comentario no topo do arquivo/patch.
+  await aguardarCpsatServiceAcordado();
 
-    if (!response.ok) {
-      const errBody = await response.text();
-      throw new Error(`Servico CP-SAT respondeu ${response.status}: ${errBody}`);
+  const MAX_TENTATIVAS_CPSAT = 2;
+  let ultimoErroCpsat: unknown = null;
+  for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_CPSAT; tentativa++) {
+    try {
+      const controller = new AbortController();
+      const timeoutMs = ((tempoLimiteS ?? 120) + 30) * 1000;
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      const response = await fetch(`${CPSAT_SERVICE_URL}/gerar-grade`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      if (!response.ok) {
+        const errBody = await response.text();
+        throw new Error(`Servico CP-SAT respondeu ${response.status}: ${errBody}`);
+      }
+      resultado = (await response.json()) as typeof resultado;
+      ultimoErroCpsat = null;
+      break;
+    } catch (err) {
+      ultimoErroCpsat = err;
+      // So vale a pena tentar de novo em falha de conexao (cold
+      // start ainda rolando, rede instavel) -- um erro HTTP real do
+      // servico (4xx/5xx com corpo) nao muda tentando de novo.
+      const mensagemErroCpsat = err instanceof Error ? err.message : String(err);
+      const pareceFalhaConexao =
+        mensagemErroCpsat.includes("fetch failed") ||
+        mensagemErroCpsat.includes("ECONNREFUSED") ||
+        mensagemErroCpsat.includes("ETIMEDOUT");
+      if (!pareceFalhaConexao || tentativa === MAX_TENTATIVAS_CPSAT) break;
+      await new Promise((resolve) => setTimeout(resolve, 5000));
     }
-    resultado = (await response.json()) as typeof resultado;
-  } catch (err) {
+  }
+  if (ultimoErroCpsat != null) {
     return {
       httpStatus: 502,
       body: {
         error: "Nao foi possivel gerar a grade com o motor CP-SAT.",
-        detalhe: err instanceof Error ? err.message : String(err),
+        detalhe: ultimoErroCpsat instanceof Error ? ultimoErroCpsat.message : String(ultimoErroCpsat),
         dica: "Verifique se o servico nexgrade-cpsat esta no ar (pode estar hibernado se estiver no free tier do Render).",
       },
     };
