@@ -1,4 +1,4 @@
-"""
+﻿"""
 Motor de geração de grade horária com CP-SAT.
 
 Reaproveita exatamente a modelagem validada em spike-cp-sat/spike_teste_escala_real.py
@@ -123,7 +123,7 @@ def resolver(
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = tempo_limite_s
-    solver.parameters.num_search_workers = 8
+    solver.parameters.num_search_workers = 1  # [FIX-CPU] Free tier tem so 0.1 CPU -- mais workers so gera troca de contexto, sem paralelismo real.
     status = solver.Solve(model)
 
     return solver, status, aula_var
