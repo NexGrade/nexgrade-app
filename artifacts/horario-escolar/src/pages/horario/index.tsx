@@ -1531,6 +1531,7 @@ function AbaExperimental() {
   const [cpsatForm, setCpsatForm] = useState({
     turno: "matutino",
     nomeExperimental: `CPSAT-${new Date().toISOString().split("T")[0]}`,
+    tempoLimiteS: 120,
   });
   // [NOVO] Mesmo motor CP-SAT, mas por turma única (antes só existia
   // por turno inteiro) -- espelha o par "Turma / Turno inteiro" que já
@@ -1648,6 +1649,7 @@ function AbaExperimental() {
         body: JSON.stringify({
           turno: cpsatForm.turno,
           nomeExperimental: cpsatForm.nomeExperimental,
+          tempoLimiteS: cpsatForm.tempoLimiteS,
         }),
         responseType: "json",
       });
@@ -2076,10 +2078,15 @@ function AbaExperimental() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-1.5">
+              <Label>Tempo limite (segundos)</Label>
+              <Input type="number" min={30} max={600} value={cpsatForm.tempoLimiteS} onChange={(e) => setCpsatForm((f) => ({ ...f, tempoLimiteS: Number(e.target.value) || 120 }))} />
+              <p className="text-xs text-muted-foreground">Padrao 120s. Turnos com muitas turmas (ex.: matutino do Mario Braga, 24 turmas) podem precisar de mais tempo -- tente 300-600s se o solver nao terminar a tempo.</p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenGerarCpsat(false)}>Cancelar</Button>
-            <Button onClick={handleGerarCpsat} disabled={gerandoCpsat}>{gerandoCpsat ? "Gerando (pode levar ate 2 min)..." : "Gerar com CP-SAT"}</Button>
+            <Button onClick={handleGerarCpsat} disabled={gerandoCpsat}>{gerandoCpsat ? `Gerando (pode levar ate ${Math.ceil(cpsatForm.tempoLimiteS / 60) + 1} min)...` : "Gerar com CP-SAT"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
