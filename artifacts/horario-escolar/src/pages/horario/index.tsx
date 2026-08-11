@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useSearch, Link } from "wouter";
 import {
   useListHorarioSlots, useSetHorarioSlotsLote, getListHorarioSlotsQueryKey,
@@ -1664,13 +1664,33 @@ function AbaExperimental() {
         mensagem?: string;
         detalhe?: string;
       };
+      // [FIX-REDE] Tolera falhas de rede transitorias (fetch failed)
+      // durante o polling -- comum em redes de escola com quedas
+      // intermitentes de conexao. So desiste de verdade
+      // apos varias falhas consecutivas; uma unica queda de ~4s nao
+      // aborta mais a geracao inteira.
+      const MAX_FALHAS_POLLING_CONSECUTIVAS = 5;
+      let falhasPollingConsecutivas = 0;
       // eslint-disable-next-line no-constant-condition
       while (true) {
         await new Promise((resolve) => setTimeout(resolve, INTERVALO_POLLING_MS));
-        statusResult = await customFetch<typeof statusResult>(`/api/horarios/gerar-cpsat-status/${inicio.jobId}`, {
-          method: "GET",
-          responseType: "json",
-        });
+        try {
+          statusResult = await customFetch<typeof statusResult>(`/api/horarios/gerar-cpsat-status/${inicio.jobId}`, {
+            method: "GET",
+            responseType: "json",
+          });
+          falhasPollingConsecutivas = 0;
+        } catch (pollErr) {
+          falhasPollingConsecutivas += 1;
+          if (falhasPollingConsecutivas >= MAX_FALHAS_POLLING_CONSECUTIVAS) {
+            throw new Error(
+              pollErr instanceof Error
+                ? `Conexao instavel: nao foi possivel consultar o progresso apos ${MAX_FALHAS_POLLING_CONSECUTIVAS} tentativas (${pollErr.message}). A geracao pode ainda estar rodando em segundo plano -- tente novamente em alguns instantes.`
+                : "Conexao instavel: nao foi possivel consultar o progresso apos varias tentativas.",
+            );
+          }
+          continue;
+        }
         if (statusResult.jobStatus !== "running") break;
       }
 
