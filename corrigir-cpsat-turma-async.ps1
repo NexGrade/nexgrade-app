@@ -65,46 +65,36 @@ const CPSAT_TURMA_JOB_PENDENTE_KEY = "nexgrade:cpsat-turma-job-pendente";
 $conteudo = $conteudo.Replace($anchorChaveExistente, ($anchorChaveExistente + $novaChave))
 
 # ── Parte 2: substitui handleGerarCpsatTurma sincrono por versao
-#    assincrona com finalizarJobCpsatTurma + useEffect de retomada ──
+#    assincrona com finalizarJobCpsatTurma + useEffect de retomada.
+#    [ROBUSTEZ] Usa localizacao por numero de linha (nao comparacao
+#    literal do bloco inteiro) porque o comentario original contem um
+#    acento ("customFetch já anexa") que o Windows PowerShell 5.1 pode
+#    ler com encoding incorreto ao interpretar este proprio script,
+#    quebrando comparacoes literais mesmo com conteudo visualmente
+#    identico. Localizando so pela linha inicial (sem acento) e um
+#    numero fixo de linhas, evitamos depender desse caractere.
 
-$originalHandler = @'
-  const handleGerarCpsatTurma = async () => {
-    if (!cpsatTurmaForm.turmaId) { toast({ title: "Selecione uma turma", variant: "destructive" }); return; }
-    if (!cpsatTurmaForm.nomeExperimental.trim()) { toast({ title: "Informe o nome do experimento", variant: "destructive" }); return; }
-    setGerandoCpsatTurma(true);
-    try {
-      // [FIX] fetch() sem token Bearer -- "Turma (Beta)" voltava 401
-      // desde que foi criada hoje. customFetch já anexa o token.
-      const result = await customFetch<{
-        totalSlots: number;
-        status: string;
-        tempoResolucaoS: number;
-      }>("/api/horarios/gerar-cpsat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          turmaId: Number(cpsatTurmaForm.turmaId),
-          nomeExperimental: cpsatTurmaForm.nomeExperimental,
-        }),
-        responseType: "json",
-      });
-      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
-      toast({
-        title: `Grade CP-SAT gerada! ${result.totalSlots} aulas criadas.`,
-        description: result.status === "OPTIMAL"
-          ? `Solucao otima em ${result.tempoResolucaoS}s (sem janelas evitaveis).`
-          : `Status: ${result.status}. Confira antes de promover.`,
-      });
-      setOpenGerarCpsatTurma(false);
-      setNomeExpandido(cpsatTurmaForm.nomeExperimental);
-      setTurmaExpandidaId(Number(cpsatTurmaForm.turmaId));
-    } catch (err) {
-      toast({ title: "Erro ao gerar com CP-SAT", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
-    } finally {
-      setGerandoCpsatTurma(false);
-    }
-  };
-'@
+$eol = if ($usaCRLF) { "`r`n" } else { "`n" }
+$linhas = $conteudo -split "`n"
+
+$anchorInicioHandler = '  const handleGerarCpsatTurma = async () => {'
+$indicesInicio = @()
+for ($i = 0; $i -lt $linhas.Length; $i++) {
+    if ($linhas[$i] -eq $anchorInicioHandler) { $indicesInicio += $i }
+}
+if ($indicesInicio.Count -ne 1) {
+    Write-Host "ERRO: esperava 1 ocorrencia da linha inicial de handleGerarCpsatTurma, encontrei $($indicesInicio.Count)." -ForegroundColor Red
+    exit 1
+}
+$idxInicio = $indicesInicio[0]
+
+$NUM_LINHAS_BLOCO_ORIGINAL = 36
+$idxFim = $idxInicio + $NUM_LINHAS_BLOCO_ORIGINAL - 1
+if ($idxFim -ge $linhas.Length -or $linhas[$idxFim].Trim() -ne '};') {
+    Write-Host "ERRO: o bloco de $NUM_LINHAS_BLOCO_ORIGINAL linhas a partir da linha inicial nao termina com '};' como esperado -- o arquivo pode ter mudado desde que este patch foi escrito. Confira manualmente." -ForegroundColor Red
+    Write-Host "Ultima linha encontrada: '$($linhas[$idxFim])'" -ForegroundColor Yellow
+    exit 1
+}
 
 $novoHandler = @'
   // Mesma logica de finalizarJobCpsat (turno inteiro), mas pro fluxo
@@ -212,17 +202,16 @@ $novoHandler = @'
   }, []);
 '@
 
-$ocorrenciasHandler = ([regex]::Matches($conteudo, [regex]::Escape($originalHandler))).Count
-if ($ocorrenciasHandler -ne 1) {
-    Write-Host "ERRO: esperava exatamente 1 ocorrencia do handleGerarCpsatTurma esperado, encontrei $ocorrenciasHandler." -ForegroundColor Red
-    exit 1
+$linhasNovoHandler = $novoHandler -split "`n"
+
+$linhasFinal = @()
+$linhasFinal += $linhas[0..($idxInicio - 1)]
+$linhasFinal += $linhasNovoHandler
+if ($idxFim + 1 -le $linhas.Length - 1) {
+    $linhasFinal += $linhas[($idxFim + 1)..($linhas.Length - 1)]
 }
 
-$conteudo = $conteudo.Replace($originalHandler, $novoHandler)
-
-if ($usaCRLF) {
-    $conteudo = $conteudo -replace "`n", "`r`n"
-}
+$conteudo = $linhasFinal -join $eol
 
 Set-Content -Path $arquivo -Value $conteudo -Encoding UTF8 -NoNewline
 
