@@ -23,6 +23,7 @@ import {
 } from "@workspace/api-zod";
 import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
+import { randomUUID } from "node:crypto";
 
 const router = Router();
 
@@ -1183,30 +1184,33 @@ const GerarCpsatBody = z.object({
   nomeExperimental: z.string().min(1),
   tempoLimiteS: z.number().int().positive().optional(),
 }).refine((data) => (data.turno != null) !== (data.turmaId != null), {
-  message: "Informe turno OU turmaId (exatamente um dos dois, não os dois nem nenhum).",
+  message: "Informe turno OU turmaId (exatamente um dos dois, nao os dois nem nenhum).",
 });
 
-router.post("/gerar-cpsat", async (req, res) => {
-  const escolaId = getEscolaId(req);
-  const parsed = GerarCpsatBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
-    return;
-  }
-  const { turno: turnoInformado, turmaId, nomeExperimental, tempoLimiteS } = parsed.data;
-
+// [NOVO] Logica de geracao extraida pra uma funcao compartilhada, pra
+// poder ser chamada tanto pela rota sincrona (/gerar-cpsat, mantida por
+// compatibilidade e pra geracao rapida de turma unica) quanto pela rota
+// assincrona (/gerar-cpsat-async) usada pra turnos grandes que excedem
+// o timeout do proxy do Render (~300s) numa requisicao HTTP sincrona --
+// caso real: matutino do Mario Braga, 24 turmas, solver levando mais
+// de 5 minutos. Em vez de manter a conexao HTTP aberta esperando o
+// solver terminar, a rota async devolve um jobId na hora e o cliente
+// consulta o progresso via polling em /gerar-cpsat-status/:jobId.
+async function runCpsatGeneration(
+  escolaId: string,
+  turnoInformado: "matutino" | "vespertino" | "noturno" | undefined,
+  turmaId: number | undefined,
+  nomeExperimental: string,
+  tempoLimiteS: number | undefined,
+): Promise<{ httpStatus: number; body: Record<string, unknown> }> {
   let turno: "matutino" | "vespertino" | "noturno";
   let turmasDoTurno: (typeof turmasTable.$inferSelect)[];
 
   if (turmaId != null) {
-    // Escopo por turma única -- confirma que a turma existe E pertence
-    // a esta escola antes de qualquer outra coisa (mesma checagem de
-    // segurança que o modo por turno já fazia via escolaId).
     const [turmaEscolhida] = await db.select().from(turmasTable)
       .where(and(eq(turmasTable.id, turmaId), eq(turmasTable.escolaId, escolaId)));
     if (!turmaEscolhida) {
-      res.status(400).json({ error: `Turma #${turmaId} não encontrada para esta escola.` });
-      return;
+      return { httpStatus: 400, body: { error: `Turma #${turmaId} nao encontrada para esta escola.` } };
     }
     turmasDoTurno = [turmaEscolhida];
     turno = turmaEscolhida.turno as "matutino" | "vespertino" | "noturno";
@@ -1215,8 +1219,7 @@ router.post("/gerar-cpsat", async (req, res) => {
     turmasDoTurno = await db.select().from(turmasTable)
       .where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.turno, turno)));
     if (turmasDoTurno.length === 0) {
-      res.status(400).json({ error: `Nenhuma turma encontrada no turno "${turno}"` });
-      return;
+      return { httpStatus: 400, body: { error: `Nenhuma turma encontrada no turno "${turno}"` } };
     }
   }
   const turmaIds = turmasDoTurno.map((t) => t.id);
@@ -1233,43 +1236,18 @@ router.post("/gerar-cpsat", async (req, res) => {
   ]);
 
   if (turmaDiscsTodos.length === 0) {
-    res.status(400).json({ error: "Nenhuma disciplina cadastrada para as turmas deste turno" });
-    return;
+    return { httpStatus: 400, body: { error: "Nenhuma disciplina cadastrada para as turmas deste turno" } };
   }
 
   const disciplinaMap = new Map(disciplinas.map((d) => [d.id, d]));
-  // [FIX] Fonte da verdade pra carga horaria semanal de uma disciplina
-  // NUMA TURMA especifica e itens_matriz (a matriz curricular daquela
-  // turma), nao disciplinas.cargaSemanal -- que e so um valor generico
-  // da disciplina, sem relacao com a matriz de nenhuma turma em
-  // particular. Usar o generico direto fazia o CP-SAT tentar encaixar
-  // uma carga totalmente errada sempre que o generico da disciplina
-  // nao batia com a matriz real da turma (ex.: Lingua Portuguesa
-  // generico=2h vs real da 3D TEC=4h -- confirmado no payload real
-  // enviado ao solver, que causava INFEASIBLE sem relacao com
-  // disponibilidade nenhuma).
   const itensMatrizMap = new Map(itensMatrizTodos.map((im) => [`${im.matrizCurricularId}-${im.disciplinaId}`, im]));
   const professorMap = new Map(professoresTodos.map((p) => [p.id, p]));
   const turmaMap = new Map(turmasDoTurno.map((t) => [t.id, t]));
 
-  // Chave usada pra mapear a resposta do CP-SAT (que só devolve nomes,
-  // não IDs) de volta pros IDs reais do banco. Mesma convenção usada
-  // em scripts/exportar-dados-cpsat.ts, já validada com dados reais.
   const chaveParaIds = new Map<string, { turmaId: number; disciplinaId: number }>();
   const nomeParaProfessorId = new Map<string, number>();
   professoresTodos.forEach((p) => nomeParaProfessorId.set(p.nome, p.id));
 
-  // [FIX] Quando turma_disciplinas.professorId e nulo (caso das aulas
-  // "Hibrida", entre outras), o motor heuristico ja resolve isso via
-  // professor_disciplinas (vinculo generico professor<->disciplina).
-  // O CP-SAT precisa do mesmo fallback -- sem ele, a linha inteira era
-  // descartada e a aula sumia da grade gerada (constatado comparando
-  // com a carga horaria real do PDF da escola: toda turma com entrada
-  // "Hibrida" ficava faltando exatamente 1 aula). Quando ha mais de um
-  // candidato no pool generico, prioriza o professor cujo nome contem
-  // "(<nome da turma>)" -- convencao ja usada nos professores virtuais
-  // Hibrida (1NB), Hibrida (2NB) etc. -- e cai pro primeiro candidato
-  // do pool se nao achar esse padrao.
   function resolverProfessor(td: typeof turmaDiscsTodos[number], turma: typeof turmasDoTurno[number]) {
     if (td.professorId != null) return professorMap.get(td.professorId) ?? null;
     const candidatos = profDiscsTodos
@@ -1280,27 +1258,11 @@ router.post("/gerar-cpsat", async (req, res) => {
     return porNomeTurma ?? null;
   }
 
-  // [FIX] Antes usava um numero fixo (2) como fallback quando a
-  // disciplina nao tinha maxAulasConsecutivasDia proprio -- ignorava a
-  // configuracao real da escola (seed_pr.max_aulas_geminadas_padrao),
-  // que pode ser diferente (ex.: Arlinda usa 3). Isso travava o CP-SAT
-  // como "INVIAVEL" sempre que uma disciplina precisava de mais aulas
-  // seguidas num dia do que o fallback fixo permitia, mesmo dentro do
-  // limite real configurado pela escola.
   const configGeminadasCpsat = await db.select().from(configuracoesTable)
     .where(and(eq(configuracoesTable.escolaId, escolaId), eq(configuracoesTable.chave, CHAVE_MAX_GEMINADAS_PADRAO)))
     .then((r) => r[0]);
   const maxGeminadasPadraoCpsat = typeof configGeminadasCpsat?.valor === "number" ? configGeminadasCpsat.valor : 2;
 
-  // [FIX] Escolas que misturam Fundamental e Medio/Tecnico no mesmo
-  // turno (ex.: matutino com 9o ano de 5 aulas/dia e Ensino Medio de 6
-  // aulas/dia) tem horario_slots com nivelEnsino diferentes por turma.
-  // Sem isso, o CP-SAT recebia um unico aulasPorDia pro turno inteiro
-  // (o maior dos dois) e usava o periodo extra tambem pras turmas do
-  // nivel menor -- gerando aula de verdade num horario que nao deveria
-  // nem existir pra elas (constatado na 9C, Arlinda: aula real gerada
-  // na 6a aula de quarta/quinta/sexta, quando o 9o ano so tem 5 aulas
-  // configuradas em horario_slots).
   const maxAulaPorNivelEnsino = new Map<string, number>();
   for (const slot of horarioSlotsTurno) {
     if (!slot.letivo) continue;
@@ -1337,8 +1299,7 @@ router.post("/gerar-cpsat", async (req, res) => {
     .filter((d) => d.aulasSemana > 0);
 
   if (disciplinasTurma.length === 0) {
-    res.status(400).json({ error: "Nenhuma disciplina com carga horária > 0 e professor definido para este turno" });
-    return;
+    return { httpStatus: 400, body: { error: "Nenhuma disciplina com carga horaria > 0 e professor definido para este turno" } };
   }
 
   const professorIdsUsados = new Set(disciplinasTurma.map((d) => nomeParaProfessorId.get(d.professor)).filter((id): id is number => id != null));
@@ -1350,12 +1311,6 @@ router.post("/gerar-cpsat", async (req, res) => {
       aula: d.horarioSlot,
     }));
 
-  // [FIX] Bloqueia tambem os horarios em que o professor JA esta
-  // comprometido em OUTRA turma do mesmo turno -- seja na grade oficial
-  // ja promovida, seja em outro experimento ainda ativo. Sem isso, gerar
-  // turma por turma (modo "Turma (Beta)") cria conflitos de professor
-  // entre turmas, porque cada chamada resolve isoladamente sem saber
-  // nada sobre as demais.
   const outrasTurmasDoTurno = await db.select({ id: turmasTable.id })
     .from(turmasTable)
     .where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.turno, turno)));
@@ -1400,7 +1355,6 @@ router.post("/gerar-cpsat", async (req, res) => {
     bloqueiosProfessor,
     tempoLimiteS: tempoLimiteS ?? 120,
   };
-  // [TEMP-DEBUG] log temporario pra diagnosticar 3D TEC -- remover depois
   console.log("[DEBUG-CPSAT-PAYLOAD]", JSON.stringify(payload));
 
   let resultado: {
@@ -1426,25 +1380,29 @@ router.post("/gerar-cpsat", async (req, res) => {
 
     if (!response.ok) {
       const errBody = await response.text();
-      throw new Error(`Serviço CP-SAT respondeu ${response.status}: ${errBody}`);
+      throw new Error(`Servico CP-SAT respondeu ${response.status}: ${errBody}`);
     }
     resultado = (await response.json()) as typeof resultado;
   } catch (err) {
-    res.status(502).json({
-      error: "Não foi possível gerar a grade com o motor CP-SAT.",
-      detalhe: err instanceof Error ? err.message : String(err),
-      dica: "Verifique se o serviço nexgrade-cpsat está no ar (pode estar hibernado se estiver no free tier do Render).",
-    });
-    return;
+    return {
+      httpStatus: 502,
+      body: {
+        error: "Nao foi possivel gerar a grade com o motor CP-SAT.",
+        detalhe: err instanceof Error ? err.message : String(err),
+        dica: "Verifique se o servico nexgrade-cpsat esta no ar (pode estar hibernado se estiver no free tier do Render).",
+      },
+    };
   }
 
   if (!resultado.viavel) {
-    res.status(422).json({
-      error: "INVIÁVEL",
-      status: resultado.status,
-      mensagem: resultado.mensagem ?? "Não existe grade possível com os dados atuais.",
-    });
-    return;
+    return {
+      httpStatus: 422,
+      body: {
+        error: "INVIAVEL",
+        status: resultado.status,
+        mensagem: resultado.mensagem ?? "Nao existe grade possivel com os dados atuais.",
+      },
+    };
   }
 
   await db.delete(horariosExperimentaisTable).where(and(
@@ -1478,29 +1436,139 @@ router.post("/gerar-cpsat", async (req, res) => {
   }
 
   if (linhasParaGravar.length === 0) {
-    res.status(500).json({
-      error: "O CP-SAT devolveu uma grade, mas nenhuma aula pôde ser mapeada de volta para os IDs do banco.",
-      naoMapeadas,
-    });
-    return;
+    return {
+      httpStatus: 500,
+      body: {
+        error: "O CP-SAT devolveu uma grade, mas nenhuma aula pode ser mapeada de volta para os IDs do banco.",
+        naoMapeadas,
+      },
+    };
   }
 
   const gravados = await db.insert(horariosExperimentaisTable).values(linhasParaGravar).returning();
 
-  res.json({
-    nomeExperimental,
-    turno,
-    status: resultado.status,
-    otimo: resultado.otimo,
-    tempoResolucaoS: resultado.tempoResolucaoS,
-    totalTurmas: turmasDoTurno.length,
-    totalSlots: gravados.length,
-    naoMapeadas: naoMapeadas.length,
-    semProfessorResolvido: semProfessorResolvido.length,
-    ...(naoMapeadas.length > 0 ? { detalheNaoMapeadas: naoMapeadas } : {}),
-    ...(semProfessorResolvido.length > 0 ? { detalheSemProfessorResolvido: semProfessorResolvido } : {}),
-    mensagem: `Grade gerada como experimento "${nomeExperimental}". Revise e use POST /experimentais/${nomeExperimental}/promover para aplicar como oficial.`,
+  return {
+    httpStatus: 200,
+    body: {
+      nomeExperimental,
+      turno,
+      status: resultado.status,
+      otimo: resultado.otimo,
+      tempoResolucaoS: resultado.tempoResolucaoS,
+      totalTurmas: turmasDoTurno.length,
+      totalSlots: gravados.length,
+      naoMapeadas: naoMapeadas.length,
+      semProfessorResolvido: semProfessorResolvido.length,
+      ...(naoMapeadas.length > 0 ? { detalheNaoMapeadas: naoMapeadas } : {}),
+      ...(semProfessorResolvido.length > 0 ? { detalheSemProfessorResolvido: semProfessorResolvido } : {}),
+      mensagem: `Grade gerada como experimento "${nomeExperimental}". Revise e use POST /experimentais/${nomeExperimental}/promover para aplicar como oficial.`,
+    },
+  };
+}
+
+router.post("/gerar-cpsat", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const parsed = GerarCpsatBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { turno, turmaId, nomeExperimental, tempoLimiteS } = parsed.data;
+  const resultado = await runCpsatGeneration(escolaId, turno, turmaId, nomeExperimental, tempoLimiteS);
+  res.status(resultado.httpStatus).json(resultado.body);
+});
+
+// [NOVO] Versao assincrona: devolve um jobId na hora (202) e roda a
+// geracao em segundo plano, sem manter a conexao HTTP aberta. Criada
+// porque o proxy do Render corta requisicoes sincronas longas por
+// volta de ~300s (constatado gerando o matutino do Mario Braga, 24
+// turmas -- o solver levava mais de 5 minutos e a conexao voltava 502
+// mesmo com tempoLimiteS configurado corretamente no nosso lado).
+//
+// Os jobs ficam em memoria (Map), suficiente porque o servico roda
+// numa unica instancia (WEB_CONCURRENCY=1) e o cliente costuma
+// consultar o progresso poucos minutos depois de disparar a geracao.
+// Jobs com mais de 1h sao descartados na proxima chamada pra nao
+// vazar memoria indefinidamente.
+interface CpsatJob {
+  status: "running" | "done" | "error";
+  escolaId: string;
+  httpStatus?: number;
+  body?: Record<string, unknown>;
+  startedAt: number;
+  finishedAt?: number;
+}
+const cpsatJobs = new Map<string, CpsatJob>();
+
+function limparJobsCpsatAntigos() {
+  const umaHoraAtras = Date.now() - 60 * 60 * 1000;
+  for (const [id, job] of cpsatJobs.entries()) {
+    if (job.startedAt < umaHoraAtras) cpsatJobs.delete(id);
+  }
+}
+
+router.post("/gerar-cpsat-async", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const parsed = GerarCpsatBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { turno, turmaId, nomeExperimental, tempoLimiteS } = parsed.data;
+
+  limparJobsCpsatAntigos();
+  const jobId = randomUUID();
+  cpsatJobs.set(jobId, { status: "running", escolaId, startedAt: Date.now() });
+
+  void runCpsatGeneration(escolaId, turno, turmaId, nomeExperimental, tempoLimiteS)
+    .then((resultado) => {
+      const jobAtual = cpsatJobs.get(jobId);
+      cpsatJobs.set(jobId, {
+        status: resultado.httpStatus >= 200 && resultado.httpStatus < 300 ? "done" : "error",
+        escolaId,
+        httpStatus: resultado.httpStatus,
+        body: resultado.body,
+        startedAt: jobAtual?.startedAt ?? Date.now(),
+        finishedAt: Date.now(),
+      });
+    })
+    .catch((err) => {
+      const jobAtual = cpsatJobs.get(jobId);
+      cpsatJobs.set(jobId, {
+        status: "error",
+        escolaId,
+        httpStatus: 500,
+        body: { error: "Erro inesperado ao gerar a grade.", detalhe: err instanceof Error ? err.message : String(err) },
+        startedAt: jobAtual?.startedAt ?? Date.now(),
+        finishedAt: Date.now(),
+      });
+    });
+
+  res.status(202).json({
+    jobId,
+    mensagem: "Geracao iniciada em segundo plano. Consulte o progresso em GET /api/horarios/gerar-cpsat-status/:jobId.",
   });
+});
+
+router.get("/gerar-cpsat-status/:jobId", (req, res) => {
+  const escolaId = getEscolaId(req);
+  const job = cpsatJobs.get(req.params.jobId);
+  if (!job || job.escolaId !== escolaId) {
+    res.status(404).json({ error: "Job nao encontrado (pode ter expirado ou pertencer a outra escola)." });
+    return;
+  }
+  if (job.status === "running") {
+    res.json({ jobStatus: "running" });
+    return;
+  }
+  // [FIX] Sempre 200 aqui, mesmo quando o job terminou com erro (422,
+  // 502 etc) -- o codigo HTTP original vem em httpStatusOriginal. Isso
+  // evita que o cliente HTTP do frontend trate uma falha de negocio
+  // (ex.: INVIAVEL) como erro de rede e perca os detalhes da
+  // mensagem. Usa "jobStatus" (nao "status") pra nao colidir com o
+  // campo "status" que ja existe dentro do corpo de sucesso (o status
+  // do solver, tipo OPTIMAL/FEASIBLE).
+  res.status(200).json({ jobStatus: job.status, httpStatusOriginal: job.httpStatus, ...job.body });
 });
 
 export default router;

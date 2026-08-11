@@ -1635,15 +1635,13 @@ function AbaExperimental() {
     if (!cpsatForm.nomeExperimental.trim()) { toast({ title: "Informe o nome do experimento", variant: "destructive" }); return; }
     setGerandoCpsat(true);
     try {
-      // [FIX] fetch() sem token Bearer -- "Turno inteiro (Beta)"
-      // voltava 401 antes de gerar qualquer coisa. customFetch já
-      // anexa o token.
-      const result = await customFetch<{
-        totalTurmas: number;
-        totalSlots: number;
-        status: string;
-        tempoResolucaoS: number;
-      }>("/api/horarios/gerar-cpsat", {
+      // [NOVO] Rota assincrona: devolve um jobId na hora (202) em vez
+      // de esperar o solver terminar -- evita o timeout de ~300s do
+      // proxy do Render em turnos grandes (ex.: matutino do Mario
+      // Braga, 24 turmas, pode levar varios minutos). O progresso e
+      // consultado via polling em /gerar-cpsat-status/:jobId ate o
+      // job sair do estado "running".
+      const inicio = await customFetch<{ jobId: string }>("/api/horarios/gerar-cpsat-async", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1653,12 +1651,39 @@ function AbaExperimental() {
         }),
         responseType: "json",
       });
+
+      const INTERVALO_POLLING_MS = 4000;
+      let statusResult: {
+        jobStatus: "running" | "done" | "error";
+        httpStatusOriginal?: number;
+        totalTurmas?: number;
+        totalSlots?: number;
+        status?: string;
+        tempoResolucaoS?: number;
+        error?: string;
+        mensagem?: string;
+        detalhe?: string;
+      };
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        await new Promise((resolve) => setTimeout(resolve, INTERVALO_POLLING_MS));
+        statusResult = await customFetch<typeof statusResult>(`/api/horarios/gerar-cpsat-status/${inicio.jobId}`, {
+          method: "GET",
+          responseType: "json",
+        });
+        if (statusResult.jobStatus !== "running") break;
+      }
+
+      if (statusResult.jobStatus === "error") {
+        throw new Error(statusResult.mensagem || statusResult.detalhe || statusResult.error || "Erro ao gerar a grade com o motor CP-SAT.");
+      }
+
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
       toast({
-        title: `Grade CP-SAT gerada! ${result.totalTurmas} turma(s), ${result.totalSlots} aulas criadas.`,
-        description: result.status === "OPTIMAL"
-          ? `Solucao otima em ${result.tempoResolucaoS}s (sem janelas evitaveis).`
-          : `Status: ${result.status}. Confira antes de promover.`,
+        title: `Grade CP-SAT gerada! ${statusResult.totalTurmas} turma(s), ${statusResult.totalSlots} aulas criadas.`,
+        description: statusResult.status === "OPTIMAL"
+          ? `Solucao otima em ${statusResult.tempoResolucaoS}s (sem janelas evitaveis).`
+          : `Status: ${statusResult.status}. Confira antes de promover.`,
       });
       setOpenGerarCpsat(false);
       setNomeExpandido(cpsatForm.nomeExperimental);
@@ -2086,7 +2111,7 @@ function AbaExperimental() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenGerarCpsat(false)}>Cancelar</Button>
-            <Button onClick={handleGerarCpsat} disabled={gerandoCpsat}>{gerandoCpsat ? `Gerando (pode levar ate ${Math.ceil(cpsatForm.tempoLimiteS / 60) + 1} min)...` : "Gerar com CP-SAT"}</Button>
+            <Button onClick={handleGerarCpsat} disabled={gerandoCpsat}>{gerandoCpsat ? "Gerando (acompanhando progresso)..." : "Gerar com CP-SAT"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
