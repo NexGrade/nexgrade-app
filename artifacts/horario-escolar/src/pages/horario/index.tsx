@@ -42,6 +42,66 @@ const ABAS = [
 ] as const;
 type AbaKey = typeof ABAS[number]["key"];
 
+type StatusCpsatResult = {
+  jobStatus: "running" | "done" | "error";
+  httpStatusOriginal?: number;
+  totalTurmas?: number;
+  totalSlots?: number;
+  status?: string;
+  tempoResolucaoS?: number;
+  error?: string;
+  mensagem?: string;
+  detalhe?: string;
+};
+
+// Chave no sessionStorage para o job CP-SAT pendente (turno inteiro).
+// [FIX-PERSISTENCIA] Ver comentario no topo deste arquivo/patch.
+const CPSAT_JOB_PENDENTE_KEY = "nexgrade:cpsat-job-pendente";
+
+// Faz o polling resiliente de /gerar-cpsat-status/:jobId ate o job
+// sair do estado "running". Extraida como funcao de modulo (nao
+// depende de estado do componente) para poder ser chamada tanto pelo
+// fluxo normal (handleGerarCpsat) quanto pela retomada automatica no
+// useEffect de montagem.
+async function pollarStatusCpsat(jobId: string): Promise<StatusCpsatResult> {
+  const INTERVALO_POLLING_MS = 4000;
+  // [FIX-REDE] Tolera falhas de rede transitorias (fetch failed)
+  // durante o polling -- comum em redes de escola com quedas
+  // intermitentes de conexao. So desiste de verdade apos varias
+  // falhas consecutivas; uma unica queda de ~4s nao aborta mais a
+  // geracao inteira. Um 404 "job nao encontrado" (job expirado ou de
+  // outra escola) e tratado a parte, sem esperar as tentativas todas.
+  const MAX_FALHAS_POLLING_CONSECUTIVAS = 5;
+  let falhasPollingConsecutivas = 0;
+  let statusResult: StatusCpsatResult;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    await new Promise((resolve) => setTimeout(resolve, INTERVALO_POLLING_MS));
+    try {
+      statusResult = await customFetch<StatusCpsatResult>(`/api/horarios/gerar-cpsat-status/${jobId}`, {
+        method: "GET",
+        responseType: "json",
+      });
+      falhasPollingConsecutivas = 0;
+    } catch (pollErr) {
+      const mensagemPollErr = pollErr instanceof Error ? pollErr.message : String(pollErr);
+      if (mensagemPollErr.includes("encontrado")) {
+        // Job expirou (>1h) ou pertence a outra escola -- nao adianta
+        // insistir, e um erro terminal e nao transitorio.
+        throw new Error("JOB_NAO_ENCONTRADO");
+      }
+      falhasPollingConsecutivas += 1;
+      if (falhasPollingConsecutivas >= MAX_FALHAS_POLLING_CONSECUTIVAS) {
+        throw new Error(
+          `Conexao instavel: nao foi possivel consultar o progresso apos ${MAX_FALHAS_POLLING_CONSECUTIVAS} tentativas (${mensagemPollErr}). A geracao pode ainda estar rodando em segundo plano -- tente novamente em alguns instantes.`,
+        );
+      }
+      continue;
+    }
+    if (statusResult.jobStatus !== "running") break;
+  }
+  return statusResult;
+}
 export default function HorarioHubPage() {
   // [NOVO] Deep-link pra uma aba específica via "?tab=..." (ex.:
   // /horario?tab=conflitos) -- usado pelos cards da Visão Geral, que
@@ -1631,6 +1691,47 @@ function AbaExperimental() {
     }
   };
 
+  // Espera o resultado de um job CP-SAT ja em andamento (via
+  // pollarStatusCpsat) e aplica o efeito colateral de sucesso/erro na
+  // UI. Reaproveitada tanto pelo fluxo normal (handleGerarCpsat)
+  // quanto pela retomada automatica no useEffect abaixo, para que os
+  // dois caminhos tenham exatamente o mesmo comportamento final.
+  const finalizarJobCpsat = async (jobId: string, nomeExperimental: string) => {
+    try {
+      const statusResult = await pollarStatusCpsat(jobId);
+      if (statusResult.jobStatus === "error") {
+        throw new Error(statusResult.mensagem || statusResult.detalhe || statusResult.error || "Erro ao gerar a grade com o motor CP-SAT.");
+      }
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
+      toast({
+        title: `Grade CP-SAT gerada! ${statusResult.totalTurmas} turma(s), ${statusResult.totalSlots} aulas criadas.`,
+        description: statusResult.status === "OPTIMAL"
+          ? `Solucao otima em ${statusResult.tempoResolucaoS}s (sem janelas evitaveis).`
+          : `Status: ${statusResult.status}. Confira antes de promover.`,
+      });
+      setOpenGerarCpsat(false);
+      setNomeExpandido(nomeExperimental);
+      setTurmaExpandidaId(null);
+    } catch (err) {
+      const mensagemErro = err instanceof Error ? err.message : String(err);
+      // JOB_NAO_ENCONTRADO so acontece na retomada automatica (job
+      // expirou ha mais de 1h ou pertence a outra escola) -- nao vale
+      // a pena assustar o usuario com um toast vermelho por isso,
+      // simplesmente encerra em silencio.
+      if (mensagemErro !== "JOB_NAO_ENCONTRADO") {
+        toast({ title: "Erro ao gerar com CP-SAT", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+      }
+    } finally {
+      setGerandoCpsat(false);
+      try {
+        sessionStorage.removeItem(CPSAT_JOB_PENDENTE_KEY);
+      } catch {
+        // sessionStorage indisponivel (modo privado, politica do
+        // navegador etc.) -- nao ha o que fazer, apenas segue.
+      }
+    }
+  };
+
   const handleGerarCpsat = async () => {
     if (!cpsatForm.nomeExperimental.trim()) { toast({ title: "Informe o nome do experimento", variant: "destructive" }); return; }
     setGerandoCpsat(true);
@@ -1651,69 +1752,53 @@ function AbaExperimental() {
         }),
         responseType: "json",
       });
-
-      const INTERVALO_POLLING_MS = 4000;
-      let statusResult: {
-        jobStatus: "running" | "done" | "error";
-        httpStatusOriginal?: number;
-        totalTurmas?: number;
-        totalSlots?: number;
-        status?: string;
-        tempoResolucaoS?: number;
-        error?: string;
-        mensagem?: string;
-        detalhe?: string;
-      };
-      // [FIX-REDE] Tolera falhas de rede transitorias (fetch failed)
-      // durante o polling -- comum em redes de escola com quedas
-      // intermitentes de conexao. So desiste de verdade
-      // apos varias falhas consecutivas; uma unica queda de ~4s nao
-      // aborta mais a geracao inteira.
-      const MAX_FALHAS_POLLING_CONSECUTIVAS = 5;
-      let falhasPollingConsecutivas = 0;
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        await new Promise((resolve) => setTimeout(resolve, INTERVALO_POLLING_MS));
-        try {
-          statusResult = await customFetch<typeof statusResult>(`/api/horarios/gerar-cpsat-status/${inicio.jobId}`, {
-            method: "GET",
-            responseType: "json",
-          });
-          falhasPollingConsecutivas = 0;
-        } catch (pollErr) {
-          falhasPollingConsecutivas += 1;
-          if (falhasPollingConsecutivas >= MAX_FALHAS_POLLING_CONSECUTIVAS) {
-            throw new Error(
-              pollErr instanceof Error
-                ? `Conexao instavel: nao foi possivel consultar o progresso apos ${MAX_FALHAS_POLLING_CONSECUTIVAS} tentativas (${pollErr.message}). A geracao pode ainda estar rodando em segundo plano -- tente novamente em alguns instantes.`
-                : "Conexao instavel: nao foi possivel consultar o progresso apos varias tentativas.",
-            );
-          }
-          continue;
-        }
-        if (statusResult.jobStatus !== "running") break;
+      // [FIX-PERSISTENCIA] Guarda o jobId antes de comecar o polling
+      // -- se a aba for pausada/descartada pelo navegador e o React
+      // remontar do zero, o useEffect de retomada abaixo encontra
+      // esse registro e continua o polling sozinho, sem o usuario
+      // precisar clicar em nada de novo.
+      try {
+        sessionStorage.setItem(
+          CPSAT_JOB_PENDENTE_KEY,
+          JSON.stringify({ jobId: inicio.jobId, nomeExperimental: cpsatForm.nomeExperimental }),
+        );
+      } catch {
+        // sessionStorage indisponivel -- segue sem persistencia, como
+        // era o comportamento antes deste patch.
       }
-
-      if (statusResult.jobStatus === "error") {
-        throw new Error(statusResult.mensagem || statusResult.detalhe || statusResult.error || "Erro ao gerar a grade com o motor CP-SAT.");
-      }
-
-      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
-      toast({
-        title: `Grade CP-SAT gerada! ${statusResult.totalTurmas} turma(s), ${statusResult.totalSlots} aulas criadas.`,
-        description: statusResult.status === "OPTIMAL"
-          ? `Solucao otima em ${statusResult.tempoResolucaoS}s (sem janelas evitaveis).`
-          : `Status: ${statusResult.status}. Confira antes de promover.`,
-      });
-      setOpenGerarCpsat(false);
-      setNomeExpandido(cpsatForm.nomeExperimental);
-      setTurmaExpandidaId(null);
+      await finalizarJobCpsat(inicio.jobId, cpsatForm.nomeExperimental);
     } catch (err) {
+      // So cai aqui se a chamada POST inicial falhar (antes de existir
+      // um jobId) -- finalizarJobCpsat cuida do proprio try/catch/finally
+      // para tudo que acontece depois disso.
       toast({ title: "Erro ao gerar com CP-SAT", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
-    } finally {
       setGerandoCpsat(false);
     }
   };
+
+  // [FIX-PERSISTENCIA] Ao carregar a pagina, verifica se ha um job
+  // CP-SAT pendente salvo no sessionStorage (ver handleGerarCpsat
+  // acima). Se houver, retoma o polling automaticamente em vez de
+  // deixar a geracao "perdida" sem nenhum aviso ao usuario.
+  useEffect(() => {
+    let pendente: { jobId: string; nomeExperimental: string } | null = null;
+    try {
+      const raw = sessionStorage.getItem(CPSAT_JOB_PENDENTE_KEY);
+      if (raw) pendente = JSON.parse(raw);
+    } catch {
+      pendente = null;
+    }
+    if (!pendente?.jobId) return;
+    setGerandoCpsat(true);
+    setOpenGerarCpsat(true);
+    setCpsatForm((f) => ({ ...f, nomeExperimental: pendente!.nomeExperimental || f.nomeExperimental }));
+    toast({
+      title: "Retomando geracao com CP-SAT...",
+      description: "A pagina foi recarregada antes do resultado chegar -- continuando de onde parou.",
+    });
+    void finalizarJobCpsat(pendente.jobId, pendente.nomeExperimental);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleGerar = async () => {
     if (!gerarForm.turmaId) { toast({ title: "Selecione uma turma", variant: "destructive" }); return; }
