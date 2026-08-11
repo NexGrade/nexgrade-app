@@ -1,4 +1,4 @@
-﻿"""
+"""
 Motor de geração de grade horária com CP-SAT.
 
 Reaproveita exatamente a modelagem validada em spike-cp-sat/spike_teste_escala_real.py
