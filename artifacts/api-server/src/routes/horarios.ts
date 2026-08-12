@@ -1,4 +1,4 @@
-﻿import { Router } from "express";
+import { Router } from "express";
 import { db } from "@workspace/db";
 import {
   horariosTable,
@@ -48,17 +48,7 @@ export interface GerarOpts {
   compactarCargaHoraria?: boolean;
   experimental: boolean;
   nomeExperimental?: string;
-  // [NOVO] Quando definido, a regeneracao fica restrita as disciplinas
-  // deste professor (titular OU apoio) nesta turma -- as demais
-  // disciplinas/professores da turma ficam intocados. Usado por
-  // POST /gerar-professor pra evitar que regenerar as turmas de UM
-  // professor apague/realoque as aulas de TODOS os outros professores
-  // que dividem essas mesmas turmas.
   apenasProfessorId?: number;
-  // [FIX] Permite ao chamador forcar uma ordem de dias especifica (usado
-  // por gerarAlgoritmoMelhorTentativa pra tentar varias ordens e ficar
-  // com a que tiver menos conflitos). Quando ausente, usa o padrao
-  // (fatorPedagogico ou Segunda->Sexta).
   diasBaseOverride?: number[];
 }
 
@@ -87,9 +77,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
   const condicaoNivel = turma.turno === "matutino"
     ? eq(horarioSlotsTable.nivelEnsino, turma.nivelEnsino!)
     : isNull(horarioSlotsTable.nivelEnsino);
-  // [FIX] Adicionado filtro escolaId: sem ele, escolas diferentes que configuraram
-  // turnos com número de períodos distinto compartilhavam o mesmo conjunto de slots,
-  // fazendo AULAS ter mais linhas do que o turno desta escola realmente define.
   const slotsDoTurno = await db.select().from(horarioSlotsTable)
     .where(and(eq(horarioSlotsTable.escolaId, escolaId), eq(horarioSlotsTable.turno, turma.turno), condicaoNivel));
   if (slotsDoTurno.length === 0) {
@@ -99,9 +86,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
       ". Configure o esquema de horários antes de gerar.",
     );
   }
-  // [FIX] Domínio EXPLÍCITO: conjunto exato de numeroAula do banco, não um
-  // intervalo implícito 1..N derivado do length. Se os slots tiverem lacunas
-  // (ex.: 1,2,3,5 sem o 4), o Set reflete isso. Guarda para validação cruzada.
   const AULAS_VALIDAS_TURMA = new Set(slotsDoTurno.filter(s => s.letivo).map(s => s.numeroAula));
 
   const [turmaDiscs, disciplinas, professores, profDiscs, configGeminadas, configComplementarPadrao, limitesProfessor] = await Promise.all([
@@ -122,7 +106,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
 
   if (turmaDiscs.length === 0) throw new Error("A turma não tem disciplinas cadastradas");
 
-  // [NOVO] Ver comentario em GerarOpts.apenasProfessorId.
   const turmaDiscsAlvo = opts.apenasProfessorId
     ? turmaDiscs.filter((td) => td.professorId === opts.apenasProfessorId || td.professorApoioId === opts.apenasProfessorId)
     : turmaDiscs;
@@ -160,9 +143,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
       const chaveTurnoDisp = d.turno ?? "null";
       indisponivelProf[`${d.professorId}-${chaveTurnoDisp}-${d.diaSemana}-${d.horarioSlot}`] = true;
     });
-  // [FIX] Helper que checa indisponibilidade respeitando o turno DESTA
-  // turma -- olha primeiro o bloqueio especifico do turno, e tambem o
-  // bloqueio "universal" (turno null, registros antigos).
   function indisponivelComTurno(professorId: number, dia: number, aula: number): boolean {
     return !!(
       indisponivelProf[`${professorId}-${turma.turno}-${dia}-${aula}`]
@@ -235,10 +215,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
 
   const DIAS = [0, 1, 2, 3, 4];
   const diasBase = opts.diasBaseOverride ?? (fatorPedagogico ? [1, 3, 2, 4, 0] : DIAS);
-  // [FIX] AULAS derivado do Set explícito (não de um range 1..N baseado no
-  // length da query). Domínio fechado: qualquer código que tente usar um
-  // período fora deste array estará operando num slot que não existe na
-  // configuração real da escola -- a função alocar() vai lançar erro.
   const AULAS = [...AULAS_VALIDAS_TURMA].sort((a, b) => a - b);
 
   function cargaEfetiva(td: typeof turmaDiscs[number], disc: typeof disciplinas[number] | undefined): number {
@@ -256,9 +232,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
   });
 
   function alocar(disciplinaId: number, professorId: number, dia: number, aula: number) {
-    // [FIX] Guard interno: impede silenciosamente que qualquer caminho do
-    // algoritmo grave um período que não existe no esquema desta turma.
-    // Transforma falha silenciosa em erro explícito e rastreável.
     if (!AULAS_VALIDAS_TURMA.has(aula)) {
       throw new Error(
         `[BUG] Tentativa de alocar período ${aula} que não existe no esquema da turma ` +
@@ -323,12 +296,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
       continue;
     }
 
-    // [NOVO] Segundo professor (co-docencia confirmada pela escola --
-    // ver comentario em schema/turmas.ts sobre professorApoioId). Quando
-    // definido, toda vez que o titular for alocado num slot, o apoio
-    // TAMBEM precisa estar livre naquele mesmo slot -- e os dois ganham
-    // uma linha propria em horarios (ver alocar() abaixo), pra que a
-    // carga horaria de ambos seja contabilizada corretamente.
     const profApoio = td.professorApoioId ? professores.find((p) => p.id === td.professorApoioId) : undefined;
 
     const alocacaoPorDia: Record<number, number> = {};
@@ -350,8 +317,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
       let aulasOrdem = [...AULAS];
 
       if (reduzirJanelas) {
-        // [FIX] Era AULAS.sort() — mutava o array global. Agora [...AULAS].sort()
-        // cria cópia temporária; AULAS permanece imutável para todas as disciplinas.
         aulasOrdem = [...AULAS].sort((a, b) => {
           const adjA = profsParaDisc.some(p => {
             const aulas = aulasPorProfessorDia[p.id] ?? [];
@@ -428,11 +393,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     }
   }
 
-  // [NOVO] Passo de reparo: quando uma disciplina nao fecha a carga,
-  // tenta trocar de lugar com uma aula ja alocada de OUTRA disciplina --
-  // move essa outra aula pra um horario vago que sirva pra ela, e libera
-  // o lugar pra disciplina que faltava. So troca quando os DOIS lados
-  // ficam validos -- nunca degrada uma disciplina que ja estava completa.
   function desalocar(disciplinaId: number, professorId: number, dia: number, aula: number) {
     const idx = slotsParaGravar.findIndex(
       s => s.disciplinaId === disciplinaId && s.professorId === professorId && s.diaSemana === dia && s.numeroAula === aula,
@@ -534,16 +494,6 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
 }
 
 // ── VALIDAÇÃO DE DOMÍNIO DE PERÍODO ──────────────────────────────────
-//
-// [FIX] Funções de validação de domínio: garantem que qualquer período
-// gravado manualmente nas rotas de escrita pertence ao conjunto real de
-// slots configurados para o turno+nivelEnsino da turma — mesma garantia
-// estrutural que o CP-SAT fornece por construção no motor automático.
-//
-// Causa raiz documentada: turma "2B" (matutino Médio, 6 aulas/dia) recebeu
-// slots com numero_aula até 11 porque o heurístico usava o length da query
-// de horario_slots sem filtrar por escolaId+nivelEnsino. Esta função impede
-// a mesma classe de falha nas inserções manuais e na promoção de experimentos.
 
 async function periodosValidosDaTurma(
   turmaId: number,
@@ -586,14 +536,6 @@ async function assertPeriodoValido(
 
 // ── ROUTES ───────────────────────────────────────────────────────────
 
-// [FIX] O motor heuristico e guloso e sem backtracking: uma vez que
-// ocupa um horario, nunca desfaz -- entao a ORDEM em que os dias sao
-// percorridos decide quem sobra sem aula (normalmente sexta-feira, ja
-// que a ordem padrao e sempre Segunda->Sexta). Esta funcao roda o
-// algoritmo varias vezes com ordens de dia diferentes (incluindo
-// embaralhadas) e fica so com a tentativa que tiver menos conflitos --
-// da pro heuristico uma segunda chance sem reescrever a logica de
-// alocacao em si, que ja foi validada.
 function embaralharDias(array: number[]): number[] {
   const copia = [...array];
   for (let i = copia.length - 1; i > 0; i--) {
@@ -605,8 +547,8 @@ function embaralharDias(array: number[]): number[] {
 
 export async function gerarAlgoritmoMelhorTentativa(opts: GerarOpts, tentativas = 6) {
   const ordensBase: number[][] = [
-    [0, 1, 2, 3, 4], // padrao: Segunda -> Sexta
-    [1, 3, 2, 4, 0], // fator pedagogico
+    [0, 1, 2, 3, 4],
+    [1, 3, 2, 4, 0],
   ];
   while (ordensBase.length < tentativas) {
     ordensBase.push(embaralharDias([0, 1, 2, 3, 4]));
@@ -627,10 +569,6 @@ export async function gerarAlgoritmoMelhorTentativa(opts: GerarOpts, tentativas 
     }
   }
 
-  // Garante que o banco fique exatamente no estado da MELHOR tentativa,
-  // nao da ultima que rodou (cada chamada acima ja grava no banco --
-  // essa chamada extra so roda quando a melhor tentativa NAO foi a
-  // ultima do loop, pra corrigir o estado final).
   if (melhorOrdem && melhorOrdem !== ordensBase[ordensBase.length - 1]) {
     melhor = await gerarAlgoritmo({ ...opts, diasBaseOverride: melhorOrdem });
   }
@@ -756,9 +694,6 @@ router.post("/", async (req, res) => {
     return;
   }
 
-  // [FIX] Validação de domínio: bloqueia inserção manual de período inexistente
-  // no esquema desta turma — a mesma classe de falha que gerou dados inválidos
-  // silenciosamente no incidente documentado (turma 2B, períodos 7–11).
   const validacao = await assertPeriodoValido(data.turmaId, data.numeroAula, escolaId);
   if (!validacao.ok) {
     res.status(422).json({ error: validacao.erro, periodosValidos: validacao.periodosValidos });
@@ -790,8 +725,6 @@ const ExpInput = z.object({
   disciplinaId: z.number().int(),
   professorId: z.number().int(),
   diaSemana: z.number().int().min(0).max(4),
-  // [FIX] Removido .max(8) hardcoded — o limite real varia por turno/nível de ensino.
-  // Validação dinâmica feita por assertPeriodoValido() logo após o parse do body.
   numeroAula: z.number().int().min(1),
   sala: z.string().optional(),
 });
@@ -822,7 +755,6 @@ router.post("/experimentais", async (req, res) => {
     return;
   }
 
-  // [FIX] Validação de domínio na inserção manual de slot experimental
   const validacaoExp = await assertPeriodoValido(parsed.data.turmaId, parsed.data.numeroAula, escolaId);
   if (!validacaoExp.ok) {
     res.status(422).json({ error: validacaoExp.erro, periodosValidos: validacaoExp.periodosValidos });
@@ -846,9 +778,6 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
 
   const turmaIds = [...new Set(expSlots.map(s => s.turmaId))];
 
-  // [FIX] Validação de domínio em lote antes de promover: garante que nenhum
-  // slot do experimento tem um período que não existe no esquema atual da turma.
-  // Valida cada turmaId UMA vez (via Set de períodos do banco), não slot por slot.
   const periodosPorTurma = new Map<number, Set<number>>();
   for (const tid of turmaIds) {
     periodosPorTurma.set(tid, await periodosValidosDaTurma(tid, escolaId));
@@ -1157,33 +1086,9 @@ router.post("/corrigir-professor", async (req, res) => {
 });
 
 // ── GERAÇÃO COM CP-SAT (OR-Tools) ───────────────────────────────────
-//
-// Chama o microserviço Python (cpsat-service/, deployado como Web
-// Service separado no Render) que resolve a grade com o solver CP-SAT
-// em vez do heurístico acima. Validado com dados reais dos 3 turnos
-// antes desta integração (ver spike-cp-sat/) -- todos OPTIMAL em
-// menos de 1s.
-//
-// Sempre grava como EXPERIMENTO (nunca direto na grade oficial), pelo
-// mesmo motivo documentado em /gerar-professor: é motor novo, ainda
-// não testado em produção com a escola real, então qualquer resultado
-// precisa passar por revisão humana antes de virar oficial (via
-// /experimentais/:nome/promover, que já existe).
-//
-// Limitação assumida aqui (mesma do script de export que gerou os
-// dados de validação): usa TODOS os slots de horário do turno sem
-// diferenciar por nível de ensino -- se o matutino tiver turmas de
-// Fundamental E Médio com esquemas de aula diferentes ao mesmo tempo,
-// isso pode precisar de ajuste antes de usar em produção real.
 
 const CPSAT_SERVICE_URL = process.env.CPSAT_SERVICE_URL || "https://nexgrade-cpsat.onrender.com";
 
-// [FIX-COLDSTART] "Esquenta" o servico nexgrade-cpsat antes de mandar
-// uma carga pesada -- ver comentario no topo deste arquivo/patch. Faz
-// um GET leve em /api/healthz repetidamente ate ele responder OK ou
-// ate estourar o prazo maximo; nunca lanca erro, so retorna mais cedo
-// se conseguir confirmar que o servico esta acordado (o timeout da
-// chamada principal continua sendo a rede de seguranca final).
 async function aguardarCpsatServiceAcordado(maxEsperaMs = 90_000): Promise<void> {
   const inicio = Date.now();
   while (Date.now() - inicio < maxEsperaMs) {
@@ -1198,33 +1103,26 @@ async function aguardarCpsatServiceAcordado(maxEsperaMs = 90_000): Promise<void>
     }
     await new Promise((resolve) => setTimeout(resolve, 3000));
   }
-  // Nao conseguiu confirmar dentro do prazo -- segue mesmo assim; a
-  // chamada principal tem seu proprio timeout e retry, e vai reportar
-  // o erro adequado se o servico realmente estiver fora do ar.
 }
 
 const GerarCpsatBody = z.object({
   turno: z.enum(["matutino", "vespertino", "noturno"]).optional(),
   turmaId: z.number().int().positive().optional(),
+  turmaIds: z.array(z.number().int().positive()).min(1).optional(),
   nomeExperimental: z.string().min(1),
   tempoLimiteS: z.number().int().positive().optional(),
-}).refine((data) => (data.turno != null) !== (data.turmaId != null), {
-  message: "Informe turno OU turmaId (exatamente um dos dois, nao os dois nem nenhum).",
+}).refine((data) => {
+  const opcoesInformadas = [data.turno != null, data.turmaId != null, data.turmaIds != null].filter(Boolean).length;
+  return opcoesInformadas === 1;
+}, {
+  message: "Informe turno, turmaId OU turmaIds (exatamente uma das tres opcoes, nao mais de uma nem nenhuma).",
 });
 
-// [NOVO] Logica de geracao extraida pra uma funcao compartilhada, pra
-// poder ser chamada tanto pela rota sincrona (/gerar-cpsat, mantida por
-// compatibilidade e pra geracao rapida de turma unica) quanto pela rota
-// assincrona (/gerar-cpsat-async) usada pra turnos grandes que excedem
-// o timeout do proxy do Render (~300s) numa requisicao HTTP sincrona --
-// caso real: matutino do Mario Braga, 24 turmas, solver levando mais
-// de 5 minutos. Em vez de manter a conexao HTTP aberta esperando o
-// solver terminar, a rota async devolve um jobId na hora e o cliente
-// consulta o progresso via polling em /gerar-cpsat-status/:jobId.
 async function runCpsatGeneration(
   escolaId: string,
   turnoInformado: "matutino" | "vespertino" | "noturno" | undefined,
   turmaId: number | undefined,
+  turmaIdsSelecionados: number[] | undefined,
   nomeExperimental: string,
   tempoLimiteS: number | undefined,
 ): Promise<{ httpStatus: number; body: Record<string, unknown> }> {
@@ -1239,6 +1137,34 @@ async function runCpsatGeneration(
     }
     turmasDoTurno = [turmaEscolhida];
     turno = turmaEscolhida.turno as "matutino" | "vespertino" | "noturno";
+  } else if (turmaIdsSelecionados != null) {
+    // [NOVO] Selecao de um subconjunto arbitrario de turmas (nao a turma
+    // unica, nem o turno inteiro). Criado pra contornar o limite de
+    // memoria do CP-SAT no free tier do Render: 24 turmas de uma vez
+    // (turno inteiro do Mario Braga) estoura RAM e o servico reinicia
+    // no meio do calculo (visto em producao: /api/healthz volta 404 por
+    // ~1-2min, exatamente a assinatura de um OOM-restart do container).
+    // Gerar um subconjunto menor (ex.: so os tecnicos, depois so o
+    // Fundamental) reduz o tamanho do modelo o suficiente pra caber.
+    const turmasEscolhidas = await db.select().from(turmasTable)
+      .where(and(inArray(turmasTable.id, turmaIdsSelecionados), eq(turmasTable.escolaId, escolaId)));
+    if (turmasEscolhidas.length === 0) {
+      return { httpStatus: 400, body: { error: "Nenhuma das turmas informadas foi encontrada para esta escola." } };
+    }
+    if (turmasEscolhidas.length !== turmaIdsSelecionados.length) {
+      const encontrados = new Set(turmasEscolhidas.map((t) => t.id));
+      const faltando = turmaIdsSelecionados.filter((id) => !encontrados.has(id));
+      return { httpStatus: 400, body: { error: `Turma(s) nao encontrada(s) para esta escola: ${faltando.join(", ")}` } };
+    }
+    const turnosDistintos = new Set(turmasEscolhidas.map((t) => t.turno));
+    if (turnosDistintos.size > 1) {
+      return {
+        httpStatus: 400,
+        body: { error: `As turmas selecionadas pertencem a turnos diferentes (${[...turnosDistintos].join(", ")}). O CP-SAT gera um turno por vez -- selecione turmas do mesmo turno.` },
+      };
+    }
+    turmasDoTurno = turmasEscolhidas;
+    turno = turmasEscolhidas[0].turno as "matutino" | "vespertino" | "noturno";
   } else {
     turno = turnoInformado!;
     turmasDoTurno = await db.select().from(turmasTable)
@@ -1382,17 +1308,17 @@ async function runCpsatGeneration(
   };
   console.log("[DEBUG-CPSAT-PAYLOAD]", JSON.stringify(payload));
 
-  let resultado: {
-    status: string;
-    otimo: boolean;
-    viavel: boolean;
-    tempoResolucaoS: number;
-    mensagem?: string;
-    aulas: Array<{ turma: string; codigoSae: string; disciplina: string; professor: string; dia: number; aula: number }>;
-  };
+  let resultado:
+    | {
+        status: string;
+        otimo: boolean;
+        viavel: boolean;
+        tempoResolucaoS: number;
+        mensagem?: string;
+        aulas: Array<{ turma: string; codigoSae: string; disciplina: string; professor: string; dia: number; aula: number }>;
+      }
+    | undefined;
 
-  // [FIX-COLDSTART] Da tempo do servico acordar antes da carga
-  // pesada -- ver comentario no topo do arquivo/patch.
   await aguardarCpsatServiceAcordado();
 
   const MAX_TENTATIVAS_CPSAT = 2;
@@ -1418,9 +1344,6 @@ async function runCpsatGeneration(
       break;
     } catch (err) {
       ultimoErroCpsat = err;
-      // So vale a pena tentar de novo em falha de conexao (cold
-      // start ainda rolando, rede instavel) -- um erro HTTP real do
-      // servico (4xx/5xx com corpo) nao muda tentando de novo.
       const mensagemErroCpsat = err instanceof Error ? err.message : String(err);
       const pareceFalhaConexao =
         mensagemErroCpsat.includes("fetch failed") ||
@@ -1436,8 +1359,23 @@ async function runCpsatGeneration(
       body: {
         error: "Nao foi possivel gerar a grade com o motor CP-SAT.",
         detalhe: ultimoErroCpsat instanceof Error ? ultimoErroCpsat.message : String(ultimoErroCpsat),
-        dica: "Verifique se o servico nexgrade-cpsat esta no ar (pode estar hibernado se estiver no free tier do Render).",
+        dica: "Verifique se o servico nexgrade-cpsat esta no ar (pode estar hibernado, ou ter reiniciado por falta de memoria se estiver no free tier do Render -- nesse caso, tente gerar um subconjunto menor de turmas).",
       },
+    };
+  }
+
+  // [FIX-TS2454] Guarda explicita: sem isso, o TypeScript nao consegue
+  // provar que `resultado` foi atribuido dentro do loop de tentativas
+  // acima (a atribuicao acontece dentro de um try/catch dentro de um
+  // for, fora do alcance da analise de fluxo do compilador). Na pratica
+  // isso nunca deveria disparar -- se chegamos aqui com
+  // ultimoErroCpsat == null, o loop terminou com sucesso e `resultado`
+  // foi atribuido -- mas o guard deixa isso explicito pro compilador
+  // (e vira uma rede de seguranca real caso essa premissa mude no futuro).
+  if (resultado === undefined) {
+    return {
+      httpStatus: 500,
+      body: { error: "Erro interno: o motor CP-SAT nao retornou resultado nem erro (estado inesperado)." },
     };
   }
 
@@ -1520,23 +1458,11 @@ router.post("/gerar-cpsat", async (req, res) => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { turno, turmaId, nomeExperimental, tempoLimiteS } = parsed.data;
-  const resultado = await runCpsatGeneration(escolaId, turno, turmaId, nomeExperimental, tempoLimiteS);
+  const { turno, turmaId, turmaIds, nomeExperimental, tempoLimiteS } = parsed.data;
+  const resultado = await runCpsatGeneration(escolaId, turno, turmaId, turmaIds, nomeExperimental, tempoLimiteS);
   res.status(resultado.httpStatus).json(resultado.body);
 });
 
-// [NOVO] Versao assincrona: devolve um jobId na hora (202) e roda a
-// geracao em segundo plano, sem manter a conexao HTTP aberta. Criada
-// porque o proxy do Render corta requisicoes sincronas longas por
-// volta de ~300s (constatado gerando o matutino do Mario Braga, 24
-// turmas -- o solver levava mais de 5 minutos e a conexao voltava 502
-// mesmo com tempoLimiteS configurado corretamente no nosso lado).
-//
-// Os jobs ficam em memoria (Map), suficiente porque o servico roda
-// numa unica instancia (WEB_CONCURRENCY=1) e o cliente costuma
-// consultar o progresso poucos minutos depois de disparar a geracao.
-// Jobs com mais de 1h sao descartados na proxima chamada pra nao
-// vazar memoria indefinidamente.
 interface CpsatJob {
   status: "running" | "done" | "error";
   escolaId: string;
@@ -1561,13 +1487,13 @@ router.post("/gerar-cpsat-async", async (req, res) => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { turno, turmaId, nomeExperimental, tempoLimiteS } = parsed.data;
+  const { turno, turmaId, turmaIds, nomeExperimental, tempoLimiteS } = parsed.data;
 
   limparJobsCpsatAntigos();
   const jobId = randomUUID();
   cpsatJobs.set(jobId, { status: "running", escolaId, startedAt: Date.now() });
 
-  void runCpsatGeneration(escolaId, turno, turmaId, nomeExperimental, tempoLimiteS)
+  void runCpsatGeneration(escolaId, turno, turmaId, turmaIds, nomeExperimental, tempoLimiteS)
     .then((resultado) => {
       const jobAtual = cpsatJobs.get(jobId);
       cpsatJobs.set(jobId, {
@@ -1608,13 +1534,6 @@ router.get("/gerar-cpsat-status/:jobId", (req, res) => {
     res.json({ jobStatus: "running" });
     return;
   }
-  // [FIX] Sempre 200 aqui, mesmo quando o job terminou com erro (422,
-  // 502 etc) -- o codigo HTTP original vem em httpStatusOriginal. Isso
-  // evita que o cliente HTTP do frontend trate uma falha de negocio
-  // (ex.: INVIAVEL) como erro de rede e perca os detalhes da
-  // mensagem. Usa "jobStatus" (nao "status") pra nao colidir com o
-  // campo "status" que ja existe dentro do corpo de sucesso (o status
-  // do solver, tipo OPTIMAL/FEASIBLE).
   res.status(200).json({ jobStatus: job.status, httpStatusOriginal: job.httpStatus, ...job.body });
 });
 

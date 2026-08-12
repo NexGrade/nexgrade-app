@@ -949,9 +949,9 @@ async function main() {
   const planosExistentes = await db.select().from(planosTable);
   if (planosExistentes.length === 0) {
     await db.insert(planosTable).values([
-      { nome: "Gratuito", preco: 0, maxProfessores: 5, maxTurmas: 3, temIA: true, temExport: false, temImport: false, ativo: true },
-      { nome: "Pro", preco: 150, maxProfessores: 30, maxTurmas: 20, temIA: true, temExport: true, temImport: true, ativo: true },
-      { nome: "Master", preco: 400, maxProfessores: 9999, maxTurmas: 9999, temIA: true, temExport: true, temImport: true, ativo: true },
+      { nome: "Gratuito", precoMensal: 0, maxProfessores: 5, maxTurmas: 3, temIA: true, temExport: false, temImport: false, ativo: true },
+      { nome: "Pro", precoMensal: 150, maxProfessores: 30, maxTurmas: 20, temIA: true, temExport: true, temImport: true, ativo: true },
+      { nome: "Master", precoMensal: 400, maxProfessores: 9999, maxTurmas: 9999, temIA: true, temExport: true, temImport: true, ativo: true },
     ]);
     console.log("✅ Planos criados: Gratuito, Pro, Master");
   } else {

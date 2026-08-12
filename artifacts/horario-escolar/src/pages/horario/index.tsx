@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useSearch, Link } from "wouter";
 import {
   useListHorarioSlots, useSetHorarioSlotsLote, getListHorarioSlotsQueryKey,
@@ -1604,9 +1604,12 @@ function AbaExperimental() {
   const [openGerarCpsatTurma, setOpenGerarCpsatTurma] = useState(false);
   const [gerandoCpsatTurma, setGerandoCpsatTurma] = useState(false);
   const [cpsatTurmaForm, setCpsatTurmaForm] = useState({
-    turmaId: "",
+    turmaIds: [] as string[],
     nomeExperimental: `CPSAT-${new Date().toISOString().split("T")[0]}`,
   });
+  // [FIX-MULTI-TURMA] turmaIds agora e uma lista (uma ou mais turmas),
+  // nao mais uma unica turma -- ver runCpsatGeneration no backend, que
+  // ganhou suporte a turmaIds como terceira opcao alem de turno/turmaId.
   // [NOVO] Detalhes por turma do último lote gerado -- ver comentário
   // no tipo DetalheTurmaLote acima.
   const [detalhesLote, setDetalhesLote] = useState<{ nomeExperimental: string; resultados: DetalheTurmaLote[] } | null>(null);
@@ -1663,7 +1666,7 @@ function AbaExperimental() {
   // de turma unica -- reaproveita pollarStatusCpsat integralmente, so
   // muda o que acontece com o resultado (estado/toast especificos de
   // turma unica).
-  const finalizarJobCpsatTurma = async (jobId: string, nomeExperimental: string, turmaId: number) => {
+  const finalizarJobCpsatTurma = async (jobId: string, nomeExperimental: string, turmaIds: number[]) => {
     try {
       const statusResult = await pollarStatusCpsat(jobId);
       if (statusResult.jobStatus === "error") {
@@ -1678,7 +1681,10 @@ function AbaExperimental() {
       });
       setOpenGerarCpsatTurma(false);
       setNomeExpandido(nomeExperimental);
-      setTurmaExpandidaId(turmaId);
+      // [FIX-MULTI-TURMA] So expande automaticamente a grade de uma
+      // turma especifica quando so UMA foi selecionada -- com varias,
+      // mostra a lista (mesmo comportamento do turno inteiro).
+      setTurmaExpandidaId(turmaIds.length === 1 ? turmaIds[0] : null);
     } catch (err) {
       const mensagemErro = err instanceof Error ? err.message : String(err);
       // JOB_NAO_ENCONTRADO so acontece na retomada automatica (job
@@ -1695,9 +1701,8 @@ function AbaExperimental() {
       }
     }
   };
-
   const handleGerarCpsatTurma = async () => {
-    if (!cpsatTurmaForm.turmaId) { toast({ title: "Selecione uma turma", variant: "destructive" }); return; }
+    if (cpsatTurmaForm.turmaIds.length === 0) { toast({ title: "Selecione ao menos uma turma", variant: "destructive" }); return; }
     if (!cpsatTurmaForm.nomeExperimental.trim()) { toast({ title: "Informe o nome do experimento", variant: "destructive" }); return; }
     setGerandoCpsatTurma(true);
     try {
@@ -1707,13 +1712,17 @@ function AbaExperimental() {
       // numa turma pesada e ganha de graca a resiliencia de rede e a
       // retomada automatica (useEffect abaixo) se a aba pausar no
       // meio do processo. customFetch ja anexa o token.
+      // [FIX-MULTI-TURMA] Com 1 turma so, manda turmaId (compatibilidade
+      // com o formato antigo); com mais de uma, manda turmaIds -- o
+      // backend aceita exatamente uma das duas chaves.
+      const turmaIdsNum = cpsatTurmaForm.turmaIds.map(Number);
+      const corpoRequisicao = turmaIdsNum.length === 1
+        ? { turmaId: turmaIdsNum[0], nomeExperimental: cpsatTurmaForm.nomeExperimental }
+        : { turmaIds: turmaIdsNum, nomeExperimental: cpsatTurmaForm.nomeExperimental };
       const inicio = await customFetch<{ jobId: string }>("/api/horarios/gerar-cpsat-async", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          turmaId: Number(cpsatTurmaForm.turmaId),
-          nomeExperimental: cpsatTurmaForm.nomeExperimental,
-        }),
+        body: JSON.stringify(corpoRequisicao),
         responseType: "json",
       });
       try {
@@ -1722,13 +1731,13 @@ function AbaExperimental() {
           JSON.stringify({
             jobId: inicio.jobId,
             nomeExperimental: cpsatTurmaForm.nomeExperimental,
-            turmaId: Number(cpsatTurmaForm.turmaId),
+            turmaIds: turmaIdsNum,
           }),
         );
       } catch {
         // sessionStorage indisponivel -- segue sem persistencia.
       }
-      await finalizarJobCpsatTurma(inicio.jobId, cpsatTurmaForm.nomeExperimental, Number(cpsatTurmaForm.turmaId));
+      await finalizarJobCpsatTurma(inicio.jobId, cpsatTurmaForm.nomeExperimental, turmaIdsNum);
     } catch (err) {
       // So cai aqui se o POST inicial falhar (antes de existir um
       // jobId) -- finalizarJobCpsatTurma cuida do resto.
@@ -1736,11 +1745,10 @@ function AbaExperimental() {
       setGerandoCpsatTurma(false);
     }
   };
-
   // [FIX-PERSISTENCIA] Retomada automatica do job CP-SAT de turma
   // unica pendente -- mesma ideia do turno inteiro, chave separada.
   useEffect(() => {
-    let pendente: { jobId: string; nomeExperimental: string; turmaId: number } | null = null;
+    let pendente: { jobId: string; nomeExperimental: string; turmaIds?: number[]; turmaId?: number } | null = null;
     try {
       const raw = sessionStorage.getItem(CPSAT_TURMA_JOB_PENDENTE_KEY);
       if (raw) pendente = JSON.parse(raw);
@@ -1748,21 +1756,23 @@ function AbaExperimental() {
       pendente = null;
     }
     if (!pendente?.jobId) return;
+    // [FIX-MULTI-TURMA] Compatibilidade com jobs pendentes salvos antes
+    // desta mudanca (formato antigo tinha turmaId unico, nao turmaIds).
+    const turmaIdsPendente = pendente.turmaIds ?? (pendente.turmaId != null ? [pendente.turmaId] : []);
     setGerandoCpsatTurma(true);
     setOpenGerarCpsatTurma(true);
     setCpsatTurmaForm((f) => ({
       ...f,
       nomeExperimental: pendente!.nomeExperimental || f.nomeExperimental,
-      turmaId: String(pendente!.turmaId),
+      turmaIds: turmaIdsPendente.map(String),
     }));
     toast({
       title: "Retomando geracao com CP-SAT...",
       description: "A pagina foi recarregada antes do resultado chegar -- continuando de onde parou.",
     });
-    void finalizarJobCpsatTurma(pendente.jobId, pendente.nomeExperimental, pendente.turmaId);
+    void finalizarJobCpsatTurma(pendente.jobId, pendente.nomeExperimental, turmaIdsPendente);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
   // Espera o resultado de um job CP-SAT ja em andamento (via
   // pollarStatusCpsat) e aplica o efeito colateral de sucesso/erro na
   // UI. Reaproveitada tanto pelo fluxo normal (handleGerarCpsat)
@@ -2244,10 +2254,29 @@ function AbaExperimental() {
             </div>
             <div className="space-y-1.5">
               <Label>Turma *</Label>
-              <Select value={cpsatTurmaForm.turmaId} onValueChange={(v) => setCpsatTurmaForm((f) => ({ ...f, turmaId: v }))}>
-                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                <SelectContent>{turmas.map((t) => <SelectItem key={t.id} value={String(t.id)}>{t.nome}</SelectItem>)}</SelectContent>
-              </Select>
+              <div className="max-h-48 overflow-y-auto border rounded-md p-2 space-y-1">
+                {turmas.map((t) => (
+                  <label key={t.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded px-1 py-0.5">
+                    <input
+                      type="checkbox"
+                      className="h-3.5 w-3.5"
+                      checked={cpsatTurmaForm.turmaIds.includes(String(t.id))}
+                      onChange={(e) => {
+                        const id = String(t.id);
+                        setCpsatTurmaForm((f) => ({
+                          ...f,
+                          turmaIds: e.target.checked ? [...f.turmaIds, id] : f.turmaIds.filter((x) => x !== id),
+                        }));
+                      }}
+                    />
+                    {t.nome}
+                  </label>
+                ))}
+              </div>
+              {cpsatTurmaForm.turmaIds.length > 0 && (
+                <p className="text-xs text-muted-foreground">{cpsatTurmaForm.turmaIds.length} turma(s) selecionada(s) -- todas precisam ser do mesmo turno.</p>
+              )}
+
             </div>
           </div>
           <DialogFooter>
