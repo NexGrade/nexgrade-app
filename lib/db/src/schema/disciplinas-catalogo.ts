@@ -27,6 +27,12 @@ export const disciplinasCatalogoTable = pgTable("disciplinas_catalogo", {
   // só o valor inicial copiado.
   cargaSemanalSugerida: integer("carga_semanal_sugerida").notNull().default(2),
   tipoSalaExigido: text("tipo_sala_exigido"),
+  // [NOVO] Sigla padrão (convenção NexGrade: 3 letras por palavra
+  // significativa, ate 2 partes, separadas por ponto -- ver
+  // lib/db/aplicar-siglas-final.cjs). Copiada pra disciplinasTable
+  // quando a escola adiciona a disciplina via catálogo, evitando que
+  // cada escola tenha que preencher a sigla do zero.
+  sigla: text("sigla"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

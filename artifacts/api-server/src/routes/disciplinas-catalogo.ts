@@ -65,6 +65,7 @@ router.post("/adicionar-selecionadas", async (req, res) => {
       categoriaCurricularPadrao: item.categoriaCurricularPadrao,
       cargaSemanal: item.cargaSemanalSugerida,
       tipoSalaExigido: item.tipoSalaExigido,
+      sigla: item.sigla,
     })),
   ).returning();
 
