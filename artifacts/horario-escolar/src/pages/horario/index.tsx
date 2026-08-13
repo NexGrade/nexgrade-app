@@ -63,6 +63,11 @@ const CPSAT_JOB_PENDENTE_KEY = "nexgrade:cpsat-job-pendente";
 // mesmo tempo (ex.: usuario troca de aba no meio de cada um).
 const CPSAT_TURMA_JOB_PENDENTE_KEY = "nexgrade:cpsat-turma-job-pendente";
 
+// Chave separada pra job pendente de Turno Parcial (Beta), mesmo
+// motivo da chave de turma unica: nao colidir com os outros jobs CP-SAT
+// se ficarem pendentes ao mesmo tempo.
+const CPSAT_TURNO_PARCIAL_JOB_PENDENTE_KEY = "nexgrade:cpsat-turno-parcial-job-pendente";
+
 // Faz o polling resiliente de /gerar-cpsat-status/:jobId ate o job
 // sair do estado "running". Extraida como funcao de modulo (nao
 // depende de estado do componente) para poder ser chamada tanto pelo
@@ -1607,6 +1612,18 @@ function AbaExperimental() {
     turmaIds: [] as string[],
     nomeExperimental: `CPSAT-${new Date().toISOString().split("T")[0]}`,
   });
+
+  // [NOVO] Turno Parcial (Beta): mesmo motor de turma(s), mas com um
+  // seletor de turno primeiro -- so mostra as turmas DAQUELE turno pra
+  // marcar, em vez da lista misturada do "Turma(s) Beta". Reaproveita a
+  // mesma rota/parametro turmaIds[] do backend, sem mudanca nenhuma la.
+  const [openGerarCpsatTurnoParcial, setOpenGerarCpsatTurnoParcial] = useState(false);
+  const [gerandoCpsatTurnoParcial, setGerandoCpsatTurnoParcial] = useState(false);
+  const [cpsatTurnoParcialForm, setCpsatTurnoParcialForm] = useState({
+    turno: "matutino" as "matutino" | "vespertino" | "noturno",
+    turmaIds: [] as string[],
+    nomeExperimental: `CPSAT-${new Date().toISOString().split("T")[0]}`,
+  });
   // [FIX-MULTI-TURMA] turmaIds agora e uma lista (uma ou mais turmas),
   // nao mais uma unica turma -- ver runCpsatGeneration no backend, que
   // ganhou suporte a turmaIds como terceira opcao alem de turno/turmaId.
@@ -1771,6 +1788,98 @@ function AbaExperimental() {
       description: "A pagina foi recarregada antes do resultado chegar -- continuando de onde parou.",
     });
     void finalizarJobCpsatTurma(pendente.jobId, pendente.nomeExperimental, turmaIdsPendente);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Mesma logica de finalizarJobCpsatTurma, mas pro fluxo de Turno
+  // Parcial -- reaproveita pollarStatusCpsat integralmente, so muda o
+  // estado/toast especificos e a chave de sessionStorage.
+  const finalizarJobCpsatTurnoParcial = async (jobId: string, nomeExperimental: string, turmaIds: number[]) => {
+    try {
+      const statusResult = await pollarStatusCpsat(jobId);
+      if (statusResult.jobStatus === "error") {
+        throw new Error(statusResult.mensagem || statusResult.detalhe || statusResult.error || "Erro ao gerar a grade com o motor CP-SAT.");
+      }
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
+      toast({
+        title: `Grade CP-SAT gerada! ${statusResult.totalSlots} aulas criadas.`,
+        description: statusResult.status === "OPTIMAL"
+          ? `Solucao otima em ${statusResult.tempoResolucaoS}s (sem janelas evitaveis).`
+          : `Status: ${statusResult.status}. Confira antes de promover.`,
+      });
+      setOpenGerarCpsatTurnoParcial(false);
+      setNomeExpandido(nomeExperimental);
+      setTurmaExpandidaId(turmaIds.length === 1 ? turmaIds[0] : null);
+    } catch (err) {
+      const mensagemErro = err instanceof Error ? err.message : String(err);
+      if (mensagemErro !== "JOB_NAO_ENCONTRADO") {
+        toast({ title: "Erro ao gerar com CP-SAT", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+      }
+    } finally {
+      setGerandoCpsatTurnoParcial(false);
+      try {
+        sessionStorage.removeItem(CPSAT_TURNO_PARCIAL_JOB_PENDENTE_KEY);
+      } catch {
+        // sessionStorage indisponivel -- nao ha o que fazer.
+      }
+    }
+  };
+
+  const handleGerarCpsatTurnoParcial = async () => {
+    if (cpsatTurnoParcialForm.turmaIds.length === 0) { toast({ title: "Selecione ao menos uma turma", variant: "destructive" }); return; }
+    if (!cpsatTurnoParcialForm.nomeExperimental.trim()) { toast({ title: "Informe o nome do experimento", variant: "destructive" }); return; }
+    setGerandoCpsatTurnoParcial(true);
+    try {
+      const turmaIdsNum = cpsatTurnoParcialForm.turmaIds.map(Number);
+      const corpoRequisicao = turmaIdsNum.length === 1
+        ? { turmaId: turmaIdsNum[0], nomeExperimental: cpsatTurnoParcialForm.nomeExperimental }
+        : { turmaIds: turmaIdsNum, nomeExperimental: cpsatTurnoParcialForm.nomeExperimental };
+      const inicio = await customFetch<{ jobId: string }>("/api/horarios/gerar-cpsat-async", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(corpoRequisicao),
+        responseType: "json",
+      });
+      try {
+        sessionStorage.setItem(
+          CPSAT_TURNO_PARCIAL_JOB_PENDENTE_KEY,
+          JSON.stringify({ jobId: inicio.jobId, nomeExperimental: cpsatTurnoParcialForm.nomeExperimental, turmaIds: turmaIdsNum }),
+        );
+      } catch {
+        // sessionStorage indisponivel -- retomada automatica nao vai
+        // funcionar, mas o fluxo normal (aba aberta) segue igual.
+      }
+      await finalizarJobCpsatTurnoParcial(inicio.jobId, cpsatTurnoParcialForm.nomeExperimental, turmaIdsNum);
+    } catch (err) {
+      setGerandoCpsatTurnoParcial(false);
+      toast({ title: "Erro ao gerar com CP-SAT", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+    }
+  };
+
+  // [FIX-PERSISTENCIA] Retomada automatica do job CP-SAT de Turno
+  // Parcial pendente -- mesma ideia dos outros dois, chave separada.
+  useEffect(() => {
+    let pendente: { jobId: string; nomeExperimental: string; turmaIds?: number[] } | null = null;
+    try {
+      const raw = sessionStorage.getItem(CPSAT_TURNO_PARCIAL_JOB_PENDENTE_KEY);
+      if (raw) pendente = JSON.parse(raw);
+    } catch {
+      pendente = null;
+    }
+    if (!pendente?.jobId) return;
+    const turmaIdsPendente = pendente.turmaIds ?? [];
+    setGerandoCpsatTurnoParcial(true);
+    setOpenGerarCpsatTurnoParcial(true);
+    setCpsatTurnoParcialForm((f) => ({
+      ...f,
+      nomeExperimental: pendente!.nomeExperimental || f.nomeExperimental,
+      turmaIds: turmaIdsPendente.map(String),
+    }));
+    toast({
+      title: "Retomando geracao com CP-SAT...",
+      description: "A pagina foi recarregada antes do resultado chegar -- continuando de onde parou.",
+    });
+    void finalizarJobCpsatTurnoParcial(pendente.jobId, pendente.nomeExperimental, turmaIdsPendente);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   // Espera o resultado de um job CP-SAT ja em andamento (via
@@ -1954,6 +2063,9 @@ function AbaExperimental() {
             <div className="flex flex-col gap-2">
               <Button variant="outline" className="w-full justify-start border-blue-300 text-blue-700 hover:bg-blue-50" onClick={() => setOpenGerarCpsatTurma(true)}>
                 <Sparkles className="w-4 h-4 mr-2" />Turma (Beta)
+              </Button>
+              <Button variant="outline" className="w-full justify-start border-blue-300 text-blue-700 hover:bg-blue-50" onClick={() => setOpenGerarCpsatTurnoParcial(true)}>
+                <Sparkles className="w-4 h-4 mr-2" />Turno Parcial (Beta)
               </Button>
               <Button variant="outline" className="w-full justify-start border-blue-300 text-blue-700 hover:bg-blue-50" onClick={() => setOpenGerarCpsat(true)}>
                 <Sparkles className="w-4 h-4 mr-2" />Turno inteiro (Beta)
@@ -2282,6 +2394,68 @@ function AbaExperimental() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenGerarCpsatTurma(false)}>Cancelar</Button>
             <Button onClick={handleGerarCpsatTurma} disabled={gerandoCpsatTurma}>{gerandoCpsatTurma ? "Gerando (pode levar até 2 min)..." : "Gerar com CP-SAT"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={openGerarCpsatTurnoParcial} onOpenChange={setOpenGerarCpsatTurnoParcial}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Gerar com CP-SAT -- Turno Parcial (Beta)</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md p-2.5">
+              <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
+              Escolha um turno e depois marque so as turmas que devem entrar neste calculo. Util pra dividir turnos grandes em pedacos menores (evita estourar memoria no CP-SAT). As turmas de fora do lote nao sao alteradas, e o motor ja evita colidir com os professores delas.
+            </div>
+            <div className="space-y-1.5">
+              <Label>Nome do experimento *</Label>
+              <Input value={cpsatTurnoParcialForm.nomeExperimental} onChange={(e) => setCpsatTurnoParcialForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex: CPSAT-Parcial-2026-08-13" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Turno *</Label>
+              <Select
+                value={cpsatTurnoParcialForm.turno}
+                onValueChange={(v) => setCpsatTurnoParcialForm((f) => ({ ...f, turno: v as "matutino" | "vespertino" | "noturno", turmaIds: [] }))}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="matutino">Matutino</SelectItem>
+                  <SelectItem value="vespertino">Vespertino</SelectItem>
+                  <SelectItem value="noturno">Noturno</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Turmas do turno selecionado *</Label>
+              <div className="max-h-48 overflow-y-auto border rounded-md p-2 space-y-1">
+                {turmas.filter((t) => t.turno === cpsatTurnoParcialForm.turno).map((t) => (
+                  <label key={t.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded px-1 py-0.5">
+                    <input
+                      type="checkbox"
+                      className="h-3.5 w-3.5"
+                      checked={cpsatTurnoParcialForm.turmaIds.includes(String(t.id))}
+                      onChange={(e) => {
+                        const id = String(t.id);
+                        setCpsatTurnoParcialForm((f) => ({
+                          ...f,
+                          turmaIds: e.target.checked ? [...f.turmaIds, id] : f.turmaIds.filter((x) => x !== id),
+                        }));
+                      }}
+                    />
+                    {t.nome}
+                  </label>
+                ))}
+                {turmas.filter((t) => t.turno === cpsatTurnoParcialForm.turno).length === 0 && (
+                  <p className="text-xs text-muted-foreground px-1 py-0.5">Nenhuma turma cadastrada neste turno.</p>
+                )}
+              </div>
+              {cpsatTurnoParcialForm.turmaIds.length > 0 && (
+                <p className="text-xs text-muted-foreground">{cpsatTurnoParcialForm.turmaIds.length} turma(s) selecionada(s).</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenGerarCpsatTurnoParcial(false)}>Cancelar</Button>
+            <Button onClick={handleGerarCpsatTurnoParcial} disabled={gerandoCpsatTurnoParcial}>{gerandoCpsatTurnoParcial ? "Gerando (pode levar ate 2 min)..." : "Gerar com CP-SAT"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
