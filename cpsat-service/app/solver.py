@@ -6,6 +6,7 @@ Reaproveita exatamente a modelagem validada em spike-cp-sat/spike_teste_escala_r
 completa (turma, disciplina, professor, dia, aula) em vez de só o status do solver.
 """
 
+import os
 from ortools.sat.python import cp_model
 from dataclasses import dataclass
 from typing import Optional
@@ -123,7 +124,30 @@ def resolver(
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = tempo_limite_s
-    solver.parameters.num_search_workers = 1  # [FIX-CPU] Free tier tem so 0.1 CPU -- mais workers so gera troca de contexto, sem paralelismo real.
+
+    # [FIX-CPU-CONFIG] Numero de workers configuravel via variavel de
+    # ambiente, em vez de fixo em 1. O comentario antigo dizia "free tier
+    # tem so 0.1 CPU", mas isso trava o paralelismo mesmo depois de migrar
+    # pra um tier com mais nucleos de verdade (Standard = 1 vCPU ainda so
+    # aproveita 1 worker de qualquer forma, mas Pro = 2 vCPU ja aproveitaria
+    # 2). Default 1 mantem o comportamento anterior; ajuste
+    # CPSAT_NUM_WORKERS no ambiente do Render se subir de tier de novo.
+    solver.parameters.num_search_workers = int(os.getenv("CPSAT_NUM_WORKERS", "1"))
+
+    # [OTIMIZACAO-VELOCIDADE] Aceita solucao dentro de X% do valor otimo em
+    # vez de exigir PROVA de otimalidade -- a maior parte do tempo de solve
+    # normalmente e gasta provando que nao da pra melhorar mais, nao achando
+    # a solucao boa em si (ver documentacao oficial do OR-Tools). Como o
+    # objetivo aqui e "minimizar janelas" (conforto, nao regra dura da
+    # SEED-PR), aceitar uma folga pequena e uma troca segura que costuma
+    # cortar o tempo de resolucao de forma significativa.
+    # Configuravel via env var; 0 = comportamento antigo (exige otimo
+    # provado). Default 0.03 = aceita ate 3% de distancia do melhor valor
+    # teorico possivel.
+    gap_relativo = float(os.getenv("CPSAT_GAP_RELATIVO", "0.03"))
+    if gap_relativo > 0:
+        solver.parameters.relative_gap_limit = gap_relativo
+
     status = solver.Solve(model)
 
     return solver, status, aula_var
