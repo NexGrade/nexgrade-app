@@ -148,6 +148,17 @@ def resolver(
     if gap_relativo > 0:
         solver.parameters.relative_gap_limit = gap_relativo
 
+    # [OTIMIZACAO-PRIMEIRA-SOLUCAO] Quando ligado, o solver para assim
+    # que acha a PRIMEIRA grade que satisfaz todas as restricoes -- abre
+    # mao de tentar reduzir mais as janelas, em troca de velocidade. Util
+    # pra turnos densos (muitos professores "apertados"), onde achar
+    # qualquer solucao valida ja e dificil e a etapa de otimizar em cima
+    # dela consome a maior parte do tempo. Desligado por padrao (mantem
+    # o comportamento de sempre tentar minimizar janelas).
+    parar_na_primeira = os.getenv("CPSAT_PARAR_NA_PRIMEIRA", "0") == "1"
+    if parar_na_primeira:
+        solver.parameters.stop_after_first_solution = True
+
     status = solver.Solve(model)
 
     return solver, status, aula_var
