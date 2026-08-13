@@ -1095,7 +1095,7 @@ async function aguardarCpsatServiceAcordado(maxEsperaMs = 90_000): Promise<void>
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
-      const response = await fetch(`${CPSAT_SERVICE_URL}/api/healthz`, { signal: controller.signal });
+      const response = await fetch(`${CPSAT_SERVICE_URL}/`, { signal: controller.signal }); // [FIX-HEALTHZ] nexgrade-cpsat so tem "/" e "/gerar-grade" -- "/api/healthz" nunca existiu nesse servico, sempre dava 404 e desperdicava ate 90s por geracao.
       clearTimeout(timeoutId);
       if (response.ok) return;
     } catch {
