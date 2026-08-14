@@ -2,7 +2,6 @@
 
 const DIAS_CURTOS = ["Seg", "Ter", "Qua", "Qui", "Sex"];
 
-// Cores da marca NexGrade (ver manual de identidade)
 const AZUL_PRINCIPAL = rgb(0x15 / 255, 0x65 / 255, 0xc0 / 255);
 const AZUL_ESCURO = rgb(0x0d / 255, 0x47 / 255, 0xa1 / 255);
 const CINZA_CLARO = rgb(0xec / 255, 0xef / 255, 0xf1 / 255);
@@ -10,44 +9,31 @@ const CINZA_ESCURO = rgb(0x60 / 255, 0x7d / 255, 0x8b / 255);
 const CINZA_BORDA = rgb(0.7, 0.7, 0.7);
 const BRANCO = rgb(1, 1, 1);
 const PRETO = rgb(0.1, 0.1, 0.1);
-const AMARELO_HA = rgb(1, 0.93, 0.6); // destaque mais forte para HA, igual ao usado no Urânia
+const AMARELO_HA = rgb(1, 0.93, 0.6);
 
 type SlotGrade = {
   diaSemana: number;
   numeroAula: number;
   linha1: string;
   linha2?: string;
-  destacado?: boolean; // usado para marcar Hora-Atividade
+  destacado?: boolean;
 };
 
-// [NOVO] Um "bloco" é uma mini-grade compacta (uma turma, ou um
-// professor) — várias cabem na mesma página, empilhadas, igual ao
-// formato real do Urânia (confirmado nos PDFs de referência
-// 06_TURMAS/PROFESSORES_*.pdf: 4 turmas por página, sem cabeçalho
-// próprio por bloco além do rótulo "Turma: 8MA").
+type CelulaBloqueada = { diaSemana: number; numeroAula: number };
+
 type BlocoGrade = {
-  rotulo: string; // "Turma: 8MA" ou "ALINE"
+  rotulo: string;
   slots: SlotGrade[];
   horariosPorAula?: Record<number, string>;
+  celulasBloqueadas?: CelulaBloqueada[];
 };
 
-const LARGURA = 595.28; // A4 retrato (mais blocos por pagina)
+const LARGURA = 595.28;
 const ALTURA = 841.89;
 const MARGEM = 30;
 const ALTURA_CABECALHO_PAGINA = 46;
 const ALTURA_RODAPE = 14;
 
-// [FIX] Blindagem contra caractere corrompido em qualquer texto que
-// vai pro PDF (nome de escola, titulo do documento, etc). A fonte
-// padrao do pdf-lib (WinAnsiEncoding) so desenha um conjunto limitado
-// de caracteres -- se um campo no banco tiver sofrido corrupcao de
-// encoding em algum momento (ex.: import antigo com charset errado),
-// ele guarda um caractere de substituicao (U+FFFD) que faz o pdf-lib
-// lancar excecao na hora de desenhar, derrubando a exportacao inteira
-// com erro 500 -- mesmo que o resto dos dados esteja perfeito. Achado
-// via caso real: nome_fantasia do Mario Braga tinha um U+FFFD no lugar
-// do "a" de "Mario", quebrando os 4 geradores de PDF que usam
-// buscarNomeEscola. Aplica em qualquer escola, nao so nesse caso.
 export function sanitizarTextoPdf(texto: string): string {
   return texto.replace(/[\uFFFD]/g, "").replace(/[^\x20-\x7E\xA0-\xFF]/g, "?");
 }
@@ -63,12 +49,24 @@ function desenharCabecalhoPagina(page: PDFPage, fontBold: PDFFont, font: PDFFont
   page.drawText(intervaloData, { x: LARGURA - MARGEM - larguraData, y: ALTURA - 27, size: 10, font: fontBold, color: BRANCO });
 }
 
-// Calcula a altura (em pontos) que um bloco vai ocupar, para decidir se
-// cabe no espaço restante da página atual.
+function desenharPontilhado(page: PDFPage, x: number, y: number, largura: number, altura: number) {
+  const cor = CINZA_ESCURO;
+  const espacamento = 5;
+  for (let offset = -altura; offset < largura; offset += espacamento) {
+    const x1 = x + Math.max(offset, 0);
+    const y1 = y + Math.max(-offset, 0);
+    const diagLen = Math.min(largura - Math.max(offset, 0), altura - Math.max(-offset, 0));
+    if (diagLen <= 0) continue;
+    const x2 = x1 + diagLen;
+    const y2 = y1 + diagLen;
+    page.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: 0.6, color: cor, dashArray: [1.5, 1.5] });
+  }
+}
+
 function alturaDoBloco(bloco: BlocoGrade, alturaLinhaDado: number, alturaLinhaCabecalho: number): number {
   const aulas = [...new Set(bloco.slots.map((s) => s.numeroAula))];
   const numLinhas = Math.max(aulas.length, bloco.horariosPorAula ? Object.keys(bloco.horariosPorAula).length : 0, 5);
-  return 6 /* rótulo (bem colado na propria tabela) */ + alturaLinhaCabecalho + numLinhas * alturaLinhaDado + 18 /* espaço entre blocos, maior que o rotulo pra ficar claro qual tabela é de quem */;
+  return 6 + alturaLinhaCabecalho + numLinhas * alturaLinhaDado + 18;
 }
 
 function desenharBloco(
@@ -84,7 +82,6 @@ function desenharBloco(
   const colAulaLargura = bloco.horariosPorAula ? 40 : 32;
   const colDiaLargura = (larguraDisponivel - colAulaLargura) / 5;
 
-  // Rótulo do bloco ("Turma: 8MA" ou nome do professor)
   page.drawText(bloco.rotulo, { x: MARGEM, y: yTopo, size: 9.5, font: fontBold, color: AZUL_ESCURO });
   let y = yTopo - 6;
 
@@ -92,7 +89,6 @@ function desenharBloco(
     ? Object.keys(bloco.horariosPorAula).map(Number).sort((a, b) => a - b)
     : [...new Set(bloco.slots.map((s) => s.numeroAula))].sort((a, b) => a - b);
 
-  // Cabeçalho da mini-tabela (Hor | Seg | Ter | Qua | Qui | Sex)
   page.drawRectangle({ x: MARGEM, y: y - alturaLinhaCabecalho, width: colAulaLargura, height: alturaLinhaCabecalho, color: AZUL_PRINCIPAL });
   page.drawText("Hor", { x: MARGEM + 5, y: y - alturaLinhaCabecalho / 2 - 3, size: 7.5, font: fontBold, color: BRANCO });
   DIAS_CURTOS.forEach((dia, i) => {
@@ -121,14 +117,17 @@ function desenharBloco(
       if (slot) {
         const maxChars = Math.floor(colDiaLargura / 3.6);
         if (slot.linha2) {
-          // Célula combinada em uma linha só: "TURMA/SIGLA" (visão por
-          // professor) -- formato real do Urânia.
           const texto = truncar(`${slot.linha1}/${slot.linha2}`, maxChars);
           page.drawText(texto, { x: x + 3, y: yLinha + alturaLinhaDado / 2 - 3, size: 6.5, font, color: PRETO });
         } else {
           const texto = truncar(slot.linha1, maxChars);
           page.drawText(texto, { x: x + 3, y: yLinha + alturaLinhaDado / 2 - 3, size: 7, font: fontBold, color: PRETO });
         }
+      } else {
+        const bloqueada = bloco.celulasBloqueadas?.some(
+          (c) => c.diaSemana === diaSemana && c.numeroAula === numeroAula,
+        );
+        if (bloqueada) desenharPontilhado(page, x, yLinha, colDiaLargura, alturaLinhaDado);
       }
     });
   });
@@ -136,13 +135,6 @@ function desenharBloco(
   return yTopo - alturaDoBloco(bloco, alturaLinhaDado, alturaLinhaCabecalho);
 }
 
-/**
- * Gera um PDF no formato compacto multi-bloco por página (padrão real
- * do Urânia): vários blocos (turmas ou professores) empilhados na mesma
- * página, sem cabeçalho individual por bloco além de um rótulo curto.
- * `nomeEscola` e `intervaloData` aparecem só no cabeçalho de cada
- * página, uma vez.
- */
 export async function gerarPdfGradeCompacta(
   nomeEscola: string,
   tituloDocumento: string,
@@ -186,6 +178,3 @@ export async function gerarPdfGradeCompacta(
 }
 
 export type { BlocoGrade, SlotGrade };
-
-
-

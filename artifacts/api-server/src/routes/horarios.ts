@@ -24,6 +24,7 @@ import {
 import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 import { randomUUID } from "node:crypto";
+import { recalcularHoraAtividade } from "../lib/recalcular-ha";
 
 const router = Router();
 
@@ -138,7 +139,7 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
 
   const indisponivelProf: Record<string, boolean> = {};
   disponibilidades
-    .filter(d => !d.disponivel)
+    .filter(d => !d.disponivel || d.horaAtividadeObrigatoria)
     .forEach(d => {
       const chaveTurnoDisp = d.turno ?? "null";
       indisponivelProf[`${d.professorId}-${chaveTurnoDisp}-${d.diaSemana}-${d.horarioSlot}`] = true;
@@ -606,6 +607,13 @@ router.post("/gerar", async (req, res) => {
       experimental: data.experimental ?? false,
       nomeExperimental: data.nomeExperimental,
     });
+    if (!(data.experimental ?? false)) {
+      try {
+        await recalcularHoraAtividade(escolaId);
+      } catch (errHA) {
+        console.error("[HA] Falha ao recalcular hora-atividade apos geracao direta:", errHA);
+      }
+    }
     res.json(result);
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : "Erro ao gerar horário" });
@@ -821,6 +829,12 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     return gravados;
   });
 
+  try {
+    await recalcularHoraAtividade(escolaId);
+  } catch (err) {
+    console.error("[HA] Falha ao recalcular hora-atividade apos promover:", err);
+  }
+
   res.json({ slotsGerados: inserted.length, conflitos: [], horario: [] });
 });
 
@@ -1009,7 +1023,7 @@ router.post("/corrigir-professor", async (req, res) => {
   const slotsDoProf = todosSlotsDaEscola.filter((s) => s.professorId === professorId);
 
   const indisponivelSet = new Set(
-    disponibilidades.filter((d) => !d.disponivel).map((d) => `${d.turno ?? "null"}-${d.diaSemana}-${d.horarioSlot}`),
+    disponibilidades.filter((d) => !d.disponivel || d.horaAtividadeObrigatoria).map((d) => `${d.turno ?? "null"}-${d.diaSemana}-${d.horarioSlot}`),
   );
 
   const conflitantes = slotsDoProf.filter((s) => {
@@ -1080,6 +1094,14 @@ router.post("/corrigir-professor", async (req, res) => {
       turmaId: slot.turmaId, turmaNome: turma?.nome ?? String(slot.turmaId),
       disciplinaId: slot.disciplinaId, de: { dia: slot.diaSemana, aula: slot.numeroAula }, para: destino,
     });
+  }
+
+  if (movidas.length > 0) {
+    try {
+      await recalcularHoraAtividade(escolaId);
+    } catch (err) {
+      console.error("[HA] Falha ao recalcular hora-atividade apos corrigir-professor:", err);
+    }
   }
 
   res.json({ professorId, professorNome: professor.nome, movidas, naoResolvidas });
@@ -1255,7 +1277,7 @@ async function runCpsatGeneration(
 
   const professorIdsUsados = new Set(disciplinasTurma.map((d) => nomeParaProfessorId.get(d.professor)).filter((id): id is number => id != null));
   const bloqueiosDisponibilidade = disponibilidades
-    .filter((d) => professorIdsUsados.has(d.professorId) && !d.disponivel && (d.turno === turno || d.turno == null))
+    .filter((d) => professorIdsUsados.has(d.professorId) && (!d.disponivel || d.horaAtividadeObrigatoria) && (d.turno === turno || d.turno == null))
     .map((d) => ({
       professor: professorMap.get(d.professorId)?.nome ?? `Professor #${d.professorId}`,
       dia: d.diaSemana,

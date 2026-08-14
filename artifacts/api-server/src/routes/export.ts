@@ -372,6 +372,16 @@ router.get("/grade-pdf/professor", async (req, res) => {
           destacado: true,
         }));
 
+      // [NOVO] Dia/horario em que o professor esta bloqueado
+      // (indisponivel, sem ser HA) nesse turno -- desenhado com
+      // hachura pontilhada no PDF quando a celula estiver vazia (ver
+      // pdf-grade.ts). So entra aqui quem NAO tem aula real e NAO e HA
+      // (os dois ja tem marcacao propria e sempre vencem visualmente).
+      const bloqueadasDoProf: NonNullable<BlocoGrade["celulasBloqueadas"]> = disponibilidades
+        .filter((d) => d.professorId === prof.id && !d.disponivel && !d.horaAtividadeObrigatoria && d.turno === turno)
+        .filter((d) => !aulasDoProf.some((a) => a.diaSemana === d.diaSemana && a.numeroAula === d.horarioSlot))
+        .map((d) => ({ diaSemana: d.diaSemana, numeroAula: d.horarioSlot }));
+
       // Rótulo só mostra o turno quando o professor dá aula em mais de
       // um (senão fica redundante, ex. "ALINE (Manhã)" toda vez).
       const rotulo = turnosDoProf.length > 1
@@ -382,6 +392,7 @@ router.get("/grade-pdf/professor", async (req, res) => {
         rotulo,
         horariosPorAula,
         slots: [...aulasDoProf, ...haDoProf],
+        celulasBloqueadas: bloqueadasDoProf,
       });
     }
   }
