@@ -102,7 +102,13 @@ def resolver(
             for aula in range(dt.ultima_aula_turma + 1, aulas_por_dia + 1):
                 model.Add(aula_var[(dt_idx, dia, aula)] == 0)
 
-    # OBJETIVO — minimizar janelas (buracos) por turma/dia
+    # OBJETIVO — minimizar janelas (buracos) por turma/dia E por
+    # professor/dia. Antes so minimizava do lado da turma -- uma turma
+    # sem buraco nao impede o professor de ter buraco no dia dele (ele
+    # pode dar aula 1a aula pra turma A e so voltar na 4a pra turma B,
+    # cada turma individualmente compacta, mas o dia do professor com
+    # buraco no meio). Reaproveita exatamente o mesmo padrao de
+    # variavel "ocupado" + "buraco" ja usado pra turma.
     penalidades = []
     for turma in turmas_nomes:
         indices_turma = [i for i, dt in enumerate(disciplinas_turma) if dt.turma == turma]
@@ -119,6 +125,25 @@ def resolver(
                 model.AddBoolAnd([ocupado[a - 1], ocupado[a].Not(), ocupado[a + 1]]).OnlyEnforceIf(buraco)
                 model.AddBoolOr([ocupado[a - 1].Not(), ocupado[a], ocupado[a + 1].Not()]).OnlyEnforceIf(buraco.Not())
                 penalidades.append(buraco)
+
+    # [NOVO] Mesmo objetivo, agora do lado do professor -- soma as
+    # aulas dele em QUALQUER turma nesse turno (nao so uma), pra saber
+    # se ele esta ocupado naquele horario, independente de qual turma.
+    for prof in professores:
+        indices_prof = [i for i, dt in enumerate(disciplinas_turma) if dt.professor == prof]
+        if not indices_prof:
+            continue
+        for dia in range(len(DIAS)):
+            ocupado_prof = []
+            for aula in range(1, aulas_por_dia + 1):
+                v = model.NewBoolVar(f"ocupado_prof_{prof}_{dia}_{aula}")
+                model.Add(sum(aula_var[(i, dia, aula)] for i in indices_prof) == v)
+                ocupado_prof.append(v)
+            for a in range(1, aulas_por_dia - 1):
+                buraco_prof = model.NewBoolVar(f"buraco_prof_{prof}_{dia}_{a}")
+                model.AddBoolAnd([ocupado_prof[a - 1], ocupado_prof[a].Not(), ocupado_prof[a + 1]]).OnlyEnforceIf(buraco_prof)
+                model.AddBoolOr([ocupado_prof[a - 1].Not(), ocupado_prof[a], ocupado_prof[a + 1].Not()]).OnlyEnforceIf(buraco_prof.Not())
+                penalidades.append(buraco_prof)
 
     model.Minimize(sum(penalidades))
 
