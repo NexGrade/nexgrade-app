@@ -111,6 +111,9 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
     const aulasDoProf = horarios.filter((h) => h.professorId === prof.id);
     if (aulasDoProf.length === 0) continue;
 
+    // aulasPorTurno / ocupadoPorTurno -- so cobrem turnos onde o
+    // professor tem aula REAL. Turnos de contraturno (HA sem aula
+    // nenhuma) nao aparecem aqui de proposito.
     const aulasPorTurno: Record<string, number> = {};
     const ocupadoPorTurno = new Map<string, Set<string>>();
     for (const h of aulasDoProf) {
@@ -121,54 +124,88 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
       ocupadoPorTurno.get(turno)!.add(`${h.diaSemana}-${h.numeroAula}`);
     }
 
-    const exigidoPorTurno = calcularHoraAtividadePorTurno(aulasPorTurno);
+    const totalAulas = Object.values(aulasPorTurno).reduce((s, n) => s + n, 0);
+    const exigidoTotal = calcularHoraAtividadeInstitucional(totalAulas);
 
-    const haDoProf = disponibilidades.filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria);
-    const haPorTurno = new Map<string, typeof haDoProf>();
-    for (const d of haDoProf) {
-      const turno = d.turno ?? "sem_turno";
-      if (!haPorTurno.has(turno)) haPorTurno.set(turno, []);
-      haPorTurno.get(turno)!.push(d);
+    // [FIX] Slots ja marcados como BLOQUEIO (disponivel=false, nao-HA)
+    // -- a busca de horario livre pra nova HA precisa excluir essas
+    // celulas tambem, nao so as que tem aula real. Sem isso, o
+    // algoritmo podia inserir HA em cima de um bloqueio ja existente
+    // (ex.: professor com o dia inteiro bloqueado, sem vir a escola --
+    // colocar HA la dentro nao faz sentido nenhum). d.turno === null
+    // conta como bloqueio universal (vale pra qualquer turno).
+    const bloqueadoPorTurno = new Map<string, Set<string>>();
+    for (const d of disponibilidades) {
+      if (d.professorId !== prof.id || d.disponivel) continue;
+      const chave = `${d.diaSemana}-${d.horarioSlot}`;
+      if (d.turno == null) {
+        for (const turno of Object.keys(aulasPorTurno)) {
+          if (!bloqueadoPorTurno.has(turno)) bloqueadoPorTurno.set(turno, new Set());
+          bloqueadoPorTurno.get(turno)!.add(chave);
+        }
+      } else {
+        if (!bloqueadoPorTurno.has(d.turno)) bloqueadoPorTurno.set(d.turno, new Set());
+        bloqueadoPorTurno.get(d.turno)!.add(chave);
+      }
     }
 
-    for (const turno of Object.keys(exigidoPorTurno)) {
-      const exigido = exigidoPorTurno[turno] ?? 0;
+    const haDoProf = disponibilidades.filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria);
+
+    // Valida cada HA existente (qualquer turno, inclusive
+    // contraturno): so e invalida se colidir com uma aula REAL no
+    // mesmo turno. Num turno sem aula nenhuma pra esse professor
+    // (contraturno), nunca ha colisao possivel -- a marcacao e sempre
+    // respeitada, mesmo sem aula ali.
+    const marcadasValidas: typeof haDoProf = [];
+    for (const m of haDoProf) {
+      const turno = m.turno ?? "sem_turno";
+      const ocupado = ocupadoPorTurno.get(turno);
+      const bloqueado = bloqueadoPorTurno.get(turno);
+      const chave = `${m.diaSemana}-${m.horarioSlot}`;
+      const colide = (ocupado?.has(chave) ?? false) || (bloqueado?.has(chave) ?? false);
+      if (colide) {
+        paraRemoverIds.push(m.id);
+        professoresAfetadosSet.add(prof.id);
+      } else {
+        marcadasValidas.push(m);
+      }
+    }
+
+    const diferenca = exigidoTotal - marcadasValidas.length;
+
+    if (diferenca === 0) continue;
+
+    if (diferenca < 0) {
+      // Sobra HA -- remove o excesso, preferindo remover das
+      // marcadas que ESTAO no turno de ensino (as que nosso proprio
+      // algoritmo costuma gerar); deixa contraturno por ultimo, ja
+      // que normalmente foi colocado manualmente por decisao
+      // institucional especifica.
+      const noTurnoDeEnsino = marcadasValidas.filter((m) => (m.turno ?? "") in aulasPorTurno);
+      const emContraturno = marcadasValidas.filter((m) => !((m.turno ?? "") in aulasPorTurno));
+      const ordemRemocao = [...noTurnoDeEnsino, ...emContraturno];
+      const remover = ordemRemocao.slice(0, -diferenca);
+      paraRemoverIds.push(...remover.map((m) => m.id));
+      professoresAfetadosSet.add(prof.id);
+      continue;
+    }
+
+    // Falta HA -- insere so nos turnos onde o professor DA AULA de
+    // verdade (nunca inventa um contraturno novo sozinho -- isso e
+    // decisao institucional feita manualmente pela coordenacao).
+    // Turnos com mais aulas primeiro (concentra no turno principal,
+    // espirito do art. 11 par. 4 da Resolucao SEED-PR n. 7.200/2025).
+    let faltam = diferenca;
+    const turnosOrdenados = Object.keys(aulasPorTurno).sort((a, b) => (aulasPorTurno[b] ?? 0) - (aulasPorTurno[a] ?? 0));
+
+    for (const turno of turnosOrdenados) {
+      if (faltam <= 0) break;
       const ocupado = ocupadoPorTurno.get(turno) ?? new Set();
-      const marcadasBrutas = haPorTurno.get(turno) ?? [];
-
-      // [FIX] Antes de mais nada, separa HA marcada em cima de um
-      // horario que agora tem aula REAL (bug de dessincronia -- a
-      // contagem podia bater por coincidencia e a verificacao antiga
-      // pulava sem olhar a posicao). Essas entradas sao sempre
-      // invalidas e removidas, independente do total bater ou nao.
-      const marcadasInvalidas = marcadasBrutas.filter((m) => ocupado.has(`${m.diaSemana}-${m.horarioSlot}`));
-      const marcadas = marcadasBrutas.filter((m) => !ocupado.has(`${m.diaSemana}-${m.horarioSlot}`));
-      if (marcadasInvalidas.length > 0) {
-        paraRemoverIds.push(...marcadasInvalidas.map((m) => m.id));
-        professoresAfetadosSet.add(prof.id);
-      }
-
-      if (exigido === 0) {
-        // sem exigencia nesse turno -- qualquer HA valida restante tambem sobra
-        if (marcadas.length > 0) {
-          paraRemoverIds.push(...marcadas.map((m) => m.id));
-          professoresAfetadosSet.add(prof.id);
-        }
-        continue;
-      }
-      const diferenca = exigido - marcadas.length;
-
-      if (diferenca === 0) continue;
-
-      if (diferenca < 0) {
-        const remover = marcadas.slice(0, -diferenca);
-        paraRemoverIds.push(...remover.map((m) => m.id));
-        professoresAfetadosSet.add(prof.id);
-        continue;
-      }
-
+      const bloqueado = bloqueadoPorTurno.get(turno) ?? new Set();
       const maxAula = maxAulaPorTurno.get(turno) ?? 6;
-      const jaMarcado = new Set(marcadas.map((m) => `${m.diaSemana}-${m.horarioSlot}`));
+      const jaMarcado = new Set(
+        marcadasValidas.filter((m) => (m.turno ?? "sem_turno") === turno).map((m) => `${m.diaSemana}-${m.horarioSlot}`),
+      );
 
       const candidatosJanela: Array<{ dia: number; aula: number }> = [];
       const candidatosOutros: Array<{ dia: number; aula: number }> = [];
@@ -176,7 +213,7 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
       for (let dia = 0; dia < 5; dia++) {
         for (let aula = 1; aula <= maxAula; aula++) {
           const chave = `${dia}-${aula}`;
-          if (ocupado.has(chave) || jaMarcado.has(chave)) continue;
+          if (ocupado.has(chave) || jaMarcado.has(chave) || bloqueado.has(chave)) continue;
           const antesOcupado = ocupado.has(`${dia}-${aula - 1}`);
           const depoisOcupado = ocupado.has(`${dia}-${aula + 1}`);
           if (antesOcupado && depoisOcupado) {
@@ -187,24 +224,19 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
         }
       }
 
-      const escolhidos = [...candidatosJanela, ...candidatosOutros].slice(0, diferenca);
+      const escolhidos = [...candidatosJanela, ...candidatosOutros].slice(0, faltam);
       for (const c of escolhidos) {
         paraInserir.push({ professorId: prof.id, turno, diaSemana: c.dia, horarioSlot: c.aula });
+        ocupado.add(`${c.dia}-${c.aula}`);
       }
-      for (const c of escolhidos) ocupado.add(`${c.dia}-${c.aula}`);
+      faltam -= escolhidos.length;
       if (escolhidos.length > 0) professoresAfetadosSet.add(prof.id);
     }
 
-    // [FIX] HA marcada num turno onde o professor nao tem mais NENHUMA
-    // aula real (turno inteiro perdido, ex.: deixou de dar aula a
-    // noite) -- o loop acima so visita turnos com aula, entao essas
-    // ficariam orfas sem essa checagem extra.
-    for (const [turno, marcadas] of haPorTurno.entries()) {
-      if (turno in exigidoPorTurno) continue;
-      if (marcadas.length === 0) continue;
-      paraRemoverIds.push(...marcadas.map((m) => m.id));
-      professoresAfetadosSet.add(prof.id);
-    }
+    // Se ainda faltar depois de tentar todos os turnos de ensino, nao
+    // insere em lugar nenhum sozinho -- fica como pendencia real (a
+    // conferencia de conflitos continua acusando ate alguem decidir
+    // manualmente, ex.: abrir um contraturno novo pra esse professor).
   }
 
   if (paraInserir.length === 0 && paraRemoverIds.length === 0) {
