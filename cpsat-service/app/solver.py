@@ -55,7 +55,7 @@ def resolver(
         )
 
     # RESTRIÇÃO 2 — turma sem 2 aulas no mesmo horário
-    for turma in turmas_nomes:
+    for turma in sorted(turmas_nomes):
         indices_turma = [i for i, dt in enumerate(disciplinas_turma) if dt.turma == turma]
         for dia in range(len(DIAS)):
             for aula in range(1, aulas_por_dia + 1):
@@ -63,7 +63,7 @@ def resolver(
 
     # RESTRIÇÃO 3 — professor sem 2 turmas ao mesmo tempo
     professores = {dt.professor for dt in disciplinas_turma}
-    for prof in professores:
+    for prof in sorted(professores):
         indices_prof = [i for i, dt in enumerate(disciplinas_turma) if dt.professor == prof]
         for dia in range(len(DIAS)):
             for aula in range(1, aulas_por_dia + 1):
@@ -71,7 +71,7 @@ def resolver(
 
     # RESTRIÇÃO 4 — teto de aulas por turno (SEED-PR art. 11 §3º)
     teto = TETO_AULAS_TURNO.get(turno, 24)
-    for prof in professores:
+    for prof in sorted(professores):
         indices = [i for i, dt in enumerate(disciplinas_turma) if dt.professor == prof]
         total = sum(
             aula_var[(i, dia, aula)]
@@ -109,8 +109,15 @@ def resolver(
     # cada turma individualmente compacta, mas o dia do professor com
     # buraco no meio). Reaproveita exatamente o mesmo padrao de
     # variavel "ocupado" + "buraco" ja usado pra turma.
-    penalidades = []
-    for turma in turmas_nomes:
+    #
+    # [DESCOBERTA] Testado localmente (sem teto de rede) com payload
+    # real: o solver prova OPTIMAL em ~24s com peso igual (1:1) entre
+    # as duas listas -- ou seja, NAO e falta de tempo. E uma troca
+    # matematica real: zerar janela de turma "custa" janela de
+    # professor, e com peso igual o solver sempre prefere zerar turma
+    # primeiro. Peso configuravel deixa a escola decidir a prioridade.
+    penalidades_turma = []
+    for turma in sorted(turmas_nomes):
         indices_turma = [i for i, dt in enumerate(disciplinas_turma) if dt.turma == turma]
         if not indices_turma:
             continue
@@ -124,12 +131,13 @@ def resolver(
                 buraco = model.NewBoolVar(f"buraco_{turma}_{dia}_{a}")
                 model.AddBoolAnd([ocupado[a - 1], ocupado[a].Not(), ocupado[a + 1]]).OnlyEnforceIf(buraco)
                 model.AddBoolOr([ocupado[a - 1].Not(), ocupado[a], ocupado[a + 1].Not()]).OnlyEnforceIf(buraco.Not())
-                penalidades.append(buraco)
+                penalidades_turma.append(buraco)
 
     # [NOVO] Mesmo objetivo, agora do lado do professor -- soma as
     # aulas dele em QUALQUER turma nesse turno (nao so uma), pra saber
     # se ele esta ocupado naquele horario, independente de qual turma.
-    for prof in professores:
+    penalidades_professor = []
+    for prof in sorted(professores):
         indices_prof = [i for i, dt in enumerate(disciplinas_turma) if dt.professor == prof]
         if not indices_prof:
             continue
@@ -143,9 +151,15 @@ def resolver(
                 buraco_prof = model.NewBoolVar(f"buraco_prof_{prof}_{dia}_{a}")
                 model.AddBoolAnd([ocupado_prof[a - 1], ocupado_prof[a].Not(), ocupado_prof[a + 1]]).OnlyEnforceIf(buraco_prof)
                 model.AddBoolOr([ocupado_prof[a - 1].Not(), ocupado_prof[a], ocupado_prof[a + 1].Not()]).OnlyEnforceIf(buraco_prof.Not())
-                penalidades.append(buraco_prof)
+                penalidades_professor.append(buraco_prof)
 
-    model.Minimize(sum(penalidades))
+    # Peso configuravel (padrao 1 = igual, comportamento anterior).
+    # CPSAT_PESO_JANELA_PROFESSOR=3 significa que 1 janela de
+    # professor "custa" o mesmo que 3 janelas de turma no objetivo --
+    # o solver passa a aceitar mais janela de turma em troca de menos
+    # janela de professor.
+    peso_professor = int(os.getenv("CPSAT_PESO_JANELA_PROFESSOR", "1"))
+    model.Minimize(sum(penalidades_turma) + peso_professor * sum(penalidades_professor))
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = tempo_limite_s
@@ -183,6 +197,14 @@ def resolver(
     parar_na_primeira = os.getenv("CPSAT_PARAR_NA_PRIMEIRA", "0") == "1"
     if parar_na_primeira:
         solver.parameters.stop_after_first_solution = True
+
+    # --- DEBUG TEMPORARIO ---
+    import os as _os_debug
+    print("[DEBUG] CPSAT_NUM_WORKERS (raw env) =", repr(_os_debug.environ.get("CPSAT_NUM_WORKERS")))
+    print("[DEBUG] solver.parameters.num_search_workers (aplicado) =", solver.parameters.num_search_workers)
+    print("[DEBUG] os.cpu_count() reportado pelo container =", _os_debug.cpu_count())
+    # --- FIM DEBUG ---
+
 
     status = solver.Solve(model)
 
