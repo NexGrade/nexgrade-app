@@ -172,6 +172,8 @@ def resolver(
     # 2). Default 1 mantem o comportamento anterior; ajuste
     # CPSAT_NUM_WORKERS no ambiente do Render se subir de tier de novo.
     solver.parameters.num_search_workers = int(os.getenv("CPSAT_NUM_WORKERS", "1"))
+    solver.parameters.interleave_search = True
+    solver.parameters.interleave_batch_size = 4
 
     # [OTIMIZACAO-VELOCIDADE] Aceita solucao dentro de X% do valor otimo em
     # vez de exigir PROVA de otimalidade -- a maior parte do tempo de solve
@@ -197,13 +199,6 @@ def resolver(
     parar_na_primeira = os.getenv("CPSAT_PARAR_NA_PRIMEIRA", "0") == "1"
     if parar_na_primeira:
         solver.parameters.stop_after_first_solution = True
-
-    # --- DEBUG TEMPORARIO ---
-    import os as _os_debug
-    print("[DEBUG] CPSAT_NUM_WORKERS (raw env) =", repr(_os_debug.environ.get("CPSAT_NUM_WORKERS")))
-    print("[DEBUG] solver.parameters.num_search_workers (aplicado) =", solver.parameters.num_search_workers)
-    print("[DEBUG] os.cpu_count() reportado pelo container =", _os_debug.cpu_count())
-    # --- FIM DEBUG ---
 
 
     status = solver.Solve(model)
@@ -282,3 +277,4 @@ def gerar_grade(
         )
 
     return resultado
+
