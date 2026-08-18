@@ -141,6 +141,9 @@ def resolver(
         indices_prof = [i for i, dt in enumerate(disciplinas_turma) if dt.professor == prof]
         if not indices_prof:
             continue
+        turmas_do_prof = {disciplinas_turma[i].turma for i in indices_prof}
+        if len(turmas_do_prof) < 2:
+            continue  # so cria variavel de janela pra quem da aula em 2+ turmas
         for dia in range(len(DIAS)):
             ocupado_prof = []
             for aula in range(1, aulas_por_dia + 1):
@@ -277,4 +280,5 @@ def gerar_grade(
         )
 
     return resultado
+
 
