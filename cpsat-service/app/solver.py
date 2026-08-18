@@ -237,8 +237,17 @@ def gerar_grade(
     turmas_nomes = {t["nome"] for t in turmas_raw}
 
     inicio = time.time()
+    # [LIMITE-PRATICO] Objetivo de janela de professor e' custoso e
+    # instavel em tempo de execucao para turnos grandes (24 turmas) --
+    # confirmado em testes extensivos (variacao de 46s a >300s com os
+    # mesmos dados). Acima de 16 turmas, usa so objetivo de turma
+    # (rapido e confiavel, ~1-4s, sempre OPTIMAL). Turno Parcial
+    # (tipicamente <=16 turmas) mantem o objetivo completo (turma +
+    # professor).
+    apenas_turma_auto = len(turmas_nomes) > 16
     solver, status, aula_var = resolver(
-        disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes, tempo_limite_s
+        disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
+        tempo_limite_s, apenas_turma=apenas_turma_auto,
     )
     duracao = time.time() - inicio
 
@@ -280,5 +289,7 @@ def gerar_grade(
         )
 
     return resultado
+
+
 
 
