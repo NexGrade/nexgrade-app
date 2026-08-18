@@ -46,6 +46,8 @@ const OnboardingPage = lazy(() => import("@/pages/onboarding/index"));
 const CursosList = lazy(() => import("@/pages/cursos/index"));
 const DisponibilidadePage = lazy(() => import("@/pages/disponibilidade/index"));
 const CalendarioEscolarPage = lazy(() => import("@/pages/calendario/index"));
+const ReservasPage = lazy(() => import("@/pages/reservas/index"));
+const RegrasReservasPage = lazy(() => import("@/pages/reservas/regras"));
 // [NOVO] Página já existia em disco (completa e funcional -- usa hooks
 // reais de configuração/turmas/professores/limites diários), mas nunca
 // tinha sido ligada nem no App.tsx nem no menu. Achado na faxina de
@@ -326,6 +328,8 @@ function Router() {
       <Route path="/planos" component={() => <ProtectedRoute component={PlanosPage} />} />
       <Route path="/dados-escola" component={() => <ProtectedRoute component={DadosEscolaPage} />} />
       <Route path="/assinatura" component={() => <ProtectedRoute component={AssinaturaPage} />} />
+      <Route path="/reservas" component={() => <ProtectedRoute component={ReservasPage} />} />
+      <Route path="/reservas/regras" component={() => <ProtectedRoute component={RegrasReservasPage} />} />
       <Route path="/master" component={MasterRoute} />
       <Route component={() => <Suspense fallback={<PaginaCarregando />}><NotFound /></Suspense>} />
     </Switch>

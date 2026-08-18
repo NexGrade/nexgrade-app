@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, BookOpen, GraduationCap, Calendar, CalendarDays,
   Building2, FileText, Bell, Shield, History,
   Settings, Download, Sparkles, Upload, CreditCard, Library, ShieldCheck, Clock,
-  SlidersHorizontal, Landmark,
+  SlidersHorizontal, Landmark, DoorOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +42,7 @@ const navGroups = [
       { href: "/licencas", label: "Licenças", icon: FileText },
       { href: "/comunicados", label: "Comunicados", icon: Bell },
       { href: "/importar", label: "Importar Dados", icon: Upload },
+      { href: "/reservas", label: "Reservas", icon: DoorOpen },
     ],
   },
   {
