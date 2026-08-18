@@ -1,4 +1,5 @@
 import { Router } from "express";
+import axios from "axios";
 import { db } from "@workspace/db";
 import {
   horariosTable,
@@ -1347,21 +1348,20 @@ async function runCpsatGeneration(
   let ultimoErroCpsat: unknown = null;
   for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_CPSAT; tentativa++) {
     try {
-      const controller = new AbortController();
       const timeoutMs = ((tempoLimiteS ?? 120) + 30) * 1000;
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-      const response = await fetch(`${CPSAT_SERVICE_URL}/gerar-grade`, {
-        method: "POST",
+      // [FIX-AXIOS] Trocado fetch nativo (undici) por axios -- suspeita de
+      // que o undici trava/falha silenciosamente com corpos de requisicao
+      // medios/grandes (60KB+) na rede interna do Render, mesmo dentro do
+      // timeout configurado. axios usa http/https nativos do Node.
+      const axiosResponse = await axios.post(`${CPSAT_SERVICE_URL}/gerar-grade`, payload, {
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
+        timeout: timeoutMs,
+        validateStatus: () => true,
       });
-      clearTimeout(timeoutId);
-      if (!response.ok) {
-        const errBody = await response.text();
-        throw new Error(`Servico CP-SAT respondeu ${response.status}: ${errBody}`);
+      if (axiosResponse.status < 200 || axiosResponse.status >= 300) {
+        throw new Error(`Servico CP-SAT respondeu ${axiosResponse.status}: ${JSON.stringify(axiosResponse.data)}`);
       }
-      resultado = (await response.json()) as typeof resultado;
+      resultado = axiosResponse.data as typeof resultado;
       ultimoErroCpsat = null;
       break;
     } catch (err) {
@@ -1370,7 +1370,10 @@ async function runCpsatGeneration(
       const pareceFalhaConexao =
         mensagemErroCpsat.includes("fetch failed") ||
         mensagemErroCpsat.includes("ECONNREFUSED") ||
-        mensagemErroCpsat.includes("ETIMEDOUT");
+        mensagemErroCpsat.includes("ETIMEDOUT") ||
+        mensagemErroCpsat.includes("ECONNABORTED") ||
+        mensagemErroCpsat.includes("ECONNRESET") ||
+        mensagemErroCpsat.includes("timeout of");
       if (!pareceFalhaConexao || tentativa === MAX_TENTATIVAS_CPSAT) break;
       await new Promise((resolve) => setTimeout(resolve, 5000));
     }
@@ -1560,3 +1563,5 @@ router.get("/gerar-cpsat-status/:jobId", (req, res) => {
 });
 
 export default router;
+
+
