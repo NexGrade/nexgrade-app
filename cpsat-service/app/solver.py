@@ -88,6 +88,36 @@ def resolver(
             total_dia = sum(aula_var[(dt_idx, dia, aula)] for aula in range(1, aulas_por_dia + 1))
             model.Add(total_dia <= dt.max_aulas_dia)
 
+    # RESTRICAO 5b -- maximo 3 aulas no dia do mesmo par
+    # (professor, turma), somando TODAS as disciplinas desse professor
+    # nessa turma (nao so uma disciplina isolada, que ja e coberto pela
+    # RESTRICAO 5), E dessas no maximo 3, no maximo 2 podem ser
+    # SEGUIDAS -- a 3a exige pelo menos 1 aula de pausa antes dela.
+    # Ex.: Simone da 3 disciplinas diferentes pra 1MB DES -- padrao
+    # valido e X,X,pausa,X (ou variacoes), nunca X,X,X direto.
+    pares_prof_turma = {(dt.professor, dt.turma) for dt in disciplinas_turma}
+    for prof, turma in sorted(pares_prof_turma):
+        indices_par = [
+            i for i, dt in enumerate(disciplinas_turma)
+            if dt.professor == prof and dt.turma == turma
+        ]
+        if len(indices_par) < 2:
+            continue  # so uma disciplina desse par -- RESTRICAO 5 ja cobre
+        for dia in range(len(DIAS)):
+            total_dia_par = sum(
+                aula_var[(i, dia, aula)]
+                for i in indices_par
+                for aula in range(1, aulas_por_dia + 1)
+            )
+            model.Add(total_dia_par <= 3)
+            for inicio_janela in range(1, aulas_por_dia - 1):
+                soma_janela = sum(
+                    aula_var[(i, dia, aula)]
+                    for i in indices_par
+                    for aula in range(inicio_janela, inicio_janela + 3)
+                )
+                model.Add(soma_janela <= 2)
+
     # RESTRIÇÃO 6 — bloqueios de disponibilidade do professor
     for dt_idx, dt in enumerate(disciplinas_turma):
         for (prof, dia, aula) in bloqueios:
