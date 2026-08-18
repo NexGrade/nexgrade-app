@@ -615,6 +615,133 @@ paths:
           description: Removida
 
   # â”€â”€ DISPONIBILIDADE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # ── RESERVAS ──────────────────────────────────────────────
+  /reservas:
+    get:
+      operationId: listReservas
+      tags: [reservas]
+      parameters:
+        - name: data
+          in: query
+          schema: { type: string, format: date }
+        - name: salaId
+          in: query
+          schema: { type: integer }
+        - name: professorId
+          in: query
+          schema: { type: integer }
+        - name: status
+          in: query
+          schema: { type: string, enum: [pendente, confirmada, cancelada] }
+      responses:
+        "200":
+          description: Lista
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Reserva"
+    post:
+      operationId: createReserva
+      tags: [reservas]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReservaInput"
+      responses:
+        "201":
+          description: Criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reserva"
+  /reservas/resumo:
+    get:
+      operationId: getReservasResumo
+      tags: [reservas]
+      parameters:
+        - name: data
+          in: query
+          required: true
+          schema: { type: string, format: date }
+      responses:
+        "200":
+          description: Resumo do dia
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservasResumo"
+  /reservas/regras-professores:
+    get:
+      operationId: listRegrasReservaProfessores
+      tags: [reservas]
+      responses:
+        "200":
+          description: Lista
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RegraReservaProfessor"
+  /reservas/regras-professores/{professorId}:
+    patch:
+      operationId: updateRegraReservaProfessor
+      tags: [reservas]
+      parameters:
+        - name: professorId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegraReservaProfessorInput"
+      responses:
+        "200":
+          description: Atualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegraReservaProfessor"
+  /reservas/{id}:
+    patch:
+      operationId: updateReserva
+      tags: [reservas]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReservaUpdate"
+      responses:
+        "200":
+          description: Atualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reserva"
+    delete:
+      operationId: deleteReserva
+      tags: [reservas]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Cancelada
   /disponibilidade:
     get:
       operationId: listDisponibilidade
@@ -2035,6 +2162,98 @@ components:
         capacidade: { type: integer }
         ativa: { type: boolean }
         observacoes: { type: string }
+
+    ReservaStatus:
+      type: string
+      enum: [pendente, confirmada, cancelada]
+
+    Reserva:
+      type: object
+      required: [id, salaId, professorId, data, diaSemana, numeroAula, titulo, status, prioridadeAplicada]
+      properties:
+        id: { type: integer }
+        salaId: { type: integer }
+        professorId: { type: integer }
+        horarioId: { type: ["integer", "null"] }
+        data: { type: string, format: date }
+        diaSemana: { type: integer, minimum: 0, maximum: 4 }
+        numeroAula: { type: integer, minimum: 1 }
+        titulo: { type: string }
+        observacoes: { type: ["string", "null"] }
+        status:
+          $ref: "#/components/schemas/ReservaStatus"
+        prioridadeAplicada: { type: integer, minimum: 1, maximum: 5 }
+        sala:
+          $ref: "#/components/schemas/Sala"
+        professor:
+          $ref: "#/components/schemas/Professor"
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    ReservaInput:
+      type: object
+      required: [salaId, professorId, data, diaSemana, numeroAula, titulo]
+      properties:
+        salaId: { type: integer }
+        professorId: { type: integer }
+        data: { type: string, format: date }
+        diaSemana: { type: integer, minimum: 0, maximum: 4 }
+        numeroAula: { type: integer, minimum: 1 }
+        titulo: { type: string, minLength: 1 }
+        observacoes: { type: string }
+
+    ReservaUpdate:
+      type: object
+      properties:
+        salaId: { type: integer }
+        professorId: { type: integer }
+        data: { type: string, format: date }
+        diaSemana: { type: integer, minimum: 0, maximum: 4 }
+        numeroAula: { type: integer, minimum: 1 }
+        titulo: { type: string, minLength: 1 }
+        observacoes: { type: ["string", "null"] }
+        status:
+          $ref: "#/components/schemas/ReservaStatus"
+
+    RegraReservaProfessor:
+      type: object
+      required: [professorId, professorNome, limiteSemanal, prioridade, reservasNaSemana]
+      properties:
+        professorId: { type: integer }
+        professorNome: { type: string }
+        limiteSemanal: { type: integer, minimum: 0 }
+        prioridade: { type: integer, minimum: 1, maximum: 5 }
+        reservasNaSemana: { type: integer, minimum: 0 }
+        regraId: { type: ["integer", "null"] }
+
+    RegraReservaProfessorInput:
+      type: object
+      required: [limiteSemanal, prioridade]
+      properties:
+        limiteSemanal: { type: integer, minimum: 0 }
+        prioridade: { type: integer, minimum: 1, maximum: 5 }
+
+    ReservasResumoPorPrioridadeItem:
+      type: object
+      required: [prioridade, quantidade]
+      properties:
+        prioridade: { type: integer }
+        quantidade: { type: integer }
+
+    ReservasResumo:
+      type: object
+      required: [data, total, confirmadas, pendentes, canceladas, salasOcupadas, porPrioridade]
+      properties:
+        data: { type: string, format: date }
+        total: { type: integer }
+        confirmadas: { type: integer }
+        pendentes: { type: integer }
+        canceladas: { type: integer }
+        salasOcupadas: { type: integer }
+        porPrioridade:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReservasResumoPorPrioridadeItem"
 
     Disponibilidade:
       type: object

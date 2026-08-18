@@ -24,6 +24,7 @@ import horarioSlotsRouter from "./horario-slots";
 import aulasFixasRouter from "./aulas-fixas";
 import limitesDiariosProfessorRouter from "./limites-diarios-professor";
 import matrizesOficiaisRouter from "./matrizes-oficiais";
+import reservasRouter from "./reservas";
 
 const router: IRouter = Router();
 
@@ -52,5 +53,7 @@ router.use("/horario-slots", horarioSlotsRouter);
 router.use("/aulas-fixas", aulasFixasRouter);
 router.use("/limites-diarios-professor", limitesDiariosProfessorRouter);
 router.use("/matrizes-oficiais", matrizesOficiaisRouter);
+router.use("/reservas", reservasRouter);
 
 export default router;
+
