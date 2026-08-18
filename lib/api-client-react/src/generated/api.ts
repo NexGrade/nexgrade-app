@@ -61,6 +61,7 @@ import type {
   ExportRelatorioSeedParams,
   GerarHorarioInput,
   GerarHorarioResult,
+  GetReservasResumoParams,
   HealthStatus,
   HorarioExperimental,
   HorarioExperimentalInput,
@@ -84,6 +85,7 @@ import type {
   ListHorariosParams,
   ListLicencasParams,
   ListLimitesDiariosProfessorParams,
+  ListReservasParams,
   ListTrimestresLetivosParams,
   MasterMetrics,
   MasterWhoami200,
@@ -95,6 +97,12 @@ import type {
   ProfessorCarga,
   ProfessorInput,
   ProfessorUpdate,
+  RegraReservaProfessor,
+  RegraReservaProfessorInput,
+  Reserva,
+  ReservaInput,
+  ReservaUpdate,
+  ReservasResumo,
   Sala,
   SalaInput,
   SalaUpdate,
@@ -2403,6 +2411,491 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getDeleteSalaMutationOptions(options));
+    }
+
+export const getListReservasUrl = (params?: ListReservasParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/reservas?${stringifiedParams}` : `/api/reservas`
+}
+
+export const listReservas = async (params?: ListReservasParams, options?: RequestInit): Promise<Reserva[]> => {
+
+  return customFetch<Reserva[]>(getListReservasUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListReservasQueryKey = (params?: ListReservasParams,) => {
+    return [
+    `/api/reservas`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListReservasQueryOptions = <TData = Awaited<ReturnType<typeof listReservas>>, TError = ErrorType<unknown>>(params?: ListReservasParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listReservas>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListReservasQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listReservas>>> = ({ signal }) => listReservas(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listReservas>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListReservasQueryResult = NonNullable<Awaited<ReturnType<typeof listReservas>>>
+export type ListReservasQueryError = ErrorType<unknown>
+
+
+
+export function useListReservas<TData = Awaited<ReturnType<typeof listReservas>>, TError = ErrorType<unknown>>(
+ params?: ListReservasParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listReservas>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListReservasQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateReservaUrl = () => {
+
+
+
+
+  return `/api/reservas`
+}
+
+export const createReserva = async (reservaInput: ReservaInput, options?: RequestInit): Promise<Reserva> => {
+
+  return customFetch<Reserva>(getCreateReservaUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(reservaInput)
+  }
+);}
+
+
+
+
+export const getCreateReservaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createReserva>>, TError,{data: BodyType<ReservaInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createReserva>>, TError,{data: BodyType<ReservaInput>}, TContext> => {
+
+const mutationKey = ['createReserva'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createReserva>>, {data: BodyType<ReservaInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createReserva(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateReservaMutationResult = NonNullable<Awaited<ReturnType<typeof createReserva>>>
+    export type CreateReservaMutationBody = BodyType<ReservaInput>
+    export type CreateReservaMutationError = ErrorType<unknown>
+
+    export const useCreateReserva = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createReserva>>, TError,{data: BodyType<ReservaInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createReserva>>,
+        TError,
+        {data: BodyType<ReservaInput>},
+        TContext
+      > => {
+      return useMutation(getCreateReservaMutationOptions(options));
+    }
+
+export const getGetReservasResumoUrl = (params: GetReservasResumoParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/reservas/resumo?${stringifiedParams}` : `/api/reservas/resumo`
+}
+
+export const getReservasResumo = async (params: GetReservasResumoParams, options?: RequestInit): Promise<ReservasResumo> => {
+
+  return customFetch<ReservasResumo>(getGetReservasResumoUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetReservasResumoQueryKey = (params?: GetReservasResumoParams,) => {
+    return [
+    `/api/reservas/resumo`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetReservasResumoQueryOptions = <TData = Awaited<ReturnType<typeof getReservasResumo>>, TError = ErrorType<unknown>>(params: GetReservasResumoParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReservasResumo>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetReservasResumoQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getReservasResumo>>> = ({ signal }) => getReservasResumo(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getReservasResumo>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetReservasResumoQueryResult = NonNullable<Awaited<ReturnType<typeof getReservasResumo>>>
+export type GetReservasResumoQueryError = ErrorType<unknown>
+
+
+
+export function useGetReservasResumo<TData = Awaited<ReturnType<typeof getReservasResumo>>, TError = ErrorType<unknown>>(
+ params: GetReservasResumoParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReservasResumo>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetReservasResumoQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListRegrasReservaProfessoresUrl = () => {
+
+
+
+
+  return `/api/reservas/regras-professores`
+}
+
+export const listRegrasReservaProfessores = async ( options?: RequestInit): Promise<RegraReservaProfessor[]> => {
+
+  return customFetch<RegraReservaProfessor[]>(getListRegrasReservaProfessoresUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListRegrasReservaProfessoresQueryKey = () => {
+    return [
+    `/api/reservas/regras-professores`
+    ] as const;
+    }
+
+
+export const getListRegrasReservaProfessoresQueryOptions = <TData = Awaited<ReturnType<typeof listRegrasReservaProfessores>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listRegrasReservaProfessores>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListRegrasReservaProfessoresQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listRegrasReservaProfessores>>> = ({ signal }) => listRegrasReservaProfessores({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listRegrasReservaProfessores>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListRegrasReservaProfessoresQueryResult = NonNullable<Awaited<ReturnType<typeof listRegrasReservaProfessores>>>
+export type ListRegrasReservaProfessoresQueryError = ErrorType<unknown>
+
+
+
+export function useListRegrasReservaProfessores<TData = Awaited<ReturnType<typeof listRegrasReservaProfessores>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listRegrasReservaProfessores>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListRegrasReservaProfessoresQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateRegraReservaProfessorUrl = (professorId: number,) => {
+
+
+
+
+  return `/api/reservas/regras-professores/${professorId}`
+}
+
+export const updateRegraReservaProfessor = async (professorId: number,
+    regraReservaProfessorInput: RegraReservaProfessorInput, options?: RequestInit): Promise<RegraReservaProfessor> => {
+
+  return customFetch<RegraReservaProfessor>(getUpdateRegraReservaProfessorUrl(professorId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(regraReservaProfessorInput)
+  }
+);}
+
+
+
+
+export const getUpdateRegraReservaProfessorMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRegraReservaProfessor>>, TError,{professorId: number;data: BodyType<RegraReservaProfessorInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateRegraReservaProfessor>>, TError,{professorId: number;data: BodyType<RegraReservaProfessorInput>}, TContext> => {
+
+const mutationKey = ['updateRegraReservaProfessor'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateRegraReservaProfessor>>, {professorId: number;data: BodyType<RegraReservaProfessorInput>}> = (props) => {
+          const {professorId,data} = props ?? {};
+
+          return  updateRegraReservaProfessor(professorId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateRegraReservaProfessorMutationResult = NonNullable<Awaited<ReturnType<typeof updateRegraReservaProfessor>>>
+    export type UpdateRegraReservaProfessorMutationBody = BodyType<RegraReservaProfessorInput>
+    export type UpdateRegraReservaProfessorMutationError = ErrorType<unknown>
+
+    export const useUpdateRegraReservaProfessor = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRegraReservaProfessor>>, TError,{professorId: number;data: BodyType<RegraReservaProfessorInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateRegraReservaProfessor>>,
+        TError,
+        {professorId: number;data: BodyType<RegraReservaProfessorInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateRegraReservaProfessorMutationOptions(options));
+    }
+
+export const getUpdateReservaUrl = (id: number,) => {
+
+
+
+
+  return `/api/reservas/${id}`
+}
+
+export const updateReserva = async (id: number,
+    reservaUpdate: ReservaUpdate, options?: RequestInit): Promise<Reserva> => {
+
+  return customFetch<Reserva>(getUpdateReservaUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(reservaUpdate)
+  }
+);}
+
+
+
+
+export const getUpdateReservaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateReserva>>, TError,{id: number;data: BodyType<ReservaUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateReserva>>, TError,{id: number;data: BodyType<ReservaUpdate>}, TContext> => {
+
+const mutationKey = ['updateReserva'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateReserva>>, {id: number;data: BodyType<ReservaUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateReserva(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateReservaMutationResult = NonNullable<Awaited<ReturnType<typeof updateReserva>>>
+    export type UpdateReservaMutationBody = BodyType<ReservaUpdate>
+    export type UpdateReservaMutationError = ErrorType<unknown>
+
+    export const useUpdateReserva = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateReserva>>, TError,{id: number;data: BodyType<ReservaUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateReserva>>,
+        TError,
+        {id: number;data: BodyType<ReservaUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateReservaMutationOptions(options));
+    }
+
+export const getDeleteReservaUrl = (id: number,) => {
+
+
+
+
+  return `/api/reservas/${id}`
+}
+
+export const deleteReserva = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteReservaUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteReservaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteReserva>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteReserva>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteReserva'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteReserva>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteReserva(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteReservaMutationResult = NonNullable<Awaited<ReturnType<typeof deleteReserva>>>
+
+    export type DeleteReservaMutationError = ErrorType<unknown>
+
+    export const useDeleteReserva = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteReserva>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteReserva>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteReservaMutationOptions(options));
     }
 
 export const getListDisponibilidadeUrl = (params?: ListDisponibilidadeParams,) => {

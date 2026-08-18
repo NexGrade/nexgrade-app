@@ -396,6 +396,119 @@ export interface SalaUpdate {
   observacoes?: string;
 }
 
+export type ReservaStatus = typeof ReservaStatus[keyof typeof ReservaStatus];
+
+
+export const ReservaStatus = {
+  pendente: 'pendente',
+  confirmada: 'confirmada',
+  cancelada: 'cancelada',
+} as const;
+
+export interface Reserva {
+  id: number;
+  salaId: number;
+  professorId: number;
+  /** @nullable */
+  horarioId?: number | null;
+  data: string;
+  /**
+     * @minimum 0
+     * @maximum 4
+     */
+  diaSemana: number;
+  /** @minimum 1 */
+  numeroAula: number;
+  titulo: string;
+  /** @nullable */
+  observacoes?: string | null;
+  status: ReservaStatus;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  prioridadeAplicada: number;
+  sala?: Sala;
+  professor?: Professor;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ReservaInput {
+  salaId: number;
+  professorId: number;
+  data: string;
+  /**
+     * @minimum 0
+     * @maximum 4
+     */
+  diaSemana: number;
+  /** @minimum 1 */
+  numeroAula: number;
+  /** @minLength 1 */
+  titulo: string;
+  observacoes?: string;
+}
+
+export interface ReservaUpdate {
+  salaId?: number;
+  professorId?: number;
+  data?: string;
+  /**
+     * @minimum 0
+     * @maximum 4
+     */
+  diaSemana?: number;
+  /** @minimum 1 */
+  numeroAula?: number;
+  /** @minLength 1 */
+  titulo?: string;
+  /** @nullable */
+  observacoes?: string | null;
+  status?: ReservaStatus;
+}
+
+export interface RegraReservaProfessor {
+  professorId: number;
+  professorNome: string;
+  /** @minimum 0 */
+  limiteSemanal: number;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  prioridade: number;
+  /** @minimum 0 */
+  reservasNaSemana: number;
+  /** @nullable */
+  regraId?: number | null;
+}
+
+export interface RegraReservaProfessorInput {
+  /** @minimum 0 */
+  limiteSemanal: number;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  prioridade: number;
+}
+
+export interface ReservasResumoPorPrioridadeItem {
+  prioridade: number;
+  quantidade: number;
+}
+
+export interface ReservasResumo {
+  data: string;
+  total: number;
+  confirmadas: number;
+  pendentes: number;
+  canceladas: number;
+  salasOcupadas: number;
+  porPrioridade: ReservasResumoPorPrioridadeItem[];
+}
+
 /**
  * Turno deste bloqueio â€” necessÃ¡rio para validar concentraÃ§Ã£o de hora-atividade no mesmo turno das aulas (ResoluÃ§Ã£o SEED n.Âº 7.200/2025, art. 11, Â§4Âº).
  * @nullable
@@ -1300,6 +1413,26 @@ professorId?: number;
 
 export type ListHorariosExperimentaisParams = {
 turmaId?: number;
+};
+
+export type ListReservasParams = {
+data?: string;
+salaId?: number;
+professorId?: number;
+status?: ListReservasStatus;
+};
+
+export type ListReservasStatus = typeof ListReservasStatus[keyof typeof ListReservasStatus];
+
+
+export const ListReservasStatus = {
+  pendente: 'pendente',
+  confirmada: 'confirmada',
+  cancelada: 'cancelada',
+} as const;
+
+export type GetReservasResumoParams = {
+data: string;
 };
 
 export type ListDisponibilidadeParams = {
