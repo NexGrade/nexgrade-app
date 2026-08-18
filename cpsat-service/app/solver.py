@@ -178,6 +178,8 @@ def resolver(
     solver.parameters.num_search_workers = int(os.getenv("CPSAT_NUM_WORKERS", "1"))
     solver.parameters.interleave_search = True
     solver.parameters.interleave_batch_size = 4
+    if apenas_turma:
+        solver.parameters.symmetry_level = 0
 
     # [OTIMIZACAO-VELOCIDADE] Aceita solucao dentro de X% do valor otimo em
     # vez de exigir PROVA de otimalidade -- a maior parte do tempo de solve
@@ -290,6 +292,7 @@ def gerar_grade(
         )
 
     return resultado
+
 
 
 
