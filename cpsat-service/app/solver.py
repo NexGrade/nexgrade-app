@@ -38,6 +38,7 @@ def resolver(
     aulas_por_dia: int,
     turmas_nomes: set[str],
     tempo_limite_s: int = 120,
+    apenas_turma: bool = False,
 ):
     model = cp_model.CpModel()
 
@@ -137,7 +138,7 @@ def resolver(
     # aulas dele em QUALQUER turma nesse turno (nao so uma), pra saber
     # se ele esta ocupado naquele horario, independente de qual turma.
     penalidades_professor = []
-    for prof in sorted(professores):
+    for prof in ([] if apenas_turma else sorted(professores)):
         indices_prof = [i for i, dt in enumerate(disciplinas_turma) if dt.professor == prof]
         if not indices_prof:
             continue
@@ -289,6 +290,8 @@ def gerar_grade(
         )
 
     return resultado
+
+
 
 
 
