@@ -91,6 +91,9 @@ import type {
   MasterWhoami200,
   MatrizCurricular,
   MatrizCurricularInput,
+  MinhaAgendaAula,
+  MinhaAgendaReserva,
+  MinhaReservaInput,
   Plano,
   PlanoInput,
   Professor,
@@ -2896,6 +2899,283 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getDeleteReservaMutationOptions(options));
+    }
+
+export const getGetMeuProfessorUrl = () => {
+
+
+
+
+  return `/api/minha-agenda/professor`
+}
+
+export const getMeuProfessor = async ( options?: RequestInit): Promise<Professor> => {
+
+  return customFetch<Professor>(getGetMeuProfessorUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMeuProfessorQueryKey = () => {
+    return [
+    `/api/minha-agenda/professor`
+    ] as const;
+    }
+
+
+export const getGetMeuProfessorQueryOptions = <TData = Awaited<ReturnType<typeof getMeuProfessor>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMeuProfessor>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMeuProfessorQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMeuProfessor>>> = ({ signal }) => getMeuProfessor({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMeuProfessor>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMeuProfessorQueryResult = NonNullable<Awaited<ReturnType<typeof getMeuProfessor>>>
+export type GetMeuProfessorQueryError = ErrorType<void>
+
+
+
+export function useGetMeuProfessor<TData = Awaited<ReturnType<typeof getMeuProfessor>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMeuProfessor>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMeuProfessorQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetMinhaAgendaHorarioUrl = () => {
+
+
+
+
+  return `/api/minha-agenda/horario`
+}
+
+export const getMinhaAgendaHorario = async ( options?: RequestInit): Promise<MinhaAgendaAula[]> => {
+
+  return customFetch<MinhaAgendaAula[]>(getGetMinhaAgendaHorarioUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMinhaAgendaHorarioQueryKey = () => {
+    return [
+    `/api/minha-agenda/horario`
+    ] as const;
+    }
+
+
+export const getGetMinhaAgendaHorarioQueryOptions = <TData = Awaited<ReturnType<typeof getMinhaAgendaHorario>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMinhaAgendaHorario>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMinhaAgendaHorarioQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMinhaAgendaHorario>>> = ({ signal }) => getMinhaAgendaHorario({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMinhaAgendaHorario>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMinhaAgendaHorarioQueryResult = NonNullable<Awaited<ReturnType<typeof getMinhaAgendaHorario>>>
+export type GetMinhaAgendaHorarioQueryError = ErrorType<void>
+
+
+
+export function useGetMinhaAgendaHorario<TData = Awaited<ReturnType<typeof getMinhaAgendaHorario>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMinhaAgendaHorario>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMinhaAgendaHorarioQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetMinhaAgendaReservasUrl = () => {
+
+
+
+
+  return `/api/minha-agenda/reservas`
+}
+
+export const getMinhaAgendaReservas = async ( options?: RequestInit): Promise<MinhaAgendaReserva[]> => {
+
+  return customFetch<MinhaAgendaReserva[]>(getGetMinhaAgendaReservasUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMinhaAgendaReservasQueryKey = () => {
+    return [
+    `/api/minha-agenda/reservas`
+    ] as const;
+    }
+
+
+export const getGetMinhaAgendaReservasQueryOptions = <TData = Awaited<ReturnType<typeof getMinhaAgendaReservas>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMinhaAgendaReservas>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMinhaAgendaReservasQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMinhaAgendaReservas>>> = ({ signal }) => getMinhaAgendaReservas({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMinhaAgendaReservas>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMinhaAgendaReservasQueryResult = NonNullable<Awaited<ReturnType<typeof getMinhaAgendaReservas>>>
+export type GetMinhaAgendaReservasQueryError = ErrorType<void>
+
+
+
+export function useGetMinhaAgendaReservas<TData = Awaited<ReturnType<typeof getMinhaAgendaReservas>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMinhaAgendaReservas>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMinhaAgendaReservasQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateMinhaReservaUrl = () => {
+
+
+
+
+  return `/api/minha-agenda/reservas`
+}
+
+export const createMinhaReserva = async (minhaReservaInput: MinhaReservaInput, options?: RequestInit): Promise<Reserva> => {
+
+  return customFetch<Reserva>(getCreateMinhaReservaUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(minhaReservaInput)
+  }
+);}
+
+
+
+
+export const getCreateMinhaReservaMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMinhaReserva>>, TError,{data: BodyType<MinhaReservaInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createMinhaReserva>>, TError,{data: BodyType<MinhaReservaInput>}, TContext> => {
+
+const mutationKey = ['createMinhaReserva'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMinhaReserva>>, {data: BodyType<MinhaReservaInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createMinhaReserva(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateMinhaReservaMutationResult = NonNullable<Awaited<ReturnType<typeof createMinhaReserva>>>
+    export type CreateMinhaReservaMutationBody = BodyType<MinhaReservaInput>
+    export type CreateMinhaReservaMutationError = ErrorType<void>
+
+    export const useCreateMinhaReserva = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMinhaReserva>>, TError,{data: BodyType<MinhaReservaInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createMinhaReserva>>,
+        TError,
+        {data: BodyType<MinhaReservaInput>},
+        TContext
+      > => {
+      return useMutation(getCreateMinhaReservaMutationOptions(options));
     }
 
 export const getListDisponibilidadeUrl = (params?: ListDisponibilidadeParams,) => {

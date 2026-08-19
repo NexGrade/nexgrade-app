@@ -50,7 +50,7 @@ const salaTypeValues = [
   "outro",
 ] as const;
 
-type ReservaData = typeof reservasTable.$inferSelect;
+export type ReservaData = typeof reservasTable.$inferSelect;
 
 function dateOnly(value: Date): string {
   return value.toISOString().slice(0, 10);
@@ -87,7 +87,7 @@ async function getReserva(id: number, escolaId: string): Promise<ReservaData | n
   return reserva ?? null;
 }
 
-async function publicReserva(reserva: ReservaData) {
+export async function publicReserva(reserva: ReservaData) {
   const [sala, professor] = await Promise.all([
     db
       .select()
@@ -147,7 +147,7 @@ async function getProfessorRule(escolaId: string, professorId: number) {
   return rule ?? null;
 }
 
-type ValidationError = {
+export type ValidationError = {
   status: number;
   error: string;
   conflito?: { tipo: string; reservaId?: number };
@@ -156,7 +156,7 @@ type ValidationError = {
   reservasNaSemana?: number;
 };
 
-type ValidationSuccess = {
+export type ValidationSuccess = {
   sala: typeof salasTable.$inferSelect;
   professor: typeof professoresTable.$inferSelect;
   horario: typeof horariosTable.$inferSelect;
@@ -168,7 +168,7 @@ type ValidationSuccess = {
   reservasNaSemana: number;
 };
 
-async function validateReserva(
+export async function validateReserva(
   escolaId: string,
   input: {
     salaId: number;
@@ -636,3 +636,4 @@ router.delete("/:id", async (req, res): Promise<void> => {
 });
 
 export default router;
+

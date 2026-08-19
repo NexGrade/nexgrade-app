@@ -48,6 +48,7 @@ const DisponibilidadePage = lazy(() => import("@/pages/disponibilidade/index"));
 const CalendarioEscolarPage = lazy(() => import("@/pages/calendario/index"));
 const ReservasPage = lazy(() => import("@/pages/reservas/index"));
 const RegrasReservasPage = lazy(() => import("@/pages/reservas/regras"));
+const MinhaAgendaPage = lazy(() => import("@/pages/minha-agenda/index"));
 // [NOVO] Página já existia em disco (completa e funcional -- usa hooks
 // reais de configuração/turmas/professores/limites diários), mas nunca
 // tinha sido ligada nem no App.tsx nem no menu. Achado na faxina de
@@ -236,6 +237,31 @@ function EscolaGate({ component: Component }: { component: React.ComponentType }
   );
 }
 
+function ProfessorRoute({ component: Component }: { component: React.ComponentType }) {
+  const { data, isLoading } = useGetEscolaAtual({
+    query: { queryKey: getGetEscolaAtualQueryKey() },
+  });
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-4">
+        <Skeleton className="h-10 w-1/3" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+  if (!data?.cadastrada) {
+    return <Redirect to="/onboarding" />;
+  }
+  // [PORTAL DO PROFESSOR] Propositalmente NAO usa <Layout> -- sem o
+  // menu administrativo completo, so o conteudo da propria pagina
+  // (que ja inclui seu proprio cabecalho simplificado).
+  return (
+    <Suspense fallback={<PaginaCarregando />}>
+      <Component />
+    </Suspense>
+  );
+}
+
 function OnboardingRoute() {
   return (
     <>
@@ -330,6 +356,7 @@ function Router() {
       <Route path="/assinatura" component={() => <ProtectedRoute component={AssinaturaPage} />} />
       <Route path="/reservas" component={() => <ProtectedRoute component={ReservasPage} />} />
       <Route path="/reservas/regras" component={() => <ProtectedRoute component={RegrasReservasPage} />} />
+      <Route path="/minha-agenda" component={() => <ProfessorRoute component={MinhaAgendaPage} />} />
       <Route path="/master" component={MasterRoute} />
       <Route component={() => <Suspense fallback={<PaginaCarregando />}><NotFound /></Suspense>} />
     </Switch>

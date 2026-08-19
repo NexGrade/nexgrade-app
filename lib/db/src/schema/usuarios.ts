@@ -4,7 +4,7 @@ import { z } from "zod/v4";
 
 export const usuariosTable = pgTable("usuarios", {
   id: serial("id").primaryKey(),
-  escolaId: text("escola_id").notNull().default("escola_default"),
+  escolaId: text("escola_id").notNull(),
   clerkId: text("clerk_id").notNull().unique(),
   nome: text("nome").notNull(),
   email: text("email").notNull(),
@@ -17,3 +17,4 @@ export const usuariosTable = pgTable("usuarios", {
 export const insertUsuarioSchema = createInsertSchema(usuariosTable).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertUsuario = z.infer<typeof insertUsuarioSchema>;
 export type Usuario = typeof usuariosTable.$inferSelect;
+

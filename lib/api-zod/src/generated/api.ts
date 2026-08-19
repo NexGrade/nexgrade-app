@@ -1121,6 +1121,104 @@ export const DeleteReservaParams = zod.object({
 export const DeleteReservaResponse = zod.void()
 
 
+export const GetMeuProfessorResponse = zod.object({
+  "id": zod.number(),
+  "nome": zod.string(),
+  "email": zod.string(),
+  "telefone": zod.string().nullish(),
+  "ativo": zod.boolean(),
+  "disciplinaIds": zod.array(zod.number()).optional(),
+  "createdAt": zod.string()
+})
+
+
+export const getMinhaAgendaHorarioResponseDiaSemanaMin = 0;
+export const getMinhaAgendaHorarioResponseDiaSemanaMax = 4;
+
+
+
+
+export const GetMinhaAgendaHorarioResponseItem = zod.object({
+  "diaSemana": zod.number().min(getMinhaAgendaHorarioResponseDiaSemanaMin).max(getMinhaAgendaHorarioResponseDiaSemanaMax),
+  "numeroAula": zod.number().min(1),
+  "sala": zod.string().nullish(),
+  "disciplinaNome": zod.string(),
+  "turmaNome": zod.string()
+})
+export const GetMinhaAgendaHorarioResponse = zod.array(GetMinhaAgendaHorarioResponseItem)
+
+
+export const GetMinhaAgendaReservasResponseItem = zod.object({
+  "id": zod.number(),
+  "data": zod.coerce.date(),
+  "diaSemana": zod.number(),
+  "numeroAula": zod.number(),
+  "titulo": zod.string(),
+  "observacoes": zod.string().nullish(),
+  "status": zod.enum(['pendente', 'confirmada', 'cancelada']),
+  "salaNome": zod.string()
+})
+export const GetMinhaAgendaReservasResponse = zod.array(GetMinhaAgendaReservasResponseItem)
+
+
+export const createMinhaReservaBodyDiaSemanaMin = 0;
+export const createMinhaReservaBodyDiaSemanaMax = 4;
+
+
+
+
+
+export const CreateMinhaReservaBody = zod.object({
+  "salaId": zod.number(),
+  "data": zod.coerce.date(),
+  "diaSemana": zod.number().min(createMinhaReservaBodyDiaSemanaMin).max(createMinhaReservaBodyDiaSemanaMax),
+  "numeroAula": zod.number().min(1),
+  "titulo": zod.string().min(1),
+  "observacoes": zod.string().optional()
+})
+
+export const createMinhaReservaResponseDiaSemanaMin = 0;
+export const createMinhaReservaResponseDiaSemanaMax = 4;
+
+
+export const createMinhaReservaResponsePrioridadeAplicadaMax = 5;
+
+
+
+export const CreateMinhaReservaResponse = zod.object({
+  "id": zod.number(),
+  "salaId": zod.number(),
+  "professorId": zod.number(),
+  "horarioId": zod.number().nullish(),
+  "data": zod.coerce.date(),
+  "diaSemana": zod.number().min(createMinhaReservaResponseDiaSemanaMin).max(createMinhaReservaResponseDiaSemanaMax),
+  "numeroAula": zod.number().min(1),
+  "titulo": zod.string(),
+  "observacoes": zod.string().nullish(),
+  "status": zod.enum(['pendente', 'confirmada', 'cancelada']),
+  "prioridadeAplicada": zod.number().min(1).max(createMinhaReservaResponsePrioridadeAplicadaMax),
+  "sala": zod.object({
+  "id": zod.number(),
+  "nome": zod.string(),
+  "tipo": zod.enum(['sala_aula', 'laboratorio', 'quadra', 'informatica', 'auditorio', 'biblioteca', 'sala_arte', 'outro']),
+  "capacidade": zod.number(),
+  "ativa": zod.boolean(),
+  "observacoes": zod.string().nullish()
+}).optional(),
+  "professor": zod.object({
+  "id": zod.number(),
+  "nome": zod.string(),
+  "email": zod.string(),
+  "telefone": zod.string().nullish(),
+  "ativo": zod.boolean(),
+  "disciplinaIds": zod.array(zod.number()).optional(),
+  "createdAt": zod.string()
+}).optional(),
+  "createdAt": zod.coerce.date().optional(),
+  "updatedAt": zod.coerce.date().optional()
+})
+
+
 export const ListDisponibilidadeQueryParams = zod.object({
   "professorId": zod.coerce.number().optional()
 })

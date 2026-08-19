@@ -509,6 +509,47 @@ export interface ReservasResumo {
   porPrioridade: ReservasResumoPorPrioridadeItem[];
 }
 
+export interface MinhaAgendaAula {
+  /**
+     * @minimum 0
+     * @maximum 4
+     */
+  diaSemana: number;
+  /** @minimum 1 */
+  numeroAula: number;
+  /** @nullable */
+  sala?: string | null;
+  disciplinaNome: string;
+  turmaNome: string;
+}
+
+export interface MinhaReservaInput {
+  salaId: number;
+  data: string;
+  /**
+     * @minimum 0
+     * @maximum 4
+     */
+  diaSemana: number;
+  /** @minimum 1 */
+  numeroAula: number;
+  /** @minLength 1 */
+  titulo: string;
+  observacoes?: string;
+}
+
+export interface MinhaAgendaReserva {
+  id: number;
+  data: string;
+  diaSemana: number;
+  numeroAula: number;
+  titulo: string;
+  /** @nullable */
+  observacoes?: string | null;
+  status: ReservaStatus;
+  salaNome: string;
+}
+
 /**
  * Turno deste bloqueio â€” necessÃ¡rio para validar concentraÃ§Ã£o de hora-atividade no mesmo turno das aulas (ResoluÃ§Ã£o SEED n.Âº 7.200/2025, art. 11, Â§4Âº).
  * @nullable

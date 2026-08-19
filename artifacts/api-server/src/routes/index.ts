@@ -25,6 +25,7 @@ import aulasFixasRouter from "./aulas-fixas";
 import limitesDiariosProfessorRouter from "./limites-diarios-professor";
 import matrizesOficiaisRouter from "./matrizes-oficiais";
 import reservasRouter from "./reservas";
+import minhaAgendaRouter from "./minha-agenda";
 
 const router: IRouter = Router();
 
@@ -54,6 +55,8 @@ router.use("/aulas-fixas", aulasFixasRouter);
 router.use("/limites-diarios-professor", limitesDiariosProfessorRouter);
 router.use("/matrizes-oficiais", matrizesOficiaisRouter);
 router.use("/reservas", reservasRouter);
+router.use("/minha-agenda", minhaAgendaRouter);
 
 export default router;
+
 

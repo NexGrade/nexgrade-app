@@ -742,6 +742,70 @@ paths:
       responses:
         "204":
           description: Cancelada
+  # ── MINHA AGENDA (PORTAL DO PROFESSOR) ────────────────────────
+  /minha-agenda/professor:
+    get:
+      operationId: getMeuProfessor
+      tags: [minha-agenda]
+      responses:
+        "200":
+          description: Professor vinculado a conta logada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Professor"
+        "404":
+          description: Nenhum professor vinculado
+  /minha-agenda/horario:
+    get:
+      operationId: getMinhaAgendaHorario
+      tags: [minha-agenda]
+      responses:
+        "200":
+          description: Grade oficial do professor logado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MinhaAgendaAula"
+        "404":
+          description: Nenhum professor vinculado
+  /minha-agenda/reservas:
+    get:
+      operationId: getMinhaAgendaReservas
+      tags: [minha-agenda]
+      responses:
+        "200":
+          description: Reservas ativas do professor logado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MinhaAgendaReserva"
+        "404":
+          description: Nenhum professor vinculado
+    post:
+      operationId: createMinhaReserva
+      tags: [minha-agenda]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MinhaReservaInput"
+      responses:
+        "201":
+          description: Criada (confirmada ou pendente, conforme prioridade)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reserva"
+        "404":
+          description: Nenhum professor vinculado
+        "409":
+          description: Conflito de sala ou professor
   /disponibilidade:
     get:
       operationId: listDisponibilidade
@@ -2254,6 +2318,41 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ReservasResumoPorPrioridadeItem"
+
+    MinhaAgendaAula:
+      type: object
+      required: [diaSemana, numeroAula, disciplinaNome, turmaNome]
+      properties:
+        diaSemana: { type: integer, minimum: 0, maximum: 4 }
+        numeroAula: { type: integer, minimum: 1 }
+        sala: { type: ["string", "null"] }
+        disciplinaNome: { type: string }
+        turmaNome: { type: string }
+
+    MinhaReservaInput:
+      type: object
+      required: [salaId, data, diaSemana, numeroAula, titulo]
+      properties:
+        salaId: { type: integer }
+        data: { type: string, format: date }
+        diaSemana: { type: integer, minimum: 0, maximum: 4 }
+        numeroAula: { type: integer, minimum: 1 }
+        titulo: { type: string, minLength: 1 }
+        observacoes: { type: string }
+
+    MinhaAgendaReserva:
+      type: object
+      required: [id, data, diaSemana, numeroAula, titulo, status, salaNome]
+      properties:
+        id: { type: integer }
+        data: { type: string, format: date }
+        diaSemana: { type: integer }
+        numeroAula: { type: integer }
+        titulo: { type: string }
+        observacoes: { type: ["string", "null"] }
+        status:
+          $ref: "#/components/schemas/ReservaStatus"
+        salaNome: { type: string }
 
     Disponibilidade:
       type: object
