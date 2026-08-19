@@ -1335,10 +1335,12 @@ function AbaGrade() {
                             key={`${aulaNum}-${colIndex}`}
                             type="button"
                             onClick={() => abrirAdicionarNaCelula(colIndex, aulaNum)}
-                            className={`p-2 border-r border-border last:border-0 min-h-[100px] flex items-center justify-center w-full group transition-colors ${temHA ? "bg-amber-100" : "bg-background hover:bg-muted/40"}`}
+                            className={`p-2 border-r border-border last:border-0 min-h-[100px] flex items-center justify-center w-full group transition-colors ${temHA ? "bg-background" : "bg-background hover:bg-muted/40"}`}
                           >
                             {temHA ? (
-                              <span className="text-xs font-bold text-amber-700">HA</span>
+                              <div className="h-full w-full rounded-md p-2 border-l-4 bg-amber-50 border-amber-400 flex items-center justify-center">
+                                <span className="text-xs font-semibold text-amber-700">HA</span>
+                              </div>
                             ) : (
                               <span className="text-xs text-muted-foreground/30 group-hover:text-primary group-hover:font-medium flex items-center gap-1">
                                 <Plus className="h-3 w-3 opacity-0 group-hover:opacity-100" />

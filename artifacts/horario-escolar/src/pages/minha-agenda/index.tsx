@@ -270,11 +270,26 @@ const ESTILO_IMPRESSAO = `
   @media print {
     @page {
       size: A4 landscape;
-      margin: 12mm;
+      margin: 8mm;
     }
     body {
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
+      font-size: 9px;
+    }
+    .imprimir-compacto td, .imprimir-compacto th {
+      padding: 2px 4px !important;
+      font-size: 8px !important;
+    }
+    .imprimir-cartao-aula {
+      padding: 2px 3px !important;
+    }
+    .imprimir-sem-quebra {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .imprimir-oculto {
+      display: none !important;
     }
   }
 `;
@@ -395,7 +410,7 @@ export default function MinhaAgendaPage() {
         </div>
 
         {mostrarCalendario && (
-          <Card>
+          <Card className="print:hidden">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CalendarDays className="h-5 w-5" />
@@ -444,7 +459,7 @@ export default function MinhaAgendaPage() {
               <Skeleton className="h-48 w-full" />
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm border-collapse">
+                <table className="w-full text-sm border-collapse imprimir-compacto">
                   <thead>
                     <tr>
                       <th className="text-left p-2 border-b">Aula</th>
@@ -465,7 +480,7 @@ export default function MinhaAgendaPage() {
                   </thead>
                   <tbody>
                     {Array.from({ length: maxAula }, (_, i) => i + 1).map((numeroAula) => (
-                      <tr key={numeroAula}>
+                      <tr key={numeroAula} className="imprimir-sem-quebra">
                         <td className="p-2 border-b font-medium">{numeroAula}ª</td>
                         {DIAS.map((_, diaIdx) => {
                           const aula = aulas?.find((a) => a.diaSemana === diaIdx && a.numeroAula === numeroAula);
@@ -473,7 +488,7 @@ export default function MinhaAgendaPage() {
                             <td key={diaIdx} className="p-2 border-b">
                               {aula ? (
                                 <div
-                                  className="h-full rounded-md p-2 border-l-4"
+                                  className="h-full rounded-md p-2 border-l-4 imprimir-cartao-aula"
                                   style={{
                                     backgroundColor: `${aula.disciplinaCor ?? "#1565C0"}15`,
                                     borderLeftColor: aula.disciplinaCor ?? "#1565C0",
@@ -485,7 +500,7 @@ export default function MinhaAgendaPage() {
                                   </div>
                                 </div>
                               ) : ehHoraAtividade(diaIdx, numeroAula) ? (
-                                <div className="h-full rounded-md p-2 border-l-4 bg-amber-50 border-amber-400 flex items-center justify-center">
+                                <div className="h-full rounded-md p-2 border-l-4 bg-amber-50 border-amber-400 flex items-center justify-center imprimir-cartao-aula">
                                   <span className="text-xs font-semibold text-amber-700">HA</span>
                                 </div>
                               ) : (
@@ -516,7 +531,7 @@ export default function MinhaAgendaPage() {
               reservas.map((r) => (
                 <div
                   key={r.id}
-                  className="flex items-center justify-between border rounded-md p-3 border-l-4"
+                  className="flex items-center justify-between border rounded-md p-3 border-l-4 imprimir-sem-quebra"
                   style={{
                     borderLeftColor: r.status === "confirmada" ? "#22c55e" : "#f59e0b",
                   }}
