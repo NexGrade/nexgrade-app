@@ -336,6 +336,7 @@ const ESTILO_IMPRESSAO = `
 
 export default function MinhaAgendaPage() {
   const { podeInstalar, instalar } = usePwaInstall();
+  const [mostrarCalendario, setMostrarCalendario] = useState(false);
   const queryClient = useQueryClient();
   const { data: professor, isLoading: carregandoProfessor } = useGetMeuProfessor();
   const { data: notificacoes } = useGetMinhaAgendaNotificacoes({
@@ -384,17 +385,18 @@ export default function MinhaAgendaPage() {
 
   function handleAdicionarCalendario() {
     if (!professor) return;
-    // [FIX-v2] A primeira tentativa (navegar direto pra rota da API)
-    // falhou com 401 -- o Clerk trata navegacao de pagina cheia
-    // (window.location.href) diferente de chamadas via fetch/XHR, e
-    // nao reconhece a sessao nesse caso. Solucao: gerar o .ics no
-    // proprio navegador (dado que ja carregamos aulas/reservas) e
-    // navegar para uma "data URI" -- o Safari do iPhone reconhece
-    // esse formato especificamente e oferece "Adicionar ao
-    // Calendario" nativamente (diferente de blob + download, que ele
-    // nao suporta bem).
     const ics = gerarIcs(aulas ?? [], reservas ?? [], professor.nome);
-    window.location.href = "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
+    // [FIX-v3] iOS Safari nao suporta blob + download de forma
+    // confiavel -- precisa de data URI. Ja desktop/Android baixam
+    // certinho via blob, mas com data URI o nome do arquivo sai
+    // generico ("baixados.ics" no Chrome). Detecta a plataforma e
+    // usa o metodo certo pra cada uma.
+    const ehIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (ehIOS) {
+      window.location.href = "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
+    } else {
+      baixarArquivo(ics, "minha-agenda.ics", "text/calendar");
+    }
   }
 
   if (carregandoProfessor) {
@@ -443,6 +445,13 @@ export default function MinhaAgendaPage() {
 
       <main className="p-4 md:p-6 space-y-6 max-w-5xl mx-auto">
         <div className="flex flex-wrap gap-2 justify-end print:hidden">
+          <Button
+            variant={mostrarCalendario ? "default" : "outline"}
+            onClick={() => setMostrarCalendario((v) => !v)}
+          >
+            <CalendarDays className="h-4 w-4 mr-2" />
+            {mostrarCalendario ? "Ocultar calendário" : "Ver calendário"}
+          </Button>
           {podeInstalar && (
             <Button variant="outline" onClick={instalar}>
               <MonitorSmartphone className="h-4 w-4 mr-2" />
@@ -459,6 +468,44 @@ export default function MinhaAgendaPage() {
           </Button>
           <NovaReservaDialog professorId={professor.id} />
         </div>
+
+        {mostrarCalendario && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CalendarDays className="h-5 w-5" />
+                Calendário escolar -- próximos eventos
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {proximosEventos.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhum evento próximo cadastrado.</p>
+              ) : (
+                proximosEventos.map((evento) => (
+                  <div
+                    key={evento.id}
+                    className="flex items-center justify-between border rounded-md p-3 border-l-4"
+                    style={{ borderLeftColor: evento.diaLetivo ? "#1565C0" : "#f59e0b" }}
+                  >
+                    <div>
+                      <div className="font-medium">{evento.descricao}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(`${evento.data}T00:00:00`).toLocaleDateString("pt-BR", {
+                          weekday: "long",
+                          day: "2-digit",
+                          month: "2-digit",
+                        })}
+                      </div>
+                    </div>
+                    <Badge variant={evento.diaLetivo ? "default" : "secondary"}>
+                      {evento.tipo}
+                    </Badge>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>
@@ -530,40 +577,6 @@ export default function MinhaAgendaPage() {
             )}
           </CardContent>
         </Card>
-
-        {proximosEventos.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarDays className="h-5 w-5" />
-                Próximos eventos do calendário escolar
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {proximosEventos.map((evento) => (
-                <div
-                  key={evento.id}
-                  className="flex items-center justify-between border rounded-md p-3 border-l-4"
-                  style={{ borderLeftColor: evento.diaLetivo ? "#1565C0" : "#f59e0b" }}
-                >
-                  <div>
-                    <div className="font-medium">{evento.descricao}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(`${evento.data}T00:00:00`).toLocaleDateString("pt-BR", {
-                        weekday: "long",
-                        day: "2-digit",
-                        month: "2-digit",
-                      })}
-                    </div>
-                  </div>
-                  <Badge variant={evento.diaLetivo ? "default" : "secondary"}>
-                    {evento.tipo}
-                  </Badge>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
 
         <Card>
           <CardHeader>
