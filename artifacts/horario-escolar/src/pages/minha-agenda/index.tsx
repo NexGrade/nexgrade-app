@@ -17,6 +17,7 @@ import {
   useGetMinhaAgendaReservas,
   useCreateMinhaReserva,
   useListSalas,
+  useListCalendarioEscolar,
   getGetMinhaAgendaReservasQueryKey,
   getGetMinhaAgendaHorarioQueryKey,
 } from "@workspace/api-client-react";
@@ -338,6 +339,18 @@ export default function MinhaAgendaPage() {
   const { data: reservas, isLoading: carregandoReservas } = useGetMinhaAgendaReservas({
     query: { queryKey: getGetMinhaAgendaReservasQueryKey(), enabled: !!professor },
   });
+  const { data: eventosCalendario } = useListCalendarioEscolar(
+    { ano: new Date().getFullYear() },
+    { query: { queryKey: ["calendario-escolar", new Date().getFullYear()], enabled: !!professor } },
+  );
+  const proximosEventos = useMemo(() => {
+    if (!eventosCalendario) return [];
+    const hoje = new Date().toISOString().slice(0, 10);
+    return eventosCalendario
+      .filter((e) => e.data >= hoje)
+      .sort((a, b) => a.data.localeCompare(b.data))
+      .slice(0, 6);
+  }, [eventosCalendario]);
 
   const maxAula = useMemo(() => {
     if (!aulas || aulas.length === 0) return 6;
@@ -353,12 +366,18 @@ export default function MinhaAgendaPage() {
   }
 
   function handleAdicionarCalendario() {
-    // [FIX] No Safari do iPhone, baixar via blob + atributo "download"
-    // nao funciona de forma confiavel (limitacao conhecida do
-    // WebKit). Navegar direto para o endpoint do servidor, que serve
-    // o .ics com o Content-Type correto, faz o celular reconhecer e
-    // oferecer "Adicionar ao Calendario" nativamente.
-    window.location.href = "/api/minha-agenda/agenda.ics";
+    if (!professor) return;
+    // [FIX-v2] A primeira tentativa (navegar direto pra rota da API)
+    // falhou com 401 -- o Clerk trata navegacao de pagina cheia
+    // (window.location.href) diferente de chamadas via fetch/XHR, e
+    // nao reconhece a sessao nesse caso. Solucao: gerar o .ics no
+    // proprio navegador (dado que ja carregamos aulas/reservas) e
+    // navegar para uma "data URI" -- o Safari do iPhone reconhece
+    // esse formato especificamente e oferece "Adicionar ao
+    // Calendario" nativamente (diferente de blob + download, que ele
+    // nao suporta bem).
+    const ics = gerarIcs(aulas ?? [], reservas ?? [], professor.nome);
+    window.location.href = "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
   }
 
   if (carregandoProfessor) {
@@ -489,6 +508,40 @@ export default function MinhaAgendaPage() {
             )}
           </CardContent>
         </Card>
+
+        {proximosEventos.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CalendarDays className="h-5 w-5" />
+                Próximos eventos do calendário escolar
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {proximosEventos.map((evento) => (
+                <div
+                  key={evento.id}
+                  className="flex items-center justify-between border rounded-md p-3 border-l-4"
+                  style={{ borderLeftColor: evento.diaLetivo ? "#1565C0" : "#f59e0b" }}
+                >
+                  <div>
+                    <div className="font-medium">{evento.descricao}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {new Date(`${evento.data}T00:00:00`).toLocaleDateString("pt-BR", {
+                        weekday: "long",
+                        day: "2-digit",
+                        month: "2-digit",
+                      })}
+                    </div>
+                  </div>
+                  <Badge variant={evento.diaLetivo ? "default" : "secondary"}>
+                    {evento.tipo}
+                  </Badge>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>
