@@ -1155,6 +1155,7 @@ export const GetMinhaAgendaHorarioResponse = zod.object({
   "numeroAula": zod.number().min(1),
   "sala": zod.string().nullish(),
   "disciplinaNome": zod.string(),
+  "disciplinaSigla": zod.string().nullish(),
   "disciplinaCor": zod.string().optional(),
   "turmaNome": zod.string()
 })),

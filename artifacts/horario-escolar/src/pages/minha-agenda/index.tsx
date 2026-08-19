@@ -494,7 +494,7 @@ export default function MinhaAgendaPage() {
                                     borderLeftColor: aula.disciplinaCor ?? "#1565C0",
                                   }}
                                 >
-                                  <div className="font-semibold text-sm truncate">{aula.disciplinaNome}</div>
+                                  <div className="font-semibold text-sm truncate">{aula.disciplinaSigla || aula.disciplinaNome}</div>
                                   <div className="text-xs text-muted-foreground truncate">
                                     {aula.turmaNome}{aula.sala ? ` · ${aula.sala}` : ""}
                                   </div>

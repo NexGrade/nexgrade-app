@@ -17,6 +17,8 @@ export interface MinhaAgendaAula {
   /** @nullable */
   sala?: string | null;
   disciplinaNome: string;
+  /** @nullable */
+  disciplinaSigla?: string | null;
   disciplinaCor?: string;
   turmaNome: string;
 }

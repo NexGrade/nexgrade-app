@@ -69,6 +69,7 @@ router.get("/horario", async (req, res) => {
       numeroAula: horariosTable.numeroAula,
       sala: horariosTable.sala,
       disciplinaNome: disciplinasTable.nome,
+      disciplinaSigla: disciplinasTable.sigla,
       disciplinaCor: disciplinasTable.cor,
       turmaNome: turmasTable.nome,
     })

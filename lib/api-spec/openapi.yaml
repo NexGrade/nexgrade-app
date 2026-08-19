@@ -2376,6 +2376,7 @@ components:
         numeroAula: { type: integer, minimum: 1 }
         sala: { type: ["string", "null"] }
         disciplinaNome: { type: string }
+        disciplinaSigla: { type: ["string", "null"] }
         disciplinaCor: { type: string }
         turmaNome: { type: string }
 
