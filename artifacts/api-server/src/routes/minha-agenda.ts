@@ -9,6 +9,7 @@ import {
   turmasTable,
   reservasTable,
   salasTable,
+  disponibilidadeTable,
 } from "@workspace/db";
 import { and, eq, gte, ne, or, isNull } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
@@ -82,7 +83,24 @@ router.get("/horario", async (req, res) => {
       ),
     )
     .orderBy(horariosTable.diaSemana, horariosTable.numeroAula);
-  res.json(linhas);
+
+  // [HA] Hora-Atividade obrigatoria do professor -- slots vazios na
+  // grade (sem aula de nenhuma turma) que ainda assim sao
+  // "ocupados" por HA, pra distinguir de horario realmente livre.
+  const horasAtividade = await db
+    .select({
+      diaSemana: disponibilidadeTable.diaSemana,
+      numeroAula: disponibilidadeTable.horarioSlot,
+    })
+    .from(disponibilidadeTable)
+    .where(
+      and(
+        eq(disponibilidadeTable.professorId, professor.id),
+        eq(disponibilidadeTable.horaAtividadeObrigatoria, true),
+      ),
+    );
+
+  res.json({ aulas: linhas, horasAtividade });
 });
 
 router.get("/reservas", async (req, res) => {

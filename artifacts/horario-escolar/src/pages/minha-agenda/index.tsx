@@ -321,6 +321,19 @@ function usePwaInstall() {
     : { podeInstalar: false, instalar: () => {} };
 }
 
+const ESTILO_IMPRESSAO = `
+  @media print {
+    @page {
+      size: A4 landscape;
+      margin: 12mm;
+    }
+    body {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+`;
+
 export default function MinhaAgendaPage() {
   const { podeInstalar, instalar } = usePwaInstall();
   const queryClient = useQueryClient();
@@ -333,9 +346,13 @@ export default function MinhaAgendaPage() {
       onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetMinhaAgendaNotificacoesQueryKey() }),
     },
   });
-  const { data: aulas, isLoading: carregandoHorario } = useGetMinhaAgendaHorario({
+  const { data: dadosHorario, isLoading: carregandoHorario } = useGetMinhaAgendaHorario({
     query: { queryKey: getGetMinhaAgendaHorarioQueryKey(), enabled: !!professor },
   });
+  const aulas = dadosHorario?.aulas;
+  const horasAtividade = dadosHorario?.horasAtividade ?? [];
+  const ehHoraAtividade = (diaIdx: number, numeroAula: number) =>
+    horasAtividade.some((h) => h.diaSemana === diaIdx && h.numeroAula === numeroAula);
   const { data: reservas, isLoading: carregandoReservas } = useGetMinhaAgendaReservas({
     query: { queryKey: getGetMinhaAgendaReservasQueryKey(), enabled: !!professor },
   });
@@ -409,6 +426,7 @@ export default function MinhaAgendaPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <style>{ESTILO_IMPRESSAO}</style>
       <header className="border-b p-4 flex items-center justify-between print:hidden">
         <div>
           <h1 className="text-lg font-semibold">Minha Agenda</h1>
@@ -493,6 +511,10 @@ export default function MinhaAgendaPage() {
                                   <div className="text-xs text-muted-foreground truncate">
                                     {aula.turmaNome}{aula.sala ? ` · ${aula.sala}` : ""}
                                   </div>
+                                </div>
+                              ) : ehHoraAtividade(diaIdx, numeroAula) ? (
+                                <div className="h-full rounded-md p-2 border-l-4 bg-amber-50 border-amber-400 flex items-center justify-center">
+                                  <span className="text-xs font-semibold text-amber-700">HA</span>
                                 </div>
                               ) : (
                                 <span className="text-xs text-muted-foreground italic">Livre</span>

@@ -779,13 +779,11 @@ paths:
       tags: [minha-agenda]
       responses:
         "200":
-          description: Grade oficial do professor logado
+          description: Grade oficial do professor logado, com Hora-Atividade
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/MinhaAgendaAula"
+                $ref: "#/components/schemas/MinhaAgendaHorarioResponse"
         "404":
           description: Nenhum professor vinculado
   /minha-agenda/notificacoes:
@@ -2391,6 +2389,26 @@ components:
         numeroAula: { type: integer, minimum: 1 }
         titulo: { type: string, minLength: 1 }
         observacoes: { type: string }
+
+    MinhaAgendaHoraAtividade:
+      type: object
+      required: [diaSemana, numeroAula]
+      properties:
+        diaSemana: { type: integer, minimum: 0, maximum: 4 }
+        numeroAula: { type: integer, minimum: 1 }
+
+    MinhaAgendaHorarioResponse:
+      type: object
+      required: [aulas, horasAtividade]
+      properties:
+        aulas:
+          type: array
+          items:
+            $ref: "#/components/schemas/MinhaAgendaAula"
+        horasAtividade:
+          type: array
+          items:
+            $ref: "#/components/schemas/MinhaAgendaHoraAtividade"
 
     MinhaAgendaReserva:
       type: object

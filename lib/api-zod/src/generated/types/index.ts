@@ -114,6 +114,8 @@ export * from './masterWhoami200';
 export * from './matrizCurricular';
 export * from './matrizCurricularInput';
 export * from './minhaAgendaAula';
+export * from './minhaAgendaHoraAtividade';
+export * from './minhaAgendaHorarioResponse';
 export * from './minhaAgendaReserva';
 export * from './minhaReservaInput';
 export * from './plano';

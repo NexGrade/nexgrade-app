@@ -1139,21 +1139,30 @@ export const GetMeuProfessorResponse = zod.object({
 })
 
 
-export const getMinhaAgendaHorarioResponseDiaSemanaMin = 0;
-export const getMinhaAgendaHorarioResponseDiaSemanaMax = 4;
+export const getMinhaAgendaHorarioResponseAulasItemDiaSemanaMin = 0;
+export const getMinhaAgendaHorarioResponseAulasItemDiaSemanaMax = 4;
+
+
+export const getMinhaAgendaHorarioResponseHorasAtividadeItemDiaSemanaMin = 0;
+export const getMinhaAgendaHorarioResponseHorasAtividadeItemDiaSemanaMax = 4;
 
 
 
 
-export const GetMinhaAgendaHorarioResponseItem = zod.object({
-  "diaSemana": zod.number().min(getMinhaAgendaHorarioResponseDiaSemanaMin).max(getMinhaAgendaHorarioResponseDiaSemanaMax),
+export const GetMinhaAgendaHorarioResponse = zod.object({
+  "aulas": zod.array(zod.object({
+  "diaSemana": zod.number().min(getMinhaAgendaHorarioResponseAulasItemDiaSemanaMin).max(getMinhaAgendaHorarioResponseAulasItemDiaSemanaMax),
   "numeroAula": zod.number().min(1),
   "sala": zod.string().nullish(),
   "disciplinaNome": zod.string(),
   "disciplinaCor": zod.string().optional(),
   "turmaNome": zod.string()
+})),
+  "horasAtividade": zod.array(zod.object({
+  "diaSemana": zod.number().min(getMinhaAgendaHorarioResponseHorasAtividadeItemDiaSemanaMin).max(getMinhaAgendaHorarioResponseHorasAtividadeItemDiaSemanaMax),
+  "numeroAula": zod.number().min(1)
+}))
 })
-export const GetMinhaAgendaHorarioResponse = zod.array(GetMinhaAgendaHorarioResponseItem)
 
 
 export const GetMinhaAgendaNotificacoesResponseItem = zod.object({

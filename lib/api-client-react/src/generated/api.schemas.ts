@@ -539,6 +539,21 @@ export interface MinhaReservaInput {
   observacoes?: string;
 }
 
+export interface MinhaAgendaHoraAtividade {
+  /**
+     * @minimum 0
+     * @maximum 4
+     */
+  diaSemana: number;
+  /** @minimum 1 */
+  numeroAula: number;
+}
+
+export interface MinhaAgendaHorarioResponse {
+  aulas: MinhaAgendaAula[];
+  horasAtividade: MinhaAgendaHoraAtividade[];
+}
+
 export interface MinhaAgendaReserva {
   id: number;
   data: string;

@@ -91,7 +91,7 @@ import type {
   MasterWhoami200,
   MatrizCurricular,
   MatrizCurricularInput,
-  MinhaAgendaAula,
+  MinhaAgendaHorarioResponse,
   MinhaAgendaReserva,
   MinhaReservaInput,
   Plano,
@@ -3044,9 +3044,9 @@ export const getGetMinhaAgendaHorarioUrl = () => {
   return `/api/minha-agenda/horario`
 }
 
-export const getMinhaAgendaHorario = async ( options?: RequestInit): Promise<MinhaAgendaAula[]> => {
+export const getMinhaAgendaHorario = async ( options?: RequestInit): Promise<MinhaAgendaHorarioResponse> => {
 
-  return customFetch<MinhaAgendaAula[]>(getGetMinhaAgendaHorarioUrl(),
+  return customFetch<MinhaAgendaHorarioResponse>(getGetMinhaAgendaHorarioUrl(),
   {
     ...options,
     method: 'GET'
