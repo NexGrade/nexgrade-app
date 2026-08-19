@@ -343,15 +343,22 @@ export default function MinhaAgendaPage() {
     if (!aulas || aulas.length === 0) return 6;
     return Math.max(...aulas.map((a) => a.numeroAula), 6);
   }, [aulas]);
+  const hojeDiaSemana = useMemo(() => {
+    const dow = new Date().getDay();
+    return dow === 0 ? 6 : dow - 1;
+  }, []);
 
   function handleBaixarPdf() {
     window.print();
   }
 
   function handleAdicionarCalendario() {
-    if (!professor) return;
-    const ics = gerarIcs(aulas ?? [], reservas ?? [], professor.nome);
-    baixarArquivo(ics, "minha-agenda.ics", "text/calendar");
+    // [FIX] No Safari do iPhone, baixar via blob + atributo "download"
+    // nao funciona de forma confiavel (limitacao conhecida do
+    // WebKit). Navegar direto para o endpoint do servidor, que serve
+    // o .ics com o Content-Type correto, faz o celular reconhecer e
+    // oferecer "Adicionar ao Calendario" nativamente.
+    window.location.href = "/api/minha-agenda/agenda.ics";
   }
 
   if (carregandoProfessor) {
@@ -432,8 +439,18 @@ export default function MinhaAgendaPage() {
                   <thead>
                     <tr>
                       <th className="text-left p-2 border-b">Aula</th>
-                      {DIAS.map((d) => (
-                        <th key={d} className="text-left p-2 border-b">{d}</th>
+                      {DIAS.map((d, idx) => (
+                        <th
+                          key={d}
+                          className={`text-left p-2 border-b ${
+                            idx === hojeDiaSemana ? "text-primary font-semibold" : ""
+                          }`}
+                        >
+                          {d}
+                          {idx === hojeDiaSemana && (
+                            <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-primary align-middle" />
+                          )}
+                        </th>
                       ))}
                     </tr>
                   </thead>
@@ -446,14 +463,20 @@ export default function MinhaAgendaPage() {
                           return (
                             <td key={diaIdx} className="p-2 border-b">
                               {aula ? (
-                                <div>
-                                  <div className="font-medium">{aula.disciplinaNome}</div>
-                                  <div className="text-xs text-muted-foreground">
+                                <div
+                                  className="h-full rounded-md p-2 border-l-4"
+                                  style={{
+                                    backgroundColor: `${aula.disciplinaCor ?? "#1565C0"}15`,
+                                    borderLeftColor: aula.disciplinaCor ?? "#1565C0",
+                                  }}
+                                >
+                                  <div className="font-semibold text-sm truncate">{aula.disciplinaNome}</div>
+                                  <div className="text-xs text-muted-foreground truncate">
                                     {aula.turmaNome}{aula.sala ? ` · ${aula.sala}` : ""}
                                   </div>
                                 </div>
                               ) : (
-                                <span className="text-muted-foreground">—</span>
+                                <span className="text-xs text-muted-foreground italic">Livre</span>
                               )}
                             </td>
                           );
@@ -478,7 +501,13 @@ export default function MinhaAgendaPage() {
               <p className="text-sm text-muted-foreground">Nenhuma reserva ativa.</p>
             ) : (
               reservas.map((r) => (
-                <div key={r.id} className="flex items-center justify-between border rounded-md p-3">
+                <div
+                  key={r.id}
+                  className="flex items-center justify-between border rounded-md p-3 border-l-4"
+                  style={{
+                    borderLeftColor: r.status === "confirmada" ? "#22c55e" : "#f59e0b",
+                  }}
+                >
                   <div>
                     <div className="font-medium">{r.titulo}</div>
                     <div className="text-xs text-muted-foreground">
