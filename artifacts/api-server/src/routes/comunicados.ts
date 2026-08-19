@@ -10,7 +10,7 @@ const router = Router();
 const ComunicadoInput = z.object({
   titulo: z.string().min(2),
   mensagem: z.string().min(5),
-  tipo: z.enum(["geral", "licenca", "conflito", "horario", "urgente"]).default("geral"),
+  tipo: z.enum(["geral", "licenca", "conflito", "horario", "urgente", "reserva"]).default("geral"),
   turmaId: z.number().int().optional(),
   professorId: z.number().int().optional(),
   autorNome: z.string().default("Sistema"),
@@ -64,3 +64,4 @@ router.delete("/:id", async (req, res) => {
 });
 
 export default router;
+

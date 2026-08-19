@@ -4,7 +4,7 @@ import { z } from "zod/v4";
 
 export const comunicadosTable = pgTable("comunicados", {
   id: serial("id").primaryKey(),
-  escolaId: text("escola_id").notNull().default("escola_default"),
+  escolaId: text("escola_id").notNull(),
   titulo: text("titulo").notNull(),
   mensagem: text("mensagem").notNull(),
   tipo: text("tipo").notNull().default("geral"),
@@ -18,3 +18,4 @@ export const comunicadosTable = pgTable("comunicados", {
 export const insertComunicadoSchema = createInsertSchema(comunicadosTable).omit({ id: true, createdAt: true, lida: true });
 export type InsertComunicado = z.infer<typeof insertComunicadoSchema>;
 export type Comunicado = typeof comunicadosTable.$inferSelect;
+

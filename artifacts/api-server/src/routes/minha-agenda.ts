@@ -3,6 +3,7 @@ import { getAuth, clerkClient } from "@clerk/express";
 import { db } from "@workspace/db";
 import {
   professoresTable,
+  comunicadosTable,
   horariosTable,
   disciplinasTable,
   turmasTable,
@@ -195,8 +196,59 @@ router.post("/reservas", async (req, res) => {
       .returning();
     return row;
   });
+  if (statusFinal === "pendente") {
+    await db.insert(comunicadosTable).values({
+      escolaId,
+      titulo: "Nova reserva pendente",
+      mensagem: `${professor.nome} solicitou "${parsed.data.titulo}" para ${parsed.data.data} (${parsed.data.numeroAula}a aula) -- aguardando confirmacao.`,
+      tipo: "reserva",
+      autorNome: professor.nome,
+    });
+  }
   const result = await publicReserva(created);
   res.status(201).json(result);
+});
+
+// [NOTIFICACOES] Lista notificacoes visiveis para o professor logado:
+// gerais (professorId null) + as direcionadas especificamente a ele.
+router.get("/notificacoes", async (req, res) => {
+  const professor = await resolverProfessorLogado(req);
+  if (!professor) {
+    res.status(404).json({ error: "Nenhum professor vinculado a esta conta." });
+    return;
+  }
+  const escolaId = getEscolaId(req);
+  const linhas = await db
+    .select()
+    .from(comunicadosTable)
+    .where(
+      and(
+        eq(comunicadosTable.escolaId, escolaId),
+        or(isNull(comunicadosTable.professorId), eq(comunicadosTable.professorId, professor.id)),
+      ),
+    )
+    .orderBy(comunicadosTable.createdAt);
+  res.json(linhas.reverse());
+});
+
+router.patch("/notificacoes/:id/lida", async (req, res) => {
+  const professor = await resolverProfessorLogado(req);
+  if (!professor) {
+    res.status(404).json({ error: "Nenhum professor vinculado a esta conta." });
+    return;
+  }
+  const escolaId = getEscolaId(req);
+  const id = Number(req.params.id);
+  const [atualizado] = await db
+    .update(comunicadosTable)
+    .set({ lida: true })
+    .where(and(eq(comunicadosTable.id, id), eq(comunicadosTable.escolaId, escolaId)))
+    .returning();
+  if (!atualizado) {
+    res.status(404).json({ error: "Notificacao nao encontrada." });
+    return;
+  }
+  res.json(atualizado);
 });
 
 export default router;

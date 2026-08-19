@@ -1,9 +1,15 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { UserButton } from "@clerk/react";
+import {
+  useGetMinhaAgendaNotificacoes,
+  useMarcarMinhaNotificacaoLida,
+  getGetMinhaAgendaNotificacoesQueryKey,
+} from "@workspace/api-client-react";
+import { NotificationBell } from "@/components/notification-bell";
 import { CalendarDays, Download, Loader2, Plus, CalendarPlus, MonitorSmartphone } from "lucide-react";
 import {
   useGetMeuProfessor,
@@ -316,7 +322,16 @@ function usePwaInstall() {
 
 export default function MinhaAgendaPage() {
   const { podeInstalar, instalar } = usePwaInstall();
+  const queryClient = useQueryClient();
   const { data: professor, isLoading: carregandoProfessor } = useGetMeuProfessor();
+  const { data: notificacoes } = useGetMinhaAgendaNotificacoes({
+    query: { queryKey: getGetMinhaAgendaNotificacoesQueryKey(), enabled: !!professor, refetchInterval: 30000 },
+  });
+  const marcarLida = useMarcarMinhaNotificacaoLida({
+    mutation: {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetMinhaAgendaNotificacoesQueryKey() }),
+    },
+  });
   const { data: aulas, isLoading: carregandoHorario } = useGetMinhaAgendaHorario({
     query: { queryKey: getGetMinhaAgendaHorarioQueryKey(), enabled: !!professor },
   });
@@ -373,7 +388,13 @@ export default function MinhaAgendaPage() {
           <h1 className="text-lg font-semibold">Minha Agenda</h1>
           <p className="text-sm text-muted-foreground">{professor.nome}</p>
         </div>
-        <UserButton />
+        <div className="flex items-center gap-2">
+          <NotificationBell
+            notificacoes={notificacoes}
+            onMarcarLida={(id) => marcarLida.mutate({ id })}
+          />
+          <UserButton />
+        </div>
       </header>
 
       <main className="p-4 md:p-6 space-y-6 max-w-5xl mx-auto">
@@ -476,3 +497,4 @@ export default function MinhaAgendaPage() {
     </div>
   );
 }
+

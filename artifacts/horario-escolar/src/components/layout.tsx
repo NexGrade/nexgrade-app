@@ -1,6 +1,8 @@
 import { Link, useLocation } from "wouter";
 import { UserButton } from "@clerk/react";
-import { useMasterWhoami } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useMasterWhoami, useListComunicados, useMarcarComunicadoLido, getListComunicadosQueryKey } from "@workspace/api-client-react";
+import { NotificationBell } from "@/components/notification-bell";
 import {
   LayoutDashboard, Users, BookOpen, GraduationCap, Calendar, CalendarDays,
   Building2, FileText, Bell, Shield, History,
@@ -57,6 +59,24 @@ const navGroups = [
     ],
   },
 ];
+
+function NotificationBellAdmin() {
+  const queryClient = useQueryClient();
+  const { data: notificacoes } = useListComunicados(undefined, {
+    query: { queryKey: getListComunicadosQueryKey(), refetchInterval: 30000 },
+  });
+  const marcarLida = useMarcarComunicadoLido({
+    mutation: {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: getListComunicadosQueryKey() }),
+    },
+  });
+  return (
+    <NotificationBell
+      notificacoes={notificacoes}
+      onMarcarLida={(id) => marcarLida.mutate({ id })}
+    />
+  );
+}
 
 function NexGradeLogo() {
   return (
@@ -128,7 +148,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           ))}
-          <div className="pt-4 mt-2 border-t border-border">
+          <div className="pt-4 mt-2 border-t border-border space-y-1">
+            <div className="flex items-center gap-3 px-3 py-1 rounded-md text-sm font-medium text-muted-foreground">
+              <NotificationBellAdmin />
+              <span className="flex-1 whitespace-nowrap">Notificações</span>
+            </div>
             <div className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground">
               <span className="w-6 h-6 shrink-0 flex items-center justify-center">
                 <UserButton

@@ -1,8 +1,8 @@
-﻿openapi: 3.1.0
+openapi: 3.1.0
 info:
   title: Api
   version: 0.2.0
-  description: GradeEscolar â€” Sistema Completo de GestÃ£o de HorÃ¡rios Escolares
+  description: GradeEscolar — Sistema Completo de Gestão de Horários Escolares
 servers:
   - url: /api
     description: Base API path
@@ -10,31 +10,31 @@ tags:
   - name: health
     description: Health operations
   - name: professores
-    description: GestÃ£o de professores
+    description: Gestão de professores
   - name: disciplinas
-    description: GestÃ£o de disciplinas
+    description: Gestão de disciplinas
   - name: turmas
-    description: GestÃ£o de turmas
+    description: Gestão de turmas
   - name: horarios
-    description: GestÃ£o e geraÃ§Ã£o de horÃ¡rios
+    description: Gestão e geração de horários
   - name: salas
-    description: GestÃ£o de salas e espaÃ§os
+    description: Gestão de salas e espaços
   - name: licencas
-    description: LicenÃ§as de professores e substituiÃ§Ãµes
+    description: Licenças de professores e substituições
   - name: comunicados
     description: Comunicados para turmas e professores
   - name: usuarios
-    description: UsuÃ¡rios e perfis de acesso
+    description: Usuários e perfis de acesso
   - name: audit
-    description: HistÃ³rico de alteraÃ§Ãµes
+    description: Histórico de alterações
   - name: configuracoes
-    description: ConfiguraÃ§Ãµes do sistema
+    description: Configurações do sistema
   - name: export
-    description: ExportaÃ§Ã£o de dados
+    description: Exportação de dados
   - name: conflitos
-    description: DetecÃ§Ã£o e sugestÃµes de conflitos
+    description: Detecção e sugestões de conflitos
   - name: stats
-    description: EstatÃ­sticas e resumos
+    description: Estatísticas e resumos
   - name: calendario-escolar
     description: Calendario escolar, feriados e trimestres letivos
 
@@ -52,7 +52,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
-  # â”€â”€ PROFESSORES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # ── PROFESSORES ──────────────────────────────────────────────────────────────
   /professores:
     get:
       operationId: listProfessores
@@ -103,7 +103,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Professor"
         "404":
-          description: NÃ£o encontrado
+          description: Não encontrado
     patch:
       operationId: updateProfessor
       tags: [professores]
@@ -151,7 +151,7 @@ paths:
             type: integer
       responses:
         "200":
-          description: Carga horÃ¡ria
+          description: Carga horária
           content:
             application/json:
               schema:
@@ -174,7 +174,7 @@ paths:
           description: Professor nao encontrado
         "422":
           description: Falha ao enviar convite
-  # â”€â”€ DISCIPLINAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # ── DISCIPLINAS ───────────────────────────────────────────────────────────────
   /disciplinas:
     get:
       operationId: listDisciplinas
@@ -253,7 +253,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Disciplina"
         "404":
-          description: NÃ£o encontrada
+          description: Não encontrada
     patch:
       operationId: updateDisciplina
       tags: [disciplinas]
@@ -289,7 +289,7 @@ paths:
         "204":
           description: Removida
 
-  # â”€â”€ TURMAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # ── TURMAS ───────────────────────────────────────────────────────────────────
   /turmas:
     get:
       operationId: listTurmas
@@ -338,7 +338,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Turma"
         "404":
-          description: NÃ£o encontrada
+          description: Não encontrada
     patch:
       operationId: updateTurma
       tags: [turmas]
@@ -392,13 +392,13 @@ paths:
               $ref: "#/components/schemas/AplicarMatrizInput"
       responses:
         "200":
-          description: Turma com disciplinas e cargas horÃ¡rias substituÃ­das pelas da matriz (RF-TUR-02)
+          description: Turma com disciplinas e cargas horárias substituídas pelas da matriz (RF-TUR-02)
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Turma"
         "404":
-          description: Turma ou matriz curricular nÃ£o encontrada
+          description: Turma ou matriz curricular não encontrada
 
   /turmas/{id}/horario:
     get:
@@ -412,7 +412,7 @@ paths:
             type: integer
       responses:
         "200":
-          description: Grade horÃ¡ria
+          description: Grade horária
           content:
             application/json:
               schema:
@@ -420,7 +420,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/HorarioSlot"
 
-  # â”€â”€ HORÁRIOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # ── HOR�RIOS ──────────────────────────────────────────────────────────────────
   /horarios:
     get:
       operationId: listHorarios
@@ -478,7 +478,7 @@ paths:
     post:
       operationId: gerarHorario
       tags: [horarios]
-      summary: Gera horÃ¡rio automaticamente com algoritmo avanÃ§ado
+      summary: Gera horário automaticamente com algoritmo avançado
       requestBody:
         required: true
         content:
@@ -497,7 +497,7 @@ paths:
     get:
       operationId: listHorariosExperimentais
       tags: [horarios]
-      summary: Lista horÃ¡rios experimentais
+      summary: Lista horários experimentais
       parameters:
         - name: turmaId
           in: query
@@ -515,7 +515,7 @@ paths:
     post:
       operationId: createHorarioExperimental
       tags: [horarios]
-      summary: Cria horÃ¡rio experimental
+      summary: Cria horário experimental
       requestBody:
         required: true
         content:
@@ -534,7 +534,7 @@ paths:
     post:
       operationId: promoverHorarioExperimental
       tags: [horarios]
-      summary: Promove horÃ¡rio experimental para oficial
+      summary: Promove horário experimental para oficial
       parameters:
         - name: nome
           in: path
@@ -553,7 +553,7 @@ paths:
     delete:
       operationId: deleteHorarioExperimental
       tags: [horarios]
-      summary: Remove horÃ¡rio experimental
+      summary: Remove horário experimental
       parameters:
         - name: nome
           in: path
@@ -564,7 +564,7 @@ paths:
         "204":
           description: Removido
 
-  # â”€â”€ SALAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # ── SALAS ────────────────────────────────────────────────────────────────────
   /salas:
     get:
       operationId: listSalas
@@ -631,8 +631,8 @@ paths:
         "204":
           description: Removida
 
-  # â”€â”€ DISPONIBILIDADE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  # ── RESERVAS ──────────────────────────────────────────────
+  # ── DISPONIBILIDADE ──────────────────────────────────────────────────────────
+  # -- RESERVAS ----------------------------------------------
   /reservas:
     get:
       operationId: listReservas
@@ -759,7 +759,7 @@ paths:
       responses:
         "204":
           description: Cancelada
-  # ── MINHA AGENDA (PORTAL DO PROFESSOR) ────────────────────────
+  # -- MINHA AGENDA (PORTAL DO PROFESSOR) ------------------------
   /minha-agenda/professor:
     get:
       operationId: getMeuProfessor
@@ -788,6 +788,40 @@ paths:
                   $ref: "#/components/schemas/MinhaAgendaAula"
         "404":
           description: Nenhum professor vinculado
+  /minha-agenda/notificacoes:
+    get:
+      operationId: getMinhaAgendaNotificacoes
+      tags: [minha-agenda]
+      responses:
+        "200":
+          description: Notificacoes visiveis para o professor logado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comunicado"
+        "404":
+          description: Nenhum professor vinculado
+  /minha-agenda/notificacoes/{id}/lida:
+    patch:
+      operationId: marcarMinhaNotificacaoLida
+      tags: [minha-agenda]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Marcada como lida
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comunicado"
+        "404":
+          description: Nao encontrada
   /minha-agenda/reservas:
     get:
       operationId: getMinhaAgendaReservas
@@ -891,7 +925,7 @@ paths:
       responses:
         "204":
           description: Removida
-# â”€â”€ HORARIO SLOTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── HORARIO SLOTS ────────────────────────────────────────────────────────
   /horario-slots:
     get:
       operationId: listHorarioSlots
@@ -945,7 +979,7 @@ paths:
               $ref: "#/components/schemas/EsquemaHorarioSlotLoteInput"
       responses:
         "201":
-          description: Esquema do turno substituÃ­do
+          description: Esquema do turno substituído
           content:
             application/json:
               schema:
@@ -967,7 +1001,7 @@ paths:
         "204":
           description: Removido
 
-  # â”€â”€ AULAS FIXAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # ── AULAS FIXAS ──────────────────────────────────────────────────────────
   /aulas-fixas:
     get:
       operationId: listAulasFixas
@@ -1017,7 +1051,7 @@ paths:
         "204":
           description: Removida
 
-  # â”€â”€ LIMITES DIÁRIOS PROFESSOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # ── LIMITES DI�RIOS PROFESSOR ────────────────────────────────────────────
   /limites-diarios-professor:
     get:
       operationId: listLimitesDiariosProfessor
@@ -1066,14 +1100,14 @@ paths:
       responses:
         "204":
           description: Removido
-  # â”€â”€ ESCOLAS / ONBOARDING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # ── ESCOLAS / ONBOARDING ─────────────────────────────────────────────────────
   /escolas/planos:
     get:
       operationId: listPlanos
       tags: [escolas]
       responses:
         "200":
-          description: Lista de planos disponÃ­veis (RF-ESC, expansÃ£o SaaS)
+          description: Lista de planos disponíveis (RF-ESC, expansão SaaS)
           content:
             application/json:
               schema:
@@ -1087,7 +1121,7 @@ paths:
       tags: [escolas]
       responses:
         "200":
-          description: Escola vinculada ao usuÃ¡rio/organizaÃ§Ã£o logada, se jÃ¡ cadastrada (RF-ESC-01)
+          description: Escola vinculada ao usuário/organização logada, se já cadastrada (RF-ESC-01)
           content:
             application/json:
               schema:
@@ -1111,7 +1145,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Escola"
         "201":
-          description: Escola criada (onboarding concluÃ­do)
+          description: Escola criada (onboarding concluído)
           content:
             application/json:
               schema:
@@ -1139,8 +1173,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/AssinaturaAsaasResponse"
 
-  # â”€â”€ PAINEL MASTER SAAS (RF-MASTER-01 a RF-MASTER-03) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  # Opera fora do isolamento por escola de propÃ³sito â€” administra todas as
+  # ── PAINEL MASTER SAAS (RF-MASTER-01 a RF-MASTER-03) ────────────────────────
+  # Opera fora do isolamento por escola de propósito — administra todas as
   # escolas da plataforma. Ver middlewares/requireMaster.ts.
   /master/whoami:
     get:
@@ -1148,7 +1182,7 @@ paths:
       tags: [master]
       responses:
         "200":
-          description: Se o usuÃ¡rio autenticado Ã© administrador da plataforma
+          description: Se o usuário autenticado é administrador da plataforma
           content:
             application/json:
               schema:
@@ -1163,7 +1197,7 @@ paths:
       tags: [master]
       responses:
         "200":
-          description: Todas as escolas da plataforma, com mÃ©tricas bÃ¡sicas
+          description: Todas as escolas da plataforma, com métricas básicas
           content:
             application/json:
               schema:
@@ -1171,7 +1205,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/EscolaComMetricas"
         "403":
-          description: UsuÃ¡rio nÃ£o Ã© administrador da plataforma
+          description: Usuário não é administrador da plataforma
 
   /master/escolas/{id}:
     patch:
@@ -1203,8 +1237,8 @@ paths:
       tags: [master]
       description: >
         Cancela a assinatura da escola no Asaas (chamada de API real) e
-        reflete o cancelamento no banco. Encerra a cobrança recorrente de
-        verdade -- diferente de só marcar planoAtivo=false.
+        reflete o cancelamento no banco. Encerra a cobran�a recorrente de
+        verdade -- diferente de s� marcar planoAtivo=false.
       parameters:
         - name: id
           in: path
@@ -1219,9 +1253,9 @@ paths:
               schema:
                 $ref: "#/components/schemas/Escola"
         "400":
-          description: Escola não tem assinatura Asaas ativa
+          description: Escola n�o tem assinatura Asaas ativa
         "404":
-          description: Escola não encontrada
+          description: Escola n�o encontrada
         "502":
           description: Falha ao cancelar no Asaas
 
@@ -1285,13 +1319,13 @@ paths:
       tags: [master]
       responses:
         "200":
-          description: MÃ©tricas agregadas de uso da plataforma (RF-MASTER-03)
+          description: Métricas agregadas de uso da plataforma (RF-MASTER-03)
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/MasterMetrics"
 
-  # â”€â”€ CURSOS E MATRIZ CURRICULAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # ── CURSOS E MATRIZ CURRICULAR ─────────────────────────────────────────────────
   /cursos:
     get:
       operationId: listCursos
@@ -1498,7 +1532,7 @@ paths:
         "204":
           description: Removido
 
-  # â”€â”€ LICENÃ‡AS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # ── LICENÇAS ─────────────────────────────────────────────────────────────────
   /licencas:
     get:
       operationId: listLicencas
@@ -1574,7 +1608,7 @@ paths:
         "204":
           description: Removida
 
-  # â”€â”€ COMUNICADOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # ── COMUNICADOS ───────────────────────────────────────────────────────────────
   /calendario-escolar:
     get:
       operationId: listCalendarioEscolar
@@ -1586,7 +1620,7 @@ paths:
             type: integer
       responses:
         "200":
-          description: Lista de eventos do calendï¿½rio
+          description: Lista de eventos do calend�rio
           content:
             application/json:
               schema:
@@ -1702,7 +1736,7 @@ paths:
         "204":
           description: Removido
 
-  # â”€â”€ USUÁRIOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # ── USU�RIOS ──────────────────────────────────────────────────────────────────
   /usuarios:
     get:
       operationId: listUsuarios
@@ -1737,7 +1771,7 @@ paths:
     get:
       operationId: getMe
       tags: [usuarios]
-      summary: Retorna o perfil do usuÃ¡rio autenticado
+      summary: Retorna o perfil do usuário autenticado
       responses:
         "200":
           description: Meu perfil
@@ -1746,7 +1780,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Usuario"
         "404":
-          description: NÃ£o cadastrado ainda
+          description: Não cadastrado ainda
 
   /usuarios/{id}:
     patch:
@@ -1772,7 +1806,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Usuario"
 
-  # â”€â”€ AUDIT LOG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # ── AUDIT LOG ─────────────────────────────────────────────────────────────────
   /audit:
     get:
       operationId: listAuditLogs
@@ -1788,7 +1822,7 @@ paths:
             type: integer
       responses:
         "200":
-          description: HistÃ³rico
+          description: Histórico
           content:
             application/json:
               schema:
@@ -1796,14 +1830,14 @@ paths:
                 items:
                   $ref: "#/components/schemas/AuditLog"
 
-  # â”€â”€ CONFIGURAÃ‡Ã•ES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # ── CONFIGURAÇÕES ─────────────────────────────────────────────────────────────
   /configuracoes:
     get:
       operationId: listConfiguracoes
       tags: [configuracoes]
       responses:
         "200":
-          description: ConfiguraÃ§Ãµes
+          description: Configurações
           content:
             application/json:
               schema:
@@ -1823,7 +1857,7 @@ paths:
             type: string
       responses:
         "200":
-          description: ConfiguraÃ§Ã£o
+          description: Configuração
           content:
             application/json:
               schema:
@@ -1851,12 +1885,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/Configuracao"
 
-  # â”€â”€ EXPORTAÃ‡ÃƒO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # ── EXPORTAÇÃO ────────────────────────────────────────────────────────────────
   /export/grade:
     get:
       operationId: exportGrade
       tags: [export]
-      summary: Exporta grade horÃ¡ria em CSV
+      summary: Exporta grade horária em CSV
       parameters:
         - name: turmaId
           in: query
@@ -1908,7 +1942,7 @@ paths:
     get:
       operationId: exportRelatorioSeed
       tags: [export]
-      summary: Exporta relatÃ³rio no formato SEED do estado
+      summary: Exporta relatório no formato SEED do estado
       parameters:
         - name: estado
           in: query
@@ -1916,13 +1950,13 @@ paths:
             type: string
       responses:
         "200":
-          description: RelatÃ³rio
+          description: Relatório
           content:
             application/json:
               schema:
                 type: object
 
-  # â”€â”€ CONFLITOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # ── CONFLITOS ─────────────────────────────────────────────────────────────────
   /conflitos:
     get:
       operationId: listConflitos
@@ -1942,10 +1976,10 @@ paths:
     get:
       operationId: getConflitosComSugestoes
       tags: [conflitos]
-      summary: Conflitos com sugestÃµes algorÃ­tmicas de resoluÃ§Ã£o
+      summary: Conflitos com sugestões algorítmicas de resolução
       responses:
         "200":
-          description: Conflitos com sugestÃµes
+          description: Conflitos com sugestões
           content:
             application/json:
               schema:
@@ -1953,14 +1987,14 @@ paths:
                 items:
                   $ref: "#/components/schemas/ConflitoComSugestao"
 
-  # â”€â”€ STATS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # ── STATS ─────────────────────────────────────────────────────────────────────
   /stats:
     get:
       operationId: getStats
       tags: [stats]
       responses:
         "200":
-          description: EstatÃ­sticas
+          description: Estatísticas
           content:
             application/json:
               schema:
@@ -2029,7 +2063,7 @@ components:
         nome: { type: string }
         cargaSemanal: { type: integer }
         cor: { type: string }
-        codigoSae: { type: ["string", "null"], description: "CÃ³digo SAE oficial (SEED-PR), quando conhecido." }
+        codigoSae: { type: ["string", "null"], description: "Código SAE oficial (SEED-PR), quando conhecido." }
         sigla: { type: ["string", "null"], description: "Sigla curta usada nas grades PDF compactas (ex: MAT, L.POR)." }
         tipoSalaExigido: { type: ["string", "null"], description: "Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra)." }
         categoriaCurricularPadrao: { type: ["string", "null"], enum: [BNC, PD, FGB, PFO, IFA, IF, IFP, APF, null], description: "Categoria curricular fixa desta disciplina (nula = flexivel, elegivel para qualquer categoria)." }
@@ -2074,7 +2108,7 @@ components:
           items: { type: integer }
         disciplinasComCarga:
           type: array
-          description: "Carga horÃ¡ria semanal efetiva por disciplina (override da matriz aplicada, com fallback para a carga global)."
+          description: "Carga horária semanal efetiva por disciplina (override da matriz aplicada, com fallback para a carga global)."
           items:
             type: object
             required: [disciplinaId, nome, cargaHorariaSemanal, origemMatriz]
@@ -2083,8 +2117,8 @@ components:
               nome: { type: string }
               cargaHorariaSemanal: { type: integer }
               origemMatriz: { type: boolean }
-              maxAulasConsecutivasDia: { type: ["integer", "null"], description: "Limite de aulas geminadas desta disciplina, nesta turma, por dia. Nulo = usa o padrÃ£o geral (configuracoes/seed_pr.max_aulas_geminadas_padrao)." }
-              grupoCompartilhadoId: { type: ["string", "null"], description: "Quando preenchido, agrupa esta disciplina com a mesma linha de outras turmas para horÃ¡rio simultÃ¢neo (ex. ItinerÃ¡rio Formativo cursado junto)." }
+              maxAulasConsecutivasDia: { type: ["integer", "null"], description: "Limite de aulas geminadas desta disciplina, nesta turma, por dia. Nulo = usa o padrão geral (configuracoes/seed_pr.max_aulas_geminadas_padrao)." }
+              grupoCompartilhadoId: { type: ["string", "null"], description: "Quando preenchido, agrupa esta disciplina com a mesma linha de outras turmas para horário simultâneo (ex. Itinerário Formativo cursado junto)." }
         createdAt: { type: string }
 
     AplicarMatrizInput:
@@ -2113,7 +2147,7 @@ components:
           items: { type: integer }
         disciplinasConfig:
           type: object
-          description: "ConfiguraÃ§Ã£o extra por disciplina â€” chave Ã© o disciplinaId (como string). SÃ³ tem efeito para disciplinas presentes em disciplinaIds."
+          description: "Configuração extra por disciplina — chave é o disciplinaId (como string). Só tem efeito para disciplinas presentes em disciplinaIds."
           additionalProperties:
             $ref: "#/components/schemas/DisciplinaConfigTurma"
 
@@ -2130,7 +2164,7 @@ components:
           items: { type: integer }
         disciplinasConfig:
           type: object
-          description: "ConfiguraÃ§Ã£o extra por disciplina â€” chave Ã© o disciplinaId (como string). Pode ser enviado mesmo sem disciplinaIds, para sÃ³ atualizar a configuraÃ§Ã£o de vÃ­nculos jÃ¡ existentes."
+          description: "Configuração extra por disciplina — chave é o disciplinaId (como string). Pode ser enviado mesmo sem disciplinaIds, para só atualizar a configuração de vínculos já existentes."
           additionalProperties:
             $ref: "#/components/schemas/DisciplinaConfigTurma"
 
@@ -2381,8 +2415,8 @@ components:
         horarioSlot: { type: integer, minimum: 1 }
         disponivel: { type: boolean }
         motivo: { type: ["string", "null"] }
-        turno: { type: ["string", "null"], enum: [matutino, vespertino, noturno, null], description: "Turno deste bloqueio â€” necessÃ¡rio para validar concentraÃ§Ã£o de hora-atividade no mesmo turno das aulas (ResoluÃ§Ã£o SEED n.Âº 7.200/2025, art. 11, Â§4Âº)." }
-        horaAtividadeObrigatoria: { type: boolean, default: false, description: "true quando este bloqueio representa Hora-Atividade obrigatÃ³ria, nÃ£o outro tipo de indisponibilidade." }
+        turno: { type: ["string", "null"], enum: [matutino, vespertino, noturno, null], description: "Turno deste bloqueio — necessário para validar concentração de hora-atividade no mesmo turno das aulas (Resolução SEED n.º 7.200/2025, art. 11, §4º)." }
+        horaAtividadeObrigatoria: { type: boolean, default: false, description: "true quando este bloqueio representa Hora-Atividade obrigatória, não outro tipo de indisponibilidade." }
 
     DisponibilidadeInput:
       type: object
@@ -2504,7 +2538,7 @@ components:
       properties:
         id: { type: integer }
         professorId: { type: integer }
-        turmaId: { type: ["integer", "null"], description: "Nulo = padrÃ£o do professor, vÃ¡lido em qualquer turma. Preenchido = override especÃ­fico por turma." }
+        turmaId: { type: ["integer", "null"], description: "Nulo = padrão do professor, válido em qualquer turma. Preenchido = override específico por turma." }
         maxAulasPorDia: { type: integer, minimum: 1 }
 
     LimiteDiarioProfessorInput:
@@ -2512,7 +2546,7 @@ components:
       required: [professorId, maxAulasPorDia]
       properties:
         professorId: { type: integer }
-        turmaId: { type: ["integer", "null"], default: null, description: "Nulo = padrÃ£o do professor, vÃ¡lido em qualquer turma. Preenchido = override especÃ­fico por turma." }
+        turmaId: { type: ["integer", "null"], default: null, description: "Nulo = padrão do professor, válido em qualquer turma. Preenchido = override específico por turma." }
         maxAulasPorDia: { type: integer, minimum: 1 }
     Curso:
       type: object
@@ -2599,8 +2633,8 @@ components:
       properties:
         id: { type: integer }
         nome: { type: string }
-        precoMensal: { type: integer, description: "Preço mensal em centavos. 0 = plano gratuito (Piloto)." }
-        precoAnual: { type: ["integer", "null"], description: "Preço anual em centavos, com desconto. Nulo enquanto não configurado." }
+        precoMensal: { type: integer, description: "Pre�o mensal em centavos. 0 = plano gratuito (Piloto)." }
+        precoAnual: { type: ["integer", "null"], description: "Pre�o anual em centavos, com desconto. Nulo enquanto n�o configurado." }
         maxProfessores: { type: integer }
         maxTurmas: { type: integer }
         temIA: { type: boolean }
@@ -2620,20 +2654,20 @@ components:
         cidade: { type: ["string", "null"] }
         estado: { type: string }
         modalidade: { type: string, enum: [regular, tecnica, eja, normal_magisterio] }
-        codigoInep: { type: ["string", "null"], description: "Código INEP oficial da escola perante o MEC." }
-        nre: { type: ["string", "null"], description: "Núcleo Regional de Educação (SEED-PR) ou equivalente estadual." }
-        turnosOfertados: { type: ["string", "null"], description: "Lista separada por vírgula, ex: 'matutino,vespertino'." }
-        resolucaoSeedPr: { type: ["string", "null"], description: "Número da resolução SEED-PR (ou equivalente estadual) que rege a escola." }
+        codigoInep: { type: ["string", "null"], description: "C�digo INEP oficial da escola perante o MEC." }
+        nre: { type: ["string", "null"], description: "N�cleo Regional de Educa��o (SEED-PR) ou equivalente estadual." }
+        turnosOfertados: { type: ["string", "null"], description: "Lista separada por v�rgula, ex: 'matutino,vespertino'." }
+        resolucaoSeedPr: { type: ["string", "null"], description: "N�mero da resolu��o SEED-PR (ou equivalente estadual) que rege a escola." }
         planoId: { type: ["integer", "null"] }
         clerkOrgId: { type: ["string", "null"] }
         stripeCustomerId: { type: ["string", "null"] }
         stripeSubscriptionId: { type: ["string", "null"] }
         emailContato: { type: ["string", "null"], description: "E-mail de contato geral da escola." }
         telefoneContato: { type: ["string", "null"] }
-        emailCobranca: { type: ["string", "null"], description: "E-mail específico usado pelo Asaas pra notificar a escola (boleto/PIX). Cai pra emailContato quando vazio." }
+        emailCobranca: { type: ["string", "null"], description: "E-mail espec�fico usado pelo Asaas pra notificar a escola (boleto/PIX). Cai pra emailContato quando vazio." }
         asaasCustomerId: { type: ["string", "null"] }
         asaasSubscriptionId: { type: ["string", "null"] }
-        asaasStatusAssinatura: { type: ["string", "null"], enum: [em_dia, pendente, atrasada, cancelada, null], description: "Alimentado pelo webhook do Asaas a cada evento de cobrança." }
+        asaasStatusAssinatura: { type: ["string", "null"], enum: [em_dia, pendente, atrasada, cancelada, null], description: "Alimentado pelo webhook do Asaas a cada evento de cobran�a." }
         asaasProximoVencimento: { type: ["string", "null"], format: date-time }
         planoAtivo: { type: boolean }
         trialEndsAt: { type: ["string", "null"], format: date-time }
@@ -2643,7 +2677,7 @@ components:
       type: object
       required: [cadastrada]
       properties:
-        cadastrada: { type: boolean, description: "false quando o usuÃ¡rio/organizaÃ§Ã£o ainda nÃ£o passou pelo onboarding." }
+        cadastrada: { type: boolean, description: "false quando o usuário/organização ainda não passou pelo onboarding." }
         id: { type: string }
         nomeFantasia: { type: string }
         cidade: { type: ["string", "null"] }
@@ -2675,7 +2709,7 @@ components:
         emailCobranca: { type: string, format: email }
         codigoInep: { type: string }
         nre: { type: string }
-        turnosOfertados: { type: string, description: "Lista separada por vírgula, ex: 'matutino,vespertino'." }
+        turnosOfertados: { type: string, description: "Lista separada por v�rgula, ex: 'matutino,vespertino'." }
         resolucaoSeedPr: { type: string }
 
     Licenca:
@@ -2725,7 +2759,7 @@ components:
         id: { type: integer }
         titulo: { type: string }
         mensagem: { type: string }
-        tipo: { type: string, enum: [geral, licenca, conflito, horario, urgente] }
+        tipo: { type: string, enum: [geral, licenca, conflito, horario, urgente, reserva] }
         turmaId: { type: ["integer", "null"] }
         professorId: { type: ["integer", "null"] }
         lida: { type: boolean }
@@ -2738,7 +2772,7 @@ components:
       properties:
         titulo: { type: string, minLength: 2 }
         mensagem: { type: string, minLength: 5 }
-        tipo: { type: string, enum: [geral, licenca, conflito, horario, urgente] }
+        tipo: { type: string, enum: [geral, licenca, conflito, horario, urgente, reserva] }
         turmaId: { type: integer }
         professorId: { type: integer }
         autorNome: { type: string }
@@ -2950,6 +2984,7 @@ components:
         totalAulasDistribuidas: { type: integer }
         totalUsuarios: { type: integer }
         mensagensEnviadasParaIA: { type: integer }
+
 
 
 

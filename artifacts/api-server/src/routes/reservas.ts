@@ -28,6 +28,7 @@ import {
   UpdateReservaResponse,
 } from "@workspace/api-zod";
 import {
+  comunicadosTable,
   db,
   horariosTable,
   professoresTable,
@@ -473,6 +474,15 @@ router.post("/", async (req, res): Promise<void> => {
       .returning();
     return row;
   });
+  if (validation.reservaParaDeslocar) {
+    await db.insert(comunicadosTable).values({
+      escolaId,
+      titulo: "Reserva movida para pendente",
+      mensagem: `Sua reserva "${validation.reservaParaDeslocar.titulo}" foi movida para pendente por causa de outra reserva de prioridade maior no mesmo espaco.`,
+      tipo: "reserva",
+      professorId: validation.reservaParaDeslocar.professorId,
+    });
+  }
   const result = await publicReserva(created);
   res.status(201).json({
     ...CreateReservaResponse.parse(result),
@@ -564,6 +574,15 @@ router.patch("/:id", async (req, res): Promise<void> => {
       .set({ status: "cancelada" })
       .where(eq(reservasTable.id, current.id))
       .returning();
+    if (current.status !== "cancelada") {
+      await db.insert(comunicadosTable).values({
+        escolaId,
+        titulo: "Reserva cancelada",
+        mensagem: `Sua reserva "${current.titulo}" foi cancelada pela coordenacao.`,
+        tipo: "reserva",
+        professorId: current.professorId,
+      });
+    }
     const result = await publicReserva(updated);
     res.json(UpdateReservaResponse.parse(result));
     return;
@@ -610,6 +629,24 @@ router.patch("/:id", async (req, res): Promise<void> => {
       .returning();
     return row;
   });
+  if (validation.reservaParaDeslocar) {
+    await db.insert(comunicadosTable).values({
+      escolaId,
+      titulo: "Reserva movida para pendente",
+      mensagem: `Sua reserva "${validation.reservaParaDeslocar.titulo}" foi movida para pendente por causa de outra reserva de prioridade maior no mesmo espaco.`,
+      tipo: "reserva",
+      professorId: validation.reservaParaDeslocar.professorId,
+    });
+  }
+  if (current.status === "pendente" && statusFinal === "confirmada") {
+    await db.insert(comunicadosTable).values({
+      escolaId,
+      titulo: "Reserva confirmada",
+      mensagem: `Sua reserva "${updated.titulo}" foi confirmada.`,
+      tipo: "reserva",
+      professorId: updated.professorId,
+    });
+  }
   const result = await publicReserva(updated);
   res.json(UpdateReservaResponse.parse(result));
 });
@@ -636,4 +673,5 @@ router.delete("/:id", async (req, res): Promise<void> => {
 });
 
 export default router;
+
 
