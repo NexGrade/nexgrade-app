@@ -12,6 +12,7 @@ import {
 } from "@workspace/api-zod";
 import { horariosTable, turmasTable, disponibilidadeTable } from "@workspace/db";
 import { getEscolaId } from "../lib/escola-id";
+import { getAuth, clerkClient } from "@clerk/express";
 import { registrarAuditoria } from "../lib/audit";
 import { calcularHoraAtividadePorTurno } from "../lib/hora-atividade";
 
@@ -231,6 +232,42 @@ router.get("/:id/carga", async (req, res) => {
     haInstitucionalTotal,
     haAlocadaPorTurno,
   });
+});
+
+// [PORTAL DO PROFESSOR] Convida o professor a entrar na organizacao
+// Clerk da escola (por e-mail) para acessar /minha-agenda. Usa o
+// papel "org:member" (nao admin) -- so enxerga o portal restrito, nao
+// as telas administrativas. Requer que a conta que esta convidando
+// (quem clicou o botao) ja seja admin da organizacao no Clerk.
+router.post("/:id/convidar-portal", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const { userId } = getAuth(req);
+  if (!userId) {
+    res.status(401).json({ error: "Nao autenticado." });
+    return;
+  }
+  const id = Number(req.params.id);
+  const professor = await db
+    .select()
+    .from(professoresTable)
+    .where(and(eq(professoresTable.id, id), eq(professoresTable.escolaId, escolaId)))
+    .then((r) => r[0] ?? null);
+  if (!professor) {
+    res.status(404).json({ error: "Professor nao encontrado." });
+    return;
+  }
+  try {
+    await clerkClient.organizations.createOrganizationInvitation({
+      organizationId: escolaId,
+      inviterUserId: userId,
+      emailAddress: professor.email,
+      role: "org:member",
+    });
+    res.status(201).json({ ok: true });
+  } catch (err: any) {
+    const mensagem = err?.errors?.[0]?.message ?? "Nao foi possivel enviar o convite.";
+    res.status(422).json({ error: mensagem });
+  }
 });
 
 export default router;

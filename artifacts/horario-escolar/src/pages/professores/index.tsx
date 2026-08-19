@@ -1,10 +1,10 @@
-ï»¿import { useState } from "react";
-import { useListProfessores, useDeleteProfessor, getListProfessoresQueryKey, useListDisciplinas } from "@workspace/api-client-react";
+import { useState } from "react";
+import { useListProfessores, useDeleteProfessor, useConvidarProfessorPortal, getListProfessoresQueryKey, useListDisciplinas } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Trash2, Users, Mail, Phone, LayoutGrid, List } from "lucide-react";
+import { Plus, Edit, Trash2, Users, Mail, Phone, LayoutGrid, List, Send } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,12 +23,18 @@ export default function ProfessoresList() {
   const { data: professores, isLoading } = useListProfessores();
   const { data: disciplinas } = useListDisciplinas();
   const deleteProfessor = useDeleteProfessor();
+  const convidar = useConvidarProfessorPortal({
+    mutation: {
+      onSuccess: () => toast({ title: "Convite enviado", description: "O professor vai receber um e-mail para acessar o portal." }),
+      onError: (err: any) => toast({ title: "Nao foi possivel convidar", description: err?.response?.data?.error ?? "Tente novamente.", variant: "destructive" }),
+    },
+  });
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [filtroDisciplina, setFiltroDisciplina] = useState<string>("todas");
   const [modo, setModo] = useState<ModoVisualizacao>("grade");
 
-  // Busca + ordenaÃ§Ã£o alfabÃ©tica primeiro, filtro de disciplina depois â€”
+  // Busca + ordenação alfabética primeiro, filtro de disciplina depois —
   // os dois funcionam juntos.
   const { busca, setBusca, itensFiltrados: professoresOrdenados } = useListaFiltrada(professores, (p) => p.nome);
 
@@ -65,7 +71,7 @@ export default function ProfessoresList() {
         <AlertDialogHeader>
           <AlertDialogTitle>Remover professor?</AlertDialogTitle>
           <AlertDialogDescription>
-            Isso tambÃ©m removerÃ¡ a disponibilidade e os horÃ¡rios vinculados a "{professor.nome}".
+            Isso também removerá a disponibilidade e os horários vinculados a "{professor.nome}".
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -139,7 +145,7 @@ export default function ProfessoresList() {
         <div className="text-center py-12 bg-card rounded-lg border border-border">
           <Users className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
           <h3 className="text-lg font-medium text-foreground">Nenhum professor cadastrado</h3>
-          <p className="text-sm text-muted-foreground mt-1">Cadastre os professores para montar a grade horÃ¡ria.</p>
+          <p className="text-sm text-muted-foreground mt-1">Cadastre os professores para montar a grade horária.</p>
         </div>
       ) : professoresFiltrados.length === 0 ? (
         <div className="text-center py-12 bg-card rounded-lg border border-border">
@@ -165,6 +171,15 @@ export default function ProfessoresList() {
                     </div>
                   </div>
                   <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Convidar para o portal do professor"
+                      disabled={convidar.isPending}
+                      onClick={() => convidar.mutate({ id: professor.id })}
+                    >
+                      <Send className="w-4 h-4" />
+                    </Button>
                     <Link href={`/professores/${professor.id}`}>
                       <Button variant="ghost" size="icon"><Edit className="w-4 h-4" /></Button>
                     </Link>
@@ -189,7 +204,7 @@ export default function ProfessoresList() {
             <span>Nome</span>
             <span>Disciplinas</span>
             <span>Contato</span>
-            <span className="w-20 text-center">AÃ§Ãµes</span>
+            <span className="w-20 text-center">Ações</span>
           </div>
           <div className="divide-y divide-border">
             {professoresFiltrados.map((professor) => (
@@ -206,11 +221,11 @@ export default function ProfessoresList() {
                     <Badge variant="outline" className="text-[10px]">+{professor.disciplinaIds!.length - 3}</Badge>
                   )}
                   {(professor.disciplinaIds ?? []).length === 0 && (
-                    <span className="text-muted-foreground text-xs">â€”</span>
+                    <span className="text-muted-foreground text-xs">—</span>
                   )}
                 </div>
                 <div className="text-xs text-muted-foreground truncate">
-                  {professor.email || professor.telefone || "â€”"}
+                  {professor.email || professor.telefone || "—"}
                 </div>
                 <div className="w-20 flex items-center justify-center gap-1">
                   <Link href={`/professores/${professor.id}`}>
@@ -228,3 +243,4 @@ export default function ProfessoresList() {
     </div>
   );
 }
+

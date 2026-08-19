@@ -112,6 +112,13 @@ export const GetProfessorCargaResponse = zod.object({
 })
 
 
+export const ConvidarProfessorPortalParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ConvidarProfessorPortalResponse = zod.void()
+
+
 export const ListDisciplinasResponseItem = zod.object({
   "id": zod.number(),
   "nome": zod.string(),

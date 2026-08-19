@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { UserButton } from "@clerk/react";
-import { CalendarDays, Download, Loader2, Plus, CalendarPlus } from "lucide-react";
+import { CalendarDays, Download, Loader2, Plus, CalendarPlus, MonitorSmartphone } from "lucide-react";
 import {
   useGetMeuProfessor,
   useGetMinhaAgendaHorario,
@@ -273,7 +273,49 @@ function NovaReservaDialog({ professorId }: { professorId: number }) {
   );
 }
 
+function usePwaInstall() {
+  const [prompt, setPrompt] = useState<any>(null);
+
+  useMemo(() => {
+    if (typeof window === "undefined") return;
+
+    // Registra o manifest desta pagina especificamente (nao afeta o
+    // resto do app administrativo).
+    const linkExistente = document.querySelector('link[rel="manifest"][data-minha-agenda]');
+    if (!linkExistente) {
+      const link = document.createElement("link");
+      link.rel = "manifest";
+      link.href = "/manifest-minha-agenda.json";
+      link.setAttribute("data-minha-agenda", "true");
+      document.head.appendChild(link);
+    }
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw-minha-agenda.js", { scope: "/minha-agenda" }).catch(() => {});
+    }
+
+    const handler = (e: any) => {
+      e.preventDefault();
+      setPrompt(e);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  return prompt
+    ? {
+        podeInstalar: true,
+        instalar: async () => {
+          prompt.prompt();
+          await prompt.userChoice;
+          setPrompt(null);
+        },
+      }
+    : { podeInstalar: false, instalar: () => {} };
+}
+
 export default function MinhaAgendaPage() {
+  const { podeInstalar, instalar } = usePwaInstall();
   const { data: professor, isLoading: carregandoProfessor } = useGetMeuProfessor();
   const { data: aulas, isLoading: carregandoHorario } = useGetMinhaAgendaHorario({
     query: { queryKey: getGetMinhaAgendaHorarioQueryKey(), enabled: !!professor },
@@ -336,6 +378,12 @@ export default function MinhaAgendaPage() {
 
       <main className="p-4 md:p-6 space-y-6 max-w-5xl mx-auto">
         <div className="flex flex-wrap gap-2 justify-end print:hidden">
+          {podeInstalar && (
+            <Button variant="outline" onClick={instalar}>
+              <MonitorSmartphone className="h-4 w-4 mr-2" />
+              Instalar app
+            </Button>
+          )}
           <Button variant="outline" onClick={handleBaixarPdf}>
             <Download className="h-4 w-4 mr-2" />
             Baixar PDF

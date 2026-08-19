@@ -181,10 +181,15 @@ function SignUpPage() {
 }
 
 function HomeRedirect() {
+  // [PORTAL DO PROFESSOR] Membro comum da organizacao (nao admin) vai
+  // direto pra agenda restrita dele -- so a coordenacao (admin) ve o
+  // painel administrativo completo.
+  const { orgRole } = useAuth();
+  const destino = orgRole && orgRole !== "org:admin" ? "/minha-agenda" : "/dashboard";
   return (
     <>
       <Show when="signed-in">
-        <Redirect to="/dashboard" />
+        <Redirect to={destino} />
       </Show>
       <Show when="signed-out">
         <Redirect to="/sign-in" />

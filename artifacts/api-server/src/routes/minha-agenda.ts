@@ -1,8 +1,7 @@
 ﻿import { Router } from "express";
-import { getAuth } from "@clerk/express";
+import { getAuth, clerkClient } from "@clerk/express";
 import { db } from "@workspace/db";
 import {
-  usuariosTable,
   professoresTable,
   horariosTable,
   disciplinasTable,
@@ -27,17 +26,21 @@ async function resolverProfessorLogado(req: import("express").Request) {
   if (!userId) return null;
   const escolaId = getEscolaId(req);
 
-  const usuario = await db
-    .select()
-    .from(usuariosTable)
-    .where(and(eq(usuariosTable.clerkId, userId), eq(usuariosTable.escolaId, escolaId)))
-    .then((r) => r[0] ?? null);
-  if (!usuario || usuario.perfil !== "professor" || !usuario.ativo) return null;
+  // [SIMPLIFICADO] Nao depende da tabela usuarios (que exigiria
+  // vincular o clerkId ANTES da pessoa existir, impraticavel num
+  // fluxo de convite). Busca o e-mail direto da conta Clerk logada e
+  // compara com professores.email -- fonte de verdade unica, sem
+  // necessidade de sincronizacao manual.
+  const clerkUser = await clerkClient.users.getUser(userId);
+  const email = clerkUser.emailAddresses.find(
+    (e) => e.id === clerkUser.primaryEmailAddressId,
+  )?.emailAddress;
+  if (!email) return null;
 
   const professor = await db
     .select()
     .from(professoresTable)
-    .where(and(eq(professoresTable.email, usuario.email), eq(professoresTable.escolaId, escolaId)))
+    .where(and(eq(professoresTable.email, email), eq(professoresTable.escolaId, escolaId)))
     .then((r) => r[0] ?? null);
   return professor;
 }

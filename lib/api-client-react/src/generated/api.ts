@@ -641,6 +641,70 @@ export function useGetProfessorCarga<TData = Awaited<ReturnType<typeof getProfes
 
 
 
+export const getConvidarProfessorPortalUrl = (id: number,) => {
+
+
+
+
+  return `/api/professores/${id}/convidar-portal`
+}
+
+export const convidarProfessorPortal = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getConvidarProfessorPortalUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getConvidarProfessorPortalMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof convidarProfessorPortal>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof convidarProfessorPortal>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['convidarProfessorPortal'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof convidarProfessorPortal>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  convidarProfessorPortal(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConvidarProfessorPortalMutationResult = NonNullable<Awaited<ReturnType<typeof convidarProfessorPortal>>>
+
+    export type ConvidarProfessorPortalMutationError = ErrorType<void>
+
+    export const useConvidarProfessorPortal = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof convidarProfessorPortal>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof convidarProfessorPortal>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getConvidarProfessorPortalMutationOptions(options));
+    }
+
 export const getListDisciplinasUrl = () => {
 
 

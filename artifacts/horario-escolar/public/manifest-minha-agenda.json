@@ -1,0 +1,14 @@
+﻿{
+  "name": "NexGrade - Minha Agenda",
+  "short_name": "Minha Agenda",
+  "description": "Grade de aulas e reservas do professor",
+  "start_url": "/minha-agenda",
+  "scope": "/minha-agenda",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#1565C0",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
