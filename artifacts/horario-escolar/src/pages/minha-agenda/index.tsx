@@ -10,7 +10,7 @@ import {
   getGetMinhaAgendaNotificacoesQueryKey,
 } from "@workspace/api-client-react";
 import { NotificationBell } from "@/components/notification-bell";
-import { CalendarDays, Download, Loader2, Plus, CalendarPlus, MonitorSmartphone } from "lucide-react";
+import { CalendarDays, Download, Loader2, Plus, MonitorSmartphone } from "lucide-react";
 import {
   useGetMeuProfessor,
   useGetMinhaAgendaHorario,
@@ -74,61 +74,6 @@ function baixarArquivo(conteudo: string, nomeArquivo: string, tipo: string) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-}
-
-function gerarIcs(
-  aulas: Array<{ diaSemana: number; numeroAula: number; disciplinaNome: string; turmaNome: string; sala?: string | null }>,
-  reservas: Array<{ data: string; numeroAula: number; titulo: string; salaNome: string; status: string }>,
-  nomeProfessor: string,
-) {
-  const HORAS_POR_AULA: Record<number, string> = {
-    1: "0700", 2: "0750", 3: "0740", 4: "0930", 5: "1020", 6: "1110",
-  };
-  const linhas: string[] = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//NexGrade//Minha Agenda//PT",
-    "CALSCALE:GREGORIAN",
-  ];
-  // Segunda-feira de referencia para gerar as datas das aulas recorrentes
-  const hoje = new Date();
-  const diaSemanaHoje = hoje.getDay() === 0 ? 6 : hoje.getDay() - 1;
-  const segundaRef = new Date(hoje);
-  segundaRef.setDate(hoje.getDate() - diaSemanaHoje);
-
-  aulas.forEach((aula, idx) => {
-    const dataAula = new Date(segundaRef);
-    dataAula.setDate(segundaRef.getDate() + aula.diaSemana);
-    const yyyymmdd = dataAula.toISOString().slice(0, 10).replace(/-/g, "");
-    const hora = HORAS_POR_AULA[aula.numeroAula] ?? "0800";
-    linhas.push(
-      "BEGIN:VEVENT",
-      `UID:aula-${idx}-${nomeProfessor.replace(/\s/g, "")}@nexgrade`,
-      `DTSTART:${yyyymmdd}T${hora}00`,
-      `DTEND:${yyyymmdd}T${hora}50`,
-      "RRULE:FREQ=WEEKLY;COUNT=20",
-      `SUMMARY:${aula.disciplinaNome} - ${aula.turmaNome}`,
-      `LOCATION:${aula.sala ?? ""}`,
-      "END:VEVENT",
-    );
-  });
-
-  reservas.forEach((r, idx) => {
-    const yyyymmdd = r.data.replace(/-/g, "");
-    const hora = HORAS_POR_AULA[r.numeroAula] ?? "0800";
-    linhas.push(
-      "BEGIN:VEVENT",
-      `UID:reserva-${idx}-${nomeProfessor.replace(/\s/g, "")}@nexgrade`,
-      `DTSTART:${yyyymmdd}T${hora}00`,
-      `DTEND:${yyyymmdd}T${hora}50`,
-      `SUMMARY:[Reserva ${r.status}] ${r.titulo}`,
-      `LOCATION:${r.salaNome}`,
-      "END:VEVENT",
-    );
-  });
-
-  linhas.push("END:VCALENDAR");
-  return linhas.join("\r\n");
 }
 
 function NovaReservaDialog({ professorId }: { professorId: number }) {
@@ -383,22 +328,6 @@ export default function MinhaAgendaPage() {
     window.print();
   }
 
-  function handleAdicionarCalendario() {
-    if (!professor) return;
-    const ics = gerarIcs(aulas ?? [], reservas ?? [], professor.nome);
-    // [FIX-v3] iOS Safari nao suporta blob + download de forma
-    // confiavel -- precisa de data URI. Ja desktop/Android baixam
-    // certinho via blob, mas com data URI o nome do arquivo sai
-    // generico ("baixados.ics" no Chrome). Detecta a plataforma e
-    // usa o metodo certo pra cada uma.
-    const ehIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    if (ehIOS) {
-      window.location.href = "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
-    } else {
-      baixarArquivo(ics, "minha-agenda.ics", "text/calendar");
-    }
-  }
-
   if (carregandoProfessor) {
     return (
       <div className="min-h-screen p-6 space-y-4">
@@ -461,10 +390,6 @@ export default function MinhaAgendaPage() {
           <Button variant="outline" onClick={handleBaixarPdf}>
             <Download className="h-4 w-4 mr-2" />
             Baixar PDF
-          </Button>
-          <Button variant="outline" onClick={handleAdicionarCalendario}>
-            <CalendarPlus className="h-4 w-4 mr-2" />
-            Adicionar ao calendário
           </Button>
           <NovaReservaDialog professorId={professor.id} />
         </div>
