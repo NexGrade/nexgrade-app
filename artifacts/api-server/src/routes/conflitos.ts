@@ -379,6 +379,12 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     slots.filter((s) => s.professorId === prof.id).forEach((s) => {
       const turma = turmas.find((t) => t.id === s.turmaId);
       if (!turma) return;
+      // [FIX] Mesma excecao do teto de aulas/turno: disciplinas "semTurma"
+      // (ex.: PAEE) nao entram na contagem que gera a exigencia de HA
+      // institucional -- SS11 da Resolucao 7.863/2024 trata PAEE como
+      // categoria que nao recebe HA da mesma forma que professor regular.
+      const disc = disciplinas.find((d) => d.id === s.disciplinaId);
+      if (disc?.semTurma) return;
       turnosComAula[turma.turno] = (turnosComAula[turma.turno] ?? 0) + 1;
     });
 
