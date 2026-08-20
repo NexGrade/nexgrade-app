@@ -1291,9 +1291,16 @@ async function runCpsatGeneration(
       aula: d.horarioSlot,
     }));
 
+  // [FIX] Mesma correcao aplicada em turmasDoTurno mais acima --
+  // sem excluir turmas fantasma aqui tambem, os professores que dao
+  // PAEE (turma fantasma) sao lidos como "ocupados" em TODOS os
+  // horarios da semana (PAEE preenche literalmente todos os slots),
+  // impossibilitando o solver de encaixa-los em qualquer aula real
+  // das turmas de verdade -- travava a geracao mesmo com a turma
+  // fantasma ja excluida da lista principal.
   const outrasTurmasDoTurno = await db.select({ id: turmasTable.id })
     .from(turmasTable)
-    .where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.turno, turno)));
+    .where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.turno, turno), eq(turmasTable.fantasma, false)));
   const outrasTurmaIds = outrasTurmasDoTurno.map((t) => t.id).filter((id) => !turmaIds.includes(id));
 
   let bloqueiosOutrasTurmas: Array<{ professor: string; dia: number; aula: number }> = [];
