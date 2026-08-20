@@ -268,8 +268,13 @@ function usePwaInstall() {
 
 const ESTILO_IMPRESSAO = `
   @media print {
+    /* [FIX] "A4 landscape" (palavra-chave) nem sempre e respeitado
+       pelo dialogo de impressao do Chrome -- o radio "Retrato" fica
+       selecionado por padrao mesmo com essa regra, cortando o
+       conteudo. Dimensoes explicitas (297mm x 210mm = A4 deitado)
+       sao mais confiaveis entre navegadores. */
     @page {
-      size: A4 landscape;
+      size: 297mm 210mm;
       margin: 8mm;
     }
     body {
@@ -296,6 +301,7 @@ const ESTILO_IMPRESSAO = `
 
 export default function MinhaAgendaPage() {
   const { podeInstalar, instalar } = usePwaInstall();
+  const { toast } = useToast();
   const [mostrarCalendario, setMostrarCalendario] = useState(false);
   const queryClient = useQueryClient();
   const { data: professor, isLoading: carregandoProfessor } = useGetMeuProfessor();
@@ -340,6 +346,14 @@ export default function MinhaAgendaPage() {
   }, []);
 
   function handleBaixarPdf() {
+    // [DICA] Alguns navegadores nao selecionam "Paisagem" sozinhos
+    // no dialogo de impressao, mesmo com a orientacao configurada no
+    // CSS -- avisa o usuario pra conferir/marcar manualmente antes
+    // de salvar, evitando conteudo cortado.
+    toast({
+      title: "Dica de impressão",
+      description: 'Na tela que abrir, confira se "Paisagem" está selecionado em Layout antes de salvar.',
+    });
     window.print();
   }
 
@@ -494,7 +508,7 @@ export default function MinhaAgendaPage() {
                                     borderLeftColor: aula.disciplinaCor ?? "#1565C0",
                                   }}
                                 >
-                                  <div className="font-semibold text-sm truncate">{aula.disciplinaSigla || aula.disciplinaNome}</div>
+                                  <div className="font-semibold text-sm truncate">{(aula.disciplinaSigla || aula.disciplinaNome.slice(0, 8)).toUpperCase()}</div>
                                   <div className="text-xs text-muted-foreground truncate">
                                     {aula.turmaNome}{aula.sala ? ` · ${aula.sala}` : ""}
                                   </div>
