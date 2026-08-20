@@ -498,7 +498,13 @@ function App() {
               para o reload, nao useLocation), mas manter perto do Router
               deixa claro que o proposito dele e reagir a navegacao. */}
           <WouterRouter base={basePath}>
-            <div className="h-screen flex flex-col overflow-hidden">
+            {/* [FIX-PRINT] print:h-auto e print:overflow-visible nos dois
+                niveis abaixo -- sem isso, o Chrome nao expande esses
+                containers com rolagem propria na hora de imprimir, entao so
+                o que cabe na tela naquele momento e capturado (conteudo
+                "escondido" pela rolagem, como reservas mais abaixo na
+                pagina, sumia do PDF em vez de ir pra pagina 2). */}
+            <div className="h-screen flex flex-col overflow-hidden print:h-auto print:overflow-visible">
               <OrgSwitchWatcher />
               <GlobalTopBar />
               {/* [FIX] overflow-auto adicionado aqui -- paginas que NAO usam
@@ -508,7 +514,7 @@ function App() {
                   Sem overflow-auto neste wrapper, conteudo mais alto que a
                   tela (ex: o formulario inteiro de /onboarding) ficava sem
                   jeito de rolar ate o fim. */}
-              <div className="flex-1 min-h-0 overflow-auto">
+              <div className="flex-1 min-h-0 overflow-auto print:h-auto print:overflow-visible">
                 <Router />
               </div>
             </div>
