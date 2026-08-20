@@ -1,0 +1,1 @@
+ALTER TABLE "horarios" ADD COLUMN "turno" text;

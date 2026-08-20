@@ -148,6 +148,27 @@
       "when": 1787088447975,
       "tag": "0020_colossal_fenris",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1787183102485,
+      "tag": "0021_sticky_charles_xavier",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1787183350731,
+      "tag": "0022_huge_garia",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1787184960713,
+      "tag": "0023_sturdy_nico_minoru",
+      "breakpoints": true
     }
   ]
 }

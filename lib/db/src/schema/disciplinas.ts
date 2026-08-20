@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { composicaoCurricularEnum } from "./enums";
@@ -30,6 +30,13 @@ export const disciplinasTable = pgTable("disciplinas", {
   // vínculo. Nula = disciplina "flexível", sem categoria fixa, elegível
   // pra qualquer categoria ao montar a matriz.
   categoriaCurricularPadrao: composicaoCurricularEnum("categoria_curricular_padrao"),
+  // [NOVO] Disciplinas do tipo PAEE (Atendimento Educacional
+  // Especializado) e similares nao tem vinculo com turma -- o
+  // professor da essa "aula" pra registrar carga horaria, mas nao
+  // existe uma turma especifica associada. Quando true, o campo
+  // turmaId em horariosTable fica opcional pra essa disciplina (a
+  // interface tambem esconde o seletor de turma ao criar/editar).
+  semTurma: boolean("sem_turma").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
