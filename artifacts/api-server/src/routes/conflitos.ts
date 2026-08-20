@@ -548,13 +548,22 @@ function gerarSugestoes(conflito: Conflito): string[] {
   }
 }
 
+// [FIX] Express gera ETag automatico em toda resposta JSON por padrao.
+// O navegador guardava o ETag dessas rotas e passava a enviar
+// If-None-Match nas chamadas seguintes -- o servidor respondia 304 (Not
+// Modified) mesmo depois de a grade ter sido alterada de verdade,
+// fazendo a tela de Conflitos parecer "travada" com um numero antigo.
+// Conflitos precisam refletir o estado atual do banco em toda consulta,
+// entao cache aqui e sempre incorreto -- nunca deve ser reutilizado.
 router.get("/", async (req, res) => {
+  res.set("Cache-Control", "no-store");
   const escolaId = getEscolaId(req);
   const conflitos = await detectarConflitos(escolaId);
   res.json(conflitos);
 });
 
 router.get("/sugestoes", async (req, res) => {
+  res.set("Cache-Control", "no-store");
   const escolaId = getEscolaId(req);
   const conflitos = await detectarConflitos(escolaId);
   const resultado: ConflitoComSugestao[] = conflitos.map(c => ({
