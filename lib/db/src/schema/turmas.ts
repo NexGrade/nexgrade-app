@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, pgEnum , boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { matrizesCurricularesTable } from "./cursos";
@@ -24,6 +24,12 @@ export const turmasTable = pgTable("turmas", {
   // `serie`); daqui pra frente, obrigatorio definir no cadastro da turma.
   nivelEnsino: nivelEnsinoEnum("nivel_ensino"),
   anoLetivo: integer("ano_letivo").notNull(),
+  // [NOVO] Turmas "fantasma" (ex.: PAEE) existem so pra satisfazer a
+  // exigencia tecnica de turma_id em horarios, quando o professor da
+  // uma disciplina semTurma (ver disciplinas.semTurma). Nunca tem
+  // aluno de verdade, e por isso precisam ser excluidas de qualquer
+  // geracao de grade via CP-SAT (que so lida com turmas reais).
+  fantasma: boolean("fantasma").notNull().default(false),
   // RF-TUR-01/02: vínculo opcional com a Matriz Curricular (ver
   // cursos.ts) que define a carga horária esperada por disciplina desta
   // turma. Nulo enquanto a turma não estiver associada a uma matriz.

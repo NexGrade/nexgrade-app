@@ -1190,8 +1190,14 @@ async function runCpsatGeneration(
     turno = turmasEscolhidas[0].turno as "matutino" | "vespertino" | "noturno";
   } else {
     turno = turnoInformado!;
+    // [FIX] Exclui turmas fantasma (ex.: PAEE) -- elas nao tem aluno
+    // de verdade e nao devem entrar na geracao de grade via CP-SAT.
+    // Sem esse filtro, o solver tenta encaixar tambem as aulas de
+    // PAEE junto com a curricular real, tornando o problema muito
+    // mais dificil sem necessidade (visto em producao: geracao que
+    // levava segundos passou a nao terminar nem em 400s).
     turmasDoTurno = await db.select().from(turmasTable)
-      .where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.turno, turno)));
+      .where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.turno, turno), eq(turmasTable.fantasma, false)));
     if (turmasDoTurno.length === 0) {
       return { httpStatus: 400, body: { error: `Nenhuma turma encontrada no turno "${turno}"` } };
     }
