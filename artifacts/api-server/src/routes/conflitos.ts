@@ -344,6 +344,11 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
   slots.forEach((s) => {
     const turma = turmas.find((t) => t.id === s.turmaId);
     if (!turma) return;
+    // [FIX] Disciplinas "semTurma" (ex.: PAEE) nao entram no teto de aulas/turno
+    // da SEED-PR -- Resolucao 7.863/2024 SS10/SS11 trata PAEE como categoria
+    // separada, com limite proprio de 25h/turno em acumulo de funcoes.
+    const disc = disciplinas.find((d) => d.id === s.disciplinaId);
+    if (disc?.semTurma) return;
     const key = `${s.professorId}-${turma.turno}`;
     aulasPorProfTurno[key] = (aulasPorProfTurno[key] ?? 0) + 1;
   });
