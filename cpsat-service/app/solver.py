@@ -39,6 +39,7 @@ def resolver(
     turmas_nomes: set[str],
     tempo_limite_s: int = 120,
     apenas_turma: bool = False,
+    hints: dict | None = None,
 ):
     model = cp_model.CpModel()
 
@@ -47,6 +48,10 @@ def resolver(
         for dia in range(len(DIAS)):
             for aula in range(1, aulas_por_dia + 1):
                 aula_var[(dt_idx, dia, aula)] = model.NewBoolVar(f"a_{dt_idx}_{dia}_{aula}")
+    if hints:
+        for key, valor in hints.items():
+            if key in aula_var:
+                model.AddHint(aula_var[key], valor)
 
     # RESTRIÇÃO 1 — carga horária semanal exata
     for dt_idx, dt in enumerate(disciplinas_turma):
@@ -278,10 +283,30 @@ def gerar_grade(
     # (tipicamente <=16 turmas) mantem o objetivo completo (turma +
     # professor).
     apenas_turma_auto = len(turmas_nomes) > 16
-    solver, status, aula_var = resolver(
-        disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
-        tempo_limite_s, apenas_turma=apenas_turma_auto,
-    )
+    if apenas_turma_auto:
+        solver_f1, status_f1, aula_var_f1 = resolver(
+            disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
+            tempo_limite_s, apenas_turma=True,
+        )
+        duracao_f1 = time.time() - inicio
+        tempo_restante = max(0, tempo_limite_s - duracao_f1)
+        if status_f1 in (cp_model.OPTIMAL, cp_model.FEASIBLE) and tempo_restante > 5:
+            hints_f1 = {k: solver_f1.Value(v) for k, v in aula_var_f1.items()}
+            solver_f2, status_f2, aula_var_f2 = resolver(
+                disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
+                int(tempo_restante), apenas_turma=False, hints=hints_f1,
+            )
+            if status_f2 in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+                solver, status, aula_var = solver_f2, status_f2, aula_var_f2
+            else:
+                solver, status, aula_var = solver_f1, status_f1, aula_var_f1
+        else:
+            solver, status, aula_var = solver_f1, status_f1, aula_var_f1
+    else:
+        solver, status, aula_var = resolver(
+            disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
+            tempo_limite_s, apenas_turma=False,
+        )
     duracao = time.time() - inicio
 
     status_nome = solver.StatusName(status)
