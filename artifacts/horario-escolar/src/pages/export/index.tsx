@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Download, FileText, Table, BarChart3, FileDown, ClipboardList, TrendingUp } from "lucide-react";
+import { Download, FileText, Table, BarChart3, FileDown, ClipboardList, TrendingUp, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 function buildUrl(path: string, params: Record<string, string | undefined>) {
@@ -73,6 +73,14 @@ export default function ExportPage() {
   // baixar (seja um blob local, seja uma URL de servidor que NÃO
   // precise de autenticação). Mantido separado de baixarArquivo abaixo
   // porque handleSeedDownload já monta o próprio blob na mão.
+  // [FIX] Nenhum botao de PDF/CSV dava feedback visual enquanto
+  // gerava -- parecia que o clique nao tinha funcionado, especialmente
+  // em relatorios mais pesados que demoram alguns segundos. Estado
+  // compartilhado (nao precisa ser por botao -- na pratica so um
+  // download acontece por vez) desabilita o botao clicado e troca o
+  // texto/icone pra "Gerando...", igual ao padrao ja usado no botao
+  // de Relatorio SEED mais abaixo.
+  const [baixando, setBaixando] = useState(false);
   const handleDownload = (url: string, filename: string) => {
     const a = document.createElement("a");
     a.href = url;
@@ -93,6 +101,7 @@ export default function ExportPage() {
   // mecanismo usado em toda chamada normal da tela) -- busca o arquivo
   // como blob primeiro, e só então cria o link e clica.
   const baixarArquivo = async (url: string, filename: string) => {
+    setBaixando(true);
     try {
       const blob = await customFetch<Blob>(url, { responseType: "blob" });
       const objUrl = URL.createObjectURL(blob);
@@ -104,6 +113,8 @@ export default function ExportPage() {
         description: err instanceof Error ? err.message : undefined,
         variant: "destructive",
       });
+    } finally {
+      setBaixando(false);
     }
   };
 
@@ -165,7 +176,7 @@ export default function ExportPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button className="w-full" onClick={() => {
+            <Button className="w-full" disabled={baixando} onClick={() => {
               const url = buildUrl("/api/export/grade", { turmaId: gradeOpts.turmaId || undefined, formato: gradeOpts.formato });
               // [FIX] Antes o nome do arquivo vinha sempre fixo em
               // ".csv", mesmo quando "JSON (API)" estava selecionado --
@@ -174,7 +185,7 @@ export default function ExportPage() {
               const extensao = gradeOpts.formato === "json" ? "json" : "csv";
               baixarArquivo(url, `grade_horaria.${extensao}`);
             }}>
-              <Download className="w-4 h-4 mr-2" />Baixar Grade Horária
+              {baixando ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}{baixando ? "Gerando..." : "Baixar Grade Horária"}
             </Button>
           </CardContent>
         </Card>
@@ -216,7 +227,7 @@ export default function ExportPage() {
                 </Select>
               </div>
             </div>
-            <Button className="w-full" onClick={() => {
+            <Button className="w-full" disabled={baixando} onClick={() => {
               const url = buildUrl("/api/export/ponto", {
                 professorId: pontoOpts.professorId || undefined,
                 mes: pontoOpts.mes,
@@ -224,7 +235,7 @@ export default function ExportPage() {
               });
               baixarArquivo(url, `ponto_professores_${pontoOpts.mes}_${pontoOpts.ano}.csv`);
             }}>
-              <Download className="w-4 h-4 mr-2" />Baixar Controle de Ponto
+              {baixando ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}{baixando ? "Gerando..." : "Baixar Controle de Ponto"}
             </Button>
           </CardContent>
         </Card>
@@ -294,6 +305,7 @@ export default function ExportPage() {
             </div>
             <Button
               className="w-full"
+              disabled={baixando}
               onClick={() => {
                 const param = pdfOpts.visao === "turma" ? "turmaId" : "professorId";
                 const turnoParaEnviar = pdfOpts.turno === TURNO_TODOS ? undefined : pdfOpts.turno;
@@ -307,7 +319,7 @@ export default function ExportPage() {
                 baixarArquivo(url, `grade_por_${pdfOpts.visao}${sufixoTurno}${sufixoSemana}.pdf`);
               }}
             >
-              <Download className="w-4 h-4 mr-2" />Baixar PDF
+              {baixando ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}{baixando ? "Gerando..." : "Baixar PDF"}
             </Button>
           </CardContent>
         </Card>
@@ -343,6 +355,7 @@ export default function ExportPage() {
             </div>
             <Button
               className="w-full"
+              disabled={baixando}
               onClick={() => {
                 const url = buildUrl("/api/export/relatorio-carga-pdf", {
                   professorId: cargaOpts.professorId || undefined,
@@ -355,7 +368,7 @@ export default function ExportPage() {
                 baixarArquivo(url, `relatorio_carga_professores${sufixo}${sufixoSemana}.pdf`);
               }}
             >
-              <Download className="w-4 h-4 mr-2" />Baixar Relatório de Carga
+              {baixando ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}{baixando ? "Gerando..." : "Baixar Relatório de Carga"}
             </Button>
           </CardContent>
         </Card>
@@ -380,12 +393,13 @@ export default function ExportPage() {
             </div>
             <Button
               className="w-full"
+              disabled={baixando}
               onClick={() => {
                 const url = buildUrl("/api/export/carga-horaria-pdf", { ano: cargaHorariaOpts.ano });
                 baixarArquivo(url, `carga_horaria_${cargaHorariaOpts.ano}.pdf`);
               }}
             >
-              <Download className="w-4 h-4 mr-2" />Baixar Carga Horária
+              {baixando ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}{baixando ? "Gerando..." : "Baixar Carga Horária"}
             </Button>
           </CardContent>
         </Card>
