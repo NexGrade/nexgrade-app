@@ -350,7 +350,11 @@ router.get("/grade-pdf/professor", async (req, res) => {
     db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
     db.select().from(disponibilidadeTable),
   ]);
-  const professores = professorIdFiltro ? professoresTodos.filter((p) => p.id === professorIdFiltro) : professoresTodos;
+  // [FIX] Ordem alfabetica por nome -- padrao ja usado em todas as
+  // outras listas do sistema (dropdowns, tabelas de Professores/
+  // Turmas/Disciplinas/Cursos etc.), essa rota ainda nao seguia.
+  const professores = (professorIdFiltro ? professoresTodos.filter((p) => p.id === professorIdFiltro) : professoresTodos)
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
   const blocos: BlocoGrade[] = [];
   for (const prof of professores) {
