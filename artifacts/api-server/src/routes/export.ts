@@ -108,11 +108,25 @@ async function buscarHorariosPorAula(
   turno: string,
   nivelEnsino: string | null,
 ): Promise<Record<number, string>> {
+  // [FIX] Turmas "fantasma" (ex.: PAEE, ver disciplinas.semTurma) tem
+  // nivelEnsino sempre null, mas atendem aos dois niveis (fundamental
+  // e medio_tecnico) ao mesmo tempo -- diferente de uma turma real,
+  // que sempre tem um nivel definido. Pro matutino especificamente
+  // (unico turno com horarios distintos por nivel), isNull() nunca
+  // acha nada nesse caso -- nenhuma linha real de horario tem nivel
+  // null -- entao a tabela saia sempre vazia pra esses professores.
+  // Correcao: quando nivelEnsino vier null no matutino, busca os dois
+  // niveis e combina (o numero da aula raramente diverge de horario
+  // entre eles o suficiente pra importar aqui, e o objetivo e so
+  // mostrar uma referencia de horario, nao a grade oficial da turma).
   const condicaoNivel = turno === "matutino" && nivelEnsino
     ? eq(horarioSlotsTable.nivelEnsino, nivelEnsino as "fundamental" | "medio_tecnico")
-    : isNull(horarioSlotsTable.nivelEnsino);
-  const rows = await db.select().from(horarioSlotsTable)
-    .where(and(eq(horarioSlotsTable.escolaId, escolaId), eq(horarioSlotsTable.turno, turno), condicaoNivel));
+    : turno === "matutino"
+      ? undefined // nivelEnsino null no matutino -- busca os dois niveis, sem filtrar
+      : isNull(horarioSlotsTable.nivelEnsino);
+  const condicoes = [eq(horarioSlotsTable.escolaId, escolaId), eq(horarioSlotsTable.turno, turno)];
+  if (condicaoNivel) condicoes.push(condicaoNivel);
+  const rows = await db.select().from(horarioSlotsTable).where(and(...condicoes));
   const mapa: Record<number, string> = {};
   rows.forEach((r) => { mapa[r.numeroAula] = r.horaInicio.slice(0, 5); });
   // [NOVO] O turno noturno sempre mostra 18:00 no topo da grade, mesmo
