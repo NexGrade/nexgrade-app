@@ -289,15 +289,17 @@ def gerar_grade(
             tempo_limite_s, apenas_turma=True,
         )
         duracao_f1 = time.time() - inicio
-        # [MARGEM-SEGURANCA] Reserva alguns segundos pra garantir que
-        # o Python devolve a resposta ANTES do prazo total configurado
-        # -- sem essa folga, a fase 2 podia usar o tempo restante todo
-        # ate o ultimo segundo, e o lado Node (que tambem cronometra o
-        # mesmo limite) as vezes desistia antes do Python conseguir
-        # devolver o resultado, reportando timeout mesmo quando a fase
-        # 1 (que sempre funciona rapido) tinha uma resposta valida pronta.
-        margem_seguranca_s = 10
-        tempo_restante = max(0, tempo_limite_s - duracao_f1 - margem_seguranca_s)
+        # [TETO-FASE-2] A fase 2 usava TODO o tempo restante do limite
+        # configurado (podia ser 200s+) -- se ela nao convergisse a
+        # tempo, o usuario esperava o prazo inteiro pra so entao
+        # (as vezes) cair no fallback da fase 1, que ja estava pronta
+        # em segundos. Teto curto e fixo: toda geracao ganha uma
+        # 'chance gratis' de reduzir janela de professor sem risco de
+        # travar o sistema por minutos -- latencia total previsivel
+        # (fase 1 + no maximo TETO_FASE_2_S segundos), independente
+        # do tempo limite total configurado pelo usuario.
+        TETO_FASE_2_S = 25
+        tempo_restante = min(TETO_FASE_2_S, max(0, tempo_limite_s - duracao_f1 - 5))
         if status_f1 in (cp_model.OPTIMAL, cp_model.FEASIBLE) and tempo_restante > 5:
             hints_f1 = {k: solver_f1.Value(v) for k, v in aula_var_f1.items()}
             solver_f2, status_f2, aula_var_f2 = resolver(
