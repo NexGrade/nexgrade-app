@@ -65,7 +65,7 @@ def resolver(
         indices_turma = [i for i, dt in enumerate(disciplinas_turma) if dt.turma == turma]
         for dia in range(len(DIAS)):
             for aula in range(1, aulas_por_dia + 1):
-                model.Add(sum(aula_var[(i, dia, aula)] for i in indices_turma) <= 1)
+                model.AddAtMostOne(aula_var[(i, dia, aula)] for i in indices_turma)
 
     # RESTRIÇÃO 3 — professor sem 2 turmas ao mesmo tempo
     professores = {dt.professor for dt in disciplinas_turma}
@@ -73,7 +73,7 @@ def resolver(
         indices_prof = [i for i, dt in enumerate(disciplinas_turma) if dt.professor == prof]
         for dia in range(len(DIAS)):
             for aula in range(1, aulas_por_dia + 1):
-                model.Add(sum(aula_var[(i, dia, aula)] for i in indices_prof) <= 1)
+                model.AddAtMostOne(aula_var[(i, dia, aula)] for i in indices_prof)
 
     # RESTRIÇÃO 4 — teto de aulas por turno (SEED-PR art. 11 §3º)
     teto = TETO_AULAS_TURNO.get(turno, 24)
@@ -186,10 +186,29 @@ def resolver(
                 v = model.NewBoolVar(f"ocupado_prof_{prof}_{dia}_{aula}")
                 model.Add(sum(aula_var[(i, dia, aula)] for i in indices_prof) == v)
                 ocupado_prof.append(v)
-            for a in range(1, aulas_por_dia - 1):
+            n = len(ocupado_prof)
+            # Prefixo[a] = existe aula ocupada em alguma posicao <= a?
+            prefixo = [None] * n
+            prefixo[0] = ocupado_prof[0]
+            for a in range(1, n):
+                pv = model.NewBoolVar(f"prefixo_prof_{prof}_{dia}_{a}")
+                model.AddMaxEquality(pv, [prefixo[a - 1], ocupado_prof[a]])
+                prefixo[a] = pv
+            # Sufixo[a] = existe aula ocupada em alguma posicao >= a?
+            sufixo = [None] * n
+            sufixo[n - 1] = ocupado_prof[n - 1]
+            for a in range(n - 2, -1, -1):
+                sv = model.NewBoolVar(f"sufixo_prof_{prof}_{dia}_{a}")
+                model.AddMaxEquality(sv, [sufixo[a + 1], ocupado_prof[a]])
+                sufixo[a] = sv
+            # Janela = slot vazio com ocupacao antes E depois (qualquer
+            # distancia -- cobre buracos de 1, 2, 3+ aulas seguidas).
+            # Bordas (a=0 e a=n-1) nunca entram no laco, entao nunca sao
+            # penalizadas -- regra de "janela so nas pontas e ok" preservada.
+            for a in range(1, n - 1):
                 buraco_prof = model.NewBoolVar(f"buraco_prof_{prof}_{dia}_{a}")
-                model.AddBoolAnd([ocupado_prof[a - 1], ocupado_prof[a].Not(), ocupado_prof[a + 1]]).OnlyEnforceIf(buraco_prof)
-                model.AddBoolOr([ocupado_prof[a - 1].Not(), ocupado_prof[a], ocupado_prof[a + 1].Not()]).OnlyEnforceIf(buraco_prof.Not())
+                model.AddBoolAnd([prefixo[a - 1], ocupado_prof[a].Not(), sufixo[a + 1]]).OnlyEnforceIf(buraco_prof)
+                model.AddBoolOr([prefixo[a - 1].Not(), ocupado_prof[a], sufixo[a + 1].Not()]).OnlyEnforceIf(buraco_prof.Not())
                 penalidades_professor.append(buraco_prof)
 
     # Peso configuravel (padrao 1 = igual, comportamento anterior).
