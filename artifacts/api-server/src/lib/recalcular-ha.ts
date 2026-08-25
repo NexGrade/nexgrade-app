@@ -224,6 +224,16 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
         }
       }
 
+      // [NOVO] Preferir bordas do dia (1a ou ultima aula) dentro dos
+      // candidatos "outros" -- HA no meio do dia, quando evitavel,
+      // atrapalha mais o professor do que HA cedo ou no fim do turno.
+      candidatosOutros.sort((a, b) => {
+        const distA = Math.min(a.aula - 1, maxAula - a.aula);
+        const distB = Math.min(b.aula - 1, maxAula - b.aula);
+        if (distA !== distB) return distA - distB;
+        return a.dia - b.dia;
+      });
+
       const escolhidos = [...candidatosJanela, ...candidatosOutros].slice(0, faltam);
       for (const c of escolhidos) {
         paraInserir.push({ professorId: prof.id, turno, diaSemana: c.dia, horarioSlot: c.aula });
