@@ -108,20 +108,25 @@ def resolver(
         ]
         if len(indices_par) < 2:
             continue  # so uma disciplina desse par -- RESTRICAO 5 ja cobre
+        # RESTRICAO 5b -- regra pedagogica: 2 seguidas
+        # e normal, 3 seguidas e tolerado (nao ideal, mas permitido),
+        # 4+ seguidas NUNCA. Janela deslizante de 4 slots, max 3 dentro
+        # dela (proibe 4 seguidas). Teto de total no dia relaxado para
+        # 6 (o que importa e a sequencia, nao o total).
         for dia in range(len(DIAS)):
             total_dia_par = sum(
                 aula_var[(i, dia, aula)]
                 for i in indices_par
                 for aula in range(1, aulas_por_dia + 1)
             )
-            model.Add(total_dia_par <= 3)
-            for inicio_janela in range(1, aulas_por_dia - 1):
+            model.Add(total_dia_par <= 6)
+            for inicio_janela in range(1, aulas_por_dia - 2):
                 soma_janela = sum(
                     aula_var[(i, dia, aula)]
                     for i in indices_par
-                    for aula in range(inicio_janela, inicio_janela + 3)
+                    for aula in range(inicio_janela, inicio_janela + 4)
                 )
-                model.Add(soma_janela <= 2)
+                model.Add(soma_janela <= 3)
 
     # RESTRIÇÃO 6 — bloqueios de disponibilidade do professor
     for dt_idx, dt in enumerate(disciplinas_turma):
