@@ -219,15 +219,20 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
           if (antesOcupado && depoisOcupado) {
             candidatosJanela.push({ dia, aula });
           } else {
-            candidatosOutros.push({ dia, aula });
+            candidatosOutros.push({ dia, aula, colada: antesOcupado || depoisOcupado });
           }
         }
       }
 
-      // [NOVO] Preferir bordas do dia (1a ou ultima aula) dentro dos
-      // candidatos "outros" -- HA no meio do dia, quando evitavel,
-      // atrapalha mais o professor do que HA cedo ou no fim do turno.
+      // Prioridade dos candidatos "outros": primeiro os que ficam
+      // COLADOS no bloco de aulas/HA ja existente (estende o bloco
+      // compacto do professor, sem deixar vao entre a HA e a aula).
+      // So depois, entre os restantes, prefere a borda do dia (aula 1
+      // ou ultima) -- essa preferencia de borda so vale quando nao ha
+      // nenhuma posicao colada disponivel (ex.: dia sem nenhuma aula
+      // ainda, contraturno, etc).
       candidatosOutros.sort((a, b) => {
+        if (a.colada !== b.colada) return a.colada ? -1 : 1;
         const distA = Math.min(a.aula - 1, maxAula - a.aula);
         const distB = Math.min(b.aula - 1, maxAula - b.aula);
         if (distA !== distB) return distA - distB;
