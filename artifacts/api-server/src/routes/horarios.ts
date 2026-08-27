@@ -1254,6 +1254,19 @@ async function runCpsatGeneration(
   for (const v of maxAulaPorNivelEnsino.values()) if (v > maxAulaGlobalFallback) maxAulaGlobalFallback = v;
   const semProfessorResolvido: Array<{ turma: string; disciplina: string }> = [];
 
+  // [DUPLA-DOCENCIA] Algumas combinacoes turma+disciplina tem DUAS linhas
+  // na matriz curricular (2 professores dando aula juntos, ao mesmo tempo,
+  // pra mesma turma -- confirmado na grade real do Urania, ex.: Rec.
+  // Aprend. L. Port e Rec. Aprend. Matematica do 6o/9o ano). Cada uma
+  // dessas linhas vira um "grupoDupla" com o mesmo id -- o solver usa isso
+  // pra forcar as duas a caírem sempre no mesmo horario, em vez de tratar
+  // como duas exigencias independentes (que ficariam em horarios diferentes).
+  const contagemPorTurmaDisc = new Map<string, number>();
+  for (const td of turmaDiscsTodos) {
+    const chave = `${td.turmaId}::${td.disciplinaId}`;
+    contagemPorTurmaDisc.set(chave, (contagemPorTurmaDisc.get(chave) ?? 0) + 1);
+  }
+
   const disciplinasTurma = turmaDiscsTodos
     .map((td) => {
       const turma = turmaMap.get(td.turmaId)!;
@@ -1264,15 +1277,21 @@ async function runCpsatGeneration(
         return null;
       }
       const codigoSae = disc?.codigoSae ?? disc?.sigla ?? String(td.disciplinaId);
-      chaveParaIds.set(`${turma.nome}||${codigoSae}`, { turmaId: td.turmaId, disciplinaId: td.disciplinaId });
+      const chaveTurmaDisc = `${td.turmaId}::${td.disciplinaId}`;
+      const ehDupla = (contagemPorTurmaDisc.get(chaveTurmaDisc) ?? 1) > 1;
+      // codigoSae de chaveParaIds precisa ser unico por linha quando ha dupla,
+      // senao a segunda linha sobrescreve a primeira no Map
+      const codigoSaeChave = ehDupla ? `${codigoSae}#${td.id}` : codigoSae;
+      chaveParaIds.set(`${turma.nome}||${codigoSaeChave}`, { turmaId: td.turmaId, disciplinaId: td.disciplinaId });
       return {
         turma: turma.nome,
-        codigoSae,
+        codigoSae: codigoSaeChave,
         nome: disc?.nome ?? `Disciplina #${td.disciplinaId}`,
         aulasSemana: td.cargaHorariaSemanalOverride ?? itensMatrizMap.get(`${turma.matrizCurricularId}-${td.disciplinaId}`)?.cargaHorariaSemanal ?? disc?.cargaSemanal ?? 0,
         professor: prof.nome,
         maxAulasDia: td.maxAulasConsecutivasDia ?? maxGeminadasPadraoCpsat,
         ultimaAulaTurma: maxAulaPorNivelEnsino.get(turma.nivelEnsino ?? "__sem_nivel__") ?? maxAulaGlobalFallback,
+        grupoDupla: ehDupla ? chaveTurmaDisc : null,
       };
     })
     .filter((d): d is NonNullable<typeof d> => d !== null)

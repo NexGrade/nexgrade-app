@@ -29,6 +29,11 @@ class DisciplinaTurma:
     # Medio/Tecnico=6 aulas/dia no mesmo matutino). None = usa
     # aulas_por_dia do turno inteiro (comportamento antigo).
     ultima_aula_turma: int | None = None
+    # [DUPLA-DOCENCIA] Quando preenchido, todas as linhas com o mesmo
+    # grupo_dupla precisam SEMPRE cair no mesmo (dia, aula) -- sao dois
+    # (ou mais) professores dando aula juntos, ao mesmo tempo, pra mesma
+    # turma (ex.: Rec. Aprend. L. Port com 2 professores simultaneos).
+    grupo_dupla: str | None = None
 
 
 def resolver(
@@ -53,6 +58,21 @@ def resolver(
             if key in aula_var:
                 model.AddHint(aula_var[key], valor)
 
+    # RESTRIÇÃO 0 — dupla docência: linhas do mesmo grupo_dupla (2+
+    # professores dando aula junto, mesma turma, mesma disciplina)
+    # precisam SEMPRE cair no mesmo (dia, aula). Forçamos igualdade
+    # entre as variáveis de cada linha do grupo.
+    grupos_dupla: dict[str, list[int]] = {}
+    for i, dt in enumerate(disciplinas_turma):
+        if dt.grupo_dupla is not None:
+            grupos_dupla.setdefault(dt.grupo_dupla, []).append(i)
+    for grupo, indices in grupos_dupla.items():
+        base = indices[0]
+        for outro in indices[1:]:
+            for dia in range(len(DIAS)):
+                for aula in range(1, aulas_por_dia + 1):
+                    model.Add(aula_var[(base, dia, aula)] == aula_var[(outro, dia, aula)])
+
     # RESTRIÇÃO 1 — carga horária semanal exata
     for dt_idx, dt in enumerate(disciplinas_turma):
         model.Add(
@@ -61,8 +81,21 @@ def resolver(
         )
 
     # RESTRIÇÃO 2 — turma sem 2 aulas no mesmo horário
+    # [DUPLA-DOCENCIA] quando ha grupo_dupla, so o primeiro indice do
+    # grupo entra nessa lista -- os outros sao forcados a ter o MESMO
+    # valor pela RESTRICAO 0, entao contar os dois aqui violaria
+    # AddAtMostOne mesmo quando so "uma aula" esta de fato acontecendo.
     for turma in sorted(turmas_nomes):
-        indices_turma = [i for i, dt in enumerate(disciplinas_turma) if dt.turma == turma]
+        vistos_dupla = set()
+        indices_turma = []
+        for i, dt in enumerate(disciplinas_turma):
+            if dt.turma != turma:
+                continue
+            if dt.grupo_dupla is not None:
+                if dt.grupo_dupla in vistos_dupla:
+                    continue
+                vistos_dupla.add(dt.grupo_dupla)
+            indices_turma.append(i)
         for dia in range(len(DIAS)):
             for aula in range(1, aulas_por_dia + 1):
                 model.AddAtMostOne(aula_var[(i, dia, aula)] for i in indices_turma)
@@ -159,7 +192,20 @@ def resolver(
     # primeiro. Peso configuravel deixa a escola decidir a prioridade.
     penalidades_turma = []
     for turma in sorted(turmas_nomes):
-        indices_turma = [i for i, dt in enumerate(disciplinas_turma) if dt.turma == turma]
+        # [DUPLA-DOCENCIA] mesma deduplicacao da RESTRICAO 2 -- somar as
+        # duas linhas da dupla aqui faria "ocupado" precisar valer 2
+        # (violando o proprio tipo BoolVar) no horario em que a dupla
+        # está ativa.
+        vistos_dupla_obj = set()
+        indices_turma = []
+        for i, dt in enumerate(disciplinas_turma):
+            if dt.turma != turma:
+                continue
+            if dt.grupo_dupla is not None:
+                if dt.grupo_dupla in vistos_dupla_obj:
+                    continue
+                vistos_dupla_obj.add(dt.grupo_dupla)
+            indices_turma.append(i)
         if not indices_turma:
             continue
         for dia in range(len(DIAS)):
@@ -292,6 +338,7 @@ def gerar_grade(
             professor=d["professor"],
             max_aulas_dia=d["maxAulasDia"],
             ultima_aula_turma=d.get("ultimaAulaTurma"),
+            grupo_dupla=d.get("grupoDupla"),
         )
         for d in disciplinas_turma_raw
     ]
