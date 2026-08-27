@@ -230,6 +230,10 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
 
   const turmasComSlot = new Set(slots.map(s => s.turmaId));
   turmas.forEach(t => {
+    // Turmas "fantasma" (ex.: PAEE) existem só pra satisfazer vínculos de
+    // disciplina sem turma real — elas nunca vão ter horário gerado de
+    // propósito, então não é conflito real, é o comportamento esperado.
+    if (t.fantasma) return;
     if (!turmasComSlot.has(t.id)) {
       conflitos.push({
         tipo: "turma_sem_horario",
