@@ -1,10 +1,10 @@
-import { useGetTurma, useGetTurmaHorario, useGerarHorario, getGetTurmaHorarioQueryKey, useListCursos, useListMatrizesCurriculares, getListMatrizesCurricularesQueryKey, useAplicarMatrizTurma, getGetTurmaQueryKey } from "@workspace/api-client-react";
+import { useGetTurma, useGetTurmaHorario, useGerarHorario, getGetTurmaHorarioQueryKey, useListCursos, useListMatrizesCurriculares, getListMatrizesCurricularesQueryKey, useAplicarMatrizTurma, getGetTurmaQueryKey, useListProfessores, customFetch } from "@workspace/api-client-react";
 import { useParams } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, AlertTriangle, BookOpen, Settings2 } from "lucide-react";
+import { Sparkles, AlertTriangle, BookOpen, Settings2, Users, X, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -201,6 +201,7 @@ export default function TurmaHorario() {
       )}
 
       <MatrizCurricularCard turmaId={turmaId} matrizCurricularIdAtual={turma?.matrizCurricularId ?? null} />
+      <ProfessoresPorDisciplinaCard turmaId={turmaId} />
 
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
@@ -365,6 +366,191 @@ function MatrizCurricularCard({
             Matriz curricular #{matrizCurricularIdAtual} aplicada
           </Badge>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// [DUPLA-DOCENCIA] Lista cada disciplina da turma com seu(s)
+// professor(es) -- normalmente 1, mas pode ter 2 quando é dupla
+// docência (dois professores dando aula junto, mesmo horário; ver
+// RESTRIÇÃO 0 do solver CP-SAT). Permite trocar o professor de cada
+// linha, adicionar um segundo professor (criar a dupla) ou remover um
+// dos dois (desfazer a dupla).
+//
+// Usa customFetch direto (em vez de hooks gerados pelo Orval) porque
+// as rotas /disciplinas/linha/:id e /disciplinas/:id/dupla são novas
+// -- o cliente gerado ainda não as conhece até o Orval rodar de novo.
+function ProfessoresPorDisciplinaCard({ turmaId }: { turmaId: number }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { data: turma, isLoading } = useGetTurma(turmaId, { query: { enabled: !!turmaId, queryKey: ["turma", turmaId] as const } });
+  const { data: professores } = useListProfessores();
+  const [salvandoLinhaId, setSalvandoLinhaId] = useState<number | null>(null);
+  const [adicionandoDuplaDisciplinaId, setAdicionandoDuplaDisciplinaId] = useState<number | null>(null);
+  const [professorNovaDupla, setProfessorNovaDupla] = useState<string>("");
+
+  // tipagem solta pra esses campos novos até o cliente gerado (Orval)
+  // ser atualizado com o novo formato de disciplinasComCarga
+  const disciplinas = ((turma as any)?.disciplinasComCarga ?? []) as Array<{
+    turmaDisciplinaId: number;
+    disciplinaId: number;
+    nome: string;
+    cargaHorariaSemanal: number;
+    professorId: number | null;
+    professorNome: string | null;
+  }>;
+
+  function invalidar() {
+    queryClient.invalidateQueries({ queryKey: ["turma", turmaId] as const });
+    queryClient.invalidateQueries({ queryKey: getGetTurmaQueryKey(turmaId) });
+  }
+
+  async function trocarProfessor(linhaId: number, professorId: number | null) {
+    setSalvandoLinhaId(linhaId);
+    try {
+      const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+      await customFetch(`${basePath}/api/turmas/${turmaId}/disciplinas/linha/${linhaId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ professorId }),
+        responseType: "json",
+      });
+      invalidar();
+    } catch (err) {
+      toast({ title: "Não foi possível trocar o professor", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+    } finally {
+      setSalvandoLinhaId(null);
+    }
+  }
+
+  async function removerLinha(linhaId: number) {
+    setSalvandoLinhaId(linhaId);
+    try {
+      const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+      await customFetch(`${basePath}/api/turmas/${turmaId}/disciplinas/linha/${linhaId}`, {
+        method: "DELETE",
+        responseType: "json",
+      });
+      toast({ title: "Professor removido dessa disciplina" });
+      invalidar();
+    } catch (err) {
+      toast({ title: "Não foi possível remover", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+    } finally {
+      setSalvandoLinhaId(null);
+    }
+  }
+
+  async function confirmarAdicionarDupla(disciplinaId: number) {
+    if (!professorNovaDupla) return;
+    setSalvandoLinhaId(-1);
+    try {
+      const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+      await customFetch(`${basePath}/api/turmas/${turmaId}/disciplinas/${disciplinaId}/dupla`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ professorId: Number(professorNovaDupla) }),
+        responseType: "json",
+      });
+      toast({ title: "Segundo professor adicionado", description: "Os dois serão escalados sempre no mesmo horário ao gerar a grade." });
+      setAdicionandoDuplaDisciplinaId(null);
+      setProfessorNovaDupla("");
+      invalidar();
+    } catch (err) {
+      toast({ title: "Não foi possível adicionar o segundo professor", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+    } finally {
+      setSalvandoLinhaId(null);
+    }
+  }
+
+  // agrupa as linhas por disciplina (1 ou 2 linhas por disciplina)
+  const porDisciplina = new Map<number, typeof disciplinas>();
+  for (const d of disciplinas) {
+    const lista = porDisciplina.get(d.disciplinaId) ?? [];
+    lista.push(d);
+    porDisciplina.set(d.disciplinaId, lista);
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Users className="h-4 w-4" />
+          Professores por Disciplina
+        </CardTitle>
+        <CardDescription>
+          Defina quem dá cada disciplina desta turma. Pra dupla docência (dois professores juntos, mesmo horário), adicione um segundo professor na mesma disciplina.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {isLoading && <Skeleton className="h-24 w-full" />}
+        {!isLoading && disciplinas.length === 0 && (
+          <p className="text-sm text-muted-foreground">Nenhuma disciplina vinculada ainda. Aplique uma matriz curricular acima primeiro.</p>
+        )}
+        {[...porDisciplina.entries()].map(([disciplinaId, linhas]) => (
+          <div key={disciplinaId} className="border rounded-lg p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-medium text-sm">{linhas[0].nome}</span>
+              <span className="text-xs text-muted-foreground">{linhas[0].cargaHorariaSemanal}h/semana</span>
+            </div>
+            {linhas.map((linha) => (
+              <div key={linha.turmaDisciplinaId} className="flex items-center gap-2">
+                <Select
+                  value={linha.professorId != null ? String(linha.professorId) : undefined}
+                  onValueChange={(v) => trocarProfessor(linha.turmaDisciplinaId, Number(v))}
+                  disabled={salvandoLinhaId === linha.turmaDisciplinaId}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Selecione o professor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {professores?.map((p) => (
+                      <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {linhas.length > 1 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removerLinha(linha.turmaDisciplinaId)}
+                    disabled={salvandoLinhaId === linha.turmaDisciplinaId}
+                    title="Remover este professor da disciplina"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
+
+            {linhas.length === 1 && adicionandoDuplaDisciplinaId !== disciplinaId && (
+              <Button variant="outline" size="sm" onClick={() => setAdicionandoDuplaDisciplinaId(disciplinaId)}>
+                <Plus className="h-3.5 w-3.5 mr-1" />
+                Adicionar professor (dupla docência)
+              </Button>
+            )}
+            {adicionandoDuplaDisciplinaId === disciplinaId && (
+              <div className="flex items-center gap-2">
+                <Select value={professorNovaDupla} onValueChange={setProfessorNovaDupla}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Segundo professor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {professores?.filter((p) => p.id !== linhas[0].professorId).map((p) => (
+                      <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button size="sm" onClick={() => confirmarAdicionarDupla(disciplinaId)} disabled={!professorNovaDupla || salvandoLinhaId === -1}>
+                  Confirmar
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => { setAdicionandoDuplaDisciplinaId(null); setProfessorNovaDupla(""); }}>
+                  Cancelar
+                </Button>
+              </div>
+            )}
+          </div>
+        ))}
       </CardContent>
     </Card>
   );

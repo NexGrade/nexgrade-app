@@ -65,21 +65,36 @@ async function getTurmaWithDisciplinas(id: number, escolaId: string) {
     .from(turmaDisciplinasTable)
     .where(eq(turmaDisciplinasTable.turmaId, id));
   const disciplinasAll = await db.select().from(disciplinasTable);
+  const professoresIds = [...new Set(links.map((l) => l.professorId).filter((pid): pid is number => pid != null))];
+  const professoresAll = professoresIds.length
+    ? await db.select().from(professoresTable).where(inArray(professoresTable.id, professoresIds))
+    : [];
   return {
     ...turma,
     disciplinaIds: links.map((l) => l.disciplinaId),
     // RF-TUR-02: carga efetiva = override da matriz aplicada, com
     // fallback para a carga global da disciplina quando não houver
     // matriz aplicada a este vínculo específico.
+    //
+    // [DUPLA-DOCENCIA] Cada linha de turma_disciplinas é retornada
+    // individualmente (não agrupada por disciplinaId) -- quando duas
+    // linhas compartilham o mesmo disciplinaId, são dois professores
+    // dando aula junto (dupla docência). O front agrupa por
+    // disciplinaId pra exibir, mas cada linha tem seu próprio `id`
+    // (turmaDisciplinaId) pra edição/remoção individual.
     disciplinasComCarga: links.map((l) => {
       const disc = disciplinasAll.find((d) => d.id === l.disciplinaId);
+      const prof = l.professorId != null ? professoresAll.find((p) => p.id === l.professorId) : null;
       return {
+        turmaDisciplinaId: l.id,
         disciplinaId: l.disciplinaId,
         nome: disc?.nome ?? "",
         cargaHorariaSemanal: l.cargaHorariaSemanalOverride ?? disc?.cargaSemanal ?? 0,
         origemMatriz: l.cargaHorariaSemanalOverride !== null,
         maxAulasConsecutivasDia: l.maxAulasConsecutivasDia,
         grupoCompartilhadoId: l.grupoCompartilhadoId,
+        professorId: l.professorId,
+        professorNome: prof?.nome ?? null,
       };
     }),
   };
@@ -305,6 +320,168 @@ router.post("/:id/aplicar-matriz", async (req, res) => {
   await registrarAuditoria({
     req, escolaId, entidade: "turmas", entidadeId: turmaId,
     acao: "alteracao", dadosAnteriores: { ...turma, matrizAnterior: turma.matrizCurricularId }, dadosNovos: result,
+  });
+  res.json(result);
+});
+
+// [DUPLA-DOCENCIA] Define o professor de UMA linha específica de
+// turma_disciplinas (identificada pelo id da própria linha, não pelo
+// disciplinaId -- necessário pra editar cada lado de uma dupla
+// individualmente sem afetar o outro).
+const DefinirProfessorLinhaInput = z.object({
+  professorId: z.number().int().nullable(),
+});
+
+router.patch("/:turmaId/disciplinas/linha/:linhaId", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const turmaId = Number(req.params.turmaId);
+  const linhaId = Number(req.params.linhaId);
+  if (!Number.isInteger(turmaId) || !Number.isInteger(linhaId)) {
+    res.status(400).json({ error: "ID inválido" });
+    return;
+  }
+  const parsed = DefinirProfessorLinhaInput.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const turma = await db.select().from(turmasTable)
+    .where(and(eq(turmasTable.id, turmaId), eq(turmasTable.escolaId, escolaId)))
+    .then((r) => r[0]);
+  if (!turma) {
+    res.status(404).json({ error: "Turma não encontrada" });
+    return;
+  }
+  const linha = await db.select().from(turmaDisciplinasTable)
+    .where(and(eq(turmaDisciplinasTable.id, linhaId), eq(turmaDisciplinasTable.turmaId, turmaId)))
+    .then((r) => r[0]);
+  if (!linha) {
+    res.status(404).json({ error: "Vínculo turma+disciplina não encontrado" });
+    return;
+  }
+  if (parsed.data.professorId != null) {
+    const prof = await db.select().from(professoresTable)
+      .where(and(eq(professoresTable.id, parsed.data.professorId), eq(professoresTable.escolaId, escolaId)))
+      .then((r) => r[0]);
+    if (!prof) {
+      res.status(404).json({ error: "Professor não encontrado" });
+      return;
+    }
+  }
+  await db.update(turmaDisciplinasTable)
+    .set({ professorId: parsed.data.professorId })
+    .where(eq(turmaDisciplinasTable.id, linhaId));
+  const result = await getTurmaWithDisciplinas(turmaId, escolaId);
+  await registrarAuditoria({
+    req, escolaId, entidade: "turma_disciplinas", entidadeId: linhaId,
+    acao: "alteracao", dadosAnteriores: linha, dadosNovos: { ...linha, professorId: parsed.data.professorId },
+  });
+  res.json(result);
+});
+
+// [DUPLA-DOCENCIA] Adiciona um SEGUNDO professor pra mesma disciplina
+// da turma -- cria uma nova linha em turma_disciplinas com o mesmo
+// disciplinaId, copiando carga horária e max de aulas geminadas da
+// linha existente, pra que os dois professores sejam escalados sempre
+// no mesmo horário (ver RESTRIÇÃO 0 do solver CP-SAT).
+const AdicionarProfessorDuplaInput = z.object({
+  professorId: z.number().int(),
+});
+
+router.post("/:turmaId/disciplinas/:disciplinaId/dupla", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const turmaId = Number(req.params.turmaId);
+  const disciplinaId = Number(req.params.disciplinaId);
+  if (!Number.isInteger(turmaId) || !Number.isInteger(disciplinaId)) {
+    res.status(400).json({ error: "ID inválido" });
+    return;
+  }
+  const parsed = AdicionarProfessorDuplaInput.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const turma = await db.select().from(turmasTable)
+    .where(and(eq(turmasTable.id, turmaId), eq(turmasTable.escolaId, escolaId)))
+    .then((r) => r[0]);
+  if (!turma) {
+    res.status(404).json({ error: "Turma não encontrada" });
+    return;
+  }
+  const linhaExistente = await db.select().from(turmaDisciplinasTable)
+    .where(and(eq(turmaDisciplinasTable.turmaId, turmaId), eq(turmaDisciplinasTable.disciplinaId, disciplinaId)))
+    .then((r) => r[0]);
+  if (!linhaExistente) {
+    res.status(404).json({ error: "Esta turma ainda não tem essa disciplina vinculada -- adicione a disciplina primeiro" });
+    return;
+  }
+  const jaTemEsseProfessor = await db.select().from(turmaDisciplinasTable)
+    .where(and(
+      eq(turmaDisciplinasTable.turmaId, turmaId),
+      eq(turmaDisciplinasTable.disciplinaId, disciplinaId),
+      eq(turmaDisciplinasTable.professorId, parsed.data.professorId),
+    )).then((r) => r[0]);
+  if (jaTemEsseProfessor) {
+    res.status(409).json({ error: "Este professor já está vinculado a essa disciplina nessa turma" });
+    return;
+  }
+  const prof = await db.select().from(professoresTable)
+    .where(and(eq(professoresTable.id, parsed.data.professorId), eq(professoresTable.escolaId, escolaId)))
+    .then((r) => r[0]);
+  if (!prof) {
+    res.status(404).json({ error: "Professor não encontrado" });
+    return;
+  }
+  const [novaLinha] = await db.insert(turmaDisciplinasTable).values({
+    turmaId,
+    disciplinaId,
+    professorId: parsed.data.professorId,
+    cargaHorariaSemanalOverride: linhaExistente.cargaHorariaSemanalOverride,
+    maxAulasConsecutivasDia: linhaExistente.maxAulasConsecutivasDia,
+  }).returning();
+  const result = await getTurmaWithDisciplinas(turmaId, escolaId);
+  await registrarAuditoria({
+    req, escolaId, entidade: "turma_disciplinas", entidadeId: novaLinha.id,
+    acao: "criacao", dadosAnteriores: null, dadosNovos: novaLinha,
+  });
+  res.status(201).json(result);
+});
+
+// [DUPLA-DOCENCIA] Remove uma linha específica (usado pra desfazer uma
+// dupla, tirando um dos dois professores -- a outra linha continua).
+router.delete("/:turmaId/disciplinas/linha/:linhaId", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const turmaId = Number(req.params.turmaId);
+  const linhaId = Number(req.params.linhaId);
+  if (!Number.isInteger(turmaId) || !Number.isInteger(linhaId)) {
+    res.status(400).json({ error: "ID inválido" });
+    return;
+  }
+  const turma = await db.select().from(turmasTable)
+    .where(and(eq(turmasTable.id, turmaId), eq(turmasTable.escolaId, escolaId)))
+    .then((r) => r[0]);
+  if (!turma) {
+    res.status(404).json({ error: "Turma não encontrada" });
+    return;
+  }
+  const linha = await db.select().from(turmaDisciplinasTable)
+    .where(and(eq(turmaDisciplinasTable.id, linhaId), eq(turmaDisciplinasTable.turmaId, turmaId)))
+    .then((r) => r[0]);
+  if (!linha) {
+    res.status(404).json({ error: "Vínculo turma+disciplina não encontrado" });
+    return;
+  }
+  const outrasLinhasMesmaDisciplina = await db.select().from(turmaDisciplinasTable)
+    .where(and(eq(turmaDisciplinasTable.turmaId, turmaId), eq(turmaDisciplinasTable.disciplinaId, linha.disciplinaId)));
+  if (outrasLinhasMesmaDisciplina.length <= 1) {
+    res.status(400).json({ error: "Essa é a única linha dessa disciplina -- pra remover a disciplina inteira, use PATCH /turmas/:id com disciplinaIds" });
+    return;
+  }
+  await db.delete(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.id, linhaId));
+  const result = await getTurmaWithDisciplinas(turmaId, escolaId);
+  await registrarAuditoria({
+    req, escolaId, entidade: "turma_disciplinas", entidadeId: linhaId,
+    acao: "exclusao", dadosAnteriores: linha, dadosNovos: null,
   });
   res.json(result);
 });
