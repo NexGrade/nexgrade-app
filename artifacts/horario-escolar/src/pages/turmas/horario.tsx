@@ -25,9 +25,25 @@ const turnosMap: Record<string, string> = { matutino: "Matutino", vespertino: "V
 
 // Mostra só o primeiro nome do professor nas células compactas da
 // grade (mesma convenção do Urania) -- o nome completo continua nos
-// selects/dropdowns, só aqui no grid é abreviado.
-function abreviarNomeProfessor(nomeCompleto: string): string {
-  return nomeCompleto.trim().split(/\s+/)[0] ?? nomeCompleto;
+// selects/dropdowns, só aqui no grid é abreviado. Quando existe MAIS
+// de um professor com o mesmo primeiro nome (ex.: "Eliane" e "Eliane
+// Rocha"), desambigua acrescentando a inicial do segundo nome (ex.:
+// "Eliane" continua "Eliane", mas "Eliane Rocha" vira "Eliane R.").
+function abreviarNomeProfessor(nomeCompleto: string, todosProfessores?: Array<{ nome: string }>): string {
+  const partes = nomeCompleto.trim().split(/\s+/);
+  const primeiroNome = partes[0] ?? nomeCompleto;
+  if (!todosProfessores || partes.length < 2) return primeiroNome;
+
+  const normaliza = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const temColisao = todosProfessores.some((p) => {
+    if (p.nome === nomeCompleto) return false;
+    const primeiroOutro = p.nome.trim().split(/\s+/)[0] ?? p.nome;
+    return normaliza(primeiroOutro) === normaliza(primeiroNome);
+  });
+
+  if (!temColisao) return primeiroNome;
+  const inicialSegundoNome = partes[1]?.[0] ?? "";
+  return inicialSegundoNome ? `${primeiroNome} ${inicialSegundoNome}.` : primeiroNome;
 }
 
 export default function TurmaHorario() {
@@ -38,6 +54,7 @@ export default function TurmaHorario() {
 
   const { data: turma, isLoading: isLoadingTurma } = useGetTurma(turmaId, { query: { enabled: !!turmaId, queryKey: ["turma", turmaId] as const } });
   const { data: horarioSlots, isLoading: isLoadingHorario } = useGetTurmaHorario(turmaId, { query: { enabled: !!turmaId, queryKey: getGetTurmaHorarioQueryKey(turmaId) } });
+  const { data: todosProfessores } = useListProfessores();
 
   const [openOpcoes, setOpenOpcoes] = useState(false);
   const [gerandoCpsat, setGerandoCpsat] = useState(false);
@@ -172,7 +189,7 @@ export default function TurmaHorario() {
                   {Array.from({ length: 5 }).map((_, colIndex) => {
                     const slotsAqui = getSlots(colIndex, aulaNum);
                     const slot = slotsAqui[0];
-                    const nomesProfessores = slotsAqui.map(s => abreviarNomeProfessor(s.professor?.nome || "Sem professor")).join(" + ");
+                    const nomesProfessores = slotsAqui.map(s => abreviarNomeProfessor(s.professor?.nome || "Sem professor", todosProfessores)).join(" + ");
 
                     if (!slot) {
                       return (

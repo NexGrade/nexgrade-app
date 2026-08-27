@@ -169,9 +169,22 @@ function paraMinutos(hora: string): number {
 // como identificação nas células). O cadastro completo (nome inteiro)
 // continua intacto em todo o resto do sistema -- isso é só visual,
 // pra caber no espaço apertado da célula da grade.
-function abreviarNomeProfessor(nomeCompleto: string | undefined): string {
+function abreviarNomeProfessor(nomeCompleto: string | undefined, todosProfessores?: Array<{ nome: string }>): string {
   if (!nomeCompleto) return "";
-  return nomeCompleto.trim().split(" ")[0];
+  const partes = nomeCompleto.trim().split(" ");
+  const primeiroNome = partes[0];
+  if (!todosProfessores || partes.length < 2) return primeiroNome;
+
+  const normaliza = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const temColisao = todosProfessores.some((p) => {
+    if (p.nome === nomeCompleto) return false;
+    const primeiroOutro = p.nome.trim().split(" ")[0] ?? p.nome;
+    return normaliza(primeiroOutro) === normaliza(primeiroNome);
+  });
+
+  if (!temColisao) return primeiroNome;
+  const inicialSegundoNome = partes[1]?.[0] ?? "";
+  return inicialSegundoNome ? `${primeiroNome} ${inicialSegundoNome}.` : primeiroNome;
 }
 
 function AbaEsquema() {
@@ -1283,7 +1296,11 @@ function AbaGrade() {
                               {aulaNum === 0 ? "18:00" : `${aulaNum}ª`}
                             </div>
                             {Array.from({ length: 5 }).map((_, colIndex) => {
-                              const slot = slotsDaTurma.find((s) => s.diaSemana === colIndex && s.numeroAula === aulaNum);
+                              // [FIX-DUPLA-DOCENCIA] mesmo fix do Modo Experimental: pega
+                              // TODOS os slots do dia+aula (nao so o primeiro com .find()),
+                              // pra dupla docencia mostrar os dois professores juntos.
+                              const slotsAqui = slotsDaTurma.filter((s) => s.diaSemana === colIndex && s.numeroAula === aulaNum);
+                              const slot = slotsAqui[0];
                               if (!slot) {
                                 return (
                                   <div key={`${aulaNum}-${colIndex}`} className="p-1 border-r border-border last:border-0 min-h-[46px] flex items-center justify-center">
@@ -1291,6 +1308,7 @@ function AbaGrade() {
                                   </div>
                                 );
                               }
+                              const nomesProfessores = slotsAqui.map((s) => abreviarNomeProfessor(s.professor?.nome, professores)).join(" + ");
                               return (
                                 <div key={slot.id} className="p-1 border-r border-border last:border-0">
                                   <div
@@ -1298,7 +1316,7 @@ function AbaGrade() {
                                     style={{ backgroundColor: `${slot.disciplina?.cor}15`, borderLeftColor: slot.disciplina?.cor || "var(--primary)" }}
                                   >
                                     <div className="font-semibold truncate">{slot.disciplina?.nome}</div>
-                                    <div className="text-muted-foreground truncate">{abreviarNomeProfessor(slot.professor?.nome)}</div>
+                                    <div className="text-muted-foreground truncate">{nomesProfessores}</div>
                                   </div>
                                 </div>
                               );
@@ -1337,7 +1355,11 @@ function AbaGrade() {
                     </div>
                     {Array.from({ length: 5 }).map((_, colIndex) => {
                       const slotId = isTurmaSelected ? Number(turmaId) : undefined;
-                      const slot = getSlot(colIndex, aulaNum, slotId);
+                      // [FIX-DUPLA-DOCENCIA] getSlot() só achava o primeiro professor do
+                      // slot -- troca pra getSlots() (plural, já existia pro clique de
+                      // edição) pra também mostrar os dois professores juntos na exibição.
+                      const slotsAqui = getSlots(colIndex, aulaNum, slotId);
+                      const slot = slotsAqui[0];
                       if (!slot) {
                         const temHA = isProfessorSelected && getHA(colIndex, aulaNum);
                         return (
@@ -1364,6 +1386,7 @@ function AbaGrade() {
                       // turma selecionada) -- cada slot já carrega o
                       // próprio turmaId, então funciona também na
                       // visão "por professor".
+                      const nomesProfessoresCelula = slotsAqui.map((s) => abreviarNomeProfessor(s.professor?.nome, professores)).join(" + ");
                       return (
                         <div
                           key={slot.id}
@@ -1389,7 +1412,7 @@ function AbaGrade() {
                               {isProfessorSelected ? (
                                 <span className="font-medium truncate text-foreground/80">Turma: {slot.turma?.nome}</span>
                               ) : (
-                                <span className="font-medium truncate text-foreground/80">{abreviarNomeProfessor(slot.professor?.nome)}</span>
+                                <span className="font-medium truncate text-foreground/80">{nomesProfessoresCelula}</span>
                               )}
                             </div>
                           </div>
@@ -2243,7 +2266,13 @@ function AbaExperimental() {
                                   {aulaNum}ª
                                 </div>
                                 {Array.from({ length: 5 }).map((_, colIndex) => {
-                                  const slot = slotsGrade.find((s) => s.diaSemana === colIndex && s.numeroAula === aulaNum);
+                                  // [FIX-DUPLA-DOCENCIA] Antes usava .find() (só o primeiro
+                                  // professor do slot) -- em dupla docência (duas linhas
+                                  // mesmo dia+aula, professores diferentes), isso escondia o
+                                  // segundo professor. Agora pega TODOS e junta com " + ",
+                                  // mesmo padrão já usado na grade oficial (turmas/horario.tsx).
+                                  const slotsAqui = slotsGrade.filter((s) => s.diaSemana === colIndex && s.numeroAula === aulaNum);
+                                  const slot = slotsAqui[0];
                                   if (!slot) {
                                     return (
                                       <div key={`${aulaNum}-${colIndex}`} className="p-1.5 border-r border-purple-100 last:border-0 min-h-[54px] flex items-center justify-center">
@@ -2252,7 +2281,9 @@ function AbaExperimental() {
                                     );
                                   }
                                   const disc = disciplinas.find((d) => d.id === slot.disciplinaId);
-                                  const prof = professores.find((p) => p.id === slot.professorId);
+                                  const nomesProfessores = slotsAqui
+                                    .map((s) => abreviarNomeProfessor(professores.find((p) => p.id === s.professorId)?.nome, professores))
+                                    .join(" + ");
                                   return (
                                     <div key={slot.id} className="p-1 border-r border-purple-100 last:border-0">
                                       <div
@@ -2260,7 +2291,7 @@ function AbaExperimental() {
                                         style={{ backgroundColor: `${disc?.cor ?? "#8E24AA"}15`, borderLeftColor: disc?.cor ?? "#8E24AA" }}
                                       >
                                         <div className="font-semibold truncate">{disc?.nome ?? "?"}</div>
-                                        <div className="text-muted-foreground truncate">{prof?.nome ?? "?"}</div>
+                                        <div className="text-muted-foreground truncate">{nomesProfessores}</div>
                                       </div>
                                     </div>
                                   );
