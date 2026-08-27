@@ -1,16 +1,14 @@
-import { useGetTurma, useGetTurmaHorario, useGerarHorario, getGetTurmaHorarioQueryKey, useListCursos, useListMatrizesCurriculares, getListMatrizesCurricularesQueryKey, useAplicarMatrizTurma, getGetTurmaQueryKey, useListProfessores, customFetch } from "@workspace/api-client-react";
+import { useGetTurma, useGetTurmaHorario, getGetTurmaHorarioQueryKey, useListCursos, useListMatrizesCurriculares, getListMatrizesCurricularesQueryKey, useAplicarMatrizTurma, getGetTurmaQueryKey, useListProfessores, customFetch } from "@workspace/api-client-react";
 import { useParams } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, AlertTriangle, BookOpen, Settings2, Users, X, Plus, ChevronDown } from "lucide-react";
+import { Sparkles, BookOpen, Settings2, Users, X, Plus, ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
@@ -25,6 +23,13 @@ import {
 const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
 const turnosMap: Record<string, string> = { matutino: "Matutino", vespertino: "Vespertino", noturno: "Noturno" };
 
+// Mostra só o primeiro nome do professor nas células compactas da
+// grade (mesma convenção do Urania) -- o nome completo continua nos
+// selects/dropdowns, só aqui no grid é abreviado.
+function abreviarNomeProfessor(nomeCompleto: string): string {
+  return nomeCompleto.trim().split(/\s+/)[0] ?? nomeCompleto;
+}
+
 export default function TurmaHorario() {
   const { id } = useParams();
   const turmaId = Number(id);
@@ -33,53 +38,42 @@ export default function TurmaHorario() {
 
   const { data: turma, isLoading: isLoadingTurma } = useGetTurma(turmaId, { query: { enabled: !!turmaId, queryKey: ["turma", turmaId] as const } });
   const { data: horarioSlots, isLoading: isLoadingHorario } = useGetTurmaHorario(turmaId, { query: { enabled: !!turmaId, queryKey: getGetTurmaHorarioQueryKey(turmaId) } });
-  const gerarHorario = useGerarHorario();
 
   const [openOpcoes, setOpenOpcoes] = useState(false);
-  // Mesmos defaults ja usados no Modo Experimental (horario/index.tsx),
-  // pra manter consistencia entre as duas telas de geracao.
-  // [ALTERADO] "aulaspordia" nao existe mais aqui -- o backend calcula
-  // isso sozinho a partir de horario_slots (turno + nivelEnsino da
-  // turma), evitando o erro de pedir 6 aulas numa turma que so tem 5
-  // (ou vice-versa).
-  const [opcoes, setOpcoes] = useState({
-    reduzirJanelas: true,
-    fatorPedagogico: false,
-    compactarCargaHoraria: false,
-  });
+  const [gerandoCpsat, setGerandoCpsat] = useState(false);
 
-  const handleGerarHorario = () => {
-    gerarHorario.mutate(
-      {
-        data: {
-          turmaId,
-          substituir: true,
-          reduzirJanelas: opcoes.reduzirJanelas,
-          fatorPedagogico: opcoes.fatorPedagogico,
-          compactarCargaHoraria: opcoes.compactarCargaHoraria,
-        },
-      },
-      {
-        onSuccess: (result) => {
-          toast({
-            title: "Horário gerado com sucesso!",
-            description: `${result.slotsGerados} aulas alocadas.`
-          });
-          if (result.conflitos && result.conflitos.length > 0) {
-            toast({
-              title: "Conflitos encontrados",
-              description: "Alguns horários não puderam ser alocados. Verifique os avisos.",
-              variant: "destructive"
-            });
-          }
-          queryClient.invalidateQueries({ queryKey: getGetTurmaHorarioQueryKey(turmaId) });
-          setOpenOpcoes(false);
-        },
-        onError: () => {
-          toast({ title: "Erro ao gerar horário", variant: "destructive" });
-        }
-      }
-    );
+  // [PRIORIDADE-CPSAT] Esse botão agora gera via CP-SAT (motor
+  // preciso) em vez da heurística rápida -- por design de segurança,
+  // o CP-SAT nunca grava direto na grade oficial, então isso sempre
+  // cria uma prévia no Modo Experimental. Precisa promover lá pra
+  // valer de verdade -- evita o incidente de sobrescrever a grade real
+  // sem querer (já aconteceu antes nessa mesma tela).
+  const handleGerarHorario = async () => {
+    setGerandoCpsat(true);
+    try {
+      const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+      const nomeExperimental = `CPSAT-${turma?.nome ?? turmaId}-${new Date().toISOString().slice(0, 16)}`;
+      const data = await customFetch<{
+        nomeExperimental: string;
+        totalTurmas?: number;
+        totalSlots?: number;
+        slotsGerados?: number;
+      }>(`${basePath}/api/horarios/gerar-cpsat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ turmaId, nomeExperimental }),
+        responseType: "json",
+      });
+      toast({
+        title: `Prévia gerada via CP-SAT: "${data.nomeExperimental}"`,
+        description: "Nada mudou na grade oficial ainda — revise em Horário → Modo Experimental e promova só se estiver bom.",
+      });
+      setOpenOpcoes(false);
+    } catch (err) {
+      toast({ title: "Não foi possível gerar via CP-SAT", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+    } finally {
+      setGerandoCpsat(false);
+    }
   };
 
   // [FIX] Retorna TODOS os horarios do slot (nao so o primeiro) -- em
@@ -127,10 +121,12 @@ export default function TurmaHorario() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Settings2 className="h-4 w-4" />
-                Opções de geração
+                Gerar via CP-SAT
               </DialogTitle>
               <DialogDescription>
-                Isso substitui o horário atual desta turma. Ajuste as preferências abaixo antes de gerar.
+                O motor CP-SAT monta uma grade otimizada (minimiza janelas de professor) pra essa turma. O resultado
+                vai pro <strong>Modo Experimental</strong> — a grade oficial só muda se você revisar e promover
+                de lá. Nada é sobrescrito agora.
               </DialogDescription>
             </DialogHeader>
 
@@ -140,66 +136,17 @@ export default function TurmaHorario() {
                 A quantidade de aulas por dia é calculada automaticamente pelo esquema de horário configurado
                 para o turno e nível de ensino desta turma.
               </div>
-
-              <div className="flex items-center justify-between py-1">
-                <div>
-                  <Label className="cursor-pointer">Reduzir janelas do professor</Label>
-                  <p className="text-xs text-muted-foreground mt-0.5">Prioriza slots adjacentes a aulas já alocadas do mesmo professor.</p>
-                </div>
-                <Switch
-                  checked={opcoes.reduzirJanelas}
-                  onCheckedChange={(v) => setOpcoes((o) => ({ ...o, reduzirJanelas: v }))}
-                />
-              </div>
-
-              <div className="flex items-center justify-between py-1">
-                <div>
-                  <Label className="cursor-pointer">Fator pedagógico</Label>
-                  <p className="text-xs text-muted-foreground mt-0.5">Distribuição equilibrada, priorizando ordem de dias mais favorável.</p>
-                </div>
-                <Switch
-                  checked={opcoes.fatorPedagogico}
-                  onCheckedChange={(v) => setOpcoes((o) => ({ ...o, fatorPedagogico: v }))}
-                />
-              </div>
-
-              <div className="flex items-center justify-between py-1">
-                <div>
-                  <Label className="cursor-pointer">Compactar carga horária</Label>
-                  <p className="text-xs text-muted-foreground mt-0.5">Concentra cada professor em menos dias distintos, em vez de espalhar pela semana.</p>
-                </div>
-                <Switch
-                  checked={opcoes.compactarCargaHoraria}
-                  onCheckedChange={(v) => setOpcoes((o) => ({ ...o, compactarCargaHoraria: v }))}
-                />
-              </div>
             </div>
 
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpenOpcoes(false)}>Cancelar</Button>
-              <Button onClick={handleGerarHorario} disabled={gerarHorario.isPending}>
-                {gerarHorario.isPending ? "Gerando..." : "Gerar Horário"}
+              <Button onClick={handleGerarHorario} disabled={gerandoCpsat}>
+                {gerandoCpsat ? "Gerando..." : "Gerar via CP-SAT"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
-
-      {gerarHorario.isSuccess && gerarHorario.data?.conflitos && gerarHorario.data.conflitos.length > 0 && (
-        <Card className="border-destructive/50 bg-destructive/5">
-          <CardHeader className="py-3 px-4">
-            <CardTitle className="text-sm font-medium flex items-center gap-2 text-destructive">
-              <AlertTriangle className="h-4 w-4" />
-              Avisos da Geração de Horário
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="py-3 px-4 pt-0">
-            <ul className="list-disc pl-5 text-sm text-destructive/80 space-y-1">
-              {gerarHorario.data.conflitos.map((c, i) => <li key={i}>{c}</li>)}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
 
       <MatrizCurricularCard turmaId={turmaId} matrizCurricularIdAtual={turma?.matrizCurricularId ?? null} />
       <ProfessoresPorDisciplinaCard turmaId={turmaId} />
@@ -225,7 +172,7 @@ export default function TurmaHorario() {
                   {Array.from({ length: 5 }).map((_, colIndex) => {
                     const slotsAqui = getSlots(colIndex, aulaNum);
                     const slot = slotsAqui[0];
-                    const nomesProfessores = slotsAqui.map(s => s.professor?.nome || "Sem professor").join(" + ");
+                    const nomesProfessores = slotsAqui.map(s => abreviarNomeProfessor(s.professor?.nome || "Sem professor")).join(" + ");
 
                     if (!slot) {
                       return (

@@ -164,6 +164,16 @@ function paraMinutos(hora: string): number {
   return h * 60 + m;
 }
 
+// Exibição compacta na grade: só o primeiro nome, igual ao padrão dos
+// relatórios do Urania (que usam apenas o primeiro nome do professor
+// como identificação nas células). O cadastro completo (nome inteiro)
+// continua intacto em todo o resto do sistema -- isso é só visual,
+// pra caber no espaço apertado da célula da grade.
+function abreviarNomeProfessor(nomeCompleto: string | undefined): string {
+  if (!nomeCompleto) return "";
+  return nomeCompleto.trim().split(" ")[0];
+}
+
 function AbaEsquema() {
   const [turno, setTurno] = useState<Turno>("matutino");
   const [nivelEnsino, setNivelEnsino] = useState<"fundamental" | "medio_tecnico">("fundamental");
@@ -1288,7 +1298,7 @@ function AbaGrade() {
                                     style={{ backgroundColor: `${slot.disciplina?.cor}15`, borderLeftColor: slot.disciplina?.cor || "var(--primary)" }}
                                   >
                                     <div className="font-semibold truncate">{slot.disciplina?.nome}</div>
-                                    <div className="text-muted-foreground truncate">{slot.professor?.nome}</div>
+                                    <div className="text-muted-foreground truncate">{abreviarNomeProfessor(slot.professor?.nome)}</div>
                                   </div>
                                 </div>
                               );
@@ -1379,7 +1389,7 @@ function AbaGrade() {
                               {isProfessorSelected ? (
                                 <span className="font-medium truncate text-foreground/80">Turma: {slot.turma?.nome}</span>
                               ) : (
-                                <span className="font-medium truncate text-foreground/80">{slot.professor?.nome}</span>
+                                <span className="font-medium truncate text-foreground/80">{abreviarNomeProfessor(slot.professor?.nome)}</span>
                               )}
                             </div>
                           </div>
@@ -2050,27 +2060,27 @@ function AbaExperimental() {
         </div>
         <div className="flex flex-col gap-3 shrink-0 items-stretch w-56">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Motor heurístico (rápido)</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-blue-700 mb-1.5">Motor CP-SAT (preciso, recomendado)</p>
             <div className="flex flex-col gap-2">
-              <Button className="w-full justify-start" onClick={() => setOpenGerar(true)}>
-                <Plus className="w-4 h-4 mr-2" />Turma
+              <Button className="w-full justify-start" onClick={() => setOpenGerarCpsatTurma(true)}>
+                <Sparkles className="w-4 h-4 mr-2" />Turma
               </Button>
-              <Button variant="outline" className="w-full justify-start" onClick={() => setOpenGerarLote(true)}>
-                <RefreshCw className="w-4 h-4 mr-2" />Turno inteiro
+              <Button className="w-full justify-start" onClick={() => setOpenGerarCpsatTurnoParcial(true)}>
+                <Sparkles className="w-4 h-4 mr-2" />Turno Parcial
+              </Button>
+              <Button className="w-full justify-start" onClick={() => setOpenGerarCpsat(true)}>
+                <Sparkles className="w-4 h-4 mr-2" />Turno inteiro
               </Button>
             </div>
           </div>
           <div className="pt-2 border-t">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-blue-700 mb-1.5">Motor CP-SAT (preciso, mais lento)</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Motor heurístico (rápido, menos preciso)</p>
             <div className="flex flex-col gap-2">
-              <Button variant="outline" className="w-full justify-start border-blue-300 text-blue-700 hover:bg-blue-50" onClick={() => setOpenGerarCpsatTurma(true)}>
-                <Sparkles className="w-4 h-4 mr-2" />Turma (Beta)
+              <Button variant="outline" className="w-full justify-start" onClick={() => setOpenGerar(true)}>
+                <Plus className="w-4 h-4 mr-2" />Turma
               </Button>
-              <Button variant="outline" className="w-full justify-start border-blue-300 text-blue-700 hover:bg-blue-50" onClick={() => setOpenGerarCpsatTurnoParcial(true)}>
-                <Sparkles className="w-4 h-4 mr-2" />Turno Parcial (Beta)
-              </Button>
-              <Button variant="outline" className="w-full justify-start border-blue-300 text-blue-700 hover:bg-blue-50" onClick={() => setOpenGerarCpsat(true)}>
-                <Sparkles className="w-4 h-4 mr-2" />Turno inteiro (Beta)
+              <Button variant="outline" className="w-full justify-start" onClick={() => setOpenGerarLote(true)}>
+                <RefreshCw className="w-4 h-4 mr-2" />Turno inteiro
               </Button>
             </div>
           </div>
