@@ -27,7 +27,7 @@ import { SeletorBusca } from "@/components/seletor-busca";
 import {
   Check, ArrowRight, ArrowLeft, Lock, ChevronDown, ChevronRight, Plus,
   Calendar, ListChecks, AlertTriangle, FlaskConical,
-  CheckCircle2, RefreshCw, ChevronUp, ArrowUpCircle, Trash2, Clock, Info, X, Sparkles,
+  CheckCircle2, RefreshCw, ChevronUp, ArrowUpCircle, Trash2, Clock, Info, X, Sparkles, Download,
 } from "lucide-react";
 
 // Hub único de Horário — Esquema > Regras > Grade > Conflitos > Experimental,
@@ -2074,6 +2074,33 @@ function AbaExperimental() {
     toast({ title: `Experimento "${nome}" removido` });
   };
 
+  // [NOVO] Baixa o PDF da prévia (turma ou professor) de um
+  // experimento específico, sem precisar promover primeiro pra ver
+  // como ficou fora da tela. customFetch já anexa o token Bearer --
+  // um <a href> direto não funcionaria (a API não usa cookie de sessão).
+  const [baixandoPdf, setBaixandoPdf] = useState<string | null>(null);
+  const baixarPdfExperimento = async (nome: string, visao: "turma" | "professor") => {
+    const chave = `${nome}-${visao}`;
+    setBaixandoPdf(chave);
+    try {
+      const url = `/api/export/grade-pdf/${visao}?nomeExperimental=${encodeURIComponent(nome)}`;
+      const blob = await customFetch<Blob>(url, { responseType: "blob" });
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objUrl;
+      a.download = `previa_${nome.replace(/[^a-zA-Z0-9-_]/g, "_")}_por_${visao}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objUrl);
+      toast({ title: "Download iniciado" });
+    } catch (err) {
+      toast({ title: "Erro ao baixar PDF", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+    } finally {
+      setBaixandoPdf(null);
+    }
+  };
+
   return (
     <div className="space-y-4 pt-2">
       <div className="flex items-center justify-between">
@@ -2209,6 +2236,22 @@ function AbaExperimental() {
                       >
                         {nomeExpandido === nome ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                         {nomeExpandido === nome ? "Ocultar grade" : "Ver grade"}
+                      </Button>
+                      <Button
+                        size="sm" variant="outline" className="gap-1.5"
+                        onClick={() => baixarPdfExperimento(nome, "turma")}
+                        disabled={baixandoPdf === `${nome}-turma`}
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        {baixandoPdf === `${nome}-turma` ? "Gerando..." : "PDF por turma"}
+                      </Button>
+                      <Button
+                        size="sm" variant="outline" className="gap-1.5"
+                        onClick={() => baixarPdfExperimento(nome, "professor")}
+                        disabled={baixandoPdf === `${nome}-professor`}
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        {baixandoPdf === `${nome}-professor` ? "Gerando..." : "PDF por professor"}
                       </Button>
                       <Button size="sm" variant="outline" className="border-green-300 text-green-700 hover:bg-green-50 gap-1.5" onClick={() => handlePromover(nome)}>
                         <ArrowUpCircle className="w-3.5 h-3.5" />Promover para oficial

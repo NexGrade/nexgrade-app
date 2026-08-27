@@ -3,7 +3,7 @@ import { db } from "@workspace/db";
 import {
   horariosTable, professoresTable, disciplinasTable, turmasTable, disponibilidadeTable,
   horarioSlotsTable, turmaDisciplinasTable, trimestresLetivosTable, matrizesCurricularesTable, itensMatrizTable,
-  escolasTable,
+  escolasTable, horariosExperimentaisTable,
 } from "@workspace/db";
 import { and, eq, isNull } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
@@ -278,14 +278,32 @@ router.get("/grade-pdf/turma", async (req, res) => {
   const escolaId = getEscolaId(req);
   const turmaIdFiltro = req.query.turmaId ? Number(req.query.turmaId) : undefined;
   const turnoFiltro = req.query.turno as string | undefined;
-  const [slots, professores, disciplinas, turmasTodas] = await Promise.all([
-    db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
+  // [NOVO] ?nomeExperimental=X -- exporta a PRÉVIA de um experimento
+  // específico (horarios_experimentais) em vez da grade oficial. Útil
+  // pra revisar uma geração do CP-SAT em PDF antes de decidir promover.
+  const nomeExperimental = req.query.nomeExperimental as string | undefined;
+  const [slotsBrutos, professores, disciplinas, turmasTodas] = await Promise.all([
+    nomeExperimental
+      ? db.select().from(horariosExperimentaisTable).where(and(
+          eq(horariosExperimentaisTable.escolaId, escolaId),
+          eq(horariosExperimentaisTable.nome, nomeExperimental),
+          eq(horariosExperimentaisTable.ativo, true),
+        ))
+      : db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
     db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
     db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
   ]);
+  const slots = slotsBrutos as Array<{ turmaId: number; disciplinaId: number; professorId: number; diaSemana: number; numeroAula: number }>;
   let turmas = turmaIdFiltro ? turmasTodas.filter((t) => t.id === turmaIdFiltro) : turmasTodas;
   if (turnoFiltro) turmas = turmas.filter((t) => t.turno === turnoFiltro);
+  // no modo experimental, só mostra turmas que de fato têm alguma
+  // linha no experimento (evita paginas vazias pra turmas de fora do
+  // escopo gerado)
+  if (nomeExperimental) {
+    const turmaIdsNoExperimento = new Set(slots.map((s) => s.turmaId));
+    turmas = turmas.filter((t) => turmaIdsNoExperimento.has(t.id));
+  }
 
   const blocos: BlocoGrade[] = await Promise.all(turmas.map(async (turma) => ({
     rotulo: `Turma: ${turma.nome}`,
@@ -317,9 +335,15 @@ router.get("/grade-pdf/turma", async (req, res) => {
     })(),
   })));
 
-  const pdfBytes = await gerarPdfGradeCompacta(await buscarNomeEscola(escolaId), "Grade Horária por Turma", intervaloSemana(lerOffsetSemana(req)), blocos);
+  const titulo = nomeExperimental
+    ? `Prévia (Experimento "${nomeExperimental}") — Grade por Turma`
+    : "Grade Horária por Turma";
+  const pdfBytes = await gerarPdfGradeCompacta(await buscarNomeEscola(escolaId), titulo, intervaloSemana(lerOffsetSemana(req)), blocos);
   res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", 'attachment; filename="grade_por_turma.pdf"');
+  const nomeArquivo = nomeExperimental
+    ? `previa_${nomeExperimental.replace(/[^a-zA-Z0-9-_]/g, "_")}_por_turma.pdf`
+    : "grade_por_turma.pdf";
+  res.setHeader("Content-Disposition", `attachment; filename="${nomeArquivo}"`);
   res.send(Buffer.from(pdfBytes));
 });
 
@@ -343,17 +367,30 @@ router.get("/grade-pdf/professor", async (req, res) => {
   const escolaId = getEscolaId(req);
   const professorIdFiltro = req.query.professorId ? Number(req.query.professorId) : undefined;
   const turnoFiltroProf = req.query.turno as string | undefined;
-  const [slots, professoresTodos, disciplinas, turmas, disponibilidades] = await Promise.all([
-    db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
+  // [NOVO] ?nomeExperimental=X -- mesma logica da rota /grade-pdf/turma,
+  // ver comentario la.
+  const nomeExperimental = req.query.nomeExperimental as string | undefined;
+  const [slotsBrutos, professoresTodos, disciplinas, turmas, disponibilidades] = await Promise.all([
+    nomeExperimental
+      ? db.select().from(horariosExperimentaisTable).where(and(
+          eq(horariosExperimentaisTable.escolaId, escolaId),
+          eq(horariosExperimentaisTable.nome, nomeExperimental),
+          eq(horariosExperimentaisTable.ativo, true),
+        ))
+      : db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
     db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
     db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
     db.select().from(disponibilidadeTable),
   ]);
+  const slots = slotsBrutos as Array<{ turmaId: number; disciplinaId: number; professorId: number; diaSemana: number; numeroAula: number }>;
   // [FIX] Ordem alfabetica por nome -- padrao ja usado em todas as
   // outras listas do sistema (dropdowns, tabelas de Professores/
   // Turmas/Disciplinas/Cursos etc.), essa rota ainda nao seguia.
-  const professores = (professorIdFiltro ? professoresTodos.filter((p) => p.id === professorIdFiltro) : professoresTodos)
+  const professoresBase = nomeExperimental
+    ? professoresTodos.filter((p) => slots.some((s) => s.professorId === p.id))
+    : professoresTodos;
+  const professores = (professorIdFiltro ? professoresBase.filter((p) => p.id === professorIdFiltro) : professoresBase)
     .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
   const blocos: BlocoGrade[] = [];
@@ -380,7 +417,11 @@ router.get("/grade-pdf/professor", async (req, res) => {
       // "HA" literal, igual ao Urânia — sem linha2 pra não formatar como
       // célula combinada. Filtra pelo turno certo (disponibilidade já
       // guarda o turno direto, não precisa inferir pela turma).
-      const haDoProf: BlocoGrade["slots"] = disponibilidades
+      // [NOVO] No modo experimental (prévia não promovida), não
+      // sobrepõe HA/bloqueios oficiais -- eles refletem a disponibilidade
+      // atual, não necessariamente compatível com uma prévia que ainda
+      // nem foi aplicada.
+      const haDoProf: BlocoGrade["slots"] = nomeExperimental ? [] : disponibilidades
         .filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && d.turno === turno)
         .filter((d) => !aulasDoProf.some((a) => a.diaSemana === d.diaSemana && a.numeroAula === d.horarioSlot))
         .map((d) => ({
@@ -395,7 +436,7 @@ router.get("/grade-pdf/professor", async (req, res) => {
       // hachura pontilhada no PDF quando a celula estiver vazia (ver
       // pdf-grade.ts). So entra aqui quem NAO tem aula real e NAO e HA
       // (os dois ja tem marcacao propria e sempre vencem visualmente).
-      const bloqueadasDoProf: NonNullable<BlocoGrade["celulasBloqueadas"]> = disponibilidades
+      const bloqueadasDoProf: NonNullable<BlocoGrade["celulasBloqueadas"]> = nomeExperimental ? [] : disponibilidades
         .filter((d) => d.professorId === prof.id && !d.disponivel && !d.horaAtividadeObrigatoria && d.turno === turno)
         .filter((d) => !aulasDoProf.some((a) => a.diaSemana === d.diaSemana && a.numeroAula === d.horarioSlot))
         .map((d) => ({ diaSemana: d.diaSemana, numeroAula: d.horarioSlot }));
@@ -415,9 +456,15 @@ router.get("/grade-pdf/professor", async (req, res) => {
     }
   }
 
-  const pdfBytes = await gerarPdfGradeCompacta(await buscarNomeEscola(escolaId), "Grade Horária por Professor", intervaloSemana(lerOffsetSemana(req)), blocos);
+  const tituloProf = nomeExperimental
+    ? `Prévia (Experimento "${nomeExperimental}") — Grade por Professor`
+    : "Grade Horária por Professor";
+  const pdfBytes = await gerarPdfGradeCompacta(await buscarNomeEscola(escolaId), tituloProf, intervaloSemana(lerOffsetSemana(req)), blocos);
   res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", 'attachment; filename="grade_por_professor.pdf"');
+  const nomeArquivoProf = nomeExperimental
+    ? `previa_${nomeExperimental.replace(/[^a-zA-Z0-9-_]/g, "_")}_por_professor.pdf`
+    : "grade_por_professor.pdf";
+  res.setHeader("Content-Disposition", `attachment; filename="${nomeArquivoProf}"`);
   res.send(Buffer.from(pdfBytes));
 });
 
