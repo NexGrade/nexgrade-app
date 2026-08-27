@@ -156,7 +156,17 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
     // mesmo turno. Num turno sem aula nenhuma pra esse professor
     // (contraturno), nunca ha colisao possivel -- a marcacao e sempre
     // respeitada, mesmo sem aula ali.
+    //
+    // [FIX-REPOSICIONAMENTO] Alem de invalidar por colisao, tambem
+    // invalida (pra reposicionar depois) uma HA que NAO esta fechando
+    // janela nenhuma, SE existir uma janela de verdade sem HA nesse
+    // mesmo turno. Sem isso, uma HA que ficou "sobrando" numa posicao
+    // ruim (porque a grade mudou ao redor dela depois que ela foi
+    // colocada) nunca era corrigida -- a quantidade total already
+    // batia, entao o algoritmo antigo nao mexia nela, mesmo com uma
+    // janela vaga esperando do lado.
     const marcadasValidas: typeof haDoProf = [];
+    const candidatasAReposicionar: typeof haDoProf = [];
     for (const m of haDoProf) {
       const turno = m.turno ?? "sem_turno";
       const ocupado = ocupadoPorTurno.get(turno);
@@ -166,8 +176,51 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
       if (colide) {
         paraRemoverIds.push(m.id);
         professoresAfetadosSet.add(prof.id);
-      } else {
-        marcadasValidas.push(m);
+        continue;
+      }
+      candidatasAReposicionar.push(m);
+    }
+
+    // pra cada turno onde o professor tem HA, verifica se existe uma
+    // janela de verdade (slot vago entre duas posicoes ocupadas --
+    // aula real OU HA ja mantida) que nenhuma das HAs desse turno esta
+    // preenchendo. Se existir, e a HA em questao NAO fecha janela
+    // nenhuma, ela e candidata a mover.
+    const porTurnoHA = new Map<string, typeof haDoProf>();
+    for (const m of candidatasAReposicionar) {
+      const turno = m.turno ?? "sem_turno";
+      if (!porTurnoHA.has(turno)) porTurnoHA.set(turno, []);
+      porTurnoHA.get(turno)!.push(m);
+    }
+    for (const [turno, marcasDoTurno] of porTurnoHA) {
+      const maxAula = maxAulaPorTurno.get(turno) ?? 6;
+      const ocupadoReal = ocupadoPorTurno.get(turno) ?? new Set();
+      const todasHAsDoTurno = new Set(marcasDoTurno.map((m) => `${m.diaSemana}-${m.horarioSlot}`));
+      // ocupado total pra fins de deteccao de janela = aula real + toda HA desse turno
+      const ocupadoTotal = new Set([...ocupadoReal, ...todasHAsDoTurno]);
+
+      const existeJanelaVaga = (() => {
+        for (let dia = 0; dia < 5; dia++) {
+          for (let aula = 1; aula <= maxAula; aula++) {
+            const chave = `${dia}-${aula}`;
+            if (ocupadoTotal.has(chave)) continue;
+            if (ocupadoTotal.has(`${dia}-${aula - 1}`) && ocupadoTotal.has(`${dia}-${aula + 1}`)) return true;
+          }
+        }
+        return false;
+      })();
+
+      for (const m of marcasDoTurno) {
+        const chave = `${m.diaSemana}-${m.horarioSlot}`;
+        const fechaJanela =
+          ocupadoTotal.has(`${m.diaSemana}-${m.horarioSlot - 1}`) &&
+          ocupadoTotal.has(`${m.diaSemana}-${m.horarioSlot + 1}`);
+        if (existeJanelaVaga && !fechaJanela) {
+          paraRemoverIds.push(m.id);
+          professoresAfetadosSet.add(prof.id);
+        } else {
+          marcadasValidas.push(m);
+        }
       }
     }
 
@@ -206,6 +259,10 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
       const jaMarcado = new Set(
         marcadasValidas.filter((m) => (m.turno ?? "sem_turno") === turno).map((m) => `${m.diaSemana}-${m.horarioSlot}`),
       );
+      // [FIX] pra deteccao de janela (antes/depois), HA ja existente
+      // TAMBEM conta como "ocupado" -- senao um vago entre uma HA e
+      // uma aula real nao era reconhecido como janela de verdade.
+      const ocupadoParaJanela = new Set([...ocupado, ...jaMarcado]);
 
       const candidatosJanela: Array<{ dia: number; aula: number }> = [];
       const candidatosOutros: Array<{ dia: number; aula: number }> = [];
@@ -214,8 +271,8 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
         for (let aula = 1; aula <= maxAula; aula++) {
           const chave = `${dia}-${aula}`;
           if (ocupado.has(chave) || jaMarcado.has(chave) || bloqueado.has(chave)) continue;
-          const antesOcupado = ocupado.has(`${dia}-${aula - 1}`);
-          const depoisOcupado = ocupado.has(`${dia}-${aula + 1}`);
+          const antesOcupado = ocupadoParaJanela.has(`${dia}-${aula - 1}`);
+          const depoisOcupado = ocupadoParaJanela.has(`${dia}-${aula + 1}`);
           if (antesOcupado && depoisOcupado) {
             candidatosJanela.push({ dia, aula });
           } else {
