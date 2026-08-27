@@ -4,7 +4,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, AlertTriangle, BookOpen, Settings2, Users, X, Plus } from "lucide-react";
+import { Sparkles, AlertTriangle, BookOpen, Settings2, Users, X, Plus, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -384,6 +385,7 @@ function MatrizCurricularCard({
 function ProfessoresPorDisciplinaCard({ turmaId }: { turmaId: number }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [aberto, setAberto] = useState(false);
   const { data: turma, isLoading } = useGetTurma(turmaId, { query: { enabled: !!turmaId, queryKey: ["turma", turmaId] as const } });
   const { data: professores } = useListProfessores();
   const [salvandoLinhaId, setSalvandoLinhaId] = useState<number | null>(null);
@@ -473,85 +475,96 @@ function ProfessoresPorDisciplinaCard({ turmaId }: { turmaId: number }) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Users className="h-4 w-4" />
-          Professores por Disciplina
-        </CardTitle>
-        <CardDescription>
-          Defina quem dá cada disciplina desta turma. Pra dupla docência (dois professores juntos, mesmo horário), adicione um segundo professor na mesma disciplina.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {isLoading && <Skeleton className="h-24 w-full" />}
-        {!isLoading && disciplinas.length === 0 && (
-          <p className="text-sm text-muted-foreground">Nenhuma disciplina vinculada ainda. Aplique uma matriz curricular acima primeiro.</p>
-        )}
-        {[...porDisciplina.entries()].map(([disciplinaId, linhas]) => (
-          <div key={disciplinaId} className="border rounded-lg p-3 space-y-2">
+      <Collapsible open={aberto} onOpenChange={setAberto}>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="cursor-pointer select-none">
             <div className="flex items-center justify-between">
-              <span className="font-medium text-sm">{linhas[0].nome}</span>
-              <span className="text-xs text-muted-foreground">{linhas[0].cargaHorariaSemanal}h/semana</span>
+              <div>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Users className="h-4 w-4" />
+                  Professores por Disciplina
+                </CardTitle>
+                <CardDescription>
+                  Defina quem dá cada disciplina desta turma. Pra dupla docência (dois professores juntos, mesmo horário), adicione um segundo professor na mesma disciplina.
+                </CardDescription>
+              </div>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform ${aberto ? "rotate-180" : ""}`} />
             </div>
-            {linhas.map((linha) => (
-              <div key={linha.turmaDisciplinaId} className="flex items-center gap-2">
-                <Select
-                  value={linha.professorId != null ? String(linha.professorId) : undefined}
-                  onValueChange={(v) => trocarProfessor(linha.turmaDisciplinaId, Number(v))}
-                  disabled={salvandoLinhaId === linha.turmaDisciplinaId}
-                >
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Selecione o professor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {professores?.map((p) => (
-                      <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {linhas.length > 1 && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removerLinha(linha.turmaDisciplinaId)}
-                    disabled={salvandoLinhaId === linha.turmaDisciplinaId}
-                    title="Remover este professor da disciplina"
-                  >
-                    <X className="h-4 w-4" />
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="space-y-4">
+            {isLoading && <Skeleton className="h-24 w-full" />}
+            {!isLoading && disciplinas.length === 0 && (
+              <p className="text-sm text-muted-foreground">Nenhuma disciplina vinculada ainda. Aplique uma matriz curricular acima primeiro.</p>
+            )}
+            {[...porDisciplina.entries()].map(([disciplinaId, linhas]) => (
+              <div key={disciplinaId} className="border rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-sm">{linhas[0].nome}</span>
+                  <span className="text-xs text-muted-foreground">{linhas[0].cargaHorariaSemanal}h/semana</span>
+                </div>
+                {linhas.map((linha) => (
+                  <div key={linha.turmaDisciplinaId} className="flex items-center gap-2">
+                    <Select
+                      value={linha.professorId != null ? String(linha.professorId) : undefined}
+                      onValueChange={(v) => trocarProfessor(linha.turmaDisciplinaId, Number(v))}
+                      disabled={salvandoLinhaId === linha.turmaDisciplinaId}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Selecione o professor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {professores?.map((p) => (
+                          <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {linhas.length > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removerLinha(linha.turmaDisciplinaId)}
+                        disabled={salvandoLinhaId === linha.turmaDisciplinaId}
+                        title="Remover este professor da disciplina"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+
+                {linhas.length === 1 && adicionandoDuplaDisciplinaId !== disciplinaId && (
+                  <Button variant="outline" size="sm" onClick={() => setAdicionandoDuplaDisciplinaId(disciplinaId)}>
+                    <Plus className="h-3.5 w-3.5 mr-1" />
+                    Adicionar professor (dupla docência)
                   </Button>
+                )}
+                {adicionandoDuplaDisciplinaId === disciplinaId && (
+                  <div className="flex items-center gap-2">
+                    <Select value={professorNovaDupla} onValueChange={setProfessorNovaDupla}>
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Segundo professor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {professores?.filter((p) => p.id !== linhas[0].professorId).map((p) => (
+                          <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button size="sm" onClick={() => confirmarAdicionarDupla(disciplinaId)} disabled={!professorNovaDupla || salvandoLinhaId === -1}>
+                      Confirmar
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => { setAdicionandoDuplaDisciplinaId(null); setProfessorNovaDupla(""); }}>
+                      Cancelar
+                    </Button>
+                  </div>
                 )}
               </div>
             ))}
-
-            {linhas.length === 1 && adicionandoDuplaDisciplinaId !== disciplinaId && (
-              <Button variant="outline" size="sm" onClick={() => setAdicionandoDuplaDisciplinaId(disciplinaId)}>
-                <Plus className="h-3.5 w-3.5 mr-1" />
-                Adicionar professor (dupla docência)
-              </Button>
-            )}
-            {adicionandoDuplaDisciplinaId === disciplinaId && (
-              <div className="flex items-center gap-2">
-                <Select value={professorNovaDupla} onValueChange={setProfessorNovaDupla}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Segundo professor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {professores?.filter((p) => p.id !== linhas[0].professorId).map((p) => (
-                      <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button size="sm" onClick={() => confirmarAdicionarDupla(disciplinaId)} disabled={!professorNovaDupla || salvandoLinhaId === -1}>
-                  Confirmar
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => { setAdicionandoDuplaDisciplinaId(null); setProfessorNovaDupla(""); }}>
-                  Cancelar
-                </Button>
-              </div>
-            )}
-          </div>
-        ))}
-      </CardContent>
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
     </Card>
   );
 }
