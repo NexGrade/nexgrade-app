@@ -1,0 +1,138 @@
+{
+  "modo": "APLICAR",
+  "timestamp": "2026-08-12T23:24:35.681Z",
+  "apagadas": [
+    {
+      "id": 31,
+      "nome": "Aprendizado de"
+    },
+    {
+      "id": 61,
+      "nome": "Biossegurança e"
+    },
+    {
+      "id": 98,
+      "nome": "Criatividade e Ideação em Projetos de"
+    },
+    {
+      "id": 100,
+      "nome": "Criatividade e Ideação em Projetos de Inovação e"
+    },
+    {
+      "id": 101,
+      "nome": "Criatividade e Ideação em Projetos de Itinerário Inovação e Modelagem de Projetos de"
+    },
+    {
+      "id": 112,
+      "nome": "Desenho Técnico Para Projetos de"
+    },
+    {
+      "id": 113,
+      "nome": "Desenvolvimento de"
+    },
+    {
+      "id": 148,
+      "nome": "Empreendedorismo e"
+    },
+    {
+      "id": 177,
+      "nome": "Fundamentos da"
+    },
+    {
+      "id": 200,
+      "nome": "Fundamentos do"
+    },
+    {
+      "id": 214,
+      "nome": "Gestão da Instalação de"
+    },
+    {
+      "id": 220,
+      "nome": "Gestão da Montagem e"
+    },
+    {
+      "id": 226,
+      "nome": "Gestão de Equipes da Confecção do Profissional Vestuário e Planejamento da Produção do"
+    },
+    {
+      "id": 229,
+      "nome": "Gestão de Máquinas, Técnico Equipamentos e Instalações em Obras de"
+    },
+    {
+      "id": 240,
+      "nome": "Gestão de Transporte e"
+    },
+    {
+      "id": 241,
+      "nome": "Gestão dos Processos de"
+    },
+    {
+      "id": 243,
+      "nome": "Gestão e"
+    },
+    {
+      "id": 278,
+      "nome": "Informática Aplicada e If Sistemas Integrados em"
+    },
+    {
+      "id": 282,
+      "nome": "Infraestrutura de Redes de"
+    },
+    {
+      "id": 289,
+      "nome": "Instalação e Formativo Manutenção de"
+    },
+    {
+      "id": 297,
+      "nome": "Instrumentação e Controle de"
+    },
+    {
+      "id": 320,
+      "nome": "Introdução a Qualidade e Produtividade e"
+    },
+    {
+      "id": 325,
+      "nome": "Introdução Ao Formativo Desenvolvimento de Projetos e"
+    },
+    {
+      "id": 380,
+      "nome": "Marketing Aplicado Ao"
+    },
+    {
+      "id": 404,
+      "nome": "Metodologia de"
+    },
+    {
+      "id": 410,
+      "nome": "Métodos Modernos de Construção e Inovações Tecnológicas em Projetos de"
+    },
+    {
+      "id": 462,
+      "nome": "Plataformas de"
+    },
+    {
+      "id": 479,
+      "nome": "Processos Básicos de"
+    },
+    {
+      "id": 480,
+      "nome": "Processos de"
+    },
+    {
+      "id": 500,
+      "nome": "Programação Com"
+    },
+    {
+      "id": 599,
+      "nome": "Sistemas Eletrônicos e"
+    },
+    {
+      "id": 625,
+      "nome": "Tecnologia da Profissional Informação Aplicada Ao"
+    },
+    {
+      "id": 627,
+      "nome": "Tecnologia dos"
+    }
+  ]
+}

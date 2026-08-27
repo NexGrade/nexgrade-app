@@ -1,5 +1,176 @@
 [
   {
+    "professor": "ALECKSEY",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TB",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "ALECKSEY",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TD",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "ALECKSEY",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TB",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "ALECKSEY",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TE",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "ALECKSEY",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TE",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "ALECKSEY",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TC",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "ALECKSEY",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TD",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "ALECKSEY",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "7TD",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "ALECKSEY",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "7TC",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "ALECKSEY",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "7TA",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "ALECKSEY",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "7TE",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "ALECKSEY",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TA",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "ALECKSEY",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TB",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "ALECKSEY",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TA",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "ALECKSEY",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TA",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "ALECKSEY",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TC",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "ALECKSEY",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TB",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "ALECKSEY",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TA",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "ALECKSEY",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TB",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
     "professor": "ANDERSON",
     "dia": 0,
     "diaLabel": "Seg",
@@ -36,6 +207,132 @@
     "disciplinaAbrev": "MAT"
   },
   {
+    "professor": "ANDRE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TA",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "ANDRE",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TA",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "ANDRE",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TA",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "ANDRE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TB",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "ANDRE",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TB",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "ANDRE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TB",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "ANDRE",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TB",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "ANDRE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "7TB",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "ANDRE",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TB",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "ANDRE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TA",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "ANDRE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TA",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "ANDRE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TA",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "ANDRE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TB",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "ANDRE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TA",
+    "disciplinaAbrev": "MAT"
+  },
+  {
     "professor": "ANDREIA",
     "dia": 2,
     "diaLabel": "Qua",
@@ -50,31 +347,175 @@
     "diaLabel": "Qua",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "ANDREIA",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "ANDREIA",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 5,
-    "hora": "16:40",
     "turmaCodigo": "9TH",
     "disciplinaAbrev": "CIEN"
   },
   {
+    "professor": "ANDREIA",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "ANDREIA",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "ANTONIO SILVA",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "8TF",
+    "disciplinaAbrev": "RED"
+  },
+  {
+    "professor": "ANTONIO SILVA",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "8TH",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "ANTONIO SILVA",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "8TH",
+    "disciplinaAbrev": "RED"
+  },
+  {
+    "professor": "ANTONIO SILVA",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "8TG",
+    "disciplinaAbrev": "RED"
+  },
+  {
+    "professor": "ANTONIO SILVA",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "8TH",
+    "disciplinaAbrev": "RED"
+  },
+  {
+    "professor": "ANTONIO SILVA",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "8TH",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "ANTONIO SILVA",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "8TF",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "ANTONIO SILVA",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "8TF",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "ANTONIO SILVA",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "8TG",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "ANTONIO SILVA",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "8TH",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "ANTONIO SILVA",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "8TF",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "ANTONIO SILVA",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "8TG",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "ANTONIO SILVA",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "8TG",
+    "disciplinaAbrev": "RED"
+  },
+  {
+    "professor": "ANTONIO SILVA",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "8TF",
+    "disciplinaAbrev": "RED"
+  },
+  {
+    "professor": "ANTONIO SILVA",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "8TG",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
     "professor": "CECILIA",
     "dia": 0,
     "diaLabel": "Seg",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TB",
+    "disciplinaAbrev": "LRPORT"
+  },
+  {
+    "professor": "CECILIA",
+    "dia": 1,
+    "diaLabel": "Ter",
     "numeroAula": 1,
     "hora": "13:05",
     "turmaCodigo": "7TG",
@@ -84,28 +525,10 @@
     "professor": "CECILIA",
     "dia": 1,
     "diaLabel": "Ter",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TA",
-    "disciplinaAbrev": "LRPORT"
-  },
-  {
-    "professor": "CECILIA",
-    "dia": 0,
-    "diaLabel": "Seg",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "6TA",
-    "disciplinaAbrev": "LRPORT"
-  },
-  {
-    "professor": "CECILIA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TB",
-    "disciplinaAbrev": "LRPORT"
+    "turmaCodigo": "7TG",
+    "disciplinaAbrev": "LPORT"
   },
   {
     "professor": "CECILIA",
@@ -113,6 +536,24 @@
     "diaLabel": "Seg",
     "numeroAula": 3,
     "hora": "14:45",
+    "turmaCodigo": "6TA",
+    "disciplinaAbrev": "LRPORT"
+  },
+  {
+    "professor": "CECILIA",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TA",
+    "disciplinaAbrev": "LRPORT"
+  },
+  {
+    "professor": "CECILIA",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 4,
+    "hora": "15:50",
     "turmaCodigo": "6TC",
     "disciplinaAbrev": "LRPORT"
   },
@@ -120,8 +561,8 @@
     "professor": "CECILIA",
     "dia": 1,
     "diaLabel": "Ter",
-    "numeroAula": 3,
-    "hora": "14:45",
+    "numeroAula": 4,
+    "hora": "15:50",
     "turmaCodigo": "6TC",
     "disciplinaAbrev": "LRPORT"
   },
@@ -129,8 +570,8 @@
     "professor": "CECILIA",
     "dia": 0,
     "diaLabel": "Seg",
-    "numeroAula": 4,
-    "hora": "15:50",
+    "numeroAula": 5,
+    "hora": "16:40",
     "turmaCodigo": "7TG",
     "disciplinaAbrev": "LPORT"
   },
@@ -138,15 +579,6 @@
     "professor": "CECILIA",
     "dia": 1,
     "diaLabel": "Ter",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TG",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "CECILIA",
-    "dia": 0,
-    "diaLabel": "Seg",
     "numeroAula": 5,
     "hora": "16:40",
     "turmaCodigo": "6TB",
@@ -158,24 +590,6 @@
     "diaLabel": "Sex",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "8TF",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "CRISLAINE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "8TH",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "CRISLAINE",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 2,
-    "hora": "13:55",
     "turmaCodigo": "8TH",
     "disciplinaAbrev": "INGL"
   },
@@ -183,9 +597,27 @@
     "professor": "CRISLAINE",
     "dia": 0,
     "diaLabel": "Seg",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "8TG",
+    "disciplinaAbrev": "INGL"
+  },
+  {
+    "professor": "CRISLAINE",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "8TG",
+    "disciplinaAbrev": "INGL"
+  },
+  {
+    "professor": "CRISLAINE",
+    "dia": 0,
+    "diaLabel": "Seg",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "8TG",
+    "turmaCodigo": "8TH",
     "disciplinaAbrev": "INGL"
   },
   {
@@ -194,7 +626,7 @@
     "diaLabel": "Seg",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "8TG",
+    "turmaCodigo": "8TF",
     "disciplinaAbrev": "INGL"
   },
   {
@@ -205,447 +637,6 @@
     "hora": "16:40",
     "turmaCodigo": "8TF",
     "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "DAIANE",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TA",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "DAIANE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TD",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "DAIANE",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TA",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "DAIANE",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TE",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "DAIANE",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TA",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "DAIANE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TB",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "DAIANE",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TB",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "DAIANE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TC",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "DAIANE",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TC",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "DAIANE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TC",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "DAIANE",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TA",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "DAIANE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TB",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "DAIANE",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TD",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "DAIANE",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TB",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "DAIANE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TC",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "DAIANE",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TE",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "EDNILSON",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TF",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "EDNILSON",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TG",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "EDNILSON",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TG",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "EDNILSON",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TF",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "ANDRE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TB",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "ANDRE",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TA",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "ANDRE",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TA",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "ANDRE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TA",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "ANDRE",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TB",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "ANDRE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TB",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "ANDRE",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TB",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "ANDRE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TB",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "ANDRE",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TB",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "ANDRE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TA",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "ANDRE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TB",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "ANDRE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TA",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "ANDRE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TA",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "ANDRE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TA",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "ANTONIO SILVA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "8TF",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "ANTONIO SILVA",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "8TH",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "ANTONIO SILVA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "8TF",
-    "disciplinaAbrev": "RED"
-  },
-  {
-    "professor": "ANTONIO SILVA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "8TG",
-    "disciplinaAbrev": "RED"
-  },
-  {
-    "professor": "ANTONIO SILVA",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "8TH",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "ANTONIO SILVA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "8TH",
-    "disciplinaAbrev": "RED"
-  },
-  {
-    "professor": "ANTONIO SILVA",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "8TF",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "ANTONIO SILVA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "8TG",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "ANTONIO SILVA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "8TH",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "ANTONIO SILVA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "8TG",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "ANTONIO SILVA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "8TF",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "ANTONIO SILVA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "8TF",
-    "disciplinaAbrev": "RED"
-  },
-  {
-    "professor": "ANTONIO SILVA",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "8TG",
-    "disciplinaAbrev": "RED"
-  },
-  {
-    "professor": "ANTONIO SILVA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "8TH",
-    "disciplinaAbrev": "RED"
-  },
-  {
-    "professor": "ANTONIO SILVA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "8TG",
-    "disciplinaAbrev": "LPORT"
   },
   {
     "professor": "CRISTIANE",
@@ -653,7 +644,7 @@
     "diaLabel": "Ter",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "9TG",
+    "turmaCodigo": "9TH",
     "disciplinaAbrev": "EDFIS"
   },
   {
@@ -671,7 +662,7 @@
     "diaLabel": "Ter",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "9TH",
+    "turmaCodigo": "9TG",
     "disciplinaAbrev": "EDFIS"
   },
   {
@@ -680,7 +671,7 @@
     "diaLabel": "Sex",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "9TG",
+    "turmaCodigo": "9TH",
     "disciplinaAbrev": "EDFIS"
   },
   {
@@ -698,8 +689,152 @@
     "diaLabel": "Sex",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "9TH",
+    "turmaCodigo": "9TG",
     "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "DAIANE",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TC",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "DAIANE",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TE",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "DAIANE",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TC",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "DAIANE",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TB",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "DAIANE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TC",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "DAIANE",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TA",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "DAIANE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TD",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "DAIANE",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TE",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "DAIANE",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TA",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "DAIANE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TB",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "DAIANE",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TB",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "DAIANE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TC",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "DAIANE",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TB",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "DAIANE",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TA",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "DAIANE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TD",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "DAIANE",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TA",
+    "disciplinaAbrev": "HIST"
   },
   {
     "professor": "DEBORA",
@@ -716,13 +851,22 @@
     "diaLabel": "Sex",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "6TE",
+    "turmaCodigo": "6TI",
     "disciplinaAbrev": "ARTE"
   },
   {
     "professor": "DEBORA",
     "dia": 3,
     "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "ARTE"
+  },
+  {
+    "professor": "DEBORA",
+    "dia": 4,
+    "diaLabel": "Sex",
     "numeroAula": 2,
     "hora": "13:55",
     "turmaCodigo": "6TI",
@@ -730,20 +874,11 @@
   },
   {
     "professor": "DEBORA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "ARTE"
-  },
-  {
-    "professor": "DEBORA",
     "dia": 3,
     "diaLabel": "Qui",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "6TH",
+    "turmaCodigo": "6TF",
     "disciplinaAbrev": "ARTE"
   },
   {
@@ -752,7 +887,7 @@
     "diaLabel": "Sex",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "6TG",
+    "turmaCodigo": "6TE",
     "disciplinaAbrev": "ARTE"
   },
   {
@@ -779,7 +914,7 @@
     "diaLabel": "Qui",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "6TI",
+    "turmaCodigo": "6TH",
     "disciplinaAbrev": "ARTE"
   },
   {
@@ -788,7 +923,7 @@
     "diaLabel": "Sex",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "6TF",
+    "turmaCodigo": "6TG",
     "disciplinaAbrev": "ARTE"
   },
   {
@@ -797,7 +932,16 @@
     "diaLabel": "Seg",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "7TA",
+    "turmaCodigo": "7TC",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "DORIVAL",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TB",
     "disciplinaAbrev": "GEO"
   },
   {
@@ -806,16 +950,16 @@
     "diaLabel": "Qua",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "7TA",
+    "turmaCodigo": "7TB",
     "disciplinaAbrev": "GEO"
   },
   {
     "professor": "DORIVAL",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TB",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TA",
     "disciplinaAbrev": "GEO"
   },
   {
@@ -824,7 +968,25 @@
     "diaLabel": "Qua",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "7TB",
+    "turmaCodigo": "7TA",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "DORIVAL",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TC",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "DORIVAL",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TD",
     "disciplinaAbrev": "GEO"
   },
   {
@@ -833,6 +995,24 @@
     "diaLabel": "Qua",
     "numeroAula": 4,
     "hora": "15:50",
+    "turmaCodigo": "7TB",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "DORIVAL",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TD",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "DORIVAL",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 5,
+    "hora": "16:40",
     "turmaCodigo": "7TA",
     "disciplinaAbrev": "GEO"
   },
@@ -842,49 +1022,121 @@
     "diaLabel": "Qua",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "7TB",
+    "turmaCodigo": "7TD",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "DORIVAL",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TC",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "EDNILSON",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "EDNILSON",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "EDNILSON",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "9TH",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "EDNILSON",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "7TF",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "EDNILSON",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "EDNILSON",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "9TH",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "EDNILSON",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TG",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "EDNILSON",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "EDNILSON",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TF",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "EDNILSON",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TG",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "EDUARDA",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TE",
     "disciplinaAbrev": "GEO"
   },
   {
     "professor": "EDUARDA",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "LRPORT"
-  },
-  {
-    "professor": "EDUARDA",
     "dia": 1,
     "diaLabel": "Ter",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "EDUARDA",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "LRPORT"
-  },
-  {
-    "professor": "EDUARDA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TA",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "EDUARDA",
-    "dia": 4,
-    "diaLabel": "Sex",
     "numeroAula": 1,
     "hora": "13:05",
     "turmaCodigo": "9TI",
@@ -892,8 +1144,44 @@
   },
   {
     "professor": "EDUARDA",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TE",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "EDUARDA",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "8TF",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "EDUARDA",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "EDUARDA",
     "dia": 1,
     "diaLabel": "Ter",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "8TF",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "EDUARDA",
+    "dia": 4,
+    "diaLabel": "Sex",
     "numeroAula": 2,
     "hora": "13:55",
     "turmaCodigo": "9TI",
@@ -901,66 +1189,30 @@
   },
   {
     "professor": "EDUARDA",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 2,
-    "hora": "13:55",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 3,
+    "hora": "14:45",
     "turmaCodigo": "9TH",
     "disciplinaAbrev": "LRPORT"
   },
   {
     "professor": "EDUARDA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 2,
-    "hora": "13:55",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 3,
+    "hora": "14:45",
     "turmaCodigo": "9TI",
     "disciplinaAbrev": "LPORT"
   },
   {
     "professor": "EDUARDA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "EDUARDA",
-    "dia": 1,
-    "diaLabel": "Ter",
+    "dia": 3,
+    "diaLabel": "Qui",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "7TA",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "EDUARDA",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TA",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "EDUARDA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TB",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "EDUARDA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TB",
-    "disciplinaAbrev": "CIEN"
+    "turmaCodigo": "7TE",
+    "disciplinaAbrev": "GEO"
   },
   {
     "professor": "EDUARDA",
@@ -968,8 +1220,8 @@
     "diaLabel": "Qua",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "7TB",
-    "disciplinaAbrev": "CIEN"
+    "turmaCodigo": "9TH",
+    "disciplinaAbrev": "LRPORT"
   },
   {
     "professor": "EDUARDA",
@@ -981,56 +1233,47 @@
     "disciplinaAbrev": "LRPORT"
   },
   {
-    "professor": "EDUARDO",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "8TH",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "EDUARDO",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TC",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "EDUARDO",
+    "professor": "EDUARDA",
     "dia": 2,
     "diaLabel": "Qua",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TB",
-    "disciplinaAbrev": "EDFIS"
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "LRPORT"
   },
   {
-    "professor": "EDUARDO",
+    "professor": "EDUARDA",
     "dia": 3,
     "diaLabel": "Qui",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "8TH",
-    "disciplinaAbrev": "EDFIS"
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "INGL"
+  },
+  {
+    "professor": "EDUARDA",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "8TF",
+    "disciplinaAbrev": "HIST"
   },
   {
     "professor": "EDUARDO",
     "dia": 0,
     "diaLabel": "Seg",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TD",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "8TG",
     "disciplinaAbrev": "EDFIS"
   },
   {
     "professor": "EDUARDO",
     "dia": 1,
     "diaLabel": "Ter",
-    "numeroAula": 2,
-    "hora": "13:55",
+    "numeroAula": 1,
+    "hora": "13:05",
     "turmaCodigo": "7TE",
     "disciplinaAbrev": "EDFIS"
   },
@@ -1038,8 +1281,8 @@
     "professor": "EDUARDO",
     "dia": 2,
     "diaLabel": "Qua",
-    "numeroAula": 2,
-    "hora": "13:55",
+    "numeroAula": 1,
+    "hora": "13:05",
     "turmaCodigo": "7TF",
     "disciplinaAbrev": "EDFIS"
   },
@@ -1047,9 +1290,54 @@
     "professor": "EDUARDO",
     "dia": 3,
     "diaLabel": "Qui",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TB",
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "EDUARDO",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "8TF",
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "EDUARDO",
+    "dia": 0,
+    "diaLabel": "Seg",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "7TE",
+    "turmaCodigo": "7TA",
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "EDUARDO",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TD",
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "EDUARDO",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TA",
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "EDUARDO",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "8TG",
     "disciplinaAbrev": "EDFIS"
   },
   {
@@ -1058,7 +1346,7 @@
     "diaLabel": "Sex",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "8TF",
+    "turmaCodigo": "8TH",
     "disciplinaAbrev": "EDFIS"
   },
   {
@@ -1067,7 +1355,7 @@
     "diaLabel": "Ter",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "8TF",
+    "turmaCodigo": "7TB",
     "disciplinaAbrev": "EDFIS"
   },
   {
@@ -1076,7 +1364,7 @@
     "diaLabel": "Qui",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "7TA",
+    "turmaCodigo": "7TD",
     "disciplinaAbrev": "EDFIS"
   },
   {
@@ -1085,728 +1373,233 @@
     "diaLabel": "Sex",
     "numeroAula": 3,
     "hora": "14:45",
+    "turmaCodigo": "7TC",
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "EDUARDO",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TC",
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "EDUARDO",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "8TH",
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "EDUARDO",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TE",
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "EDUARDO",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "8TF",
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "EDUARDO",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 5,
+    "hora": "16:40",
     "turmaCodigo": "7TF",
     "disciplinaAbrev": "EDFIS"
   },
   {
-    "professor": "EDUARDO",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TA",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "EDUARDO",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "8TG",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "EDUARDO",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TB",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "EDUARDO",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "8TG",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "EDUARDO",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TD",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "EDUARDO",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TC",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "ELIANE ROCHA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TG",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "ELIANE ROCHA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TE",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "ELIANE ROCHA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "ELIANE ROCHA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "ELIANE ROCHA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "ELIANE ROCHA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TG",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "ELIANE ROCHA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "ELIANE ROCHA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "ELIANE ROCHA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TE",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "ELIANE ROCHA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "EMANUELE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "EMANUELE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "EMANUELE",
+    "professor": "ELECIANA",
     "dia": 2,
     "diaLabel": "Qua",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "GEO"
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "LPORT"
   },
   {
-    "professor": "EMANUELE",
+    "professor": "ELECIANA",
     "dia": 3,
     "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "ELECIANA",
+    "dia": 1,
+    "diaLabel": "Ter",
     "numeroAula": 3,
     "hora": "14:45",
     "turmaCodigo": "8TH",
-    "disciplinaAbrev": "GEO"
+    "disciplinaAbrev": "HIST"
   },
   {
-    "professor": "EMANUELE",
-    "dia": 0,
-    "diaLabel": "Seg",
+    "professor": "ELECIANA",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "8TH",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "ELECIANA",
+    "dia": 1,
+    "diaLabel": "Ter",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "GEO"
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "LPORT"
   },
   {
-    "professor": "EMANUELE",
+    "professor": "ELECIANA",
     "dia": 2,
     "diaLabel": "Qua",
     "numeroAula": 4,
     "hora": "15:50",
     "turmaCodigo": "8TG",
-    "disciplinaAbrev": "GEO"
+    "disciplinaAbrev": "HIST"
   },
   {
-    "professor": "EMANUELE",
-    "dia": 0,
-    "diaLabel": "Seg",
+    "professor": "ELECIANA",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "8TG",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "ELECIANA",
+    "dia": 1,
+    "diaLabel": "Ter",
     "numeroAula": 5,
     "hora": "16:40",
     "turmaCodigo": "8TG",
-    "disciplinaAbrev": "GEO"
+    "disciplinaAbrev": "HIST"
   },
   {
-    "professor": "EMANUELE",
-    "dia": 1,
-    "diaLabel": "Ter",
+    "professor": "ELECIANA",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "ELECIANA",
+    "dia": 3,
+    "diaLabel": "Qui",
     "numeroAula": 5,
     "hora": "16:40",
     "turmaCodigo": "8TH",
-    "disciplinaAbrev": "GEO"
+    "disciplinaAbrev": "HIST"
   },
   {
-    "professor": "EMANUELE",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "EMANUELE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "FRANCIELE DE ASSIS",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TI",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "FRANCIELE DE ASSIS",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "FRANCIELE DE ASSIS",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "FRANCIELE DE ASSIS",
+    "professor": "ELIANE ROCHA",
     "dia": 1,
     "diaLabel": "Ter",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "8TG",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "FRANCIELE DE ASSIS",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "8TG",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "FRANCIELE DE ASSIS",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "FRANCIELE DE ASSIS",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TI",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "FRANCIELE DE ASSIS",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "FRANCIELE DE ASSIS",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "8TG",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "FRANCIELE DE ASSIS",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "FRANCIELE DE ASSIS",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TI",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "FRANCIELE DE ASSIS",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TI",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "FRANCIELE DE ASSIS",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "FRANCIELE DE ASSIS",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "8TG",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "FRANCIELE DE ASSIS",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "GABRIELA",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TE",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "GABRIELA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TB",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "GABRIELA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TC",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "GABRIELA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TD",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "GABRIELA",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TB",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "GABRIELA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TC",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "GABRIELA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TA",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "GABRIELA",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TD",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "GABRIELA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TE",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "GABRIELA",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TE",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "GABRIELA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TA",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "GABRIELA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TD",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "GABRIELA",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TC",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "GABRIELA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TA",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "GABRIELA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TB",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "GILBERTO",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "GILBERTO",
-    "dia": 4,
-    "diaLabel": "Sex",
     "numeroAula": 1,
     "hora": "13:05",
     "turmaCodigo": "9TH",
-    "disciplinaAbrev": "R MAT"
+    "disciplinaAbrev": "INGL"
   },
   {
-    "professor": "GILBERTO",
+    "professor": "ELIANE ROCHA",
     "dia": 3,
     "diaLabel": "Qui",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TH",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "GILBERTO",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "GILBERTO",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "GILBERTO",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TI",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "GILBERTO",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "GILBERTO",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TI",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "GILBERTO",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TH",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "GILBERTO",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "HEBERTON",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TG",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "HEBERTON",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "HEBERTON",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "HEBERTON",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TG",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "ELECIANA",
-    "dia": 2,
-    "diaLabel": "Qua",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "LPORT"
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "INGL"
   },
   {
-    "professor": "ELECIANA",
+    "professor": "ELIANE ROCHA",
     "dia": 1,
     "diaLabel": "Ter",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "7TD",
-    "disciplinaAbrev": "CIEN"
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "INGL"
   },
   {
-    "professor": "ELECIANA",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "ELECIANA",
+    "professor": "ELIANE ROCHA",
     "dia": 3,
     "diaLabel": "Qui",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "7TC",
-    "disciplinaAbrev": "CIEN"
+    "turmaCodigo": "7TE",
+    "disciplinaAbrev": "INGL"
   },
   {
-    "professor": "ELECIANA",
+    "professor": "ELIANE ROCHA",
     "dia": 1,
     "diaLabel": "Ter",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "7TC",
-    "disciplinaAbrev": "CIEN"
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "INGL"
   },
   {
-    "professor": "ELECIANA",
-    "dia": 2,
-    "diaLabel": "Qua",
+    "professor": "ELIANE ROCHA",
+    "dia": 3,
+    "diaLabel": "Qui",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "7TC",
-    "disciplinaAbrev": "CIEN"
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "INGL"
   },
   {
-    "professor": "ELECIANA",
+    "professor": "ELIANE ROCHA",
     "dia": 1,
     "diaLabel": "Ter",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "LPORT"
+    "turmaCodigo": "7TG",
+    "disciplinaAbrev": "INGL"
   },
   {
-    "professor": "ELECIANA",
+    "professor": "ELIANE ROCHA",
     "dia": 3,
     "diaLabel": "Qui",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "7TD",
-    "disciplinaAbrev": "CIEN"
+    "turmaCodigo": "7TG",
+    "disciplinaAbrev": "INGL"
   },
   {
-    "professor": "ELECIANA",
-    "dia": 2,
-    "diaLabel": "Qua",
+    "professor": "ELIANE ROCHA",
+    "dia": 1,
+    "diaLabel": "Ter",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "7TD",
-    "disciplinaAbrev": "CIEN"
+    "turmaCodigo": "7TE",
+    "disciplinaAbrev": "INGL"
   },
   {
-    "professor": "ELECIANA",
+    "professor": "ELIANE ROCHA",
     "dia": 3,
     "diaLabel": "Qui",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "LPORT"
+    "turmaCodigo": "9TH",
+    "disciplinaAbrev": "INGL"
   },
   {
     "professor": "ELISANGELA",
@@ -1814,7 +1607,7 @@
     "diaLabel": "Seg",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "6TB",
+    "turmaCodigo": "6TA",
     "disciplinaAbrev": "EDFIS"
   },
   {
@@ -1823,6 +1616,24 @@
     "diaLabel": "Ter",
     "numeroAula": 1,
     "hora": "13:05",
+    "turmaCodigo": "6TF",
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "ELISANGELA",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TA",
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "ELISANGELA",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 2,
+    "hora": "13:55",
     "turmaCodigo": "6TC",
     "disciplinaAbrev": "EDFIS"
   },
@@ -1830,8 +1641,8 @@
     "professor": "ELISANGELA",
     "dia": 0,
     "diaLabel": "Seg",
-    "numeroAula": 2,
-    "hora": "13:55",
+    "numeroAula": 3,
+    "hora": "14:45",
     "turmaCodigo": "6TB",
     "disciplinaAbrev": "EDFIS"
   },
@@ -1839,27 +1650,9 @@
     "professor": "ELISANGELA",
     "dia": 1,
     "diaLabel": "Ter",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TF",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "ELISANGELA",
-    "dia": 0,
-    "diaLabel": "Seg",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "6TA",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "ELISANGELA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TF",
+    "turmaCodigo": "6TD",
     "disciplinaAbrev": "EDFIS"
   },
   {
@@ -1868,7 +1661,7 @@
     "diaLabel": "Seg",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "6TA",
+    "turmaCodigo": "6TB",
     "disciplinaAbrev": "EDFIS"
   },
   {
@@ -1886,7 +1679,7 @@
     "diaLabel": "Seg",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "6TD",
+    "turmaCodigo": "6TC",
     "disciplinaAbrev": "EDFIS"
   },
   {
@@ -1895,34 +1688,394 @@
     "diaLabel": "Ter",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "6TC",
+    "turmaCodigo": "6TF",
     "disciplinaAbrev": "EDFIS"
   },
   {
-    "professor": "GEVERSON",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TD",
-    "disciplinaAbrev": "MAT"
+    "professor": "EMANUELE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "GEO"
   },
   {
-    "professor": "GEVERSON",
+    "professor": "EMANUELE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "EMANUELE",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "EMANUELE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "8TH",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "EMANUELE",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "8TG",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "EMANUELE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "EMANUELE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "EMANUELE",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "8TH",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "EMANUELE",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "EMANUELE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "8TG",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "FRANCIELE DE ASSIS",
     "dia": 3,
     "diaLabel": "Qui",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "7TD",
+    "turmaCodigo": "6TI",
     "disciplinaAbrev": "MAT"
   },
   {
-    "professor": "GEVERSON",
-    "dia": 2,
-    "diaLabel": "Qua",
+    "professor": "FRANCIELE DE ASSIS",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "FRANCIELE DE ASSIS",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "FRANCIELE DE ASSIS",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "FRANCIELE DE ASSIS",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "FRANCIELE DE ASSIS",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "8TG",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "FRANCIELE DE ASSIS",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TI",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "FRANCIELE DE ASSIS",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "8TG",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "FRANCIELE DE ASSIS",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "8TG",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "FRANCIELE DE ASSIS",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "8TG",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "FRANCIELE DE ASSIS",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TI",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "FRANCIELE DE ASSIS",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "FRANCIELE DE ASSIS",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "FRANCIELE DE ASSIS",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "FRANCIELE DE ASSIS",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TI",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "GABRIELA",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TB",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "GABRIELA",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TC",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "GABRIELA",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TA",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "GABRIELA",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TD",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "GABRIELA",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TE",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "GABRIELA",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TA",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "GABRIELA",
+    "dia": 3,
+    "diaLabel": "Qui",
     "numeroAula": 2,
     "hora": "13:55",
     "turmaCodigo": "7TD",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "GABRIELA",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "7TC",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "GABRIELA",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "7TB",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "GABRIELA",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TE",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "GABRIELA",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TE",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "GABRIELA",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TC",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "GABRIELA",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TA",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "GABRIELA",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TD",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "GABRIELA",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TB",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "GEVERSON",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TC",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "GEVERSON",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TD",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "GEVERSON",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TC",
     "disciplinaAbrev": "MAT"
   },
   {
@@ -1931,7 +2084,16 @@
     "diaLabel": "Seg",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "7TC",
+    "turmaCodigo": "7TD",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "GEVERSON",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "7TD",
     "disciplinaAbrev": "MAT"
   },
   {
@@ -1945,20 +2107,11 @@
   },
   {
     "professor": "GEVERSON",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TD",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "GEVERSON",
     "dia": 2,
     "diaLabel": "Qua",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "7TC",
+    "turmaCodigo": "7TD",
     "disciplinaAbrev": "MAT"
   },
   {
@@ -1987,6 +2140,96 @@
     "hora": "16:40",
     "turmaCodigo": "7TC",
     "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "GILBERTO",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "GILBERTO",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "GILBERTO",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "9TH",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "GILBERTO",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "GILBERTO",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "9TH",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "GILBERTO",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TI",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "GILBERTO",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "GILBERTO",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TI",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "GILBERTO",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TH",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "GILBERTO",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TH",
+    "disciplinaAbrev": "R MAT"
   },
   {
     "professor": "GUSTAVO",
@@ -2007,6 +2250,42 @@
     "disciplinaAbrev": "ED.DIG"
   },
   {
+    "professor": "HEBERTON",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TG",
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "HEBERTON",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "HEBERTON",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "HEBERTON",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TG",
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
     "professor": "HERICA",
     "dia": 1,
     "diaLabel": "Ter",
@@ -2021,24 +2300,6 @@
     "diaLabel": "Sex",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "7TB",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "HERICA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TA",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "HERICA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 2,
-    "hora": "13:55",
     "turmaCodigo": "7TC",
     "disciplinaAbrev": "INGL"
   },
@@ -2046,9 +2307,27 @@
     "professor": "HERICA",
     "dia": 1,
     "diaLabel": "Ter",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TC",
+    "disciplinaAbrev": "INGL"
+  },
+  {
+    "professor": "HERICA",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TA",
+    "disciplinaAbrev": "INGL"
+  },
+  {
+    "professor": "HERICA",
+    "dia": 1,
+    "diaLabel": "Ter",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "7TB",
+    "turmaCodigo": "7TA",
     "disciplinaAbrev": "INGL"
   },
   {
@@ -2057,40 +2336,40 @@
     "diaLabel": "Sex",
     "numeroAula": 3,
     "hora": "14:45",
+    "turmaCodigo": "7TB",
+    "disciplinaAbrev": "INGL"
+  },
+  {
+    "professor": "HERICA",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TB",
+    "disciplinaAbrev": "INGL"
+  },
+  {
+    "professor": "HERICA",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 4,
+    "hora": "15:50",
     "turmaCodigo": "7TD",
     "disciplinaAbrev": "INGL"
   },
   {
-    "professor": "HERICA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TC",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "HERICA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TA",
-    "disciplinaAbrev": "INGL"
-  },
-  {
     "professor": "IVANIR",
-    "dia": 1,
-    "diaLabel": "Ter",
+    "dia": 0,
+    "diaLabel": "Seg",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "6TA",
+    "turmaCodigo": "6TB",
     "disciplinaAbrev": "LRPORT"
   },
   {
     "professor": "IVANIR",
-    "dia": 2,
-    "diaLabel": "Qua",
+    "dia": 1,
+    "diaLabel": "Ter",
     "numeroAula": 1,
     "hora": "13:05",
     "turmaCodigo": "6TH",
@@ -2098,11 +2377,29 @@
   },
   {
     "professor": "IVANIR",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TA",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TD",
+    "disciplinaAbrev": "LRPORT"
+  },
+  {
+    "professor": "IVANIR",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "LRPORT"
+  },
+  {
+    "professor": "IVANIR",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TG",
     "disciplinaAbrev": "LRPORT"
   },
   {
@@ -2111,7 +2408,7 @@
     "diaLabel": "Ter",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "6TB",
+    "turmaCodigo": "6TI",
     "disciplinaAbrev": "LRPORT"
   },
   {
@@ -2120,7 +2417,7 @@
     "diaLabel": "Qua",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "6TF",
+    "turmaCodigo": "6TE",
     "disciplinaAbrev": "LRPORT"
   },
   {
@@ -2129,16 +2426,7 @@
     "diaLabel": "Qui",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "LRPORT"
-  },
-  {
-    "professor": "IVANIR",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TD",
+    "turmaCodigo": "6TF",
     "disciplinaAbrev": "LRPORT"
   },
   {
@@ -2147,7 +2435,7 @@
     "diaLabel": "Seg",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "6TC",
+    "turmaCodigo": "6TA",
     "disciplinaAbrev": "LRPORT"
   },
   {
@@ -2156,7 +2444,7 @@
     "diaLabel": "Ter",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "6TC",
+    "turmaCodigo": "6TA",
     "disciplinaAbrev": "LRPORT"
   },
   {
@@ -2165,7 +2453,7 @@
     "diaLabel": "Qui",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "6TI",
+    "turmaCodigo": "6TH",
     "disciplinaAbrev": "LRPORT"
   },
   {
@@ -2179,11 +2467,20 @@
   },
   {
     "professor": "IVANIR",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TC",
+    "disciplinaAbrev": "LRPORT"
+  },
+  {
+    "professor": "IVANIR",
     "dia": 1,
     "diaLabel": "Ter",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "6TE",
+    "turmaCodigo": "6TC",
     "disciplinaAbrev": "LRPORT"
   },
   {
@@ -2192,22 +2489,13 @@
     "diaLabel": "Qui",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "6TG",
+    "turmaCodigo": "6TD",
     "disciplinaAbrev": "LRPORT"
   },
   {
     "professor": "IVANIR",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TH",
-    "disciplinaAbrev": "LRPORT"
-  },
-  {
-    "professor": "IVANIR",
-    "dia": 0,
-    "diaLabel": "Seg",
+    "dia": 1,
+    "diaLabel": "Ter",
     "numeroAula": 5,
     "hora": "16:40",
     "turmaCodigo": "6TB",
@@ -2215,20 +2503,11 @@
   },
   {
     "professor": "IVANIR",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TI",
-    "disciplinaAbrev": "LRPORT"
-  },
-  {
-    "professor": "IVANIR",
     "dia": 3,
     "diaLabel": "Qui",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "6TD",
+    "turmaCodigo": "6TI",
     "disciplinaAbrev": "LRPORT"
   },
   {
@@ -2237,8 +2516,98 @@
     "diaLabel": "Sex",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "6TG",
+    "turmaCodigo": "6TE",
     "disciplinaAbrev": "LRPORT"
+  },
+  {
+    "professor": "JACKSON",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TB",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "JACKSON",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TB",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "JACKSON",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "9TH",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "JACKSON",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TC",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "JACKSON",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "9TH",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "JACKSON",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TC",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "JACKSON",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "JACKSON",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "JACKSON",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "JACKSON",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "9TH",
+    "disciplinaAbrev": "GEO"
   },
   {
     "professor": "JANICE",
@@ -2250,625 +2619,94 @@
     "disciplinaAbrev": "ENSREL"
   },
   {
-    "professor": "JULIO",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "JULIO",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "JULIO",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "JULIO",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "JULIO",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "JULIO",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "JULIO",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "JULIO",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "JULIO",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "JULIO",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "JULIO",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "JULIO",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "JULIO",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "JULIO",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "LISIANE",
+    "professor": "JANIS",
     "dia": 0,
     "diaLabel": "Seg",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "R MAT"
+    "turmaCodigo": "7TG",
+    "disciplinaAbrev": "MAT"
   },
   {
-    "professor": "LISIANE",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LISIANE",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LISIANE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TD",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LISIANE",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LISIANE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LISIANE",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LISIANE",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TC",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LISIANE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TH",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LISIANE",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LISIANE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TB",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LISIANE",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TB",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LISIANE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LISIANE",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TI",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LISIANE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TF",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LISIANE",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TC",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LISIANE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LISIANE",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TI",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LISIANE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TF",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LISIANE",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TD",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LISIANE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TH",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LISIANE",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "LUCIANE",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "ARTE"
-  },
-  {
-    "professor": "LUCIANE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "ARTE"
-  },
-  {
-    "professor": "LUCIANE",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "ARTE"
-  },
-  {
-    "professor": "LUCIANE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "8TH",
-    "disciplinaAbrev": "ARTE"
-  },
-  {
-    "professor": "LUCIANE",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "ARTE"
-  },
-  {
-    "professor": "LUCIANE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "ARTE"
-  },
-  {
-    "professor": "LUCIANE",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "8TH",
-    "disciplinaAbrev": "ARTE"
-  },
-  {
-    "professor": "LUCIANE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "ARTE"
-  },
-  {
-    "professor": "MARIO",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "MARIO",
+    "professor": "JANIS",
     "dia": 2,
     "diaLabel": "Qua",
     "numeroAula": 1,
     "hora": "13:05",
     "turmaCodigo": "7TH",
-    "disciplinaAbrev": "HIST"
+    "disciplinaAbrev": "MAT"
   },
   {
-    "professor": "MARIO",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "8TG",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "MARIO",
+    "professor": "JANIS",
     "dia": 4,
     "diaLabel": "Sex",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "8TH",
-    "disciplinaAbrev": "HIST"
+    "turmaCodigo": "7TG",
+    "disciplinaAbrev": "MAT"
   },
   {
-    "professor": "MARIO",
+    "professor": "JANIS",
     "dia": 0,
     "diaLabel": "Seg",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "HIST"
+    "turmaCodigo": "7TG",
+    "disciplinaAbrev": "MAT"
   },
   {
-    "professor": "MARIO",
-    "dia": 3,
-    "diaLabel": "Qui",
+    "professor": "JANIS",
+    "dia": 4,
+    "diaLabel": "Sex",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "8TF",
-    "disciplinaAbrev": "HIST"
+    "turmaCodigo": "7TG",
+    "disciplinaAbrev": "MAT"
   },
   {
-    "professor": "MARIO",
+    "professor": "JANIS",
     "dia": 0,
     "diaLabel": "Seg",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "8TF",
-    "disciplinaAbrev": "HIST"
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "MAT"
   },
   {
-    "professor": "MARIO",
+    "professor": "JANIS",
     "dia": 2,
     "diaLabel": "Qua",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "8TG",
-    "disciplinaAbrev": "HIST"
+    "turmaCodigo": "7TG",
+    "disciplinaAbrev": "MAT"
   },
   {
-    "professor": "MARIO",
-    "dia": 2,
-    "diaLabel": "Qua",
+    "professor": "JANIS",
+    "dia": 0,
+    "diaLabel": "Seg",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "HIST"
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "MAT"
   },
   {
-    "professor": "MARIO",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "8TH",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "MARIO",
+    "professor": "JANIS",
     "dia": 4,
     "diaLabel": "Sex",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "8TG",
-    "disciplinaAbrev": "HIST"
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "MAT"
   },
   {
-    "professor": "MARIO",
-    "dia": 0,
-    "diaLabel": "Seg",
+    "professor": "JANIS",
+    "dia": 4,
+    "diaLabel": "Sex",
     "numeroAula": 5,
     "hora": "16:40",
     "turmaCodigo": "7TH",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "MARIO",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "8TH",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "MARIO",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "MARIO",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "8TF",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "JACKSON",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "JACKSON",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TC",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "JACKSON",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "JACKSON",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "JACKSON",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TB",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "JACKSON",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "JACKSON",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TB",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "JACKSON",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "JACKSON",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "JACKSON",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TC",
-    "disciplinaAbrev": "GEO"
+    "disciplinaAbrev": "MAT"
   },
   {
     "professor": "JORDANA",
@@ -2876,24 +2714,6 @@
     "diaLabel": "Qua",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "7TC",
-    "disciplinaAbrev": "ARTE"
-  },
-  {
-    "professor": "JORDANA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TC",
-    "disciplinaAbrev": "ARTE"
-  },
-  {
-    "professor": "JORDANA",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 2,
-    "hora": "13:55",
     "turmaCodigo": "7TB",
     "disciplinaAbrev": "ARTE"
   },
@@ -2901,9 +2721,27 @@
     "professor": "JORDANA",
     "dia": 4,
     "diaLabel": "Sex",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TE",
+    "disciplinaAbrev": "ARTE"
+  },
+  {
+    "professor": "JORDANA",
+    "dia": 2,
+    "diaLabel": "Qua",
     "numeroAula": 2,
     "hora": "13:55",
     "turmaCodigo": "7TD",
+    "disciplinaAbrev": "ARTE"
+  },
+  {
+    "professor": "JORDANA",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TC",
     "disciplinaAbrev": "ARTE"
   },
   {
@@ -2912,7 +2750,7 @@
     "diaLabel": "Qua",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "7TD",
+    "turmaCodigo": "7TB",
     "disciplinaAbrev": "ARTE"
   },
   {
@@ -2930,7 +2768,7 @@
     "diaLabel": "Qua",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "7TE",
+    "turmaCodigo": "7TC",
     "disciplinaAbrev": "ARTE"
   },
   {
@@ -2939,40 +2777,355 @@
     "diaLabel": "Sex",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "7TE",
-    "disciplinaAbrev": "ARTE"
-  },
-  {
-    "professor": "JORDANA",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 5,
-    "hora": "16:40",
     "turmaCodigo": "7TA",
     "disciplinaAbrev": "ARTE"
   },
   {
     "professor": "JORDANA",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TE",
+    "disciplinaAbrev": "ARTE"
+  },
+  {
+    "professor": "JORDANA",
     "dia": 4,
     "diaLabel": "Sex",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "7TB",
+    "turmaCodigo": "7TD",
     "disciplinaAbrev": "ARTE"
+  },
+  {
+    "professor": "JULIO",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "JULIO",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "9TH",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "JULIO",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "JULIO",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "JULIO",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "JULIO",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "JULIO",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "9TH",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "JULIO",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "JULIO",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "JULIO",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "JULIO",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "9TH",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "JULIO",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "9TH",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "JULIO",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "9TH",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "JULIO",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TD",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TC",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "9TH",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TB",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TF",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TC",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "9TH",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TB",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TI",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TI",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TH",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TD",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TF",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "LISIANE",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TH",
+    "disciplinaAbrev": "R MAT"
   },
   {
     "professor": "LORENA",
     "dia": 1,
     "diaLabel": "Ter",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "8TG",
-    "disciplinaAbrev": "ARTE"
-  },
-  {
-    "professor": "LORENA",
-    "dia": 3,
-    "diaLabel": "Qui",
     "numeroAula": 1,
     "hora": "13:05",
     "turmaCodigo": "7TF",
@@ -2980,10 +3133,10 @@
   },
   {
     "professor": "LORENA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 2,
-    "hora": "13:55",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 1,
+    "hora": "13:05",
     "turmaCodigo": "7TG",
     "disciplinaAbrev": "ARTE"
   },
@@ -2991,9 +3144,27 @@
     "professor": "LORENA",
     "dia": 3,
     "diaLabel": "Qui",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "8TG",
+    "disciplinaAbrev": "ARTE"
+  },
+  {
+    "professor": "LORENA",
+    "dia": 1,
+    "diaLabel": "Ter",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "8TG",
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "ARTE"
+  },
+  {
+    "professor": "LORENA",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TG",
     "disciplinaAbrev": "ARTE"
   },
   {
@@ -3002,7 +3173,16 @@
     "diaLabel": "Ter",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "7TH",
+    "turmaCodigo": "8TG",
+    "disciplinaAbrev": "ARTE"
+  },
+  {
+    "professor": "LORENA",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "8TF",
     "disciplinaAbrev": "ARTE"
   },
   {
@@ -3011,15 +3191,6 @@
     "diaLabel": "Qui",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "ARTE"
-  },
-  {
-    "professor": "LORENA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 4,
-    "hora": "15:50",
     "turmaCodigo": "8TF",
     "disciplinaAbrev": "ARTE"
   },
@@ -3029,15 +3200,6 @@
     "diaLabel": "Qui",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "7TG",
-    "disciplinaAbrev": "ARTE"
-  },
-  {
-    "professor": "LORENA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 5,
-    "hora": "16:40",
     "turmaCodigo": "7TF",
     "disciplinaAbrev": "ARTE"
   },
@@ -3047,7 +3209,79 @@
     "diaLabel": "Qui",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "8TF",
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "ARTE"
+  },
+  {
+    "professor": "LUCIANE",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "8TH",
+    "disciplinaAbrev": "ARTE"
+  },
+  {
+    "professor": "LUCIANE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "ARTE"
+  },
+  {
+    "professor": "LUCIANE",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "ARTE"
+  },
+  {
+    "professor": "LUCIANE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "8TH",
+    "disciplinaAbrev": "ARTE"
+  },
+  {
+    "professor": "LUCIANE",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "ARTE"
+  },
+  {
+    "professor": "LUCIANE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "ARTE"
+  },
+  {
+    "professor": "LUCIANE",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "9TH",
+    "disciplinaAbrev": "ARTE"
+  },
+  {
+    "professor": "LUCIANE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "9TH",
     "disciplinaAbrev": "ARTE"
   },
   {
@@ -3056,8 +3290,8 @@
     "diaLabel": "Seg",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "6TD",
-    "disciplinaAbrev": "HIST"
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "ENSREL"
   },
   {
     "professor": "MARCIO",
@@ -3065,8 +3299,8 @@
     "diaLabel": "Ter",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "7TE",
-    "disciplinaAbrev": "MAT"
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "HIST"
   },
   {
     "professor": "MARCIO",
@@ -3074,8 +3308,8 @@
     "diaLabel": "Qua",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "6TD",
-    "disciplinaAbrev": "MAT"
+    "turmaCodigo": "6TA",
+    "disciplinaAbrev": "ENSREL"
   },
   {
     "professor": "MARCIO",
@@ -3083,7 +3317,7 @@
     "diaLabel": "Qui",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "6TC",
+    "turmaCodigo": "7TE",
     "disciplinaAbrev": "MAT"
   },
   {
@@ -3092,8 +3326,8 @@
     "diaLabel": "Sex",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "7TE",
-    "disciplinaAbrev": "MAT"
+    "turmaCodigo": "6TD",
+    "disciplinaAbrev": "HIST"
   },
   {
     "professor": "MARCIO",
@@ -3101,7 +3335,7 @@
     "diaLabel": "Seg",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "6TC",
+    "turmaCodigo": "6TD",
     "disciplinaAbrev": "MAT"
   },
   {
@@ -3124,17 +3358,35 @@
   },
   {
     "professor": "MARCIO",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TC",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "MARCIO",
     "dia": 4,
     "diaLabel": "Sex",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "6TA",
-    "disciplinaAbrev": "ENSREL"
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "HIST"
   },
   {
     "professor": "MARCIO",
     "dia": 0,
     "diaLabel": "Seg",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TC",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "MARCIO",
+    "dia": 1,
+    "diaLabel": "Ter",
     "numeroAula": 3,
     "hora": "14:45",
     "turmaCodigo": "7TE",
@@ -3148,15 +3400,6 @@
     "hora": "14:45",
     "turmaCodigo": "7TE",
     "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MARCIO",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "HIST"
   },
   {
     "professor": "MARCIO",
@@ -3182,16 +3425,7 @@
     "diaLabel": "Qua",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "6TD",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "MARCIO",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TD",
+    "turmaCodigo": "6TC",
     "disciplinaAbrev": "MAT"
   },
   {
@@ -3209,7 +3443,16 @@
     "diaLabel": "Seg",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "9TG",
+    "turmaCodigo": "7TE",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "MARCIO",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TD",
     "disciplinaAbrev": "HIST"
   },
   {
@@ -3218,16 +3461,7 @@
     "diaLabel": "Qua",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "6TC",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MARCIO",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TE",
+    "turmaCodigo": "6TD",
     "disciplinaAbrev": "MAT"
   },
   {
@@ -3236,8 +3470,8 @@
     "diaLabel": "Sex",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "ENSREL"
+    "turmaCodigo": "7TE",
+    "disciplinaAbrev": "MAT"
   },
   {
     "professor": "MARISE",
@@ -3245,13 +3479,22 @@
     "diaLabel": "Seg",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "6TC",
+    "turmaCodigo": "6TG",
     "disciplinaAbrev": "INGL"
   },
   {
     "professor": "MARISE",
     "dia": 1,
     "diaLabel": "Ter",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "INGL"
+  },
+  {
+    "professor": "MARISE",
+    "dia": 2,
+    "diaLabel": "Qua",
     "numeroAula": 1,
     "hora": "13:05",
     "turmaCodigo": "6TI",
@@ -3259,20 +3502,11 @@
   },
   {
     "professor": "MARISE",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TF",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "MARISE",
     "dia": 3,
     "diaLabel": "Qui",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "6TE",
+    "turmaCodigo": "6TA",
     "disciplinaAbrev": "INGL"
   },
   {
@@ -3281,22 +3515,13 @@
     "diaLabel": "Sex",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "6TB",
+    "turmaCodigo": "6TC",
     "disciplinaAbrev": "INGL"
   },
   {
     "professor": "MARISE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TF",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "MARISE",
-    "dia": 1,
-    "diaLabel": "Ter",
+    "dia": 2,
+    "diaLabel": "Qua",
     "numeroAula": 2,
     "hora": "13:55",
     "turmaCodigo": "6TH",
@@ -3304,29 +3529,11 @@
   },
   {
     "professor": "MARISE",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TD",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "MARISE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TC",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "MARISE",
     "dia": 4,
     "diaLabel": "Sex",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "6TI",
+    "turmaCodigo": "6TB",
     "disciplinaAbrev": "INGL"
   },
   {
@@ -3335,7 +3542,7 @@
     "diaLabel": "Ter",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "6TA",
+    "turmaCodigo": "7TF",
     "disciplinaAbrev": "INGL"
   },
   {
@@ -3349,6 +3556,24 @@
   },
   {
     "professor": "MARISE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "7TF",
+    "disciplinaAbrev": "INGL"
+  },
+  {
+    "professor": "MARISE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TH",
+    "disciplinaAbrev": "INGL"
+  },
+  {
+    "professor": "MARISE",
     "dia": 1,
     "diaLabel": "Ter",
     "numeroAula": 4,
@@ -3362,7 +3587,7 @@
     "diaLabel": "Qua",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "6TB",
+    "turmaCodigo": "6TD",
     "disciplinaAbrev": "INGL"
   },
   {
@@ -3371,7 +3596,16 @@
     "diaLabel": "Qui",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "6TF",
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "INGL"
+  },
+  {
+    "professor": "MARISE",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TD",
     "disciplinaAbrev": "INGL"
   },
   {
@@ -3380,31 +3614,13 @@
     "diaLabel": "Seg",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "6TG",
+    "turmaCodigo": "6TI",
     "disciplinaAbrev": "INGL"
   },
   {
     "professor": "MARISE",
     "dia": 1,
     "diaLabel": "Ter",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "MARISE",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TH",
-    "disciplinaAbrev": "INGL"
-  },
-  {
-    "professor": "MARISE",
-    "dia": 3,
-    "diaLabel": "Qui",
     "numeroAula": 5,
     "hora": "16:40",
     "turmaCodigo": "6TA",
@@ -3412,161 +3628,107 @@
   },
   {
     "professor": "MARISE",
-    "dia": 4,
-    "diaLabel": "Sex",
+    "dia": 2,
+    "diaLabel": "Qua",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "6TD",
+    "turmaCodigo": "6TC",
     "disciplinaAbrev": "INGL"
   },
   {
-    "professor": "MARISTELA",
+    "professor": "MARISE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TB",
+    "disciplinaAbrev": "INGL"
+  },
+  {
+    "professor": "MARISE",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TF",
+    "disciplinaAbrev": "INGL"
+  },
+  {
+    "professor": "MARLETE",
     "dia": 0,
     "diaLabel": "Seg",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "MAT"
+    "turmaCodigo": "6TI",
+    "disciplinaAbrev": "EDFIS"
   },
   {
-    "professor": "MARISTELA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MARISTELA",
+    "professor": "MARLETE",
     "dia": 2,
     "diaLabel": "Qua",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "7TG",
-    "disciplinaAbrev": "MAT"
+    "turmaCodigo": "6TH",
+    "disciplinaAbrev": "EDFIS"
   },
   {
-    "professor": "MARISTELA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MARISTELA",
-    "dia": 1,
-    "diaLabel": "Ter",
+    "professor": "MARLETE",
+    "dia": 0,
+    "diaLabel": "Seg",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "7TF",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MARISTELA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TG",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MARISTELA",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MARISTELA",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TG",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MARISTELA",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TF",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MARISTELA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TF",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MARISTELA",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TF",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MARISTELA",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TG",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MARISTELA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TG",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MARISTELA",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MARISTELA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TF",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MARTA",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 1,
-    "hora": "13:05",
     "turmaCodigo": "6TE",
-    "disciplinaAbrev": "LPORT"
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "MARLETE",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "MARLETE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TH",
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "MARLETE",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "MARLETE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "EDFIS"
+  },
+  {
+    "professor": "MARLETE",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TI",
+    "disciplinaAbrev": "EDFIS"
   },
   {
     "professor": "MARTA",
-    "dia": 1,
-    "diaLabel": "Ter",
+    "dia": 0,
+    "diaLabel": "Seg",
     "numeroAula": 1,
     "hora": "13:05",
     "turmaCodigo": "6TH",
@@ -3574,11 +3736,29 @@
   },
   {
     "professor": "MARTA",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TI",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "MARTA",
     "dia": 2,
     "diaLabel": "Qua",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "6TI",
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "MARTA",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TE",
     "disciplinaAbrev": "LPORT"
   },
   {
@@ -3587,7 +3767,7 @@
     "diaLabel": "Sex",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "6TD",
+    "turmaCodigo": "6TE",
     "disciplinaAbrev": "LPORT"
   },
   {
@@ -3601,8 +3781,8 @@
   },
   {
     "professor": "MARTA",
-    "dia": 1,
-    "diaLabel": "Ter",
+    "dia": 2,
+    "diaLabel": "Qua",
     "numeroAula": 2,
     "hora": "13:55",
     "turmaCodigo": "6TI",
@@ -3610,20 +3790,20 @@
   },
   {
     "professor": "MARTA",
-    "dia": 2,
-    "diaLabel": "Qua",
+    "dia": 4,
+    "diaLabel": "Sex",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "6TE",
+    "turmaCodigo": "6TD",
     "disciplinaAbrev": "LPORT"
   },
   {
     "professor": "MARTA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TD",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TF",
     "disciplinaAbrev": "LPORT"
   },
   {
@@ -3632,7 +3812,7 @@
     "diaLabel": "Ter",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "6TD",
+    "turmaCodigo": "6TF",
     "disciplinaAbrev": "LPORT"
   },
   {
@@ -3641,16 +3821,7 @@
     "diaLabel": "Qua",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "6TF",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "MARTA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TF",
+    "turmaCodigo": "6TD",
     "disciplinaAbrev": "LPORT"
   },
   {
@@ -3659,7 +3830,7 @@
     "diaLabel": "Sex",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "6TE",
+    "turmaCodigo": "6TH",
     "disciplinaAbrev": "LPORT"
   },
   {
@@ -3668,7 +3839,7 @@
     "diaLabel": "Seg",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "6TH",
+    "turmaCodigo": "6TD",
     "disciplinaAbrev": "LPORT"
   },
   {
@@ -3686,7 +3857,7 @@
     "diaLabel": "Qui",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "6TI",
+    "turmaCodigo": "6TF",
     "disciplinaAbrev": "LPORT"
   },
   {
@@ -3695,7 +3866,16 @@
     "diaLabel": "Sex",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "6TF",
+    "turmaCodigo": "6TI",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "MARTA",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TE",
     "disciplinaAbrev": "LPORT"
   },
   {
@@ -3704,116 +3884,278 @@
     "diaLabel": "Ter",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "6TF",
+    "turmaCodigo": "6TH",
     "disciplinaAbrev": "LPORT"
   },
   {
     "professor": "MARTA",
     "dia": 2,
     "diaLabel": "Qua",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TF",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "MARTA",
+    "dia": 3,
+    "diaLabel": "Qui",
     "numeroAula": 5,
     "hora": "16:40",
     "turmaCodigo": "6TD",
     "disciplinaAbrev": "LPORT"
   },
   {
-    "professor": "MARTA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "LPORT"
+    "professor": "MATHEUS",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TF",
+    "disciplinaAbrev": "MAT"
   },
   {
-    "professor": "MARTA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 5,
-    "hora": "16:40",
+    "professor": "MATHEUS",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "MATHEUS",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 1,
+    "hora": "13:05",
     "turmaCodigo": "6TH",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "MATHEUS",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TF",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "MATHEUS",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TF",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "MATHEUS",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "MATHEUS",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TH",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "MATHEUS",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TF",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "MATHEUS",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TH",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "MATHEUS",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "MATHEUS",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "8TH",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "MATHEUS",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TH",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "MATHEUS",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "8TH",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "MATHEUS",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "8TH",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "MATHEUS",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "MATHEUS",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "8TH",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "MELINA",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TG",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "MELINA",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "MELINA",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "MELINA",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "MELINA",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "7TF",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "MELINA",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "7TG",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "MELINA",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "7TF",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "MELINA",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TF",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "MELINA",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TG",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "PATRICIA",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TH",
     "disciplinaAbrev": "LPORT"
   },
   {
-    "professor": "MELINA",
+    "professor": "PATRICIA",
     "dia": 3,
     "diaLabel": "Qui",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TG",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "MELINA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "MELINA",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "MELINA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "MELINA",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TF",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "MELINA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TF",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "MELINA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TG",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "MELINA",
-    "dia": 2,
-    "diaLabel": "Qua",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "7TG",
-    "disciplinaAbrev": "CIEN"
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "LPORT"
   },
   {
-    "professor": "MELINA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TF",
-    "disciplinaAbrev": "CIEN"
+    "professor": "PATRICIA",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "LPORT"
   },
   {
     "professor": "PAULO",
@@ -3837,8 +4179,8 @@
     "professor": "PAULO",
     "dia": 2,
     "diaLabel": "Qua",
-    "numeroAula": 3,
-    "hora": "14:45",
+    "numeroAula": 4,
+    "hora": "15:50",
     "turmaCodigo": "8TH",
     "disciplinaAbrev": "ED.DIG"
   },
@@ -3846,18 +4188,126 @@
     "professor": "PAULO",
     "dia": 2,
     "diaLabel": "Qua",
-    "numeroAula": 4,
-    "hora": "15:50",
+    "numeroAula": 5,
+    "hora": "16:40",
     "turmaCodigo": "8TH",
     "disciplinaAbrev": "ED.DIG"
   },
   {
+    "professor": "PEDRO",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TD",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "PEDRO",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TC",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "PEDRO",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TF",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "PEDRO",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TC",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "PEDRO",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "PEDRO",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TA",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "PEDRO",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "PEDRO",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "PEDRO",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TA",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "PEDRO",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TD",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "PEDRO",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
+    "professor": "PEDRO",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TF",
+    "disciplinaAbrev": "R MAT"
+  },
+  {
     "professor": "PRISCILA",
     "dia": 0,
     "diaLabel": "Seg",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "6TA",
+    "turmaCodigo": "6TC",
     "disciplinaAbrev": "ARTE"
   },
   {
@@ -3875,7 +4325,7 @@
     "diaLabel": "Ter",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "6TC",
+    "turmaCodigo": "6TB",
     "disciplinaAbrev": "ARTE"
   },
   {
@@ -3893,6 +4343,24 @@
     "diaLabel": "Seg",
     "numeroAula": 4,
     "hora": "15:50",
+    "turmaCodigo": "6TA",
+    "disciplinaAbrev": "ARTE"
+  },
+  {
+    "professor": "PRISCILA",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TA",
+    "disciplinaAbrev": "ARTE"
+  },
+  {
+    "professor": "PRISCILA",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 5,
+    "hora": "16:40",
     "turmaCodigo": "6TB",
     "disciplinaAbrev": "ARTE"
   },
@@ -3900,672 +4368,15 @@
     "professor": "PRISCILA",
     "dia": 1,
     "diaLabel": "Ter",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TA",
-    "disciplinaAbrev": "ARTE"
-  },
-  {
-    "professor": "PRISCILA",
-    "dia": 0,
-    "diaLabel": "Seg",
     "numeroAula": 5,
     "hora": "16:40",
     "turmaCodigo": "6TC",
     "disciplinaAbrev": "ARTE"
-  },
-  {
-    "professor": "PRISCILA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TB",
-    "disciplinaAbrev": "ARTE"
-  },
-  {
-    "professor": "RICARDO",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TH",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "RICARDO",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TF",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "RICARDO",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TH",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "RICARDO",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TI",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "RICARDO",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TA",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "RICARDO",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TF",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "RICARDO",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "RICARDO",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "RICARDO",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TD",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "RICARDO",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "8TF",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "RICARDO",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TD",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "RICARDO",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "RICARDO",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "8TF",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "RICARDO",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TA",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "RICARDO",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "RICARDO",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TI",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "MARLETE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TI",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "MARLETE",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "MARLETE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TH",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "MARLETE",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TH",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "MARLETE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "MARLETE",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "MARLETE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "MARLETE",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TI",
-    "disciplinaAbrev": "EDFIS"
-  },
-  {
-    "professor": "MATHEUS",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TF",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MATHEUS",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TF",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MATHEUS",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TH",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MATHEUS",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MATHEUS",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TF",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MATHEUS",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MATHEUS",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MATHEUS",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MATHEUS",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TH",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MATHEUS",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "8TH",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MATHEUS",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TH",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MATHEUS",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "8TH",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MATHEUS",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "8TH",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MATHEUS",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TH",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MATHEUS",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TF",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "MATHEUS",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "8TH",
-    "disciplinaAbrev": "MAT"
-  },
-  {
-    "professor": "NELSON",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TD",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "NELSON",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TF",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "NELSON",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TE",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "NELSON",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TG",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "NELSON",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TE",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "NELSON",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TC",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "NELSON",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TF",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "NELSON",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TG",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "NELSON",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TG",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "NELSON",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TE",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "NELSON",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TD",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "NELSON",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TC",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "NELSON",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TC",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "NELSON",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TF",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "NELSON",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TD",
-    "disciplinaAbrev": "GEO"
-  },
-  {
-    "professor": "PATRICIA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "PATRICIA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "PATRICIA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "PEDRO",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "PEDRO",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "PEDRO",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TD",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "PEDRO",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "PEDRO",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "PEDRO",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TC",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "PEDRO",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TA",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "PEDRO",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TF",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "PEDRO",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TC",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "PEDRO",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TA",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "PEDRO",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TF",
-    "disciplinaAbrev": "R MAT"
-  },
-  {
-    "professor": "PEDRO",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TD",
-    "disciplinaAbrev": "R MAT"
   },
   {
     "professor": "RAFAEL",
     "dia": 0,
     "diaLabel": "Seg",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TF",
-    "disciplinaAbrev": "RED"
-  },
-  {
-    "professor": "RAFAEL",
-    "dia": 1,
-    "diaLabel": "Ter",
     "numeroAula": 1,
     "hora": "13:05",
     "turmaCodigo": "9TG",
@@ -4573,17 +4384,8 @@
   },
   {
     "professor": "RAFAEL",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TB",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "RAFAEL",
-    "dia": 3,
-    "diaLabel": "Qui",
+    "dia": 1,
+    "diaLabel": "Ter",
     "numeroAula": 1,
     "hora": "13:05",
     "turmaCodigo": "6TA",
@@ -4591,11 +4393,38 @@
   },
   {
     "professor": "RAFAEL",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TC",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "RAFAEL",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TF",
+    "disciplinaAbrev": "RED"
+  },
+  {
+    "professor": "RAFAEL",
     "dia": 0,
     "diaLabel": "Seg",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "7TG",
+    "turmaCodigo": "6TC",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "RAFAEL",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TF",
     "disciplinaAbrev": "RED"
   },
   {
@@ -4604,141 +4433,42 @@
     "diaLabel": "Qua",
     "numeroAula": 2,
     "hora": "13:55",
+    "turmaCodigo": "6TA",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "RAFAEL",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TA",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "RAFAEL",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TF",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "RAFAEL",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 3,
+    "hora": "14:45",
     "turmaCodigo": "7TE",
     "disciplinaAbrev": "RED"
   },
   {
     "professor": "RAFAEL",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TF",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "RAFAEL",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TC",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "RAFAEL",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TF",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "RAFAEL",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TF",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "RAFAEL",
     "dia": 2,
     "diaLabel": "Qua",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "6TC",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "RAFAEL",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TC",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "RAFAEL",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TA",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "RAFAEL",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TC",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "RAFAEL",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TB",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "RAFAEL",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TA",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "RAFAEL",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TF",
-    "disciplinaAbrev": "RED"
-  },
-  {
-    "professor": "RAFAEL",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TB",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "RAFAEL",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TE",
-    "disciplinaAbrev": "RED"
-  },
-  {
-    "professor": "RAFAEL",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TA",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "RAFAEL",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 5,
-    "hora": "16:40",
     "turmaCodigo": "9TG",
     "disciplinaAbrev": "LRPORT"
   },
@@ -4746,9 +4476,99 @@
     "professor": "RAFAEL",
     "dia": 3,
     "diaLabel": "Qui",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TB",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "RAFAEL",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "7TG",
+    "disciplinaAbrev": "RED"
+  },
+  {
+    "professor": "RAFAEL",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TF",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "RAFAEL",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TB",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "RAFAEL",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TE",
+    "disciplinaAbrev": "RED"
+  },
+  {
+    "professor": "RAFAEL",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TC",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "RAFAEL",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TB",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "RAFAEL",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TA",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "RAFAEL",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TG",
+    "disciplinaAbrev": "RED"
+  },
+  {
+    "professor": "RAFAEL",
+    "dia": 2,
+    "diaLabel": "Qua",
     "numeroAula": 5,
     "hora": "16:40",
     "turmaCodigo": "6TB",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "RAFAEL",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TF",
     "disciplinaAbrev": "LPORT"
   },
   {
@@ -4757,8 +4577,152 @@
     "diaLabel": "Sex",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "7TG",
-    "disciplinaAbrev": "RED"
+    "turmaCodigo": "6TC",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "RICARDO",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "RICARDO",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TF",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "RICARDO",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "RICARDO",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TF",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "RICARDO",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TD",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "RICARDO",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "RICARDO",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TI",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "RICARDO",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TH",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "RICARDO",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TD",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "RICARDO",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "8TF",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "RICARDO",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TI",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "RICARDO",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TA",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "RICARDO",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "8TF",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "RICARDO",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TH",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "RICARDO",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "RICARDO",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TA",
+    "disciplinaAbrev": "GEO"
   },
   {
     "professor": "ROBSON",
@@ -4766,7 +4730,7 @@
     "diaLabel": "Seg",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "7TC",
+    "turmaCodigo": "7TD",
     "disciplinaAbrev": "RED"
   },
   {
@@ -4775,8 +4739,8 @@
     "diaLabel": "Ter",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "HIST"
+    "turmaCodigo": "7TH",
+    "disciplinaAbrev": "RED"
   },
   {
     "professor": "ROBSON",
@@ -4784,7 +4748,7 @@
     "diaLabel": "Qua",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "6TA",
+    "turmaCodigo": "6TB",
     "disciplinaAbrev": "MAT"
   },
   {
@@ -4793,7 +4757,16 @@
     "diaLabel": "Qui",
     "numeroAula": 1,
     "hora": "13:05",
-    "turmaCodigo": "6TB",
+    "turmaCodigo": "7TC",
+    "disciplinaAbrev": "RED"
+  },
+  {
+    "professor": "ROBSON",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TA",
     "disciplinaAbrev": "MAT"
   },
   {
@@ -4802,7 +4775,7 @@
     "diaLabel": "Seg",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "7TC",
+    "turmaCodigo": "7TD",
     "disciplinaAbrev": "RED"
   },
   {
@@ -4820,7 +4793,7 @@
     "diaLabel": "Qua",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "6TA",
+    "turmaCodigo": "6TB",
     "disciplinaAbrev": "MAT"
   },
   {
@@ -4838,7 +4811,7 @@
     "diaLabel": "Sex",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "6TB",
+    "turmaCodigo": "6TA",
     "disciplinaAbrev": "MAT"
   },
   {
@@ -4856,7 +4829,7 @@
     "diaLabel": "Ter",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "7TD",
+    "turmaCodigo": "7TC",
     "disciplinaAbrev": "RED"
   },
   {
@@ -4865,22 +4838,13 @@
     "diaLabel": "Qua",
     "numeroAula": 3,
     "hora": "14:45",
-    "turmaCodigo": "6TB",
+    "turmaCodigo": "6TA",
     "disciplinaAbrev": "MAT"
   },
   {
     "professor": "ROBSON",
     "dia": 3,
     "diaLabel": "Qui",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "ROBSON",
-    "dia": 4,
-    "diaLabel": "Sex",
     "numeroAula": 3,
     "hora": "14:45",
     "turmaCodigo": "7TH",
@@ -4888,20 +4852,20 @@
   },
   {
     "professor": "ROBSON",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TB",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "ROBSON",
     "dia": 0,
     "diaLabel": "Seg",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "7TA",
-    "disciplinaAbrev": "RED"
-  },
-  {
-    "professor": "ROBSON",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "7TD",
+    "turmaCodigo": "7TB",
     "disciplinaAbrev": "RED"
   },
   {
@@ -4919,8 +4883,8 @@
     "diaLabel": "Qui",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "7TB",
-    "disciplinaAbrev": "RED"
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "HIST"
   },
   {
     "professor": "ROBSON",
@@ -4928,26 +4892,26 @@
     "diaLabel": "Sex",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "7TH",
-    "disciplinaAbrev": "RED"
-  },
-  {
-    "professor": "ROBSON",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 5,
-    "hora": "16:40",
     "turmaCodigo": "7TF",
     "disciplinaAbrev": "ENSREL"
   },
   {
     "professor": "ROBSON",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TF",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "ROBSON",
     "dia": 1,
     "diaLabel": "Ter",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "7TB",
-    "disciplinaAbrev": "RED"
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "HIST"
   },
   {
     "professor": "ROBSON",
@@ -4955,8 +4919,8 @@
     "diaLabel": "Qua",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "6TF",
-    "disciplinaAbrev": "HIST"
+    "turmaCodigo": "7TA",
+    "disciplinaAbrev": "RED"
   },
   {
     "professor": "ROBSON",
@@ -4973,106 +4937,376 @@
     "diaLabel": "Sex",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "6TA",
+    "turmaCodigo": "7TB",
+    "disciplinaAbrev": "RED"
+  },
+  {
+    "professor": "SALETE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TF",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "SALETE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TF",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "SALETE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "7TG",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "SALETE",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "7TG",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "SALETE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TG",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "SALETE",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TF",
+    "disciplinaAbrev": "GEO"
+  },
+  {
+    "professor": "SARAH",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TI",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "SARAH",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TI",
+    "disciplinaAbrev": "HIST"
+  },
+  {
+    "professor": "SILMARA",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TH",
+    "disciplinaAbrev": "LRPORT"
+  },
+  {
+    "professor": "SILMARA",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TD",
+    "disciplinaAbrev": "LRPORT"
+  },
+  {
+    "professor": "SILMARA",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "LRPORT"
+  },
+  {
+    "professor": "SILMARA",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "LRPORT"
+  },
+  {
+    "professor": "SILMARA",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TI",
+    "disciplinaAbrev": "LRPORT"
+  },
+  {
+    "professor": "SILMARA",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "LRPORT"
+  },
+  {
+    "professor": "SILMARA",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TF",
+    "disciplinaAbrev": "LRPORT"
+  },
+  {
+    "professor": "SILMARA",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TH",
+    "disciplinaAbrev": "LRPORT"
+  },
+  {
+    "professor": "SILMARA",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TF",
+    "disciplinaAbrev": "LRPORT"
+  },
+  {
+    "professor": "SILMARA",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TD",
+    "disciplinaAbrev": "LRPORT"
+  },
+  {
+    "professor": "SILMARA",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TI",
+    "disciplinaAbrev": "LRPORT"
+  },
+  {
+    "professor": "SILMARA",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "LRPORT"
+  },
+  {
+    "professor": "SONEIDE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "9TH",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "SONEIDE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "9TH",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "SONEIDE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "9TH",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "SONEIDE",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "SONEIDE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "SONEIDE",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "9TG",
+    "disciplinaAbrev": "LPORT"
+  },
+  {
+    "professor": "SYPRIANO",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TA",
+    "disciplinaAbrev": "ENSREL"
+  },
+  {
+    "professor": "SYPRIANO",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TC",
+    "disciplinaAbrev": "ENSREL"
+  },
+  {
+    "professor": "SYPRIANO",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TD",
+    "disciplinaAbrev": "ENSREL"
+  },
+  {
+    "professor": "SYPRIANO",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "6TI",
+    "disciplinaAbrev": "ENSREL"
+  },
+  {
+    "professor": "SYPRIANO",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TF",
+    "disciplinaAbrev": "ENSREL"
+  },
+  {
+    "professor": "SYPRIANO",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TE",
+    "disciplinaAbrev": "ENSREL"
+  },
+  {
+    "professor": "SYPRIANO",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "7TD",
+    "disciplinaAbrev": "ENSREL"
+  },
+  {
+    "professor": "SYPRIANO",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "ENSREL"
+  },
+  {
+    "professor": "SYPRIANO",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "7TB",
+    "disciplinaAbrev": "ENSREL"
+  },
+  {
+    "professor": "SYPRIANO",
+    "dia": 2,
+    "diaLabel": "Qua",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "6TH",
+    "disciplinaAbrev": "ENSREL"
+  },
+  {
+    "professor": "SYPRIANO",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TE",
+    "disciplinaAbrev": "ENSREL"
+  },
+  {
+    "professor": "SYPRIANO",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "7TC",
+    "disciplinaAbrev": "ENSREL"
+  },
+  {
+    "professor": "WELLINGTON",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "6TD",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "WELLINGTON",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "7TF",
     "disciplinaAbrev": "MAT"
   },
   {
-    "professor": "SARAH",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TI",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "SARAH",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TI",
-    "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "SONEIDE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "SONEIDE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "SONEIDE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "9TG",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "SONEIDE",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "SONEIDE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "SONEIDE",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "9TH",
-    "disciplinaAbrev": "LPORT"
-  },
-  {
-    "professor": "WELLINGTON",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "WELLINGTON",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TI",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
     "professor": "WELLINGTON",
     "dia": 0,
     "diaLabel": "Seg",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "6TD",
+    "turmaCodigo": "6TH",
     "disciplinaAbrev": "CIEN"
   },
   {
@@ -5081,51 +5315,6 @@
     "diaLabel": "Ter",
     "numeroAula": 2,
     "hora": "13:55",
-    "turmaCodigo": "8TF",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "WELLINGTON",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TB",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "WELLINGTON",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TF",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "WELLINGTON",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "7TE",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "WELLINGTON",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TF",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "WELLINGTON",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 3,
-    "hora": "14:45",
     "turmaCodigo": "6TH",
     "disciplinaAbrev": "CIEN"
   },
@@ -5133,15 +5322,33 @@
     "professor": "WELLINGTON",
     "dia": 2,
     "diaLabel": "Qua",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TI",
-    "disciplinaAbrev": "CIEN"
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TF",
+    "disciplinaAbrev": "MAT"
   },
   {
     "professor": "WELLINGTON",
     "dia": 3,
     "diaLabel": "Qui",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "7TF",
+    "disciplinaAbrev": "MAT"
+  },
+  {
+    "professor": "WELLINGTON",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "8TF",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "WELLINGTON",
+    "dia": 0,
+    "diaLabel": "Seg",
     "numeroAula": 3,
     "hora": "14:45",
     "turmaCodigo": "8TF",
@@ -5149,8 +5356,17 @@
   },
   {
     "professor": "WELLINGTON",
-    "dia": 4,
-    "diaLabel": "Sex",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "WELLINGTON",
+    "dia": 2,
+    "diaLabel": "Qua",
     "numeroAula": 3,
     "hora": "14:45",
     "turmaCodigo": "6TC",
@@ -5158,11 +5374,29 @@
   },
   {
     "professor": "WELLINGTON",
+    "dia": 3,
+    "diaLabel": "Qui",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TG",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "WELLINGTON",
+    "dia": 4,
+    "diaLabel": "Sex",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "6TI",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "WELLINGTON",
     "dia": 0,
     "diaLabel": "Seg",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "8TF",
+    "turmaCodigo": "6TF",
     "disciplinaAbrev": "CIEN"
   },
   {
@@ -5171,8 +5405,8 @@
     "diaLabel": "Ter",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "7TE",
-    "disciplinaAbrev": "CIEN"
+    "turmaCodigo": "7TF",
+    "disciplinaAbrev": "MAT"
   },
   {
     "professor": "WELLINGTON",
@@ -5180,7 +5414,7 @@
     "diaLabel": "Qui",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "7TE",
+    "turmaCodigo": "8TF",
     "disciplinaAbrev": "CIEN"
   },
   {
@@ -5189,7 +5423,7 @@
     "diaLabel": "Sex",
     "numeroAula": 4,
     "hora": "15:50",
-    "turmaCodigo": "6TD",
+    "turmaCodigo": "6TF",
     "disciplinaAbrev": "CIEN"
   },
   {
@@ -5198,8 +5432,8 @@
     "diaLabel": "Seg",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "6TH",
-    "disciplinaAbrev": "CIEN"
+    "turmaCodigo": "7TF",
+    "disciplinaAbrev": "MAT"
   },
   {
     "professor": "WELLINGTON",
@@ -5207,7 +5441,7 @@
     "diaLabel": "Ter",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "6TG",
+    "turmaCodigo": "6TI",
     "disciplinaAbrev": "CIEN"
   },
   {
@@ -5225,7 +5459,79 @@
     "diaLabel": "Sex",
     "numeroAula": 5,
     "hora": "16:40",
-    "turmaCodigo": "6TB",
+    "turmaCodigo": "6TD",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "WEREDIANA",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "8TH",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "WEREDIANA",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 1,
+    "hora": "13:05",
+    "turmaCodigo": "8TG",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "WEREDIANA",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "8TH",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "WEREDIANA",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 2,
+    "hora": "13:55",
+    "turmaCodigo": "8TG",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "WEREDIANA",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 3,
+    "hora": "14:45",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "WEREDIANA",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "9TI",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "WEREDIANA",
+    "dia": 1,
+    "diaLabel": "Ter",
+    "numeroAula": 4,
+    "hora": "15:50",
+    "turmaCodigo": "8TH",
+    "disciplinaAbrev": "CIEN"
+  },
+  {
+    "professor": "WEREDIANA",
+    "dia": 0,
+    "diaLabel": "Seg",
+    "numeroAula": 5,
+    "hora": "16:40",
+    "turmaCodigo": "8TG",
     "disciplinaAbrev": "CIEN"
   },
   {
@@ -5245,311 +5551,5 @@
     "hora": "13:55",
     "turmaCodigo": "6TH",
     "disciplinaAbrev": "HIST"
-  },
-  {
-    "professor": "SILMARA",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TH",
-    "disciplinaAbrev": "LRPORT"
-  },
-  {
-    "professor": "SILMARA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TA",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "SILMARA",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TF",
-    "disciplinaAbrev": "LRPORT"
-  },
-  {
-    "professor": "SILMARA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "LRPORT"
-  },
-  {
-    "professor": "SILMARA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TD",
-    "disciplinaAbrev": "LRPORT"
-  },
-  {
-    "professor": "SILMARA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TI",
-    "disciplinaAbrev": "LRPORT"
-  },
-  {
-    "professor": "SILMARA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TF",
-    "disciplinaAbrev": "LRPORT"
-  },
-  {
-    "professor": "SILMARA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "LRPORT"
-  },
-  {
-    "professor": "SILMARA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "LRPORT"
-  },
-  {
-    "professor": "SILMARA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TH",
-    "disciplinaAbrev": "LRPORT"
-  },
-  {
-    "professor": "SILMARA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TI",
-    "disciplinaAbrev": "LRPORT"
-  },
-  {
-    "professor": "SILMARA",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TA",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "SILMARA",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TD",
-    "disciplinaAbrev": "LRPORT"
-  },
-  {
-    "professor": "SILMARA",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "LRPORT"
-  },
-  {
-    "professor": "SYPRIANO",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TC",
-    "disciplinaAbrev": "ENSREL"
-  },
-  {
-    "professor": "SYPRIANO",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "7TB",
-    "disciplinaAbrev": "ENSREL"
-  },
-  {
-    "professor": "SYPRIANO",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "6TF",
-    "disciplinaAbrev": "ENSREL"
-  },
-  {
-    "professor": "SYPRIANO",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TH",
-    "disciplinaAbrev": "ENSREL"
-  },
-  {
-    "professor": "SYPRIANO",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "6TG",
-    "disciplinaAbrev": "ENSREL"
-  },
-  {
-    "professor": "SYPRIANO",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "6TD",
-    "disciplinaAbrev": "ENSREL"
-  },
-  {
-    "professor": "SYPRIANO",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TD",
-    "disciplinaAbrev": "ENSREL"
-  },
-  {
-    "professor": "SYPRIANO",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "7TC",
-    "disciplinaAbrev": "ENSREL"
-  },
-  {
-    "professor": "SYPRIANO",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TI",
-    "disciplinaAbrev": "ENSREL"
-  },
-  {
-    "professor": "SYPRIANO",
-    "dia": 3,
-    "diaLabel": "Qui",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "6TE",
-    "disciplinaAbrev": "ENSREL"
-  },
-  {
-    "professor": "SYPRIANO",
-    "dia": 2,
-    "diaLabel": "Qua",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TE",
-    "disciplinaAbrev": "ENSREL"
-  },
-  {
-    "professor": "SYPRIANO",
-    "dia": 4,
-    "diaLabel": "Sex",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "7TA",
-    "disciplinaAbrev": "ENSREL"
-  },
-  {
-    "professor": "WEREDIANA",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "8TG",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "WEREDIANA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 1,
-    "hora": "13:05",
-    "turmaCodigo": "8TH",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "WEREDIANA",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "8TG",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "WEREDIANA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 2,
-    "hora": "13:55",
-    "turmaCodigo": "8TH",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "WEREDIANA",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "8TH",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "WEREDIANA",
-    "dia": 1,
-    "diaLabel": "Ter",
-    "numeroAula": 3,
-    "hora": "14:45",
-    "turmaCodigo": "8TG",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "WEREDIANA",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 4,
-    "hora": "15:50",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "CIEN"
-  },
-  {
-    "professor": "WEREDIANA",
-    "dia": 0,
-    "diaLabel": "Seg",
-    "numeroAula": 5,
-    "hora": "16:40",
-    "turmaCodigo": "9TI",
-    "disciplinaAbrev": "CIEN"
   }
 ]

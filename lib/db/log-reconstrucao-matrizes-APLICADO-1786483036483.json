@@ -1,0 +1,557 @@
+{
+  "modo": "APLICAR",
+  "timestamp": "2026-08-11T21:17:06.999Z",
+  "grupos": [
+    {
+      "cursoId": 77,
+      "serieAno": "1ª Série",
+      "turmas": [
+        "1NF ADM"
+      ],
+      "categoria": "FGB",
+      "status": "OK",
+      "matrizId": 519,
+      "itensInseridos": 16,
+      "cargaTotal": 25,
+      "turmasVinculadas": [
+        {
+          "id": 382,
+          "nome": "1NF ADM"
+        }
+      ]
+    },
+    {
+      "cursoId": 77,
+      "serieAno": "2ª Série",
+      "turmas": [
+        "2MA ADM"
+      ],
+      "categoria": "FGB",
+      "status": "OK",
+      "matrizId": 520,
+      "itensInseridos": 17,
+      "cargaTotal": 30,
+      "turmasVinculadas": [
+        {
+          "id": 383,
+          "nome": "2MA ADM"
+        }
+      ]
+    },
+    {
+      "cursoId": 77,
+      "serieAno": "3ª Série",
+      "turmas": [
+        "3MA ADM"
+      ],
+      "categoria": "FGB",
+      "status": "OK",
+      "matrizId": 521,
+      "itensInseridos": 13,
+      "cargaTotal": 30,
+      "turmasVinculadas": [
+        {
+          "id": 390,
+          "nome": "3MA ADM"
+        }
+      ]
+    },
+    {
+      "cursoId": 79,
+      "serieAno": "1ª Série",
+      "turmas": [
+        "1MB DES"
+      ],
+      "categoria": "FGB",
+      "status": "OK",
+      "matrizId": 522,
+      "itensInseridos": 14,
+      "cargaTotal": 30,
+      "turmasVinculadas": [
+        {
+          "id": 377,
+          "nome": "1MB DES"
+        }
+      ]
+    },
+    {
+      "cursoId": 79,
+      "serieAno": "2ª Série",
+      "turmas": [
+        "2MB DES"
+      ],
+      "categoria": "FGB",
+      "status": "OK",
+      "matrizId": 523,
+      "itensInseridos": 13,
+      "cargaTotal": 30,
+      "turmasVinculadas": [
+        {
+          "id": 385,
+          "nome": "2MB DES"
+        }
+      ]
+    },
+    {
+      "cursoId": 79,
+      "serieAno": "3ª Série",
+      "turmas": [
+        "3MB DES"
+      ],
+      "categoria": "FGB",
+      "status": "OK",
+      "matrizId": 524,
+      "itensInseridos": 12,
+      "cargaTotal": 30,
+      "turmasVinculadas": [
+        {
+          "id": 392,
+          "nome": "3MB DES"
+        }
+      ]
+    },
+    {
+      "cursoId": 80,
+      "serieAno": "1ª Série",
+      "turmas": [
+        "1MC FAR"
+      ],
+      "categoria": "FGB",
+      "status": "OK",
+      "matrizId": 525,
+      "itensInseridos": 16,
+      "cargaTotal": 30,
+      "turmasVinculadas": [
+        {
+          "id": 378,
+          "nome": "1MC FAR"
+        }
+      ]
+    },
+    {
+      "cursoId": 80,
+      "serieAno": "2ª Série",
+      "turmas": [
+        "2MC FAR"
+      ],
+      "categoria": "FGB",
+      "status": "OK",
+      "matrizId": 526,
+      "itensInseridos": 16,
+      "cargaTotal": 30,
+      "turmasVinculadas": [
+        {
+          "id": 386,
+          "nome": "2MC FAR"
+        }
+      ]
+    },
+    {
+      "cursoId": 72,
+      "serieAno": "1ª Série",
+      "turmas": [
+        "1MD MA"
+      ],
+      "categoria": "FGB",
+      "status": "OK",
+      "matrizId": 527,
+      "itensInseridos": 15,
+      "cargaTotal": 30,
+      "turmasVinculadas": [
+        {
+          "id": 379,
+          "nome": "1MD MA"
+        }
+      ]
+    },
+    {
+      "cursoId": 72,
+      "serieAno": "2ª Série",
+      "turmas": [
+        "2MD MA"
+      ],
+      "categoria": "FGB",
+      "status": "OK",
+      "matrizId": 528,
+      "itensInseridos": 16,
+      "cargaTotal": 30,
+      "turmasVinculadas": [
+        {
+          "id": 387,
+          "nome": "2MD MA"
+        }
+      ]
+    },
+    {
+      "cursoId": 41,
+      "serieAno": "1ª Série",
+      "turmas": [
+        "1ME DOC"
+      ],
+      "categoria": "FGB",
+      "status": "OK",
+      "matrizId": 529,
+      "itensInseridos": 14,
+      "cargaTotal": 30,
+      "turmasVinculadas": [
+        {
+          "id": 380,
+          "nome": "1ME DOC"
+        }
+      ]
+    },
+    {
+      "cursoId": 13,
+      "serieAno": "1ª Série",
+      "turmas": [
+        "1MA EM"
+      ],
+      "categoria": "BNC",
+      "status": "OK",
+      "matrizId": 530,
+      "itensInseridos": 13,
+      "cargaTotal": 30,
+      "turmasVinculadas": [
+        {
+          "id": 376,
+          "nome": "1MA EM"
+        }
+      ]
+    },
+    {
+      "cursoId": 13,
+      "serieAno": "2ª Série",
+      "turmas": [
+        "2MA EM"
+      ],
+      "categoria": "BNC",
+      "status": "OK",
+      "matrizId": 531,
+      "itensInseridos": 13,
+      "cargaTotal": 30,
+      "turmasVinculadas": [
+        {
+          "id": 384,
+          "nome": "2MA EM"
+        }
+      ]
+    },
+    {
+      "cursoId": 13,
+      "serieAno": "3ª Série",
+      "turmas": [
+        "3MA EM"
+      ],
+      "categoria": "BNC",
+      "status": "OK",
+      "matrizId": 532,
+      "itensInseridos": 13,
+      "cargaTotal": 30,
+      "turmasVinculadas": [
+        {
+          "id": 391,
+          "nome": "3MA EM"
+        }
+      ]
+    },
+    {
+      "cursoId": 16,
+      "serieAno": "1ª Série",
+      "turmas": [
+        "1NB"
+      ],
+      "categoria": "BNC",
+      "status": "OK",
+      "matrizId": 533,
+      "itensInseridos": 11,
+      "cargaTotal": 25,
+      "turmasVinculadas": [
+        {
+          "id": 381,
+          "nome": "1NB"
+        }
+      ]
+    },
+    {
+      "cursoId": 16,
+      "serieAno": "2ª Série",
+      "turmas": [
+        "2NB",
+        "2NC"
+      ],
+      "categoria": "BNC",
+      "status": "OK",
+      "matrizId": 534,
+      "itensInseridos": 11,
+      "cargaTotal": 25,
+      "turmasVinculadas": [
+        {
+          "id": 388,
+          "nome": "2NB"
+        },
+        {
+          "id": 389,
+          "nome": "2NC"
+        }
+      ]
+    },
+    {
+      "cursoId": 15,
+      "serieAno": "3ª Série",
+      "turmas": [
+        "3NB"
+      ],
+      "categoria": "BNC",
+      "status": "OK",
+      "matrizId": 535,
+      "itensInseridos": 13,
+      "cargaTotal": 25,
+      "turmasVinculadas": [
+        {
+          "id": 393,
+          "nome": "3NB"
+        }
+      ]
+    },
+    {
+      "cursoId": 16,
+      "serieAno": "3ª Série",
+      "turmas": [
+        "3NC"
+      ],
+      "categoria": "BNC",
+      "status": "OK",
+      "matrizId": 536,
+      "itensInseridos": 13,
+      "cargaTotal": 25,
+      "turmasVinculadas": [
+        {
+          "id": 394,
+          "nome": "3NC"
+        }
+      ]
+    },
+    {
+      "cursoId": 11,
+      "serieAno": "6º Ano",
+      "turmas": [
+        "6TA",
+        "6TB",
+        "6TC",
+        "6TD",
+        "6TE",
+        "6TF",
+        "6TG",
+        "6TH",
+        "6TI"
+      ],
+      "categoria": "BNC",
+      "status": "OK",
+      "matrizId": 537,
+      "itensInseridos": 11,
+      "cargaTotal": 25,
+      "turmasVinculadas": [
+        {
+          "id": 395,
+          "nome": "6TA"
+        },
+        {
+          "id": 396,
+          "nome": "6TB"
+        },
+        {
+          "id": 397,
+          "nome": "6TC"
+        },
+        {
+          "id": 398,
+          "nome": "6TD"
+        },
+        {
+          "id": 399,
+          "nome": "6TE"
+        },
+        {
+          "id": 400,
+          "nome": "6TF"
+        },
+        {
+          "id": 401,
+          "nome": "6TG"
+        },
+        {
+          "id": 402,
+          "nome": "6TH"
+        },
+        {
+          "id": 403,
+          "nome": "6TI"
+        }
+      ]
+    },
+    {
+      "cursoId": 11,
+      "serieAno": "7º Ano",
+      "turmas": [
+        "7TA",
+        "7TB",
+        "7TC",
+        "7TD",
+        "7TE",
+        "7TF",
+        "7TG",
+        "7TH"
+      ],
+      "categoria": "BNC",
+      "status": "OK",
+      "matrizId": 538,
+      "itensInseridos": 10,
+      "cargaTotal": 25,
+      "turmasVinculadas": [
+        {
+          "id": 404,
+          "nome": "7TA"
+        },
+        {
+          "id": 405,
+          "nome": "7TB"
+        },
+        {
+          "id": 406,
+          "nome": "7TC"
+        },
+        {
+          "id": 407,
+          "nome": "7TD"
+        },
+        {
+          "id": 408,
+          "nome": "7TE"
+        },
+        {
+          "id": 409,
+          "nome": "7TF"
+        },
+        {
+          "id": 410,
+          "nome": "7TG"
+        },
+        {
+          "id": 411,
+          "nome": "7TH"
+        }
+      ]
+    },
+    {
+      "cursoId": 11,
+      "serieAno": "8º Ano",
+      "turmas": [
+        "8MA",
+        "8MB",
+        "8MC",
+        "8MD",
+        "8ME",
+        "8TF",
+        "8TG",
+        "8TH"
+      ],
+      "categoria": "BNC",
+      "status": "OK",
+      "matrizId": 539,
+      "itensInseridos": 10,
+      "cargaTotal": 25,
+      "turmasVinculadas": [
+        {
+          "id": 412,
+          "nome": "8MA"
+        },
+        {
+          "id": 413,
+          "nome": "8MB"
+        },
+        {
+          "id": 414,
+          "nome": "8MC"
+        },
+        {
+          "id": 415,
+          "nome": "8MD"
+        },
+        {
+          "id": 416,
+          "nome": "8ME"
+        },
+        {
+          "id": 417,
+          "nome": "8TF"
+        },
+        {
+          "id": 418,
+          "nome": "8TG"
+        },
+        {
+          "id": 419,
+          "nome": "8TH"
+        }
+      ]
+    },
+    {
+      "cursoId": 11,
+      "serieAno": "9º Ano",
+      "turmas": [
+        "9MA",
+        "9MB",
+        "9MC",
+        "9MD",
+        "9ME",
+        "9MF",
+        "9TG",
+        "9TH",
+        "9TI"
+      ],
+      "categoria": "BNC",
+      "status": "OK",
+      "matrizId": 540,
+      "itensInseridos": 10,
+      "cargaTotal": 25,
+      "turmasVinculadas": [
+        {
+          "id": 420,
+          "nome": "9MA"
+        },
+        {
+          "id": 421,
+          "nome": "9MB"
+        },
+        {
+          "id": 422,
+          "nome": "9MC"
+        },
+        {
+          "id": 423,
+          "nome": "9MD"
+        },
+        {
+          "id": 424,
+          "nome": "9ME"
+        },
+        {
+          "id": 425,
+          "nome": "9MF"
+        },
+        {
+          "id": 426,
+          "nome": "9TG"
+        },
+        {
+          "id": 427,
+          "nome": "9TH"
+        },
+        {
+          "id": 428,
+          "nome": "9TI"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,258 @@
+{
+  "trio": [
+    {
+      "id": 336,
+      "nome": "Lei e Rec Aprend L Port",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": null,
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 337,
+      "nome": "Lei Rec. Aprend. L. Port",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": null,
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 555,
+      "nome": "Rec. Aprend. L. Port",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": null,
+      "created_at": "2026-07-16T12:43:40.153Z"
+    }
+  ],
+  "truncadas": [
+    {
+      "id": 31,
+      "nome": "Aprendizado de",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 61,
+      "nome": "Biossegurança e",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 98,
+      "nome": "Criatividade e Ideação em Projetos de",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 100,
+      "nome": "Criatividade e Ideação em Projetos de Inovação e",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 101,
+      "nome": "Criatividade e Ideação em Projetos de Itinerário Inovação e Modelagem de Projetos de",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 112,
+      "nome": "Desenho Técnico Para Projetos de",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 113,
+      "nome": "Desenvolvimento de",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 148,
+      "nome": "Empreendedorismo e",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 177,
+      "nome": "Fundamentos da",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 200,
+      "nome": "Fundamentos do",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 214,
+      "nome": "Gestão da Instalação de",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 220,
+      "nome": "Gestão da Montagem e",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 226,
+      "nome": "Gestão de Equipes da Confecção do Profissional Vestuário e Planejamento da Produção do",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 229,
+      "nome": "Gestão de Máquinas, Técnico Equipamentos e Instalações em Obras de",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 240,
+      "nome": "Gestão de Transporte e",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 241,
+      "nome": "Gestão dos Processos de",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 243,
+      "nome": "Gestão e",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 278,
+      "nome": "Informática Aplicada e If Sistemas Integrados em",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 282,
+      "nome": "Infraestrutura de Redes de",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 289,
+      "nome": "Instalação e Formativo Manutenção de",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 297,
+      "nome": "Instrumentação e Controle de",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 320,
+      "nome": "Introdução a Qualidade e Produtividade e",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 325,
+      "nome": "Introdução Ao Formativo Desenvolvimento de Projetos e",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 380,
+      "nome": "Marketing Aplicado Ao",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 404,
+      "nome": "Metodologia de",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "APF",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 410,
+      "nome": "Métodos Modernos de Construção e Inovações Tecnológicas em Projetos de",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 462,
+      "nome": "Plataformas de",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 479,
+      "nome": "Processos Básicos de",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 480,
+      "nome": "Processos de",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 500,
+      "nome": "Programação Com",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 599,
+      "nome": "Sistemas Eletrônicos e",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 625,
+      "nome": "Tecnologia da Profissional Informação Aplicada Ao",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    },
+    {
+      "id": 627,
+      "nome": "Tecnologia dos",
+      "codigo_sae": null,
+      "categoria_curricular_padrao": "IFP",
+      "created_at": "2026-07-16T12:43:40.153Z"
+    }
+  ]
+}

@@ -1,0 +1,416 @@
+[
+  {
+    "id": 2641,
+    "nome": "Administração Financeira e Orçamentária",
+    "codigo_sae": null,
+    "sigla": "AFO"
+  },
+  {
+    "id": 2625,
+    "nome": "Arte",
+    "codigo_sae": "704",
+    "sigla": "ARTE"
+  },
+  {
+    "id": 2623,
+    "nome": "Arte II",
+    "codigo_sae": null,
+    "sigla": "AI"
+  },
+  {
+    "id": 2624,
+    "nome": "Arte Paranaense",
+    "codigo_sae": null,
+    "sigla": "AP"
+  },
+  {
+    "id": 2642,
+    "nome": "Biologia",
+    "codigo_sae": "1001",
+    "sigla": "BIOL"
+  },
+  {
+    "id": 2643,
+    "nome": "Biologia II",
+    "codigo_sae": null,
+    "sigla": "BI"
+  },
+  {
+    "id": 2626,
+    "nome": "Ciências",
+    "codigo_sae": "801",
+    "sigla": "CIÊN"
+  },
+  {
+    "id": 2644,
+    "nome": "Comunicação e Vendas",
+    "codigo_sae": "5020",
+    "sigla": "CV"
+  },
+  {
+    "id": 2645,
+    "nome": "Controladoria e Finanças",
+    "codigo_sae": null,
+    "sigla": "CF"
+  },
+  {
+    "id": 2627,
+    "nome": "Educação Digital",
+    "codigo_sae": null,
+    "sigla": "ED"
+  },
+  {
+    "id": 2944,
+    "nome": "Educação Digital e Computação: Programação e IA",
+    "codigo_sae": null,
+    "sigla": null
+  },
+  {
+    "id": 2646,
+    "nome": "Educação Financeira",
+    "codigo_sae": null,
+    "sigla": "EF2"
+  },
+  {
+    "id": 2628,
+    "nome": "Educação Física",
+    "codigo_sae": "601",
+    "sigla": "EF"
+  },
+  {
+    "id": 2629,
+    "nome": "Ensino Religioso",
+    "codigo_sae": null,
+    "sigla": "ER"
+  },
+  {
+    "id": 2647,
+    "nome": "Estratégias de Marketing",
+    "codigo_sae": "5019",
+    "sigla": "EM"
+  },
+  {
+    "id": 2648,
+    "nome": "Filosofia",
+    "codigo_sae": "2201",
+    "sigla": "FILO"
+  },
+  {
+    "id": 2649,
+    "nome": "Filosofia Análises de Textos Filosóficos",
+    "codigo_sae": null,
+    "sigla": "FATF"
+  },
+  {
+    "id": 2650,
+    "nome": "Finanças Empresariais",
+    "codigo_sae": "5033",
+    "sigla": "FE"
+  },
+  {
+    "id": 2651,
+    "nome": "Física",
+    "codigo_sae": "901",
+    "sigla": "FÍSI"
+  },
+  {
+    "id": 2652,
+    "nome": "Física e Tecnociência",
+    "codigo_sae": null,
+    "sigla": "FT"
+  },
+  {
+    "id": 2653,
+    "nome": "Física II",
+    "codigo_sae": null,
+    "sigla": "FI"
+  },
+  {
+    "id": 2654,
+    "nome": "Física III",
+    "codigo_sae": null,
+    "sigla": "FI2"
+  },
+  {
+    "id": 2630,
+    "nome": "Geografia",
+    "codigo_sae": "2001",
+    "sigla": "GEOG"
+  },
+  {
+    "id": 2631,
+    "nome": "Geografia do Paraná",
+    "codigo_sae": null,
+    "sigla": "GP"
+  },
+  {
+    "id": 2632,
+    "nome": "Geografia I",
+    "codigo_sae": null,
+    "sigla": "GI"
+  },
+  {
+    "id": 2508,
+    "nome": "Gestão da Produção",
+    "codigo_sae": "3832",
+    "sigla": null
+  },
+  {
+    "id": 2509,
+    "nome": "Gestão da Produção e Qualidade",
+    "codigo_sae": "4388",
+    "sigla": null
+  },
+  {
+    "id": 2952,
+    "nome": "Gestão das Equipes de Trabalho",
+    "codigo_sae": null,
+    "sigla": null
+  },
+  {
+    "id": 2510,
+    "nome": "Gestão de Projetos e Processos",
+    "codigo_sae": "5549",
+    "sigla": null
+  },
+  {
+    "id": 2511,
+    "nome": "Gestão Organizacional",
+    "codigo_sae": "6372",
+    "sigla": null
+  },
+  {
+    "id": 2633,
+    "nome": "História",
+    "codigo_sae": "1901",
+    "sigla": "HIST"
+  },
+  {
+    "id": 2635,
+    "nome": "História do Paraná",
+    "codigo_sae": null,
+    "sigla": "HP"
+  },
+  {
+    "id": 2634,
+    "nome": "História I",
+    "codigo_sae": null,
+    "sigla": "HI"
+  },
+  {
+    "id": 2945,
+    "nome": "Indústria 4.0",
+    "codigo_sae": null,
+    "sigla": null
+  },
+  {
+    "id": 2655,
+    "nome": "Informática Empresarial",
+    "codigo_sae": "5015",
+    "sigla": "IE"
+  },
+  {
+    "id": 2656,
+    "nome": "Liderança e Gestão de Pessoas",
+    "codigo_sae": null,
+    "sigla": "LGP"
+  },
+  {
+    "id": 2657,
+    "nome": "Liderança Organizacional e Gestão de Pessoas",
+    "codigo_sae": "5034",
+    "sigla": "LOGP"
+  },
+  {
+    "id": 2658,
+    "nome": "Língua Espanhola I",
+    "codigo_sae": null,
+    "sigla": "LEI"
+  },
+  {
+    "id": 2636,
+    "nome": "Língua Inglesa",
+    "codigo_sae": "1501",
+    "sigla": "LI"
+  },
+  {
+    "id": 2637,
+    "nome": "Língua Portuguesa",
+    "codigo_sae": "101",
+    "sigla": "LP"
+  },
+  {
+    "id": 2659,
+    "nome": "Literatura e Produção de Texto",
+    "codigo_sae": null,
+    "sigla": "LPT"
+  },
+  {
+    "id": 2622,
+    "nome": "Matemática",
+    "codigo_sae": "201",
+    "sigla": "MAT"
+  },
+  {
+    "id": 2621,
+    "nome": "Matemática II",
+    "codigo_sae": null,
+    "sigla": "MI"
+  },
+  {
+    "id": 2661,
+    "nome": "Negociação e Vendas",
+    "codigo_sae": null,
+    "sigla": "NV"
+  },
+  {
+    "id": 2660,
+    "nome": "Noções de Direito",
+    "codigo_sae": null,
+    "sigla": "ND"
+  },
+  {
+    "id": 2946,
+    "nome": "Planejamento da Produção",
+    "codigo_sae": null,
+    "sigla": null
+  },
+  {
+    "id": 2662,
+    "nome": "Princípios de Administração",
+    "codigo_sae": "4129",
+    "sigla": "PA"
+  },
+  {
+    "id": 2663,
+    "nome": "Princípios Econômicos",
+    "codigo_sae": "5031",
+    "sigla": "PE"
+  },
+  {
+    "id": 2953,
+    "nome": "Processos de Manutenção e Melhoria da Produção",
+    "codigo_sae": null,
+    "sigla": null
+  },
+  {
+    "id": 2678,
+    "nome": "Produção, Logística e Qualidade",
+    "codigo_sae": "5021",
+    "sigla": null
+  },
+  {
+    "id": 2664,
+    "nome": "Programação",
+    "codigo_sae": null,
+    "sigla": "PROG"
+  },
+  {
+    "id": 2948,
+    "nome": "Programação e Monitoramento da Produção",
+    "codigo_sae": null,
+    "sigla": null
+  },
+  {
+    "id": 2951,
+    "nome": "Programação e Monitoramento da Produção I",
+    "codigo_sae": null,
+    "sigla": null
+  },
+  {
+    "id": 2665,
+    "nome": "Projeto de Vida",
+    "codigo_sae": null,
+    "sigla": "PV"
+  },
+  {
+    "id": 2666,
+    "nome": "Química",
+    "codigo_sae": "1101",
+    "sigla": "QUÍM"
+  },
+  {
+    "id": 2667,
+    "nome": "Química I",
+    "codigo_sae": null,
+    "sigla": "QI"
+  },
+  {
+    "id": 2639,
+    "nome": "Rec. Aprend. L. Port",
+    "codigo_sae": null,
+    "sigla": "RLP"
+  },
+  {
+    "id": 2638,
+    "nome": "Rec. Aprend. Matemática",
+    "codigo_sae": null,
+    "sigla": "RM"
+  },
+  {
+    "id": 2668,
+    "nome": "Recursos Humanos",
+    "codigo_sae": "4450",
+    "sigla": "RH"
+  },
+  {
+    "id": 2640,
+    "nome": "Redação e Leitura",
+    "codigo_sae": null,
+    "sigla": "RL"
+  },
+  {
+    "id": 2669,
+    "nome": "Robótica",
+    "codigo_sae": null,
+    "sigla": "ROBÓ"
+  },
+  {
+    "id": 2949,
+    "nome": "Saúde e Segurança do Trabalho",
+    "codigo_sae": null,
+    "sigla": null
+  },
+  {
+    "id": 2670,
+    "nome": "Sociologia",
+    "codigo_sae": "2301",
+    "sigla": "SOCI"
+  },
+  {
+    "id": 2671,
+    "nome": "Sociologia Gov Cid Sociedade",
+    "codigo_sae": null,
+    "sigla": "SGCS"
+  },
+  {
+    "id": 2672,
+    "nome": "Sociologia I",
+    "codigo_sae": null,
+    "sigla": "SI"
+  },
+  {
+    "id": 2950,
+    "nome": "Sustentabilidade nos Processos de Produção",
+    "codigo_sae": null,
+    "sigla": null
+  },
+  {
+    "id": 2674,
+    "nome": "Técnicas Integradas",
+    "codigo_sae": "6509",
+    "sigla": "TI"
+  },
+  {
+    "id": 2947,
+    "nome": "Tecnologia da Informação e Comunicação",
+    "codigo_sae": null,
+    "sigla": null
+  },
+  {
+    "id": 2673,
+    "nome": "Tecnologia e Ferramenta de Gestão",
+    "codigo_sae": null,
+    "sigla": "TFG"
+  }
+]

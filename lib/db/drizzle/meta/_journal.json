@@ -169,6 +169,13 @@
       "when": 1787184960713,
       "tag": "0023_sturdy_nico_minoru",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1787250236509,
+      "tag": "0024_swift_supreme_intelligence",
+      "breakpoints": true
     }
   ]
 }

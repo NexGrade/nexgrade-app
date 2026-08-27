@@ -1,0 +1,95 @@
+{
+  "dupSemAcento": [
+    [
+      "processos produtivos de insumos e produtos biotecnologicos",
+      [
+        {
+          "id": 488,
+          "nome": "Processos Produtivos de Insumos e Produtos Biotecnológicos",
+          "codigo_sae": "5918",
+          "categoria_curricular_padrao": "IFP"
+        },
+        {
+          "id": 489,
+          "nome": "Processos Produtivos de Insumos e Produtos Biotecnológicos",
+          "codigo_sae": "6905",
+          "categoria_curricular_padrao": "IFP"
+        }
+      ]
+    ],
+    [
+      "seguranca do trabalho",
+      [
+        {
+          "id": 786,
+          "nome": "Segurança do trabalho",
+          "codigo_sae": "4376",
+          "categoria_curricular_padrao": "APF"
+        },
+        {
+          "id": 583,
+          "nome": "Segurança do Trabalho",
+          "codigo_sae": "4014",
+          "categoria_curricular_padrao": "IFP"
+        }
+      ]
+    ]
+  ],
+  "suspeitos": [
+    {
+      "id": 52,
+      "nome": "Banco de Dados I",
+      "codigo_sae": "5400",
+      "categoria_curricular_padrao": "IFP"
+    },
+    {
+      "id": 53,
+      "nome": "Banco de Dados II",
+      "codigo_sae": "5600",
+      "categoria_curricular_padrao": "IFP"
+    },
+    {
+      "id": 104,
+      "nome": "Cuidados Integral em Enfermagem I",
+      "codigo_sae": "5100",
+      "categoria_curricular_padrao": "IFP"
+    },
+    {
+      "id": 196,
+      "nome": "Fundamentos de Química",
+      "codigo_sae": "6900",
+      "categoria_curricular_padrao": "IFP"
+    },
+    {
+      "id": 367,
+      "nome": "Manutenção de Sistemas Automatizados II",
+      "codigo_sae": "7100",
+      "categoria_curricular_padrao": "IFP"
+    },
+    {
+      "id": 498,
+      "nome": "Programação back-end I",
+      "codigo_sae": "5700",
+      "categoria_curricular_padrao": "IFP"
+    },
+    {
+      "id": 499,
+      "nome": "Programação back-end II",
+      "codigo_sae": "5900",
+      "categoria_curricular_padrao": "IFP"
+    },
+    {
+      "id": 861,
+      "nome": "Programação com Python 2",
+      "codigo_sae": "6600",
+      "categoria_curricular_padrao": "APF"
+    },
+    {
+      "id": 519,
+      "nome": "Projeto Final de Conclusão de Curso",
+      "codigo_sae": "6300",
+      "categoria_curricular_padrao": "IFP"
+    }
+  ],
+  "incompletos": []
+}

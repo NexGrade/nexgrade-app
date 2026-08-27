@@ -39,16 +39,16 @@ const ABREV_PARA_NOME: Record<string, string> = {
   // ── comuns a vários turnos ──
   "MAT.": "matematica",
   "MAT": "matematica",
-  "PORT": "lingua portuguesa e literatura",
-  "L.POR": "lingua portuguesa e literatura",
+  "PORT": "lingua portuguesa",
+  "L.POR": "lingua portuguesa",
   "GEO": "geografia",
   "BIO": "biologia",
   "QUIM": "quimica",
   "ART": "arte",
   "ARTE": "arte",
   "ED.FIS": "educacao fisica",
-  "INGLES": "lingua estrangeira moderna - ingles",
-  "L.ING": "lingua estrangeira moderna - ingles",
+  "INGLES": "lingua inglesa",
+  "L.ING": "lingua inglesa",
   "ED.FIN": "educacao financeira",
   "ED.DIG": "educacao digital",
   "HIB": "hibrida",
@@ -60,35 +60,35 @@ const ABREV_PARA_NOME: Record<string, string> = {
   "SOCIO": "sociologia",
   "SOC.": "sociologia",
   "VIDA": "projeto de vida",
-  "MAT 2": "matematica 2",
-  "BIO2": "biologia 2",
-  "FIS2": "fisica 2",
-  "FIS3": "fisica 3",
-  "QUI1": "quimica 1",
-  "R PORT": "recomposicao da aprendizagem - lingua portuguesa",
-  "LRPORT": "leitura e recomposicao da aprendizagem - lingua portuguesa",
-  "R MAT": "recomposicao da aprendizagem - matematica",
-  "ART2": "arte 2",
-  "GEO1": "geografia 1",
-  "HIS1": "historia 1",
-  "SOC1": "sociologia 1",
-  "SOCIO1": "sociologia 1",
+  "MAT 2": "matematica ii",
+  "BIO2": "biologia ii",
+  "FIS2": "fisica ii",
+  "FIS3": "fisica iii",
+  "QUI1": "quimica i",
+  "R PORT": "rec aprend l port",
+  "LRPORT": "rec aprend l port",
+  "R MAT": "rec aprend matematica",
+  "ART2": "arte ii",
+  "GEO1": "geografia i",
+  "HIS1": "historia i",
+  "SOC1": "sociologia i",
+  "SOCIO1": "sociologia i",
   "EMPRES": "informatica empresarial",
   "ECON.": "principios economicos",
   "FINAN.": "financas empresariais",
-  "PR.ADM": "princ de administracao",
+  "PR.ADM": "principios de administracao",
   "RH": "recursos humanos",
   "INTEG.": "tecnicas integradas",
-  "CIEN": "ciencias (fundamental)",
-  "ING1": "lingua inglesa 1",
+  "CIEN": "ciencias",
+  "ING1": "lingua inglesa i",
   "INFAPL": "informatica aplicada",
-  "ORGAN.": "lid org e ges de pessoas",
+  "ORGAN.": "lideranca organizacional e gestao de pessoas",
   "TECEMP": "in tec e empreendedorismo",
 
   // — Vespertino (variacoes sem ponto de siglas ja conhecidas + novas) —
   "EDFIS": "educacao fisica",
-  "INGL": "lingua estrangeira moderna - ingles",
-  "LPORT": "lingua portuguesa e literatura",
+  "INGL": "lingua inglesa",
+  "LPORT": "lingua portuguesa",
   "ENSREL": "ensino religioso",
   "RED": "redacao e leitura",
 
@@ -98,8 +98,8 @@ const ABREV_PARA_NOME: Record<string, string> = {
   "ART.PR": "arte paranaense",
 
   // ── Técnico: Farmácia ──
-  "FARM1": "farmacologia 1",
-  "FARM2": "farmacologia 2",
+  "FARM1": "farmacologia i",
+  "FARM2": "farmacologia ii",
   "FFARM": "fundamentos de farmacia",
   "FARHOS": "farmacia hospitalar",
   "DPFACO": "dis prod far e correlatos",
@@ -111,10 +111,10 @@ const ABREV_PARA_NOME: Record<string, string> = {
 
   // ── Técnico: Desenvolvimento de Sistemas ──
   "DADOS": "banco de dados",
-  "DADOS1": "banco de dados 1",
-  "DADOS2": "banco de dados 2",
+  "DADOS1": "banco de dados i",
+  "DADOS2": "banco de dados ii",
   "BAEND": "programacao back end",
-  "BAEND1": "programacao back end 1",
+  "BAEND1": "programacao back end i",
   "FRONT": "programacao front end",
   "MOBILE": "programacao mobile",
   "LOGCOM": "logica computacional",
@@ -138,14 +138,14 @@ const ABREV_PARA_NOME: Record<string, string> = {
 
   // ── Meio ambiente ──
   "EDAMB": "educacao ambiental",
-  "EDAMB1": "educacao ambiental 1",
+  "EDAMB1": "educacao ambiental i",
   "GESRES": "gestao de residuos",
   "GRNAT": "gestao de rec naturais",
-  "GRNAT1": "gestao de rec naturais 1",
+  "GRNAT1": "gestao de rec naturais i",
   "RISAMB": "est de imp ris ambientais",
   "SGAMB": "sist de gestao ambiental",
   "ACQAM": "analise cont e quim amb",
-  "ACQAM1": "analise cont e quim amb 1",
+  "ACQAM1": "analise cont e quim amb i",
 
   // ── Fundamental / pedagógico ──
   "MATBAS": "mat bas p anos iniciais",
@@ -157,7 +157,7 @@ const ABREV_PARA_NOME: Record<string, string> = {
   "LP.TEX": "lit e prod de texto",
   "REDLEI": "redacao e leitura",
   "REDTEC": "redacao tecnica",
-  "MCCOM": "met cient e comunicacao",
+  "MCCOM": "metodologia cientifica e comunicacao",
   "TEXFIL": "filtextos filosoficos",
 };
 
@@ -166,7 +166,7 @@ const ABREV_PARA_NOME: Record<string, string> = {
 // nenhuma tiver, usa a primeira da lista (melhor palpite).
 const CANDIDATOS_AMBIGUOS: Record<string, string[]> = {
   "E.MARK": ["estrategias de marketing", "estrategia de marketing"],
-  "G.PES.": ["lid org e ges de pessoas", "lid e gestao de pessoas"],
+  "G.PES.": ["lideranca organizacional e gestao de pessoas"],
 };
 
 function normalizar(s: string): string {
@@ -304,6 +304,13 @@ async function main() {
         problemas.push(`Professor "${item.professor}" ambiguo: ${candidatos.map((c) => c.nome).join(", ")}`);
         continue;
       }
+    }
+    if (!prof) {
+      const APELIDOS_MANUAIS: Record<string, string> = {
+        "sypriano": "luiz antonio sypriano",
+      };
+      const alvo = APELIDOS_MANUAIS[nomeProfNorm];
+      if (alvo) prof = professorPorNomeCompleto.get(alvo);
     }
     if (!prof) { problemas.push(`Professor "${item.professor}" nao encontrado`); continue; }
 

@@ -1,0 +1,1 @@
+ALTER TABLE "turmas" ADD COLUMN "fantasma" boolean DEFAULT false NOT NULL;

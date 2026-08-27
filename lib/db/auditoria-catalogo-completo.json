@@ -1,0 +1,261 @@
+{
+  "totalLinhas": 789,
+  "duplicadasPorNome": [
+    [
+      "biossegurança",
+      [
+        {
+          "id": 767,
+          "nome": "Biossegurança",
+          "codigo_sae": "1080",
+          "categoria_curricular_padrao": "IFA"
+        },
+        {
+          "id": 60,
+          "nome": "Biossegurança",
+          "codigo_sae": null,
+          "categoria_curricular_padrao": "IFP"
+        }
+      ]
+    ],
+    [
+      "educação midiática",
+      [
+        {
+          "id": 863,
+          "nome": "Educação midiática",
+          "codigo_sae": "6609",
+          "categoria_curricular_padrao": "APF"
+        },
+        {
+          "id": 132,
+          "nome": "Educação Midiática",
+          "codigo_sae": null,
+          "categoria_curricular_padrao": "IFP"
+        }
+      ]
+    ],
+    [
+      "eletrônica",
+      [
+        {
+          "id": 783,
+          "nome": "Eletrônica",
+          "codigo_sae": "3805",
+          "categoria_curricular_padrao": "APF"
+        },
+        {
+          "id": 141,
+          "nome": "Eletrônica",
+          "codigo_sae": null,
+          "categoria_curricular_padrao": "IFP"
+        }
+      ]
+    ],
+    [
+      "empreendedorismo",
+      [
+        {
+          "id": 146,
+          "nome": "Empreendedorismo",
+          "codigo_sae": null,
+          "categoria_curricular_padrao": "IF"
+        },
+        {
+          "id": 147,
+          "nome": "Empreendedorismo",
+          "codigo_sae": "2334",
+          "categoria_curricular_padrao": "IFP"
+        }
+      ]
+    ],
+    [
+      "fundamentos de farmácia",
+      [
+        {
+          "id": 657,
+          "nome": "Fundamentos de farmácia",
+          "codigo_sae": "4295",
+          "categoria_curricular_padrao": "APF"
+        },
+        {
+          "id": 193,
+          "nome": "Fundamentos de Farmácia",
+          "codigo_sae": null,
+          "categoria_curricular_padrao": null
+        }
+      ]
+    ],
+    [
+      "informática",
+      [
+        {
+          "id": 795,
+          "nome": "Informática",
+          "codigo_sae": "4404",
+          "categoria_curricular_padrao": "APF"
+        },
+        {
+          "id": 276,
+          "nome": "Informática",
+          "codigo_sae": null,
+          "categoria_curricular_padrao": "IFP"
+        }
+      ]
+    ],
+    [
+      "informática i",
+      [
+        {
+          "id": 810,
+          "nome": "Informática I",
+          "codigo_sae": "6521",
+          "categoria_curricular_padrao": "IFA"
+        },
+        {
+          "id": 280,
+          "nome": "Informática I",
+          "codigo_sae": null,
+          "categoria_curricular_padrao": "IFP"
+        }
+      ]
+    ],
+    [
+      "logística",
+      [
+        {
+          "id": 842,
+          "nome": "Logística",
+          "codigo_sae": "3179",
+          "categoria_curricular_padrao": "APF"
+        },
+        {
+          "id": 352,
+          "nome": "Logística",
+          "codigo_sae": null,
+          "categoria_curricular_padrao": "IFP"
+        }
+      ]
+    ],
+    [
+      "metrologia",
+      [
+        {
+          "id": 789,
+          "nome": "Metrologia",
+          "codigo_sae": "1502",
+          "categoria_curricular_padrao": "APF"
+        },
+        {
+          "id": 412,
+          "nome": "Metrologia",
+          "codigo_sae": null,
+          "categoria_curricular_padrao": "IFP"
+        }
+      ]
+    ],
+    [
+      "processos produtivos de insumos e produtos biotecnológicos",
+      [
+        {
+          "id": 489,
+          "nome": "Processos Produtivos de Insumos e Produtos Biotecnológicos",
+          "codigo_sae": "6905",
+          "categoria_curricular_padrao": "IFP"
+        },
+        {
+          "id": 488,
+          "nome": "Processos Produtivos de Insumos e Produtos Biotecnológicos",
+          "codigo_sae": "5918",
+          "categoria_curricular_padrao": "IFP"
+        }
+      ]
+    ],
+    [
+      "projetos",
+      [
+        {
+          "id": 520,
+          "nome": "Projetos",
+          "codigo_sae": null,
+          "categoria_curricular_padrao": "IFP"
+        },
+        {
+          "id": 794,
+          "nome": "Projetos",
+          "codigo_sae": "3602",
+          "categoria_curricular_padrao": "IFA"
+        }
+      ]
+    ],
+    [
+      "química aplicada",
+      [
+        {
+          "id": 656,
+          "nome": "Química aplicada",
+          "codigo_sae": "809",
+          "categoria_curricular_padrao": "IFA"
+        },
+        {
+          "id": 552,
+          "nome": "Química Aplicada",
+          "codigo_sae": null,
+          "categoria_curricular_padrao": "IF"
+        }
+      ]
+    ],
+    [
+      "redes",
+      [
+        {
+          "id": 814,
+          "nome": "Redes",
+          "codigo_sae": "4484",
+          "categoria_curricular_padrao": "APF"
+        },
+        {
+          "id": 562,
+          "nome": "Redes",
+          "codigo_sae": null,
+          "categoria_curricular_padrao": "IFP"
+        }
+      ]
+    ],
+    [
+      "segurança do trabalho",
+      [
+        {
+          "id": 786,
+          "nome": "Segurança do trabalho",
+          "codigo_sae": "4376",
+          "categoria_curricular_padrao": "APF"
+        },
+        {
+          "id": 583,
+          "nome": "Segurança do Trabalho",
+          "codigo_sae": "4014",
+          "categoria_curricular_padrao": "IFP"
+        }
+      ]
+    ],
+    [
+      "soluções sustentáveis",
+      [
+        {
+          "id": 802,
+          "nome": "Soluções sustentáveis",
+          "codigo_sae": "5837",
+          "categoria_curricular_padrao": "APF"
+        },
+        {
+          "id": 607,
+          "nome": "Soluções Sustentáveis",
+          "codigo_sae": null,
+          "categoria_curricular_padrao": "IFP"
+        }
+      ]
+    ]
+  ],
+  "possiveisSingularPlural": []
+}

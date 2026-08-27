@@ -1,0 +1,57 @@
+{
+  "modo": "APLICAR",
+  "timestamp": "2026-08-11T21:46:15.481Z",
+  "disponibilidade_professores": 50,
+  "licencas_professores": 0,
+  "limites_diarios_professor": 0,
+  "professoresApagados": [
+    {
+      "id": 687,
+      "nome": "Clair"
+    },
+    {
+      "id": 696,
+      "nome": "Camila"
+    },
+    {
+      "id": 697,
+      "nome": "Doraci"
+    },
+    {
+      "id": 698,
+      "nome": "Noeli"
+    },
+    {
+      "id": 699,
+      "nome": "Hericleia"
+    },
+    {
+      "id": 700,
+      "nome": "Kauana"
+    },
+    {
+      "id": 701,
+      "nome": "Silvana"
+    },
+    {
+      "id": 702,
+      "nome": "Rosinei"
+    },
+    {
+      "id": 686,
+      "nome": "Sueli"
+    },
+    {
+      "id": 693,
+      "nome": "Francielle S."
+    },
+    {
+      "id": 694,
+      "nome": "Francielle S."
+    },
+    {
+      "id": 695,
+      "nome": "Francielle S."
+    }
+  ]
+}

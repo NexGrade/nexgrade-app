@@ -1,0 +1,210 @@
+[
+  {
+    "id": 2495,
+    "nome": "Auxílio na Comercialização de Produtos em Farmácias",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2493,
+    "nome": "Auxílio na Orientação do Uso Racional de Medicamentos em Farmácias",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2494,
+    "nome": "Auxílio na Orientação para o Uso de de Higiene Pessoal, Perfumaria e Produtos para Saúde em Farmácias",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2500,
+    "nome": "Auxílio no Fornecimento de Medicamentos e Produtos para a Saúde em Unidades de Dispensação do SUS",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2496,
+    "nome": "Auxílio no Fornecimento de Medicamentos e Produtos para Saúde em Hospitais e Clínicas",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2486,
+    "nome": "Controle de Qualidade",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2512,
+    "nome": "Coordenação",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2497,
+    "nome": "Educação em Saúde na Área Farmacêutica - Comunicação com a Comunidade",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2482,
+    "nome": "Farmacologia Ii",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2491,
+    "nome": "Fornecimento de Medicamentos em Farmácias - Cálculos Medicamentosos, Interpretação de Prescrição e Descarte de Resíduos.",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2483,
+    "nome": "Fundamentos da Fisiopatologia",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2488,
+    "nome": "Homeopatia e Fitoterapia",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 1679,
+    "nome": "Lid e Gestão de Pessoas",
+    "codigo_sae": "5034",
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2489,
+    "nome": "Microbiologia e Parasitologia Básica",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2503,
+    "nome": "Operações Farmacêuticas, Manipulação de Medicamentos e Controle de Qualidade",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 1717,
+    "nome": "Paee",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2490,
+    "nome": "Primeiros Socorros",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2679,
+    "nome": "Produção, Logística e Qualidade",
+    "codigo_sae": "5021",
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2492,
+    "nome": "Projeto Integrador",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2484,
+    "nome": "Química Aplicada",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2506,
+    "nome": "Realização de Operações Farmacotécnicas na Manipulação de Medicamentos Homeopáticos",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2501,
+    "nome": "Realização de Operações Farmacotécnicas na Manipulação e Produção de Medicamentos Alopáticos e Cosméticos na Forma Líquida",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2502,
+    "nome": "Realização de Operações Farmacotécnicas na Manipulação e Produção de Medicamentos Alopáticos e Cosméticos na Forma Semissólida",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2505,
+    "nome": "Realização de Operações Farmacotécnicas na Manipulação e Produção de Medicamentos Alopáticos e Cosméticos na Forma Sólida",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2507,
+    "nome": "Realização do Controle de Qualidade em Insumos, Embalagens e Produtos Acabados",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  },
+  {
+    "id": 2499,
+    "nome": "Realização do Controle e da Manutenção do Estoque de Insumos, Medicamentos, Cosméticos e Produtos para Saúde",
+    "codigo_sae": null,
+    "turma_disciplinas": 0,
+    "itens_matriz_total": 0,
+    "itens_matriz_vivos": 0
+  }
+]

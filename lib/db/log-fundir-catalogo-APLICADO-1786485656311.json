@@ -1,0 +1,227 @@
+{
+  "modo": "APLICAR",
+  "timestamp": "2026-08-11T22:00:55.366Z",
+  "pares": [
+    {
+      "manterId": 767,
+      "apagarId": 60,
+      "status": "OK",
+      "detalhes": [
+        {
+          "id": 60,
+          "nome": "Biossegurança",
+          "codigo_sae": null
+        },
+        {
+          "id": 767,
+          "nome": "Biossegurança",
+          "codigo_sae": "1080"
+        }
+      ]
+    },
+    {
+      "manterId": 863,
+      "apagarId": 132,
+      "status": "OK",
+      "detalhes": [
+        {
+          "id": 132,
+          "nome": "Educação Midiática",
+          "codigo_sae": null
+        },
+        {
+          "id": 863,
+          "nome": "Educação midiática",
+          "codigo_sae": "6609"
+        }
+      ]
+    },
+    {
+      "manterId": 783,
+      "apagarId": 141,
+      "status": "OK",
+      "detalhes": [
+        {
+          "id": 141,
+          "nome": "Eletrônica",
+          "codigo_sae": null
+        },
+        {
+          "id": 783,
+          "nome": "Eletrônica",
+          "codigo_sae": "3805"
+        }
+      ]
+    },
+    {
+      "manterId": 147,
+      "apagarId": 146,
+      "status": "OK",
+      "detalhes": [
+        {
+          "id": 146,
+          "nome": "Empreendedorismo",
+          "codigo_sae": null
+        },
+        {
+          "id": 147,
+          "nome": "Empreendedorismo",
+          "codigo_sae": "2334"
+        }
+      ]
+    },
+    {
+      "manterId": 657,
+      "apagarId": 193,
+      "status": "OK",
+      "detalhes": [
+        {
+          "id": 193,
+          "nome": "Fundamentos de Farmácia",
+          "codigo_sae": null
+        },
+        {
+          "id": 657,
+          "nome": "Fundamentos de farmácia",
+          "codigo_sae": "4295"
+        }
+      ]
+    },
+    {
+      "manterId": 795,
+      "apagarId": 276,
+      "status": "OK",
+      "detalhes": [
+        {
+          "id": 276,
+          "nome": "Informática",
+          "codigo_sae": null
+        },
+        {
+          "id": 795,
+          "nome": "Informática",
+          "codigo_sae": "4404"
+        }
+      ]
+    },
+    {
+      "manterId": 810,
+      "apagarId": 280,
+      "status": "OK",
+      "detalhes": [
+        {
+          "id": 280,
+          "nome": "Informática I",
+          "codigo_sae": null
+        },
+        {
+          "id": 810,
+          "nome": "Informática I",
+          "codigo_sae": "6521"
+        }
+      ]
+    },
+    {
+      "manterId": 842,
+      "apagarId": 352,
+      "status": "OK",
+      "detalhes": [
+        {
+          "id": 352,
+          "nome": "Logística",
+          "codigo_sae": null
+        },
+        {
+          "id": 842,
+          "nome": "Logística",
+          "codigo_sae": "3179"
+        }
+      ]
+    },
+    {
+      "manterId": 789,
+      "apagarId": 412,
+      "status": "OK",
+      "detalhes": [
+        {
+          "id": 412,
+          "nome": "Metrologia",
+          "codigo_sae": null
+        },
+        {
+          "id": 789,
+          "nome": "Metrologia",
+          "codigo_sae": "1502"
+        }
+      ]
+    },
+    {
+      "manterId": 794,
+      "apagarId": 520,
+      "status": "OK",
+      "detalhes": [
+        {
+          "id": 520,
+          "nome": "Projetos",
+          "codigo_sae": null
+        },
+        {
+          "id": 794,
+          "nome": "Projetos",
+          "codigo_sae": "3602"
+        }
+      ]
+    },
+    {
+      "manterId": 656,
+      "apagarId": 552,
+      "status": "OK",
+      "detalhes": [
+        {
+          "id": 552,
+          "nome": "Química Aplicada",
+          "codigo_sae": null
+        },
+        {
+          "id": 656,
+          "nome": "Química aplicada",
+          "codigo_sae": "809"
+        }
+      ]
+    },
+    {
+      "manterId": 814,
+      "apagarId": 562,
+      "status": "OK",
+      "detalhes": [
+        {
+          "id": 562,
+          "nome": "Redes",
+          "codigo_sae": null
+        },
+        {
+          "id": 814,
+          "nome": "Redes",
+          "codigo_sae": "4484"
+        }
+      ]
+    },
+    {
+      "manterId": 802,
+      "apagarId": 607,
+      "status": "OK",
+      "detalhes": [
+        {
+          "id": 607,
+          "nome": "Soluções Sustentáveis",
+          "codigo_sae": null
+        },
+        {
+          "id": 802,
+          "nome": "Soluções sustentáveis",
+          "codigo_sae": "5837"
+        }
+      ]
+    }
+  ]
+}

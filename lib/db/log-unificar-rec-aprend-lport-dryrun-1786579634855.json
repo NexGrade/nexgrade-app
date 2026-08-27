@@ -1,0 +1,22 @@
+{
+  "modo": "DRY_RUN",
+  "timestamp": "2026-08-13T00:07:14.440Z",
+  "migradas": [
+    {
+      "id": 4477,
+      "turma_id": 391
+    },
+    {
+      "id": 4913,
+      "turma_id": 393
+    },
+    {
+      "id": 4926,
+      "turma_id": 394
+    }
+  ],
+  "apagada": {
+    "id": 1703,
+    "nome": "Recomposição da Aprendizagem - Língua Portuguesa"
+  }
+}

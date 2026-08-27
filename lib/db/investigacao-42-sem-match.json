@@ -1,0 +1,534 @@
+{
+  "comCodigoValido": [
+    {
+      "id": 1633,
+      "nome": "Biossegurança e Seg Trab",
+      "codigo_sae": "4290",
+      "nomeCatalogo": "Biossegurança e Segurança do Trabalho"
+    },
+    {
+      "id": 1639,
+      "nome": "Des Hum e Socioemocional",
+      "codigo_sae": "5216",
+      "nomeCatalogo": "Desenvolvimento Humano e Socioemocional"
+    },
+    {
+      "id": 1640,
+      "nome": "Dis Prod Far e Correlatos",
+      "codigo_sae": "4291",
+      "nomeCatalogo": "Dispensação de Produtos Farmacêuticos e Correlatos"
+    },
+    {
+      "id": 1641,
+      "nome": "Ed Inclusiva Diversidade",
+      "codigo_sae": "5303",
+      "nomeCatalogo": "Educação Inclusiva e Diversidade"
+    },
+    {
+      "id": 1643,
+      "nome": "Educação Ambiental 1",
+      "codigo_sae": "6622",
+      "nomeCatalogo": "Educação ambiental I"
+    },
+    {
+      "id": 1649,
+      "nome": "Est de Imp Ris Ambientais",
+      "codigo_sae": "1519",
+      "nomeCatalogo": "Estudos de Impactos e Riscos Ambientais"
+    },
+    {
+      "id": 1652,
+      "nome": "Farmacologia 1",
+      "codigo_sae": "5513",
+      "nomeCatalogo": "Farmacologia I"
+    },
+    {
+      "id": 1653,
+      "nome": "Farmacologia 2",
+      "codigo_sae": "5514",
+      "nomeCatalogo": "Farmacologia II"
+    },
+    {
+      "id": 1658,
+      "nome": "Fund da Fisiopatologia",
+      "codigo_sae": "5515",
+      "nomeCatalogo": "Fundamentos da fisiopatologia"
+    },
+    {
+      "id": 1666,
+      "nome": "Gestão de Rec Naturais",
+      "codigo_sae": "868",
+      "nomeCatalogo": "Gestão de recursos naturais"
+    },
+    {
+      "id": 1667,
+      "nome": "Gestão de Rec Naturais 1",
+      "codigo_sae": "6623",
+      "nomeCatalogo": "Gestão de recursos naturais I"
+    },
+    {
+      "id": 1680,
+      "nome": "Lid Org e Ges de Pessoas",
+      "codigo_sae": "5034",
+      "nomeCatalogo": "Liderança Organizacional e Gestão de Pessoas"
+    },
+    {
+      "id": 1620,
+      "nome": "Análise Cont e Quim Amb",
+      "codigo_sae": "867",
+      "nomeCatalogo": "Análise, controle e química ambiental"
+    },
+    {
+      "id": 1621,
+      "nome": "Análise Cont e Quim Amb 1",
+      "codigo_sae": "6620",
+      "nomeCatalogo": "Análise, Controle e Química Ambiental I"
+    },
+    {
+      "id": 1686,
+      "nome": "Mat Bas P Anos Iniciais",
+      "codigo_sae": "6508",
+      "nomeCatalogo": "Matemática Básica Para Anos Iniciais"
+    },
+    {
+      "id": 1692,
+      "nome": "Org do Trab Pedagógico",
+      "codigo_sae": "1803",
+      "nomeCatalogo": "Organização do Trabalho Pedagógico"
+    },
+    {
+      "id": 1693,
+      "nome": "Princ. de Administração",
+      "codigo_sae": "4129",
+      "nomeCatalogo": "Princípios de administração"
+    },
+    {
+      "id": 1696,
+      "nome": "Programação Back End",
+      "codigo_sae": "5900",
+      "nomeCatalogo": "Programação back-end II"
+    },
+    {
+      "id": 1697,
+      "nome": "Programação Back End 1",
+      "codigo_sae": "5700",
+      "nomeCatalogo": "Programação back-end I"
+    },
+    {
+      "id": 1698,
+      "nome": "Programação Front End",
+      "codigo_sae": "4761",
+      "nomeCatalogo": "Programação Front-end"
+    },
+    {
+      "id": 1709,
+      "nome": "Sist de Gestão Ambiental",
+      "codigo_sae": "6713",
+      "nomeCatalogo": "Sistema de Gestão Ambiental"
+    },
+    {
+      "id": 1715,
+      "nome": "Trab Ped na Ed Infantil",
+      "codigo_sae": "1726",
+      "nomeCatalogo": "Trabalho Pedagógico Na Educação Infantil"
+    },
+    {
+      "id": 1622,
+      "nome": "Análise e Met P Sistemas",
+      "codigo_sae": "5316",
+      "nomeCatalogo": "Análise e Método Para Sistemas"
+    },
+    {
+      "id": 1628,
+      "nome": "Banco de Dados 1",
+      "codigo_sae": "5400",
+      "nomeCatalogo": "Banco de Dados I"
+    },
+    {
+      "id": 1629,
+      "nome": "Banco de Dados 2",
+      "codigo_sae": "5600",
+      "nomeCatalogo": "Banco de Dados II"
+    },
+    {
+      "id": 1630,
+      "nome": "Bases Bio Aplic a Saude",
+      "codigo_sae": "4288",
+      "nomeCatalogo": "Bases Biológicas Aplicadas a Saúde"
+    }
+  ],
+  "comCodigoInvalido": [],
+  "candidatosPorItem": [
+    {
+      "mb": {
+        "id": 1655,
+        "nome": "Fil.textos Filosóficos",
+        "codigo_sae": null
+      },
+      "candidatos": [
+        {
+          "id": 171,
+          "nome": "Filosofia",
+          "codigo_sae": "2201",
+          "score": 1
+        },
+        {
+          "id": 905,
+          "nome": "Filosofia Análises de textos Filosóficos",
+          "codigo_sae": null,
+          "score": 1
+        }
+      ]
+    },
+    {
+      "mb": {
+        "id": 1661,
+        "nome": "Física 2",
+        "codigo_sae": null
+      },
+      "candidatos": [
+        {
+          "id": 130,
+          "nome": "Educação Física",
+          "codigo_sae": "601",
+          "score": 1
+        },
+        {
+          "id": 174,
+          "nome": "Física",
+          "codigo_sae": "901",
+          "score": 1
+        },
+        {
+          "id": 194,
+          "nome": "Fundamentos de Matemática e Física",
+          "codigo_sae": null,
+          "score": 1
+        }
+      ]
+    },
+    {
+      "mb": {
+        "id": 1662,
+        "nome": "Física 3",
+        "codigo_sae": null
+      },
+      "candidatos": [
+        {
+          "id": 130,
+          "nome": "Educação Física",
+          "codigo_sae": "601",
+          "score": 1
+        },
+        {
+          "id": 174,
+          "nome": "Física",
+          "codigo_sae": "901",
+          "score": 1
+        },
+        {
+          "id": 194,
+          "nome": "Fundamentos de Matemática e Física",
+          "codigo_sae": null,
+          "score": 1
+        }
+      ]
+    },
+    {
+      "mb": {
+        "id": 1664,
+        "nome": "Geografia 1",
+        "codigo_sae": null
+      },
+      "candidatos": [
+        {
+          "id": 206,
+          "nome": "Geografia",
+          "codigo_sae": "2001",
+          "score": 1
+        },
+        {
+          "id": 207,
+          "nome": "Geografia do Paraná",
+          "codigo_sae": null,
+          "score": 1
+        },
+        {
+          "id": 902,
+          "nome": "Geografia I",
+          "codigo_sae": null,
+          "score": 1
+        }
+      ]
+    },
+    {
+      "mb": {
+        "id": 1669,
+        "nome": "Hibrida",
+        "codigo_sae": null
+      },
+      "candidatos": []
+    },
+    {
+      "mb": {
+        "id": 1671,
+        "nome": "História 1",
+        "codigo_sae": null
+      },
+      "candidatos": [
+        {
+          "id": 83,
+          "nome": "Contação de histórias",
+          "codigo_sae": "6430",
+          "score": 1
+        },
+        {
+          "id": 254,
+          "nome": "História",
+          "codigo_sae": "1901",
+          "score": 1
+        },
+        {
+          "id": 255,
+          "nome": "História do Paraná",
+          "codigo_sae": null,
+          "score": 1
+        }
+      ]
+    },
+    {
+      "mb": {
+        "id": 1683,
+        "nome": "Língua Inglesa 1",
+        "codigo_sae": null
+      },
+      "candidatos": [
+        {
+          "id": 90,
+          "nome": "Conversação Língua Inglesa",
+          "codigo_sae": "3353",
+          "score": 1
+        },
+        {
+          "id": 283,
+          "nome": "Inglês",
+          "codigo_sae": null,
+          "score": 1
+        },
+        {
+          "id": 344,
+          "nome": "Língua Inglesa",
+          "codigo_sae": "1501",
+          "score": 1
+        }
+      ]
+    },
+    {
+      "mb": {
+        "id": 1619,
+        "nome": "Adm Financ e Orçamentária",
+        "codigo_sae": null
+      },
+      "candidatos": [
+        {
+          "id": 5,
+          "nome": "Administração Financeira e Orçamentária",
+          "codigo_sae": null,
+          "score": 1
+        }
+      ]
+    },
+    {
+      "mb": {
+        "id": 1681,
+        "nome": "Lit. e Prod. de Texto",
+        "codigo_sae": null
+      },
+      "candidatos": [
+        {
+          "id": 911,
+          "nome": "Literatura e Produção de Texto",
+          "codigo_sae": null,
+          "score": 1
+        }
+      ]
+    },
+    {
+      "mb": {
+        "id": 1688,
+        "nome": "Matemática 2",
+        "codigo_sae": null
+      },
+      "candidatos": [
+        {
+          "id": 194,
+          "nome": "Fundamentos de Matemática e Física",
+          "codigo_sae": null,
+          "score": 1
+        },
+        {
+          "id": 388,
+          "nome": "Matemática",
+          "codigo_sae": "201",
+          "score": 1
+        },
+        {
+          "id": 389,
+          "nome": "Matemática Básica Para Anos Iniciais",
+          "codigo_sae": "6508",
+          "score": 1
+        }
+      ]
+    },
+    {
+      "mb": {
+        "id": 1703,
+        "nome": "Recomposição da Aprendizagem - Língua Portuguesa",
+        "codigo_sae": null
+      },
+      "candidatos": [
+        {
+          "id": 345,
+          "nome": "Língua Portuguesa",
+          "codigo_sae": "101",
+          "score": 1
+        },
+        {
+          "id": 555,
+          "nome": "Rec. Aprend. L. Port",
+          "codigo_sae": null,
+          "score": 1
+        },
+        {
+          "id": 437,
+          "nome": "Oe Língua Portuguesa",
+          "codigo_sae": null,
+          "score": 0.6666666666666666
+        }
+      ]
+    },
+    {
+      "mb": {
+        "id": 1710,
+        "nome": "Soc.gov.cidad e Sociedade",
+        "codigo_sae": null
+      },
+      "candidatos": [
+        {
+          "id": 605,
+          "nome": "Sociologia",
+          "codigo_sae": "2301",
+          "score": 1
+        },
+        {
+          "id": 913,
+          "nome": "Sociologia Gov Cid Sociedade",
+          "codigo_sae": null,
+          "score": 1
+        },
+        {
+          "id": 914,
+          "nome": "Sociologia I",
+          "codigo_sae": null,
+          "score": 1
+        }
+      ]
+    },
+    {
+      "mb": {
+        "id": 1712,
+        "nome": "Sociologia 1",
+        "codigo_sae": null
+      },
+      "candidatos": [
+        {
+          "id": 605,
+          "nome": "Sociologia",
+          "codigo_sae": "2301",
+          "score": 1
+        },
+        {
+          "id": 913,
+          "nome": "Sociologia Gov Cid Sociedade",
+          "codigo_sae": null,
+          "score": 1
+        },
+        {
+          "id": 914,
+          "nome": "Sociologia I",
+          "codigo_sae": null,
+          "score": 1
+        }
+      ]
+    },
+    {
+      "mb": {
+        "id": 1713,
+        "nome": "Tecno. e Fer. de Gestão",
+        "codigo_sae": null
+      },
+      "candidatos": [
+        {
+          "id": 915,
+          "nome": "Tecnologia e Ferramenta de Gestão",
+          "codigo_sae": null,
+          "score": 1
+        }
+      ]
+    },
+    {
+      "mb": {
+        "id": 1625,
+        "nome": "Arte 2",
+        "codigo_sae": null
+      },
+      "candidatos": [
+        {
+          "id": 33,
+          "nome": "Arte",
+          "codigo_sae": "704",
+          "score": 1
+        },
+        {
+          "id": 34,
+          "nome": "Arte e Mídias Digitais",
+          "codigo_sae": null,
+          "score": 1
+        },
+        {
+          "id": 35,
+          "nome": "Arte Paranaense",
+          "codigo_sae": null,
+          "score": 1
+        }
+      ]
+    },
+    {
+      "mb": {
+        "id": 1632,
+        "nome": "Biologia 2",
+        "codigo_sae": null
+      },
+      "candidatos": [
+        {
+          "id": 56,
+          "nome": "Biologia",
+          "codigo_sae": "1001",
+          "score": 1
+        },
+        {
+          "id": 57,
+          "nome": "Biologia Molecular",
+          "codigo_sae": null,
+          "score": 1
+        },
+        {
+          "id": 904,
+          "nome": "Biologia II",
+          "codigo_sae": null,
+          "score": 1
+        }
+      ]
+    }
+  ]
+}

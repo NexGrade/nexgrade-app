@@ -1,0 +1,2222 @@
+[
+  {
+    "id": 2869,
+    "nome": "Acionamento de Máquinas",
+    "codigo_sae": "3823",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1619,
+    "nome": "Adm Financ e Orçamentária",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2826,
+    "nome": "Administração e Economia Rural",
+    "codigo_sae": "4602",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2919,
+    "nome": "Administração Portuária",
+    "codigo_sae": "4185",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2850,
+    "nome": "Análise Ambiental",
+    "codigo_sae": "3028",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1620,
+    "nome": "Análise Cont e Quim Amb",
+    "codigo_sae": "867",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1621,
+    "nome": "Análise Cont e Quim Amb 1",
+    "codigo_sae": "6620",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2835,
+    "nome": "Análise de Alimentos",
+    "codigo_sae": "3018",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2904,
+    "nome": "Análise de Mercado e Comportamento do Consumidor",
+    "codigo_sae": "5535",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1622,
+    "nome": "Análise e Met P Sistemas",
+    "codigo_sae": "5316",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1623,
+    "nome": "Análise Proj de Sistemas",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 4,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2928,
+    "nome": "Anatomia Bucal",
+    "codigo_sae": "3138",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2923,
+    "nome": "Anatomia e Escultura Dental",
+    "codigo_sae": "3103",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2894,
+    "nome": "Armazenagem e Gestão de Estoque",
+    "codigo_sae": "6403",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1624,
+    "nome": "Arte",
+    "codigo_sae": "4100",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 33,
+    "ocorrencias_turma_disciplinas": 44
+  },
+  {
+    "id": 1625,
+    "nome": "Arte 2",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 2
+  },
+  {
+    "id": 1626,
+    "nome": "Arte Paranaense",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2888,
+    "nome": "Aspectos Geográficos e Históricos do Turismo Brasileiro",
+    "codigo_sae": "5567",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2910,
+    "nome": "Automação e Robótica",
+    "codigo_sae": "3824",
+    "sigla": null,
+    "carga_semanal": 4,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2862,
+    "nome": "Automação Industrial",
+    "codigo_sae": "1547",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1627,
+    "nome": "Banco de Dados",
+    "codigo_sae": "6510",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1628,
+    "nome": "Banco de Dados 1",
+    "codigo_sae": "5400",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1629,
+    "nome": "Banco de Dados 2",
+    "codigo_sae": "5600",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2852,
+    "nome": "Banco de Dados Iii",
+    "codigo_sae": "6510",
+    "sigla": null,
+    "carga_semanal": 1,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1630,
+    "nome": "Bases Bio Aplic a Saude",
+    "codigo_sae": "4288",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2876,
+    "nome": "Bases Biológicas Aplicadas a Saúde",
+    "codigo_sae": "4288",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1631,
+    "nome": "Biologia",
+    "codigo_sae": "2500",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 7
+  },
+  {
+    "id": 1632,
+    "nome": "Biologia 2",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2847,
+    "nome": "Bioquímica",
+    "codigo_sae": "3501",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2833,
+    "nome": "Bioquímica de Alimentos",
+    "codigo_sae": "3001",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2932,
+    "nome": "Biossegurança e Controle Biológico",
+    "codigo_sae": "3139",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1633,
+    "nome": "Biossegurança e Seg Trab",
+    "codigo_sae": "4290",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2877,
+    "nome": "Biossegurança e Segurança do Trabalho",
+    "codigo_sae": "4290",
+    "sigla": null,
+    "carga_semanal": 1,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2848,
+    "nome": "Bromatologia",
+    "codigo_sae": "3095",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2827,
+    "nome": "Cadeias Produtivas",
+    "codigo_sae": "5035",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2844,
+    "nome": "Cadeias Produtivas e Agroindústria",
+    "codigo_sae": "5836",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2829,
+    "nome": "Cadeias Produtivas I",
+    "codigo_sae": "6617",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1634,
+    "nome": "Ciências (Fundamental)",
+    "codigo_sae": "2400",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 34
+  },
+  {
+    "id": 1635,
+    "nome": "Ciências de Dados",
+    "codigo_sae": "4763",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1636,
+    "nome": "Computação Gráfica",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2902,
+    "nome": "Comunicação de Marketing",
+    "codigo_sae": "5536",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2825,
+    "nome": "Comunicação e Atendimento Ao Cliente",
+    "codigo_sae": "5565",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1637,
+    "nome": "Comunicação e Vendas",
+    "codigo_sae": "5020",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2831,
+    "nome": "Conservação de Alimentos",
+    "codigo_sae": "3003",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1638,
+    "nome": "Controladoria e Finanças",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2911,
+    "nome": "Controle de Processos Industriais",
+    "codigo_sae": "3825",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2872,
+    "nome": "Cosmetologia",
+    "codigo_sae": "4350",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2879,
+    "nome": "Cozinha Fria",
+    "codigo_sae": "4272",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2882,
+    "nome": "Cozinha Internacional",
+    "codigo_sae": "4273",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1639,
+    "nome": "Des Hum e Socioemocional",
+    "codigo_sae": "5216",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2860,
+    "nome": "Desenho Elétrico",
+    "codigo_sae": "1909",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2905,
+    "nome": "Desenho Mecânico",
+    "codigo_sae": "3828",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1640,
+    "nome": "Dis Prod Far e Correlatos",
+    "codigo_sae": "4291",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 2
+  },
+  {
+    "id": 2875,
+    "nome": "Dispensação de Produtos Farmacêuticos e Correlatos",
+    "codigo_sae": "4291",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1641,
+    "nome": "Ed Inclusiva Diversidade",
+    "codigo_sae": "5303",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1642,
+    "nome": "Educação Ambiental",
+    "codigo_sae": "310",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1643,
+    "nome": "Educação Ambiental 1",
+    "codigo_sae": "6622",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1644,
+    "nome": "Educação Digital",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 15
+  },
+  {
+    "id": 2476,
+    "nome": "Educação Digital e Computação: Programação e IA",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 1,
+    "categoria_curricular_padrao": "FGB",
+    "ocorrencias_itens_matriz": 33,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1645,
+    "nome": "Educação Financeira",
+    "codigo_sae": "EDFIN",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 35,
+    "ocorrencias_turma_disciplinas": 14
+  },
+  {
+    "id": 1646,
+    "nome": "Educação Física",
+    "codigo_sae": "3200",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 66,
+    "ocorrencias_turma_disciplinas": 53
+  },
+  {
+    "id": 2890,
+    "nome": "Educação Midiática",
+    "codigo_sae": "6609",
+    "sigla": null,
+    "carga_semanal": 1,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2857,
+    "nome": "Eletricidade",
+    "codigo_sae": "1545",
+    "sigla": null,
+    "carga_semanal": 5,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 6,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2861,
+    "nome": "Eletrônica",
+    "codigo_sae": "3805",
+    "sigla": null,
+    "carga_semanal": 5,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 4,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2856,
+    "nome": "Eletrônica Analógica",
+    "codigo_sae": "1523",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2936,
+    "nome": "Emergência Odontológica",
+    "codigo_sae": "3121",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1647,
+    "nome": "Empreendedorismo",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2886,
+    "nome": "Empreendedorismo e Inovação",
+    "codigo_sae": "3947",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1648,
+    "nome": "Ensino Religioso",
+    "codigo_sae": "6400",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 17
+  },
+  {
+    "id": 2868,
+    "nome": "Equipamentos e Comandos",
+    "codigo_sae": "1526",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1649,
+    "nome": "Est de Imp Ris Ambientais",
+    "codigo_sae": "1519",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1650,
+    "nome": "Estratégia de Marketing",
+    "codigo_sae": "5019",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1651,
+    "nome": "Estratégias de Marketing",
+    "codigo_sae": "5019",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1654,
+    "nome": "Farmácia Hospitalar",
+    "codigo_sae": "5319",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1652,
+    "nome": "Farmacologia 1",
+    "codigo_sae": "5513",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1653,
+    "nome": "Farmacologia 2",
+    "codigo_sae": "5514",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2479,
+    "nome": "Farmacologia I",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "APF",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2487,
+    "nome": "Farmacotécnica",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "APF",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1655,
+    "nome": "Fil.textos Filosóficos",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1656,
+    "nome": "Filosofia",
+    "codigo_sae": "3100",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 7
+  },
+  {
+    "id": 1657,
+    "nome": "Finanças Empresariais",
+    "codigo_sae": "5033",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 2
+  },
+  {
+    "id": 1660,
+    "nome": "Física",
+    "codigo_sae": "2600",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 12
+  },
+  {
+    "id": 1661,
+    "nome": "Física 2",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1662,
+    "nome": "Física 3",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1658,
+    "nome": "Fund da Fisiopatologia",
+    "codigo_sae": "5515",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1659,
+    "nome": "Fundamentos de Farmácia",
+    "codigo_sae": "4295",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2885,
+    "nome": "Fundamentos do Turismo e da Hospitalidade",
+    "codigo_sae": "4942",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1663,
+    "nome": "Geografia",
+    "codigo_sae": "2100",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 41
+  },
+  {
+    "id": 1664,
+    "nome": "Geografia 1",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 2
+  },
+  {
+    "id": 1665,
+    "nome": "Geografia do Paraná",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2916,
+    "nome": "Gestão Ambiental",
+    "codigo_sae": "4033",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2842,
+    "nome": "Gestão da Atividade Turística",
+    "codigo_sae": "5840",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2895,
+    "nome": "Gestão de Qualidade Total",
+    "codigo_sae": "6406",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1666,
+    "nome": "Gestão de Rec Naturais",
+    "codigo_sae": "868",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1667,
+    "nome": "Gestão de Rec Naturais 1",
+    "codigo_sae": "6623",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1668,
+    "nome": "Gestão de Resíduos",
+    "codigo_sae": "1928",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 2
+  },
+  {
+    "id": 2838,
+    "nome": "Gestão e Empreendedorismo",
+    "codigo_sae": "8125",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2883,
+    "nome": "Gestão e Negócios na Gastronomia",
+    "codigo_sae": "5517",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2863,
+    "nome": "Gestão Industrial",
+    "codigo_sae": "2141",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1669,
+    "nome": "Hibrida",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 3
+  },
+  {
+    "id": 2881,
+    "nome": "Higiene e Segurança Alimentar",
+    "codigo_sae": "1832",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2917,
+    "nome": "Higiene e Segurança do Trabalho",
+    "codigo_sae": "1535",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1670,
+    "nome": "História",
+    "codigo_sae": "2200",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 41
+  },
+  {
+    "id": 1671,
+    "nome": "História 1",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 2
+  },
+  {
+    "id": 1672,
+    "nome": "História do Paraná",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2878,
+    "nome": "História, Arte e Cultura dos Alimentos",
+    "codigo_sae": "4276",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1673,
+    "nome": "In Tec e Empreendedorismo",
+    "codigo_sae": "5999",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2940,
+    "nome": "Indumentária e Caracterização",
+    "codigo_sae": "2526",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1674,
+    "nome": "Informática Aplicada",
+    "codigo_sae": "4420",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1675,
+    "nome": "Informática Empresarial",
+    "codigo_sae": "5015",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 2
+  },
+  {
+    "id": 2938,
+    "nome": "Instalações Elétricas",
+    "codigo_sae": "3810",
+    "sigla": null,
+    "carga_semanal": 4,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2937,
+    "nome": "Instrumentação e Medidas de Energia",
+    "codigo_sae": "4280",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2941,
+    "nome": "Interpretação Teatral",
+    "codigo_sae": "2527",
+    "sigla": null,
+    "carga_semanal": 4,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1676,
+    "nome": "Introdução À Computação",
+    "codigo_sae": "5314",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2853,
+    "nome": "Introdução À Construção Civil",
+    "codigo_sae": "2137",
+    "sigla": null,
+    "carga_semanal": 1,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2906,
+    "nome": "Introdução a Mecânica",
+    "codigo_sae": "3918",
+    "sigla": null,
+    "carga_semanal": 1,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1677,
+    "nome": "Introdução À Programação",
+    "codigo_sae": "5315",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2939,
+    "nome": "Laboratório de Montagem Teatral",
+    "codigo_sae": "2528",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2828,
+    "nome": "Legislação Agrária e Ambiental",
+    "codigo_sae": "2125",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1678,
+    "nome": "Leitura e Recomposição da Aprendizagem - Língua Portuguesa",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 18
+  },
+  {
+    "id": 1680,
+    "nome": "Lid Org e Ges de Pessoas",
+    "codigo_sae": "5034",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 2
+  },
+  {
+    "id": 2839,
+    "nome": "Liderança e Associativismo",
+    "codigo_sae": "5838",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2892,
+    "nome": "Liderança e Gestão de Empresas",
+    "codigo_sae": "6444",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2819,
+    "nome": "Liderança Organizacional e Gestão de Pessoas",
+    "codigo_sae": "5034",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 4,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2477,
+    "nome": "Língua Espanhola",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 4,
+    "categoria_curricular_padrao": "PD",
+    "ocorrencias_itens_matriz": 99,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1682,
+    "nome": "Língua Estrangeira Moderna - Inglês",
+    "codigo_sae": "1400",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 48
+  },
+  {
+    "id": 2475,
+    "nome": "Língua Inglesa",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "FGB",
+    "ocorrencias_itens_matriz": 99,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1683,
+    "nome": "Língua Inglesa 1",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2474,
+    "nome": "Língua Portuguesa",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "FGB",
+    "ocorrencias_itens_matriz": 99,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1684,
+    "nome": "Língua Portuguesa e Literatura",
+    "codigo_sae": "1100",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 7,
+    "ocorrencias_turma_disciplinas": 52
+  },
+  {
+    "id": 1681,
+    "nome": "Lit. e Prod. de Texto",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1685,
+    "nome": "Lógica Computacional",
+    "codigo_sae": "1348",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2896,
+    "nome": "Logística Integrada e Sustentabilidade",
+    "codigo_sae": "6408",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2865,
+    "nome": "Máquinas Elétricas",
+    "codigo_sae": "3820",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2837,
+    "nome": "Marketing Aplicado Ao Consumo Sustentável",
+    "codigo_sae": "5834",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2903,
+    "nome": "Marketing de Conteúdo",
+    "codigo_sae": "5546",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2871,
+    "nome": "Massoterapia Aplicada a Estética",
+    "codigo_sae": "5509",
+    "sigla": null,
+    "carga_semanal": 4,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1686,
+    "nome": "Mat Bas P Anos Iniciais",
+    "codigo_sae": "6508",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1687,
+    "nome": "Matemática",
+    "codigo_sae": "2700",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 109,
+    "ocorrencias_turma_disciplinas": 53
+  },
+  {
+    "id": 1688,
+    "nome": "Matemática 2",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2924,
+    "nome": "Materiais e Equipamentos Odontológicos",
+    "codigo_sae": "3115",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2929,
+    "nome": "Materiais Odontológicos",
+    "codigo_sae": "3140",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2858,
+    "nome": "Mecânica",
+    "codigo_sae": "3910",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 5,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1689,
+    "nome": "Metodologia Científica e Comunicação",
+    "codigo_sae": "871",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2914,
+    "nome": "Metodologia Científica e Comunicação I",
+    "codigo_sae": "6627",
+    "sigla": null,
+    "carga_semanal": 1,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2874,
+    "nome": "Microagulhamento",
+    "codigo_sae": "5511",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2830,
+    "nome": "Microbiologia dos Alimentos",
+    "codigo_sae": "3072",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2849,
+    "nome": "Microbiologia Industrial",
+    "codigo_sae": "3067",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1690,
+    "nome": "Negociação e Vendas",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1691,
+    "nome": "Noções de Direito",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2930,
+    "nome": "Odontologia Preventiva e Social",
+    "codigo_sae": "3142",
+    "sigla": null,
+    "carga_semanal": 1,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2918,
+    "nome": "Operações com Cargas",
+    "codigo_sae": "4321",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1692,
+    "nome": "Org do Trab Pedagógico",
+    "codigo_sae": "1803",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2927,
+    "nome": "Organização e Administração em Saúde Bucal",
+    "codigo_sae": "3143",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2926,
+    "nome": "Organização e Administração Laboratorial",
+    "codigo_sae": "3114",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2942,
+    "nome": "Organização e Produção Teatral",
+    "codigo_sae": "2529",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2880,
+    "nome": "Panificação e Confeitaria",
+    "codigo_sae": "5519",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2935,
+    "nome": "Patologia Bucal",
+    "codigo_sae": "3144",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2915,
+    "nome": "Planejamento da Produção",
+    "codigo_sae": "5548",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2898,
+    "nome": "Planejamento de Marketing",
+    "codigo_sae": "5538",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2832,
+    "nome": "Prática de Higienização e Legislação dos Alimentos",
+    "codigo_sae": "2062",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2893,
+    "nome": "Práticas em Lazer",
+    "codigo_sae": "6423",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1693,
+    "nome": "Princ. de Administração",
+    "codigo_sae": "4129",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1694,
+    "nome": "Princípios Econômicos",
+    "codigo_sae": "5031",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 2
+  },
+  {
+    "id": 2851,
+    "nome": "Processos Industriais",
+    "codigo_sae": "805",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1695,
+    "nome": "Prog no Des de Sistemas",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1696,
+    "nome": "Programação Back End",
+    "codigo_sae": "5900",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1697,
+    "nome": "Programação Back End 1",
+    "codigo_sae": "5700",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2889,
+    "nome": "Programação com Python 1",
+    "codigo_sae": "6599",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1698,
+    "nome": "Programação Front End",
+    "codigo_sae": "4761",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1699,
+    "nome": "Programação Mobile",
+    "codigo_sae": "4491",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2922,
+    "nome": "Programação Web Aplicada a Jogos Digitais",
+    "codigo_sae": "5561",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1700,
+    "nome": "Projeto de Vida",
+    "codigo_sae": "PV01",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 4
+  },
+  {
+    "id": 2867,
+    "nome": "Projetos Elétricos",
+    "codigo_sae": "3719",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2859,
+    "nome": "Projetos em Eletromecânica",
+    "codigo_sae": "3808",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2925,
+    "nome": "Prótese Total",
+    "codigo_sae": "3107",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1701,
+    "nome": "Química",
+    "codigo_sae": "2300",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 7
+  },
+  {
+    "id": 1702,
+    "nome": "Química 1",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2933,
+    "nome": "Radiologia Odontológica",
+    "codigo_sae": "3145",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1703,
+    "nome": "Recomposição da Aprendizagem - Língua Portuguesa",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 3
+  },
+  {
+    "id": 1704,
+    "nome": "Recomposição da Aprendizagem - Matemática",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 21
+  },
+  {
+    "id": 1705,
+    "nome": "Recursos Humanos",
+    "codigo_sae": "4450",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 3
+  },
+  {
+    "id": 1706,
+    "nome": "Redação e Leitura",
+    "codigo_sae": "RED01",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 16
+  },
+  {
+    "id": 1707,
+    "nome": "Redação Técnica",
+    "codigo_sae": "126",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 2
+  },
+  {
+    "id": 2870,
+    "nome": "Reflexoterapias",
+    "codigo_sae": "5512",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2920,
+    "nome": "Regulamentação Aduaneira",
+    "codigo_sae": "4184",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2899,
+    "nome": "Relações Interpessoais",
+    "codigo_sae": "2324",
+    "sigla": null,
+    "carga_semanal": 1,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2846,
+    "nome": "Roteirização Turística",
+    "codigo_sae": "5839",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2909,
+    "nome": "Saúde e Segurança do Trabalho",
+    "codigo_sae": "3212",
+    "sigla": null,
+    "carga_semanal": 1,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1708,
+    "nome": "Saúde Pública",
+    "codigo_sae": "3228",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2891,
+    "nome": "Segurança Digital",
+    "codigo_sae": "6612",
+    "sigla": null,
+    "carga_semanal": 1,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2864,
+    "nome": "Segurança do Trabalho",
+    "codigo_sae": "4014",
+    "sigla": null,
+    "carga_semanal": 1,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2884,
+    "nome": "Segurança do Trabalho e Saúde Ocupacional",
+    "codigo_sae": "5520",
+    "sigla": null,
+    "carga_semanal": 1,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2866,
+    "nome": "Segurança e Controle Ambiental",
+    "codigo_sae": "4065",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1709,
+    "nome": "Sist de Gestão Ambiental",
+    "codigo_sae": "6713",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 2
+  },
+  {
+    "id": 2913,
+    "nome": "Sistema de Gestão Ambiental",
+    "codigo_sae": "6713",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1710,
+    "nome": "Soc.gov.cidad e Sociedade",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1711,
+    "nome": "Sociologia",
+    "codigo_sae": "3300",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 7
+  },
+  {
+    "id": 1712,
+    "nome": "Sociologia 1",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 2
+  },
+  {
+    "id": 2845,
+    "nome": "Soluções Sustentáveis",
+    "codigo_sae": "5837",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2841,
+    "nome": "Sustentabilidade",
+    "codigo_sae": "3183",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2855,
+    "nome": "Técnicas Construtivas",
+    "codigo_sae": "2136",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2873,
+    "nome": "Técnicas de Estética Facial",
+    "codigo_sae": "1694",
+    "sigla": null,
+    "carga_semanal": 4,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2931,
+    "nome": "Técnicas de Instrumentação em Odontologia",
+    "codigo_sae": "3146",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2843,
+    "nome": "Técnicas de Produção Animal e Vegetal",
+    "codigo_sae": "5841",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2900,
+    "nome": "Técnicas de Venda e Marketing de Varejo",
+    "codigo_sae": "5537",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1716,
+    "nome": "Técnicas Integradas",
+    "codigo_sae": "6509",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 6,
+    "ocorrencias_turma_disciplinas": 2
+  },
+  {
+    "id": 2934,
+    "nome": "Técnicas Restauradoras",
+    "codigo_sae": "3147",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1713,
+    "nome": "Tecno. e Fer. de Gestão",
+    "codigo_sae": null,
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2824,
+    "nome": "Tecnologia da Informação Aplicada Ao Turismo",
+    "codigo_sae": "5571",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2908,
+    "nome": "Tecnologia dos Materiais",
+    "codigo_sae": "2147",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2907,
+    "nome": "Tecnologia Mecânica",
+    "codigo_sae": "3916",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2834,
+    "nome": "Tecnologias de Carnes e Derivados",
+    "codigo_sae": "4342",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2836,
+    "nome": "Tecnologias de Lacticínios",
+    "codigo_sae": "4340",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2901,
+    "nome": "Tecnologias Digitais Aplicadas Ao Marketing",
+    "codigo_sae": "5833",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2840,
+    "nome": "Tecnologias Sociais e Identidade Territorial",
+    "codigo_sae": "5835",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2887,
+    "nome": "Teoria e Técnica",
+    "codigo_sae": "4934",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 3,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2854,
+    "nome": "Topografia",
+    "codigo_sae": "4628",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 1,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 1714,
+    "nome": "Toxicologia",
+    "codigo_sae": "3511",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 1715,
+    "nome": "Trab Ped na Ed Infantil",
+    "codigo_sae": "1726",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": null,
+    "ocorrencias_itens_matriz": 0,
+    "ocorrencias_turma_disciplinas": 1
+  },
+  {
+    "id": 2921,
+    "nome": "Transporte Marítimo",
+    "codigo_sae": "4322",
+    "sigla": null,
+    "carga_semanal": 3,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  },
+  {
+    "id": 2897,
+    "nome": "Transportes e Seguros",
+    "codigo_sae": "6405",
+    "sigla": null,
+    "carga_semanal": 2,
+    "categoria_curricular_padrao": "IFP",
+    "ocorrencias_itens_matriz": 2,
+    "ocorrencias_turma_disciplinas": 0
+  }
+]
