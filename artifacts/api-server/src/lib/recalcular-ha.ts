@@ -8,11 +8,16 @@
 //
 // Usa a formula oficial SEED-PR (Resolucao n. 7.200/2025, art. 11)
 // aplicada nas aulas REAIS da grade oficial atual:
-//   - Falta HA: preenche primeiro janelas (buraco entre duas aulas no
-//     mesmo dia) -- resolve HA insuficiente e janela excessiva ao
-//     mesmo tempo. Sem janelas suficientes, completa com qualquer
-//     slot livre no mesmo turno (art. 11 par. 4 -- HA concentrada no
-//     turno principal quando ate 19 aulas nesse turno).
+//   - Preenche primeiro no(s) turno(s) onde o professor da aula,
+//     priorizando sempre o slot que resulta em MENOS janelas no total
+//     (art. 11 par. 4 -- HA concentrada no turno principal).
+//   - [POLITICA-CONTRATURNO] O que nao couber (turno de ensino lotado
+//     de aula real, sem espaco suficiente) e completado automaticamente
+//     em contraturno, no turno onde o professor nao da aula. Decisao
+//     institucional confirmada em 28/08/2026 -- antes disso o sistema
+//     nunca inventava contraturno sozinho (so preservava marcacao
+//     manual ja existente); agora preenche o que sobra sozinho, sempre
+//     priorizando o turno de ensino primeiro.
 //   - Sobra HA: remove o excesso.
 //   - Ja bate: nao mexe.
 //
@@ -44,7 +49,7 @@ function calcularHoraAtividadeInstitucional(aulasNoTurno: number): number {
   return Math.ceil(aulasNoTurno / 3);
 }
 
-function calcularHoraAtividadePorTurno(aulasPorTurno: Record<string, number>): Record<string, number> {
+function calcularHoraAtividadePorTurno(aulasPorTurno: Record<string, number>, exigidoOverride?: number): Record<string, number> {
   const turnos = Object.keys(aulasPorTurno);
   const totalAulas = turnos.reduce((soma, t) => soma + (aulasPorTurno[t] || 0), 0);
   if (totalAulas <= 0) {
@@ -52,7 +57,7 @@ function calcularHoraAtividadePorTurno(aulasPorTurno: Record<string, number>): R
     turnos.forEach((t) => (zeros[t] = 0));
     return zeros;
   }
-  const exigidoTotal = calcularHoraAtividadeInstitucional(totalAulas);
+  const exigidoTotal = exigidoOverride ?? calcularHoraAtividadeInstitucional(totalAulas);
   const partes = turnos.map((turno) => {
     const aulas = aulasPorTurno[turno] || 0;
     const proporcional = (aulas / totalAulas) * exigidoTotal;
@@ -176,31 +181,31 @@ export async function calcularHAIdeal(
 
     const totalAulas = Object.values(aulasPorTurno).reduce((s, n) => s + n, 0);
     const exigidoTotal = calcularHoraAtividadeInstitucional(totalAulas);
-    const orcamentoPorTurno = calcularHoraAtividadePorTurno(aulasPorTurno);
+    // [FIX] a HA manual de contraturno ja preservada acima conta pro
+    // total exigido -- sem subtrair aqui, o orcamento automatico por
+    // turno de ensino seria calculado em cima do total CHEIO de novo,
+    // dando HA a mais (manual + automatica somando mais que o exigido).
+    const exigidoParaDistribuir = Math.max(0, exigidoTotal - haManualContraturno.length);
+    const orcamentoPorTurno = calcularHoraAtividadePorTurno(aulasPorTurno, exigidoParaDistribuir);
 
-    // [RECALCULO DETERMINISTICO] Pra cada turno onde o professor da
-    // aula, calcula do ZERO (nunca olhando pra HA antiga) a melhor
-    // distribuicao do orcamento daquele turno, em 3 fases -- sempre na
-    // mesma ordem de prioridade, sempre com o mesmo resultado pra a
-    // mesma entrada (aulas reais + orcamento). Isso elimina qualquer
-    // chance de oscilacao entre rodadas (o problema do algoritmo
-    // anterior, que tentava "consertar" o estado anterior aos poucos e
-    // podia entrar num ciclo sem nunca convergir).
-    for (const turno of Object.keys(aulasPorTurno)) {
-      let orcamento = orcamentoPorTurno[turno] ?? 0;
-      if (orcamento <= 0) continue;
-
+    // [PREENCHIMENTO-GULOSO] Funcao reutilizavel: dado um turno, um
+    // orcamento e o conjunto inicial de slots ocupados (aula real),
+    // preenche o maximo possivel do orcamento nesse turno, sempre
+    // escolhendo a cada passo o slot que resulta em MENOS janelas no
+    // total (empate: prefere colado a algo ja ocupado, depois mais
+    // perto da borda do turno, depois ordem do dia). Retorna quanto
+    // sobrou de orcamento sem conseguir encaixar (turno lotado).
+    function preencherGuloso(turno: string, orcamentoInicial: number, ocupadoInicial: Set<string>): number {
+      let orcamento = orcamentoInicial;
       const maxAula = maxAulaPorTurno.get(turno) ?? 6;
       const bloqueado = bloqueadoPorTurno.get(turno) ?? new Set();
-      // copia mutavel -- vai crescendo conforme a HA e escolhida
-      const ocupado = new Set(ocupadoPorTurnoOriginal.get(turno) ?? []);
+      const ocupado = new Set(ocupadoInicial);
 
       function livre(dia: number, aula: number): boolean {
         if (aula < 1 || aula > maxAula) return false;
         const chave = `${dia}-${aula}`;
         return !ocupado.has(chave) && !bloqueado.has(chave);
       }
-
       function contarJanelas(conjunto: Set<string>): number {
         let total = 0;
         for (let dia = 0; dia < 5; dia++) {
@@ -213,16 +218,6 @@ export async function calcularHAIdeal(
         return total;
       }
 
-      // [GULOSO-DETERMINISTICO] A cada HA que falta colocar, testa
-      // TODOS os slots livres, recalcula quantas janelas restariam no
-      // total pra cada opcao, e escolhe sempre a que resulta em MENOS
-      // janelas (empate: prefere colado a algo ja ocupado, depois mais
-      // perto da borda do turno, depois ordem do dia). Recalculando do
-      // zero a cada passo (em vez de decidir tudo de uma vez em fases
-      // fixas), o proprio algoritmo enxerga e evita o efeito colateral
-      // de "encurralar" um slot vazio entre duas HAs colocadas nesta
-      // mesma rodada -- se isso aconteceria, a opcao correspondente
-      // simplesmente pontua pior e nao e escolhida.
       while (orcamento > 0) {
         const candidatos: Array<{ dia: number; aula: number }> = [];
         for (let dia = 0; dia < 5; dia++) {
@@ -230,7 +225,7 @@ export async function calcularHAIdeal(
             if (livre(dia, aula)) candidatos.push({ dia, aula });
           }
         }
-        if (candidatos.length === 0) break; // turno lotado, fica pendencia real
+        if (candidatos.length === 0) break;
 
         let melhor: { dia: number; aula: number; janelas: number; colado: boolean; dist: number } | null = null;
         for (const c of candidatos) {
@@ -254,12 +249,63 @@ export async function calcularHAIdeal(
         ocupado.add(`${melhor.dia}-${melhor.aula}`);
         orcamento--;
       }
-
-      // Se AINDA sobrar orcamento (turno lotado, sem slot livre
-      // nenhum), fica como pendencia real -- nunca inventa contraturno
-      // sozinho, e a conferencia de conflitos acusa ate alguem decidir
-      // manualmente.
+      return orcamento;
     }
+
+    // [RECALCULO DETERMINISTICO] Pra cada turno onde o professor da
+    // aula, preenche do ZERO (nunca olhando pra HA antiga) a melhor
+    // distribuicao do orcamento daquele turno -- sempre com o mesmo
+    // resultado pra mesma entrada (aulas reais + orcamento), o que
+    // elimina qualquer chance de oscilacao entre rodadas.
+    let sobraGeral = 0;
+    for (const turno of Object.keys(aulasPorTurno)) {
+      const orcamento = orcamentoPorTurno[turno] ?? 0;
+      if (orcamento <= 0) continue;
+      const restante = preencherGuloso(turno, orcamento, ocupadoPorTurnoOriginal.get(turno) ?? new Set());
+      sobraGeral += restante;
+    }
+
+    // [CONTRATURNO-AUTOMATICO] O que nao coube no(s) turno(s) de
+    // ensino (turno lotado -- aula real ocupando quase tudo) e
+    // colocado automaticamente em contraturno, no(s) turno(s) onde o
+    // professor NAO da aula nenhuma. Prioriza o turno com mais espaco
+    // livre primeiro. So entra aqui quando de fato faltou espaco --
+    // nunca reduz o que ja coube no turno de ensino.
+    if (sobraGeral > 0) {
+      const turnosContraturno = [...maxAulaPorTurno.keys()].filter((t) => !(t in aulasPorTurno));
+      // ordena pelo turno com mais slots livres primeiro, pra
+      // distribuir de forma mais equilibrada quando ha mais de uma
+      // opcao de contraturno (ex.: professor so do vespertino tem
+      // tanto matutino quanto noturno como opcao)
+      const espacoLivre = (turno: string) => {
+        const maxAula = maxAulaPorTurno.get(turno) ?? 6;
+        const bloqueado = bloqueadoPorTurno.get(turno) ?? new Set();
+        let livre = 0;
+        for (let dia = 0; dia < 5; dia++) {
+          for (let aula = 1; aula <= maxAula; aula++) {
+            if (!bloqueado.has(`${dia}-${aula}`)) livre++;
+          }
+        }
+        return livre;
+      };
+      turnosContraturno.sort((a, b) => espacoLivre(b) - espacoLivre(a));
+
+      for (const turno of turnosContraturno) {
+        if (sobraGeral <= 0) break;
+        // [FIX] semeia com a HA manual ja existente nesse contraturno
+        // (se houver) -- senao o preenchimento automatico podia
+        // escolher o MESMO slot que já tem uma marca manual ali.
+        const jaManualNesseTurno = new Set(
+          haManualContraturno.filter((m) => (m.turno ?? "sem_turno") === turno).map((m) => `${m.diaSemana}-${m.horarioSlot}`),
+        );
+        sobraGeral = preencherGuloso(turno, sobraGeral, jaManualNesseTurno);
+      }
+    }
+
+    // Se AINDA sobrar depois de tentar todo turno de ensino E todo
+    // contraturno (bloqueios cobrindo a semana inteira em todo turno),
+    // fica como pendencia real -- a conferencia de conflitos acusa ate
+    // alguem decidir manualmente (ex.: reduzir a carga do professor).
   }
   return marcasFinais;
 }
