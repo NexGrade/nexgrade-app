@@ -135,29 +135,19 @@ export async function calcularHAIdeal(
     const aulasDoProf = horarios.filter((h) => h.professorId === prof.id);
     if (aulasDoProf.length === 0) continue;
 
-    // aulasPorTurno / ocupadoPorTurno -- so cobrem turnos onde o
-    // professor tem aula REAL. Turnos de contraturno (HA sem aula
-    // nenhuma) nao aparecem aqui de proposito.
     const aulasPorTurno: Record<string, number> = {};
-    const ocupadoPorTurno = new Map<string, Set<string>>();
+    const ocupadoPorTurnoOriginal = new Map<string, Set<string>>();
     for (const h of aulasDoProf) {
       const turno = turmaMap.get(h.turmaId)?.turno;
       if (!turno) continue;
       aulasPorTurno[turno] = (aulasPorTurno[turno] ?? 0) + 1;
-      if (!ocupadoPorTurno.has(turno)) ocupadoPorTurno.set(turno, new Set());
-      ocupadoPorTurno.get(turno)!.add(`${h.diaSemana}-${h.numeroAula}`);
+      if (!ocupadoPorTurnoOriginal.has(turno)) ocupadoPorTurnoOriginal.set(turno, new Set());
+      ocupadoPorTurnoOriginal.get(turno)!.add(`${h.diaSemana}-${h.numeroAula}`);
     }
 
-    const totalAulas = Object.values(aulasPorTurno).reduce((s, n) => s + n, 0);
-    const exigidoTotal = calcularHoraAtividadeInstitucional(totalAulas);
-
-    // [FIX] Slots ja marcados como BLOQUEIO (disponivel=false, nao-HA)
-    // -- a busca de horario livre pra nova HA precisa excluir essas
-    // celulas tambem, nao so as que tem aula real. Sem isso, o
-    // algoritmo podia inserir HA em cima de um bloqueio ja existente
-    // (ex.: professor com o dia inteiro bloqueado, sem vir a escola --
-    // colocar HA la dentro nao faz sentido nenhum). d.turno === null
-    // conta como bloqueio universal (vale pra qualquer turno).
+    // bloqueios (disponivel=false, nao-HA) -- excluidos de qualquer
+    // calculo de candidato, em qualquer fase. turno===null bloqueia em
+    // todos os turnos onde o professor tem aula.
     const bloqueadoPorTurno = new Map<string, Set<string>>();
     for (const d of disponibilidades) {
       if (d.professorId !== prof.id || d.disponivel) continue;
@@ -173,159 +163,104 @@ export async function calcularHAIdeal(
       }
     }
 
-    const haDoProf = disponibilidades.filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria);
-
-    // Valida cada HA existente (qualquer turno, inclusive
-    // contraturno): so e invalida se colidir com uma aula REAL no
-    // mesmo turno. Num turno sem aula nenhuma pra esse professor
-    // (contraturno), nunca ha colisao possivel -- a marcacao e sempre
-    // respeitada, mesmo sem aula ali.
-    //
-    // [FIX-REPOSICIONAMENTO] Alem de invalidar por colisao, tambem
-    // invalida (pra reposicionar depois) uma HA que NAO esta fechando
-    // janela nenhuma, SE existir uma janela de verdade sem HA nesse
-    // mesmo turno. Sem isso, uma HA que ficou "sobrando" numa posicao
-    // ruim (porque a grade mudou ao redor dela depois que ela foi
-    // colocada) nunca era corrigida -- a quantidade total already
-    // batia, entao o algoritmo antigo nao mexia nela, mesmo com uma
-    // janela vaga esperando do lado.
-    const marcadasValidas: typeof haDoProf = [];
-    const candidatasAReposicionar: typeof haDoProf = [];
-    for (const m of haDoProf) {
-      const turno = m.turno ?? "sem_turno";
-      const ocupado = ocupadoPorTurno.get(turno);
-      const bloqueado = bloqueadoPorTurno.get(turno);
-      const chave = `${m.diaSemana}-${m.horarioSlot}`;
-      const colide = (ocupado?.has(chave) ?? false) || (bloqueado?.has(chave) ?? false);
-      if (colide) continue;
-      candidatasAReposicionar.push(m);
-    }
-
-    // pra cada turno onde o professor tem HA, verifica se existe uma
-    // janela de verdade (slot vago entre duas posicoes ocupadas --
-    // aula real OU HA ja mantida) que nenhuma das HAs desse turno esta
-    // preenchendo. Se existir, e a HA em questao NAO fecha janela
-    // nenhuma, ela e candidata a mover.
-    // [FIX-REPOSICIONAMENTO-2] Registra os slots que a HA acabou de
-    // deixar vago nesta mesma rodada (por nao fechar janela) -- a fase
-    // de insercao logo abaixo nao pode escolher esses slots de volta,
-    // senao o algoritmo as vezes so troca a HA "de lugar pro lugar
-    // vazio que ela mesma acabou de criar", em vez de ir pro buraco de
-    // verdade (o slot recem-vago costuma ficar mais perto da borda do
-    // dia, e o desempate por borda escolhia ele de novo por engano).
-    const recemEsvaziadoPorTurno = new Map<string, Set<string>>();
-
-    const porTurnoHA = new Map<string, typeof haDoProf>();
-    for (const m of candidatasAReposicionar) {
-      const turno = m.turno ?? "sem_turno";
-      if (!porTurnoHA.has(turno)) porTurnoHA.set(turno, []);
-      porTurnoHA.get(turno)!.push(m);
-    }
-    for (const [turno, marcasDoTurno] of porTurnoHA) {
-      const maxAula = maxAulaPorTurno.get(turno) ?? 6;
-      const ocupadoReal = ocupadoPorTurno.get(turno) ?? new Set();
-      const todasHAsDoTurno = new Set(marcasDoTurno.map((m) => `${m.diaSemana}-${m.horarioSlot}`));
-      const ocupadoTotal = new Set([...ocupadoReal, ...todasHAsDoTurno]);
-
-      const existeJanelaVaga = (() => {
-        for (let dia = 0; dia < 5; dia++) {
-          for (let aula = 1; aula <= maxAula; aula++) {
-            const chave = `${dia}-${aula}`;
-            if (ocupadoTotal.has(chave)) continue;
-            if (ocupadoTotal.has(`${dia}-${aula - 1}`) && ocupadoTotal.has(`${dia}-${aula + 1}`)) return true;
-          }
-        }
-        return false;
-      })();
-
-      for (const m of marcasDoTurno) {
-        const fechaJanela =
-          ocupadoTotal.has(`${m.diaSemana}-${m.horarioSlot - 1}`) &&
-          ocupadoTotal.has(`${m.diaSemana}-${m.horarioSlot + 1}`);
-        if (existeJanelaVaga && !fechaJanela) {
-          if (!recemEsvaziadoPorTurno.has(turno)) recemEsvaziadoPorTurno.set(turno, new Set());
-          recemEsvaziadoPorTurno.get(turno)!.add(`${m.diaSemana}-${m.horarioSlot}`);
-          continue;
-        }
-        marcadasValidas.push(m);
-      }
-    }
-
-    const diferenca = exigidoTotal - marcadasValidas.length;
-
-    if (diferenca <= 0) {
-      // sobra ou bate certinho -- mantem so as N primeiras validas
-      // (mesma prioridade de remocao da funcao que grava: turno de
-      // ensino antes de contraturno)
-      const noTurnoDeEnsino = marcadasValidas.filter((m) => (m.turno ?? "") in aulasPorTurno);
-      const emContraturno = marcadasValidas.filter((m) => !((m.turno ?? "") in aulasPorTurno));
-      const mantidas = [...noTurnoDeEnsino, ...emContraturno].slice(0, exigidoTotal);
-      for (const m of mantidas) {
-        marcasFinais.push({ professorId: prof.id, turno: m.turno ?? "sem_turno", diaSemana: m.diaSemana, horarioSlot: m.horarioSlot });
-      }
-      continue;
-    }
-
-    // Falta HA -- insere so nos turnos onde o professor DA AULA de
-    // verdade (nunca inventa um contraturno novo sozinho -- isso e
-    // decisao institucional feita manualmente pela coordenacao).
-    // Turnos com mais aulas primeiro (concentra no turno principal,
-    // espirito do art. 11 par. 4 da Resolucao SEED-PR n. 7.200/2025).
-    for (const m of marcadasValidas) {
+    // [MANUAL-CONTRATURNO] HA ja marcada manualmente num turno onde o
+    // professor NAO tem nenhuma aula real -- e uma decisao institucional
+    // tomada por fora do sistema (autorizacao da coordenacao), sempre
+    // respeitada e nunca recalculada por aqui. Conta pro total exigido.
+    const haManualContraturno = disponibilidades.filter(
+      (d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && !((d.turno ?? "") in aulasPorTurno),
+    );
+    for (const m of haManualContraturno) {
       marcasFinais.push({ professorId: prof.id, turno: m.turno ?? "sem_turno", diaSemana: m.diaSemana, horarioSlot: m.horarioSlot });
     }
 
-    let faltam = diferenca;
-    const turnosOrdenados = Object.keys(aulasPorTurno).sort((a, b) => (aulasPorTurno[b] ?? 0) - (aulasPorTurno[a] ?? 0));
+    const totalAulas = Object.values(aulasPorTurno).reduce((s, n) => s + n, 0);
+    const exigidoTotal = calcularHoraAtividadeInstitucional(totalAulas);
+    const orcamentoPorTurno = calcularHoraAtividadePorTurno(aulasPorTurno);
 
-    for (const turno of turnosOrdenados) {
-      if (faltam <= 0) break;
-      const ocupado = ocupadoPorTurno.get(turno) ?? new Set();
-      const bloqueado = bloqueadoPorTurno.get(turno) ?? new Set();
+    // [RECALCULO DETERMINISTICO] Pra cada turno onde o professor da
+    // aula, calcula do ZERO (nunca olhando pra HA antiga) a melhor
+    // distribuicao do orcamento daquele turno, em 3 fases -- sempre na
+    // mesma ordem de prioridade, sempre com o mesmo resultado pra a
+    // mesma entrada (aulas reais + orcamento). Isso elimina qualquer
+    // chance de oscilacao entre rodadas (o problema do algoritmo
+    // anterior, que tentava "consertar" o estado anterior aos poucos e
+    // podia entrar num ciclo sem nunca convergir).
+    for (const turno of Object.keys(aulasPorTurno)) {
+      let orcamento = orcamentoPorTurno[turno] ?? 0;
+      if (orcamento <= 0) continue;
+
       const maxAula = maxAulaPorTurno.get(turno) ?? 6;
-      const jaMarcado = new Set(
-        marcadasValidas.filter((m) => (m.turno ?? "sem_turno") === turno).map((m) => `${m.diaSemana}-${m.horarioSlot}`),
-      );
-      // [FIX] pra deteccao de janela (antes/depois), HA ja existente
-      // TAMBEM conta como "ocupado" -- senao um vago entre uma HA e
-      // uma aula real nao era reconhecido como janela de verdade.
-      const ocupadoParaJanela = new Set([...ocupado, ...jaMarcado]);
-      const evitar = recemEsvaziadoPorTurno.get(turno) ?? new Set<string>();
+      const bloqueado = bloqueadoPorTurno.get(turno) ?? new Set();
+      // copia mutavel -- vai crescendo conforme a HA e escolhida
+      const ocupado = new Set(ocupadoPorTurnoOriginal.get(turno) ?? []);
 
-      const candidatosJanela: Array<{ dia: number; aula: number }> = [];
-      const candidatosOutros: Array<{ dia: number; aula: number; colada: boolean }> = [];
+      function livre(dia: number, aula: number): boolean {
+        if (aula < 1 || aula > maxAula) return false;
+        const chave = `${dia}-${aula}`;
+        return !ocupado.has(chave) && !bloqueado.has(chave);
+      }
 
-      for (let dia = 0; dia < 5; dia++) {
-        for (let aula = 1; aula <= maxAula; aula++) {
-          const chave = `${dia}-${aula}`;
-          if (ocupado.has(chave) || jaMarcado.has(chave) || bloqueado.has(chave) || evitar.has(chave)) continue;
-          const antesOcupado = ocupadoParaJanela.has(`${dia}-${aula - 1}`);
-          const depoisOcupado = ocupadoParaJanela.has(`${dia}-${aula + 1}`);
-          if (antesOcupado && depoisOcupado) {
-            candidatosJanela.push({ dia, aula });
-          } else {
-            candidatosOutros.push({ dia, aula, colada: antesOcupado || depoisOcupado });
+      function contarJanelas(conjunto: Set<string>): number {
+        let total = 0;
+        for (let dia = 0; dia < 5; dia++) {
+          for (let aula = 1; aula <= maxAula; aula++) {
+            const chave = `${dia}-${aula}`;
+            if (conjunto.has(chave)) continue;
+            if (conjunto.has(`${dia}-${aula - 1}`) && conjunto.has(`${dia}-${aula + 1}`)) total++;
           }
         }
+        return total;
       }
 
-      candidatosOutros.sort((a, b) => {
-        if (a.colada !== b.colada) return a.colada ? -1 : 1;
-        const distA = Math.min(a.aula - 1, maxAula - a.aula);
-        const distB = Math.min(b.aula - 1, maxAula - b.aula);
-        if (distA !== distB) return distA - distB;
-        return a.dia - b.dia;
-      });
+      // [GULOSO-DETERMINISTICO] A cada HA que falta colocar, testa
+      // TODOS os slots livres, recalcula quantas janelas restariam no
+      // total pra cada opcao, e escolhe sempre a que resulta em MENOS
+      // janelas (empate: prefere colado a algo ja ocupado, depois mais
+      // perto da borda do turno, depois ordem do dia). Recalculando do
+      // zero a cada passo (em vez de decidir tudo de uma vez em fases
+      // fixas), o proprio algoritmo enxerga e evita o efeito colateral
+      // de "encurralar" um slot vazio entre duas HAs colocadas nesta
+      // mesma rodada -- se isso aconteceria, a opcao correspondente
+      // simplesmente pontua pior e nao e escolhida.
+      while (orcamento > 0) {
+        const candidatos: Array<{ dia: number; aula: number }> = [];
+        for (let dia = 0; dia < 5; dia++) {
+          for (let aula = 1; aula <= maxAula; aula++) {
+            if (livre(dia, aula)) candidatos.push({ dia, aula });
+          }
+        }
+        if (candidatos.length === 0) break; // turno lotado, fica pendencia real
 
-      const escolhidos = [...candidatosJanela, ...candidatosOutros].slice(0, faltam);
-      for (const c of escolhidos) {
-        marcasFinais.push({ professorId: prof.id, turno, diaSemana: c.dia, horarioSlot: c.aula });
-        ocupado.add(`${c.dia}-${c.aula}`);
+        let melhor: { dia: number; aula: number; janelas: number; colado: boolean; dist: number } | null = null;
+        for (const c of candidatos) {
+          const testado = new Set(ocupado);
+          testado.add(`${c.dia}-${c.aula}`);
+          const janelas = contarJanelas(testado);
+          const colado = ocupado.has(`${c.dia}-${c.aula - 1}`) || ocupado.has(`${c.dia}-${c.aula + 1}`);
+          const dist = Math.min(c.aula - 1, maxAula - c.aula);
+          if (
+            !melhor ||
+            janelas < melhor.janelas ||
+            (janelas === melhor.janelas && colado && !melhor.colado) ||
+            (janelas === melhor.janelas && colado === melhor.colado && dist < melhor.dist) ||
+            (janelas === melhor.janelas && colado === melhor.colado && dist === melhor.dist && c.dia < melhor.dia)
+          ) {
+            melhor = { ...c, janelas, colado, dist };
+          }
+        }
+        if (!melhor) break;
+        marcasFinais.push({ professorId: prof.id, turno, diaSemana: melhor.dia, horarioSlot: melhor.aula });
+        ocupado.add(`${melhor.dia}-${melhor.aula}`);
+        orcamento--;
       }
-      faltam -= escolhidos.length;
+
+      // Se AINDA sobrar orcamento (turno lotado, sem slot livre
+      // nenhum), fica como pendencia real -- nunca inventa contraturno
+      // sozinho, e a conferencia de conflitos acusa ate alguem decidir
+      // manualmente.
     }
   }
-
   return marcasFinais;
 }
 
@@ -337,8 +272,43 @@ export async function calcularHAIdeal(
  *
  * Usa calcularHAIdeal (puro) por baixo, e so cuida de comparar contra
  * o que ja existe em disponibilidadeTable pra gravar so a diferenca.
+ *
+ * [MULTI-PASSADA] O reposicionamento de uma HA às vezes precisa de
+ * mais de um ciclo pra chegar no lugar ideal (ex.: mover a HA de A
+ * pra B libera uma janela em C, que só um segundo cálculo detecta).
+ * Em vez de exigir que alguém rode o recálculo várias vezes na mão,
+ * a função já roda internamente até estabilizar (nenhuma mudança na
+ * passada) ou até o limite de segurança, garantindo que o sistema
+ * sempre convirja numa solução sozinho.
  */
 export async function recalcularHoraAtividade(escolaId: string): Promise<ResultadoRecalculoHA> {
+  const MAX_PASSADAS = 5;
+  let totalInseridas = 0;
+  let totalRemovidas = 0;
+  const professoresAfetadosGeral = new Set<number>();
+
+  for (let passada = 1; passada <= MAX_PASSADAS; passada++) {
+    const resultado = await recalcularHoraAtividadeUmaPassada(escolaId);
+    totalInseridas += resultado.inseridas;
+    totalRemovidas += resultado.removidas;
+    resultado.professoresAfetadosIds.forEach((id) => professoresAfetadosGeral.add(id));
+
+    // estabilizou -- nenhuma mudanca nessa passada, nao precisa continuar
+    if (resultado.inseridas === 0 && resultado.removidas === 0) break;
+  }
+
+  return {
+    inseridas: totalInseridas,
+    removidas: totalRemovidas,
+    professoresAfetados: professoresAfetadosGeral.size,
+  };
+}
+
+interface ResultadoUmaPassada extends ResultadoRecalculoHA {
+  professoresAfetadosIds: number[];
+}
+
+async function recalcularHoraAtividadeUmaPassada(escolaId: string): Promise<ResultadoUmaPassada> {
   const [marcasFinais, disponibilidadesTodas, professores] = await Promise.all([
     calcularHAIdeal(escolaId),
     db.select().from(disponibilidadeTable),
@@ -365,7 +335,7 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
   ]);
 
   if (paraInserir.length === 0 && paraRemoverIds.length === 0) {
-    return { inseridas: 0, removidas: 0, professoresAfetados: 0 };
+    return { inseridas: 0, removidas: 0, professoresAfetados: 0, professoresAfetadosIds: [] };
   }
 
   await db.transaction(async (tx) => {
@@ -391,5 +361,6 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
     inseridas: paraInserir.length,
     removidas: paraRemoverIds.length,
     professoresAfetados: professoresAfetadosSet.size,
+    professoresAfetadosIds: [...professoresAfetadosSet],
   };
 }
