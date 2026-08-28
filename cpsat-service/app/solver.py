@@ -45,6 +45,7 @@ def resolver(
     tempo_limite_s: int = 120,
     apenas_turma: bool = False,
     hints: dict | None = None,
+    forcar_zero_janela: bool = False,
 ):
     model = cp_model.CpModel()
 
@@ -119,6 +120,29 @@ def resolver(
             for aula in range(1, aulas_por_dia + 1)
         )
         model.Add(total <= teto)
+
+    # [FORCAR-ZERO-JANELA] Restrição RÍGIDA (não soft) via automaton de
+    # estados finitos: obriga cada professor a ter, em cada dia, no
+    # máximo UM bloco contínuo de aulas (nunca aula-vaga-aula no mesmo
+    # dia). Mais preciso que a penalidade no objetivo, mas também mais
+    # restritivo -- se a disponibilidade real do professor não permitir
+    # um bloco contínuo (ex.: bloqueio no meio do dia por compromisso
+    # externo), o modelo fica INVIABLE em vez de aceitar 1 janela
+    # razoável. Por isso NUNCA é usado sozinho -- só como tentativa
+    # rápida "tudo ou nada"; se travar, o chamador (gerar_grade) recai
+    # pro objetivo suave de sempre, que sempre acha alguma solução.
+    if forcar_zero_janela:
+        estados_finais = [0, 1, 2]
+        transicoes = [(0, 0, 0), (0, 1, 1), (1, 1, 1), (1, 0, 2), (2, 0, 2)]
+        for prof in sorted(professores):
+            indices_prof = [i for i, dt in enumerate(disciplinas_turma) if dt.professor == prof]
+            for dia in range(len(DIAS)):
+                presenca_dia = []
+                for aula in range(1, aulas_por_dia + 1):
+                    tem_aula = model.NewBoolVar(f"presenca_{prof}_{dia}_{aula}")
+                    model.Add(sum(aula_var[(i, dia, aula)] for i in indices_prof) == tem_aula)
+                    presenca_dia.append(tem_aula)
+                model.AddAutomaton(presenca_dia, 0, estados_finais, transicoes)
 
     # RESTRIÇÃO 5 — máximo de aulas geminadas por dia
     for dt_idx, dt in enumerate(disciplinas_turma):
@@ -384,10 +408,29 @@ def gerar_grade(
         else:
             solver, status, aula_var = solver_f1, status_f1, aula_var_f1
     else:
-        solver, status, aula_var = resolver(
+        # [CAMADAS] Turno Parcial (<=16 turmas): primeiro tenta uma
+        # grade com ZERO janela garantido (restrição rígida via
+        # automaton) -- se achar, é a melhor grade possível pra
+        # professor nenhum. Orçamento de tempo curto e fixo pra essa
+        # tentativa, já que se for inviável o solver costuma provar
+        # isso rápido (a restrição rígida corta bastante o espaço de
+        # busca). Se não achar a tempo (inviável OU estourou o
+        # orçamento), cai pro objetivo suave de sempre -- que sempre
+        # encontra alguma solução, só não garante zero janela.
+        TETO_TENTATIVA_RIGIDA_S = 30
+        tempo_rigida = min(TETO_TENTATIVA_RIGIDA_S, max(5, tempo_limite_s // 3))
+        solver_rigido, status_rigido, aula_var_rigido = resolver(
             disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
-            tempo_limite_s, apenas_turma=False,
+            tempo_rigida, apenas_turma=False, forcar_zero_janela=True,
         )
+        if status_rigido in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+            solver, status, aula_var = solver_rigido, status_rigido, aula_var_rigido
+        else:
+            tempo_suave = max(5, tempo_limite_s - tempo_rigida)
+            solver, status, aula_var = resolver(
+                disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
+                tempo_suave, apenas_turma=False,
+            )
     duracao = time.time() - inicio
 
     status_nome = solver.StatusName(status)
