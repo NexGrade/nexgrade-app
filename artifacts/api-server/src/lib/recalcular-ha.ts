@@ -76,20 +76,47 @@ export interface ResultadoRecalculoHA {
   professoresAfetados: number;
 }
 
+export interface AulaParaCalculoHA {
+  professorId: number;
+  turmaId: number;
+  diaSemana: number;
+  numeroAula: number;
+}
+
+export interface MarcaHACalculada {
+  professorId: number;
+  turno: string;
+  diaSemana: number;
+  horarioSlot: number;
+}
+
 /**
- * Recalcula a Hora-Atividade institucional de todos os professores de
- * uma escola, com base nas aulas REAIS da grade oficial atual. Aplica
- * as mudancas diretamente (sem confirmacao interativa) -- para uso
- * automatico apos geracao/promocao/correcao de grade.
+ * [PURO -- NAO GRAVA NADA] Calcula qual seria a distribuicao IDEAL de
+ * Hora-Atividade institucional pra um conjunto de aulas (a formula
+ * oficial SEED-PR, preenchendo primeiro janela, art. 11 par. 4).
+ *
+ * Recebe a lista de aulas pronta (`aulasOverride`) em vez de buscar
+ * `horariosTable` sozinha -- permite reusar o MESMO calculo tanto pra
+ * grade oficial real (`recalcularHoraAtividade`, que grava no banco)
+ * quanto pra uma previa/experimento (so simulacao, pra exibir num PDF
+ * antes de promover, sem gravar nada).
+ *
+ * Retorna a lista FINAL de marcas de HA (as que ja estavam certas +
+ * as novas escolhidas), nao um diff -- quem grava no banco (a funcao
+ * abaixo) que calcula o diff contra o que ja existe.
  */
-export async function recalcularHoraAtividade(escolaId: string): Promise<ResultadoRecalculoHA> {
-  const [professores, turmas, horarios, horarioSlots, disponibilidadesTodas] = await Promise.all([
+export async function calcularHAIdeal(
+  escolaId: string,
+  aulasOverride?: AulaParaCalculoHA[],
+): Promise<MarcaHACalculada[]> {
+  const [professores, turmas, horariosReais, horarioSlots, disponibilidadesTodas] = await Promise.all([
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
     db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
-    db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
+    aulasOverride ? Promise.resolve([]) : db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
     db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId)),
     db.select().from(disponibilidadeTable),
   ]);
+  const horarios: AulaParaCalculoHA[] = aulasOverride ?? horariosReais;
 
   const profIdsDaEscola = new Set(professores.map((p) => p.id));
   const disponibilidades = disponibilidadesTodas.filter((d) => profIdsDaEscola.has(d.professorId));
@@ -102,10 +129,7 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
     if (s.numeroAula > atual) maxAulaPorTurno.set(s.turno, s.numeroAula);
   }
 
-  type Insercao = { professorId: number; turno: string; diaSemana: number; horarioSlot: number };
-  const paraInserir: Insercao[] = [];
-  const paraRemoverIds: number[] = [];
-  const professoresAfetadosSet = new Set<number>();
+  const marcasFinais: MarcaHACalculada[] = [];
 
   for (const prof of professores) {
     const aulasDoProf = horarios.filter((h) => h.professorId === prof.id);
@@ -173,11 +197,7 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
       const bloqueado = bloqueadoPorTurno.get(turno);
       const chave = `${m.diaSemana}-${m.horarioSlot}`;
       const colide = (ocupado?.has(chave) ?? false) || (bloqueado?.has(chave) ?? false);
-      if (colide) {
-        paraRemoverIds.push(m.id);
-        professoresAfetadosSet.add(prof.id);
-        continue;
-      }
+      if (colide) continue;
       candidatasAReposicionar.push(m);
     }
 
@@ -186,6 +206,15 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
     // aula real OU HA ja mantida) que nenhuma das HAs desse turno esta
     // preenchendo. Se existir, e a HA em questao NAO fecha janela
     // nenhuma, ela e candidata a mover.
+    // [FIX-REPOSICIONAMENTO-2] Registra os slots que a HA acabou de
+    // deixar vago nesta mesma rodada (por nao fechar janela) -- a fase
+    // de insercao logo abaixo nao pode escolher esses slots de volta,
+    // senao o algoritmo as vezes so troca a HA "de lugar pro lugar
+    // vazio que ela mesma acabou de criar", em vez de ir pro buraco de
+    // verdade (o slot recem-vago costuma ficar mais perto da borda do
+    // dia, e o desempate por borda escolhia ele de novo por engano).
+    const recemEsvaziadoPorTurno = new Map<string, Set<string>>();
+
     const porTurnoHA = new Map<string, typeof haDoProf>();
     for (const m of candidatasAReposicionar) {
       const turno = m.turno ?? "sem_turno";
@@ -196,7 +225,6 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
       const maxAula = maxAulaPorTurno.get(turno) ?? 6;
       const ocupadoReal = ocupadoPorTurno.get(turno) ?? new Set();
       const todasHAsDoTurno = new Set(marcasDoTurno.map((m) => `${m.diaSemana}-${m.horarioSlot}`));
-      // ocupado total pra fins de deteccao de janela = aula real + toda HA desse turno
       const ocupadoTotal = new Set([...ocupadoReal, ...todasHAsDoTurno]);
 
       const existeJanelaVaga = (() => {
@@ -211,35 +239,30 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
       })();
 
       for (const m of marcasDoTurno) {
-        const chave = `${m.diaSemana}-${m.horarioSlot}`;
         const fechaJanela =
           ocupadoTotal.has(`${m.diaSemana}-${m.horarioSlot - 1}`) &&
           ocupadoTotal.has(`${m.diaSemana}-${m.horarioSlot + 1}`);
         if (existeJanelaVaga && !fechaJanela) {
-          paraRemoverIds.push(m.id);
-          professoresAfetadosSet.add(prof.id);
-        } else {
-          marcadasValidas.push(m);
+          if (!recemEsvaziadoPorTurno.has(turno)) recemEsvaziadoPorTurno.set(turno, new Set());
+          recemEsvaziadoPorTurno.get(turno)!.add(`${m.diaSemana}-${m.horarioSlot}`);
+          continue;
         }
+        marcadasValidas.push(m);
       }
     }
 
     const diferenca = exigidoTotal - marcadasValidas.length;
 
-    if (diferenca === 0) continue;
-
-    if (diferenca < 0) {
-      // Sobra HA -- remove o excesso, preferindo remover das
-      // marcadas que ESTAO no turno de ensino (as que nosso proprio
-      // algoritmo costuma gerar); deixa contraturno por ultimo, ja
-      // que normalmente foi colocado manualmente por decisao
-      // institucional especifica.
+    if (diferenca <= 0) {
+      // sobra ou bate certinho -- mantem so as N primeiras validas
+      // (mesma prioridade de remocao da funcao que grava: turno de
+      // ensino antes de contraturno)
       const noTurnoDeEnsino = marcadasValidas.filter((m) => (m.turno ?? "") in aulasPorTurno);
       const emContraturno = marcadasValidas.filter((m) => !((m.turno ?? "") in aulasPorTurno));
-      const ordemRemocao = [...noTurnoDeEnsino, ...emContraturno];
-      const remover = ordemRemocao.slice(0, -diferenca);
-      paraRemoverIds.push(...remover.map((m) => m.id));
-      professoresAfetadosSet.add(prof.id);
+      const mantidas = [...noTurnoDeEnsino, ...emContraturno].slice(0, exigidoTotal);
+      for (const m of mantidas) {
+        marcasFinais.push({ professorId: prof.id, turno: m.turno ?? "sem_turno", diaSemana: m.diaSemana, horarioSlot: m.horarioSlot });
+      }
       continue;
     }
 
@@ -248,6 +271,10 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
     // decisao institucional feita manualmente pela coordenacao).
     // Turnos com mais aulas primeiro (concentra no turno principal,
     // espirito do art. 11 par. 4 da Resolucao SEED-PR n. 7.200/2025).
+    for (const m of marcadasValidas) {
+      marcasFinais.push({ professorId: prof.id, turno: m.turno ?? "sem_turno", diaSemana: m.diaSemana, horarioSlot: m.horarioSlot });
+    }
+
     let faltam = diferenca;
     const turnosOrdenados = Object.keys(aulasPorTurno).sort((a, b) => (aulasPorTurno[b] ?? 0) - (aulasPorTurno[a] ?? 0));
 
@@ -263,14 +290,15 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
       // TAMBEM conta como "ocupado" -- senao um vago entre uma HA e
       // uma aula real nao era reconhecido como janela de verdade.
       const ocupadoParaJanela = new Set([...ocupado, ...jaMarcado]);
+      const evitar = recemEsvaziadoPorTurno.get(turno) ?? new Set<string>();
 
       const candidatosJanela: Array<{ dia: number; aula: number }> = [];
-      const candidatosOutros: Array<{ dia: number; aula: number }> = [];
+      const candidatosOutros: Array<{ dia: number; aula: number; colada: boolean }> = [];
 
       for (let dia = 0; dia < 5; dia++) {
         for (let aula = 1; aula <= maxAula; aula++) {
           const chave = `${dia}-${aula}`;
-          if (ocupado.has(chave) || jaMarcado.has(chave) || bloqueado.has(chave)) continue;
+          if (ocupado.has(chave) || jaMarcado.has(chave) || bloqueado.has(chave) || evitar.has(chave)) continue;
           const antesOcupado = ocupadoParaJanela.has(`${dia}-${aula - 1}`);
           const depoisOcupado = ocupadoParaJanela.has(`${dia}-${aula + 1}`);
           if (antesOcupado && depoisOcupado) {
@@ -281,13 +309,6 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
         }
       }
 
-      // Prioridade dos candidatos "outros": primeiro os que ficam
-      // COLADOS no bloco de aulas/HA ja existente (estende o bloco
-      // compacto do professor, sem deixar vao entre a HA e a aula).
-      // So depois, entre os restantes, prefere a borda do dia (aula 1
-      // ou ultima) -- essa preferencia de borda so vale quando nao ha
-      // nenhuma posicao colada disponivel (ex.: dia sem nenhuma aula
-      // ainda, contraturno, etc).
       candidatosOutros.sort((a, b) => {
         if (a.colada !== b.colada) return a.colada ? -1 : 1;
         const distA = Math.min(a.aula - 1, maxAula - a.aula);
@@ -298,18 +319,50 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
 
       const escolhidos = [...candidatosJanela, ...candidatosOutros].slice(0, faltam);
       for (const c of escolhidos) {
-        paraInserir.push({ professorId: prof.id, turno, diaSemana: c.dia, horarioSlot: c.aula });
+        marcasFinais.push({ professorId: prof.id, turno, diaSemana: c.dia, horarioSlot: c.aula });
         ocupado.add(`${c.dia}-${c.aula}`);
       }
       faltam -= escolhidos.length;
-      if (escolhidos.length > 0) professoresAfetadosSet.add(prof.id);
     }
-
-    // Se ainda faltar depois de tentar todos os turnos de ensino, nao
-    // insere em lugar nenhum sozinho -- fica como pendencia real (a
-    // conferencia de conflitos continua acusando ate alguem decidir
-    // manualmente, ex.: abrir um contraturno novo pra esse professor).
   }
+
+  return marcasFinais;
+}
+
+/**
+ * Recalcula a Hora-Atividade institucional de todos os professores de
+ * uma escola, com base nas aulas REAIS da grade oficial atual. Aplica
+ * as mudancas diretamente (sem confirmacao interativa) -- para uso
+ * automatico apos geracao/promocao/correcao de grade.
+ *
+ * Usa calcularHAIdeal (puro) por baixo, e so cuida de comparar contra
+ * o que ja existe em disponibilidadeTable pra gravar so a diferenca.
+ */
+export async function recalcularHoraAtividade(escolaId: string): Promise<ResultadoRecalculoHA> {
+  const [marcasFinais, disponibilidadesTodas, professores] = await Promise.all([
+    calcularHAIdeal(escolaId),
+    db.select().from(disponibilidadeTable),
+    db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
+  ]);
+
+  const profIdsDaEscola = new Set(professores.map((p) => p.id));
+  const disponibilidades = disponibilidadesTodas.filter((d) => profIdsDaEscola.has(d.professorId) && d.horaAtividadeObrigatoria);
+
+  const chaveMarca = (m: { professorId: number; turno: string; diaSemana: number; horarioSlot: number }) =>
+    `${m.professorId}|${m.turno}|${m.diaSemana}|${m.horarioSlot}`;
+
+  const finaisSet = new Set(marcasFinais.map(chaveMarca));
+  const existentesPorChave = new Map(disponibilidades.map((d) => [chaveMarca({ professorId: d.professorId, turno: d.turno ?? "sem_turno", diaSemana: d.diaSemana, horarioSlot: d.horarioSlot }), d]));
+
+  const paraInserir = marcasFinais.filter((m) => !existentesPorChave.has(chaveMarca(m)));
+  const paraRemoverIds = disponibilidades
+    .filter((d) => !finaisSet.has(chaveMarca({ professorId: d.professorId, turno: d.turno ?? "sem_turno", diaSemana: d.diaSemana, horarioSlot: d.horarioSlot })))
+    .map((d) => d.id);
+
+  const professoresAfetadosSet = new Set<number>([
+    ...paraInserir.map((m) => m.professorId),
+    ...disponibilidades.filter((d) => paraRemoverIds.includes(d.id)).map((d) => d.professorId),
+  ]);
 
   if (paraInserir.length === 0 && paraRemoverIds.length === 0) {
     return { inseridas: 0, removidas: 0, professoresAfetados: 0 };
@@ -320,7 +373,7 @@ export async function recalcularHoraAtividade(escolaId: string): Promise<Resulta
       await tx.insert(disponibilidadeTable).values(
         paraInserir.map((i) => ({
           professorId: i.professorId,
-          turno: i.turno,
+          turno: i.turno === "sem_turno" ? null : i.turno,
           diaSemana: i.diaSemana,
           horarioSlot: i.horarioSlot,
           disponivel: true,
