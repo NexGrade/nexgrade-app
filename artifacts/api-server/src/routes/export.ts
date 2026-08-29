@@ -5,11 +5,12 @@ import {
   horarioSlotsTable, turmaDisciplinasTable, trimestresLetivosTable, matrizesCurricularesTable, itensMatrizTable,
   escolasTable, horariosExperimentaisTable,
 } from "@workspace/db";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, notInArray } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
 import { gerarPdfGradeCompacta, type BlocoGrade } from "../lib/pdf-grade";
 import { gerarPdfCargaProfessores, type RelatorioProfessor } from "../lib/pdf-carga-professor";
 import { gerarPdfCargaHoraria, type TurmaCargaHoraria } from "../lib/pdf-carga-horaria";
+import { calcularHAIdeal, type MarcaHACalculada } from "../lib/recalcular-ha";
 
 const router = Router();
 
@@ -384,6 +385,28 @@ router.get("/grade-pdf/professor", async (req, res) => {
     db.select().from(disponibilidadeTable),
   ]);
   const slots = slotsBrutos as Array<{ turmaId: number; disciplinaId: number; professorId: number; diaSemana: number; numeroAula: number }>;
+  // [FIX-HA-SIMULADA] O experimento pode cobrir só ALGUNS turmas/turnos
+  // (ex.: "Turno Inteiro" gerado só pro matutino). Sem isso, um
+  // professor que também dá aula no vespertino/noturno tinha essas
+  // aulas reais IGNORADAS no cálculo -- fazendo a função achar que ele
+  // "não dá aula" lá, e jogando a HA toda pro que ela pensava ser
+  // contraturno (bug real: HA sumia do matutino inteiro). A correção:
+  // além das aulas do experimento, inclui as aulas REAIS oficiais das
+  // turmas que o experimento NÃO toca (turmas de fora do escopo dele),
+  // pra representar a semana completa do professor de verdade.
+  const haSimulada: MarcaHACalculada[] = [];
+  if (nomeExperimental) {
+    const turmaIdsNoExperimento = new Set(slots.map((s) => s.turmaId));
+    const slotsOficiaisForaDoEscopo = await db
+      .select({ turmaId: horariosTable.turmaId, professorId: horariosTable.professorId, diaSemana: horariosTable.diaSemana, numeroAula: horariosTable.numeroAula })
+      .from(horariosTable)
+      .where(and(eq(horariosTable.escolaId, escolaId), notInArray(horariosTable.turmaId, [...turmaIdsNoExperimento])));
+    const overrideCompleto = [
+      ...slots.map((s) => ({ professorId: s.professorId, turmaId: s.turmaId, diaSemana: s.diaSemana, numeroAula: s.numeroAula })),
+      ...slotsOficiaisForaDoEscopo,
+    ];
+    haSimulada.push(...(await calcularHAIdeal(escolaId, overrideCompleto)));
+  }
   // [FIX] Ordem alfabetica por nome -- padrao ja usado em todas as
   // outras listas do sistema (dropdowns, tabelas de Professores/
   // Turmas/Disciplinas/Cursos etc.), essa rota ainda nao seguia.
@@ -417,16 +440,19 @@ router.get("/grade-pdf/professor", async (req, res) => {
       // "HA" literal, igual ao Urânia — sem linha2 pra não formatar como
       // célula combinada. Filtra pelo turno certo (disponibilidade já
       // guarda o turno direto, não precisa inferir pela turma).
-      // [NOVO] No modo experimental (prévia não promovida), não
-      // sobrepõe HA/bloqueios oficiais -- eles refletem a disponibilidade
-      // atual, não necessariamente compatível com uma prévia que ainda
-      // nem foi aplicada.
-      const haDoProf: BlocoGrade["slots"] = nomeExperimental ? [] : disponibilidades
-        .filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && d.turno === turno)
-        .filter((d) => !aulasDoProf.some((a) => a.diaSemana === d.diaSemana && a.numeroAula === d.horarioSlot))
-        .map((d) => ({
-          diaSemana: d.diaSemana,
-          numeroAula: d.horarioSlot,
+      // [NOVO] No modo experimental, usa a HA SIMULADA (calculada em
+      // cima da própria prévia) em vez da disponibilidade oficial --
+      // assim o PDF mostra como a HA ficaria se essa grade fosse
+      // promovida, não a HA de uma grade antiga/diferente.
+      const haDoProf: BlocoGrade["slots"] = (nomeExperimental
+        ? haSimulada.filter((m) => m.professorId === prof.id && m.turno === turno)
+        : disponibilidades
+            .filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && d.turno === turno)
+            .map((d) => ({ diaSemana: d.diaSemana, horarioSlot: d.horarioSlot })))
+        .filter((m) => !aulasDoProf.some((a) => a.diaSemana === m.diaSemana && a.numeroAula === m.horarioSlot))
+        .map((m) => ({
+          diaSemana: m.diaSemana,
+          numeroAula: m.horarioSlot,
           linha1: "HA",
           destacado: true,
         }));
@@ -436,6 +462,8 @@ router.get("/grade-pdf/professor", async (req, res) => {
       // hachura pontilhada no PDF quando a celula estiver vazia (ver
       // pdf-grade.ts). So entra aqui quem NAO tem aula real e NAO e HA
       // (os dois ja tem marcacao propria e sempre vencem visualmente).
+      // No modo experimental nao mostra bloqueio (a disponibilidade
+      // "indisponivel" nao muda com a previa, so a HA muda).
       const bloqueadasDoProf: NonNullable<BlocoGrade["celulasBloqueadas"]> = nomeExperimental ? [] : disponibilidades
         .filter((d) => d.professorId === prof.id && !d.disponivel && !d.horaAtividadeObrigatoria && d.turno === turno)
         .filter((d) => !aulasDoProf.some((a) => a.diaSemana === d.diaSemana && a.numeroAula === d.horarioSlot))
