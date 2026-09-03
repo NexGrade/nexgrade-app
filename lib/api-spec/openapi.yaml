@@ -1390,6 +1390,31 @@ paths:
         "204":
           description: Removido
 
+  /cursos/matrizes/{id}:
+    get:
+      operationId: getMatrizCurricularPorId
+      tags: [cursos]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Matriz curricular (com o nivel do curso incluido, pra pre-preencher formularios)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/MatrizCurricular"
+                  - type: object
+                    properties:
+                      nivel:
+                        type: string
+                        nullable: true
+        "404":
+          description: Matriz não encontrada
   /cursos/{cursoId}/matrizes:
     get:
       operationId: listMatrizesCurriculares

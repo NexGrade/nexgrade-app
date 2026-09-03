@@ -61,6 +61,7 @@ import type {
   ExportRelatorioSeedParams,
   GerarHorarioInput,
   GerarHorarioResult,
+  GetMatrizCurricularPorId200,
   GetReservasResumoParams,
   HealthStatus,
   HorarioExperimental,
@@ -5410,6 +5411,77 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getDeleteCursoMutationOptions(options));
     }
+
+export const getGetMatrizCurricularPorIdUrl = (id: number,) => {
+
+
+
+
+  return `/api/cursos/matrizes/${id}`
+}
+
+export const getMatrizCurricularPorId = async (id: number, options?: RequestInit): Promise<GetMatrizCurricularPorId200> => {
+
+  return customFetch<GetMatrizCurricularPorId200>(getGetMatrizCurricularPorIdUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMatrizCurricularPorIdQueryKey = (id: number,) => {
+    return [
+    `/api/cursos/matrizes/${id}`
+    ] as const;
+    }
+
+
+export const getGetMatrizCurricularPorIdQueryOptions = <TData = Awaited<ReturnType<typeof getMatrizCurricularPorId>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMatrizCurricularPorId>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMatrizCurricularPorIdQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMatrizCurricularPorId>>> = ({ signal }) => getMatrizCurricularPorId(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMatrizCurricularPorId>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMatrizCurricularPorIdQueryResult = NonNullable<Awaited<ReturnType<typeof getMatrizCurricularPorId>>>
+export type GetMatrizCurricularPorIdQueryError = ErrorType<void>
+
+
+
+export function useGetMatrizCurricularPorId<TData = Awaited<ReturnType<typeof getMatrizCurricularPorId>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMatrizCurricularPorId>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMatrizCurricularPorIdQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getListMatrizesCurricularesUrl = (cursoId: number,) => {
 

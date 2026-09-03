@@ -113,6 +113,32 @@ router.delete("/:id", async (req, res) => {
   res.status(204).send();
 });
 
+// [NOVO 03/09] Busca uma matriz curricular so pelo ID, sem precisar do
+// cursoId -- usado pela tela de Editar Turma pra descobrir curso/nivel
+// a partir do matrizCurricularId ja salvo na turma, e pre-preencher os
+// selects de Nivel/Curso/Serie automaticamente ao abrir uma turma
+// existente (hoje eles sempre abrem vazios, forcando reselecao manual
+// toda vez).
+router.get("/matrizes/:id", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const matrizId = Number(req.params.id);
+  if (!Number.isInteger(matrizId)) {
+    res.status(400).json({ error: "ID inválido" });
+    return;
+  }
+  const matriz = await db.select().from(matrizesCurricularesTable)
+    .where(and(eq(matrizesCurricularesTable.id, matrizId), eq(matrizesCurricularesTable.escolaId, escolaId)))
+    .then((r) => r[0]);
+  if (!matriz) {
+    res.status(404).json({ error: "Matriz curricular não encontrada" });
+    return;
+  }
+  const curso = await db.select().from(cursosTable)
+    .where(eq(cursosTable.id, matriz.cursoId))
+    .then((r) => r[0]);
+  res.json({ ...matriz, nivel: curso?.nivel ?? null });
+});
+
 router.get("/:cursoId/matrizes", async (req, res) => {
   const escolaId = getEscolaId(req);
   const cursoId = Number(req.params.cursoId);

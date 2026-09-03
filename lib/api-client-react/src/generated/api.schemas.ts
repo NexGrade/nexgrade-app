@@ -1534,6 +1534,10 @@ export type MasterWhoami200 = {
   isMaster: boolean;
 };
 
+export type GetMatrizCurricularPorId200 = MatrizCurricular & ({
+  nivel?: string | null;
+});
+
 export type ListLicencasParams = {
 professorId?: number;
 ativas?: boolean;

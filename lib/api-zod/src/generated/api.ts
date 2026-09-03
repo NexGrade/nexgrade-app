@@ -1969,6 +1969,41 @@ export const DeleteCursoParams = zod.object({
 export const DeleteCursoResponse = zod.void()
 
 
+export const GetMatrizCurricularPorIdParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetMatrizCurricularPorIdResponse = zod.object({
+  "id": zod.number(),
+  "cursoId": zod.number(),
+  "serieAno": zod.string(),
+  "cargaHorariaSemanalTotal": zod.number(),
+  "codigoMatrizSere": zod.string().nullish().describe('Codigo unico de matriz atribuido pelo Estado (SERE\/SAE), quando ja registrado.'),
+  "itens": zod.array(zod.object({
+  "id": zod.number(),
+  "disciplinaId": zod.number(),
+  "disciplina": zod.object({
+  "id": zod.number(),
+  "nome": zod.string(),
+  "cargaSemanal": zod.number(),
+  "cor": zod.string(),
+  "codigoSae": zod.string().nullish().describe('CÃ³digo SAE oficial (SEED-PR), quando conhecido.'),
+  "sigla": zod.string().nullish().describe('Sigla curta usada nas grades PDF compactas (ex: MAT, L.POR).'),
+  "tipoSalaExigido": zod.string().nullish().describe('Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra).'),
+  "categoriaCurricularPadrao": zod.union([zod.literal('BNC'),zod.literal('PD'),zod.literal('FGB'),zod.literal('PFO'),zod.literal('IFA'),zod.literal('IF'),zod.literal('IFP'),zod.literal('APF'),zod.literal(null)]).nullish().describe('Categoria curricular fixa desta disciplina (nula = flexivel, elegivel para qualquer categoria).'),
+  "createdAt": zod.string()
+}).optional(),
+  "categoriaCurricular": zod.enum(['BNC', 'PD', 'FGB', 'PFO', 'IFA', 'IF', 'IFP', 'APF']),
+  "cargaHorariaSemanal": zod.number(),
+  "grupoDisciplina": zod.string().nullish(),
+  "ehPadraoDoGrupo": zod.boolean(),
+  "obrigatoria": zod.boolean()
+}))
+}).and(zod.object({
+  "nivel": zod.string().nullish()
+}))
+
+
 export const ListMatrizesCurricularesParams = zod.object({
   "cursoId": zod.coerce.number()
 })

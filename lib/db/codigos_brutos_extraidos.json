@@ -1,0 +1,2979 @@
+{
+ "2026": {
+  "DEDUC/DPGE/SEED": 2,
+  "DPGE/DEDUC/SEED, de": 1
+ },
+ "749": {
+  "XX) em": 342
+ },
+ "10": {
+  "Turismo, Hospitalidade e Lazer": 1
+ },
+ "5208": {
+  "Segurança do paciente": 3
+ },
+ "5206": {
+  "Cuidado integral em": 3
+ },
+ "5209": {
+  "Cuidado integral em": 3
+ },
+ "5100": {
+  "Cuidados integral em": 3
+ },
+ "5203": {
+  "Aspectos": 3
+ },
+ "3280": {
+  "Assistência de": 3
+ },
+ "5207": {
+  "Assistência de": 3
+ },
+ "4416": {
+  "Noções de informática": 3
+ },
+ "3277": {
+  "Assistência de": 3
+ },
+ "3279": {
+  "Assistência de": 3
+ },
+ "5211": {
+  "Atenção em": 3
+ },
+ "6164": {
+  "Estágio de cuidado": 3
+ },
+ "6175": {
+  "Estágio de cuidado": 3
+ },
+ "5505": {
+  "Anatomia e fisiologia": 4
+ },
+ "5506": {
+  "Anatomia e fisiologia": 4
+ },
+ "1080": {
+  "Biossegurança": 4
+ },
+ "3253": {
+  "Noções de patologia": 4
+ },
+ "5508": {
+  "Elemento de gestão e": 4
+ },
+ "4854": {
+  "Saúde e bem": 4
+ },
+ "5510": {
+  "Técnica de estética": 4
+ },
+ "5512": {
+  "Reflexoterapias": 4
+ },
+ "1688": {
+  "Eletroestética facial e": 4
+ },
+ "5509": {
+  "Massoterapia": 4
+ },
+ "4350": {
+  "Cosmetologia": 4
+ },
+ "1693": {
+  "Técnicas de estética": 4
+ },
+ "1694": {
+  "Técnicas de estética": 4
+ },
+ "5511": {
+  "Microagulhamento": 4
+ },
+ "809": {
+  "Química aplicada": 5
+ },
+ "4288": {
+  "Bases biológicas": 5
+ },
+ "126": {
+  "Redação técnica": 5
+ },
+ "2334": {
+  "Empreendedorismo": 10
+ },
+ "4290": {
+  "Biossegurança e": 5
+ },
+ "4344": {
+  "Controle de qualidade": 5
+ },
+ "4291": {
+  "Dispensação de": 5
+ },
+ "5319": {
+  "Farmácia hospitalar": 5
+ },
+ "5513": {
+  "Farmacologia I": 5
+ },
+ "5514": {
+  "Farmacologia II": 5
+ },
+ "4294": {
+  "Farmacotécnica": 5
+ },
+ "4295": {
+  "Fundamentos de": 5
+ },
+ "5515": {
+  "Fundamentos da": 5
+ },
+ "5320": {
+  "Homeopatia e": 5
+ },
+ "4296": {
+  "Microbiologia e": 5
+ },
+ "3228": {
+  "Saúde pública": 5
+ },
+ "3511": {
+  "Toxicologia": 5
+ },
+ "3255": {
+  "Primeiros socorros": 9
+ },
+ "867": {
+  "Análise, controle e": 4
+ },
+ "6622": {
+  "Educação ambiental I": 4
+ },
+ "1519": {
+  "Estudos de impactos e": 4
+ },
+ "868": {
+  "Gestão de recursos": 4
+ },
+ "6627": {
+  "Metodologia científica e": 4
+ },
+ "6620": {
+  "Análise, controle e": 4
+ },
+ "310": {
+  "Educação ambiental": 4
+ },
+ "6623": {
+  "Gestão de recursos": 4
+ },
+ "1928": {
+  "Gestão de resíduos": 4
+ },
+ "4420": {
+  "Informática aplicada": 8
+ },
+ "870": {
+  "Legislação e segurança": 4
+ },
+ "871": {
+  "Metodologia científica e": 4
+ },
+ "6713": {
+  "Sistema de gestão": 4
+ },
+ "3102": {
+  "Anatomia e fisiologia": 4
+ },
+ "3103": {
+  "Anatomia e escultura": 4
+ },
+ "1535": {
+  "Higiene e segurança": 4,
+  "Higiene e segurança do": 4
+ },
+ "3114": {
+  "Organização e": 4
+ },
+ "3115": {
+  "Materiais e": 4
+ },
+ "3108": {
+  "Prótese fixa": 4
+ },
+ "3112": {
+  "Prótese ortodôntica": 4
+ },
+ "3109": {
+  "Prótese parcial": 4
+ },
+ "3107": {
+  "Prótese total": 4
+ },
+ "3138": {
+  "Anatomia bucal": 4
+ },
+ "3139": {
+  "Biossegurança e": 4
+ },
+ "3144": {
+  "Patologia bucal": 4
+ },
+ "3121": {
+  "Emergência": 4
+ },
+ "3140": {
+  "Materiais odontológicos": 4
+ },
+ "3141": {
+  "Nutrição aplicada": 4
+ },
+ "3142": {
+  "Odontologia preventiva": 4
+ },
+ "3143": {
+  "Organização e": 4
+ },
+ "2113": {
+  "Psicologia aplicada": 4
+ },
+ "3145": {
+  "Radiologia": 4
+ },
+ "3146": {
+  "Técnicas de": 4
+ },
+ "3147": {
+  "Técnicas restauradoras": 4
+ },
+ "1909": {
+  "Desenho elétrico": 8
+ },
+ "1523": {
+  "Eletrônica analógica": 8
+ },
+ "4278": {
+  "Conservação de": 9
+ },
+ "2150": {
+  "Controlador lógico": 4,
+  "Controlador lógico programável": 4,
+  "Controladores lógicos": 2
+ },
+ "4234": {
+  "Equipamentos e": 4
+ },
+ "1545": {
+  "Eletricidade": 29
+ },
+ "1524": {
+  "Eletrônica digital": 8
+ },
+ "3810": {
+  "Instalações elétricas": 21
+ },
+ "3713": {
+  "Redes industriais": 8
+ },
+ "3212": {
+  "Saúde e segurança": 12
+ },
+ "1552": {
+  "Sistemas eletrônicos": 13
+ },
+ "3728": {
+  "Sistemas": 4,
+  "Sistemas microcontrolados": 4
+ },
+ "1547": {
+  "Automação industrial": 12
+ },
+ "1682": {
+  "Manutenção de": 8
+ },
+ "3910": {
+  "Mecânica": 8
+ },
+ "3805": {
+  "Eletrônica": 21
+ },
+ "4033": {
+  "Gestão ambiental": 13
+ },
+ "3820": {
+  "Máquinas elétricas": 12
+ },
+ "3920": {
+  "Processos de": 12
+ },
+ "3808": {
+  "Projetos em": 4
+ },
+ "4014": {
+  "Segurança do": 15
+ },
+ "3826": {
+  "Sistemas hidráulicos": 17
+ },
+ "2141": {
+  "Gestão industrial": 12
+ },
+ "4376": {
+  "Segurança do": 4
+ },
+ "1548": {
+  "Sistemas digitais": 4
+ },
+ "230": {
+  "Telecomunicações": 4
+ },
+ "1911": {
+  "Desenho técnico": 8
+ },
+ "3719": {
+  "Projetos elétricos": 4
+ },
+ "3823": {
+  "Acionamento de": 8
+ },
+ "1526": {
+  "Equipamentos e": 4
+ },
+ "4065": {
+  "Segurança e controle": 4
+ },
+ "1522": {
+  "Tecnologia mecânica": 4
+ },
+ "3828": {
+  "Desenho mecânico": 11
+ },
+ "3082": {
+  "Eletricidade": 4
+ },
+ "3083": {
+  "Eletrônica automotiva": 4
+ },
+ "3085": {
+  "Mecânica": 4
+ },
+ "3919": {
+  "Mecânica e": 4
+ },
+ "1502": {
+  "Metrologia": 4
+ },
+ "3087": {
+  "Motores de": 4,
+  "Motores de combustão interna": 4
+ },
+ "2129": {
+  "Segurança do": 5,
+  "Segurança do trabalho": 4
+ },
+ "5023": {
+  "Climatização e": 1
+ },
+ "5024": {
+  "Diagnósticos de": 1
+ },
+ "4779": {
+  "Elementos de": 1
+ },
+ "4780": {
+  "Estatística": 1
+ },
+ "4781": {
+  "Estratégias na": 1
+ },
+ "3514": {
+  "Fundamentos do": 1
+ },
+ "4782": {
+  "Gestão, planejamento": 1
+ },
+ "4783": {
+  "Informática aplicada e": 1
+ },
+ "4784": {
+  "Introdução a": 1
+ },
+ "350": {
+  "Manutenção": 1
+ },
+ "1717": {
+  "Metodologia científica": 1
+ },
+ "3086": {
+  "Metrologia aplicada": 1
+ },
+ "5027": {
+  "Motores de": 1
+ },
+ "1534": {
+  "Soldagem": 1
+ },
+ "3916": {
+  "Tecnologia mecânica": 4
+ },
+ "857": {
+  "Eletromecânica": 4
+ },
+ "3918": {
+  "Introdução a": 4
+ },
+ "3921": {
+  "Projetos mecânicos": 4
+ },
+ "1525": {
+  "Resistência dos": 4
+ },
+ "2147": {
+  "Tecnologia dos": 4
+ },
+ "3602": {
+  "Projetos": 4
+ },
+ "3825": {
+  "Controle de processos": 5,
+  "Controle de": 1
+ },
+ "3824": {
+  "Automação e robótica": 4
+ },
+ "4404": {
+  "Informática": 9
+ },
+ "1698": {
+  "Tipos de energia": 5
+ },
+ "1696": {
+  "Meteorologia": 5
+ },
+ "4277": {
+  "Automação": 5
+ },
+ "4280": {
+  "Instrumentação e": 5
+ },
+ "1527": {
+  "Máquinas mecânicas": 5
+ },
+ "1697": {
+  "Projetos e": 5
+ },
+ "5015": {
+  "Informática empresarial": 5
+ },
+ "5020": {
+  "Comunicação e vendas": 5
+ },
+ "5031": {
+  "Princípios econômicos": 5
+ },
+ "5033": {
+  "Finanças empresariais": 5
+ },
+ "5034": {
+  "Liderança organizacional": 5,
+  "Liderança": 5
+ },
+ "4129": {
+  "Princípios de": 5
+ },
+ "4450": {
+  "Recursos humanos": 5
+ },
+ "5019": {
+  "Estratégias de marketing": 5
+ },
+ "5021": {
+  "Produção, logística e": 5
+ },
+ "6509": {
+  "Técnicas integradas": 24
+ },
+ "8125": {
+  "Gestão e": 4
+ },
+ "5838": {
+  "Liderança e": 4
+ },
+ "5834": {
+  "Marketing aplicado ao": 4
+ },
+ "5835": {
+  "Tecnologias sociais e": 4
+ },
+ "3183": {
+  "Sustentabilidade": 4
+ },
+ "5836": {
+  "Cadeias produtivas e": 4
+ },
+ "5837": {
+  "Soluções sustentáveis": 4
+ },
+ "5839": {
+  "Roteirização turística": 4
+ },
+ "5840": {
+  "Gestão da atividade": 4
+ },
+ "5841": {
+  "Técnicas de produção": 4
+ },
+ "6368": {
+  "Operações contábeis e": 4
+ },
+ "6367": {
+  "Planejamento": 4
+ },
+ "6402": {
+  "Tecnologia de": 4
+ },
+ "6401": {
+  "Marketing logístico": 4
+ },
+ "6403": {
+  "Armazenagem e": 4
+ },
+ "6404": {
+  "Canais de distribuição": 4
+ },
+ "6405": {
+  "Transportes e seguros": 4
+ },
+ "6406": {
+  "Gestão de qualidade": 4
+ },
+ "6407": {
+  "Logística internacional": 4
+ },
+ "6408": {
+  "Logística integrada e": 4
+ },
+ "6409": {
+  "Empreendedorismo e": 4
+ },
+ "4036": {
+  "Legislação aplicada": 4
+ },
+ "5537": {
+  "Técnicas de venda e": 4
+ },
+ "5542": {
+  "Marketing digital": 4
+ },
+ "5538": {
+  "Planejamento de": 4
+ },
+ "5532": {
+  "Fundamentos do": 4
+ },
+ "5833": {
+  "Tecnologias digitais": 4
+ },
+ "5535": {
+  "Análise de mercado e": 4
+ },
+ "2324": {
+  "Relações interpessoais": 4,
+  "Relações": 8
+ },
+ "5536": {
+  "Comunicação de": 4
+ },
+ "5539": {
+  "Pesquisa de marketing": 4
+ },
+ "5540": {
+  "Logística e canais de": 4
+ },
+ "5541": {
+  "Segmentação e": 4
+ },
+ "5543": {
+  "Análise de dados": 4
+ },
+ "5544": {
+  "Legislação aplicada ao": 4
+ },
+ "5546": {
+  "Marketing de conteúdo": 4
+ },
+ "5316": {
+  "Análise e método para": 5
+ },
+ "5999": {
+  "Inovação tecnológica e": 3,
+  "Inovação tecnológica": 2
+ },
+ "5314": {
+  "Introdução à": 5
+ },
+ "1348": {
+  "Lógica computacional": 14
+ },
+ "5315": {
+  "Introdução à": 5
+ },
+ "5400": {
+  "Banco de dados I": 9
+ },
+ "5700": {
+  "Programação back": 5
+ },
+ "4761": {
+  "Programação front": 5
+ },
+ "5600": {
+  "Banco de dados II": 9
+ },
+ "5900": {
+  "Programação back": 5
+ },
+ "4491": {
+  "Programação mobile": 5
+ },
+ "6510": {
+  "Banco de dados III": 5
+ },
+ "6515": {
+  "Instalação e": 1,
+  "Instalação e manutenção": 3
+ },
+ "6513": {
+  "Gestão comercial II": 4
+ },
+ "6521": {
+  "Informática I": 4
+ },
+ "4443": {
+  "Banco de dados": 13
+ },
+ "4485": {
+  "Documentação técnica": 13
+ },
+ "6536": {
+  "Fundamentos e": 4
+ },
+ "6537": {
+  "Fundamentos e": 4
+ },
+ "6519": {
+  "Gestão comercial I": 4
+ },
+ "4418": {
+  "Informática II": 4
+ },
+ "6514": {
+  "Instalação e": 1,
+  "Instalação e manutenção": 3
+ },
+ "6517": {
+  "Instalação e": 1,
+  "Instalação e manutenção": 3
+ },
+ "4483": {
+  "Internet": 4
+ },
+ "4442": {
+  "Lógica de": 1,
+  "Lógica de programação": 23
+ },
+ "4484": {
+  "Redes": 4
+ },
+ "4455": {
+  "Sistemas operacionais": 4
+ },
+ "3493": {
+  "Produção audiovisual": 5
+ },
+ "5555": {
+  "Análise e projetos de": 5
+ },
+ "5554": {
+  "Análise e projetos de": 5
+ },
+ "3936": {
+  "Ciências da": 5
+ },
+ "5556": {
+  "Fundamentos da": 5
+ },
+ "5557": {
+  "Game e design": 5
+ },
+ "5558": {
+  "Programação de jogos": 5
+ },
+ "5559": {
+  "Programação de jogos": 5
+ },
+ "5560": {
+  "Programação mobile": 5
+ },
+ "5561": {
+  "Programação web": 5
+ },
+ "4052": {
+  "Sistemas estruturais": 4
+ },
+ "2132": {
+  "Controle e proteção": 4
+ },
+ "2137": {
+  "Introdução à construção": 3,
+  "Introdução à": 1
+ },
+ "4107": {
+  "Administração de obras": 4
+ },
+ "2708": {
+  "Instalações hidráulicas": 4
+ },
+ "2705": {
+  "Instalações prediais": 4
+ },
+ "3717": {
+  "Materiais de construção": 4
+ },
+ "4644": {
+  "Mecânica dos solos": 4
+ },
+ "2138": {
+  "Projetos em construção": 4
+ },
+ "2135": {
+  "Segurança do trabalho": 4
+ },
+ "2136": {
+  "Técnicas construtivas": 4
+ },
+ "4628": {
+  "Topografia": 5
+ },
+ "4185": {
+  "Administração portuária": 4
+ },
+ "4183": {
+  "Legislação portuária": 4
+ },
+ "1306": {
+  "Espanhol técnico": 4
+ },
+ "4187": {
+  "Logística de cargas": 4
+ },
+ "4321": {
+  "Operações com cargas": 4
+ },
+ "4184": {
+  "Regulamentação": 4
+ },
+ "4322": {
+  "Transporte marítimo": 4
+ },
+ "3072": {
+  "Microbiologia dos": 5
+ },
+ "6143": {
+  "Nutrição e saúde": 4
+ },
+ "3018": {
+  "Análise de alimentos": 9
+ },
+ "3001": {
+  "Bioquímica de": 5
+ },
+ "3003": {
+  "Conservação de": 4
+ },
+ "1360": {
+  "Novas tecnologias": 4
+ },
+ "2062": {
+  "Prática de higienização": 4,
+  "Prática de": 1
+ },
+ "6792": {
+  "Química dos alimentos": 4
+ },
+ "4342": {
+  "Tecnologias de carnes": 4
+ },
+ "4340": {
+  "Tecnologias de": 4
+ },
+ "4339": {
+  "Tecnologias de": 4
+ },
+ "3005": {
+  "Nutrição e dietética": 1
+ },
+ "2063": {
+  "Tecnologia dos": 1
+ },
+ "6202": {
+  "Práticas de": 1
+ },
+ "2524": {
+  "Iluminação, cenografia": 3,
+  "Iluminação,": 1
+ },
+ "2528": {
+  "Laboratório de": 4
+ },
+ "2511": {
+  "Expressão corporal": 4
+ },
+ "2525": {
+  "Improvisação teatral": 4
+ },
+ "2526": {
+  "Indumentária e": 4
+ },
+ "2527": {
+  "Interpretação teatral": 4
+ },
+ "2529": {
+  "Organização e": 4
+ },
+ "2517": {
+  "Técnicas de": 4
+ },
+ "3191": {
+  "Fundamentos da": 4
+ },
+ "3501": {
+  "Bioquímica": 13
+ },
+ "805": {
+  "Processos industriais": 8
+ },
+ "3095": {
+  "Bromatologia": 4
+ },
+ "348": {
+  "Gestão da qualidade": 5
+ },
+ "3067": {
+  "Microbiologia industrial": 4
+ },
+ "4072": {
+  "Processos": 4
+ },
+ "3028": {
+  "Análise ambiental": 4
+ },
+ "865": {
+  "Química analítica": 4
+ },
+ "5553": {
+  "Sustentabilidade nos": 4
+ },
+ "5550": {
+  "Programação e": 4
+ },
+ "5547": {
+  "Indústria": 4
+ },
+ "5548": {
+  "Planejamento da": 4
+ },
+ "1818": {
+  "Tecnologia da": 4
+ },
+ "6372": {
+  "Gestão organizacional": 4
+ },
+ "5549": {
+  "Gestão de projetos e": 4
+ },
+ "6628": {
+  "Programação e": 4
+ },
+ "5551": {
+  "Gestão das equipes": 4,
+  "Gestão das equipes de trabalho": 4
+ },
+ "5552": {
+  "Processos de": 4
+ },
+ "4388": {
+  "Gestão da produção e": 4
+ },
+ "3029": {
+  "Legislação e normas": 4
+ },
+ "1155": {
+  "Química aplicada ao": 4
+ },
+ "802": {
+  "Físico": 4
+ },
+ "807": {
+  "Química analítica": 8
+ },
+ "813": {
+  "Química inorgânica": 4
+ },
+ "814": {
+  "Química orgânica": 4
+ },
+ "874": {
+  "História da moda, arte e": 3,
+  "História da moda, arte": 1
+ },
+ "4316": {
+  "Segurança e saúde": 4
+ },
+ "873": {
+  "Fundamentos da": 4
+ },
+ "878": {
+  "Planejamento e": 4
+ },
+ "872": {
+  "Design e criação do": 4
+ },
+ "875": {
+  "Máquinas e": 4
+ },
+ "876": {
+  "Materiais têxteis e": 4
+ },
+ "877": {
+  "Modelagem e": 4
+ },
+ "879": {
+  "Risco e corte da": 4
+ },
+ "5848": {
+  "Agricultura de": 2
+ },
+ "4720": {
+  "Construção e": 3
+ },
+ "5842": {
+  "Gestão rural": 3
+ },
+ "1451": {
+  "Horticultura": 3
+ },
+ "4729": {
+  "Manejo e": 5
+ },
+ "4621": {
+  "Mecanização agrícola": 3
+ },
+ "3054": {
+  "Produção vegetal": 4
+ },
+ "5844": {
+  "Sistemas": 3
+ },
+ "5851": {
+  "Sustentabilidade": 2
+ },
+ "5853": {
+  "Tecnologia em": 2
+ },
+ "4602": {
+  "Administração e": 5
+ },
+ "6617": {
+  "Cadeias produtivas I": 5
+ },
+ "6629": {
+  "Empreendedorismo II": 5
+ },
+ "5035": {
+  "Cadeias produtivas": 5
+ },
+ "5037": {
+  "Tecnologias": 4,
+  "Tecnologias emergentes": 1
+ },
+ "2125": {
+  "Legislação agrária e": 5
+ },
+ "3179": {
+  "Logística": 5
+ },
+ "3944": {
+  "Práticas sustentáveis": 5
+ },
+ "6619": {
+  "Administração e": 5
+ },
+ "4607": {
+  "Cooperativismo": 5
+ },
+ "4746": {
+  "Marketing e mercado": 5
+ },
+ "6615": {
+  "Agricultura digital": 2
+ },
+ "3055": {
+  "Produção animal": 2
+ },
+ "5850": {
+  "Sustentabilidade": 1
+ },
+ "5852": {
+  "Tecnologia aplicada a": 1
+ },
+ "2131": {
+  "Tecnologia aplicada a": 1
+ },
+ "6540": {
+  "Agropecuária digital": 1
+ },
+ "6541": {
+  "Aplicação e": 1
+ },
+ "6544": {
+  "Automatização e": 1
+ },
+ "6061": {
+  "Biotecnologia": 1
+ },
+ "6545": {
+  "Máquinas e": 1
+ },
+ "6546": {
+  "Plataformas de": 1
+ },
+ "5854": {
+  "Tecnologias de": 1
+ },
+ "6549": {
+  "Tecnologias para o": 1
+ },
+ "4776": {
+  "Dendrologia e": 1
+ },
+ "4735": {
+  "Gestão e": 1
+ },
+ "4685": {
+  "Manejo florestal": 1
+ },
+ "4731": {
+  "Mecanização, colheita": 1
+ },
+ "4732": {
+  "Política e legislação": 1
+ },
+ "4714": {
+  "Silvicultura": 1
+ },
+ "4734": {
+  "Tecnologia de": 1
+ },
+ "4719": {
+  "Viveiros florestais": 1
+ },
+ "5568": {
+  "Gestão de empresas": 4
+ },
+ "5530": {
+  "Aspectos geográficos,": 8
+ },
+ "5567": {
+  "Aspectos geográficos": 12
+ },
+ "4942": {
+  "Fundamentos do": 8
+ },
+ "5562": {
+  "Produtos e serviços": 4
+ },
+ "5563": {
+  "Agências de viagens": 4
+ },
+ "5565": {
+  "Comunicação e": 4
+ },
+ "5564": {
+  "Patrimônio, museu e": 4
+ },
+ "5566": {
+  "Planejamento de": 4,
+  "Planejamento de roteiros e itinerários": 4,
+  "Planejamento de roteiros e": 2
+ },
+ "5569": {
+  "Marketing aplicado ao": 4
+ },
+ "5570": {
+  "Prática profissional": 4
+ },
+ "5571": {
+  "Tecnologia da": 8
+ },
+ "5517": {
+  "Gestão e negócios na": 4
+ },
+ "1832": {
+  "Higiene e segurança": 4
+ },
+ "4276": {
+  "História, arte e cultura": 4
+ },
+ "4271": {
+  "Cozinha brasileira": 4
+ },
+ "4272": {
+  "Cozinha fria": 4
+ },
+ "4273": {
+  "Cozinha internacional": 4
+ },
+ "5516": {
+  "Cozinha vegetariana": 4
+ },
+ "5518": {
+  "Habilidades básicas": 4
+ },
+ "5519": {
+  "Panificação e": 4
+ },
+ "5520": {
+  "Segurança do": 4
+ },
+ "432": {
+  "Organização de": 4
+ },
+ "5521": {
+  "Marketing na": 4
+ },
+ "3947": {
+  "Empreendedorismo e": 4
+ },
+ "4934": {
+  "Teoria e técnica": 4
+ },
+ "504": {
+  "Patrimônio histórico": 4
+ },
+ "423": {
+  "Legislação aplicada ao": 4
+ },
+ "3353": {
+  "Conversação língua": 4
+ },
+ "190": {
+  "Técnicas de": 4
+ },
+ "5524": {
+  "Gestão de eventos": 4
+ },
+ "3074": {
+  "Introdução ao turismo": 4
+ },
+ "416": {
+  "Meios de hospedagem": 4
+ },
+ "5522": {
+  "Rotinas de": 4
+ },
+ "5523": {
+  "Gestão de reservas": 4
+ },
+ "5525": {
+  "Marketing hoteleiro e": 4
+ },
+ "3073": {
+  "Administração nos": 4
+ },
+ "5526": {
+  "Legislação aplicada": 4
+ },
+ "5527": {
+  "Introdução a gestão": 4
+ },
+ "5528": {
+  "Rotina de recepção e": 4
+ },
+ "5531": {
+  "Empreendedorismo e": 4
+ },
+ "5529": {
+  "Tecnologia da": 4
+ },
+ "6444": {
+  "Liderança e gestão de": 4
+ },
+ "6432": {
+  "Música e lazer": 4
+ },
+ "6425": {
+  "Lazer e artes visuais": 4
+ },
+ "6421": {
+  "Recreação e": 4
+ },
+ "6422": {
+  "Lazer e cultura digital": 4
+ },
+ "6423": {
+  "Práticas em lazer": 4
+ },
+ "6426": {
+  "Produção e gestão": 4
+ },
+ "6428": {
+  "Teoria do lazer": 4
+ },
+ "6430": {
+  "Contação de histórias": 4
+ },
+ "929": {
+  "Turismo": 4
+ },
+ "6431": {
+  "Produção de eventos": 4
+ },
+ "6166": {
+  "Noções de primeiros": 4
+ },
+ "6424": {
+  "Lazer e inclusão": 4
+ },
+ "4775": {
+  "Tecnologias": 3
+ },
+ "5212": {
+  "Metodologia de": 3
+ },
+ "6508": {
+  "Matemática básica": 3
+ },
+ "1803": {
+  "Organização do": 3
+ },
+ "5216": {
+  "Desenvolvimento": 3
+ },
+ "6630": {
+  "Metodologia de": 3
+ },
+ "1562": {
+  "Metodologia da": 3
+ },
+ "5213": {
+  "Metodologia de": 3
+ },
+ "5214": {
+  "Metodologia de": 3
+ },
+ "5215": {
+  "Metodologia de": 3
+ },
+ "5303": {
+  "Educação inclusiva": 3
+ },
+ "8137": {
+  "Libras": 3
+ },
+ "1726": {
+  "Trabalho": 3
+ },
+ "1669": {
+  "PRÁTICA DE": 3
+ },
+ "6599": {
+  "Programação com": 4
+ },
+ "6602": {
+  "Inteligência artificial e": 4
+ },
+ "4763": {
+  "Ciências de dados": 4
+ },
+ "6600": {
+  "Programação com": 4
+ },
+ "6607": {
+  "Banco de dados": 4
+ },
+ "6608": {
+  "Aprendizado de": 4
+ },
+ "6609": {
+  "Educação midiática": 4
+ },
+ "6610": {
+  "Programação": 4
+ },
+ "6612": {
+  "Segurança digital": 4
+ },
+ "6613": {
+  "Redes neurais e": 4
+ },
+ "6614": {
+  "Visualização de": 4
+ },
+ "949": {
+  "XX) em": 2
+ },
+ "6845": {
+  "Introdução a qualidade e produtividade": 12,
+  "Introdução a qualidade e produtividade e": 19,
+  "Introdução a qualidade e": 41
+ },
+ "6846": {
+  "Introdução a Indústria": 72
+ },
+ "6849": {
+  "Introdução ao desenvolvimento de": 30,
+  "Introdução ao desenvolvimento de projetos": 6,
+  "Introdução ao desenvolvimento": 16,
+  "Introdução ao": 16,
+  "Introdução ao desenvolvimento de projetos e": 4
+ },
+ "6875": {
+  "Sistemas eletrônicos e": 1,
+  "Sistemas eletrônicos e microcontrolados": 3
+ },
+ "6879": {
+  "Gestão dos processos de": 1,
+  "Gestão dos processos de implementação": 3
+ },
+ "5913": {
+  "Sistemas lógicos programáveis": 9,
+  "Sistemas lógicos": 5
+ },
+ "6882": {
+  "Comunicação e informática aplicada": 8
+ },
+ "6883": {
+  "Desenho técnico aplicado à sistemas": 8
+ },
+ "5891": {
+  "Fundamentos de eletroeletrônica": 8,
+  "Fundamentos de": 2
+ },
+ "6864": {
+  "Criatividade e ideação em projetos de": 14,
+  "Criatividade e ideação em projetos": 2,
+  "Criatividade e ideação em": 4
+ },
+ "3806": {
+  "Acionamentos eletroeletrônicos": 8,
+  "Acionamentos": 6
+ },
+ "6885": {
+  "Sistemas eletrohidráulicos e": 8
+ },
+ "6886": {
+  "Instrumentação e controle de": 1,
+  "Instrumentação e controle de processos": 3
+ },
+ "6851": {
+  "Modelagem de projetos de inovação": 19,
+  "Modelagem de projetos de": 5
+ },
+ "6888": {
+  "Comissionamento de sistemas": 4
+ },
+ "6890": {
+  "Integração de dispositivos": 1,
+  "Integração de dispositivos automatizados": 3
+ },
+ "6854": {
+  "Prototipagem de negócios inovadores": 20,
+  "Prototipagem de negócios": 4
+ },
+ "5903": {
+  "Manutenção de sistemas": 9,
+  "Manutenção de sistemas automatizados": 3
+ },
+ "6892": {
+  "Sistemas de supervisão e controle": 8
+ },
+ "6894": {
+  "Projetos de intertravamento de": 1,
+  "Projetos de intertravamento de segurança": 3
+ },
+ "6896": {
+  "Projetos de acionamentos": 8
+ },
+ "6897": {
+  "Projetos de controle e sistemas": 4
+ },
+ "6855": {
+  "Implementação de negócios": 4,
+  "Implementação de negócios inovadores": 19,
+  "Implementação de": 1
+ },
+ "6939": {
+  "Fundamentos da eletroeletrônica": 4,
+  "Fundamentos da eletroeletrônica I": 3,
+  "Fundamentos da": 1
+ },
+ "7045": {
+  "Instalação de sistemas elétricos": 4
+ },
+ "6941": {
+  "Gestão da manutenção de": 1,
+  "Gestão da manutenção de sistemas": 3
+ },
+ "6942": {
+  "Fundamentos da": 5,
+  "Fundamentos da eletroeletrônica II": 3
+ },
+ "6943": {
+  "Instalação de sistemas elétricos": 4
+ },
+ "6944": {
+  "Instalação de sistemas elétricos": 4
+ },
+ "6945": {
+  "Instalação de sistemas": 4
+ },
+ "6946": {
+  "Gestão da instalação de": 1,
+  "Gestão da instalação de sistemas": 3
+ },
+ "6947": {
+  "Manutenção de sistemas": 1,
+  "Manutenção de sistemas elétricos": 3
+ },
+ "6948": {
+  "Manutenção de sistemas": 1,
+  "Manutenção de sistemas eletrônicos": 3
+ },
+ "6949": {
+  "Manutenção de sistemas": 1,
+  "Manutenção de sistemas elétricos": 3
+ },
+ "6950": {
+  "Projetos de instalações elétricas": 4
+ },
+ "6951": {
+  "Projetos de acionamento e": 1,
+  "Projetos de acionamento e controle": 3
+ },
+ "6953": {
+  "Projetos de circuitos eletrônicos": 4
+ },
+ "6957": {
+  "Manutenção mecânica de": 2,
+  "Manutenção mecânica de máquinas e": 2
+ },
+ "5890": {
+  "Fundamentos da eletricidade": 5,
+  "Fundamentos da eletricidade industrial": 1
+ },
+ "5989": {
+  "Montagem de sistemas elétricos": 5,
+  "Montagem de sistemas": 1
+ },
+ "5889": {
+  "Fundamentos da tecnologia": 12,
+  "Fundamentos da tecnologia mecânica": 2
+ },
+ "6959": {
+  "Introdução à fabricação": 1,
+  "Introdução à fabricação mecânica": 3
+ },
+ "5927": {
+  "Organização da produção": 10,
+  "Organização da produção mecânica": 2
+ },
+ "6961": {
+  "Montagem de sistemas": 1,
+  "Montagem de sistemas mecânicos": 3
+ },
+ "5028": {
+  "Planejamento e controle da": 14
+ },
+ "6963": {
+  "Manutenção mecânica de": 2,
+  "Manutenção mecânica de máquinas e": 2
+ },
+ "6965": {
+  "Manutenção de sistemas": 4
+ },
+ "5926": {
+  "Fabricação mecânica aplicada": 3,
+  "Fabricação mecânica aplicada à": 4,
+  "Fabricação mecânica": 1
+ },
+ "5931": {
+  "Metodologia de projetos": 14
+ },
+ "6968": {
+  "Projeto de inovação em": 4
+ },
+ "7100": {
+  "Manutenção de sistemas": 4
+ },
+ "6969": {
+  "Manutenção elétrica de": 1,
+  "Manutenção elétrica de máquinas": 1,
+  "Manutenção elétrica de máquinas e": 2
+ },
+ "6971": {
+  "Programação de dispositivos": 4
+ },
+ "6972": {
+  "Dispositivos eletrônicos": 4
+ },
+ "6973": {
+  "Sistemas eletrônicos digitais": 4
+ },
+ "6974": {
+  "Redes de comunicação e": 4
+ },
+ "6975": {
+  "Montagem e instalação de": 4
+ },
+ "6976": {
+  "Gestão da montagem e": 4
+ },
+ "7098": {
+  "Gestão da manutenção de": 4
+ },
+ "6979": {
+  "Projetos de sistemas eletrônicos": 4
+ },
+ "6980": {
+  "Programação de dispositivos": 4
+ },
+ "6981": {
+  "Desenvolvimento de interfaces": 4
+ },
+ "1062": {
+  "Manutenção de sistemas": 4
+ },
+ "3838": {
+  "Projetos elétricos prediais": 4
+ },
+ "3796": {
+  "Eficiência energética": 6
+ },
+ "3797": {
+  "Projetos elétricos industriais": 5,
+  "Projetos elétricos": 1
+ },
+ "6982": {
+  "Desenho técnico aplicado a": 1,
+  "Desenho técnico aplicado a projetos": 3
+ },
+ "5886": {
+  "Fundamentos de eletricidade": 6,
+  "Fundamentos de": 4,
+  "Fundamentos da eletricidade": 3
+ },
+ "6983": {
+  "Fundamentos de sistemas": 1,
+  "Fundamentos de sistemas elétricos": 3
+ },
+ "6984": {
+  "Instalação e manutenção elétrica": 4
+ },
+ "6985": {
+  "Integração de sistemas de": 1,
+  "Integração de sistemas de energias": 3
+ },
+ "6986": {
+  "Integração de sistemas elétricos": 4
+ },
+ "6987": {
+  "Manutenção elétrica industrial": 4
+ },
+ "6989": {
+  "Instalações e acionamentos": 1,
+  "Instalações e acionamentos elétricos": 3
+ },
+ "6990": {
+  "Manutenção e operação de": 1,
+  "Manutenção e operação de sistemas": 3
+ },
+ "6995": {
+  "Implementação de negócios": 4
+ },
+ "7005": {
+  "Gestão operacional integrada": 4
+ },
+ "7035": {
+  "Introdução à eletromobilidade": 4
+ },
+ "7036": {
+  "Prototipagem de negócios": 4
+ },
+ "7037": {
+  "Inspeção veicular": 4
+ },
+ "7038": {
+  "Vistoria de sinistros e cautelar": 4
+ },
+ "7039": {
+  "Criatividade e ideação em": 4
+ },
+ "7040": {
+  "Introdução às tecnologias e": 4
+ },
+ "7043": {
+  "Sistemas de freios,": 2,
+  "Sistemas de freios, suspensão e": 2
+ },
+ "7044": {
+  "Sistemas eletroeletrônicos": 4
+ },
+ "7046": {
+  "Gestão da manutenção": 4
+ },
+ "7047": {
+  "Fundamentos e tecnologias": 2,
+  "Fundamentos e tecnologias da": 2
+ },
+ "7048": {
+  "Sistemas de transmissão de": 4
+ },
+ "7049": {
+  "Diagnósticos avançados em": 4
+ },
+ "7050": {
+  "Projeto de inovação em": 4
+ },
+ "7052": {
+  "Introdução a controlados": 4,
+  "Introdução a controladores": 4
+ },
+ "7053": {
+  "Processos básicos de": 6,
+  "Processos básicos de fabricação": 2
+ },
+ "7054": {
+  "Otimização de processos": 4
+ },
+ "7055": {
+  "Fabricação mecânica": 4
+ },
+ "5961": {
+  "Tecnologias de recuperação": 4,
+  "Tecnologia de recuperação": 1,
+  "Tecnologia de recuperação de": 1
+ },
+ "7057": {
+  "Manutenção de máquinas e": 4
+ },
+ "7058": {
+  "Otimização de processos de": 4
+ },
+ "7059": {
+  "Processos de fabricação": 3,
+  "Processos de fabricação mecânica": 1
+ },
+ "7133": {
+  "Manutenção mecânica aplicada": 1,
+  "Manutenção mecânica aplicada I": 2,
+  "Manutenção mecânica": 1
+ },
+ "7062": {
+  "Projeto de inovação em": 2,
+  "Projeto de inovação em mecânica": 2
+ },
+ "7063": {
+  "Metodologia de projetos II": 4
+ },
+ "2143": {
+  "Planejamento e controle da": 6,
+  "Planejamento e controle de": 4
+ },
+ "7064": {
+  "Processos de fabricação": 4
+ },
+ "7060": {
+  "Manutenção mecânica": 2,
+  "Manutenção mecânica aplicada II": 2
+ },
+ "7065": {
+  "Projeto de inovação em": 2,
+  "Projeto de inovação em mecânica": 2
+ },
+ "5966": {
+  "Desenvolvimento de sistemas": 3,
+  "Desenvolvimento de sistemas de": 2,
+  "Desenvolvimento de": 1
+ },
+ "7066": {
+  "Metodologia de projetos I": 4
+ },
+ "7067": {
+  "Gestão dos processos de implementação": 4
+ },
+ "7068": {
+  "Mecânica aplicada a sistemas": 4
+ },
+ "5962": {
+  "Processos de fabricação mecânica": 4,
+  "Processos de fabricação": 2
+ },
+ "7069": {
+  "Integração de sistemas robóticos e": 4
+ },
+ "7070": {
+  "Projetos de sistemas mecatrônicos": 4
+ },
+ "7071": {
+  "Manutenção de sistemas mecatrônicos": 4
+ },
+ "7072": {
+  "Projetos de sistemas embarcados": 4
+ },
+ "7073": {
+  "Projetos de componentes mecânicos": 4
+ },
+ "7028": {
+  "Gestão de transporte e": 4
+ },
+ "7029": {
+  "Logística integrada": 4
+ },
+ "7030": {
+  "Introdução aos processos": 4
+ },
+ "5943": {
+  "Métodos quantitativos": 6,
+  "Métodos quantitativos aplicados": 1
+ },
+ "3832": {
+  "Gestão da produção": 12
+ },
+ "5946": {
+  "Processos de armazenagem": 5,
+  "Processos de": 2
+ },
+ "7033": {
+  "Projeto de integração de": 4
+ },
+ "5944": {
+  "Gestão de suprimentos": 7
+ },
+ "7034": {
+  "Logística sustentável": 4
+ },
+ "6300": {
+  "Projeto final de conclusão de": 5,
+  "Projeto final de conclusão": 2
+ },
+ "3982": {
+  "Lógica de programação II": 8
+ },
+ "6906": {
+  "Desenvolvimento de": 4
+ },
+ "6908": {
+  "Fundamentos de": 4
+ },
+ "6909": {
+  "Internet das coisas II": 4
+ },
+ "6911": {
+  "Lógica de programação I": 8
+ },
+ "6288": {
+  "Programação de": 5,
+  "Programação de aplicativos": 3
+ },
+ "6290": {
+  "Modelagem de sistemas": 8
+ },
+ "6912": {
+  "Desenvolvimento de": 4
+ },
+ "6913": {
+  "Teste de sistemas": 4
+ },
+ "3709": {
+  "Implantação de sistemas": 8
+ },
+ "6917": {
+  "Manutenção de sistemas": 4
+ },
+ "6918": {
+  "Fundamentos de": 4
+ },
+ "6919": {
+  "Internet das coisas I": 4
+ },
+ "7006": {
+  "Elaboração de dashboards II": 4
+ },
+ "7007": {
+  "Desenvolvimento de sistemas": 4
+ },
+ "7008": {
+  "Estruturas de computadores": 4
+ },
+ "7009": {
+  "Instalação e manutenção de": 4
+ },
+ "7010": {
+  "Infraestrutura de redes de": 4
+ },
+ "7017": {
+  "Instalação e manutenção de": 4
+ },
+ "7018": {
+  "Boas práticas em gestão de TI": 4
+ },
+ "7019": {
+  "Gestão da segurança de TI": 4
+ },
+ "7020": {
+  "Elaboração de dashboards I": 4
+ },
+ "7025": {
+  "Desenvolvimento de sistemas": 4
+ },
+ "7026": {
+  "Manipulação de bancos de": 4
+ },
+ "7027": {
+  "Projetos de TI": 4
+ },
+ "6920": {
+  "Gestão de equipes em canteiros de": 4
+ },
+ "6921": {
+  "Projetos arquitetônicos": 4
+ },
+ "6922": {
+  "Planejamento da construção de": 4
+ },
+ "6923": {
+  "Introdução a projetos de": 1,
+  "Introdução a projetos de edificações e": 3
+ },
+ "6926": {
+  "Introdução à mecânica dos solos": 1,
+  "Introdução à mecânica dos solos e": 3
+ },
+ "6928": {
+  "Desenho técnico para projetos de": 4
+ },
+ "6929": {
+  "Métodos modernos de construção": 1,
+  "Métodos modernos de construção e": 3
+ },
+ "6931": {
+  "Processos de construção de": 4
+ },
+ "6932": {
+  "Projetos de instalações elétricas e": 4
+ },
+ "6933": {
+  "Gestão de máquinas,": 1,
+  "Gestão de máquinas, equipamentos e": 3
+ },
+ "6934": {
+  "Projetos estruturais e projetos": 4
+ },
+ "6937": {
+  "Gestão da construção de": 1,
+  "Gestão da construção de estruturas em": 3
+ },
+ "6938": {
+  "Gestão da manutenção de": 1,
+  "Gestão da manutenção de edificações,": 3
+ },
+ "6850": {
+  "Segurança e controle de qualidade dos": 4
+ },
+ "6874": {
+  "Gestão de produção II": 4
+ },
+ "6856": {
+  "Princípios de higiene e segurança dos": 4
+ },
+ "6857": {
+  "Fundamentos da tecnologia de": 2,
+  "Fundamentos da tecnologia de alimentos": 2
+ },
+ "6858": {
+  "Fundamentos da industrialização de": 4
+ },
+ "6861": {
+  "Análise físico": 4
+ },
+ "6865": {
+  "Análises microbiológicas e": 3,
+  "Análises microbiológicas e microscópicas": 1
+ },
+ "7099": {
+  "Industrialização óleos, gorduras e": 4
+ },
+ "5991": {
+  "Industrialização de leites e derivados": 4,
+  "Industrialização de leites e": 4
+ },
+ "6866": {
+  "Industrialização carnes, ovos e": 2,
+  "Industrialização carnes, ovos e derivados": 2
+ },
+ "5883": {
+  "Industrialização bebidas": 4,
+  "Industrialização de bebidas": 4
+ },
+ "5882": {
+  "Industrialização grãos, cereais e": 3,
+  "Industrialização grãos, cereais e derivados": 1,
+  "Industrialização de grãos,": 3,
+  "Industrialização de grãos, cereais": 1
+ },
+ "5881": {
+  "Industrialização balas, chocolates e": 4,
+  "Industrialização de balas,": 4
+ },
+ "6871": {
+  "Industrialização frutas, hortaliças e": 4
+ },
+ "6873": {
+  "Análises sensoriais de alimentos e": 4
+ },
+ "6852": {
+  "Gestão de produção I": 4
+ },
+ "6898": {
+  "Análises físico": 4
+ },
+ "6899": {
+  "Fundamentos de": 2,
+  "Fundamentos de matemática e": 2
+ },
+ "6900": {
+  "Fundamentos de química": 4
+ },
+ "6902": {
+  "Fundamentos de": 2,
+  "Fundamentos de microbiologia": 2
+ },
+ "6903": {
+  "Prestação de serviços": 2,
+  "Prestação de serviços técnicos": 2
+ },
+ "6904": {
+  "Microbiologia aplicada": 4
+ },
+ "5916": {
+  "Biologia molecular": 5
+ },
+ "3504": {
+  "Imunologia": 5
+ },
+ "6905": {
+  "Processos produtivos de": 4
+ },
+ "6296": {
+  "Projeto de pesquisa e": 3,
+  "Projeto de pesquisa e inovação": 4
+ },
+ "7074": {
+  "Tratamento de águas e efluentes e": 4
+ },
+ "7075": {
+  "Comunicação e informática e criatividade": 4
+ },
+ "7076": {
+  "Fundamentos de matemática e física": 4
+ },
+ "7077": {
+  "Fundamentos das técnicas laboratoriais e": 4
+ },
+ "7078": {
+  "Fundamentos de química orgânica e": 4
+ },
+ "7079": {
+  "Operações unitárias laboratoriais": 4
+ },
+ "7080": {
+  "Fundamentos de bioquímica e": 4
+ },
+ "7081": {
+  "Físico": 4
+ },
+ "7082": {
+  "Fundamentos de processos químicos": 4
+ },
+ "7083": {
+  "Análises instrumentais": 4
+ },
+ "7084": {
+  "Pesquisas e aplicação de produtos e": 4
+ },
+ "7085": {
+  "Operação de processos industriais": 4
+ },
+ "7086": {
+  "Desenvolvimento de métodos analíticos,": 4
+ },
+ "7087": {
+  "Especificações técnicas de produtos e": 4
+ },
+ "7088": {
+  "Controle dos processos do vestuário": 4
+ },
+ "7089": {
+  "Fundamentos da confecção do": 4
+ },
+ "7090": {
+  "Processo de modelagem industrial": 4
+ },
+ "7091": {
+  "Processo de corte industrial": 4
+ },
+ "7092": {
+  "Processo de costura industrial": 4
+ },
+ "7093": {
+  "Análise técnica do desenvolvimento de": 4
+ },
+ "7094": {
+  "Criatividade e ideação em projetos de": 4
+ },
+ "7095": {
+  "Gestão de equipes da confecção do": 4
+ },
+ "7096": {
+  "Inspeção e controle da qualidade de": 4
+ },
+ "7097": {
+  "Prototipagem de negócios inovadores": 4
+ },
+ "5689": {
+  "Introdução a inteligência artificial": 4
+ },
+ "7111": {
+  "Processamento de linguagem natural": 4
+ },
+ "7117": {
+  "Aprendizado de máquina": 4
+ },
+ "7123": {
+  "Fundamentos de matemática aplicada": 4
+ },
+ "7124": {
+  "Criatividade, ideação e modelagem de": 4
+ },
+ "7125": {
+  "Fundamentos de programação em Python": 4
+ },
+ "7126": {
+  "Plataformas e frameworks de inteligência": 4
+ },
+ "7127": {
+  "Fundamentos de mineração de dados": 4
+ },
+ "7128": {
+  "Visão computacional e Deep Learning": 4
+ },
+ "7129": {
+  "Modelos de dados aplicados": 4
+ },
+ "7130": {
+  "Inteligência artificial aplicada aos processos": 4
+ },
+ "5911": {
+  "Medição de variáveis físicas": 2
+ },
+ "5972": {
+  "Circuitos microcontrolados": 6
+ },
+ "5915": {
+  "Elementos finais de controle": 2
+ },
+ "5806": {
+  "Introdução a qualidade e": 34
+ },
+ "6177": {
+  "Saúde e segurança no": 23,
+  "Saúde e segurança no trabalho": 7,
+  "Saúde e segurança no trabalho e": 4
+ },
+ "6181": {
+  "Introdução a tecnologia da": 34
+ },
+ "5805": {
+  "Introdução ao": 22,
+  "Introdução ao desenvolvimento": 10,
+  "Introdução ao desenvolvimento de": 2
+ },
+ "5885": {
+  "Fundamentos mecânicos": 2
+ },
+ "5892": {
+  "Fundamentos da": 2
+ },
+ "5910": {
+  "Diagramas hidráulicos e": 2
+ },
+ "6196": {
+  "Tecnologias da informação e": 3,
+  "Tecnologias da informação": 3
+ },
+ "5912": {
+  "Sistemas de intertravamento": 2
+ },
+ "5914": {
+  "Técnicas de controle": 2
+ },
+ "6195": {
+  "Gestão da manutenção": 2
+ },
+ "6197": {
+  "Projetos de sistemas de": 2
+ },
+ "7138": {
+  "Introdução a corte, soldagem e": 2
+ },
+ "6282": {
+  "Manutenção mecânica de": 4
+ },
+ "7137": {
+  "Introdução a corte, soldagem": 1,
+  "Introdução a corte, soldagem e": 1
+ },
+ "5928": {
+  "Montagem de sistemas": 2
+ },
+ "5929": {
+  "Montagem de sistemas": 2
+ },
+ "5930": {
+  "Projeto de inovação em": 2
+ },
+ "5902": {
+  "Manutenção elétrica de": 1,
+  "Manutenção elétrica de máquina": 1
+ },
+ "5932": {
+  "Comunicação técnica e": 2
+ },
+ "5904": {
+  "Manutenção elétrica predial": 1,
+  "Manutenção elétrica predial e": 1
+ },
+ "5936": {
+  "Projetos elétricos prediais": 2
+ },
+ "5933": {
+  "Segurança em eletricidade": 2
+ },
+ "3798": {
+  "Instalação de sistemas": 2
+ },
+ "5937": {
+  "Instalação de sistemas": 2
+ },
+ "5938": {
+  "Acionamento de": 1,
+  "Acionamento de dispositivos": 1
+ },
+ "5939": {
+  "Instalação de sistemas": 2
+ },
+ "5905": {
+  "Manutenção e operação de": 2
+ },
+ "5940": {
+  "Projetos de sistemas": 1,
+  "Projetos de sistemas elétricos": 1
+ },
+ "1676": {
+  "Gestão da manutenção": 2
+ },
+ "5954": {
+  "Gestão de serviços de": 2,
+  "Gestão de serviços de manutenção": 1
+ },
+ "5908": {
+  "Manutenção de sistemas de": 2,
+  "Manutenção de sistemas de freios,": 1
+ },
+ "5957": {
+  "Diagnóstico avançado em": 2,
+  "Diagnóstico avançado em sistemas": 1
+ },
+ "5951": {
+  "Documentação técnica e": 2,
+  "Documentação técnica e desenho": 1
+ },
+ "6283": {
+  "Fundamentos da mecânica": 3
+ },
+ "5897": {
+  "Fundamentos da tecnologia": 3
+ },
+ "5952": {
+  "Tapeçaria e vidraçaria": 2,
+  "Tapeçaria e vidraçaria automotiva": 1
+ },
+ "5953": {
+  "Processos de manutenção": 3
+ },
+ "5906": {
+  "Manutenção de motores de": 3
+ },
+ "5907": {
+  "Manutenção de sistemas": 3
+ },
+ "5956": {
+  "Funilaria e pintura": 1,
+  "Funilaria e pintura automotiva": 2
+ },
+ "5909": {
+  "Manutenção de sistema de": 3
+ },
+ "5955": {
+  "Gestão de serviços de": 2,
+  "Gestão de serviços de manutenção": 1
+ },
+ "7107": {
+  "Fundamentos da tecnologia": 4
+ },
+ "5959": {
+  "Eletricidade industrial e": 2
+ },
+ "5925": {
+  "Introdução a corte,": 2,
+  "Introdução a corte, soldagem": 1,
+  "Introdução a corte, soldagem e": 1
+ },
+ "7105": {
+  "Fundamentos da": 2,
+  "Fundamentos da tecnologia": 2
+ },
+ "5960": {
+  "Otimização de processos": 2
+ },
+ "5967": {
+  "Projeto de inovação": 1,
+  "Projeto de inovação mecânica": 1
+ },
+ "5965": {
+  "Introdução a controladores": 2
+ },
+ "5963": {
+  "Otimização de processos": 1,
+  "Otimização de processos de": 1
+ },
+ "5964": {
+  "Processos de fabricação a": 2
+ },
+ "6298": {
+  "Manutenção mecânica": 2
+ },
+ "6299": {
+  "Desenho mecânico e": 4
+ },
+ "5974": {
+  "Sistemas automatizados de": 4
+ },
+ "5969": {
+  "Eletrônica aplicada a": 3,
+  "Eletrônica aplicada a sistemas": 1
+ },
+ "5970": {
+  "Modelagem virtual de": 4
+ },
+ "5971": {
+  "Circuitos": 3,
+  "Circuitos eletropneumáticos e": 1
+ },
+ "5973": {
+  "Processos de manufatura": 4
+ },
+ "5895": {
+  "Fundamentos da gestão": 3
+ },
+ "6324": {
+  "Tecnologia da informação": 2,
+  "Tecnologia da informação e": 1
+ },
+ "5950": {
+  "Projeto de integração de": 3
+ },
+ "5942": {
+  "Introdução aos processos": 3
+ },
+ "5945": {
+  "Aperfeiçoamento Lean na": 3
+ },
+ "5947": {
+  "Gestão de transporte e": 3
+ },
+ "5948": {
+  "Gestão de transporte e": 3
+ },
+ "5949": {
+  "Logística integrada e": 2,
+  "Logística integrada e logística": 1
+ },
+ "5491": {
+  "Fundamentos de tecnologia": 3,
+  "Fundamentos de": 1
+ },
+ "6287": {
+  "Internet das coisas": 4
+ },
+ "6284": {
+  "Fundamentos de banco de": 3,
+  "Fundamentos de banco": 1
+ },
+ "6285": {
+  "Fundamentos de redes de": 4
+ },
+ "6286": {
+  "Fundamentos de": 4
+ },
+ "6289": {
+  "Teste e manutenção de": 4
+ },
+ "5623": {
+  "Desenvolvimento de": 4
+ },
+ "5894": {
+  "Fundamentos de": 2,
+  "Fundamentos de sustentabilidade": 1
+ },
+ "5888": {
+  "Fundamentos de topografia": 3
+ },
+ "5923": {
+  "Orçamento de obras e": 3
+ },
+ "1513": {
+  "Gestão de pessoas": 3
+ },
+ "6294": {
+  "Pré": 3
+ },
+ "5893": {
+  "Fundamentos de processos": 3
+ },
+ "6297": {
+  "Introdução a construção de": 3
+ },
+ "6291": {
+  "Desenho técnico de edificações": 3
+ },
+ "5887": {
+  "Fundamentos de mecânica dos": 3
+ },
+ "6293": {
+  "Materiais e ensaios": 2,
+  "Materiais e ensaios tecnológicos": 1
+ },
+ "5919": {
+  "Processos construtivos": 3
+ },
+ "5920": {
+  "Documentação técnica e": 3
+ },
+ "3724": {
+  "Projeto arquitetônico": 3
+ },
+ "6295": {
+  "Projeto de instalações elétricas": 2,
+  "Projeto de instalações elétricas e": 1
+ },
+ "5922": {
+  "Projeto estrutural e projeto": 3
+ },
+ "3505": {
+  "Microbiologia": 5
+ },
+ "4647": {
+  "Pré": 5
+ },
+ "5879": {
+  "Segurança dos alimentos": 4
+ },
+ "3433": {
+  "Desenvolvimento de": 1,
+  "Desenvolvimento de projetos": 3
+ },
+ "5877": {
+  "Fundamentos das": 5,
+  "Fundamentos das tecnologias": 2
+ },
+ "5878": {
+  "Introdução aos processos": 5
+ },
+ "5880": {
+  "Industrialização de frutas e": 4
+ },
+ "5884": {
+  "Industrialização de óleos,": 4
+ },
+ "5990": {
+  "Industrialização de carnes e": 4
+ },
+ "5896": {
+  "Fundamentos e projeto de": 1
+ },
+ "5917": {
+  "Prestação de serviços": 1
+ },
+ "5918": {
+  "Processos produtivos de": 1
+ },
+ "7140": {
+  "Química analítica II": 2
+ },
+ "5978": {
+  "Operação de processos": 2
+ },
+ "5977": {
+  "Análises microbiológicas": 2
+ },
+ "5975": {
+  "Introdução aos processos": 2
+ },
+ "5976": {
+  "Introdução aos processos": 2
+ },
+ "7139": {
+  "Química analítica I": 2
+ },
+ "1663": {
+  "Análises instrumentais": 2
+ },
+ "5979": {
+  "Desenvolvimento de": 2
+ },
+ "6639": {
+  "Registro, processamento e planejamento de": 4
+ },
+ "6644": {
+  "Preparação e processamento de análises": 4
+ },
+ "6843": {
+  "Processamento de amostras biológicas": 4
+ },
+ "6370": {
+  "Auxílio no processo de registro,": 4,
+  "Auxílio no processo de": 1
+ },
+ "6371": {
+  "Realização de processos de segregação e": 4,
+  "Realização de processos de": 1
+ },
+ "6376": {
+  "Auxílio no planejamento e execução de": 4,
+  "Auxílio no planejamento e": 1
+ },
+ "6377": {
+  "Prestação de assistência inicial em situação": 4,
+  "Prestação de assistência": 1
+ },
+ "6379": {
+  "Coleta materiais biológicos": 4,
+  "Coleta de materiais": 1
+ },
+ "6813": {
+  "Projeto integrador": 20,
+  "Projeto Integrador": 30
+ },
+ "6380": {
+  "Preparação de amostras biológicas": 4,
+  "Preparação de amostras": 1
+ },
+ "6381": {
+  "Auxílio na implantação e na manutenção dos": 4,
+  "Auxílio na implantação e na": 1
+ },
+ "6382": {
+  "Processamento de amostras biológicas em": 4,
+  "Processamento de amostras": 1
+ },
+ "6383": {
+  "Processamento de amostras biológicas em": 4,
+  "Processamento de amostras": 1
+ },
+ "6384": {
+  "Processamento de amostras biológicas em": 4,
+  "Processamento de amostras": 1
+ },
+ "6385": {
+  "Processamento de amostras biológicas em": 4,
+  "Processamento de amostras": 1
+ },
+ "6386": {
+  "Processamento de amostras biológicas em": 4,
+  "Processamento de amostras": 1
+ },
+ "6388": {
+  "Processamento de amostras biológicas em": 4,
+  "Processamento de amostras": 1
+ },
+ "6387": {
+  "Processamento de amostras biológicas em": 4,
+  "Processamento de amostras": 1
+ },
+ "6676": {
+  "Processo de trabalho, atendimento ao": 3,
+  "Processo de trabalho, atendimento ao cliente": 1
+ },
+ "6680": {
+  "Avaliação facial do cliente em estética e": 3,
+  "Avaliação facial do cliente em estética e bem": 1
+ },
+ "6682": {
+  "Avaliação corporal do cliente em estética e": 4
+ },
+ "6683": {
+  "Gerenciamento de negócios de beleza": 4
+ },
+ "6684": {
+  "Organização do ambiente e processos de": 4
+ },
+ "6685": {
+  "Estabelecimento de estratégias de": 4
+ },
+ "6686": {
+  "Avaliação das condições de saúde e": 3,
+  "Avaliação das condições de saúde e hábitos": 1
+ },
+ "6687": {
+  "Combinação de cosméticos para uso em": 4
+ },
+ "6689": {
+  "Realização da avaliação estética facial do": 4
+ },
+ "6690": {
+  "Realização de procedimentos para reduzir": 3,
+  "Realização de procedimentos para reduzir a": 1
+ },
+ "6691": {
+  "Realização de procedimentos estéticos": 3,
+  "Realização de procedimentos estéticos faciais": 1
+ },
+ "6692": {
+  "Realização dos procedimentos estéticos": 3,
+  "Realização dos procedimentos estéticos para": 1
+ },
+ "6693": {
+  "Realização dos procedimentos faciais em": 4
+ },
+ "6697": {
+  "Realização da avaliação estética corporal": 3,
+  "Realização da avaliação estética corporal do": 1
+ },
+ "6698": {
+  "Realização dos procedimentos de": 4
+ },
+ "6700": {
+  "Realização dos procedimentos estéticos": 3,
+  "Realização dos procedimentos estéticos que": 1
+ },
+ "6701": {
+  "Realização dos procedimentos estéticos": 3,
+  "Realização dos procedimentos estéticos que": 1
+ },
+ "6707": {
+  "Realização dos procedimentos corporais": 3,
+  "Realização dos procedimentos corporais em": 1
+ },
+ "6708": {
+  "Prática integrada das competências em": 4
+ },
+ "6710": {
+  "Fornecimento de medicamentos em": 4
+ },
+ "6711": {
+  "Educação em saúde na área farmacêutica": 3,
+  "Educação em saúde na área": 1
+ },
+ "6712": {
+  "Operações farmacêuticas, manipulação de": 3,
+  "Operações farmacêuticas, manipulação": 1
+ },
+ "6714": {
+  "Auxílio na orientação do uso racional de": 4
+ },
+ "6715": {
+  "Auxílio na orientação para o uso de": 4
+ },
+ "6716": {
+  "Auxílio na comercialização de produtos em": 3,
+  "Auxílio na comercialização de produtos": 1
+ },
+ "6717": {
+  "Auxílio no fornecimento de medicamentos": 3,
+  "Auxílio no fornecimento de": 1
+ },
+ "6719": {
+  "Realização do controle e da manutenção": 4
+ },
+ "6720": {
+  "Auxílio no fornecimento de medicamentos": 3,
+  "Auxílio no fornecimento de": 1
+ },
+ "6759": {
+  "Planejamento, orientação e acompanhamento": 2,
+  "Planejamento, orientação e acompanhamento da": 2
+ },
+ "6760": {
+  "Acompanhamento e orientação de preparos de": 4
+ },
+ "6761": {
+  "Desenvolvimento de produtos alimentícios para": 4
+ },
+ "6762": {
+  "Realização de atividades de orientação": 3,
+  "Realização de atividades de orientação nutricional": 1
+ },
+ "6764": {
+  "Auxílio no planejamento e na execução de": 4
+ },
+ "6767": {
+  "Acompanhamento e orientação do controle de": 4
+ },
+ "6769": {
+  "Acompanhamento e orientação dos": 3,
+  "Acompanhamento e orientação dos procedimentos": 1
+ },
+ "6770": {
+  "Acompanhamento e orientação dos": 3,
+  "Acompanhamento e orientação dos procedimentos": 1
+ },
+ "6771": {
+  "Acompanhamento e orientação dos": 3,
+  "Acompanhamento e orientação dos procedimentos": 1
+ },
+ "6772": {
+  "Acompanhamento e orientação dos processos": 4
+ },
+ "6774": {
+  "Acompanhamento e orientação das atividades": 2,
+  "Acompanhamento e orientação das atividades de": 2
+ },
+ "6775": {
+  "Auxílio na coordenação e no treinamento de": 4
+ },
+ "6776": {
+  "Realização de atividades de acompanhamento": 2,
+  "Realização de atividades de acompanhamento do": 2
+ },
+ "6844": {
+  "Acompanhamento e orientação da execução": 1,
+  "Acompanhamento e orientação da execução de": 3
+ },
+ "6777": {
+  "Acompanhamento e orientação da produção e": 4
+ },
+ "6778": {
+  "Auxílio no desenvolvimento de produtos": 4
+ },
+ "6646": {
+  "Planejamento, desenvolvimento e": 4
+ },
+ "6647": {
+  "Criação, produção e desenvolvimento de": 4
+ },
+ "6651": {
+  "Planejamento, criação e desenvolvimento": 4
+ },
+ "6652": {
+  "Composição e tratamento de imagens": 4
+ },
+ "6653": {
+  "Desenvolvimento de ilustrações vetoriais": 4
+ },
+ "6655": {
+  "Planejamento de projetos gráficos": 4
+ },
+ "6656": {
+  "Planejamento de produção gráfica": 4
+ },
+ "6657": {
+  "Diagramação de livros impressos e e": 4
+ },
+ "6658": {
+  "Diagramação de revistas impressa e digital": 4
+ },
+ "6660": {
+  "Produção de infográfico": 4
+ },
+ "6661": {
+  "Criação de identidade visual": 4
+ },
+ "6662": {
+  "Desenvolvimento de manual de identidade": 4
+ },
+ "6663": {
+  "Desenvolvimento de projeto gráfico para": 4
+ },
+ "6664": {
+  "Criação de mockups impressos e digitais": 4
+ },
+ "6665": {
+  "Criação de embalagens cartotécnicas": 4
+ },
+ "6669": {
+  "Desenvolvimento de materiais de ponto de": 4
+ },
+ "6671": {
+  "Planejamento de projetos gráficos digitais": 4
+ },
+ "6672": {
+  "Desenvolvimento de interface e guia de": 4
+ },
+ "6673": {
+  "Desenvolvimento de projeto de design em": 4
+ },
+ "6675": {
+  "Criação de portfólio digital": 4
+ },
+ "6779": {
+  "Introdução à moda": 4
+ },
+ "6780": {
+  "Composições de moda, beleza e artes": 4
+ },
+ "6781": {
+  "Produções de moda, espaços, fotografia e": 4
+ },
+ "6783": {
+  "Pesquisa sobre tendências": 4
+ },
+ "6784": {
+  "Mapeamento de referências visuais": 4
+ },
+ "6785": {
+  "Decodificação sobre tendências": 4
+ },
+ "6800": {
+  "Elaboração do plano de comunicação de": 4
+ },
+ "6826": {
+  "Elaboração de composições visuais": 4
+ },
+ "6827": {
+  "Desenvolvimento de projeto executivo de": 4
+ },
+ "6828": {
+  "Elaboração de composição de looks e": 4
+ },
+ "6829": {
+  "Elaboração de composições de beleza na": 4
+ },
+ "6831": {
+  "Projeto de design de espaços efêmeros": 4
+ },
+ "6832": {
+  "Produção de imagem de moda em": 4
+ },
+ "6833": {
+  "Produção de imagem de moda para": 4
+ },
+ "6834": {
+  "Produção de conteúdo visual para": 4
+ },
+ "6835": {
+  "Produção de eventos de moda": 4
+ },
+ "6836": {
+  "Riscos ocupacionais": 4
+ },
+ "6838": {
+  "Controle de incidentes": 4
+ },
+ "6839": {
+  "Ações educativas para segurança do": 4
+ },
+ "6326": {
+  "Avaliação e medidas de controle de riscos": 4,
+  "Avaliação e medidas de": 2,
+  "Avaliação e medidas de controle": 1
+ },
+ "6327": {
+  "Monitoramento de riscos ocupacionais.": 4,
+  "Monitoramento de riscos": 3
+ },
+ "6328": {
+  "Elaboração, implantação e implementação": 4,
+  "Elaboração, implantação e": 3
+ },
+ "6329": {
+  "Avaliação e medidas de controle de riscos": 4,
+  "Avaliação de medidas de": 3
+ },
+ "6330": {
+  "Execução de ações de investigação,": 4,
+  "Execução de ações de": 3
+ },
+ "6331": {
+  "Auxílio e execução das ações de": 4,
+  "Auxílio e execução de ações": 2,
+  "Auxílio e execução de ações de": 1
+ },
+ "6348": {
+  "Implantação e implementação dos": 4,
+  "Implantação e": 2,
+  "Implantação e implementação": 1
+ },
+ "6333": {
+  "Controle de situações de emergência": 4,
+  "Controle de situações de": 3
+ },
+ "6349": {
+  "Elaboração, implantação e implementação": 4,
+  "Elaboração, implantação e": 3
+ },
+ "6350": {
+  "Planejamento de ações educativas em": 4,
+  "Planejamento de ações": 3
+ },
+ "6351": {
+  "Execução de ações educativas em saúde e": 4,
+  "Execução de ações": 2,
+  "Execução de ações educativas": 1
+ },
+ "6332": {
+  "Auxílio na gestão integrada da": 5,
+  "Auxílio na gestão integrada": 2
+ },
+ "6727": {
+  "Recursos tecnológicos, leitura e": 4,
+  "Recursos tecnológicos,": 3,
+  "Recursos tecnológicos, leitura": 1
+ },
+ "6728": {
+  "Recursos científicos no contexto social e do": 3,
+  "Recursos científicos no contexto social e": 1
+ },
+ "6730": {
+  "Recursos químicos e históricos relevantes": 4
+ },
+ "6352": {
+  "Organização do ambiente de trabalho para": 4,
+  "Organização do ambiente de": 4
+ },
+ "6353": {
+  "Controle e organização de estoques em": 4,
+  "Controle e organização de": 4
+ },
+ "6354": {
+  "Supervisão do pré": 8
+ },
+ "6359": {
+  "Elaboração e operacionalização de": 4,
+  "Elaboração e": 4
+ },
+ "6356": {
+  "Elaboração e monitoramento da execução": 4,
+  "Elaboração e monitoramento": 4
+ },
+ "6358": {
+  "Preparação de produções gastronômicas": 4,
+  "Preparação de produções": 4
+ },
+ "6357": {
+  "Preparação e finalização de produções de": 4,
+  "Preparação e finalização de": 4
+ },
+ "6355": {
+  "Preparação de produções gastronômicas": 4,
+  "Preparação de produções": 4
+ },
+ "6360": {
+  "Auxílio na gestão operacional de": 4,
+  "Auxílio na gestão": 3,
+  "Auxílio na gestão operacional": 1
+ },
+ "6731": {
+  "Recursos tecnológicos, leitura e": 4,
+  "Recursos tecnológicos,": 1,
+  "Recursos tecnológicos, leitura": 1
+ },
+ "6733": {
+  "Cartografia aplicada ao turismo": 4
+ },
+ "6734": {
+  "Elaboração de roteiros e trilhas para": 4,
+  "Elaboração de roteiros e": 1,
+  "Elaboração de roteiros e trilhas": 1
+ },
+ "6389": {
+  "Elaboração de estratégias de comunicação": 4,
+  "Elaboração de estratégias de": 2
+ },
+ "6390": {
+  "Criação de ambientes colaborativos entre": 4,
+  "Criação de ambientes": 2
+ },
+ "6391": {
+  "Condução de turistas na realização de": 4,
+  "Condução de turistas na": 2
+ },
+ "6397": {
+  "Prestação de assistência ao turista": 4,
+  "Prestação de assistência ao": 2
+ },
+ "6392": {
+  "Prestação de informações históricas,": 4,
+  "Prestação de informações": 2
+ },
+ "6393": {
+  "Orientação de turistas em roteiros": 4,
+  "Orientação de turistas em": 2
+ },
+ "6399": {
+  "Prática profissional de guia regional": 4,
+  "Prática profissional de guia": 2
+ },
+ "6400": {
+  "Prática profissional de guia de excursão": 4,
+  "Prática profissional de guia": 2
+ },
+ "6735": {
+  "Fundamentos de computação": 4
+ },
+ "6736": {
+  "Inglês instrumental aplicado à computação": 4
+ },
+ "6738": {
+  "Fundamentos matemáticos para computação": 2,
+  "Fundamentos matemáticos para computação e": 2
+ },
+ "6740": {
+  "Responsabilidade social e comunicação crítica": 1,
+  "Responsabilidade social e comunicação crítica e": 2,
+  "Responsabilidade social e comunicação": 1
+ },
+ "6741": {
+  "Inglês instrumental aplicado à inteligência": 2,
+  "Inglês instrumental aplicado à inteligência artificial": 2
+ },
+ "6742": {
+  "Matemática aplicada à inteligência artificial": 4
+ },
+ "6743": {
+  "Matemática aplicada à inteligência artificial e": 4
+ },
+ "6744": {
+  "Redação e comunicação em ambientes": 2,
+  "Redação e comunicação em ambientes digitais": 2
+ },
+ "6746": {
+  "Fundamentos e conceitos de inteligência": 2,
+  "Fundamentos e conceitos de inteligência artificial": 2
+ },
+ "6753": {
+  "Preparação e tratamento de dados para": 4
+ }
+}

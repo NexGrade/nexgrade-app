@@ -1,7 +1,7 @@
 import {
   useListTurmas, useCreateTurma, useUpdateTurma, useDeleteTurma, getListTurmasQueryKey,
   useListDisciplinas, useListCursos, useListMatrizesCurriculares, getListMatrizesCurricularesQueryKey,
-  useAplicarMatrizTurma,
+  useAplicarMatrizTurma, useGetMatrizCurricularPorId, getGetMatrizCurricularPorIdQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2, GraduationCap, CalendarDays } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -164,6 +164,23 @@ function TurmaForm({ editingId, turmaAtual, onFechar }: { editingId: number | nu
   const [nivel, setNivel] = useState("");
   const [cursoId, setCursoId] = useState("");
   const [matrizId, setMatrizId] = useState("");
+  // [NOVO 03/09] Se a turma que estamos editando ja tem uma matriz
+  // aplicada, busca os dados dela (curso + nivel) pra pre-preencher os
+  // selects automaticamente -- antes isso sempre abria vazio, forcando
+  // reselecao manual toda vez, mesmo pra turma ja montada certinho.
+  const matrizJaAplicadaId = turmaAtual?.matrizCurricularId ?? undefined;
+  const { data: matrizDaTurma } = useGetMatrizCurricularPorId(
+    matrizJaAplicadaId ?? 0,
+    { query: { enabled: !!matrizJaAplicadaId, queryKey: getGetMatrizCurricularPorIdQueryKey(matrizJaAplicadaId ?? 0) } },
+  );
+  useEffect(() => {
+    if (matrizDaTurma && !matrizId) {
+      setNivel(matrizDaTurma.nivel ?? "");
+      setCursoId(String(matrizDaTurma.cursoId));
+      setMatrizId(String(matrizDaTurma.id));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matrizDaTurma]);
   const cursosFiltrados = nivel ? cursos?.filter((c) => c.nivel === nivel) : cursos;
   const { data: matrizes } = useListMatrizesCurriculares(
     Number(cursoId),
@@ -197,8 +214,17 @@ function TurmaForm({ editingId, turmaAtual, onFechar }: { editingId: number | nu
   async function onSubmit(data: TurmaFormValues) {
     try {
       let turmaId = editingId;
+      // [FIX 03/09] Se a turma ja tinha uma matriz aplicada e o usuario
+      // NAO trocou de matriz nesta sessao (Nivel/Curso/Serie continuam
+      // vazios, que e o estado padrao ao abrir o formulario), NAO manda
+      // disciplinaIds -- evita que o backend desvincule a matriz por
+      // engano em qualquer edicao trivial (RF-TUR-02/03 em turmas.ts so
+      // deveria disparar numa edicao manual de verdade, nao como efeito
+      // colateral de abrir e salvar o formulario sem mexer em nada).
+      const matrizJaAplicadaSemTroca = !matrizId && !!turmaAtual?.matrizCurricularId;
+      const omitirDisciplinaIds = !!matrizId || matrizJaAplicadaSemTroca;
       if (editingId) {
-        await updateTurma.mutateAsync({ id: editingId, data: matrizId ? { ...data, disciplinaIds: undefined } : data });
+        await updateTurma.mutateAsync({ id: editingId, data: omitirDisciplinaIds ? { ...data, disciplinaIds: undefined } : data });
       } else {
         const nova = await createTurma.mutateAsync({ data: matrizId ? { ...data, disciplinaIds: undefined } : data });
         turmaId = nova.id;

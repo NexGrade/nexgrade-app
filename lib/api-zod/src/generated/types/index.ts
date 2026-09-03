@@ -76,6 +76,7 @@ export * from './exportRelatorioSeed200';
 export * from './exportRelatorioSeedParams';
 export * from './gerarHorarioInput';
 export * from './gerarHorarioResult';
+export * from './getMatrizCurricularPorId200';
 export * from './getReservasResumoParams';
 export * from './healthStatus';
 export * from './horarioExperimental';
