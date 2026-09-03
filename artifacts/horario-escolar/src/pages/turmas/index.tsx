@@ -79,6 +79,7 @@ export default function TurmasList() {
           <DialogContent className="max-w-2xl">
             {isDialogOpen && (
               <TurmaForm
+                key={editingId ?? "nova-turma"}
                 editingId={editingId}
                 turmaAtual={editingId ? turmas?.find((t) => t.id === editingId) : undefined}
                 onFechar={() => setIsDialogOpen(false)}
@@ -174,9 +175,7 @@ function TurmaForm({ editingId, turmaAtual, onFechar }: { editingId: number | nu
     { query: { enabled: !!matrizJaAplicadaId, queryKey: getGetMatrizCurricularPorIdQueryKey(matrizJaAplicadaId ?? 0) } },
   );
   useEffect(() => {
-    console.log("[DEBUG matriz]", { matrizDaTurma, matrizId, editingId, turmaAtualMatrizId: turmaAtual?.matrizCurricularId });
     if (matrizDaTurma && !matrizId) {
-      console.log("[DEBUG matriz] entrou no if, vai setar:", matrizDaTurma.nivel, matrizDaTurma.cursoId, matrizDaTurma.id);
       setNivel(matrizDaTurma.nivel ?? "");
       setCursoId(String(matrizDaTurma.cursoId));
       setMatrizId(String(matrizDaTurma.id));
