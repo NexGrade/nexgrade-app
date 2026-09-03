@@ -192,14 +192,6 @@ function TurmaForm({ editingId, turmaAtual, onFechar }: { editingId: number | nu
     { query: { enabled: !!cursoId, queryKey: getListMatrizesCurricularesQueryKey(Number(cursoId)) } },
   );
   const matrizSelecionada = matrizes?.find((m) => m.id === Number(matrizId));
-  console.log("[DEBUG-v3]", {
-    cursoId,
-    cursoIdNumber: Number(cursoId),
-    matrizId,
-    matrizIdNumber: Number(matrizId),
-    matrizesIds: matrizes?.map((m) => ({ id: m.id, tipo: typeof m.id, serieAno: m.serieAno })),
-    matrizSelecionada,
-  });
 
   const createTurma = useCreateTurma();
   const updateTurma = useUpdateTurma();
