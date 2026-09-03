@@ -170,16 +170,12 @@ function TurmaForm({ editingId, turmaAtual, onFechar }: { editingId: number | nu
   // selects automaticamente -- antes isso sempre abria vazio, forcando
   // reselecao manual toda vez, mesmo pra turma ja montada certinho.
   const matrizJaAplicadaId = turmaAtual?.matrizCurricularId ?? undefined;
-  console.log("[DEBUG-v2 render]", { turmaAtualId: turmaAtual?.id, turmaAtualNome: turmaAtual?.nome, matrizJaAplicadaId, nivel, cursoId, matrizId });
-  const { data: matrizDaTurma, isLoading: matrizLoading, isError: matrizError, error: matrizErrorObj } = useGetMatrizCurricularPorId(
+  const { data: matrizDaTurma } = useGetMatrizCurricularPorId(
     matrizJaAplicadaId ?? 0,
     { query: { enabled: !!matrizJaAplicadaId, queryKey: getGetMatrizCurricularPorIdQueryKey(matrizJaAplicadaId ?? 0) } },
   );
-  console.log("[DEBUG-v2 query]", { matrizDaTurma, matrizLoading, matrizError, matrizErrorObj });
   useEffect(() => {
-    console.log("[DEBUG-v2 effect]", { matrizDaTurma, matrizId, cursoId, nivel });
     if (matrizDaTurma && !matrizId) {
-      console.log("[DEBUG-v2 effect] SETANDO:", matrizDaTurma.nivel, matrizDaTurma.cursoId, matrizDaTurma.id);
       setNivel(matrizDaTurma.nivel ?? "");
       setCursoId(String(matrizDaTurma.cursoId));
       setMatrizId(String(matrizDaTurma.id));
