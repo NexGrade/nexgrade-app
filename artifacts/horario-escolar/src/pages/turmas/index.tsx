@@ -266,7 +266,7 @@ function TurmaForm({ editingId, turmaAtual, onFechar }: { editingId: number | nu
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className="text-xs text-muted-foreground block mb-1">Nível</label>
-                <Select value={nivel} onValueChange={(v) => { setNivel(v); setCursoId(""); setMatrizId(""); }}>
+                <Select value={nivel} onValueChange={(v) => { if (!v) return; setNivel(v); setCursoId(""); setMatrizId(""); }}>
                   <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="fundamental">Ensino Fundamental</SelectItem>
@@ -278,7 +278,7 @@ function TurmaForm({ editingId, turmaAtual, onFechar }: { editingId: number | nu
               </div>
               <div>
                 <label className="text-xs text-muted-foreground block mb-1">Curso</label>
-                <Select value={cursoId} onValueChange={(v) => { setCursoId(v); setMatrizId(""); }}>
+                <Select value={cursoId} onValueChange={(v) => { if (!v) return; setCursoId(v); setMatrizId(""); }}>
                   <SelectTrigger><SelectValue placeholder="Selecione o curso" /></SelectTrigger>
                   <SelectContent>
                     {cursosFiltrados?.map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.nome}</SelectItem>)}
