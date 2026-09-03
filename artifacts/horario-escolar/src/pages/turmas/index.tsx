@@ -162,44 +162,32 @@ export default function TurmasList() {
 function TurmaForm({ editingId, turmaAtual, onFechar }: { editingId: number | null; turmaAtual: any; onFechar: () => void }) {
   const { data: disciplinas } = useListDisciplinas();
   const { data: cursos } = useListCursos();
-  const [nivel, setNivel] = useState("");
-  const [cursoId, setCursoId] = useState("");
-  const [matrizId, setMatrizId] = useState("");
-  // [NOVO 03/09] Se a turma que estamos editando ja tem uma matriz
-  // aplicada, busca os dados dela (curso + nivel) pra pre-preencher os
-  // selects automaticamente -- antes isso sempre abria vazio, forcando
-  // reselecao manual toda vez, mesmo pra turma ja montada certinho.
+  // [FIX 03/09 v2 -- causa raiz corrigida] Antes, o valor da matriz ja
+  // aplicada era copiado pra estado local via useEffect -- isso cria
+  // uma janela entre o efeito rodar e o proximo render onde outro
+  // evento pode interromper o processo, perdendo o valor (confirmado
+  // com logs: matrizId chegava a virar "520" e sozinho voltava pra "").
+  // Agora os valores exibidos sao DERIVADOS a cada renderizacao: usam
+  // o override do usuario quando ele mexeu manualmente, senao usam o
+  // valor vindo da matriz ja aplicada a turma. Sem efeito, sem janela
+  // de corrida, sem essa classe de bug.
+  const [nivelOverride, setNivel] = useState<string | null>(null);
+  const [cursoIdOverride, setCursoId] = useState<string | null>(null);
+  const [matrizIdOverride, setMatrizId] = useState<string | null>(null);
   const matrizJaAplicadaId = turmaAtual?.matrizCurricularId ?? undefined;
-  console.log("[DEBUG-v2 render]", { turmaAtualId: turmaAtual?.id, turmaAtualNome: turmaAtual?.nome, matrizJaAplicadaId, nivel, cursoId, matrizId });
-  const { data: matrizDaTurma, isLoading: matrizLoading, isError: matrizError, error: matrizErrorObj } = useGetMatrizCurricularPorId(
+  const { data: matrizDaTurma } = useGetMatrizCurricularPorId(
     matrizJaAplicadaId ?? 0,
     { query: { enabled: !!matrizJaAplicadaId, queryKey: getGetMatrizCurricularPorIdQueryKey(matrizJaAplicadaId ?? 0) } },
   );
-  console.log("[DEBUG-v2 query]", { matrizDaTurma, matrizLoading, matrizError, matrizErrorObj });
-  useEffect(() => {
-    console.log("[DEBUG-v2 effect]", { matrizDaTurma, matrizId, cursoId, nivel });
-    if (matrizDaTurma && !matrizId) {
-      console.log("[DEBUG-v2 effect] SETANDO:", matrizDaTurma.nivel, matrizDaTurma.cursoId, matrizDaTurma.id);
-      setNivel(matrizDaTurma.nivel ?? "");
-      setCursoId(String(matrizDaTurma.cursoId));
-      setMatrizId(String(matrizDaTurma.id));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [matrizDaTurma]);
+  const nivel = nivelOverride ?? matrizDaTurma?.nivel ?? "";
+  const cursoId = cursoIdOverride ?? (matrizDaTurma ? String(matrizDaTurma.cursoId) : "");
+  const matrizId = matrizIdOverride ?? (matrizDaTurma ? String(matrizDaTurma.id) : "");
   const cursosFiltrados = nivel ? cursos?.filter((c) => c.nivel === nivel) : cursos;
   const { data: matrizes } = useListMatrizesCurriculares(
     Number(cursoId),
     { query: { enabled: !!cursoId, queryKey: getListMatrizesCurricularesQueryKey(Number(cursoId)) } },
   );
   const matrizSelecionada = matrizes?.find((m) => m.id === Number(matrizId));
-  console.log("[DEBUG-v3]", {
-    cursoId,
-    cursoIdNumber: Number(cursoId),
-    matrizId,
-    matrizIdNumber: Number(matrizId),
-    matrizesIds: matrizes?.map((m) => ({ id: m.id, tipo: typeof m.id, serieAno: m.serieAno })),
-    matrizSelecionada,
-  });
 
   const createTurma = useCreateTurma();
   const updateTurma = useUpdateTurma();
