@@ -171,12 +171,9 @@ function TurmaForm({ editingId, turmaAtual, onFechar }: { editingId: number | nu
   // o override do usuario quando ele mexeu manualmente, senao usam o
   // valor vindo da matriz ja aplicada a turma. Sem efeito, sem janela
   // de corrida, sem essa classe de bug.
-  const [nivelOverride, setNivelRaw] = useState<string | null>(null);
-  const [cursoIdOverride, setCursoIdRaw] = useState<string | null>(null);
-  const [matrizIdOverride, setMatrizIdRaw] = useState<string | null>(null);
-  const setNivel = (v: string) => { console.trace("[DEBUG-v4] setNivel chamado com:", v); setNivelRaw(v); };
-  const setCursoId = (v: string) => { console.trace("[DEBUG-v4] setCursoId chamado com:", v); setCursoIdRaw(v); };
-  const setMatrizId = (v: string) => { console.trace("[DEBUG-v4] setMatrizId chamado com:", v); setMatrizIdRaw(v); };
+  const [nivelOverride, setNivel] = useState<string | null>(null);
+  const [cursoIdOverride, setCursoId] = useState<string | null>(null);
+  const [matrizIdOverride, setMatrizId] = useState<string | null>(null);
   const matrizJaAplicadaId = turmaAtual?.matrizCurricularId ?? undefined;
   const { data: matrizDaTurma } = useGetMatrizCurricularPorId(
     matrizJaAplicadaId ?? 0,
@@ -185,7 +182,6 @@ function TurmaForm({ editingId, turmaAtual, onFechar }: { editingId: number | nu
   const nivel = nivelOverride ?? matrizDaTurma?.nivel ?? "";
   const cursoId = cursoIdOverride ?? (matrizDaTurma ? String(matrizDaTurma.cursoId) : "");
   const matrizId = matrizIdOverride ?? (matrizDaTurma ? String(matrizDaTurma.id) : "");
-  console.log("[DEBUG-v4 render]", { nivelOverride, cursoIdOverride, matrizIdOverride, matrizDaTurma, nivel, cursoId, matrizId });
   const cursosFiltrados = nivel ? cursos?.filter((c) => c.nivel === nivel) : cursos;
   const { data: matrizes } = useListMatrizesCurriculares(
     Number(cursoId),
@@ -211,6 +207,14 @@ function TurmaForm({ editingId, turmaAtual, onFechar }: { editingId: number | nu
   });
 
   function selecionarMatriz(id: string) {
+    // [FIX 03/09 v3 -- causa raiz real] O Select de Serie/Matriz e
+    // disabled={!cursoId} -- quando cursoId passa a ter valor (matriz
+    // ja aplicada carregando), o Select "liga" e dispara
+    // onValueChange("") sozinho nesse instante, chamando esta funcao
+    // com id vazio e zerando o matrizId bem na hora que tinha acabado
+    // de ser preenchido certo. Uma selecao de verdade do usuario
+    // sempre manda um id real -- ignora chamadas com id vazio.
+    if (!id) return;
     setMatrizId(id);
     const m = matrizes?.find((mm) => mm.id === Number(id));
     if (m) form.setValue("serie", m.serieAno, { shouldValidate: true });
