@@ -220,50 +220,156 @@ router.get("/ponto", async (req, res) => {
   res.send('\uFEFF' + csv);
 });
 
+// [DICIONARIO CONFIRMADO 03/09/2026] So o que ainda NAO e o Codigo SAE
+// oficial cadastrado em disciplinas.codigoSae (a maioria do nucleo
+// comum e tecnico ja foi corrigida direto no banco, confirmada contra
+// o portal SERE e o XML real do Urania do Mario Braga). Ensino
+// Religioso e Educacao Ambiental ainda usam um valor pendente de
+// confirmacao oficial.
+const DICIONARIO_CODDISC_PENDENTE: Record<string, number> = {
+  "Ensino Religioso": 33,
+  "Educação Ambiental": 89,
+};
+// [CONHECIDO] Valores de codigo_sae que sao placeholder antigo, nao
+// Codigo SAE de verdade -- se algum dia aparecerem de novo (ex.:
+// escola nova cadastrada a partir de um molde desatualizado), nao
+// devem ser usados sem confirmar no portal SERE primeiro.
+const CODDISC_PLACEHOLDERS_SUSPEITOS = new Set([101, 701, 1101, 1501, 1901, 2001]);
+
+function resolverCoddisc(disciplinaNome: string, codigoSae: string | null): number | null {
+  if (disciplinaNome in DICIONARIO_CODDISC_PENDENTE) return DICIONARIO_CODDISC_PENDENTE[disciplinaNome];
+  if (codigoSae != null && !CODDISC_PLACEHOLDERS_SUSPEITOS.has(Number(codigoSae))) return Number(codigoSae);
+  return null;
+}
+
+const DIA_SEMANA_CODIGO: Record<number, string> = { 0: "SEG", 1: "TER", 2: "QUA", 3: "QUI", 4: "SEX" };
+
 router.get("/relatorio-seed", async (req, res) => {
   const escolaId = getEscolaId(req);
-  const estado = (req.query.estado as string) ?? "SP";
-  const [slots, professores, disciplinas, turmas] = await Promise.all([
-    db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
-    db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
-    db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
-    db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
-  ]);
-  const relatorio = {
-    estado,
-    anoLetivo: new Date().getFullYear(),
-    geradoEm: new Date().toISOString(),
-    resumo: {
-      totalTurmas: turmas.length,
-      totalProfessores: professores.length,
-      totalDisciplinas: disciplinas.length,
-      totalAulasSemanais: slots.length,
-    },
-    turmas: turmas.map(t => ({
-      id: t.id,
-      nome: t.nome,
-      serie: t.serie,
-      turno: t.turno,
-      grade: DIAS.map((dia, diaSemana) => ({
-        dia,
-        aulas: slots
-          .filter(s => s.turmaId === t.id && s.diaSemana === diaSemana)
-          .sort((a, b) => a.numeroAula - b.numeroAula)
-          .map(s => ({
-            numeroAula: s.numeroAula,
-            disciplina: disciplinas.find(d => d.id === s.disciplinaId)?.nome ?? "",
-            professor: professores.find(p => p.id === s.professorId)?.nome ?? "",
-          })),
-      })),
-    })),
-    professores: professores.map(p => ({
-      id: p.id,
-      nome: p.nome,
-      email: p.email,
-      cargaSemanal: slots.filter(s => s.professorId === p.id).length,
-    })),
-  };
-  res.json(relatorio);
+  const estado = (req.query.estado as string) ?? "PR";
+  const turno = req.query.turno as string | undefined;
+
+  if (estado !== "PR") {
+    res.status(400).json({ error: `Exportação no formato SERE/Urânia só está implementada para o Paraná (PR) no momento.` });
+    return;
+  }
+  if (!turno || !["matutino", "vespertino", "noturno"].includes(turno)) {
+    res.status(400).json({ error: "Selecione um turno (matutino, vespertino ou noturno) antes de exportar." });
+    return;
+  }
+
+  const [escola] = await db.select().from(escolasTable).where(eq(escolasTable.id, escolaId));
+  if (!escola?.codigoInep) {
+    res.status(400).json({ error: "O Código INEP da escola ainda não foi cadastrado. Preencha em Configurações → Dados da Escola antes de exportar." });
+    return;
+  }
+
+  const linhas = await db
+    .select({
+      diaSemana: horariosTable.diaSemana,
+      numeroAula: horariosTable.numeroAula,
+      turmaId: turmasTable.id,
+      turmaNome: turmasTable.nome,
+      turmaNivelEnsino: turmasTable.nivelEnsino,
+      disciplinaNome: disciplinasTable.nome,
+      codigoSae: disciplinasTable.codigoSae,
+      professorId: professoresTable.id,
+    })
+    .from(horariosTable)
+    .innerJoin(turmasTable, eq(turmasTable.id, horariosTable.turmaId))
+    .innerJoin(disciplinasTable, eq(disciplinasTable.id, horariosTable.disciplinaId))
+    .innerJoin(professoresTable, eq(professoresTable.id, horariosTable.professorId))
+    .where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.turno, turno)));
+
+  if (linhas.length === 0) {
+    res.status(400).json({ error: `Nenhuma aula encontrada para o turno "${turno}". A grade foi gerada e homologada?` });
+    return;
+  }
+
+  // bloqueia ANTES de gerar qualquer coisa -- nunca manda XML parcial
+  // ou com codigo chutado
+  const semCodigo = new Map<string, number>();
+  for (const l of linhas) {
+    if (resolverCoddisc(l.disciplinaNome, l.codigoSae) === null) {
+      semCodigo.set(l.disciplinaNome, (semCodigo.get(l.disciplinaNome) ?? 0) + 1);
+    }
+  }
+  if (semCodigo.size > 0) {
+    res.status(400).json({
+      error: "Algumas disciplinas ainda não têm Código SAE cadastrado. Preencha em Disciplinas antes de exportar.",
+      disciplinasSemCodigo: [...semCodigo.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([nome, aulas]) => ({ nome, aulas })),
+    });
+    return;
+  }
+
+  // [FIX] matutino tem 2 esquemas de horario (Fundamental 5 aulas vs
+  // Medio/Tecnico 6 aulas) -- cruza por nivelEnsino da turma quando o
+  // turno for matutino; nos outros turnos o esquema e unico
+  // (nivelEnsino fica nulo em horario_slots).
+  const slots = await db.select().from(horarioSlotsTable)
+    .where(and(eq(horarioSlotsTable.escolaId, escolaId), eq(horarioSlotsTable.turno, turno), eq(horarioSlotsTable.letivo, true)));
+  function chaveSlot(numeroAula: number, nivelEnsino: string | null): string {
+    return turno === "matutino" ? `${numeroAula}|${nivelEnsino ?? "?"}` : `${numeroAula}|todos`;
+  }
+  const horarioPorSlot = new Map<string, [string, string]>();
+  for (const s of slots) {
+    const chave = chaveSlot(s.numeroAula, turno === "matutino" ? s.nivelEnsino : null);
+    if (!horarioPorSlot.has(chave)) {
+      const inicio = String(s.horaInicio).slice(0, 5);
+      const [h, m] = inicio.split(":").map(Number);
+      const totalMin = h * 60 + m + (s.duracaoMinutos ?? 0);
+      const fim = `${String(Math.floor(totalMin / 60) % 24).padStart(2, "0")}:${String(totalMin % 60).padStart(2, "0")}`;
+      horarioPorSlot.set(chave, [inicio, fim]);
+    }
+  }
+
+  // turmas sem nivelEnsino definido no matutino: nao da pra saber qual
+  // esquema de horario usar -- bloqueia com erro claro em vez de
+  // adivinhar
+  if (turno === "matutino") {
+    const semNivel = new Set(linhas.filter(l => !l.turmaNivelEnsino).map(l => l.turmaNome));
+    if (semNivel.size > 0) {
+      res.status(400).json({
+        error: "Algumas turmas do matutino não têm o nível de ensino definido (Fundamental ou Médio/Técnico), necessário para saber o esquema de horário correto. Edite essas turmas antes de exportar.",
+        turmasSemNivel: [...semNivel],
+      });
+      return;
+    }
+  }
+
+  const codTurmaMap = new Map<number, number>();
+  const codProfMap = new Map<number, number>();
+  let proxTurma = 1, proxProf = 1;
+  for (const l of linhas) {
+    if (!codTurmaMap.has(l.turmaId)) codTurmaMap.set(l.turmaId, proxTurma++);
+    if (!codProfMap.has(l.professorId)) codProfMap.set(l.professorId, proxProf++);
+  }
+
+  const partes: string[] = [`<IMPORT_URANIA>`, `<CODESCOLA>${escola.codigoInep}</CODESCOLA>`, `<HORARIO>`];
+  for (const l of linhas) {
+    const chave = chaveSlot(l.numeroAula, turno === "matutino" ? l.turmaNivelEnsino : null);
+    const [horaInicio, horaFim] = horarioPorSlot.get(chave) ?? ["00:00", "00:00"];
+    partes.push(
+      `<REGISTRO>`,
+      `<CODTURMA>${codTurmaMap.get(l.turmaId)}</CODTURMA>`,
+      `<TIPOTURMA>1</TIPOTURMA>`,
+      `<DIA>${DIA_SEMANA_CODIGO[l.diaSemana]}</DIA>`,
+      `<HOR>${String(l.numeroAula).padStart(2, "0")}</HOR>`,
+      `<HORA_INICIO>${horaInicio}</HORA_INICIO>`,
+      `<HORA_FIM>${horaFim}</HORA_FIM>`,
+      `<CODPROF>${codProfMap.get(l.professorId)}</CODPROF>`,
+      `<CODDISC>${resolverCoddisc(l.disciplinaNome, l.codigoSae)}</CODDISC>`,
+      `</REGISTRO>`,
+    );
+  }
+  partes.push(`</HORARIO>`, `</IMPORT_URANIA>`);
+
+  const dataHoje = new Date().toISOString().slice(0, 10);
+  res.setHeader("Content-Type", "application/xml");
+  res.setHeader("Content-Disposition", `attachment; filename="export-sere-${turno}-${dataHoje}.xml"`);
+  res.send(partes.join("\r\n"));
 });
 
 // ------------------------------------------------------------------

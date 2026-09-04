@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useListTurmas, useListProfessores, customFetch } from "@workspace/api-client-react";
+import { useListTurmas, useListProfessores, customFetch, ApiError } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -51,7 +51,17 @@ export default function ExportPage() {
     ano: String(new Date().getFullYear()),
   });
   const [seedEstado, setSeedEstado] = useState("PR");
+  const [seedTurno, setSeedTurno] = useState("matutino");
   const [loadingSeed, setLoadingSeed] = useState(false);
+  // [NOVO] Erro estruturado do backend (disciplinas sem codigo SAE ou
+  // turmas sem nivel de ensino definido) -- mostrado na tela em vez de
+  // so um toast generico, pra a pessoa saber exatamente o que corrigir
+  // antes de tentar exportar de novo.
+  const [seedErro, setSeedErro] = useState<{
+    mensagem: string;
+    disciplinas?: { nome: string; aulas: number }[];
+    turmas?: string[];
+  } | null>(null);
   // [NOVO] "turno" filtra o PDF para só um período por vez -- sem isso,
   // turmas de matutino/vespertino/noturno saem misturadas na mesma
   // sequência de páginas, sem nenhuma ordem lógica.
@@ -123,15 +133,25 @@ export default function ExportPage() {
 
   const handleSeedDownload = async () => {
     setLoadingSeed(true);
+    setSeedErro(null);
     try {
-      const url = buildUrl("/api/export/relatorio-seed", { estado: seedEstado });
-      const data = await customFetch<unknown>(url, { responseType: "json" });
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = buildUrl("/api/export/relatorio-seed", { estado: seedEstado, turno: seedTurno });
+      const blob = await customFetch<Blob>(url, { responseType: "blob" });
       const objUrl = URL.createObjectURL(blob);
-      handleDownload(objUrl, `relatorio_seed_${seedEstado}_${new Date().getFullYear()}.json`);
+      const extensao = seedEstado === "PR" ? "xml" : "json";
+      handleDownload(objUrl, `relatorio_seed_${seedEstado}_${seedTurno}_${new Date().getFullYear()}.${extensao}`);
       URL.revokeObjectURL(objUrl);
-    } catch {
-      toast({ title: "Erro ao gerar relatório", variant: "destructive" });
+    } catch (err) {
+      if (err instanceof ApiError && err.data && typeof err.data === "object") {
+        const data = err.data as { error?: string; disciplinasSemCodigo?: { nome: string; aulas: number }[]; turmasSemNivel?: string[] };
+        setSeedErro({
+          mensagem: data.error ?? "Não foi possível gerar o relatório.",
+          disciplinas: data.disciplinasSemCodigo,
+          turmas: data.turmasSemNivel,
+        });
+      } else {
+        toast({ title: "Erro ao gerar relatório", variant: "destructive" });
+      }
     } finally {
       setLoadingSeed(false);
     }
@@ -426,11 +446,41 @@ export default function ExportPage() {
                   </SelectContent>
                 </Select>
               </div>
+              {seedEstado === "PR" && (
+                <div className="space-y-1.5 w-40">
+                  <Label>Turno</Label>
+                  <Select value={seedTurno} onValueChange={setSeedTurno}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="matutino">Matutino</SelectItem>
+                      <SelectItem value="vespertino">Vespertino</SelectItem>
+                      <SelectItem value="noturno">Noturno</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <Button onClick={handleSeedDownload} disabled={loadingSeed}>
                 <Download className="w-4 h-4 mr-2" />
                 {loadingSeed ? "Gerando..." : `Baixar Relatório SEED-${seedEstado}`}
               </Button>
             </div>
+            {seedErro && (
+              <div className="mt-4 rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm">
+                <p className="font-medium text-destructive">{seedErro.mensagem}</p>
+                {seedErro.disciplinas && seedErro.disciplinas.length > 0 && (
+                  <ul className="mt-2 space-y-0.5 list-disc list-inside text-muted-foreground">
+                    {seedErro.disciplinas.map((d) => (
+                      <li key={d.nome}>{d.nome} <span className="text-xs">({d.aulas} aula{d.aulas === 1 ? "" : "s"}/semana)</span></li>
+                    ))}
+                  </ul>
+                )}
+                {seedErro.turmas && seedErro.turmas.length > 0 && (
+                  <ul className="mt-2 space-y-0.5 list-disc list-inside text-muted-foreground">
+                    {seedErro.turmas.map((t) => <li key={t}>{t}</li>)}
+                  </ul>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
