@@ -1141,7 +1141,69 @@ const GerarCpsatBody = z.object({
   message: "Informe turno, turmaId OU turmaIds (exatamente uma das tres opcoes, nao mais de uma nem nenhuma).",
 });
 
+// [DIVISAO-POR-NIVEL] Quando o turno inteiro e pedido (sem turmaId/turmaIds
+// explicitos) e esse turno mistura Fundamental + Medio/Tecnico na mesma
+// escola, resolve em duas etapas sequenciais (Fundamental primeiro,
+// Medio/Tecnico depois) em vez de uma unica chamada com todas as turmas
+// juntas. Motivo: o problema combinado fica pesado demais pro CP-SAT
+// (visto em teste local: UNKNOWN apos 1200s com as 24 turmas do matutino
+// do Mario Braga juntas; dividido, cada metade fecha OPTIMAL em menos de
+// 1 minuto ao todo). A segunda chamada reaproveita o bloqueio automatico
+// de "outras turmas do turno" (via horariosExperimentaisTable) que ja
+// existe dentro de runCpsatGeneracaoUnica -- os professores que dao aula
+// nos dois niveis (ex.: Salete, Crislaine) nunca ficam escalados nos dois
+// ao mesmo tempo.
 async function runCpsatGeneration(
+  escolaId: string,
+  turnoInformado: "matutino" | "vespertino" | "noturno" | undefined,
+  turmaId: number | undefined,
+  turmaIdsSelecionados: number[] | undefined,
+  nomeExperimental: string,
+  tempoLimiteS: number | undefined,
+): Promise<{ httpStatus: number; body: Record<string, unknown> }> {
+  if (turmaId == null && turmaIdsSelecionados == null && turnoInformado != null) {
+    const turmasDoTurnoParaCheck = await db.select({ id: turmasTable.id, nivelEnsino: turmasTable.nivelEnsino })
+      .from(turmasTable)
+      .where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.turno, turnoInformado), eq(turmasTable.fantasma, false)));
+
+    const idsFundamental = turmasDoTurnoParaCheck.filter((t) => t.nivelEnsino === "fundamental").map((t) => t.id);
+    const idsMedioTecnico = turmasDoTurnoParaCheck.filter((t) => t.nivelEnsino != null && t.nivelEnsino !== "fundamental").map((t) => t.id);
+
+    if (idsFundamental.length > 0 && idsMedioTecnico.length > 0) {
+      const resultadoFundamental = await runCpsatGeneracaoUnica(escolaId, undefined, undefined, idsFundamental, nomeExperimental, tempoLimiteS);
+      if (resultadoFundamental.httpStatus < 200 || resultadoFundamental.httpStatus >= 300) {
+        return { httpStatus: resultadoFundamental.httpStatus, body: { etapa: "fundamental", ...resultadoFundamental.body } };
+      }
+      const resultadoMedio = await runCpsatGeneracaoUnica(escolaId, undefined, undefined, idsMedioTecnico, nomeExperimental, tempoLimiteS);
+      if (resultadoMedio.httpStatus < 200 || resultadoMedio.httpStatus >= 300) {
+        return { httpStatus: resultadoMedio.httpStatus, body: { etapa: "medio_tecnico", fundamentalJaGerado: true, ...resultadoMedio.body } };
+      }
+      const bodyFund = resultadoFundamental.body as Record<string, any>;
+      const bodyMedio = resultadoMedio.body as Record<string, any>;
+      const otimo = Boolean(bodyFund.otimo) && Boolean(bodyMedio.otimo);
+      const algumFeasible = bodyFund.status === "FEASIBLE" || bodyMedio.status === "FEASIBLE";
+      return {
+        httpStatus: 200,
+        body: {
+          nomeExperimental,
+          turno: turnoInformado,
+          dividioPorNivel: true,
+          status: otimo ? "OPTIMAL" : (algumFeasible ? "FEASIBLE" : String(bodyMedio.status)),
+          otimo,
+          tempoResolucaoS: (bodyFund.tempoResolucaoS ?? 0) + (bodyMedio.tempoResolucaoS ?? 0),
+          totalTurmas: (bodyFund.totalTurmas ?? 0) + (bodyMedio.totalTurmas ?? 0),
+          totalSlots: (bodyFund.totalSlots ?? 0) + (bodyMedio.totalSlots ?? 0),
+          naoMapeadas: (bodyFund.naoMapeadas ?? 0) + (bodyMedio.naoMapeadas ?? 0),
+          semProfessorResolvido: (bodyFund.semProfessorResolvido ?? 0) + (bodyMedio.semProfessorResolvido ?? 0),
+          mensagem: `Grade gerada como experimento "${nomeExperimental}" (Fundamental e Medio/Tecnico resolvidos em duas etapas). Revise e use POST /experimentais/${nomeExperimental}/promover para aplicar como oficial.`,
+        },
+      };
+    }
+  }
+  return runCpsatGeneracaoUnica(escolaId, turnoInformado, turmaId, turmaIdsSelecionados, nomeExperimental, tempoLimiteS);
+}
+
+async function runCpsatGeneracaoUnica(
   escolaId: string,
   turnoInformado: "matutino" | "vespertino" | "noturno" | undefined,
   turmaId: number | undefined,
