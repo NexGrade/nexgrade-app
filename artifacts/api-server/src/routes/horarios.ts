@@ -1394,10 +1394,20 @@ async function runCpsatGeneracaoUnica(
           inArray(horariosTable.turmaId, outrasTurmaIds),
           inArray(horariosTable.professorId, [...professorIdsUsados]),
         )),
+      // [FIX-POLUICAO-EXPERIMENTO] Antes considerava QUALQUER grade
+      // experimental salva de outras turmas do turno, mesmo de execucoes
+      // antigas e sem relacao (ex.: um experimento de teste de semanas
+      // atras). Isso podia inserir bloqueios espurios e obsoletos numa
+      // geracao nova -- visto na pratica travando a divisao Fundamental/
+      // Medio-Tecnico do matutino por causa de dados de um experimento
+      // anterior ja superado. Agora so conta como bloqueio o rascunho da
+      // MESMA geracao em andamento (mesmo nomeExperimental) -- e a grade
+      // oficial (query separada acima), que continuam validos sempre.
       db.select({ professorId: horariosExperimentaisTable.professorId, dia: horariosExperimentaisTable.diaSemana, aula: horariosExperimentaisTable.numeroAula })
         .from(horariosExperimentaisTable)
         .where(and(
           eq(horariosExperimentaisTable.escolaId, escolaId),
+          eq(horariosExperimentaisTable.nome, nomeExperimental),
           inArray(horariosExperimentaisTable.turmaId, outrasTurmaIds),
           inArray(horariosExperimentaisTable.professorId, [...professorIdsUsados]),
         )),
