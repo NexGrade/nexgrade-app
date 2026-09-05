@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export type ListDisponibilidadeParams = {
-professorId?: number;
-};
+/**
+ * Quantas HA obrigatorias ja estao de fato marcadas em disponibilidade_professores, por turno.
+ */
+export type ProfessorCargaHaAlocadaPorTurno = {[key: string]: number};

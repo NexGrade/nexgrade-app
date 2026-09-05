@@ -1,4 +1,4 @@
-﻿import { useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useGetProfessor, useUpdateProfessor, getGetProfessorQueryKey, useListDisciplinas, getListProfessoresQueryKey, useGetProfessorCarga, customFetch } from "@workspace/api-client-react";
@@ -386,6 +386,37 @@ export default function ProfessorEditar() {
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Total Semanal</span>
                     <span className="text-2xl font-bold">{cargaData.totalAulas} aulas</span>
+                  </div>
+
+                  <div className="space-y-2 pt-2 border-t">
+                    <h4 className="text-sm font-medium text-muted-foreground pb-1">Por Turno</h4>
+                    <div className="space-y-1.5">
+                      {Object.entries(cargaData.porTurno ?? {}).map(([turno, aulas]) => (
+                        <div key={turno} className="flex items-center justify-between text-sm">
+                          <span className="capitalize">{turno}</span>
+                          <span className="font-medium">{aulas} aula(s)</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-2 border-t">
+                    <h4 className="text-sm font-medium text-muted-foreground pb-1">HA Obrigatória</h4>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Necessária (institucional)</span>
+                      <span className="font-medium">{cargaData.haInstitucionalTotal ?? 0} aula(s)</span>
+                    </div>
+                    <div className="space-y-1.5 mt-1">
+                      {Object.entries(cargaData.haInstitucionalPorTurno ?? {}).map(([turno, necessaria]) => {
+                        const alocada = (cargaData.haAlocadaPorTurno ?? {})[turno] ?? 0;
+                        return (
+                          <div key={turno} className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span className="capitalize">{turno}</span>
+                            <span>{alocada} / {necessaria} alocada(s)</span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   <div className="space-y-3">

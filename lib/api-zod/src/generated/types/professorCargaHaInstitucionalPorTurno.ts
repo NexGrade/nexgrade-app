@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export type ListDisponibilidadeParams = {
-professorId?: number;
-};
+/**
+ * HA institucional necessaria por turno, conforme regra SEED 15/5 (RNF-SEED-01).
+ */
+export type ProfessorCargaHaInstitucionalPorTurno = {[key: string]: number};

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export type ListDisponibilidadeParams = {
-professorId?: number;
-};
+/**
+ * Total de aulas semanais do professor, agrupado por turno (matutino/vespertino/noturno).
+ */
+export type ProfessorCargaPorTurno = {[key: string]: number};
