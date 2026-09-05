@@ -200,6 +200,11 @@ export async function calcularHAIdeal(
       const maxAula = maxAulaPorTurno.get(turno) ?? 6;
       const bloqueado = bloqueadoPorTurno.get(turno) ?? new Set();
       const ocupado = new Set(ocupadoInicial);
+      // [LIMITE-HA-POR-DIA] evita empilhar toda a HA de um professor
+      // num so dia (ex.: dia inteiro so de HA) -- conta quantas HA ja
+      // foram colocadas em cada dia NESTA chamada (por turno).
+      const contagemDiaAtual = new Map<number, number>();
+      const MAX_HA_POR_DIA = 3;
 
       function livre(dia: number, aula: number): boolean {
         if (aula < 1 || aula > maxAula) return false;
@@ -219,13 +224,15 @@ export async function calcularHAIdeal(
       }
 
       while (orcamento > 0) {
-        const candidatos: Array<{ dia: number; aula: number }> = [];
+        let candidatos: Array<{ dia: number; aula: number }> = [];
         for (let dia = 0; dia < 5; dia++) {
           for (let aula = 1; aula <= maxAula; aula++) {
             if (livre(dia, aula)) candidatos.push({ dia, aula });
           }
         }
         if (candidatos.length === 0) break;
+        const dentroDoLimite = candidatos.filter((c) => (contagemDiaAtual.get(c.dia) ?? 0) < MAX_HA_POR_DIA);
+        if (dentroDoLimite.length > 0) candidatos = dentroDoLimite;
 
         let melhor: { dia: number; aula: number; janelas: number; colado: boolean; dist: number } | null = null;
         for (const c of candidatos) {
@@ -247,6 +254,7 @@ export async function calcularHAIdeal(
         if (!melhor) break;
         marcasFinais.push({ professorId: prof.id, turno, diaSemana: melhor.dia, horarioSlot: melhor.aula });
         ocupado.add(`${melhor.dia}-${melhor.aula}`);
+        contagemDiaAtual.set(melhor.dia, (contagemDiaAtual.get(melhor.dia) ?? 0) + 1);
         orcamento--;
       }
       return orcamento;
