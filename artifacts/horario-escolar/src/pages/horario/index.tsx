@@ -30,12 +30,12 @@ import {
   CheckCircle2, RefreshCw, ChevronUp, ArrowUpCircle, Trash2, Clock, Info, X, Sparkles, Download,
 } from "lucide-react";
 
-// Hub ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºnico de HorÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Esquema > Regras > Grade > Conflitos > Experimental,
-// unificando as antigas 5 telas separadas num fluxo em cascata sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³.
+// Hub único de Horário — Esquema > Regras > Grade > Conflitos > Experimental,
+// unificando as antigas 5 telas separadas num fluxo em cascata só.
 
 const ABAS = [
   { key: "esquema", label: "Esquema", icon: Clock },
-  { key: "regras", label: "Regras de DistribuiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o", icon: ListChecks },
+  { key: "regras", label: "Regras de Distribuição", icon: ListChecks },
   { key: "grade", label: "Grade", icon: Calendar },
   { key: "conflitos", label: "Conflitos", icon: AlertTriangle },
   { key: "experimental", label: "Modo Experimental", icon: FlaskConical },
@@ -113,10 +113,10 @@ async function pollarStatusCpsat(jobId: string): Promise<StatusCpsatResult> {
   return statusResult;
 }
 export default function HorarioHubPage() {
-  // [NOVO] Deep-link pra uma aba especÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­fica via "?tab=..." (ex.:
-  // /horario?tab=conflitos) -- usado pelos cards da VisÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o Geral, que
-  // antes apontavam pra rotas que nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o existiam ("/horarios",
-  // "/conflitos") e caÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­am em 404.
+  // [NOVO] Deep-link pra uma aba específica via "?tab=..." (ex.:
+  // /horario?tab=conflitos) -- usado pelos cards da Visão Geral, que
+  // antes apontavam pra rotas que não existiam ("/horarios",
+  // "/conflitos") e caíam em 404.
   const search = useSearch();
   const tabParam = new URLSearchParams(search).get("tab");
   const abaInicial = (ABAS.some((a) => a.key === tabParam) ? tabParam : "esquema") as AbaKey;
@@ -125,8 +125,8 @@ export default function HorarioHubPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">HorÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio</h1>
-        <p className="text-muted-foreground">Configure, gere e acompanhe a grade horÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ria da escola.</p>
+        <h1 className="text-3xl font-bold tracking-tight">Horário</h1>
+        <p className="text-muted-foreground">Configure, gere e acompanhe a grade horária da escola.</p>
       </div>
 
       <div className="flex items-center gap-1 border-b border-border overflow-x-auto">
@@ -155,7 +155,7 @@ export default function HorarioHubPage() {
   );
 }
 
-// ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â ABA: ESQUEMA ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+// ═══════════════════════════════════════════════ ABA: ESQUEMA ═══════════════════════════════════════════════
 
 type Turno = "matutino" | "vespertino" | "noturno";
 
@@ -164,11 +164,11 @@ function paraMinutos(hora: string): number {
   return h * 60 + m;
 }
 
-// ExibiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o compacta na grade: sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ o primeiro nome, igual ao padrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o dos
-// relatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rios do Urania (que usam apenas o primeiro nome do professor
-// como identificaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o nas cÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lulas). O cadastro completo (nome inteiro)
-// continua intacto em todo o resto do sistema -- isso ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ visual,
-// pra caber no espaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§o apertado da cÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lula da grade.
+// Exibição compacta na grade: só o primeiro nome, igual ao padrão dos
+// relatórios do Urania (que usam apenas o primeiro nome do professor
+// como identificação nas células). O cadastro completo (nome inteiro)
+// continua intacto em todo o resto do sistema -- isso é só visual,
+// pra caber no espaço apertado da célula da grade.
 function abreviarNomeProfessor(nomeCompleto: string | undefined, todosProfessores?: Array<{ nome: string }>): string {
   if (!nomeCompleto) return "";
   const partes = nomeCompleto.trim().split(" ");
@@ -300,14 +300,14 @@ function AbaEsquema() {
               ))}
             </div>
             <button onClick={() => setModoAvancado(true)} className="text-xs text-primary font-medium flex items-center gap-1">
-              <Lock className="h-3 w-3" /> Modo avanÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ado
+              <Lock className="h-3 w-3" /> Modo avançado
             </button>
           </div>
 
           {step === 1 && (
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">HorÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio de inÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­cio</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Horário de início</label>
                 <Input type="time" value={form.horaInicio} onChange={(e) => setForm({ ...form, horaInicio: e.target.value })} />
               </div>
               <div>
@@ -315,7 +315,7 @@ function AbaEsquema() {
                 <Input type="number" min={1} max={10} value={form.qtdAulas} onChange={(e) => setForm({ ...form, qtdAulas: Number(e.target.value) })} />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">DuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de cada aula (min)</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Duração de cada aula (min)</label>
                 <Input type="number" min={30} max={90} value={form.duracao} onChange={(e) => setForm({ ...form, duracao: Number(e.target.value) })} />
               </div>
             </div>
@@ -325,27 +325,27 @@ function AbaEsquema() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Intervalo apÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³s a aula nÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âº</label>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Intervalo após a aula nº</label>
                   <Input type="number" min={1} max={form.qtdAulas} value={form.intervaloApos} onChange={(e) => setForm({ ...form, intervaloApos: Number(e.target.value) })} />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">DuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o do intervalo (min)</label>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Duração do intervalo (min)</label>
                   <Input type="number" min={5} max={40} value={form.duracaoIntervalo} onChange={(e) => setForm({ ...form, duracaoIntervalo: Number(e.target.value) })} />
                 </div>
               </div>
               <div className="bg-muted/50 rounded-lg p-3">
-                <p className="text-xs font-semibold text-primary mb-2">PrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©-visualizaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o</p>
+                <p className="text-xs font-semibold text-primary mb-2">Pré-visualização</p>
                 <div className="flex flex-wrap gap-2">
                   {slotsPreview.map((s) => (
                     <div key={s.numeroAula} className="text-xs border rounded px-2 py-1 bg-background">
-                      {s.numeroAula}ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âª aula ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {s.horaInicio}
+                      {s.numeroAula}ª aula · {s.horaInicio}
                     </div>
                   ))}
                 </div>
               </div>
               {slotsExistentes && slotsExistentes.length > 0 && (
                 <p className="text-xs text-amber-600">
-                  Este turno jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ tem {slotsExistentes.length} slot(s) configurado(s). Salvar substitui o esquema inteiro.
+                  Este turno já tem {slotsExistentes.length} slot(s) configurado(s). Salvar substitui o esquema inteiro.
                 </p>
               )}
             </div>
@@ -353,7 +353,7 @@ function AbaEsquema() {
 
           {step === 3 && (
             <div className="bg-muted/50 rounded-lg p-4 text-sm">
-              <strong>{form.qtdAulas} aulas</strong> de <strong>{form.duracao}min</strong> no turno <strong>{turno}</strong>, comeÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ando ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â s <strong>{form.horaInicio}</strong>.
+              <strong>{form.qtdAulas} aulas</strong> de <strong>{form.duracao}min</strong> no turno <strong>{turno}</strong>, começando às <strong>{form.horaInicio}</strong>.
             </div>
           )}
 
@@ -393,7 +393,7 @@ function AulaFixaForm({ turno, onFechar }: { turno: Turno; onFechar: () => void 
   );
   const criar = useCriarAulaFixa();
 
-  const diasSemana = ["Segunda", "TerÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§a", "Quarta", "Quinta", "Sexta"];
+  const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
 
   function salvar() {
     if (!turmaId || !disciplinaId || !professorId) return;
@@ -430,7 +430,7 @@ function AulaFixaForm({ turno, onFechar }: { turno: Turno; onFechar: () => void 
         <button onClick={onFechar} className="text-xs text-muted-foreground">Fechar</button>
       </div>
       <p className="text-xs text-muted-foreground mb-4">
-        Define uma aula fixa antes do gerador rodar. ÃƒÆ’Ã†â€™Ãƒâ€¦Ã‚Â¡til para professores com disponibilidade muito restrita.
+        Define uma aula fixa antes do gerador rodar. Útil para professores com disponibilidade muito restrita.
       </p>
       <div className="grid grid-cols-2 gap-3 mb-4">
         <Select value={turmaId} onValueChange={setTurmaId}>
@@ -460,7 +460,7 @@ function AulaFixaForm({ turno, onFechar }: { turno: Turno; onFechar: () => void 
           <div className="space-y-1">
             {aulasFixas.map((a) => (
               <div key={a.id} className="text-xs bg-muted/50 rounded px-2 py-1.5">
-                {diasSemana[a.diaSemana]} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {a.numeroAula}ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âª aula
+                {diasSemana[a.diaSemana]} · {a.numeroAula}ª aula
               </div>
             ))}
           </div>
@@ -470,7 +470,7 @@ function AulaFixaForm({ turno, onFechar }: { turno: Turno; onFechar: () => void 
   );
 }
 
-// ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â ABA: REGRAS ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+// ═══════════════════════════════════════════════ ABA: REGRAS ═══════════════════════════════════════════════
 
 const CHAVE_MAX_GEMINADAS = "seed_pr.max_aulas_geminadas_padrao";
 
@@ -478,9 +478,9 @@ function AbaRegras() {
   const [aberto, setAberto] = useState<"geral" | "especifico" | "complementar" | null>("geral");
 
   const secoes = [
-    { key: "geral" as const, titulo: "Tipos gerais", subtitulo: "Regra padrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o para toda a escola" },
-    { key: "especifico" as const, titulo: "Tipos especÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­ficos", subtitulo: "Por disciplina/turma ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â sobrescreve o geral" },
-    { key: "complementar" as const, titulo: "Complementares", subtitulo: "Professor com mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºltiplas disciplinas na mesma turma" },
+    { key: "geral" as const, titulo: "Tipos gerais", subtitulo: "Regra padrão para toda a escola" },
+    { key: "especifico" as const, titulo: "Tipos específicos", subtitulo: "Por disciplina/turma — sobrescreve o geral" },
+    { key: "complementar" as const, titulo: "Complementares", subtitulo: "Professor com múltiplas disciplinas na mesma turma" },
   ];
 
   return (
@@ -528,10 +528,10 @@ function SecaoGeral() {
 
   function salvarValor() {
     salvar.mutate(
-      { chave: CHAVE_MAX_GEMINADAS, data: { valor: Number(valor), descricao: "MÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ximo de aulas geminadas por padrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o, quando a disciplina/turma nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o tem override especÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­fico." } },
+      { chave: CHAVE_MAX_GEMINADAS, data: { valor: Number(valor), descricao: "Máximo de aulas geminadas por padrão, quando a disciplina/turma não tem override específico." } },
       {
         onSuccess: () => {
-          toast({ title: "PadrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o salvo!" });
+          toast({ title: "Padrão salvo!" });
           queryClient.invalidateQueries({ queryKey: getGetConfiguracaoQueryKey(CHAVE_MAX_GEMINADAS) });
         },
         onError: () => toast({ title: "Erro ao salvar", variant: "destructive" }),
@@ -551,10 +551,10 @@ function SecaoGeral() {
   function salvarValorComplementar() {
     if (!valorComplementar) return;
     salvarComplementar.mutate(
-      { chave: CHAVE_MAX_COMPLEMENTAR, data: { valor: Number(valorComplementar), descricao: "MÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ximo de aulas por dia com a mesma turma, por padrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o, quando um professor dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ mais de uma disciplina pra ela e nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o tem regra especÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­fica na seÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o Complementares." } },
+      { chave: CHAVE_MAX_COMPLEMENTAR, data: { valor: Number(valorComplementar), descricao: "Máximo de aulas por dia com a mesma turma, por padrão, quando um professor dá mais de uma disciplina pra ela e não tem regra específica na seção Complementares." } },
       {
         onSuccess: () => {
-          toast({ title: "PadrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o salvo!" });
+          toast({ title: "Padrão salvo!" });
           queryClient.invalidateQueries({ queryKey: getGetConfiguracaoQueryKey(CHAVE_MAX_COMPLEMENTAR) });
         },
         onError: () => toast({ title: "Erro ao salvar", variant: "destructive" }),
@@ -565,9 +565,9 @@ function SecaoGeral() {
   return (
     <div className="pt-2">
       <div className="bg-muted/50 rounded-lg p-4">
-        <label className="text-sm font-medium block mb-1">MÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ximo de aulas geminadas (padrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o da escola)</label>
+        <label className="text-sm font-medium block mb-1">Máximo de aulas geminadas (padrão da escola)</label>
         <p className="text-xs text-muted-foreground mb-3">
-          Vale para toda disciplina/turma que nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o tiver um limite especÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­fico configurado na seÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o abaixo.
+          Vale para toda disciplina/turma que não tiver um limite específico configurado na seção abaixo.
         </p>
         <div className="flex items-center gap-2">
           <Input
@@ -583,9 +583,9 @@ function SecaoGeral() {
       </div>
 
       <div className="bg-muted/50 rounded-lg p-4 mt-3">
-        <label className="text-sm font-medium block mb-1">MÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ximo de aulas por dia com a mesma turma (padrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o da escola)</label>
+        <label className="text-sm font-medium block mb-1">Máximo de aulas por dia com a mesma turma (padrão da escola)</label>
         <p className="text-xs text-muted-foreground mb-3">
-          Vale pra qualquer professor que dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âª mais de uma disciplina numa turma e nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o tenha uma regra especÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­fica configurada na seÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o "Complementares" (por professor, ou por professor+turma). Deixe em branco pra nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o aplicar limite nenhum por padrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o.
+          Vale pra qualquer professor que dê mais de uma disciplina numa turma e não tenha uma regra específica configurada na seção "Complementares" (por professor, ou por professor+turma). Deixe em branco pra não aplicar limite nenhum por padrão.
         </p>
         <div className="flex items-center gap-2">
           <Input
@@ -602,7 +602,7 @@ function SecaoGeral() {
       </div>
 
       <p className="text-xs text-amber-600 mt-3">
-        CompactaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de carga horÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ria e bloqueio de janelas ainda nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªm um padrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o configurÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡vel aqui ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â hoje sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o escolhidos a cada geraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de horÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio, na aba de Esquema.
+        Compactação de carga horária e bloqueio de janelas ainda não têm um padrão configurável aqui — hoje são escolhidos a cada geração de horário, na aba de Esquema.
       </p>
     </div>
   );
@@ -642,11 +642,11 @@ function SecaoEspecifico() {
         <div key={d.disciplinaId} className="flex items-center justify-between bg-muted/50 rounded px-3 py-2">
           <span className="text-sm">{d.nome}</span>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡x. geminadas/dia:</span>
+            <span className="text-xs text-muted-foreground">máx. geminadas/dia:</span>
             <Input
               type="number" min={1} max={6}
               defaultValue={d.maxAulasConsecutivasDia ?? ""}
-              placeholder="padrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o"
+              placeholder="padrão"
               className="w-16 h-8"
               onBlur={(e) => e.target.value && salvarLimite(d.disciplinaId, e.target.value)}
             />
@@ -654,7 +654,7 @@ function SecaoEspecifico() {
         </div>
       ))}
       {turmaId && turma?.disciplinasComCarga?.length === 0 && (
-        <p className="text-xs text-muted-foreground">Esta turma ainda nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o tem disciplinas vinculadas.</p>
+        <p className="text-xs text-muted-foreground">Esta turma ainda não tem disciplinas vinculadas.</p>
       )}
     </div>
   );
@@ -692,7 +692,7 @@ function SecaoComplementar() {
     return professores?.find((p) => p.id === id)?.nome ?? `#${id}`;
   }
   function nomeTurma(id: number | null | undefined) {
-    if (id === null || id === undefined) return "Qualquer turma (padrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o do professor)";
+    if (id === null || id === undefined) return "Qualquer turma (padrão do professor)";
     return turmas?.find((t) => t.id === id)?.nome ?? `#${id}`;
   }
 
@@ -701,7 +701,7 @@ function SecaoComplementar() {
       {limites?.map((l) => (
         <div key={l.id} className="flex items-center justify-between bg-muted/50 rounded px-3 py-2 text-sm">
           <span>{nomeProfessor(l.professorId)}</span>
-          <span className="text-xs text-muted-foreground">{nomeTurma(l.turmaId)} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡x. {l.maxAulasPorDia}/dia</span>
+          <span className="text-xs text-muted-foreground">{nomeTurma(l.turmaId)} · máx. {l.maxAulasPorDia}/dia</span>
         </div>
       ))}
 
@@ -726,7 +726,7 @@ function SecaoComplementar() {
             </Select>
           </div>
           <div>
-            <label className="text-xs text-muted-foreground block mb-1">MÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡x./dia</label>
+            <label className="text-xs text-muted-foreground block mb-1">Máx./dia</label>
             <Input type="number" min={1} value={maxAulas} onChange={(e) => setMaxAulas(e.target.value)} className="w-20" />
           </div>
           <Button size="sm" onClick={salvarLimite} disabled={salvar.isPending || !professorId}>
@@ -738,18 +738,18 @@ function SecaoComplementar() {
   );
 }
 
-// ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â ABA: GRADE ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+// ═══════════════════════════════════════════════ ABA: GRADE ═══════════════════════════════════════════════
 
-// [NOVO] FormulÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio de aula manual avulsa -- POST /api/horarios jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡
+// [NOVO] Formulário de aula manual avulsa -- POST /api/horarios já
 // existia na API (verifica slot ocupado antes de inserir, retorna 409
-// se jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ tiver aula ali), mas nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o tinha nenhum jeito de chamar essa
-// rota pela tela. Suporta professor de apoio opcional (co-docÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia),
+// se já tiver aula ali), mas não tinha nenhum jeito de chamar essa
+// rota pela tela. Suporta professor de apoio opcional (co-docência),
 // gravando duas linhas (uma por professor) no mesmo slot -- mesmo
-// padrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o que o motor gerador (gerarAlgoritmo) jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ usa pra isso.
-// [NOVO] Dados de uma aula existente, usados pra prÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©-preencher o
-// formulÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio em modo ediÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o -- inclui os IDs das linhas atuais em
-// horariosTable (uma por professor, no caso de co-docÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia), pra
-// serem apagadas antes de gravar a versÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o editada.
+// padrão que o motor gerador (gerarAlgoritmo) já usa pra isso.
+// [NOVO] Dados de uma aula existente, usados pra pré-preencher o
+// formulário em modo edição -- inclui os IDs das linhas atuais em
+// horariosTable (uma por professor, no caso de co-docência), pra
+// serem apagadas antes de gravar a versão editada.
 type AulaExistente = {
   idsParaExcluir: number[];
   turmaId: number;
@@ -766,8 +766,8 @@ function DialogAdicionarAula({
   turmaIdFixa?: number;
   diaSemanaFixo?: number;
   numeroAulaFixo?: number;
-  // [NOVO] Quando preenchido, o dialog abre em modo ediÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o: campos
-  // prÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©-carregados com a aula atual, e salvar apaga as linhas antigas
+  // [NOVO] Quando preenchido, o dialog abre em modo edição: campos
+  // pré-carregados com a aula atual, e salvar apaga as linhas antigas
   // (idsParaExcluir) antes de criar as novas.
   aulaExistente?: AulaExistente;
 }) {
@@ -786,12 +786,12 @@ function DialogAdicionarAula({
   const [numeroAula, setNumeroAula] = useState("1");
   const [salvando, setSalvando] = useState(false);
 
-  const diasSemana = ["Segunda", "TerÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§a", "Quarta", "Quinta", "Sexta"];
+  const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
   const emEdicao = !!aulaExistente;
 
-  // Repopula os campos fixos toda vez que o dialog abre (cÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lula
-  // clicada na grade define turma/dia/aula; o resto comeÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§a vazio --
-  // ou prÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©-preenchido com a aula existente, em modo ediÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o).
+  // Repopula os campos fixos toda vez que o dialog abre (célula
+  // clicada na grade define turma/dia/aula; o resto começa vazio --
+  // ou pré-preenchido com a aula existente, em modo edição).
   useEffect(() => {
     if (!open) return;
     setTurmaId(aulaExistente ? String(aulaExistente.turmaId) : (turmaIdFixa ? String(turmaIdFixa) : ""));
@@ -816,15 +816,15 @@ function DialogAdicionarAula({
       return;
     }
     if (temApoio && !professorApoioId) {
-      toast({ title: "Selecione o professor de apoio, ou desative a opÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de co-docÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia", variant: "destructive" });
+      toast({ title: "Selecione o professor de apoio, ou desative a opção de co-docência", variant: "destructive" });
       return;
     }
     setSalvando(true);
     try {
-      // [NOVO] Em modo ediÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o, apaga as linhas antigas primeiro. Se a
-      // criaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o da nova falhar depois (ex.: 409 por algum motivo), o
-      // slot fica vazio em vez de duplicado -- pior cenÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio aceitÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡vel
-      // aqui ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© "sumiu, refaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§a", nunca "ficou com dado duplicado".
+      // [NOVO] Em modo edição, apaga as linhas antigas primeiro. Se a
+      // criação da nova falhar depois (ex.: 409 por algum motivo), o
+      // slot fica vazio em vez de duplicado -- pior cenário aceitável
+      // aqui é "sumiu, refaça", nunca "ficou com dado duplicado".
       if (emEdicao) {
         for (const id of aulaExistente!.idsParaExcluir) {
           await customFetch(`/api/horarios/${id}`, { method: "DELETE" });
@@ -854,10 +854,10 @@ function DialogAdicionarAula({
       toast({ title: emEdicao ? "Aula atualizada!" : (temApoio ? "Aula adicionada com os dois professores!" : "Aula adicionada!") });
       onOpenChange(false);
     } catch (err) {
-      // 409 do backend = jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ existe aula nesse slot pra essa turma.
+      // 409 do backend = já existe aula nesse slot pra essa turma.
       toast({
-        title: emEdicao ? "Erro ao salvar ediÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o" : "Erro ao adicionar aula",
-        description: err instanceof Error ? err.message : "JÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ existe uma aula nesse horÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio para essa turma ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â apague a existente antes, se quiser substituir.",
+        title: emEdicao ? "Erro ao salvar edição" : "Erro ao adicionar aula",
+        description: err instanceof Error ? err.message : "Já existe uma aula nesse horário para essa turma — apague a existente antes, se quiser substituir.",
         variant: "destructive",
       });
     } finally {
@@ -893,7 +893,7 @@ function DialogAdicionarAula({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºmero da aula *</Label>
+              <Label>Número da aula *</Label>
               <Input
                 type="number" min={0} max={8} value={numeroAula}
                 onChange={(e) => setNumeroAula(e.target.value)}
@@ -912,8 +912,8 @@ function DialogAdicionarAula({
 
           <div className="flex items-center justify-between py-1 border-t pt-3">
             <div>
-              <Label className="cursor-pointer">Aula com dois professores (co-docÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia)</Label>
-              <p className="text-xs text-muted-foreground mt-0.5">Ex.: professor titular + professor de apoio/recomposiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o dando a mesma aula.</p>
+              <Label className="cursor-pointer">Aula com dois professores (co-docência)</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">Ex.: professor titular + professor de apoio/recomposição dando a mesma aula.</p>
             </div>
             <Switch checked={temApoio} onCheckedChange={setTemApoio} />
           </div>
@@ -930,13 +930,13 @@ function DialogAdicionarAula({
 
           <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 rounded-md p-2.5">
             <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-            Grava direto na grade oficial. Se jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ existir uma aula nesse exato horÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio pra essa turma, a inclusÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© bloqueada ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â apague a aula existente primeiro, se for o caso.
+            Grava direto na grade oficial. Se já existir uma aula nesse exato horário pra essa turma, a inclusão é bloqueada — apague a aula existente primeiro, se for o caso.
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={salvar} disabled={salvando}>
-            {salvando ? "Salvando..." : (emEdicao ? "Salvar ediÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o" : "Adicionar aula")}
+            {salvando ? "Salvando..." : (emEdicao ? "Salvar edição" : "Adicionar aula")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -944,11 +944,11 @@ function DialogAdicionarAula({
   );
 }
 
-// [NOVO] Popup leve que abre ao clicar numa cÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lula JÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â OCUPADA da
-// grade -- mostra a aula (ou as duas, se for co-docÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia) e oferece
+// [NOVO] Popup leve que abre ao clicar numa célula JÁ OCUPADA da
+// grade -- mostra a aula (ou as duas, se for co-docência) e oferece
 // Editar/Excluir. Fica separado do DialogAdicionarAula porque a
-// necessidade aqui ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ "ver o que tem e decidir o que fazer", nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o um
-// formulÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio completo.
+// necessidade aqui é só "ver o que tem e decidir o que fazer", não um
+// formulário completo.
 function DialogDetalheAula({
   open, onOpenChange, slots, disciplinaNome, onEditar, onExcluir, excluindo,
 }: {
@@ -969,7 +969,7 @@ function DialogDetalheAula({
             <div key={s.id} className="text-sm bg-muted/50 rounded px-3 py-2">{s.professorNome}</div>
           ))}
           {slots.length > 1 && (
-            <p className="text-xs text-muted-foreground">Aula com co-docÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â os dois professores acima dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o essa aula juntos.</p>
+            <p className="text-xs text-muted-foreground">Aula com co-docência — os dois professores acima dão essa aula juntos.</p>
           )}
         </div>
         <DialogFooter>
@@ -990,13 +990,13 @@ function AbaGrade() {
   const [gerando, setGerando] = useState(false);
 
   // [NOVO] Estado do dialog de aula manual -- ver DialogAdicionarAula
-  // acima. `celulaClicada` guarda dia/aula quando o usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio clica numa
-  // cÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lula "Vago" da grade, pra prÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©-preencher o formulÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio.
+  // acima. `celulaClicada` guarda dia/aula quando o usuário clica numa
+  // célula "Vago" da grade, pra pré-preencher o formulário.
   const [openAdicionar, setOpenAdicionar] = useState(false);
   const [celulaClicada, setCelulaClicada] = useState<{ dia: number; aula: number } | null>(null);
   const [aulaParaEditar, setAulaParaEditar] = useState<AulaExistente | undefined>(undefined);
 
-  // [NOVO] Popup de detalhe/editar/excluir pra cÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lula jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ ocupada.
+  // [NOVO] Popup de detalhe/editar/excluir pra célula já ocupada.
   const [openDetalhe, setOpenDetalhe] = useState(false);
   const [detalheSlots, setDetalheSlots] = useState<Array<{ id: number; disciplinaId: number; professorId: number; professorNome: string }>>([]);
   const [detalheTurmaId, setDetalheTurmaId] = useState<number | undefined>(undefined);
@@ -1013,9 +1013,9 @@ function AbaGrade() {
   if (professorId !== "all") queryParams.professorId = Number(professorId);
 
   const { data: horariosBrutos, isLoading } = useListHorarios(queryParams);
-  const diasSemana = ["Segunda", "TerÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§a", "Quarta", "Quinta", "Sexta"];
+  const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
 
-  const TURNO_ROTULO_AVISO: Record<string, string> = { matutino: "ManhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£", vespertino: "Tarde", noturno: "Noite" };
+  const TURNO_ROTULO_AVISO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
   const turmasDoTurno = (turmas ?? []).filter((t) => turno === "all" || t.turno === turno);
 
   const horarios = horariosBrutos?.filter((s) => turno === "all" || s.turma?.turno === turno);
@@ -1032,11 +1032,11 @@ function AbaGrade() {
   };
 
   // [NOVO] Igual ao getSlot, mas retorna TODOS os professores desse
-  // slot -- necessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio pra co-docÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia (duas linhas em horariosTable,
+  // slot -- necessário pra co-docência (duas linhas em horariosTable,
   // mesma turma+dia+aula, professor_id diferente). getSlot() sozinho
-  // sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ acha o primeiro e sempre foi assim pra exibiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o na grade; essa
-  // versÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© usada especificamente no clique da cÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lula, pra ediÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o e
-  // exclusÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o saberem sobre as duas linhas.
+  // só acha o primeiro e sempre foi assim pra exibição na grade; essa
+  // versão é usada especificamente no clique da célula, pra edição e
+  // exclusão saberem sobre as duas linhas.
   const getSlots = (diaSemana: number, numeroAula: number, turmaFilterId?: number) => {
     return (horarios ?? []).filter((s) =>
       s.diaSemana === diaSemana &&
@@ -1051,7 +1051,7 @@ function AbaGrade() {
     queryFn: async () =>
       // [FIX] fetch() sem token Bearer -- voltava 401, e o "HA"
       // (Hora-Atividade) simplesmente nunca aparecia destacado na
-      // grade por professor. customFetch jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ anexa o token.
+      // grade por professor. customFetch já anexa o token.
       customFetch<Array<{ diaSemana: number; horarioSlot: number; turno: string | null; horaAtividadeObrigatoria: boolean }>>(
         `/api/disponibilidade?professorId=${professorIdSelecionado}`,
         { responseType: "json" },
@@ -1086,7 +1086,7 @@ function AbaGrade() {
   const handleGerarGrade = async () => {
     if (!isTurmaSelected) return;
     const nomeTurma = turmas?.find((t) => String(t.id) === turmaId)?.nome ?? turmaId;
-    if (!confirm(`Gerar a grade de "${nomeTurma}"? Isso substitui a grade atual dessa turma, se jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ existir.`)) return;
+    if (!confirm(`Gerar a grade de "${nomeTurma}"? Isso substitui a grade atual dessa turma, se já existir.`)) return;
     setGerando(true);
     try {
       const result = await gerar({
@@ -1102,7 +1102,7 @@ function AbaGrade() {
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios"] });
       toast({
         title: `Grade gerada! ${result.slotsGerados} aulas criadas.`,
-        description: result.conflitos.length ? `${result.conflitos.length} aviso(s) ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â veja a aba Conflitos.` : undefined,
+        description: result.conflitos.length ? `${result.conflitos.length} aviso(s) — veja a aba Conflitos.` : undefined,
       });
     } catch (err) {
       toast({ title: "Erro ao gerar grade", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
@@ -1111,13 +1111,13 @@ function AbaGrade() {
     }
   };
 
-  // [NOVO] Abre o dialog jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ com turma (se selecionada) + dia/aula da
-  // cÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lula clicada. SÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ faz sentido clicar numa cÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lula vazia quando uma
-  // turma especÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­fica estÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ selecionada (senÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ pra saber pra
-  // qual turma ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© a aula).
+  // [NOVO] Abre o dialog já com turma (se selecionada) + dia/aula da
+  // célula clicada. Só faz sentido clicar numa célula vazia quando uma
+  // turma específica está selecionada (senão não dá pra saber pra
+  // qual turma é a aula).
   function abrirAdicionarNaCelula(dia: number, aula: number) {
     if (!isTurmaSelected) {
-      toast({ title: "Selecione uma turma especÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­fica primeiro", description: "Pra adicionar aula clicando na cÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lula, ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© preciso saber de qual turma ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©.", variant: "destructive" });
+      toast({ title: "Selecione uma turma específica primeiro", description: "Pra adicionar aula clicando na célula, é preciso saber de qual turma é.", variant: "destructive" });
       return;
     }
     setCelulaClicada({ dia, aula });
@@ -1130,11 +1130,11 @@ function AbaGrade() {
     setOpenAdicionar(true);
   }
 
-  // [FIX] Clique agora funciona nas duas visÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes (por turma OU por
-  // professor) -- cada linha em `horarios` jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ carrega o prÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³prio
-  // turmaId, entÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o precisamos da turma estar selecionada no
-  // filtro pra saber de qual turma ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© a aula clicada. Antes disso sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³
-  // funcionava com turma selecionada, o que deixava a visÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o "por
+  // [FIX] Clique agora funciona nas duas visões (por turma OU por
+  // professor) -- cada linha em `horarios` já carrega o próprio
+  // turmaId, então não precisamos da turma estar selecionada no
+  // filtro pra saber de qual turma é a aula clicada. Antes disso só
+  // funcionava com turma selecionada, o que deixava a visão "por
   // professor" (provavelmente a mais usada pra ajustes pontuais) sem
   // a funcionalidade.
   function abrirDetalheNaCelula(dia: number, aula: number, turmaIdDaCelula: number) {
@@ -1163,14 +1163,14 @@ function AbaGrade() {
 
   async function handleExcluirAula() {
     const nomes = detalheSlots.map((s) => s.professorNome).join(" + ");
-    if (!confirm(`Excluir esta aula (${nomes})? Essa aÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o pode ser desfeita.`)) return;
+    if (!confirm(`Excluir esta aula (${nomes})? Essa ação não pode ser desfeita.`)) return;
     setExcluindo(true);
     try {
       for (const s of detalheSlots) {
         await customFetch(`/api/horarios/${s.id}`, { method: "DELETE" });
       }
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios"] });
-      toast({ title: "Aula excluÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­da." });
+      toast({ title: "Aula excluída." });
       setOpenDetalhe(false);
     } catch (err) {
       toast({ title: "Erro ao excluir aula", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
@@ -1236,24 +1236,24 @@ function AbaGrade() {
       </Card>
       {!isTurmaSelected && (
         <p className="text-xs text-muted-foreground -mt-2">
-          Selecione uma turma especÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­fica pra habilitar o botÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o "Gerar Grade" (a geraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© sempre por turma) e pra poder adicionar aula manual clicando direto numa cÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©lula vazia da grade.
+          Selecione uma turma específica pra habilitar o botão "Gerar Grade" (a geração é sempre por turma) e pra poder adicionar aula manual clicando direto numa célula vazia da grade.
         </p>
       )}
       {precisaEscolherTurno && (
         <p className="text-xs text-amber-600 -mt-2 font-medium">
-          Este professor dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ aula em mais de um turno ({turnosNosResultados.map((t) => TURNO_ROTULO_AVISO[t as string] ?? t).join(", ")}) ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â selecione um Turno especÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­fico acima pra ver a grade sem misturar os horÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios (o nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºmero da aula se repete entre turnos, ex.: aula 1 ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© 07:30 na manhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£ e 13:05 na tarde).
+          Este professor dá aula em mais de um turno ({turnosNosResultados.map((t) => TURNO_ROTULO_AVISO[t as string] ?? t).join(", ")}) — selecione um Turno específico acima pra ver a grade sem misturar os horários (o número da aula se repete entre turnos, ex.: aula 1 é 07:30 na manhã e 13:05 na tarde).
         </p>
       )}
 
       {isLoading ? (
         <Skeleton className="h-[500px] w-full" />
       ) : !isTurmaSelected && !isProfessorSelected && turno !== "all" ? (
-        // [NOVO] VisÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o por turno: mostra todas as turmas do turno
-        // selecionado empilhadas, cada uma com a prÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³pria mini-grade
-        // diaÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Âaula -- antes sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ existia essa visÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o consolidada no PDF
-        // (Exportar ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Grade em PDF). Reaproveita os dados que
-        // `horarios` jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ traz quando sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ o turno estÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ filtrado (sem
-        // turma/professor especÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­fico).
+        // [NOVO] Visão por turno: mostra todas as turmas do turno
+        // selecionado empilhadas, cada uma com a própria mini-grade
+        // dia×aula -- antes só existia essa visão consolidada no PDF
+        // (Exportar → Grade em PDF). Reaproveita os dados que
+        // `horarios` já traz quando só o turno está filtrado (sem
+        // turma/professor específico).
         turmasDoTurno.length === 0 ? (
           <Card className="p-12 text-center text-muted-foreground">
             <p>Nenhuma turma cadastrada nesse turno.</p>
@@ -1264,12 +1264,12 @@ function AbaGrade() {
               const slotsDaTurma = (horarios ?? []).filter((s) => s.turmaId === t.id);
               const maxAulaTurma = slotsDaTurma.length > 0 ? Math.max(...slotsDaTurma.map((s) => s.numeroAula), 5) : 5;
               // [FIX] Turno noturno tem um slot informativo em
-              // numeroAula=0 (18:00, antes do inÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­cio oficial ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â s
+              // numeroAula=0 (18:00, antes do início oficial às
               // 18:45) -- ver criar-slot-1800-noite.ts e
-              // buscarHorariosPorAula em export.ts, que jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ trata isso
+              // buscarHorariosPorAula em export.ts, que já trata isso
               // no PDF. Uma turma nunca tem AULA de verdade nesse
-              // horÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio (ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© conceito de disponibilidade/HA do
-              // professor, nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de turma), entÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o a linha aparece
+              // horário (é conceito de disponibilidade/HA do
+              // professor, não de turma), então a linha aparece
               // sempre vazia aqui -- mas precisa aparecer, pra bater
               // com a realidade da grade impressa.
               const numerosAula = turno === "noturno"
@@ -1293,7 +1293,7 @@ function AbaGrade() {
                         return (
                           <div key={aulaNum} className="grid grid-cols-6 border-b border-border last:border-0">
                             <div className="p-1.5 flex items-center justify-center text-xs font-medium text-muted-foreground border-r border-border bg-muted/10">
-                              {aulaNum === 0 ? "18:00" : `${aulaNum}ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âª`}
+                              {aulaNum === 0 ? "18:00" : `${aulaNum}ª`}
                             </div>
                             {Array.from({ length: 5 }).map((_, colIndex) => {
                               // [FIX-DUPLA-DOCENCIA] mesmo fix do Modo Experimental: pega
@@ -1304,7 +1304,7 @@ function AbaGrade() {
                               if (!slot) {
                                 return (
                                   <div key={`${aulaNum}-${colIndex}`} className="p-1 border-r border-border last:border-0 min-h-[46px] flex items-center justify-center">
-                                    <span className="text-[10px] text-muted-foreground/30">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ</span>
+                                    <span className="text-[10px] text-muted-foreground/30">–</span>
                                   </div>
                                 );
                               }
@@ -1333,7 +1333,7 @@ function AbaGrade() {
         )
       ) : !isTurmaSelected && !isProfessorSelected ? (
         <Card className="p-12 text-center text-muted-foreground">
-          <p>Selecione uma turma, um professor, ou um Turno especÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­fico para visualizar a grade.</p>
+          <p>Selecione uma turma, um professor, ou um Turno específico para visualizar a grade.</p>
           <p className="text-sm mt-2">({horarios?.length || 0} aulas alocadas no total)</p>
         </Card>
       ) : (
@@ -1351,13 +1351,13 @@ function AbaGrade() {
                 return (
                   <div key={aulaNum} className="grid grid-cols-6 border-b border-border last:border-0">
                     <div className="p-4 flex items-center justify-center font-medium text-muted-foreground border-r border-border bg-muted/20">
-                      {aulaNum}ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âª Aula
+                      {aulaNum}ª Aula
                     </div>
                     {Array.from({ length: 5 }).map((_, colIndex) => {
                       const slotId = isTurmaSelected ? Number(turmaId) : undefined;
-                      // [FIX-DUPLA-DOCENCIA] getSlot() sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ achava o primeiro professor do
-                      // slot -- troca pra getSlots() (plural, jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ existia pro clique de
-                      // ediÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o) pra tambÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©m mostrar os dois professores juntos na exibiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o.
+                      // [FIX-DUPLA-DOCENCIA] getSlot() só achava o primeiro professor do
+                      // slot -- troca pra getSlots() (plural, já existia pro clique de
+                      // edição) pra também mostrar os dois professores juntos na exibição.
                       const slotsAqui = getSlots(colIndex, aulaNum, slotId);
                       const slot = slotsAqui[0];
                       if (!slot) {
@@ -1382,10 +1382,10 @@ function AbaGrade() {
                           </button>
                         );
                       }
-                      // [FIX] Clique habilitado sempre (nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ quando
-                      // turma selecionada) -- cada slot jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ carrega o
-                      // prÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³prio turmaId, entÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o funciona tambÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©m na
-                      // visÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o "por professor".
+                      // [FIX] Clique habilitado sempre (não só quando
+                      // turma selecionada) -- cada slot já carrega o
+                      // próprio turmaId, então funciona também na
+                      // visão "por professor".
                       const nomesProfessoresCelula = slotsAqui.map((s) => abreviarNomeProfessor(s.professor?.nome, professores)).join(" + ");
                       return (
                         <div
@@ -1453,21 +1453,21 @@ function AbaGrade() {
   );
 }
 
-// ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â ABA: CONFLITOS ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+// ═══════════════════════════════════════════════ ABA: CONFLITOS ═══════════════════════════════════════════════
 
 const GRAVIDADE_CONFIG = {
-  critico: { label: "CrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­tico", color: "bg-red-100 text-red-700 border-red-200", dot: "bg-red-500" },
+  critico: { label: "Crítico", color: "bg-red-100 text-red-700 border-red-200", dot: "bg-red-500" },
   alto: { label: "Alto", color: "bg-orange-100 text-orange-700 border-orange-200", dot: "bg-orange-500" },
-  medio: { label: "MÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©dio", color: "bg-amber-100 text-amber-700 border-amber-200", dot: "bg-amber-500" },
+  medio: { label: "Médio", color: "bg-amber-100 text-amber-700 border-amber-200", dot: "bg-amber-500" },
   baixo: { label: "Baixo", color: "bg-[#1565C0]/10 text-[#1565C0] border-[#1565C0]/20", dot: "bg-[#42A5F5]" },
 };
 
 const TIPO_LABELS: Record<string, string> = {
   professor_duplicado: "Professor Duplicado",
   carga_insuficiente: "Carga Insuficiente",
-  professor_nao_habilitado: "Professor NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o Habilitado",
+  professor_nao_habilitado: "Professor Não Habilitado",
   janelas_excessivas: "Janelas Excessivas",
-  turma_sem_horario: "Turma Sem HorÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio",
+  turma_sem_horario: "Turma Sem Horário",
 };
 
 function AbaConflitos() {
@@ -1497,7 +1497,7 @@ function AbaConflitos() {
           </Card>
           <Card className={`border-border/50 ${criticos > 0 ? "border-red-200 bg-red-50/30" : ""}`}>
             <CardContent className="pt-4 pb-4">
-              <p className="text-xs text-muted-foreground mb-1">CrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­ticos</p>
+              <p className="text-xs text-muted-foreground mb-1">Críticos</p>
               <p className={`text-3xl font-bold ${criticos > 0 ? "text-red-600" : "text-foreground"}`}>{criticos}</p>
             </CardContent>
           </Card>
@@ -1517,7 +1517,7 @@ function AbaConflitos() {
           <CardContent className="py-16 text-center">
             <CheckCircle2 className="w-12 h-12 mx-auto text-green-500 mb-3" />
             <p className="font-semibold text-green-700 text-lg">Nenhum conflito encontrado!</p>
-            <p className="text-green-600 text-sm mt-1">A grade horÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ria estÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ consistente.</p>
+            <p className="text-green-600 text-sm mt-1">A grade horária está consistente.</p>
           </CardContent>
         </Card>
       ) : (
@@ -1550,7 +1550,7 @@ function AbaConflitos() {
                       )}
                       <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => setExpanded(isOpen ? null : idx)}>
                         {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                        {isOpen ? "Ocultar" : "Ver sugestÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes"}
+                        {isOpen ? "Ocultar" : "Ver sugestões"}
                       </Button>
                     </div>
                   </div>
@@ -1558,7 +1558,7 @@ function AbaConflitos() {
                 {isOpen && (
                   <CardContent className="pt-0">
                     <div className="border-t border-current/20 pt-3 mt-1">
-                      <p className="text-xs font-semibold mb-2 opacity-80">SugestÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes de resoluÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o:</p>
+                      <p className="text-xs font-semibold mb-2 opacity-80">Sugestões de resolução:</p>
                       <ul className="space-y-1.5">
                         {item.sugestoes.map((s, si) => (
                           <li key={si} className="flex items-start gap-2 text-xs opacity-90">
@@ -1579,14 +1579,14 @@ function AbaConflitos() {
   );
 }
 
-// ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â ABA: EXPERIMENTAL ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â
+// ═══════════════════════════════════════════════ ABA: EXPERIMENTAL ═══════════════════════════════════════════════
 
-// [NOVO] Detalhe por turma que jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ vinha na resposta da API
-// (POST /api/horarios/gerar-lote -> `resultados`), mas nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o era
-// exibido em lugar nenhum -- sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ o resumo agregado (total de turmas,
-// total de conflitos) aparecia no toast. Sem isso, nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o dava pra saber
+// [NOVO] Detalhe por turma que já vinha na resposta da API
+// (POST /api/horarios/gerar-lote -> `resultados`), mas não era
+// exibido em lugar nenhum -- só o resumo agregado (total de turmas,
+// total de conflitos) aparecia no toast. Sem isso, não dava pra saber
 // QUAL disciplina ficou incompleta em QUAL turma sem ir direto no
-// DevTools. Agora fica visÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­vel na prÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³pria tela, junto do card do lote.
+// DevTools. Agora fica visível na própria tela, junto do card do lote.
 type DetalheTurmaLote = {
   turmaId: number;
   turmaNome: string;
@@ -1639,9 +1639,9 @@ function AbaExperimental() {
     nomeExperimental: `CPSAT-${new Date().toISOString().split("T")[0]}`,
     tempoLimiteS: 120,
   });
-  // [NOVO] Mesmo motor CP-SAT, mas por turma ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºnica (antes sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ existia
-  // por turno inteiro) -- espelha o par "Turma / Turno inteiro" que jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡
-  // existe do lado do motor heurÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­stico.
+  // [NOVO] Mesmo motor CP-SAT, mas por turma única (antes só existia
+  // por turno inteiro) -- espelha o par "Turma / Turno inteiro" que já
+  // existe do lado do motor heurístico.
   const [openGerarCpsatTurma, setOpenGerarCpsatTurma] = useState(false);
   const [gerandoCpsatTurma, setGerandoCpsatTurma] = useState(false);
   const [cpsatTurmaForm, setCpsatTurmaForm] = useState({
@@ -1663,19 +1663,19 @@ function AbaExperimental() {
   // [FIX-MULTI-TURMA] turmaIds agora e uma lista (uma ou mais turmas),
   // nao mais uma unica turma -- ver runCpsatGeneration no backend, que
   // ganhou suporte a turmaIds como terceira opcao alem de turno/turmaId.
-  // [NOVO] Detalhes por turma do ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºltimo lote gerado -- ver comentÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio
+  // [NOVO] Detalhes por turma do último lote gerado -- ver comentário
   // no tipo DetalheTurmaLote acima.
   const [detalhesLote, setDetalhesLote] = useState<{ nomeExperimental: string; resultados: DetalheTurmaLote[] } | null>(null);
 
   const nomes = [...new Set(expSlots.map((s) => s.nome))];
-  const diasSemanaExp = ["Segunda", "TerÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§a", "Quarta", "Quinta", "Sexta"];
+  const diasSemanaExp = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
 
   const handleGerarLote = async () => {
     if (!loteForm.nomeExperimental.trim()) { toast({ title: "Informe o nome do lote", variant: "destructive" }); return; }
     setGerandoLote(true);
     try {
       // [FIX] fetch() sem token Bearer -- "Gerar em Massa" voltava 401
-      // antes de gerar qualquer coisa. customFetch jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ anexa o token.
+      // antes de gerar qualquer coisa. customFetch já anexa o token.
       const result = await customFetch<{
         totalTurmas: number;
         totalSlots: number;
@@ -1698,11 +1698,11 @@ function AbaExperimental() {
       toast({
         title: `Lote gerado! ${result.totalTurmas} turma(s), ${result.totalSlots} aulas criadas.`,
         description: result.totalConflitos > 0 || result.turmasComErro > 0
-          ? `${result.totalConflitos} aviso(s) de disciplina incompleta, ${result.turmasComErro} turma(s) com erro ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â confira o detalhe abaixo antes de promover.`
+          ? `${result.totalConflitos} aviso(s) de disciplina incompleta, ${result.turmasComErro} turma(s) com erro — confira o detalhe abaixo antes de promover.`
           : undefined,
       });
       // [NOVO] Guarda o detalhe por turma (result.resultados) pra
-      // exibir na tela -- antes essa informaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ existia na resposta
+      // exibir na tela -- antes essa informação só existia na resposta
       // da API, sem nenhum jeito de ver sem abrir o DevTools.
       setDetalhesLote({ nomeExperimental: loteForm.nomeExperimental, resultados: result.resultados ?? [] });
       setOpenGerarLote(false);
@@ -2060,12 +2060,12 @@ function AbaExperimental() {
 
   const handlePromover = async (nome: string) => {
     const qtdTurmas = new Set(expSlots.filter((s) => s.nome === nome).map((s) => s.turmaId)).size;
-    if (!confirm(`Promover "${nome}" para horÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio oficial? Isso substituirÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ o horÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio atual de ${qtdTurmas} turma(s) envolvida(s).`)) return;
+    if (!confirm(`Promover "${nome}" para horário oficial? Isso substituirá o horário atual de ${qtdTurmas} turma(s) envolvida(s).`)) return;
     try {
       await promover({ nome });
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios"] });
-      toast({ title: `"${nome}" promovido para horÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio oficial!` });
+      toast({ title: `"${nome}" promovido para horário oficial!` });
     } catch {
       toast({ title: "Erro ao promover", variant: "destructive" });
     }
@@ -2078,10 +2078,10 @@ function AbaExperimental() {
     toast({ title: `Experimento "${nome}" removido` });
   };
 
-  // [NOVO] Baixa o PDF da prÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©via (turma ou professor) de um
-  // experimento especÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­fico, sem precisar promover primeiro pra ver
-  // como ficou fora da tela. customFetch jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ anexa o token Bearer --
-  // um <a href> direto nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o funcionaria (a API nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o usa cookie de sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o).
+  // [NOVO] Baixa o PDF da prévia (turma ou professor) de um
+  // experimento específico, sem precisar promover primeiro pra ver
+  // como ficou fora da tela. customFetch já anexa o token Bearer --
+  // um <a href> direto não funcionaria (a API não usa cookie de sessão).
   const [baixandoPdf, setBaixandoPdf] = useState<string | null>(null);
   const baixarPdfExperimento = async (nome: string, visao: "turma" | "professor") => {
     const chave = `${nome}-${visao}`;
@@ -2110,7 +2110,7 @@ function AbaExperimental() {
       <div className="flex items-center justify-between">
         <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 text-sm text-purple-800 flex-1 mr-4">
           <p className="font-medium mb-1">Como funciona o Modo Experimental?</p>
-          <p>Gere versÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes alternativas de horÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio sem substituir a grade oficial. Compare, ajuste e quando estiver satisfeito, clique em <strong>Promover para oficial</strong> para aplicar.</p>
+          <p>Gere versões alternativas de horário sem substituir a grade oficial. Compare, ajuste e quando estiver satisfeito, clique em <strong>Promover para oficial</strong> para aplicar.</p>
         </div>
         <div className="flex flex-col gap-3 shrink-0 items-stretch w-56">
           <div>
@@ -2128,7 +2128,7 @@ function AbaExperimental() {
             </div>
           </div>
           <div className="pt-2 border-t">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Motor heurÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­stico (rÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡pido, menos preciso)</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Motor heurístico (rápido, menos preciso)</p>
             <div className="flex flex-col gap-2">
               <Button variant="outline" className="w-full justify-start" onClick={() => setOpenGerar(true)}>
                 <Plus className="w-4 h-4 mr-2" />Turma
@@ -2141,10 +2141,10 @@ function AbaExperimental() {
         </div>
       </div>
 
-      {/* [NOVO] Detalhe por turma do ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºltimo lote gerado -- turmas com
+      {/* [NOVO] Detalhe por turma do último lote gerado -- turmas com
           disciplina incompleta ou erro aparecem destacadas, pra dar
-          exatamente a informaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o que faltava antes ("quais horÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios
-          vagos e por quÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âª") sem precisar abrir o DevTools. */}
+          exatamente a informação que faltava antes ("quais horários
+          vagos e por quê") sem precisar abrir o DevTools. */}
       {detalhesLote && (
         <Card className="border-amber-200 bg-amber-50/40">
           <CardHeader className="pb-3">
@@ -2155,7 +2155,7 @@ function AbaExperimental() {
                   Detalhe do lote "{detalhesLote.nomeExperimental}"
                 </CardTitle>
                 <CardDescription className="mt-1">
-                  Turmas com aviso (disciplina nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o alocada por completo) ou erro aparecem abaixo. Turmas sem nenhuma linha aqui foram alocadas 100%.
+                  Turmas com aviso (disciplina não alocada por completo) ou erro aparecem abaixo. Turmas sem nenhuma linha aqui foram alocadas 100%.
                 </CardDescription>
               </div>
               <Button variant="ghost" size="sm" onClick={() => setDetalhesLote(null)}>
@@ -2181,7 +2181,7 @@ function AbaExperimental() {
                     {r.conflitos.length > 0 && (
                       <ul className="mt-1.5 space-y-0.5">
                         {r.conflitos.map((c, i) => (
-                          <li key={i} className="text-xs text-amber-800">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ {c}</li>
+                          <li key={i} className="text-xs text-amber-800">• {c}</li>
                         ))}
                       </ul>
                     )}
@@ -2222,7 +2222,7 @@ function AbaExperimental() {
                         {nome}
                       </CardTitle>
                       <CardDescription className="mt-1">
-                        {slots.length} aulas ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {turmaIdsDoLote.length} turma{turmaIdsDoLote.length > 1 ? "s" : ""}
+                        {slots.length} aulas · {turmaIdsDoLote.length} turma{turmaIdsDoLote.length > 1 ? "s" : ""}
                         {turmaIdsDoLote.length <= 6 ? `: ${turmasNome.join(", ")}` : ""}
                       </CardDescription>
                     </div>
@@ -2310,14 +2310,14 @@ function AbaExperimental() {
                             return (
                               <div key={aulaNum} className="grid grid-cols-6 border-b border-purple-100 last:border-0">
                                 <div className="p-2 flex items-center justify-center text-xs font-medium text-muted-foreground border-r border-purple-100 bg-purple-50/30">
-                                  {aulaNum}ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âª
+                                  {aulaNum}ª
                                 </div>
                                 {Array.from({ length: 5 }).map((_, colIndex) => {
-                                  // [FIX-DUPLA-DOCENCIA] Antes usava .find() (sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ o primeiro
-                                  // professor do slot) -- em dupla docÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia (duas linhas
+                                  // [FIX-DUPLA-DOCENCIA] Antes usava .find() (só o primeiro
+                                  // professor do slot) -- em dupla docência (duas linhas
                                   // mesmo dia+aula, professores diferentes), isso escondia o
                                   // segundo professor. Agora pega TODOS e junta com " + ",
-                                  // mesmo padrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ usado na grade oficial (turmas/horario.tsx).
+                                  // mesmo padrão já usado na grade oficial (turmas/horario.tsx).
                                   const slotsAqui = slotsGrade.filter((s) => s.diaSemana === colIndex && s.numeroAula === aulaNum);
                                   const slot = slotsAqui[0];
                                   if (!slot) {
@@ -2383,11 +2383,11 @@ function AbaExperimental() {
               <Switch checked={gerarForm.reduzirJanelas} onCheckedChange={(v) => setGerarForm((f) => ({ ...f, reduzirJanelas: v }))} />
             </div>
             <div className="flex items-center justify-between py-1">
-              <Label className="cursor-pointer">Fator pedagÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³gico (distribuiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o equilibrada)</Label>
+              <Label className="cursor-pointer">Fator pedagógico (distribuição equilibrada)</Label>
               <Switch checked={gerarForm.fatorPedagogico} onCheckedChange={(v) => setGerarForm((f) => ({ ...f, fatorPedagogico: v }))} />
             </div>
             <div className="flex items-center justify-between py-1">
-              <Label className="cursor-pointer">Compactar carga horÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ria</Label>
+              <Label className="cursor-pointer">Compactar carga horária</Label>
               <Switch checked={gerarForm.compactarCargaHoraria} onCheckedChange={(v) => setGerarForm((f) => ({ ...f, compactarCargaHoraria: v }))} />
             </div>
           </div>
@@ -2404,7 +2404,7 @@ function AbaExperimental() {
           <div className="space-y-4 py-2">
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 rounded-md p-2.5">
               <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-              Gera a grade de vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rias turmas de uma vez, como um ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºnico experimento. Nada muda na grade oficial atÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© vocÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âª conferir e clicar em "Promover para oficial". Isso limpa qualquer outro experimento em andamento antes de comeÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ar.
+              Gera a grade de várias turmas de uma vez, como um único experimento. Nada muda na grade oficial até você conferir e clicar em "Promover para oficial". Isso limpa qualquer outro experimento em andamento antes de começar.
             </div>
             <div className="space-y-1.5">
               <Label>Nome do lote *</Label>
@@ -2420,18 +2420,18 @@ function AbaExperimental() {
                   <SelectItem value="noturno">Noturno</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">A geraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o em massa sempre ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© feita por turno (mais rÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡pido e mais seguro de conferir do que a escola inteira de uma vez).</p>
+              <p className="text-xs text-muted-foreground">A geração em massa sempre é feita por turno (mais rápido e mais seguro de conferir do que a escola inteira de uma vez).</p>
             </div>
             <div className="flex items-center justify-between py-1">
               <Label className="cursor-pointer">Reduzir janelas do professor</Label>
               <Switch checked={loteForm.reduzirJanelas} onCheckedChange={(v) => setLoteForm((f) => ({ ...f, reduzirJanelas: v }))} />
             </div>
             <div className="flex items-center justify-between py-1">
-              <Label className="cursor-pointer">Fator pedagÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³gico (distribuiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o equilibrada)</Label>
+              <Label className="cursor-pointer">Fator pedagógico (distribuição equilibrada)</Label>
               <Switch checked={loteForm.fatorPedagogico} onCheckedChange={(v) => setLoteForm((f) => ({ ...f, fatorPedagogico: v }))} />
             </div>
             <div className="flex items-center justify-between py-1">
-              <Label className="cursor-pointer">Compactar carga horÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ria</Label>
+              <Label className="cursor-pointer">Compactar carga horária</Label>
               <Switch checked={loteForm.compactarCargaHoraria} onCheckedChange={(v) => setLoteForm((f) => ({ ...f, compactarCargaHoraria: v }))} />
             </div>
           </div>
@@ -2444,11 +2444,11 @@ function AbaExperimental() {
 
       <Dialog open={openGerarCpsatTurma} onOpenChange={setOpenGerarCpsatTurma}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Gerar com CP-SAT ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Turma (Beta)</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Gerar com CP-SAT — Turma (Beta)</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md p-2.5">
               <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
-              Usa o motor CP-SAT (OR-Tools) em vez do gerador heurÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­stico -- mais preciso pra eliminar janelas na grade dos professores. Grava sempre como experimento; nada muda na grade oficial atÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© vocÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âª promover.
+              Usa o motor CP-SAT (OR-Tools) em vez do gerador heurístico -- mais preciso pra eliminar janelas na grade dos professores. Grava sempre como experimento; nada muda na grade oficial até você promover.
             </div>
             <div className="space-y-1.5">
               <Label>Nome do experimento *</Label>
@@ -2483,7 +2483,7 @@ function AbaExperimental() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenGerarCpsatTurma(false)}>Cancelar</Button>
-            <Button onClick={handleGerarCpsatTurma} disabled={gerandoCpsatTurma}>{gerandoCpsatTurma ? "Gerando (pode levar atÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© 2 min)..." : "Gerar com CP-SAT"}</Button>
+            <Button onClick={handleGerarCpsatTurma} disabled={gerandoCpsatTurma}>{gerandoCpsatTurma ? "Gerando (pode levar até 2 min)..." : "Gerar com CP-SAT"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -2552,7 +2552,7 @@ function AbaExperimental() {
 
       <Dialog open={openGerarCpsat} onOpenChange={setOpenGerarCpsat}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Gerar com CP-SAT ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Turno inteiro (Beta)</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Gerar com CP-SAT — Turno inteiro (Beta)</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md p-2.5">
               <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
@@ -2583,21 +2583,16 @@ function AbaExperimental() {
             <Button
               variant="outline"
               onClick={async () => {
-                // [CANCELAMENTO] Se ha uma geracao em andamento, aborta de
-                // verdade no backend (nao so fecha a tela) antes de sair.
                 if (gerandoCpsat && jobIdAtual) {
                   try {
                     await customFetch(`/api/horarios/gerar-cpsat-cancelar/${jobIdAtual}`, { method: "POST", responseType: "json" });
                   } catch {
-                    // mesmo se a chamada de cancelamento falhar, ainda fecha
-                    // a tela -- nao trava o usuario por causa disso.
                   }
                   setGerandoCpsat(false);
                   setJobIdAtual(null);
                   try {
                     sessionStorage.removeItem(CPSAT_JOB_PENDENTE_KEY);
                   } catch {
-                    // sessionStorage indisponivel -- segue sem persistencia.
                   }
                 }
                 setOpenGerarCpsat(false);

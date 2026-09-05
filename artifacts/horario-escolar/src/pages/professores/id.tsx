@@ -401,9 +401,9 @@ export default function ProfessorEditar() {
                   </div>
 
                   <div className="space-y-2 pt-2 border-t">
-                    <h4 className="text-sm font-medium text-muted-foreground pb-1">HA Obrigatória</h4>
+                    <h4 className="text-sm font-medium text-muted-foreground pb-1">HA Obrigatoria</h4>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Necessária (institucional)</span>
+                      <span className="text-muted-foreground">Necessaria (institucional)</span>
                       <span className="font-medium">{cargaData.haInstitucionalTotal ?? 0} aula(s)</span>
                     </div>
                     <div className="space-y-1.5 mt-1">

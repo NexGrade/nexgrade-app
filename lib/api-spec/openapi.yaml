@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Api
   version: 0.2.0
-  description: GradeEscolar Ã¢â‚¬â€ Sistema Completo de GestÃƒÂ£o de HorÃƒÂ¡rios Escolares
+  description: GradeEscolar â€” Sistema Completo de GestÃ£o de HorÃ¡rios Escolares
 servers:
   - url: /api
     description: Base API path
@@ -10,31 +10,31 @@ tags:
   - name: health
     description: Health operations
   - name: professores
-    description: GestÃƒÂ£o de professores
+    description: GestÃ£o de professores
   - name: disciplinas
-    description: GestÃƒÂ£o de disciplinas
+    description: GestÃ£o de disciplinas
   - name: turmas
-    description: GestÃƒÂ£o de turmas
+    description: GestÃ£o de turmas
   - name: horarios
-    description: GestÃƒÂ£o e geraÃƒÂ§ÃƒÂ£o de horÃƒÂ¡rios
+    description: GestÃ£o e geraÃ§Ã£o de horÃ¡rios
   - name: salas
-    description: GestÃƒÂ£o de salas e espaÃƒÂ§os
+    description: GestÃ£o de salas e espaÃ§os
   - name: licencas
-    description: LicenÃƒÂ§as de professores e substituiÃƒÂ§ÃƒÂµes
+    description: LicenÃ§as de professores e substituiÃ§Ãµes
   - name: comunicados
     description: Comunicados para turmas e professores
   - name: usuarios
-    description: UsuÃƒÂ¡rios e perfis de acesso
+    description: UsuÃ¡rios e perfis de acesso
   - name: audit
-    description: HistÃƒÂ³rico de alteraÃƒÂ§ÃƒÂµes
+    description: HistÃ³rico de alteraÃ§Ãµes
   - name: configuracoes
-    description: ConfiguraÃƒÂ§ÃƒÂµes do sistema
+    description: ConfiguraÃ§Ãµes do sistema
   - name: export
-    description: ExportaÃƒÂ§ÃƒÂ£o de dados
+    description: ExportaÃ§Ã£o de dados
   - name: conflitos
-    description: DetecÃƒÂ§ÃƒÂ£o e sugestÃƒÂµes de conflitos
+    description: DetecÃ§Ã£o e sugestÃµes de conflitos
   - name: stats
-    description: EstatÃƒÂ­sticas e resumos
+    description: EstatÃ­sticas e resumos
   - name: calendario-escolar
     description: Calendario escolar, feriados e trimestres letivos
 
@@ -52,7 +52,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
-  # Ã¢â€â‚¬Ã¢â€â‚¬ PROFESSORES Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  # â”€â”€ PROFESSORES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /professores:
     get:
       operationId: listProfessores
@@ -103,7 +103,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Professor"
         "404":
-          description: NÃƒÂ£o encontrado
+          description: NÃ£o encontrado
     patch:
       operationId: updateProfessor
       tags: [professores]
@@ -151,7 +151,7 @@ paths:
             type: integer
       responses:
         "200":
-          description: Carga horÃƒÂ¡ria
+          description: Carga horÃ¡ria
           content:
             application/json:
               schema:
@@ -174,7 +174,7 @@ paths:
           description: Professor nao encontrado
         "422":
           description: Falha ao enviar convite
-  # Ã¢â€â‚¬Ã¢â€â‚¬ DISCIPLINAS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  # â”€â”€ DISCIPLINAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /disciplinas:
     get:
       operationId: listDisciplinas
@@ -253,7 +253,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Disciplina"
         "404":
-          description: NÃƒÂ£o encontrada
+          description: NÃ£o encontrada
     patch:
       operationId: updateDisciplina
       tags: [disciplinas]
@@ -289,7 +289,7 @@ paths:
         "204":
           description: Removida
 
-  # Ã¢â€â‚¬Ã¢â€â‚¬ TURMAS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  # â”€â”€ TURMAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /turmas:
     get:
       operationId: listTurmas
@@ -338,7 +338,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Turma"
         "404":
-          description: NÃƒÂ£o encontrada
+          description: NÃ£o encontrada
     patch:
       operationId: updateTurma
       tags: [turmas]
@@ -392,13 +392,13 @@ paths:
               $ref: "#/components/schemas/AplicarMatrizInput"
       responses:
         "200":
-          description: Turma com disciplinas e cargas horÃƒÂ¡rias substituÃƒÂ­das pelas da matriz (RF-TUR-02)
+          description: Turma com disciplinas e cargas horÃ¡rias substituÃ­das pelas da matriz (RF-TUR-02)
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Turma"
         "404":
-          description: Turma ou matriz curricular nÃƒÂ£o encontrada
+          description: Turma ou matriz curricular nÃ£o encontrada
 
   /turmas/{id}/horario:
     get:
@@ -412,7 +412,7 @@ paths:
             type: integer
       responses:
         "200":
-          description: Grade horÃƒÂ¡ria
+          description: Grade horÃ¡ria
           content:
             application/json:
               schema:
@@ -420,7 +420,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/HorarioSlot"
 
-  # Ã¢â€â‚¬Ã¢â€â‚¬ HORÃRIOS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  # â”€â”€ HORÁRIOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /horarios:
     get:
       operationId: listHorarios
@@ -478,7 +478,7 @@ paths:
     post:
       operationId: gerarHorario
       tags: [horarios]
-      summary: Gera horÃƒÂ¡rio automaticamente com algoritmo avanÃƒÂ§ado
+      summary: Gera horÃ¡rio automaticamente com algoritmo avanÃ§ado
       requestBody:
         required: true
         content:
@@ -497,7 +497,7 @@ paths:
     get:
       operationId: listHorariosExperimentais
       tags: [horarios]
-      summary: Lista horÃƒÂ¡rios experimentais
+      summary: Lista horÃ¡rios experimentais
       parameters:
         - name: turmaId
           in: query
@@ -515,7 +515,7 @@ paths:
     post:
       operationId: createHorarioExperimental
       tags: [horarios]
-      summary: Cria horÃƒÂ¡rio experimental
+      summary: Cria horÃ¡rio experimental
       requestBody:
         required: true
         content:
@@ -534,7 +534,7 @@ paths:
     post:
       operationId: promoverHorarioExperimental
       tags: [horarios]
-      summary: Promove horÃƒÂ¡rio experimental para oficial
+      summary: Promove horÃ¡rio experimental para oficial
       parameters:
         - name: nome
           in: path
@@ -553,7 +553,7 @@ paths:
     delete:
       operationId: deleteHorarioExperimental
       tags: [horarios]
-      summary: Remove horÃƒÂ¡rio experimental
+      summary: Remove horÃ¡rio experimental
       parameters:
         - name: nome
           in: path
@@ -564,7 +564,7 @@ paths:
         "204":
           description: Removido
 
-  # Ã¢â€â‚¬Ã¢â€â‚¬ SALAS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  # â”€â”€ SALAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /salas:
     get:
       operationId: listSalas
@@ -631,7 +631,7 @@ paths:
         "204":
           description: Removida
 
-  # Ã¢â€â‚¬Ã¢â€â‚¬ DISPONIBILIDADE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  # â”€â”€ DISPONIBILIDADE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   # -- RESERVAS ----------------------------------------------
   /reservas:
     get:
@@ -923,7 +923,7 @@ paths:
       responses:
         "204":
           description: Removida
-# Ã¢â€â‚¬Ã¢â€â‚¬ HORARIO SLOTS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+# â”€â”€ HORARIO SLOTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /horario-slots:
     get:
       operationId: listHorarioSlots
@@ -977,7 +977,7 @@ paths:
               $ref: "#/components/schemas/EsquemaHorarioSlotLoteInput"
       responses:
         "201":
-          description: Esquema do turno substituÃƒÂ­do
+          description: Esquema do turno substituÃ­do
           content:
             application/json:
               schema:
@@ -999,7 +999,7 @@ paths:
         "204":
           description: Removido
 
-  # Ã¢â€â‚¬Ã¢â€â‚¬ AULAS FIXAS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  # â”€â”€ AULAS FIXAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /aulas-fixas:
     get:
       operationId: listAulasFixas
@@ -1049,7 +1049,7 @@ paths:
         "204":
           description: Removida
 
-  # Ã¢â€â‚¬Ã¢â€â‚¬ LIMITES DIÃRIOS PROFESSOR Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  # â”€â”€ LIMITES DIÁRIOS PROFESSOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /limites-diarios-professor:
     get:
       operationId: listLimitesDiariosProfessor
@@ -1098,14 +1098,14 @@ paths:
       responses:
         "204":
           description: Removido
-  # Ã¢â€â‚¬Ã¢â€â‚¬ ESCOLAS / ONBOARDING Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  # â”€â”€ ESCOLAS / ONBOARDING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /escolas/planos:
     get:
       operationId: listPlanos
       tags: [escolas]
       responses:
         "200":
-          description: Lista de planos disponÃƒÂ­veis (RF-ESC, expansÃƒÂ£o SaaS)
+          description: Lista de planos disponÃ­veis (RF-ESC, expansÃ£o SaaS)
           content:
             application/json:
               schema:
@@ -1119,7 +1119,7 @@ paths:
       tags: [escolas]
       responses:
         "200":
-          description: Escola vinculada ao usuÃƒÂ¡rio/organizaÃƒÂ§ÃƒÂ£o logada, se jÃƒÂ¡ cadastrada (RF-ESC-01)
+          description: Escola vinculada ao usuÃ¡rio/organizaÃ§Ã£o logada, se jÃ¡ cadastrada (RF-ESC-01)
           content:
             application/json:
               schema:
@@ -1143,7 +1143,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Escola"
         "201":
-          description: Escola criada (onboarding concluÃƒÂ­do)
+          description: Escola criada (onboarding concluÃ­do)
           content:
             application/json:
               schema:
@@ -1171,8 +1171,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/AssinaturaAsaasResponse"
 
-  # Ã¢â€â‚¬Ã¢â€â‚¬ PAINEL MASTER SAAS (RF-MASTER-01 a RF-MASTER-03) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-  # Opera fora do isolamento por escola de propÃƒÂ³sito Ã¢â‚¬â€ administra todas as
+  # â”€â”€ PAINEL MASTER SAAS (RF-MASTER-01 a RF-MASTER-03) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  # Opera fora do isolamento por escola de propÃ³sito â€” administra todas as
   # escolas da plataforma. Ver middlewares/requireMaster.ts.
   /master/whoami:
     get:
@@ -1180,7 +1180,7 @@ paths:
       tags: [master]
       responses:
         "200":
-          description: Se o usuÃƒÂ¡rio autenticado ÃƒÂ© administrador da plataforma
+          description: Se o usuÃ¡rio autenticado Ã© administrador da plataforma
           content:
             application/json:
               schema:
@@ -1195,7 +1195,7 @@ paths:
       tags: [master]
       responses:
         "200":
-          description: Todas as escolas da plataforma, com mÃƒÂ©tricas bÃƒÂ¡sicas
+          description: Todas as escolas da plataforma, com mÃ©tricas bÃ¡sicas
           content:
             application/json:
               schema:
@@ -1203,7 +1203,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/EscolaComMetricas"
         "403":
-          description: UsuÃƒÂ¡rio nÃƒÂ£o ÃƒÂ© administrador da plataforma
+          description: UsuÃ¡rio nÃ£o Ã© administrador da plataforma
 
   /master/escolas/{id}:
     patch:
@@ -1235,8 +1235,8 @@ paths:
       tags: [master]
       description: >
         Cancela a assinatura da escola no Asaas (chamada de API real) e
-        reflete o cancelamento no banco. Encerra a cobranÃ§a recorrente de
-        verdade -- diferente de sÃ³ marcar planoAtivo=false.
+        reflete o cancelamento no banco. Encerra a cobrança recorrente de
+        verdade -- diferente de só marcar planoAtivo=false.
       parameters:
         - name: id
           in: path
@@ -1251,9 +1251,9 @@ paths:
               schema:
                 $ref: "#/components/schemas/Escola"
         "400":
-          description: Escola nÃ£o tem assinatura Asaas ativa
+          description: Escola não tem assinatura Asaas ativa
         "404":
-          description: Escola nÃ£o encontrada
+          description: Escola não encontrada
         "502":
           description: Falha ao cancelar no Asaas
 
@@ -1317,13 +1317,13 @@ paths:
       tags: [master]
       responses:
         "200":
-          description: MÃƒÂ©tricas agregadas de uso da plataforma (RF-MASTER-03)
+          description: MÃ©tricas agregadas de uso da plataforma (RF-MASTER-03)
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/MasterMetrics"
 
-  # Ã¢â€â‚¬Ã¢â€â‚¬ CURSOS E MATRIZ CURRICULAR Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  # â”€â”€ CURSOS E MATRIZ CURRICULAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /cursos:
     get:
       operationId: listCursos
@@ -1414,7 +1414,7 @@ paths:
                         type: string
                         nullable: true
         "404":
-          description: Matriz nÃ£o encontrada
+          description: Matriz não encontrada
   /cursos/{cursoId}/matrizes:
     get:
       operationId: listMatrizesCurriculares
@@ -1555,7 +1555,7 @@ paths:
         "204":
           description: Removido
 
-  # Ã¢â€â‚¬Ã¢â€â‚¬ LICENÃƒâ€¡AS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  # â”€â”€ LICENÃ‡AS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /licencas:
     get:
       operationId: listLicencas
@@ -1631,7 +1631,7 @@ paths:
         "204":
           description: Removida
 
-  # Ã¢â€â‚¬Ã¢â€â‚¬ COMUNICADOS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  # â”€â”€ COMUNICADOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /calendario-escolar:
     get:
       operationId: listCalendarioEscolar
@@ -1643,7 +1643,7 @@ paths:
             type: integer
       responses:
         "200":
-          description: Lista de eventos do calendÃ¯Â¿Â½rio
+          description: Lista de eventos do calendï¿½rio
           content:
             application/json:
               schema:
@@ -1759,7 +1759,7 @@ paths:
         "204":
           description: Removido
 
-  # Ã¢â€â‚¬Ã¢â€â‚¬ USUÃRIOS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  # â”€â”€ USUÁRIOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /usuarios:
     get:
       operationId: listUsuarios
@@ -1794,7 +1794,7 @@ paths:
     get:
       operationId: getMe
       tags: [usuarios]
-      summary: Retorna o perfil do usuÃƒÂ¡rio autenticado
+      summary: Retorna o perfil do usuÃ¡rio autenticado
       responses:
         "200":
           description: Meu perfil
@@ -1803,7 +1803,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Usuario"
         "404":
-          description: NÃƒÂ£o cadastrado ainda
+          description: NÃ£o cadastrado ainda
 
   /usuarios/{id}:
     patch:
@@ -1829,7 +1829,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Usuario"
 
-  # Ã¢â€â‚¬Ã¢â€â‚¬ AUDIT LOG Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  # â”€â”€ AUDIT LOG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /audit:
     get:
       operationId: listAuditLogs
@@ -1845,7 +1845,7 @@ paths:
             type: integer
       responses:
         "200":
-          description: HistÃƒÂ³rico
+          description: HistÃ³rico
           content:
             application/json:
               schema:
@@ -1853,14 +1853,14 @@ paths:
                 items:
                   $ref: "#/components/schemas/AuditLog"
 
-  # Ã¢â€â‚¬Ã¢â€â‚¬ CONFIGURAÃƒâ€¡Ãƒâ€¢ES Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  # â”€â”€ CONFIGURAÃ‡Ã•ES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /configuracoes:
     get:
       operationId: listConfiguracoes
       tags: [configuracoes]
       responses:
         "200":
-          description: ConfiguraÃƒÂ§ÃƒÂµes
+          description: ConfiguraÃ§Ãµes
           content:
             application/json:
               schema:
@@ -1880,7 +1880,7 @@ paths:
             type: string
       responses:
         "200":
-          description: ConfiguraÃƒÂ§ÃƒÂ£o
+          description: ConfiguraÃ§Ã£o
           content:
             application/json:
               schema:
@@ -1908,12 +1908,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/Configuracao"
 
-  # Ã¢â€â‚¬Ã¢â€â‚¬ EXPORTAÃƒâ€¡ÃƒÆ’O Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  # â”€â”€ EXPORTAÃ‡ÃƒO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /export/grade:
     get:
       operationId: exportGrade
       tags: [export]
-      summary: Exporta grade horÃƒÂ¡ria em CSV
+      summary: Exporta grade horÃ¡ria em CSV
       parameters:
         - name: turmaId
           in: query
@@ -1965,7 +1965,7 @@ paths:
     get:
       operationId: exportRelatorioSeed
       tags: [export]
-      summary: Exporta relatÃƒÂ³rio no formato SEED do estado
+      summary: Exporta relatÃ³rio no formato SEED do estado
       parameters:
         - name: estado
           in: query
@@ -1973,13 +1973,13 @@ paths:
             type: string
       responses:
         "200":
-          description: RelatÃƒÂ³rio
+          description: RelatÃ³rio
           content:
             application/json:
               schema:
                 type: object
 
-  # Ã¢â€â‚¬Ã¢â€â‚¬ CONFLITOS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  # â”€â”€ CONFLITOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /conflitos:
     get:
       operationId: listConflitos
@@ -1999,10 +1999,10 @@ paths:
     get:
       operationId: getConflitosComSugestoes
       tags: [conflitos]
-      summary: Conflitos com sugestÃƒÂµes algorÃƒÂ­tmicas de resoluÃƒÂ§ÃƒÂ£o
+      summary: Conflitos com sugestÃµes algorÃ­tmicas de resoluÃ§Ã£o
       responses:
         "200":
-          description: Conflitos com sugestÃƒÂµes
+          description: Conflitos com sugestÃµes
           content:
             application/json:
               schema:
@@ -2010,14 +2010,14 @@ paths:
                 items:
                   $ref: "#/components/schemas/ConflitoComSugestao"
 
-  # Ã¢â€â‚¬Ã¢â€â‚¬ STATS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  # â”€â”€ STATS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   /stats:
     get:
       operationId: getStats
       tags: [stats]
       responses:
         "200":
-          description: EstatÃƒÂ­sticas
+          description: EstatÃ­sticas
           content:
             application/json:
               schema:
@@ -2099,7 +2099,7 @@ components:
         nome: { type: string }
         cargaSemanal: { type: integer }
         cor: { type: string }
-        codigoSae: { type: ["string", "null"], description: "CÃƒÂ³digo SAE oficial (SEED-PR), quando conhecido." }
+        codigoSae: { type: ["string", "null"], description: "CÃ³digo SAE oficial (SEED-PR), quando conhecido." }
         sigla: { type: ["string", "null"], description: "Sigla curta usada nas grades PDF compactas (ex: MAT, L.POR)." }
         tipoSalaExigido: { type: ["string", "null"], description: "Quando preenchido, toda aula desta disciplina deve usar uma sala com este mesmo Sala.tipo (ex. laboratorio, quadra)." }
         categoriaCurricularPadrao: { type: ["string", "null"], enum: [BNC, PD, FGB, PFO, IFA, IF, IFP, APF, null], description: "Categoria curricular fixa desta disciplina (nula = flexivel, elegivel para qualquer categoria)." }
@@ -2144,7 +2144,7 @@ components:
           items: { type: integer }
         disciplinasComCarga:
           type: array
-          description: "Carga horÃƒÂ¡ria semanal efetiva por disciplina (override da matriz aplicada, com fallback para a carga global)."
+          description: "Carga horÃ¡ria semanal efetiva por disciplina (override da matriz aplicada, com fallback para a carga global)."
           items:
             type: object
             required: [disciplinaId, nome, cargaHorariaSemanal, origemMatriz]
@@ -2153,8 +2153,8 @@ components:
               nome: { type: string }
               cargaHorariaSemanal: { type: integer }
               origemMatriz: { type: boolean }
-              maxAulasConsecutivasDia: { type: ["integer", "null"], description: "Limite de aulas geminadas desta disciplina, nesta turma, por dia. Nulo = usa o padrÃƒÂ£o geral (configuracoes/seed_pr.max_aulas_geminadas_padrao)." }
-              grupoCompartilhadoId: { type: ["string", "null"], description: "Quando preenchido, agrupa esta disciplina com a mesma linha de outras turmas para horÃƒÂ¡rio simultÃƒÂ¢neo (ex. ItinerÃƒÂ¡rio Formativo cursado junto)." }
+              maxAulasConsecutivasDia: { type: ["integer", "null"], description: "Limite de aulas geminadas desta disciplina, nesta turma, por dia. Nulo = usa o padrÃ£o geral (configuracoes/seed_pr.max_aulas_geminadas_padrao)." }
+              grupoCompartilhadoId: { type: ["string", "null"], description: "Quando preenchido, agrupa esta disciplina com a mesma linha de outras turmas para horÃ¡rio simultÃ¢neo (ex. ItinerÃ¡rio Formativo cursado junto)." }
         createdAt: { type: string }
 
     AplicarMatrizInput:
@@ -2183,7 +2183,7 @@ components:
           items: { type: integer }
         disciplinasConfig:
           type: object
-          description: "ConfiguraÃƒÂ§ÃƒÂ£o extra por disciplina Ã¢â‚¬â€ chave ÃƒÂ© o disciplinaId (como string). SÃƒÂ³ tem efeito para disciplinas presentes em disciplinaIds."
+          description: "ConfiguraÃ§Ã£o extra por disciplina â€” chave Ã© o disciplinaId (como string). SÃ³ tem efeito para disciplinas presentes em disciplinaIds."
           additionalProperties:
             $ref: "#/components/schemas/DisciplinaConfigTurma"
 
@@ -2200,7 +2200,7 @@ components:
           items: { type: integer }
         disciplinasConfig:
           type: object
-          description: "ConfiguraÃƒÂ§ÃƒÂ£o extra por disciplina Ã¢â‚¬â€ chave ÃƒÂ© o disciplinaId (como string). Pode ser enviado mesmo sem disciplinaIds, para sÃƒÂ³ atualizar a configuraÃƒÂ§ÃƒÂ£o de vÃƒÂ­nculos jÃƒÂ¡ existentes."
+          description: "ConfiguraÃ§Ã£o extra por disciplina â€” chave Ã© o disciplinaId (como string). Pode ser enviado mesmo sem disciplinaIds, para sÃ³ atualizar a configuraÃ§Ã£o de vÃ­nculos jÃ¡ existentes."
           additionalProperties:
             $ref: "#/components/schemas/DisciplinaConfigTurma"
 
@@ -2473,8 +2473,8 @@ components:
         horarioSlot: { type: integer, minimum: 1 }
         disponivel: { type: boolean }
         motivo: { type: ["string", "null"] }
-        turno: { type: ["string", "null"], enum: [matutino, vespertino, noturno, null], description: "Turno deste bloqueio Ã¢â‚¬â€ necessÃƒÂ¡rio para validar concentraÃƒÂ§ÃƒÂ£o de hora-atividade no mesmo turno das aulas (ResoluÃƒÂ§ÃƒÂ£o SEED n.Ã‚Âº 7.200/2025, art. 11, Ã‚Â§4Ã‚Âº)." }
-        horaAtividadeObrigatoria: { type: boolean, default: false, description: "true quando este bloqueio representa Hora-Atividade obrigatÃƒÂ³ria, nÃƒÂ£o outro tipo de indisponibilidade." }
+        turno: { type: ["string", "null"], enum: [matutino, vespertino, noturno, null], description: "Turno deste bloqueio â€” necessÃ¡rio para validar concentraÃ§Ã£o de hora-atividade no mesmo turno das aulas (ResoluÃ§Ã£o SEED n.Âº 7.200/2025, art. 11, Â§4Âº)." }
+        horaAtividadeObrigatoria: { type: boolean, default: false, description: "true quando este bloqueio representa Hora-Atividade obrigatÃ³ria, nÃ£o outro tipo de indisponibilidade." }
 
     DisponibilidadeInput:
       type: object
@@ -2596,7 +2596,7 @@ components:
       properties:
         id: { type: integer }
         professorId: { type: integer }
-        turmaId: { type: ["integer", "null"], description: "Nulo = padrÃƒÂ£o do professor, vÃƒÂ¡lido em qualquer turma. Preenchido = override especÃƒÂ­fico por turma." }
+        turmaId: { type: ["integer", "null"], description: "Nulo = padrÃ£o do professor, vÃ¡lido em qualquer turma. Preenchido = override especÃ­fico por turma." }
         maxAulasPorDia: { type: integer, minimum: 1 }
 
     LimiteDiarioProfessorInput:
@@ -2604,7 +2604,7 @@ components:
       required: [professorId, maxAulasPorDia]
       properties:
         professorId: { type: integer }
-        turmaId: { type: ["integer", "null"], default: null, description: "Nulo = padrÃƒÂ£o do professor, vÃƒÂ¡lido em qualquer turma. Preenchido = override especÃƒÂ­fico por turma." }
+        turmaId: { type: ["integer", "null"], default: null, description: "Nulo = padrÃ£o do professor, vÃ¡lido em qualquer turma. Preenchido = override especÃ­fico por turma." }
         maxAulasPorDia: { type: integer, minimum: 1 }
     Curso:
       type: object
@@ -2691,8 +2691,8 @@ components:
       properties:
         id: { type: integer }
         nome: { type: string }
-        precoMensal: { type: integer, description: "PreÃ§o mensal em centavos. 0 = plano gratuito (Piloto)." }
-        precoAnual: { type: ["integer", "null"], description: "PreÃ§o anual em centavos, com desconto. Nulo enquanto nÃ£o configurado." }
+        precoMensal: { type: integer, description: "Preço mensal em centavos. 0 = plano gratuito (Piloto)." }
+        precoAnual: { type: ["integer", "null"], description: "Preço anual em centavos, com desconto. Nulo enquanto não configurado." }
         maxProfessores: { type: integer }
         maxTurmas: { type: integer }
         temIA: { type: boolean }
@@ -2712,20 +2712,20 @@ components:
         cidade: { type: ["string", "null"] }
         estado: { type: string }
         modalidade: { type: string, enum: [regular, tecnica, eja, normal_magisterio] }
-        codigoInep: { type: ["string", "null"], description: "CÃ³digo INEP oficial da escola perante o MEC." }
-        nre: { type: ["string", "null"], description: "NÃºcleo Regional de EducaÃ§Ã£o (SEED-PR) ou equivalente estadual." }
-        turnosOfertados: { type: ["string", "null"], description: "Lista separada por vÃ­rgula, ex: 'matutino,vespertino'." }
-        resolucaoSeedPr: { type: ["string", "null"], description: "NÃºmero da resoluÃ§Ã£o SEED-PR (ou equivalente estadual) que rege a escola." }
+        codigoInep: { type: ["string", "null"], description: "Código INEP oficial da escola perante o MEC." }
+        nre: { type: ["string", "null"], description: "Núcleo Regional de Educação (SEED-PR) ou equivalente estadual." }
+        turnosOfertados: { type: ["string", "null"], description: "Lista separada por vírgula, ex: 'matutino,vespertino'." }
+        resolucaoSeedPr: { type: ["string", "null"], description: "Número da resolução SEED-PR (ou equivalente estadual) que rege a escola." }
         planoId: { type: ["integer", "null"] }
         clerkOrgId: { type: ["string", "null"] }
         stripeCustomerId: { type: ["string", "null"] }
         stripeSubscriptionId: { type: ["string", "null"] }
         emailContato: { type: ["string", "null"], description: "E-mail de contato geral da escola." }
         telefoneContato: { type: ["string", "null"] }
-        emailCobranca: { type: ["string", "null"], description: "E-mail especÃ­fico usado pelo Asaas pra notificar a escola (boleto/PIX). Cai pra emailContato quando vazio." }
+        emailCobranca: { type: ["string", "null"], description: "E-mail específico usado pelo Asaas pra notificar a escola (boleto/PIX). Cai pra emailContato quando vazio." }
         asaasCustomerId: { type: ["string", "null"] }
         asaasSubscriptionId: { type: ["string", "null"] }
-        asaasStatusAssinatura: { type: ["string", "null"], enum: [em_dia, pendente, atrasada, cancelada, null], description: "Alimentado pelo webhook do Asaas a cada evento de cobranÃ§a." }
+        asaasStatusAssinatura: { type: ["string", "null"], enum: [em_dia, pendente, atrasada, cancelada, null], description: "Alimentado pelo webhook do Asaas a cada evento de cobrança." }
         asaasProximoVencimento: { type: ["string", "null"], format: date-time }
         planoAtivo: { type: boolean }
         trialEndsAt: { type: ["string", "null"], format: date-time }
@@ -2735,7 +2735,7 @@ components:
       type: object
       required: [cadastrada]
       properties:
-        cadastrada: { type: boolean, description: "false quando o usuÃƒÂ¡rio/organizaÃƒÂ§ÃƒÂ£o ainda nÃƒÂ£o passou pelo onboarding." }
+        cadastrada: { type: boolean, description: "false quando o usuÃ¡rio/organizaÃ§Ã£o ainda nÃ£o passou pelo onboarding." }
         id: { type: string }
         nomeFantasia: { type: string }
         cidade: { type: ["string", "null"] }
@@ -2767,7 +2767,7 @@ components:
         emailCobranca: { type: string, format: email }
         codigoInep: { type: string }
         nre: { type: string }
-        turnosOfertados: { type: string, description: "Lista separada por vÃ­rgula, ex: 'matutino,vespertino'." }
+        turnosOfertados: { type: string, description: "Lista separada por vírgula, ex: 'matutino,vespertino'." }
         resolucaoSeedPr: { type: string }
 
     Licenca:
