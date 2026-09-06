@@ -1171,11 +1171,18 @@ async function runCpsatGeneration(
     const idsMedioTecnico = turmasDoTurnoParaCheck.filter((t) => t.nivelEnsino != null && t.nivelEnsino !== "fundamental").map((t) => t.id);
 
     if (idsFundamental.length > 0 && idsMedioTecnico.length > 0) {
-      const resultadoFundamental = await runCpsatGeneracaoUnica(escolaId, undefined, undefined, idsFundamental, nomeExperimental, tempoLimiteS, signal);
+      // [FIX-TEMPO-DIVIDIDO] O tempo limite configurado pelo usuario
+      // e aplicado em CADA etapa (Fundamental e Medio/Tecnico rodam
+      // sequencialmente) -- sem dividir, "600s" configurado na tela
+      // podia significar ate 1200s de espera real (600 + 600), o
+      // dobro do esperado. Divide pela metade aqui para que o tempo
+      // configurado corresponda ao tempo total de espera de verdade.
+      const tempoLimitePorEtapa = tempoLimiteS != null ? Math.max(30, Math.floor(tempoLimiteS / 2)) : undefined;
+      const resultadoFundamental = await runCpsatGeneracaoUnica(escolaId, undefined, undefined, idsFundamental, nomeExperimental, tempoLimitePorEtapa, signal);
       if (resultadoFundamental.httpStatus < 200 || resultadoFundamental.httpStatus >= 300) {
         return { httpStatus: resultadoFundamental.httpStatus, body: { etapa: "fundamental", ...resultadoFundamental.body } };
       }
-      const resultadoMedio = await runCpsatGeneracaoUnica(escolaId, undefined, undefined, idsMedioTecnico, nomeExperimental, tempoLimiteS, signal);
+      const resultadoMedio = await runCpsatGeneracaoUnica(escolaId, undefined, undefined, idsMedioTecnico, nomeExperimental, tempoLimitePorEtapa, signal);
       if (resultadoMedio.httpStatus < 200 || resultadoMedio.httpStatus >= 300) {
         return { httpStatus: resultadoMedio.httpStatus, body: { etapa: "medio_tecnico", fundamentalJaGerado: true, ...resultadoMedio.body } };
       }
