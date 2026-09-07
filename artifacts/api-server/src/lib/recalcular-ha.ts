@@ -219,14 +219,31 @@ export async function calcularHAIdeal(
         if (!posicoes) return false;
         return posicoes.has(aula - 1) || posicoes.has(aula + 1);
       }
+      function contarJanelasNoDia(conjunto: Set<string>, dia: number): number {
+        let min: number | null = null;
+        let max: number | null = null;
+        for (let aula = 1; aula <= maxAula; aula++) {
+          if (conjunto.has(`${dia}-${aula}`)) {
+            if (min === null) min = aula;
+            max = aula;
+          }
+        }
+        if (min === null || max === null) return 0;
+        let buracos = 0;
+        for (let aula = min + 1; aula < max; aula++) {
+          if (!conjunto.has(`${dia}-${aula}`)) buracos++;
+        }
+        return buracos;
+      }
+      // [FIX-JANELA-MULTI-SLOT] Versao antiga so detectava buraco de
+      // exatamente 1 slot livre entre duas ocupacoes -- buracos de 2+
+      // slots livres seguidos passavam direto, permitindo o padrao
+      // "aula -> janela -> HA" reportado pelo usuario. Agora conta
+      // QUALQUER slot livre entre a primeira e a ultima ocupacao do dia.
       function contarJanelas(conjunto: Set<string>): number {
         let total = 0;
         for (let dia = 0; dia < 5; dia++) {
-          for (let aula = 1; aula <= maxAula; aula++) {
-            const chave = `${dia}-${aula}`;
-            if (conjunto.has(chave)) continue;
-            if (conjunto.has(`${dia}-${aula - 1}`) && conjunto.has(`${dia}-${aula + 1}`)) total++;
-          }
+          total += contarJanelasNoDia(conjunto, dia);
         }
         return total;
       }
@@ -263,6 +280,12 @@ export async function calcularHAIdeal(
           const colado = ocupado.has(`${c.dia}-${c.aula - 1}`) || ocupado.has(`${c.dia}-${c.aula + 1}`);
           const dist = Math.min(c.aula - 1, maxAula - c.aula);
 
+          // [REVERTIDO] a ordem colado-antes-de-diaCount tentada hoje foi
+          // revertida -- essa ordem original (diaCount antes de colado) ja
+          // era o fix validado na sessao de 06/09. O problema real era so
+          // o contarJanelas nao detectar buraco de 2+ slots (corrigido
+          // acima); com isso corrigido, o criterio "janelas" (que vem
+          // primeiro) ja resolve sozinho, sem precisar mexer nessa ordem.
           if (
             !melhor ||
             janelas < melhor.janelas ||
