@@ -200,7 +200,7 @@ export async function calcularHAIdeal(
       orcamentoInicial: number,
       ocupadoInicial: Set<string>,
       contagemDiaAtual: Map<number, number>,
-      haPosicoesPorDia: Map<number, Set<number>>,
+      haPosicoesPorDia: Map<string, Set<number>>,
     ): number {
       let orcamento = orcamentoInicial;
       const maxAula = maxAulaPorTurno.get(turno) ?? 6;
@@ -214,8 +214,13 @@ export async function calcularHAIdeal(
         const chave = `${dia}-${aula}`;
         return !ocupado.has(chave) && !bloqueado.has(chave);
       }
+      // [FIX-ADJACENCIA-POR-TURNO] antes a chave era so "dia", entao HA do
+      // vespertino na aula=1 dele bloqueava candidato do matutino na aula=2
+      // (numeros vizinhos, mas turnos/horarios completamente diferentes).
+      // Agora a chave inclui o turno, so bloqueia adjacencia DENTRO do
+      // mesmo turno -- que e o unico caso onde "colado" realmente importa.
       function adjacenteAHAExistente(dia: number, aula: number): boolean {
-        const posicoes = haPosicoesPorDia.get(dia);
+        const posicoes = haPosicoesPorDia.get(`${turno}-${dia}`);
         if (!posicoes) return false;
         return posicoes.has(aula - 1) || posicoes.has(aula + 1);
       }
@@ -302,8 +307,9 @@ export async function calcularHAIdeal(
         marcasFinais.push({ professorId: prof.id, turno, diaSemana: melhor.dia, horarioSlot: melhor.aula });
         ocupado.add(`${melhor.dia}-${melhor.aula}`);
         contagemDiaAtual.set(melhor.dia, (contagemDiaAtual.get(melhor.dia) ?? 0) + 1);
-        if (!haPosicoesPorDia.has(melhor.dia)) haPosicoesPorDia.set(melhor.dia, new Set());
-        haPosicoesPorDia.get(melhor.dia)!.add(melhor.aula);
+        const chaveTurnoDia = `${turno}-${melhor.dia}`;
+        if (!haPosicoesPorDia.has(chaveTurnoDia)) haPosicoesPorDia.set(chaveTurnoDia, new Set());
+        haPosicoesPorDia.get(chaveTurnoDia)!.add(melhor.aula);
         orcamento--;
       }
       return orcamento;
@@ -322,7 +328,7 @@ export async function calcularHAIdeal(
     // combinado estourando). Declarados aqui fora do loop, uma vez
     // por professor.
     const contagemDiaAtualProfessor = new Map<number, number>();
-    const haPosicoesPorDiaProfessor = new Map<number, Set<number>>();
+    const haPosicoesPorDiaProfessor = new Map<string, Set<number>>();
     let sobraGeral = 0;
     for (const turno of Object.keys(aulasPorTurno)) {
       const orcamento = orcamentoPorTurno[turno] ?? 0;
