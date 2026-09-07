@@ -195,21 +195,29 @@ export async function calcularHAIdeal(
     // total (empate: prefere colado a algo ja ocupado, depois mais
     // perto da borda do turno, depois ordem do dia). Retorna quanto
     // sobrou de orcamento sem conseguir encaixar (turno lotado).
-    function preencherGuloso(turno: string, orcamentoInicial: number, ocupadoInicial: Set<string>): number {
+    function preencherGuloso(
+      turno: string,
+      orcamentoInicial: number,
+      ocupadoInicial: Set<string>,
+      contagemDiaAtual: Map<number, number>,
+      haPosicoesPorDia: Map<number, Set<number>>,
+    ): number {
       let orcamento = orcamentoInicial;
       const maxAula = maxAulaPorTurno.get(turno) ?? 6;
       const bloqueado = bloqueadoPorTurno.get(turno) ?? new Set();
       const ocupado = new Set(ocupadoInicial);
-      // [LIMITE-HA-POR-DIA] evita empilhar toda a HA de um professor
-      // num so dia (ex.: dia inteiro so de HA) -- conta quantas HA ja
-      // foram colocadas em cada dia NESTA chamada (por turno).
-      const contagemDiaAtual = new Map<number, number>();
       const MAX_HA_POR_DIA = 3;
+
 
       function livre(dia: number, aula: number): boolean {
         if (aula < 1 || aula > maxAula) return false;
         const chave = `${dia}-${aula}`;
         return !ocupado.has(chave) && !bloqueado.has(chave);
+      }
+      function adjacenteAHAExistente(dia: number, aula: number): boolean {
+        const posicoes = haPosicoesPorDia.get(dia);
+        if (!posicoes) return false;
+        return posicoes.has(aula - 1) || posicoes.has(aula + 1);
       }
       function contarJanelas(conjunto: Set<string>): number {
         let total = 0;
@@ -231,30 +239,48 @@ export async function calcularHAIdeal(
           }
         }
         if (candidatos.length === 0) break;
-        const dentroDoLimite = candidatos.filter((c) => (contagemDiaAtual.get(c.dia) ?? 0) < MAX_HA_POR_DIA);
-        if (dentroDoLimite.length > 0) candidatos = dentroDoLimite;
 
-        let melhor: { dia: number; aula: number; janelas: number; colado: boolean; dist: number } | null = null;
+        candidatos = candidatos.filter((c) => !adjacenteAHAExistente(c.dia, c.aula));
+        if (candidatos.length === 0) break;
+
+        candidatos = candidatos.filter((c) => (contagemDiaAtual.get(c.dia) ?? 0) < MAX_HA_POR_DIA);
+        if (candidatos.length === 0) break;
+
+        let melhor: {
+          dia: number;
+          aula: number;
+          janelas: number;
+          diaCount: number;
+          colado: boolean;
+          dist: number;
+        } | null = null;
+
         for (const c of candidatos) {
           const testado = new Set(ocupado);
           testado.add(`${c.dia}-${c.aula}`);
           const janelas = contarJanelas(testado);
+          const diaCount = contagemDiaAtual.get(c.dia) ?? 0;
           const colado = ocupado.has(`${c.dia}-${c.aula - 1}`) || ocupado.has(`${c.dia}-${c.aula + 1}`);
           const dist = Math.min(c.aula - 1, maxAula - c.aula);
+
           if (
             !melhor ||
             janelas < melhor.janelas ||
-            (janelas === melhor.janelas && colado && !melhor.colado) ||
-            (janelas === melhor.janelas && colado === melhor.colado && dist < melhor.dist) ||
-            (janelas === melhor.janelas && colado === melhor.colado && dist === melhor.dist && c.dia < melhor.dia)
+            (janelas === melhor.janelas && diaCount < melhor.diaCount) ||
+            (janelas === melhor.janelas && diaCount === melhor.diaCount && colado && !melhor.colado) ||
+            (janelas === melhor.janelas && diaCount === melhor.diaCount && colado === melhor.colado && dist < melhor.dist) ||
+            (janelas === melhor.janelas && diaCount === melhor.diaCount && colado === melhor.colado && dist === melhor.dist && c.dia < melhor.dia)
           ) {
-            melhor = { ...c, janelas, colado, dist };
+            melhor = { ...c, janelas, diaCount, colado, dist };
           }
         }
         if (!melhor) break;
+
         marcasFinais.push({ professorId: prof.id, turno, diaSemana: melhor.dia, horarioSlot: melhor.aula });
         ocupado.add(`${melhor.dia}-${melhor.aula}`);
         contagemDiaAtual.set(melhor.dia, (contagemDiaAtual.get(melhor.dia) ?? 0) + 1);
+        if (!haPosicoesPorDia.has(melhor.dia)) haPosicoesPorDia.set(melhor.dia, new Set());
+        haPosicoesPorDia.get(melhor.dia)!.add(melhor.aula);
         orcamento--;
       }
       return orcamento;
@@ -265,11 +291,20 @@ export async function calcularHAIdeal(
     // distribuicao do orcamento daquele turno -- sempre com o mesmo
     // resultado pra mesma entrada (aulas reais + orcamento), o que
     // elimina qualquer chance de oscilacao entre rodadas.
+    // [FIX-MULTI-TURNO] contagemDiaAtual e haPosicoesPorDia precisam
+    // ser compartilhados entre TODOS os turnos do mesmo professor --
+    // se cada turno contasse do zero, um professor com aula em 2+
+    // turnos podia acabar com mais de 3 HA no mesmo dia da semana
+    // (cada turno respeitando o limite isoladamente, mas o total
+    // combinado estourando). Declarados aqui fora do loop, uma vez
+    // por professor.
+    const contagemDiaAtualProfessor = new Map<number, number>();
+    const haPosicoesPorDiaProfessor = new Map<number, Set<number>>();
     let sobraGeral = 0;
     for (const turno of Object.keys(aulasPorTurno)) {
       const orcamento = orcamentoPorTurno[turno] ?? 0;
       if (orcamento <= 0) continue;
-      const restante = preencherGuloso(turno, orcamento, ocupadoPorTurnoOriginal.get(turno) ?? new Set());
+      const restante = preencherGuloso(turno, orcamento, ocupadoPorTurnoOriginal.get(turno) ?? new Set(), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor);
       sobraGeral += restante;
     }
 
@@ -306,7 +341,7 @@ export async function calcularHAIdeal(
         const jaManualNesseTurno = new Set(
           haManualContraturno.filter((m) => (m.turno ?? "sem_turno") === turno).map((m) => `${m.diaSemana}-${m.horarioSlot}`),
         );
-        sobraGeral = preencherGuloso(turno, sobraGeral, jaManualNesseTurno);
+        sobraGeral = preencherGuloso(turno, sobraGeral, jaManualNesseTurno, contagemDiaAtualProfessor, haPosicoesPorDiaProfessor);
       }
     }
 
