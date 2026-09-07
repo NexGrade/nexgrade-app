@@ -413,7 +413,8 @@ async function recalcularHoraAtividadeUmaPassada(escolaId: string): Promise<Resu
   const finaisSet = new Set(marcasFinais.map(chaveMarca));
   const existentesPorChave = new Map(disponibilidades.map((d) => [chaveMarca({ professorId: d.professorId, turno: d.turno ?? "sem_turno", diaSemana: d.diaSemana, horarioSlot: d.horarioSlot }), d]));
 
-  const paraInserir = marcasFinais.filter((m) => !existentesPorChave.has(chaveMarca(m)));
+  const paraInserirBruto = marcasFinais.filter((m) => !existentesPorChave.has(chaveMarca(m)));
+  const paraInserir = [...new Map(paraInserirBruto.map((m) => [chaveMarca(m), m])).values()];
   const paraRemoverIds = disponibilidades
     .filter((d) => !finaisSet.has(chaveMarca({ professorId: d.professorId, turno: d.turno ?? "sem_turno", diaSemana: d.diaSemana, horarioSlot: d.horarioSlot })))
     .map((d) => d.id);
