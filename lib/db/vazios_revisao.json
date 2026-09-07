@@ -1,0 +1,922 @@
+[
+  {
+    "professor_pdf": "ANDERSON",
+    "dia_semana": 2,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "ANDRE",
+    "dia_semana": 1,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "ANDRE",
+    "dia_semana": 3,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "ANDRE",
+    "dia_semana": 4,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "ARNALDO",
+    "dia_semana": 3,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "ARNALDO",
+    "dia_semana": 4,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "CAMILA",
+    "dia_semana": 0,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "CAMILA",
+    "dia_semana": 1,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "CAMILA",
+    "dia_semana": 2,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "CAMILA",
+    "dia_semana": 3,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "CAMILA",
+    "dia_semana": 4,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "CECILIA",
+    "dia_semana": 2,
+    "horario_texto": "10:15"
+  },
+  {
+    "professor_pdf": "CECILIA",
+    "dia_semana": 3,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "CECILIA",
+    "dia_semana": 3,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "CECILIA",
+    "dia_semana": 3,
+    "horario_texto": "10:15"
+  },
+  {
+    "professor_pdf": "CESAR",
+    "dia_semana": 4,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "CESAR",
+    "dia_semana": 4,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "CRISTIANE",
+    "dia_semana": 4,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 0,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 0,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 0,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 0,
+    "horario_texto": "10:15"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 0,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 0,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 1,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 1,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 1,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 1,
+    "horario_texto": "10:15"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 1,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 1,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 2,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 2,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 2,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 2,
+    "horario_texto": "10:15"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 2,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 2,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 3,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 3,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 3,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 4,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 4,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 4,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 4,
+    "horario_texto": "10:15"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 4,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "DEBORA*",
+    "dia_semana": 4,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "DORACI",
+    "dia_semana": 0,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "DORACI",
+    "dia_semana": 1,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "DORACI",
+    "dia_semana": 2,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "DORACI",
+    "dia_semana": 3,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "DORACI",
+    "dia_semana": 4,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "EDNILSON",
+    "dia_semana": 4,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "EDUARDA",
+    "dia_semana": 4,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "ELISABETE",
+    "dia_semana": 1,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "ELISABETE",
+    "dia_semana": 1,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "FRANCIELLE",
+    "dia_semana": 0,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "FRANCIELLE",
+    "dia_semana": 4,
+    "horario_texto": "10:15"
+  },
+  {
+    "professor_pdf": "FRANCIELLE",
+    "dia_semana": 4,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "GABRIELA",
+    "dia_semana": 0,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "GABRIELA",
+    "dia_semana": 1,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "GABRIELA",
+    "dia_semana": 3,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "GABRIELA",
+    "dia_semana": 4,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "GEOVANI",
+    "dia_semana": 2,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "GEOVANI",
+    "dia_semana": 3,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "GEOVANI",
+    "dia_semana": 3,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "GEOVANI",
+    "dia_semana": 3,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "GEOVANI",
+    "dia_semana": 4,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "GEOVANI",
+    "dia_semana": 4,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "GEVERSON",
+    "dia_semana": 0,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "GEVERSON",
+    "dia_semana": 0,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "GEVERSON",
+    "dia_semana": 2,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "GEVERSON",
+    "dia_semana": 2,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 0,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 0,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 0,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 0,
+    "horario_texto": "10:15"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 0,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 0,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 1,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 1,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 1,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 1,
+    "horario_texto": "10:15"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 1,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 1,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 2,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 2,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 2,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 2,
+    "horario_texto": "10:15"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 2,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 2,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 3,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 3,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 3,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 3,
+    "horario_texto": "10:15"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 3,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 3,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 4,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 4,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "GILBERTO*",
+    "dia_semana": 4,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "HEMELLY",
+    "dia_semana": 1,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "IONE",
+    "dia_semana": 1,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "IONE",
+    "dia_semana": 1,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "IVANIR",
+    "dia_semana": 0,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "IVANIR",
+    "dia_semana": 3,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "JACKSON",
+    "dia_semana": 4,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "JACKSON",
+    "dia_semana": 4,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "JORDANA",
+    "dia_semana": 3,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "JORDANA",
+    "dia_semana": 4,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "JULIANA",
+    "dia_semana": 1,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "JULIANA",
+    "dia_semana": 3,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "JULIO",
+    "dia_semana": 1,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "JULIO",
+    "dia_semana": 2,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "JULIO",
+    "dia_semana": 2,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 0,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 0,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 0,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 0,
+    "horario_texto": "10:15"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 0,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 0,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 1,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 1,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 1,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 1,
+    "horario_texto": "10:15"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 1,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 1,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 3,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 3,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 3,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 3,
+    "horario_texto": "10:15"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 3,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 3,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 4,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 4,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 4,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 4,
+    "horario_texto": "10:15"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 4,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "LISIANE*",
+    "dia_semana": 4,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "MARISE",
+    "dia_semana": 1,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "MARISE",
+    "dia_semana": 3,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 0,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 0,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 0,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 0,
+    "horario_texto": "10:15"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 0,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 1,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 1,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 1,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 1,
+    "horario_texto": "10:15"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 1,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 1,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 2,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 2,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 2,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 2,
+    "horario_texto": "10:15"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 2,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 2,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 3,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 3,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 3,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 3,
+    "horario_texto": "10:15"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 3,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 3,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 4,
+    "horario_texto": "07:30"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 4,
+    "horario_texto": "08:20"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 4,
+    "horario_texto": "09:25"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 4,
+    "horario_texto": "10:15"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 4,
+    "horario_texto": "11:05"
+  },
+  {
+    "professor_pdf": "MARTA*",
+    "dia_semana": 4,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "NOELI",
+    "dia_semana": 0,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "NOELI",
+    "dia_semana": 1,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "NOELI",
+    "dia_semana": 2,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "NOELI",
+    "dia_semana": 3,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "NOELI",
+    "dia_semana": 4,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "ROSINEI",
+    "dia_semana": 0,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "ROSINEI",
+    "dia_semana": 1,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "ROSINEI",
+    "dia_semana": 2,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "ROSINEI",
+    "dia_semana": 3,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "ROSINEI",
+    "dia_semana": 4,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "SALETE",
+    "dia_semana": 4,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "SUELI",
+    "dia_semana": 0,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "SUELI",
+    "dia_semana": 1,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "SUELI",
+    "dia_semana": 2,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "SUELI",
+    "dia_semana": 3,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "SUELI",
+    "dia_semana": 4,
+    "horario_texto": "11:55"
+  },
+  {
+    "professor_pdf": "SYPRIANO",
+    "dia_semana": 0,
+    "horario_texto": "08:20"
+  }
+]

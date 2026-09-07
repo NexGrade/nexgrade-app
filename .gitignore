@@ -59,3 +59,5 @@ Thumbs.db
 
 # zips temporarios de transferencia de arquivos
 *.zip
+
+lib/db/_arquivo/
