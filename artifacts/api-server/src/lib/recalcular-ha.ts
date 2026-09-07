@@ -453,6 +453,7 @@ async function recalcularHoraAtividadeUmaPassada(escolaId: string): Promise<Resu
       ).onConflictDoUpdate({
         target: [disponibilidadeTable.professorId, disponibilidadeTable.diaSemana, disponibilidadeTable.horarioSlot, disponibilidadeTable.turno],
         set: { disponivel: true, horaAtividadeObrigatoria: true, motivo: MOTIVO_HA_AUTO },
+        where: eq(disponibilidadeTable.horaAtividadeObrigatoria, true), // [FIX-NAO-SOBRESCREVER-BLOQUEIO] so atualiza se ja era HA automatica
       });
     }
     if (paraRemoverIds.length > 0) {
