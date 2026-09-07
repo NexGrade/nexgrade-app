@@ -429,6 +429,16 @@ async function recalcularHoraAtividadeUmaPassada(escolaId: string): Promise<Resu
 
   await db.transaction(async (tx) => {
     if (paraInserir.length > 0) {
+      // [FIX-ON-CONFLICT] Rede de seguranca: a filtragem manual acima
+      // (paraInserir) ja tenta excluir o que ja existe, mas se essa
+      // comparacao falhar por qualquer motivo (ex.: diferenca sutil de
+      // turno/tipo), o INSERT sem ON CONFLICT quebrava a TRANSACAO
+      // INTEIRA por violar a constraint unica
+      // (disponibilidade_professores_unica), fazendo a HA inteira nao
+      // ser gravada -- so o console.error silencioso em horarios.ts
+      // (nao falhava a promocao, so a HA ficava vazia sem avisar
+      // ninguem). Com ON CONFLICT, mesmo se paraInserir tiver alguma
+      // linha ja existente, ela so atualiza em vez de derrubar tudo.
       await tx.insert(disponibilidadeTable).values(
         paraInserir.map((i) => ({
           professorId: i.professorId,
@@ -439,7 +449,10 @@ async function recalcularHoraAtividadeUmaPassada(escolaId: string): Promise<Resu
           horaAtividadeObrigatoria: true,
           motivo: MOTIVO_HA_AUTO,
         })),
-      );
+      ).onConflictDoUpdate({
+        target: [disponibilidadeTable.professorId, disponibilidadeTable.diaSemana, disponibilidadeTable.horarioSlot, disponibilidadeTable.turno],
+        set: { disponivel: true, horaAtividadeObrigatoria: true, motivo: MOTIVO_HA_AUTO },
+      });
     }
     if (paraRemoverIds.length > 0) {
       await tx.delete(disponibilidadeTable).where(inArray(disponibilidadeTable.id, paraRemoverIds));
