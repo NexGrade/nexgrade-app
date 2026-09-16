@@ -46,6 +46,7 @@ def resolver(
     apenas_turma: bool = False,
     hints: dict | None = None,
     forcar_zero_janela: bool = False,
+    fixar: dict | None = None,
 ):
     model = cp_model.CpModel()
 
@@ -58,6 +59,18 @@ def resolver(
         for key, valor in hints.items():
             if key in aula_var:
                 model.AddHint(aula_var[key], valor)
+
+    # [FIXAR] posicoes travadas como restricao RIGIDA (nao e hint --
+    # o solver NAO PODE fugir disso). Usado pra fixar professores-ponte
+    # ja resolvidos num sub-problema combinado antes, evitando conflito
+    # entre Fundamental e Medio/Tecnico.
+    if fixar:
+        for dt_idx, dt in enumerate(disciplinas_turma):
+            chave_fixar = (dt.turma, dt.codigo_sae, dt.professor)
+            if chave_fixar in fixar:
+                for (dia_fix, aula_fix) in fixar[chave_fixar]:
+                    if (dt_idx, dia_fix, aula_fix) in aula_var:
+                        model.Add(aula_var[(dt_idx, dia_fix, aula_fix)] == 1)
 
     # RESTRIÇÃO 0 — dupla docência: linhas do mesmo grupo_dupla (2+
     # professores dando aula junto, mesma turma, mesma disciplina)
@@ -134,13 +147,22 @@ def resolver(
     if forcar_zero_janela:
         estados_finais = [0, 1, 2]
         transicoes = [(0, 0, 0), (0, 1, 1), (1, 1, 1), (1, 0, 2), (2, 0, 2)]
-        for prof in sorted(professores):
-            indices_prof = [i for i, dt in enumerate(disciplinas_turma) if dt.professor == prof]
+        for turma in sorted(turmas_nomes):
+            vistos_dupla_fzj = set()
+            indices_turma_fzj = []
+            for i, dt in enumerate(disciplinas_turma):
+                if dt.turma != turma:
+                    continue
+                if dt.grupo_dupla is not None:
+                    if dt.grupo_dupla in vistos_dupla_fzj:
+                        continue
+                    vistos_dupla_fzj.add(dt.grupo_dupla)
+                indices_turma_fzj.append(i)
             for dia in range(len(DIAS)):
                 presenca_dia = []
                 for aula in range(1, aulas_por_dia + 1):
-                    tem_aula = model.NewBoolVar(f"presenca_{prof}_{dia}_{aula}")
-                    model.Add(sum(aula_var[(i, dia, aula)] for i in indices_prof) == tem_aula)
+                    tem_aula = model.NewBoolVar(f"presenca_fzj_{turma}_{dia}_{aula}")
+                    model.Add(sum(aula_var[(i, dia, aula)] for i in indices_turma_fzj) == tem_aula)
                     presenca_dia.append(tem_aula)
                 model.AddAutomaton(presenca_dia, 0, estados_finais, transicoes)
 
@@ -348,6 +370,7 @@ def gerar_grade(
     aulas_por_dia: int,
     turmas_raw: list[dict],
     tempo_limite_s: int = 120,
+    fixar_raw: list[dict] | None = None,
 ) -> dict:
     """
     Recebe o mesmo formato JSON exportado por scripts/exportar-dados-cpsat.ts
@@ -369,6 +392,13 @@ def gerar_grade(
     bloqueios = {(b["professor"], b["dia"], b["aula"]) for b in bloqueios_raw}
     turmas_nomes = {t["nome"] for t in turmas_raw}
 
+    fixar = None
+    if fixar_raw:
+        fixar = {}
+        for item in fixar_raw:
+            chave_fixar = (item["turma"], item["codigoSae"], item["professor"])
+            fixar.setdefault(chave_fixar, []).append((item["dia"], item["aula"]))
+
     inicio = time.time()
     # [LIMITE-PRATICO] Objetivo de janela de professor e' custoso e
     # instavel em tempo de execucao para turnos grandes (24 turmas) --
@@ -381,7 +411,7 @@ def gerar_grade(
     if apenas_turma_auto:
         solver_f1, status_f1, aula_var_f1 = resolver(
             disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
-            tempo_limite_s, apenas_turma=True,
+            tempo_limite_s, apenas_turma=True, fixar=fixar,
         )
         duracao_f1 = time.time() - inicio
         # [TETO-FASE-2] A fase 2 usava TODO o tempo restante do limite
@@ -399,7 +429,7 @@ def gerar_grade(
             hints_f1 = {k: solver_f1.Value(v) for k, v in aula_var_f1.items()}
             solver_f2, status_f2, aula_var_f2 = resolver(
                 disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
-                int(tempo_restante), apenas_turma=False, hints=hints_f1,
+                int(tempo_restante), apenas_turma=False, hints=hints_f1, fixar=fixar,
             )
             if status_f2 in (cp_model.OPTIMAL, cp_model.FEASIBLE):
                 solver, status, aula_var = solver_f2, status_f2, aula_var_f2
@@ -421,7 +451,7 @@ def gerar_grade(
         tempo_rigida = min(TETO_TENTATIVA_RIGIDA_S, max(5, tempo_limite_s // 3))
         solver_rigido, status_rigido, aula_var_rigido = resolver(
             disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
-            tempo_rigida, apenas_turma=False, forcar_zero_janela=True,
+            tempo_rigida, apenas_turma=False, forcar_zero_janela=True, fixar=fixar,
         )
         if status_rigido in (cp_model.OPTIMAL, cp_model.FEASIBLE):
             solver, status, aula_var = solver_rigido, status_rigido, aula_var_rigido
@@ -429,7 +459,7 @@ def gerar_grade(
             tempo_suave = max(5, tempo_limite_s - tempo_rigida)
             solver, status, aula_var = resolver(
                 disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
-                tempo_suave, apenas_turma=False,
+                tempo_suave, apenas_turma=False, fixar=fixar,
             )
     duracao = time.time() - inicio
 
@@ -462,6 +492,20 @@ def gerar_grade(
                             }
                         )
         resultado["aulas"] = aulas
+
+        from .reduzir_janelas import reduzir_janelas
+        fixadas_fase3 = None
+        if fixar_raw:
+            fixadas_fase3 = {
+                (item["turma"], item["codigoSae"], item["professor"]) for item in fixar_raw
+            }
+        aulas_otimizadas, janelas_antes, janelas_depois = reduzir_janelas(
+            aulas, disciplinas_turma_raw, bloqueios_raw, aulas_por_dia,
+            fixadas=fixadas_fase3,
+        )
+        resultado["aulas"] = aulas_otimizadas
+        resultado["janelasProfessorAntes"] = janelas_antes
+        resultado["janelasProfessorDepois"] = janelas_depois
     else:
         resultado["mensagem"] = (
             "Não existe grade que satisfaça todas as restrições com esses dados "

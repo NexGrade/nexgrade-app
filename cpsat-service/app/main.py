@@ -2,6 +2,7 @@ import os
 from fastapi import FastAPI, HTTPException
 from google import genai
 from .solver import gerar_grade
+from .pipeline_coordenada import gerar_grade_coordenada
 app = FastAPI(title="Nexgrade CP-SAT Solver API")
 api_key = os.getenv("GEMINI_API_KEY", "").strip().strip('"').strip("'")
 gemini_client = genai.Client(api_key=api_key) if api_key else None
@@ -58,6 +59,48 @@ def explicar_inviabilidade_com_gemini(dados_requisicao: dict, log_solver: str = 
 @app.api_route("/", methods=["GET", "HEAD"])
 def read_root():
     return {"status": "online", "service": "Nexgrade CP-SAT Solver"}
+@app.post("/gerar-grade-coordenada")
+def gerar_grade_coordenada_endpoint(payload: dict):
+    """
+    Pra turnos que misturam Fundamental e Medio/Tecnico -- coordena
+    professores-ponte antes de gerar as duas fases, e roda a pipeline
+    inteira algumas vezes (o CP-SAT varia entre execucoes), devolvendo
+    a melhor tentativa viavel.
+
+    Validado com dado real (24 turmas): 1 tentativa com
+    CPSAT_NUM_WORKERS=4 (configurado no ambiente do servico, nao no
+    payload) chegou a 18 janelas de professor em ~5 minutos.
+    """
+    try:
+        disciplinas_raw = payload.get("disciplinasTurma", [])
+        bloqueios_raw = payload.get("bloqueiosProfessor", [])
+        turno = payload.get("turno", "matutino")
+        aulas_por_dia = payload.get("aulasPorDia", 6)
+        turmas_raw = payload.get("turmas", [])
+        n_tentativas = payload.get("nTentativas", 1)
+        tempo_coordenacao_s = payload.get("tempoCoordenacaoS", 120)
+        tempo_fase_s = payload.get("tempoFaseS", 300)
+        tempo_fase3_s = payload.get("tempoFase3S", 60)
+
+        resultado = gerar_grade_coordenada(
+            disciplinas_raw, bloqueios_raw, turno, aulas_por_dia, turmas_raw,
+            n_tentativas=n_tentativas,
+            tempo_coordenacao_s=tempo_coordenacao_s,
+            tempo_fase_s=tempo_fase_s,
+            tempo_fase3_s=tempo_fase3_s,
+        )
+
+        if not resultado.get("viavel"):
+            resultado["mensagem_ia"] = explicar_inviabilidade_com_gemini(
+                dados_requisicao=payload,
+                log_solver=resultado.get("mensagem", "")
+            )
+
+        return resultado
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @app.post("/gerar-grade")
 def gerar_grade_endpoint(payload: dict):
     try:
