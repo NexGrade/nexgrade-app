@@ -374,6 +374,43 @@ export async function calcularHAIdeal(
       }
     }
 
+    // [FIX-SOBRA-ENTRE-TURNOS-DE-ENSINO] professor em 3+ turnos pode nao
+    // ter NENHUM turno de contraturno puro (turno sem nenhuma aula) --
+    // nesse caso a sobra nunca tinha pra onde ir, mesmo com espaco livre
+    // de verdade sobrando em outro turno de ENSINO dele (achado real:
+    // Elisangela e Dorival, ambos em matutino+vespertino+noturno,
+    // 2026-09-17). Tenta de novo, dessa vez nos proprios turnos de
+    // ensino, usando o espaco que sobrou alem do orcamento proporcional
+    // original de cada um.
+    if (sobraGeral > 0) {
+      const turnosDeEnsino = Object.keys(aulasPorTurno);
+      const ocupadoAtual = (turno: string): Set<string> => {
+        const s = new Set(ocupadoPorTurnoOriginal.get(turno) ?? new Set());
+        for (let dia = 0; dia < 5; dia++) {
+          const pos = haPosicoesPorDiaProfessor.get(`${turno}-${dia}`);
+          if (pos) for (const aula of pos) s.add(`${dia}-${aula}`);
+        }
+        return s;
+      };
+      const espacoLivreEnsino = (turno: string): number => {
+        const maxAula = maxAulaPorTurno.get(turno) ?? 6;
+        const bloqueado = bloqueadoPorTurno.get(turno) ?? new Set();
+        const ocup = ocupadoAtual(turno);
+        let livre = 0;
+        for (let dia = 0; dia < 5; dia++) {
+          for (let aula = 1; aula <= maxAula; aula++) {
+            if (!ocup.has(`${dia}-${aula}`) && !bloqueado.has(`${dia}-${aula}`)) livre++;
+          }
+        }
+        return livre;
+      };
+      const ordenados = [...turnosDeEnsino].sort((a, b) => espacoLivreEnsino(b) - espacoLivreEnsino(a));
+      for (const turno of ordenados) {
+        if (sobraGeral <= 0) break;
+        sobraGeral = preencherGuloso(turno, sobraGeral, ocupadoAtual(turno), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor);
+      }
+    }
+
     // Se AINDA sobrar depois de tentar todo turno de ensino E todo
     // contraturno (bloqueios cobrindo a semana inteira em todo turno),
     // fica como pendencia real -- a conferencia de conflitos acusa ate

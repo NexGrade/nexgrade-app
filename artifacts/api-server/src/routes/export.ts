@@ -540,8 +540,22 @@ router.get("/grade-pdf/professor", async (req, res) => {
         linha2: siglaOuFallback(disciplinas.find((d) => d.id === s.disciplinaId)),
       }));
 
-      const nivelPredominante = turmas.find((t) => t.id === slotsDoProfNesseTurno[0]?.turmaId)?.nivelEnsino ?? null;
-      const horariosPorAula = await buscarHorariosPorAula(escolaId, turno, nivelPredominante);
+      // [FIX-NIVEL-PREDOMINANTE] antes pegava so o nivel_ensino da
+      // PRIMEIRA turma encontrada (ordem de array nao e garantida) --
+      // se essa turma por acaso fosse Fundamental (5 aulas/dia) mas o
+      // professor tambem desse aula em turma de Medio/Tecnico (6
+      // aulas/dia) no mesmo turno, o bloco inteiro truncava em 5
+      // linhas, escondendo a 6a aula/HA de quem tinha carga mista.
+      // Agora testa todos os niveis presentes nas turmas desse
+      // professor nesse turno e usa o que renderiza MAIS linhas.
+      const niveisDoProfNesseTurno = [...new Set(
+        slotsDoProfNesseTurno.map((s) => turmas.find((t) => t.id === s.turmaId)?.nivelEnsino).filter((n): n is string => !!n)
+      )];
+      let horariosPorAula = await buscarHorariosPorAula(escolaId, turno, niveisDoProfNesseTurno[0] ?? null);
+      for (const nivel of niveisDoProfNesseTurno.slice(1)) {
+        const candidato = await buscarHorariosPorAula(escolaId, turno, nivel);
+        if (candidato.length > horariosPorAula.length) horariosPorAula = candidato;
+      }
 
       // "HA" literal, igual ao Urânia — sem linha2 pra não formatar como
       // célula combinada. Filtra pelo turno certo (disponibilidade já
