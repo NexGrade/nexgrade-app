@@ -262,9 +262,13 @@ export async function calcularHAIdeal(
         }
         if (candidatos.length === 0) break;
 
-        candidatos = candidatos.filter((c) => !adjacenteAHAExistente(c.dia, c.aula));
-        if (candidatos.length === 0) break;
-
+        // [PERMITIR-HA-COLADA] Removido o filtro rigido que descartava
+        // candidatos colados a uma HA ja colocada no mesmo dia -- ele
+        // podia forcar o algoritmo a escolher um slot pior (criando uma
+        // janela) so pra evitar colar duas HA, mesmo quando colar era a
+        // UNICA forma de fechar o buraco. A contagem de janelas (criterio
+        // primario logo abaixo) ja decide isso sozinha; nao precisa de
+        // filtro separado pra adjacencia especificamente com HA.
         candidatos = candidatos.filter((c) => (contagemDiaAtual.get(c.dia) ?? 0) < MAX_HA_POR_DIA);
         if (candidatos.length === 0) break;
 

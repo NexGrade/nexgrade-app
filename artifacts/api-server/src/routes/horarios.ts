@@ -856,6 +856,25 @@ const GerarLoteBody = z.object({
   compactarCargaHoraria: z.boolean().optional(),
 });
 
+function intercalarPorNivelEnsino<T extends { nivelEnsino: string | null }>(turmas: T[]): T[] {
+  const grupos = new Map<string, T[]>();
+  for (const t of turmas) {
+    const chave = t.nivelEnsino ?? "__sem_nivel__";
+    if (!grupos.has(chave)) grupos.set(chave, []);
+    grupos.get(chave)!.push(t);
+  }
+  const listas = [...grupos.values()];
+  const resultado: T[] = [];
+  let i = 0;
+  while (listas.some((l) => i < l.length)) {
+    for (const l of listas) {
+      if (i < l.length) resultado.push(l[i]);
+    }
+    i++;
+  }
+  return resultado;
+}
+
 router.post("/gerar-lote", async (req, res) => {
   const escolaId = getEscolaId(req);
   const parsed = GerarLoteBody.safeParse(req.body);
@@ -867,6 +886,14 @@ router.post("/gerar-lote", async (req, res) => {
 
   let turmasAlvo = await db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
   if (turno) turmasAlvo = turmasAlvo.filter(t => t.turno === turno);
+  // [INTERCALAR-NIVEIS] Sem isso, turmas eram processadas na ordem crua
+  // do banco (sem ORDER BY) -- cada turma consome a disponibilidade dos
+  // professores conforme avanca, entao o nivel de ensino processado por
+  // ultimo ficava sistematicamente esgotado pelos professores-ponte
+  // (confirmado: Fundamental so 26% das aulas esperadas vs 50% do
+  // Medio/Tecnico numa geracao real). Intercalar distribui o dano de
+  // forma justa entre os niveis em vez de concentrar tudo num so.
+  turmasAlvo = intercalarPorNivelEnsino(turmasAlvo);
 
   if (turmasAlvo.length === 0) {
     res.status(400).json({ error: turno ? `Nenhuma turma encontrada no turno "${turno}"` : "Nenhuma turma cadastrada" });
@@ -1171,6 +1198,17 @@ async function runCpsatGeneration(
     const idsMedioTecnico = turmasDoTurnoParaCheck.filter((t) => t.nivelEnsino != null && t.nivelEnsino !== "fundamental").map((t) => t.id);
 
     if (idsFundamental.length > 0 && idsMedioTecnico.length > 0) {
+      // [COORDENACAO] Tenta primeiro a rota coordenada -- gera Fundamental
+      // e Medio/Tecnico coordenando os professores-ponte antes, evitando
+      // o conflito de professor entre as duas fases que o metodo antigo
+      // (duas chamadas separadas, abaixo) podia gerar.
+      const todosIdsCoordenacao = [...idsFundamental, ...idsMedioTecnico];
+      const resultadoCoordenado = await runCpsatGeneracaoUnica(escolaId, undefined, undefined, todosIdsCoordenacao, nomeExperimental, tempoLimiteS, signal, true);
+      if (resultadoCoordenado.httpStatus >= 200 && resultadoCoordenado.httpStatus < 300) {
+        return { httpStatus: resultadoCoordenado.httpStatus, body: { ...resultadoCoordenado.body, coordenado: true } };
+      }
+      // [FALLBACK] Rota coordenada falhou (ex.: servico fora do ar) --
+      // recai no metodo antigo, duas fases separadas sem coordenacao.
       // [FIX-TEMPO-DIVIDIDO] O tempo limite configurado pelo usuario
       // e aplicado em CADA etapa (Fundamental e Medio/Tecnico rodam
       // sequencialmente) -- sem dividir, "600s" configurado na tela
@@ -1219,6 +1257,7 @@ async function runCpsatGeneracaoUnica(
   nomeExperimental: string,
   tempoLimiteS: number | undefined,
   signal?: AbortSignal,
+  usarCoordenacao?: boolean,
 ): Promise<{ httpStatus: number; body: Record<string, unknown> }> {
   let turno: "matutino" | "vespertino" | "noturno";
   let turmasDoTurno: (typeof turmasTable.$inferSelect)[];
@@ -1434,13 +1473,23 @@ async function runCpsatGeneracaoUnica(
     ? Math.max(...horarioSlotsTurno.map((s) => s.numeroAula))
     : 6;
 
+  const tempoCoordenacaoS = 120;
+  const tempoFaseS = tempoLimiteS ?? 300;
+  const tempoFase3S = 60;
+
   const payload = {
     turno,
     aulasPorDia,
-    turmas: turmasDoTurno.map((t) => ({ nome: t.nome, turno: t.turno })),
+    turmas: turmasDoTurno.map((t) => ({ nome: t.nome, turno: t.turno, nivelEnsino: t.nivelEnsino })),
     disciplinasTurma,
     bloqueiosProfessor,
     tempoLimiteS: tempoLimiteS ?? 120,
+    ...(usarCoordenacao ? {
+      nTentativas: 1,
+      tempoCoordenacaoS,
+      tempoFaseS,
+      tempoFase3S,
+    } : {}),
   };
   console.log("[DEBUG-CPSAT-PAYLOAD]", JSON.stringify(payload));
 
@@ -1461,12 +1510,14 @@ async function runCpsatGeneracaoUnica(
   let ultimoErroCpsat: unknown = null;
   for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_CPSAT; tentativa++) {
     try {
-      const timeoutMs = ((tempoLimiteS ?? 120) + 30) * 1000;
+      const timeoutMs = usarCoordenacao
+        ? (tempoCoordenacaoS + tempoFaseS * 2 + tempoFase3S + 60) * 1000
+        : ((tempoLimiteS ?? 120) + 30) * 1000;
       // [FIX-AXIOS] Trocado fetch nativo (undici) por axios -- suspeita de
       // que o undici trava/falha silenciosamente com corpos de requisicao
       // medios/grandes (60KB+) na rede interna do Render, mesmo dentro do
       // timeout configurado. axios usa http/https nativos do Node.
-      const axiosResponse = await axios.post(`${CPSAT_SERVICE_URL}/gerar-grade`, payload, {
+      const axiosResponse = await axios.post(`${CPSAT_SERVICE_URL}/${usarCoordenacao ? "gerar-grade-coordenada" : "gerar-grade"}`, payload, {
         headers: { "Content-Type": "application/json" },
         timeout: timeoutMs,
         validateStatus: () => true,
@@ -1475,7 +1526,26 @@ async function runCpsatGeneracaoUnica(
       if (axiosResponse.status < 200 || axiosResponse.status >= 300) {
         throw new Error(`Servico CP-SAT respondeu ${axiosResponse.status}: ${JSON.stringify(axiosResponse.data)}`);
       }
-      resultado = axiosResponse.data as typeof resultado;
+      if (usarCoordenacao) {
+        const raw = axiosResponse.data as {
+          viavel: boolean;
+          aulas?: Array<{ turma: string; codigoSae: string; disciplina: string; professor: string; dia: number; aula: number }>;
+          janelasProfessor?: number;
+          tentativas?: number;
+          tempoTotalS?: number;
+          mensagem?: string;
+        };
+        resultado = {
+          status: raw.viavel ? "FEASIBLE" : "INFEASIBLE",
+          otimo: false,
+          viavel: raw.viavel,
+          tempoResolucaoS: raw.tempoTotalS ?? 0,
+          mensagem: raw.mensagem,
+          aulas: raw.aulas ?? [],
+        };
+      } else {
+        resultado = axiosResponse.data as typeof resultado;
+      }
       ultimoErroCpsat = null;
       break;
     } catch (err) {
