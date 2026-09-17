@@ -710,6 +710,21 @@ router.post("/", async (req, res) => {
   }
 
   const [slot] = await db.insert(horariosTable).values({ ...data, escolaId }).returning();
+
+  // [FIX-SYNC-TURMA-DISCIPLINAS] Ao adicionar aula manual (clique na
+  // grade), o professor escolhido precisa refletir em
+  // turma_disciplinas.professorId -- senao a proxima geracao/correcao
+  // volta a usar o professor antigo cadastrado la (fonte de verdade
+  // que o CP-SAT e o heuristico consultam), desfazendo o ajuste manual
+  // sem avisar ninguem. So atualiza um vinculo JA EXISTENTE (nao cria
+  // um novo, pra nao inventar carga horaria semanal do nada).
+  await db.update(turmaDisciplinasTable)
+    .set({ professorId: data.professorId })
+    .where(and(
+      eq(turmaDisciplinasTable.turmaId, data.turmaId),
+      eq(turmaDisciplinasTable.disciplinaId, data.disciplinaId),
+    ));
+
   const enriched = await enrichSlot(slot);
   res.status(201).json(enriched);
 });

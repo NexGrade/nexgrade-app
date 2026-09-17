@@ -1,4 +1,4 @@
-export * from "./professores";
+﻿export * from "./professores";
 export * from "./disciplinas";
 export * from "./turmas";
 export * from "./horarios";
@@ -23,4 +23,3 @@ export * from "./asaas-webhook-eventos";
 
 export * from "./reservas";
 
-export * from "./vinculos-professor-disciplina-turma";
