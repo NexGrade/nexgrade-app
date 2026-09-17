@@ -23,3 +23,4 @@ export * from "./asaas-webhook-eventos";
 
 export * from "./reservas";
 
+export * from "./vinculos-professor-disciplina-turma";
