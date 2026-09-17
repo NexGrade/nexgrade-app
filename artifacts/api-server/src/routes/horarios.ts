@@ -709,6 +709,27 @@ router.post("/", async (req, res) => {
     return;
   }
 
+  // [FIX-CHECAR-DISPONIBILIDADE] Antes esta rota gravava a aula manual
+  // sem checar disponibilidade_professores -- um professor podia ser
+  // colocado exatamente num horario marcado como indisponivel, sem
+  // nenhum aviso, sobrepondo o bloqueio silenciosamente (bug
+  // confirmado 2026-09-17: caso da Katia em 1MA EM/1MD MA).
+  const bloqueio = await db.select().from(disponibilidadeTable)
+    .where(and(
+      eq(disponibilidadeTable.professorId, data.professorId),
+      eq(disponibilidadeTable.turno, turma.turno),
+      eq(disponibilidadeTable.diaSemana, data.diaSemana),
+      eq(disponibilidadeTable.horarioSlot, data.numeroAula),
+      eq(disponibilidadeTable.disponivel, false),
+    ))
+    .then(r => r[0]);
+  if (bloqueio) {
+    res.status(409).json({
+      error: `Professor está marcado como indisponível nesse horário (motivo: ${bloqueio.motivo ?? "sem motivo registrado"}). Libere a disponibilidade antes de alocar aula manual aqui.`,
+    });
+    return;
+  }
+
   const [slot] = await db.insert(horariosTable).values({ ...data, escolaId }).returning();
 
   // [FIX-SYNC-TURMA-DISCIPLINAS] Ao adicionar aula manual (clique na
