@@ -855,10 +855,22 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     sala: s.sala,
   }));
 
+  // [FIX-PROMOVER-NAO-APAGAR-TUDO] Antes apagava TODAS as aulas da
+  // turma inteira antes de inserir o experimento -- certo so quando o
+  // experimento e uma regeneracao completa da turma (todos os
+  // professores dela presentes), mas catastrofico quando o experimento
+  // veio de gerar-professor (so as aulas de UM professor): apagava as
+  // aulas de todo mundo, deixando so o professor do experimento na
+  // turma. Causa raiz confirmada do desastre de 2026-09-17/18 (Katia).
+  // Agora apaga so as linhas do(s) professor(es) presentes no
+  // experimento, por turma -- preserva quem nao faz parte dele.
+  const turmaProfessorPares = [...new Set(expSlots.map((s) => `${s.turmaId}|${s.professorId}`))]
+    .map((k) => { const [t, p] = k.split("|"); return { turmaId: Number(t), professorId: Number(p) }; });
+
   const inserted = await db.transaction(async (tx) => {
-    for (const turmaId of turmaIds) {
+    for (const { turmaId, professorId } of turmaProfessorPares) {
       await tx.delete(horariosTable)
-        .where(and(eq(horariosTable.turmaId, turmaId), eq(horariosTable.escolaId, escolaId)));
+        .where(and(eq(horariosTable.turmaId, turmaId), eq(horariosTable.escolaId, escolaId), eq(horariosTable.professorId, professorId)));
     }
     const gravados = await tx.insert(horariosTable).values(linhas).returning();
     await tx.delete(horariosExperimentaisTable)
