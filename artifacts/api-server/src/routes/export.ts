@@ -582,9 +582,14 @@ router.get("/grade-pdf/professor", async (req, res) => {
       // hachura pontilhada no PDF quando a celula estiver vazia (ver
       // pdf-grade.ts). So entra aqui quem NAO tem aula real e NAO e HA
       // (os dois ja tem marcacao propria e sempre vencem visualmente).
-      // No modo experimental nao mostra bloqueio (a disponibilidade
-      // "indisponivel" nao muda com a previa, so a HA muda).
-      const bloqueadasDoProf: NonNullable<BlocoGrade["celulasBloqueadas"]> = nomeExperimental ? [] : disponibilidades
+      // [FIX-MOSTRAR-BLOQUEIO-EXPERIMENTAL] Antes o modo experimental
+      // nunca mostrava bloqueio, so o oficial -- mas bloqueio de
+      // disponibilidade e dado fixo, cadastrado ANTES da geracao, e
+      // nao muda entre previa e oficial (so a HA simulada muda). Sem
+      // mostrar aqui, dava pra confundir na hora de revisar um
+      // experimento se o professor estava realmente bloqueado ou nao.
+      // Agora mostra igual ao oficial nos dois modos.
+      const bloqueadasDoProf: NonNullable<BlocoGrade["celulasBloqueadas"]> = disponibilidades
         .filter((d) => d.professorId === prof.id && !d.disponivel && !d.horaAtividadeObrigatoria && d.turno === turno)
         .filter((d) => !aulasDoProf.some((a) => a.diaSemana === d.diaSemana && a.numeroAula === d.horarioSlot))
         .map((d) => ({ diaSemana: d.diaSemana, numeroAula: d.horarioSlot }));
