@@ -279,7 +279,7 @@ async function main() {
 
     let disc: typeof disciplinas[number] | undefined;
     if (item.disciplinaAbrev === "E.MARK" && normalizar(item.turmaCodigo) === normalizar("2MA ADM")) {
-      disc = disciplinaPorNomeNorm.get(normalizar("Estratégia de Marketing"));
+      disc = disciplinaPorNomeNorm.get(normalizar("Estratégias de Marketing"));
     } else if (CANDIDATOS_AMBIGUOS[item.disciplinaAbrev]) {
       disc = resolverDisciplinaAmbigua(item.disciplinaAbrev, disciplinaPorNomeNorm);
     } else {
