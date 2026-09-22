@@ -423,7 +423,7 @@ def gerar_grade(
         # travar o sistema por minutos -- latencia total previsivel
         # (fase 1 + no maximo TETO_FASE_2_S segundos), independente
         # do tempo limite total configurado pelo usuario.
-        TETO_FASE_2_S = 25
+        TETO_FASE_2_S = int(os.getenv("CPSAT_TETO_FASE_2_S", "25"))
         tempo_restante = min(TETO_FASE_2_S, max(0, tempo_limite_s - duracao_f1 - 5))
         if status_f1 in (cp_model.OPTIMAL, cp_model.FEASIBLE) and tempo_restante > 5:
             hints_f1 = {k: solver_f1.Value(v) for k, v in aula_var_f1.items()}
@@ -447,7 +447,7 @@ def gerar_grade(
         # busca). Se não achar a tempo (inviável OU estourou o
         # orçamento), cai pro objetivo suave de sempre -- que sempre
         # encontra alguma solução, só não garante zero janela.
-        TETO_TENTATIVA_RIGIDA_S = 30
+        TETO_TENTATIVA_RIGIDA_S = int(os.getenv("CPSAT_TETO_TENTATIVA_RIGIDA_S", "30"))
         tempo_rigida = min(TETO_TENTATIVA_RIGIDA_S, max(5, tempo_limite_s // 3))
         solver_rigido, status_rigido, aula_var_rigido = resolver(
             disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
