@@ -159,6 +159,17 @@ export default function HorarioHubPage() {
 
 type Turno = "matutino" | "vespertino" | "noturno";
 
+// [AUTO-NOME-CPSAT] Nome padrao do experimento CP-SAT: turno + data + hora,
+// recalculado toda vez que o dialogo abre ou o turno muda -- antes o campo
+// vinha so com a data (sem hora nem turno), e ficava parado no valor do
+// carregamento da pagina ate alguem editar a mao.
+function nomeCpsatAuto(turno: string): string {
+  const agora = new Date();
+  const data = agora.toISOString().split("T")[0];
+  const hora = String(agora.getHours()).padStart(2, "0") + "h" + String(agora.getMinutes()).padStart(2, "0");
+  return `CPSAT-${turno}-${data}-${hora}`;
+}
+
 function paraMinutos(hora: string): number {
   const [h, m] = hora.split(":").map(Number);
   return h * 60 + m;
@@ -1636,7 +1647,7 @@ function AbaExperimental() {
   const [jobIdAtual, setJobIdAtual] = useState<string | null>(null);
   const [cpsatForm, setCpsatForm] = useState({
     turno: "matutino",
-    nomeExperimental: `CPSAT-${new Date().toISOString().split("T")[0]}`,
+    nomeExperimental: nomeCpsatAuto("matutino"),
     tempoLimiteS: 120,
   });
   // [NOVO] Mesmo motor CP-SAT, mas por turma única (antes só existia
@@ -2122,7 +2133,7 @@ function AbaExperimental() {
               <Button className="w-full justify-start" onClick={() => setOpenGerarCpsatTurnoParcial(true)}>
                 <Sparkles className="w-4 h-4 mr-2" />Turno Parcial
               </Button>
-              <Button className="w-full justify-start" onClick={() => setOpenGerarCpsat(true)}>
+              <Button className="w-full justify-start" onClick={() => { setCpsatForm((f) => ({ ...f, nomeExperimental: nomeCpsatAuto(f.turno) })); setOpenGerarCpsat(true); }}>
                 <Sparkles className="w-4 h-4 mr-2" />Turno inteiro
               </Button>
             </div>
@@ -2564,7 +2575,7 @@ function AbaExperimental() {
             </div>
             <div className="space-y-1.5">
               <Label>Turno</Label>
-              <Select value={cpsatForm.turno} onValueChange={(v) => setCpsatForm((f) => ({ ...f, turno: v }))}>
+              <Select value={cpsatForm.turno} onValueChange={(v) => setCpsatForm((f) => ({ ...f, turno: v, nomeExperimental: nomeCpsatAuto(v) }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="matutino">Matutino</SelectItem>
