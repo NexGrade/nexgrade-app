@@ -1539,7 +1539,7 @@ async function runCpsatGeneracaoUnica(
     ? Math.max(...horarioSlotsTurno.map((s) => s.numeroAula))
     : 6;
 
-  const tempoCoordenacaoS = 120;
+  const tempoCoordenacaoS = Number(process.env.CPSAT_TEMPO_COORDENACAO_S ?? "120");
   const tempoFaseS = tempoLimiteS ?? 300;
   const tempoFase3S = 60;
 
