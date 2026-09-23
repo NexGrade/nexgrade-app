@@ -195,18 +195,26 @@ export async function calcularHAIdeal(
     // total (empate: prefere colado a algo ja ocupado, depois mais
     // perto da borda do turno, depois ordem do dia). Retorna quanto
     // sobrou de orcamento sem conseguir encaixar (turno lotado).
+    // [SEPARA-CONTRATURNO] Limite de HA seguidas por dia agora e passado
+    // por parametro -- ensino usa RECALCULO_HA_MAX_POR_DIA (restrito, pra
+    // testar espalhar HA entre dias), contraturno usa um limite proprio,
+    // mais permissivo por padrao (HA seguida em contraturno nao cria
+    // buraco na agenda de aula, entao nao precisa ser restrita igual).
+    const MAX_HA_POR_DIA_ENSINO = Number(process.env.RECALCULO_HA_MAX_POR_DIA ?? "3");
+    const MAX_HA_POR_DIA_CONTRATURNO = Number(process.env.RECALCULO_HA_MAX_POR_DIA_CONTRATURNO ?? "6");
     function preencherGuloso(
       turno: string,
       orcamentoInicial: number,
       ocupadoInicial: Set<string>,
       contagemDiaAtual: Map<number, number>,
       haPosicoesPorDia: Map<string, Set<number>>,
+      maxHaPorDia: number,
     ): number {
       let orcamento = orcamentoInicial;
       const maxAula = maxAulaPorTurno.get(turno) ?? 6;
       const bloqueado = bloqueadoPorTurno.get(turno) ?? new Set();
       const ocupado = new Set(ocupadoInicial);
-      const MAX_HA_POR_DIA = Number(process.env.RECALCULO_HA_MAX_POR_DIA ?? "3");
+      const MAX_HA_POR_DIA = maxHaPorDia;
 
 
       function livre(dia: number, aula: number): boolean {
@@ -337,7 +345,7 @@ export async function calcularHAIdeal(
     for (const turno of Object.keys(aulasPorTurno)) {
       const orcamento = orcamentoPorTurno[turno] ?? 0;
       if (orcamento <= 0) continue;
-      const restante = preencherGuloso(turno, orcamento, ocupadoPorTurnoOriginal.get(turno) ?? new Set(), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor);
+      const restante = preencherGuloso(turno, orcamento, ocupadoPorTurnoOriginal.get(turno) ?? new Set(), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_ENSINO);
       sobraGeral += restante;
     }
 
@@ -374,7 +382,7 @@ export async function calcularHAIdeal(
         const jaManualNesseTurno = new Set(
           haManualContraturno.filter((m) => (m.turno ?? "sem_turno") === turno).map((m) => `${m.diaSemana}-${m.horarioSlot}`),
         );
-        sobraGeral = preencherGuloso(turno, sobraGeral, jaManualNesseTurno, contagemDiaAtualProfessor, haPosicoesPorDiaProfessor);
+        sobraGeral = preencherGuloso(turno, sobraGeral, jaManualNesseTurno, contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_CONTRATURNO);
       }
     }
 
@@ -411,7 +419,7 @@ export async function calcularHAIdeal(
       const ordenados = [...turnosDeEnsino].sort((a, b) => espacoLivreEnsino(b) - espacoLivreEnsino(a));
       for (const turno of ordenados) {
         if (sobraGeral <= 0) break;
-        sobraGeral = preencherGuloso(turno, sobraGeral, ocupadoAtual(turno), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor);
+        sobraGeral = preencherGuloso(turno, sobraGeral, ocupadoAtual(turno), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_ENSINO);
       }
     }
 
