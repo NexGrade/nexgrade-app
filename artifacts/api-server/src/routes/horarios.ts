@@ -1557,7 +1557,7 @@ async function runCpsatGeneracaoUnica(
     bloqueiosProfessor,
     tempoLimiteS: tempoLimiteS ?? 120,
     ...(usarCoordenacao ? {
-      nTentativas: 1,
+      nTentativas: Number(process.env.CPSAT_COORDENACAO_N_TENTATIVAS ?? "1"),
       tempoCoordenacaoS,
       tempoFaseS,
       tempoFase3S,
