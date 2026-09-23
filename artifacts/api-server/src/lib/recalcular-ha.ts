@@ -206,7 +206,7 @@ export async function calcularHAIdeal(
       const maxAula = maxAulaPorTurno.get(turno) ?? 6;
       const bloqueado = bloqueadoPorTurno.get(turno) ?? new Set();
       const ocupado = new Set(ocupadoInicial);
-      const MAX_HA_POR_DIA = 3;
+      const MAX_HA_POR_DIA = Number(process.env.RECALCULO_HA_MAX_POR_DIA ?? "3");
 
 
       function livre(dia: number, aula: number): boolean {
