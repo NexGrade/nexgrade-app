@@ -1515,7 +1515,25 @@ async function runCpsatGeneracaoUnica(
     }));
   }
 
-  const bloqueiosProfessor = [...bloqueiosDisponibilidade, ...bloqueiosOutrasTurmas];
+  // [FIX-PERIODO-NAO-LETIVO] Alguns turnos tem um periodo que existe na
+  // grade de horarios mas nao e aula de verdade (ex.: noturno aula 1,
+  // 18:00, que e so entrada -- letivo=false em horario_slots). O
+  // "aulasPorDia" abaixo nao filtra por letivo, entao sem isso o CP-SAT
+  // aloca aulas reais nesse periodo -- e a promocao rejeita depois
+  // (assertPeriodoValido), tarde demais. Bloqueia aqui, na origem, pra
+  // TODOS os professores do turno, o mesmo jeito que ja bloqueamos
+  // manualmente pra noturno em 2026-09-23 -- agora automatico p/
+  // qualquer turno/escola com essa configuracao.
+  const periodosNaoLetivos = [...new Set(horarioSlotsTurno.filter((s) => !s.letivo).map((s) => s.numeroAula))];
+  const bloqueiosPeriodoNaoLetivo: Array<{ professor: string; dia: number; aula: number }> = [];
+  if (periodosNaoLetivos.length > 0) {
+    for (const pid of professorIdsUsados) {
+      const nome = professorMap.get(pid)?.nome ?? `Professor #${pid}`;
+      for (let dia = 0; dia < 5; dia++) for (const aula of periodosNaoLetivos) bloqueiosPeriodoNaoLetivo.push({ professor: nome, dia, aula });
+    }
+  }
+
+  const bloqueiosProfessor = [...bloqueiosDisponibilidade, ...bloqueiosOutrasTurmas, ...bloqueiosPeriodoNaoLetivo];
 
   const aulasPorDia = horarioSlotsTurno.length > 0
     ? Math.max(...horarioSlotsTurno.map((s) => s.numeroAula))
