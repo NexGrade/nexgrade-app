@@ -1255,6 +1255,11 @@ async function runCpsatGeneration(
       if (resultadoCoordenado.httpStatus >= 200 && resultadoCoordenado.httpStatus < 300) {
         return { httpStatus: resultadoCoordenado.httpStatus, body: { ...resultadoCoordenado.body, coordenado: true } };
       }
+      // [DIAGNOSTICO-COORDENACAO] Loga o motivo exato que o motor CP-SAT deu
+      // pra nao achar solucao coordenada -- antes esse texto (raw.mensagem)
+      // era descartado silenciosamente ao cair no fallback, sem aparecer em
+      // lugar nenhum pro usuario nem pro log do servidor.
+      console.error(`[CPSAT-COORDENACAO] Falhou, caindo no fallback sem coordenacao. httpStatus=${resultadoCoordenado.httpStatus} corpo=${JSON.stringify(resultadoCoordenado.body)}`);
       // [FALLBACK] Rota coordenada falhou (ex.: servico fora do ar) --
       // recai no metodo antigo, duas fases separadas sem coordenacao.
       // [FIX-TEMPO-DIVIDIDO] O tempo limite configurado pelo usuario
@@ -1282,6 +1287,7 @@ async function runCpsatGeneration(
           nomeExperimental,
           turno: turnoInformado,
           dividioPorNivel: true,
+          diagnosticoCoordenacaoFalhou: (resultadoCoordenado.body as Record<string, unknown> | undefined)?.mensagem ?? JSON.stringify(resultadoCoordenado.body),
           status: otimo ? "OPTIMAL" : (algumFeasible ? "FEASIBLE" : String(bodyMedio.status)),
           otimo,
           tempoResolucaoS: (bodyFund.tempoResolucaoS ?? 0) + (bodyMedio.tempoResolucaoS ?? 0),
