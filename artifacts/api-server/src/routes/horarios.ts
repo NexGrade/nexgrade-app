@@ -27,6 +27,7 @@ import { getEscolaId } from "../lib/escola-id";
 import { randomUUID } from "node:crypto";
 import { recalcularHoraAtividade } from "../lib/recalcular-ha";
 import { ehBloqueioReal } from "../lib/bloqueio-real";
+import { validarCapacidadeProfessores } from "../lib/capacidade-professor";
 
 const router = Router();
 
@@ -773,6 +774,21 @@ const ExpInput = z.object({
   diaSemana: z.number().int().min(0).max(4),
   numeroAula: z.number().int().min(1),
   sala: z.string().optional(),
+});
+
+// [CAPACIDADE-PROFESSOR] Pre-validacao sob demanda: aulas + HA vs horarios livres, por professor.
+router.get("/capacidade", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  try {
+    const problemas = await validarCapacidadeProfessores(escolaId);
+    res.json({
+      erros: problemas.filter((p) => p.nivel === "erro").length,
+      avisos: problemas.filter((p) => p.nivel === "aviso").length,
+      problemas,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao validar capacidade.", detalhe: err instanceof Error ? err.message : String(err) });
+  }
 });
 
 router.get("/experimentais", async (req, res) => {
@@ -1764,6 +1780,20 @@ function limparJobsCpsatAntigos() {
   }
 }
 
+// [CAPACIDADE-PROFESSOR] Resumo anexado ao resultado da geracao. Nunca derruba a geracao.
+async function resumoCapacidade(escolaId: string) {
+  try {
+    const problemas = await validarCapacidadeProfessores(escolaId);
+    return {
+      erros: problemas.filter((p) => p.nivel === "erro").map((p) => `${p.professor}: ${p.mensagem}`),
+      avisosContraturno: problemas.filter((p) => p.nivel === "aviso").length,
+      detalhe: "GET /api/horarios/capacidade",
+    };
+  } catch (err) {
+    return { indisponivel: err instanceof Error ? err.message : String(err) };
+  }
+}
+
 router.post("/gerar-cpsat-async", async (req, res) => {
   const escolaId = getEscolaId(req);
   const parsed = GerarCpsatBody.safeParse(req.body);
@@ -1779,14 +1809,14 @@ router.post("/gerar-cpsat-async", async (req, res) => {
   cpsatJobs.set(jobId, { status: "running", escolaId, startedAt: Date.now(), abortController });
 
   void runCpsatGeneration(escolaId, turno, turmaId, turmaIds, nomeExperimental, tempoLimiteS, abortController.signal)
-    .then((resultado) => {
+    .then(async (resultado) => {
       const jobAtual = cpsatJobs.get(jobId);
       if (jobAtual?.status === "cancelado") return;
       cpsatJobs.set(jobId, {
         status: resultado.httpStatus >= 200 && resultado.httpStatus < 300 ? "done" : "error",
         escolaId,
         httpStatus: resultado.httpStatus,
-        body: resultado.body,
+        body: { ...resultado.body, capacidade: await resumoCapacidade(escolaId) }, // [CAPACIDADE-PROFESSOR]
         startedAt: jobAtual?.startedAt ?? Date.now(),
         finishedAt: Date.now(),
       });
