@@ -2017,12 +2017,17 @@ function AbaExperimental() {
     }
   };
 
+  // [MELHORAR-GRADE] true so enquanto o job em andamento for de MELHORIA (texto do botao certo)
+  const [melhorandoCpsat, setMelhorandoCpsat] = useState(false);
+  useEffect(() => { if (!gerandoCpsat) setMelhorandoCpsat(false); }, [gerandoCpsat]);
+
   // [MELHORAR-GRADE] Parte da grade OFICIAL do turno e roda so a busca local
   // por trocas (sem gerar do zero). Mesmo acompanhamento de job da geracao
   // CP-SAT; o resultado vira experimento com prefixo MELHORIA-.
   const handleMelhorarGradeOficial = async () => {
     const nome = (cpsatForm.nomeExperimental.trim() || `CPSAT-${cpsatForm.turno}`).replace(/^CPSAT-/, "MELHORIA-");
     if (!confirm(`Melhorar a grade OFICIAL do ${cpsatForm.turno} por trocas de aulas?\n\nO resultado vira o experimento "${nome}". A grade oficial nao muda ate voce promover.`)) return;
+    setMelhorandoCpsat(true);
     setGerandoCpsat(true);
     try {
       const inicio = await customFetch<{ jobId: string }>("/api/horarios/melhorar-grade-async", {
@@ -2623,7 +2628,7 @@ function AbaExperimental() {
               <p className="text-xs text-muted-foreground">Padrao 120s. Turnos com muitas turmas (ex.: matutino do Mario Braga, 24 turmas) podem precisar de mais tempo -- tente 300-600s se o solver nao terminar a tempo.</p>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-wrap gap-2 sm:space-x-0">
             <Button
               variant="outline"
               onClick={async () => {
@@ -2644,8 +2649,8 @@ function AbaExperimental() {
             >
               {gerandoCpsat ? "Cancelar geracao" : "Cancelar"}
             </Button>
-            <Button variant="outline" onClick={handleMelhorarGradeOficial} disabled={gerandoCpsat} title="Parte da grade oficial deste turno e tenta reduzir janelas trocando aulas de lugar. Nunca fica pior que a oficial.">Melhorar grade oficial</Button>
-            <Button onClick={handleGerarCpsat} disabled={gerandoCpsat}>{gerandoCpsat ? "Gerando (acompanhando progresso)..." : "Gerar com CP-SAT"}</Button>
+            <Button variant="outline" onClick={handleMelhorarGradeOficial} disabled={gerandoCpsat} title="Parte da grade oficial deste turno e tenta reduzir janelas trocando aulas de lugar. Nunca fica pior que a oficial.">{melhorandoCpsat ? "Melhorando..." : "Melhorar grade oficial"}</Button>
+            <Button onClick={handleGerarCpsat} disabled={gerandoCpsat}>{gerandoCpsat && !melhorandoCpsat ? "Gerando..." : "Gerar com CP-SAT"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
