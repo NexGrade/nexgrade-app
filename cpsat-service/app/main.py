@@ -101,11 +101,6 @@ def gerar_grade_coordenada_endpoint(payload: dict):
         tempo_fase_s = payload.get("tempoFaseS", 300)
         tempo_fase3_s = payload.get("tempoFase3S", 60)
 
-        import json
-        with open("/home/simone/cpsat-service/payload_producao_real.json", "w") as fp:
-            fp.write(json.dumps({"turno": turno, "aulasPorDia": aulas_por_dia, "turmas": turmas_raw, "disciplinasTurma": disciplinas_raw, "bloqueiosProfessor": bloqueios_raw}))
-        with open("/home/simone/cpsat-service/debug_coordenada.log", "a") as f:
-            f.write(json.dumps({"n_turmas": len(turmas_raw), "n_disciplinas": len(disciplinas_raw), "n_bloqueios": len(bloqueios_raw), "aulas_por_dia": aulas_por_dia, "n_tentativas": n_tentativas, "tempo_coordenacao_s": tempo_coordenacao_s, "tempo_fase_s": tempo_fase_s, "tempo_fase3_s": tempo_fase3_s}) + "\n")
         resultado = gerar_grade_coordenada(
             disciplinas_raw,
             bloqueios_raw,
@@ -118,8 +113,6 @@ def gerar_grade_coordenada_endpoint(payload: dict):
             tempo_fase3_s,
         )
 
-        with open("/home/simone/cpsat-service/debug_coordenada.log", "a") as f:
-            f.write(json.dumps({"viavel": resultado.get("viavel"), "mensagem": resultado.get("mensagem"), "janelasProfessor": resultado.get("janelasProfessor"), "tentativas": resultado.get("tentativas")}) + "\n---\n")
         if not resultado.get("viavel"):
             resultado["mensagem_ia"] = explicar_inviabilidade_com_gemini(
                 dados_requisicao=payload,
@@ -127,5 +120,39 @@ def gerar_grade_coordenada_endpoint(payload: dict):
             )
 
         return resultado
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# [MELHORAR-GRADE] Parte de uma grade ja existente (ex.: a OFICIAL do turno) e
+# roda so a busca local por trocas (reduzir_janelas, a fase 3 do CP-SAT), com
+# mais tempo. Nunca devolve grade pior que a de partida: reduzir_janelas
+# devolve a MELHOR grade encontrada, e no pior caso a propria grade inicial.
+@app.post("/melhorar-grade")
+def melhorar_grade_endpoint(payload: dict):
+    try:
+        import time
+        from .reduzir_janelas import reduzir_janelas
+        inicio = time.time()
+        aulas_iniciais = payload.get("aulasIniciais", [])
+        if not aulas_iniciais:
+            raise ValueError("aulasIniciais vazio: nada para melhorar")
+        aulas, antes, depois = reduzir_janelas(
+            aulas_iniciais,
+            payload.get("disciplinasTurma", []),
+            payload.get("bloqueiosProfessor", []),
+            payload.get("aulasPorDia", 5),
+            max_iter=int(payload.get("maxIter", 1000000)),
+            tempo_limite_s=int(payload.get("tempoLimiteS", 120)),
+        )
+        return {
+            "status": "FEASIBLE",
+            "otimo": False,
+            "viavel": True,
+            "tempoResolucaoS": round(time.time() - inicio, 2),
+            "aulas": aulas,
+            "janelasProfessorAntes": antes,
+            "janelasProfessorDepois": depois,
+        }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
