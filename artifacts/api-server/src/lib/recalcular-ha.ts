@@ -43,7 +43,7 @@ const TABELA_OFICIAL_HA: readonly number[] = [
   7, 7, 7, 8, 8, 8, 9, 9, 10, 10,
 ];
 
-function calcularHoraAtividadeInstitucional(aulasNoTurno: number): number {
+export function calcularHoraAtividadeInstitucional(aulasNoTurno: number): number {
   if (!aulasNoTurno || aulasNoTurno <= 0) return 0;
   if (aulasNoTurno <= 30) return TABELA_OFICIAL_HA[Math.round(aulasNoTurno)]!;
   return Math.ceil(aulasNoTurno / 3);
