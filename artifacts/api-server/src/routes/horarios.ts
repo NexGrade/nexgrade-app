@@ -26,6 +26,7 @@ import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 import { randomUUID } from "node:crypto";
 import { recalcularHoraAtividade } from "../lib/recalcular-ha";
+import { ehBloqueioReal } from "../lib/bloqueio-real";
 
 const router = Router();
 
@@ -140,7 +141,7 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
 
   const indisponivelProf: Record<string, boolean> = {};
   disponibilidades
-    .filter(d => !d.disponivel || d.horaAtividadeObrigatoria)
+    .filter(ehBloqueioReal)
     .forEach(d => {
       const chaveTurnoDisp = d.turno ?? "null";
       indisponivelProf[`${d.professorId}-${chaveTurnoDisp}-${d.diaSemana}-${d.horarioSlot}`] = true;
@@ -1099,7 +1100,7 @@ router.post("/corrigir-professor", async (req, res) => {
   const slotsDoProf = todosSlotsDaEscola.filter((s) => s.professorId === professorId);
 
   const indisponivelSet = new Set(
-    disponibilidades.filter((d) => !d.disponivel || d.horaAtividadeObrigatoria).map((d) => `${d.turno ?? "null"}-${d.diaSemana}-${d.horarioSlot}`),
+    disponibilidades.filter(ehBloqueioReal).map((d) => `${d.turno ?? "null"}-${d.diaSemana}-${d.horarioSlot}`),
   );
 
   const conflitantes = slotsDoProf.filter((s) => {
@@ -1467,7 +1468,7 @@ async function runCpsatGeneracaoUnica(
 
   const professorIdsUsados = new Set(disciplinasTurma.map((d) => nomeParaProfessorId.get(d.professor)).filter((id): id is number => id != null));
   const bloqueiosDisponibilidade = disponibilidades
-    .filter((d) => professorIdsUsados.has(d.professorId) && (!d.disponivel && !d.horaAtividadeObrigatoria) && (d.turno === turno || d.turno == null)) // [FIX-HA-NAO-E-BLOQUEIO] HA e calculada depois da grade, nunca entra como bloqueio
+    .filter((d) => professorIdsUsados.has(d.professorId) && ehBloqueioReal(d) && (d.turno === turno || d.turno == null)) // [REGRA-BLOQUEIO-REAL] ver lib/bloqueio-real.ts
     .map((d) => ({
       professor: professorMap.get(d.professorId)?.nome ?? `Professor #${d.professorId}`,
       dia: d.diaSemana,

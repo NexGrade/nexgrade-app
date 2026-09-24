@@ -7,6 +7,7 @@ import {
 } from "@workspace/db";
 import { and, eq, isNull, notInArray } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
+import { ehBloqueioReal } from "../lib/bloqueio-real";
 import { gerarPdfGradeCompacta, type BlocoGrade } from "../lib/pdf-grade";
 import { gerarPdfCargaProfessores, type RelatorioProfessor } from "../lib/pdf-carga-professor";
 import { gerarPdfCargaHoraria, type TurmaCargaHoraria } from "../lib/pdf-carga-horaria";
@@ -590,7 +591,7 @@ router.get("/grade-pdf/professor", async (req, res) => {
       // experimento se o professor estava realmente bloqueado ou nao.
       // Agora mostra igual ao oficial nos dois modos.
       const bloqueadasDoProf: NonNullable<BlocoGrade["celulasBloqueadas"]> = disponibilidades
-        .filter((d) => d.professorId === prof.id && !d.disponivel && !d.horaAtividadeObrigatoria && d.turno === turno)
+        .filter((d) => d.professorId === prof.id && ehBloqueioReal(d) && d.turno === turno)
         .filter((d) => !aulasDoProf.some((a) => a.diaSemana === d.diaSemana && a.numeroAula === d.horarioSlot))
         .map((d) => ({ diaSemana: d.diaSemana, numeroAula: d.horarioSlot }));
 
