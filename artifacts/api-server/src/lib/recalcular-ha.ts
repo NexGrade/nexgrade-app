@@ -173,10 +173,11 @@ export async function calcularHAIdeal(
     // tomada por fora do sistema (autorizacao da coordenacao), sempre
     // respeitada e nunca recalculada por aqui. Conta pro total exigido.
     const haManualContraturno = disponibilidades.filter(
-      (d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && d.motivo !== MOTIVO_HA_AUTO && !((d.turno ?? "") in aulasPorTurno), // [FIX-HA-AUTO-NAO-E-MANUAL] HA automatica em contraturno volta a ser recalculada
+      (d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && d.motivo !== MOTIVO_HA_AUTO, // [FIX-HA-AUTO-NAO-E-MANUAL] [HA-MANUAL-QUALQUER-TURNO] toda HA nao automatica e preservada, em qualquer turno
     );
     for (const m of haManualContraturno) {
       marcasFinais.push({ professorId: prof.id, turno: m.turno ?? "sem_turno", diaSemana: m.diaSemana, horarioSlot: m.horarioSlot });
+      if (m.turno && m.turno in aulasPorTurno) ocupadoPorTurnoOriginal.get(m.turno)?.add(`${m.diaSemana}-${m.horarioSlot}`); // [HA-MANUAL-QUALQUER-TURNO] ocupa o slot no turno de ensino
     }
 
     const totalAulas = Object.values(aulasPorTurno).reduce((s, n) => s + n, 0);
@@ -203,6 +204,7 @@ export async function calcularHAIdeal(
     // buraco na agenda de aula, entao nao precisa ser restrita igual).
     const MAX_HA_POR_DIA_ENSINO = Number(process.env.RECALCULO_HA_MAX_POR_DIA ?? "3");
     const MAX_HA_POR_DIA_CONTRATURNO = Number(process.env.RECALCULO_HA_MAX_POR_DIA_CONTRATURNO ?? "6");
+    const MAX_HA_SEGUIDAS_ENSINO = Number(process.env.RECALCULO_HA_MAX_SEGUIDAS ?? "2"); // [HA-MAX-SEGUIDAS] so turno de ensino; 0 = sem limite
     function preencherGuloso(
       turno: string,
       orcamentoInicial: number,
@@ -211,6 +213,7 @@ export async function calcularHAIdeal(
       haPosicoesPorDia: Map<string, Set<number>>,
       maxHaPorDia: number,
       diasPermitidos?: Set<number>, // [FIX-CONTRATURNO-SO-DIA-COM-AULA]
+      maxSeguidas?: number, // [HA-MAX-SEGUIDAS]
     ): number {
       let orcamento = orcamentoInicial;
       const maxAula = maxAulaPorTurno.get(turno) ?? 6;
@@ -233,6 +236,15 @@ export async function calcularHAIdeal(
         const posicoes = haPosicoesPorDia.get(`${turno}-${dia}`);
         if (!posicoes) return false;
         return posicoes.has(aula - 1) || posicoes.has(aula + 1);
+      }
+      // [HA-MAX-SEGUIDAS] tamanho da sequencia de HA (mesmo turno e dia) que se formaria colocando HA em (dia, aula)
+      function sequenciaHA(dia: number, aula: number): number {
+        const posicoes = haPosicoesPorDia.get(`${turno}-${dia}`);
+        if (!posicoes) return 1;
+        let n = 1;
+        for (let a = aula - 1; posicoes.has(a); a--) n++;
+        for (let a = aula + 1; posicoes.has(a); a++) n++;
+        return n;
       }
       function contarJanelasNoDia(conjunto: Set<string>, dia: number): number {
         let min: number | null = null;
@@ -280,6 +292,7 @@ export async function calcularHAIdeal(
         // primario logo abaixo) ja decide isso sozinha; nao precisa de
         // filtro separado pra adjacencia especificamente com HA.
         candidatos = candidatos.filter((c) => (contagemDiaAtual.get(c.dia) ?? 0) < MAX_HA_POR_DIA);
+        if (maxSeguidas && maxSeguidas > 0) candidatos = candidatos.filter((c) => sequenciaHA(c.dia, c.aula) <= maxSeguidas); // [HA-MAX-SEGUIDAS]
         if (candidatos.length === 0) break;
 
         let melhor: {
@@ -347,7 +360,7 @@ export async function calcularHAIdeal(
     for (const turno of Object.keys(aulasPorTurno)) {
       const orcamento = orcamentoPorTurno[turno] ?? 0;
       if (orcamento <= 0) continue;
-      const restante = preencherGuloso(turno, orcamento, ocupadoPorTurnoOriginal.get(turno) ?? new Set(), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_ENSINO);
+      const restante = preencherGuloso(turno, orcamento, ocupadoPorTurnoOriginal.get(turno) ?? new Set(), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_ENSINO, undefined, MAX_HA_SEGUIDAS_ENSINO);
       sobraGeral += restante;
     }
 
@@ -384,7 +397,7 @@ export async function calcularHAIdeal(
       const ordenados = [...turnosDeEnsino].sort((a, b) => espacoLivreEnsino(b) - espacoLivreEnsino(a));
       for (const turno of ordenados) {
         if (sobraGeral <= 0) break;
-        sobraGeral = preencherGuloso(turno, sobraGeral, ocupadoAtual(turno), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_ENSINO);
+        sobraGeral = preencherGuloso(turno, sobraGeral, ocupadoAtual(turno), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_ENSINO, undefined, MAX_HA_SEGUIDAS_ENSINO);
       }
     }
 
