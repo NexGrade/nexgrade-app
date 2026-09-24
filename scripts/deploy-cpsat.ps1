@@ -64,7 +64,7 @@ $cmd = @(
   'sudo /home/simone/venv/bin/python -m py_compile /tmp/cpsat-teste/app/*.py',
   'echo COMPILA_OK',
   'sudo cp /tmp/cpsat-deploy/*.py /home/simone/cpsat-service/app/',
-  'sudo chown simone:simone /home/simone/cpsat-service/app/*.py',
+  'sudo chown -R simone:simone /home/simone/cpsat-service/app',
   'sudo systemctl restart cpsat',
   'sleep 6',
   'echo SERVICO: $(systemctl is-active cpsat)',
@@ -72,4 +72,5 @@ $cmd = @(
   'echo ROTAS: $(curl -s -m 5 http://localhost:8000/openapi.json | grep -o -e /gerar-grade-coordenada -e /gerar-grade -e /melhorar-grade | sort -u | xargs)'
 ) -join ' && '
 gcloud compute ssh $vm --zone=$zona "--command=$cmd"
+if ($LASTEXITCODE -ne 0) { "ERRO: a etapa remota falhou (codigo $LASTEXITCODE). Veja as mensagens acima; o backup .tgz permite restaurar."; exit 1 }
 "Publicado: $($mudados -join ', ')"
