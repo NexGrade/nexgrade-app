@@ -32,7 +32,7 @@ import {
   horarioSlotsTable,
   disponibilidadeTable,
 } from "@workspace/db";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 
 const MOTIVO_HA_AUTO = "Hora-atividade institucional (recalculada automaticamente)";
 
@@ -521,6 +521,7 @@ async function recalcularHoraAtividadeUmaPassada(escolaId: string): Promise<Resu
     return { inseridas: 0, removidas: 0, professoresAfetados: 0, professoresAfetadosIds: [] };
   }
 
+  let gravadas = 0; // [FIX-GRAVAR-LINHA-LIVRE]
   await db.transaction(async (tx) => {
     if (paraInserir.length > 0) {
       // [FIX-ON-CONFLICT] Rede de seguranca: a filtragem manual acima
@@ -533,7 +534,7 @@ async function recalcularHoraAtividadeUmaPassada(escolaId: string): Promise<Resu
       // (nao falhava a promocao, so a HA ficava vazia sem avisar
       // ninguem). Com ON CONFLICT, mesmo se paraInserir tiver alguma
       // linha ja existente, ela so atualiza em vez de derrubar tudo.
-      await tx.insert(disponibilidadeTable).values(
+      const gravadasRows = await tx.insert(disponibilidadeTable).values(
         paraInserir.map((i) => ({
           professorId: i.professorId,
           turno: i.turno === "sem_turno" ? null : i.turno,
@@ -546,16 +547,20 @@ async function recalcularHoraAtividadeUmaPassada(escolaId: string): Promise<Resu
       ).onConflictDoUpdate({
         target: [disponibilidadeTable.professorId, disponibilidadeTable.diaSemana, disponibilidadeTable.horarioSlot, disponibilidadeTable.turno],
         set: { disponivel: true, horaAtividadeObrigatoria: true, motivo: MOTIVO_HA_AUTO },
-        where: eq(disponibilidadeTable.horaAtividadeObrigatoria, true), // [FIX-NAO-SOBRESCREVER-BLOQUEIO] so atualiza se ja era HA automatica
-      });
+        // [FIX-GRAVAR-LINHA-LIVRE] converte tambem linha livre (disponivel=true, sem HA) em HA;
+        // nunca sobrescreve bloqueio real (disponivel=false) nem marcador "ocupado" do Urania.
+        where: sql`${disponibilidadeTable.horaAtividadeObrigatoria} = true OR (${disponibilidadeTable.disponivel} = true AND COALESCE(${disponibilidadeTable.motivo}, '') NOT LIKE '%ocupado:%')`,
+      }).returning({ id: disponibilidadeTable.id });
+      gravadas = gravadasRows.length;
     }
     if (paraRemoverIds.length > 0) {
       await tx.delete(disponibilidadeTable).where(inArray(disponibilidadeTable.id, paraRemoverIds));
     }
   });
 
+  if (gravadas < paraInserir.length) console.warn(`[recalcular-ha] ${paraInserir.length - gravadas} HA calculada(s) nao gravada(s): horario com bloqueio real ou marcador ocupado`);
   return {
-    inseridas: paraInserir.length,
+    inseridas: gravadas, // [FIX-GRAVAR-LINHA-LIVRE] conta o que foi gravado de verdade
     removidas: paraRemoverIds.length,
     professoresAfetados: professoresAfetadosSet.size,
     professoresAfetadosIds: [...professoresAfetadosSet],
