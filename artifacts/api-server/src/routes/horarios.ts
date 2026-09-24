@@ -1467,7 +1467,7 @@ async function runCpsatGeneracaoUnica(
 
   const professorIdsUsados = new Set(disciplinasTurma.map((d) => nomeParaProfessorId.get(d.professor)).filter((id): id is number => id != null));
   const bloqueiosDisponibilidade = disponibilidades
-    .filter((d) => professorIdsUsados.has(d.professorId) && (!d.disponivel || d.horaAtividadeObrigatoria) && (d.turno === turno || d.turno == null))
+    .filter((d) => professorIdsUsados.has(d.professorId) && (!d.disponivel && !d.horaAtividadeObrigatoria) && (d.turno === turno || d.turno == null)) // [FIX-HA-NAO-E-BLOQUEIO] HA e calculada depois da grade, nunca entra como bloqueio
     .map((d) => ({
       professor: professorMap.get(d.professorId)?.nome ?? `Professor #${d.professorId}`,
       dia: d.diaSemana,
