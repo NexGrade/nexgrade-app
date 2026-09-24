@@ -2017,6 +2017,37 @@ function AbaExperimental() {
     }
   };
 
+  // [MELHORAR-GRADE] Parte da grade OFICIAL do turno e roda so a busca local
+  // por trocas (sem gerar do zero). Mesmo acompanhamento de job da geracao
+  // CP-SAT; o resultado vira experimento com prefixo MELHORIA-.
+  const handleMelhorarGradeOficial = async () => {
+    const nome = (cpsatForm.nomeExperimental.trim() || `CPSAT-${cpsatForm.turno}`).replace(/^CPSAT-/, "MELHORIA-");
+    if (!confirm(`Melhorar a grade OFICIAL do ${cpsatForm.turno} por trocas de aulas?\n\nO resultado vira o experimento "${nome}". A grade oficial nao muda ate voce promover.`)) return;
+    setGerandoCpsat(true);
+    try {
+      const inicio = await customFetch<{ jobId: string }>("/api/horarios/melhorar-grade-async", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          turno: cpsatForm.turno,
+          nomeExperimental: nome,
+          tempoLimiteS: cpsatForm.tempoLimiteS,
+        }),
+        responseType: "json",
+      });
+      setJobIdAtual(inicio.jobId);
+      try {
+        sessionStorage.setItem(CPSAT_JOB_PENDENTE_KEY, JSON.stringify({ jobId: inicio.jobId, nomeExperimental: nome }));
+      } catch {
+        // sessionStorage indisponivel -- segue sem persistencia
+      }
+      await finalizarJobCpsat(inicio.jobId, nome);
+    } catch (err) {
+      toast({ title: "Erro ao melhorar a grade", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+      setGerandoCpsat(false);
+    }
+  };
+
   // [FIX-PERSISTENCIA] Ao carregar a pagina, verifica se ha um job
   // CP-SAT pendente salvo no sessionStorage (ver handleGerarCpsat
   // acima). Se houver, retoma o polling automaticamente em vez de
@@ -2613,6 +2644,7 @@ function AbaExperimental() {
             >
               {gerandoCpsat ? "Cancelar geracao" : "Cancelar"}
             </Button>
+            <Button variant="outline" onClick={handleMelhorarGradeOficial} disabled={gerandoCpsat} title="Parte da grade oficial deste turno e tenta reduzir janelas trocando aulas de lugar. Nunca fica pior que a oficial.">Melhorar grade oficial</Button>
             <Button onClick={handleGerarCpsat} disabled={gerandoCpsat}>{gerandoCpsat ? "Gerando (acompanhando progresso)..." : "Gerar com CP-SAT"}</Button>
           </DialogFooter>
         </DialogContent>
