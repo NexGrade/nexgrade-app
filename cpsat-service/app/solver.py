@@ -371,6 +371,7 @@ def gerar_grade(
     turmas_raw: list[dict],
     tempo_limite_s: int = 120,
     fixar_raw: list[dict] | None = None,
+    aulas_iniciais: list[dict] | None = None,
 ) -> dict:
     """
     Recebe o mesmo formato JSON exportado por scripts/exportar-dados-cpsat.ts
@@ -399,6 +400,22 @@ def gerar_grade(
             chave_fixar = (item["turma"], item["codigoSae"], item["professor"])
             fixar.setdefault(chave_fixar, []).append((item["dia"], item["aula"]))
 
+    # [WARM-START] Grade de partida (ex.: a OFICIAL) vira DICA (AddHint) do
+    # CP-SAT: ele comeca dela e usa o tempo pra melhorar, tendendo a manter
+    # o que ja esta bom. Dica nao e trava: o solver pode mudar o que precisar.
+    hints_ini = None
+    if aulas_iniciais:
+        idx_por_chave = {(dt.turma, dt.codigo_sae): i for i, dt in enumerate(disciplinas_turma)}
+        hints_ini = {}
+        for i in range(len(disciplinas_turma)):
+            for dia in range(len(DIAS)):
+                for aula in range(1, aulas_por_dia + 1):
+                    hints_ini[(i, dia, aula)] = 0
+        for a in aulas_iniciais:
+            i = idx_por_chave.get((a["turma"], a["codigoSae"]))
+            if i is not None and (i, a["dia"], a["aula"]) in hints_ini:
+                hints_ini[(i, a["dia"], a["aula"])] = 1
+
     inicio = time.time()
     # [LIMITE-PRATICO] Objetivo de janela de professor e' custoso e
     # instavel em tempo de execucao para turnos grandes (24 turmas) --
@@ -425,11 +442,13 @@ def gerar_grade(
         # do tempo limite total configurado pelo usuario.
         TETO_FASE_2_S = int(os.getenv("CPSAT_TETO_FASE_2_S", "25"))
         tempo_restante = min(TETO_FASE_2_S, max(0, tempo_limite_s - duracao_f1 - 5))
+        if hints_ini:
+            tempo_restante = max(0, tempo_limite_s - duracao_f1 - 5)  # [WARM-START] usa todo o tempo pedido
         if status_f1 in (cp_model.OPTIMAL, cp_model.FEASIBLE) and tempo_restante > 5:
             hints_f1 = {k: solver_f1.Value(v) for k, v in aula_var_f1.items()}
             solver_f2, status_f2, aula_var_f2 = resolver(
                 disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
-                int(tempo_restante), apenas_turma=False, hints=hints_f1, fixar=fixar,
+                int(tempo_restante), apenas_turma=False, hints=hints_ini or hints_f1, fixar=fixar,  # [WARM-START]
             )
             if status_f2 in (cp_model.OPTIMAL, cp_model.FEASIBLE):
                 solver, status, aula_var = solver_f2, status_f2, aula_var_f2
@@ -451,7 +470,7 @@ def gerar_grade(
         tempo_rigida = min(TETO_TENTATIVA_RIGIDA_S, max(5, tempo_limite_s // 3))
         solver_rigido, status_rigido, aula_var_rigido = resolver(
             disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
-            tempo_rigida, apenas_turma=False, forcar_zero_janela=True, fixar=fixar,
+            tempo_rigida, apenas_turma=False, forcar_zero_janela=True, fixar=fixar, hints=hints_ini,  # [WARM-START]
         )
         if status_rigido in (cp_model.OPTIMAL, cp_model.FEASIBLE):
             solver, status, aula_var = solver_rigido, status_rigido, aula_var_rigido
@@ -459,7 +478,7 @@ def gerar_grade(
             tempo_suave = max(5, tempo_limite_s - tempo_rigida)
             solver, status, aula_var = resolver(
                 disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
-                tempo_suave, apenas_turma=False, fixar=fixar,
+                tempo_suave, apenas_turma=False, fixar=fixar, hints=hints_ini,  # [WARM-START]
             )
     duracao = time.time() - inicio
 

@@ -124,35 +124,29 @@ def gerar_grade_coordenada_endpoint(payload: dict):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-# [MELHORAR-GRADE] Parte de uma grade ja existente (ex.: a OFICIAL do turno) e
-# roda so a busca local por trocas (reduzir_janelas, a fase 3 do CP-SAT), com
-# mais tempo. Nunca devolve grade pior que a de partida: reduzir_janelas
-# devolve a MELHOR grade encontrada, e no pior caso a propria grade inicial.
+# [MELHORAR-GRADE] Parte de uma grade ja existente (ex.: a OFICIAL do turno):
+# ela vira DICA (warm start) do CP-SAT, que usa o tempo pedido para buscar
+# reorganizacoes maiores; depois a fase 3 (trocas) roda por cima, como em
+# toda geracao. Devolve janelas antes (grade de partida) e depois.
 @app.post("/melhorar-grade")
 def melhorar_grade_endpoint(payload: dict):
     try:
-        import time
-        from .reduzir_janelas import reduzir_janelas
-        inicio = time.time()
+        from .reduzir_janelas import contar_janelas_professor
         aulas_iniciais = payload.get("aulasIniciais", [])
         if not aulas_iniciais:
             raise ValueError("aulasIniciais vazio: nada para melhorar")
-        aulas, antes, depois = reduzir_janelas(
-            aulas_iniciais,
+        resultado = gerar_grade(
             payload.get("disciplinasTurma", []),
             payload.get("bloqueiosProfessor", []),
+            payload.get("turno", "matutino"),
             payload.get("aulasPorDia", 5),
-            max_iter=int(payload.get("maxIter", 1000000)),
-            tempo_limite_s=int(payload.get("tempoLimiteS", 120)),
+            payload.get("turmas", []),
+            int(payload.get("tempoLimiteS", 120)),
+            aulas_iniciais=aulas_iniciais,
         )
-        return {
-            "status": "FEASIBLE",
-            "otimo": False,
-            "viavel": True,
-            "tempoResolucaoS": round(time.time() - inicio, 2),
-            "aulas": aulas,
-            "janelasProfessorAntes": antes,
-            "janelasProfessorDepois": depois,
-        }
+        resultado["janelasProfessorAntes"] = contar_janelas_professor(aulas_iniciais)
+        if resultado.get("aulas"):
+            resultado["janelasProfessorDepois"] = contar_janelas_professor(resultado["aulas"])
+        return resultado
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
