@@ -173,13 +173,14 @@ export async function calcularHAIdeal(
     // tomada por fora do sistema (autorizacao da coordenacao), sempre
     // respeitada e nunca recalculada por aqui. Conta pro total exigido.
     const haManualContraturno = disponibilidades.filter(
-      (d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && !((d.turno ?? "") in aulasPorTurno),
+      (d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && d.motivo !== MOTIVO_HA_AUTO && !((d.turno ?? "") in aulasPorTurno), // [FIX-HA-AUTO-NAO-E-MANUAL] HA automatica em contraturno volta a ser recalculada
     );
     for (const m of haManualContraturno) {
       marcasFinais.push({ professorId: prof.id, turno: m.turno ?? "sem_turno", diaSemana: m.diaSemana, horarioSlot: m.horarioSlot });
     }
 
     const totalAulas = Object.values(aulasPorTurno).reduce((s, n) => s + n, 0);
+    const diasComAula = new Set(aulasDoProf.map((h) => h.diaSemana)); // [FIX-CONTRATURNO-SO-DIA-COM-AULA]
     const exigidoTotal = calcularHoraAtividadeInstitucional(totalAulas);
     // [FIX] a HA manual de contraturno ja preservada acima conta pro
     // total exigido -- sem subtrair aqui, o orcamento automatico por
@@ -209,6 +210,7 @@ export async function calcularHAIdeal(
       contagemDiaAtual: Map<number, number>,
       haPosicoesPorDia: Map<string, Set<number>>,
       maxHaPorDia: number,
+      diasPermitidos?: Set<number>, // [FIX-CONTRATURNO-SO-DIA-COM-AULA]
     ): number {
       let orcamento = orcamentoInicial;
       const maxAula = maxAulaPorTurno.get(turno) ?? 6;
@@ -265,7 +267,7 @@ export async function calcularHAIdeal(
         let candidatos: Array<{ dia: number; aula: number }> = [];
         for (let dia = 0; dia < 5; dia++) {
           for (let aula = 1; aula <= maxAula; aula++) {
-            if (livre(dia, aula)) candidatos.push({ dia, aula });
+            if (livre(dia, aula) && (!diasPermitidos || diasPermitidos.has(dia))) candidatos.push({ dia, aula });
           }
         }
         if (candidatos.length === 0) break;
@@ -349,43 +351,6 @@ export async function calcularHAIdeal(
       sobraGeral += restante;
     }
 
-    // [CONTRATURNO-AUTOMATICO] O que nao coube no(s) turno(s) de
-    // ensino (turno lotado -- aula real ocupando quase tudo) e
-    // colocado automaticamente em contraturno, no(s) turno(s) onde o
-    // professor NAO da aula nenhuma. Prioriza o turno com mais espaco
-    // livre primeiro. So entra aqui quando de fato faltou espaco --
-    // nunca reduz o que ja coube no turno de ensino.
-    if (sobraGeral > 0) {
-      const turnosContraturno = [...maxAulaPorTurno.keys()].filter((t) => !(t in aulasPorTurno));
-      // ordena pelo turno com mais slots livres primeiro, pra
-      // distribuir de forma mais equilibrada quando ha mais de uma
-      // opcao de contraturno (ex.: professor so do vespertino tem
-      // tanto matutino quanto noturno como opcao)
-      const espacoLivre = (turno: string) => {
-        const maxAula = maxAulaPorTurno.get(turno) ?? 6;
-        const bloqueado = bloqueadoPorTurno.get(turno) ?? new Set();
-        let livre = 0;
-        for (let dia = 0; dia < 5; dia++) {
-          for (let aula = 1; aula <= maxAula; aula++) {
-            if (!bloqueado.has(`${dia}-${aula}`)) livre++;
-          }
-        }
-        return livre;
-      };
-      turnosContraturno.sort((a, b) => espacoLivre(b) - espacoLivre(a));
-
-      for (const turno of turnosContraturno) {
-        if (sobraGeral <= 0) break;
-        // [FIX] semeia com a HA manual ja existente nesse contraturno
-        // (se houver) -- senao o preenchimento automatico podia
-        // escolher o MESMO slot que já tem uma marca manual ali.
-        const jaManualNesseTurno = new Set(
-          haManualContraturno.filter((m) => (m.turno ?? "sem_turno") === turno).map((m) => `${m.diaSemana}-${m.horarioSlot}`),
-        );
-        sobraGeral = preencherGuloso(turno, sobraGeral, jaManualNesseTurno, contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_CONTRATURNO);
-      }
-    }
-
     // [FIX-SOBRA-ENTRE-TURNOS-DE-ENSINO] professor em 3+ turnos pode nao
     // ter NENHUM turno de contraturno puro (turno sem nenhuma aula) --
     // nesse caso a sobra nunca tinha pra onde ir, mesmo com espaco livre
@@ -420,6 +385,43 @@ export async function calcularHAIdeal(
       for (const turno of ordenados) {
         if (sobraGeral <= 0) break;
         sobraGeral = preencherGuloso(turno, sobraGeral, ocupadoAtual(turno), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_ENSINO);
+      }
+    }
+
+    // [CONTRATURNO-AUTOMATICO] O que nao coube no(s) turno(s) de
+    // ensino (turno lotado -- aula real ocupando quase tudo) e
+    // colocado automaticamente em contraturno, no(s) turno(s) onde o
+    // professor NAO da aula nenhuma. Prioriza o turno com mais espaco
+    // livre primeiro. So entra aqui quando de fato faltou espaco --
+    // nunca reduz o que ja coube no turno de ensino.
+    if (sobraGeral > 0) {
+      const turnosContraturno = [...maxAulaPorTurno.keys()].filter((t) => !(t in aulasPorTurno));
+      // ordena pelo turno com mais slots livres primeiro, pra
+      // distribuir de forma mais equilibrada quando ha mais de uma
+      // opcao de contraturno (ex.: professor so do vespertino tem
+      // tanto matutino quanto noturno como opcao)
+      const espacoLivre = (turno: string) => {
+        const maxAula = maxAulaPorTurno.get(turno) ?? 6;
+        const bloqueado = bloqueadoPorTurno.get(turno) ?? new Set();
+        let livre = 0;
+        for (let dia = 0; dia < 5; dia++) {
+          for (let aula = 1; aula <= maxAula; aula++) {
+            if (!bloqueado.has(`${dia}-${aula}`)) livre++;
+          }
+        }
+        return livre;
+      };
+      turnosContraturno.sort((a, b) => espacoLivre(b) - espacoLivre(a));
+
+      for (const turno of turnosContraturno) {
+        if (sobraGeral <= 0) break;
+        // [FIX] semeia com a HA manual ja existente nesse contraturno
+        // (se houver) -- senao o preenchimento automatico podia
+        // escolher o MESMO slot que já tem uma marca manual ali.
+        const jaManualNesseTurno = new Set(
+          haManualContraturno.filter((m) => (m.turno ?? "sem_turno") === turno).map((m) => `${m.diaSemana}-${m.horarioSlot}`),
+        );
+        sobraGeral = preencherGuloso(turno, sobraGeral, jaManualNesseTurno, contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_CONTRATURNO, diasComAula);
       }
     }
 
