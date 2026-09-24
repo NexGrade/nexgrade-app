@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { SeletorBusca } from "@/components/seletor-busca";
+import { PainelCapacidade } from "@/components/painel-capacidade";
 import {
   Check, ArrowRight, ArrowLeft, Lock, ChevronDown, ChevronRight, Plus,
   Calendar, ListChecks, AlertTriangle, FlaskConical,
@@ -2565,6 +2566,7 @@ function AbaExperimental() {
         <DialogContent>
           <DialogHeader><DialogTitle>Gerar com CP-SAT — Turno inteiro (Beta)</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
+            <PainelCapacidade />
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md p-2.5">
               <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
               Usa o motor CP-SAT (OR-Tools) em vez do gerador heuristico -- mais preciso pra eliminar janelas na grade dos professores. Grava sempre como experimento; nada muda na grade oficial ate voce promover.
