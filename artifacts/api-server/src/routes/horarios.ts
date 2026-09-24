@@ -1329,6 +1329,7 @@ async function runCpsatGeneracaoUnica(
   tempoLimiteS: number | undefined,
   signal?: AbortSignal,
   usarCoordenacao?: boolean,
+  modoMelhoria?: boolean, // [MELHORAR-GRADE]
 ): Promise<{ httpStatus: number; body: Record<string, unknown> }> {
   let turno: "matutino" | "vespertino" | "noturno";
   let turmasDoTurno: (typeof turmasTable.$inferSelect)[];
@@ -1593,6 +1594,43 @@ async function runCpsatGeneracaoUnica(
       }
     | undefined;
 
+  // [MELHORAR-GRADE] Modo melhoria: em vez de gerar do zero, parte da grade
+  // OFICIAL atual destas turmas e manda para /melhorar-grade (busca local por
+  // trocas). Cada aula oficial precisa casar com uma linha da carga atual
+  // (turma + disciplina + professor -- isso resolve tambem as duplas); se
+  // alguma nao casar, aborta em vez de melhorar uma grade incompleta.
+  const aulasIniciais: Array<{ turma: string; codigoSae: string; disciplina: string; professor: string; dia: number; diaNome: string; aula: number }> = [];
+  if (modoMelhoria) {
+    const DIAS_NOME = ["Segunda", "Terca", "Quarta", "Quinta", "Sexta"];
+    const codigoPorChave = new Map<string, { codigoSae: string; disciplina: string }>();
+    for (const d of disciplinasTurma) {
+      const ids = chaveParaIds.get(`${d.turma}||${d.codigoSae}`);
+      if (ids) codigoPorChave.set(`${ids.turmaId}|${ids.disciplinaId}|${d.professor}`, { codigoSae: d.codigoSae, disciplina: d.nome });
+    }
+    const oficiais = await db.select().from(horariosTable).where(inArray(horariosTable.turmaId, turmaIds));
+    const semMapa: string[] = [];
+    for (const h of oficiais) {
+      const turmaH = turmaMap.get(h.turmaId);
+      const profNome = h.professorId != null ? professorMap.get(h.professorId)?.nome : undefined;
+      const info = turmaH && profNome ? codigoPorChave.get(`${h.turmaId}|${h.disciplinaId}|${profNome}`) : undefined;
+      if (!turmaH || !profNome || !info) {
+        semMapa.push(`${turmaH?.nome ?? `turma #${h.turmaId}`} | disciplina #${h.disciplinaId} | ${profNome ?? `professor #${h.professorId}`} | dia ${h.diaSemana} aula ${h.numeroAula}`);
+        continue;
+      }
+      aulasIniciais.push({ turma: turmaH.nome, codigoSae: info.codigoSae, disciplina: info.disciplina, professor: profNome, dia: h.diaSemana, diaNome: DIAS_NOME[h.diaSemana] ?? String(h.diaSemana), aula: h.numeroAula });
+    }
+    if (aulasIniciais.length === 0 || semMapa.length > 0) {
+      return {
+        httpStatus: 422,
+        body: {
+          error: "Nao foi possivel montar a grade oficial para melhoria: ha aulas sem correspondencia com a carga atual.",
+          totalSemMapa: semMapa.length,
+          semMapa: semMapa.slice(0, 30),
+        },
+      };
+    }
+  }
+
   await aguardarCpsatServiceAcordado();
 
   const MAX_TENTATIVAS_CPSAT = 2;
@@ -1606,7 +1644,7 @@ async function runCpsatGeneracaoUnica(
       // que o undici trava/falha silenciosamente com corpos de requisicao
       // medios/grandes (60KB+) na rede interna do Render, mesmo dentro do
       // timeout configurado. axios usa http/https nativos do Node.
-      const axiosResponse = await axios.post(`${CPSAT_SERVICE_URL}/${usarCoordenacao ? "gerar-grade-coordenada" : "gerar-grade"}`, payload, {
+      const axiosResponse = await axios.post(`${CPSAT_SERVICE_URL}/${modoMelhoria ? "melhorar-grade" : usarCoordenacao ? "gerar-grade-coordenada" : "gerar-grade"}`, modoMelhoria ? { ...payload, aulasIniciais } : payload, { // [MELHORAR-GRADE]
         headers: { "Content-Type": "application/json" },
         timeout: timeoutMs,
         validateStatus: () => true,
@@ -1739,6 +1777,7 @@ async function runCpsatGeneracaoUnica(
       status: resultado.status,
       otimo: resultado.otimo,
       tempoResolucaoS: resultado.tempoResolucaoS,
+      ...(modoMelhoria ? { modo: "melhoria", janelasProfessorAntes: (resultado as { janelasProfessorAntes?: number }).janelasProfessorAntes, janelasProfessorDepois: (resultado as { janelasProfessorDepois?: number }).janelasProfessorDepois } : {}), // [MELHORAR-GRADE]
       totalTurmas: turmasDoTurno.length,
       totalSlots: gravados.length,
       naoMapeadas: naoMapeadas.length,
@@ -1837,6 +1876,61 @@ router.post("/gerar-cpsat-async", async (req, res) => {
   res.status(202).json({
     jobId,
     mensagem: "Geracao iniciada em segundo plano. Consulte o progresso em GET /api/horarios/gerar-cpsat-status/:jobId.",
+  });
+});
+
+// [MELHORAR-GRADE] Melhora a grade OFICIAL de um turno por busca local (trocas),
+// sem gerar do zero. O resultado vai como experimento (nunca pior que a oficial)
+// e e acompanhado pelo mesmo GET /gerar-cpsat-status/:jobId.
+const MelhorarGradeBody = z.object({
+  turno: z.enum(["matutino", "vespertino", "noturno"]),
+  nomeExperimental: z.string().min(1),
+  tempoLimiteS: z.number().int().min(10).max(900).optional(),
+});
+
+router.post("/melhorar-grade-async", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const parsed = MelhorarGradeBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { turno, nomeExperimental, tempoLimiteS } = parsed.data;
+
+  limparJobsCpsatAntigos();
+  const jobId = randomUUID();
+  const abortController = new AbortController();
+  cpsatJobs.set(jobId, { status: "running", escolaId, startedAt: Date.now(), abortController });
+
+  void runCpsatGeneracaoUnica(escolaId, turno, undefined, undefined, nomeExperimental, tempoLimiteS ?? 120, abortController.signal, false, true)
+    .then((resultado) => {
+      const jobAtual = cpsatJobs.get(jobId);
+      if (jobAtual?.status === "cancelado") return;
+      cpsatJobs.set(jobId, {
+        status: resultado.httpStatus >= 200 && resultado.httpStatus < 300 ? "done" : "error",
+        escolaId,
+        httpStatus: resultado.httpStatus,
+        body: resultado.body,
+        startedAt: jobAtual?.startedAt ?? Date.now(),
+        finishedAt: Date.now(),
+      });
+    })
+    .catch((err) => {
+      const jobAtual = cpsatJobs.get(jobId);
+      if (jobAtual?.status === "cancelado") return;
+      cpsatJobs.set(jobId, {
+        status: "error",
+        escolaId,
+        httpStatus: 500,
+        body: { error: "Erro inesperado ao melhorar a grade.", detalhe: err instanceof Error ? err.message : String(err) },
+        startedAt: jobAtual?.startedAt ?? Date.now(),
+        finishedAt: Date.now(),
+      });
+    });
+
+  res.status(202).json({
+    jobId,
+    mensagem: "Melhoria iniciada em segundo plano. Consulte o progresso em GET /api/horarios/gerar-cpsat-status/:jobId.",
   });
 });
 
