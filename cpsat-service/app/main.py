@@ -59,48 +59,6 @@ def explicar_inviabilidade_com_gemini(dados_requisicao: dict, log_solver: str = 
 @app.api_route("/", methods=["GET", "HEAD"])
 def read_root():
     return {"status": "online", "service": "Nexgrade CP-SAT Solver"}
-@app.post("/gerar-grade-coordenada")
-def gerar_grade_coordenada_endpoint(payload: dict):
-    """
-    Pra turnos que misturam Fundamental e Medio/Tecnico -- coordena
-    professores-ponte antes de gerar as duas fases, e roda a pipeline
-    inteira algumas vezes (o CP-SAT varia entre execucoes), devolvendo
-    a melhor tentativa viavel.
-
-    Validado com dado real (24 turmas): 1 tentativa com
-    CPSAT_NUM_WORKERS=4 (configurado no ambiente do servico, nao no
-    payload) chegou a 18 janelas de professor em ~5 minutos.
-    """
-    try:
-        disciplinas_raw = payload.get("disciplinasTurma", [])
-        bloqueios_raw = payload.get("bloqueiosProfessor", [])
-        turno = payload.get("turno", "matutino")
-        aulas_por_dia = payload.get("aulasPorDia", 6)
-        turmas_raw = payload.get("turmas", [])
-        n_tentativas = payload.get("nTentativas", 1)
-        tempo_coordenacao_s = payload.get("tempoCoordenacaoS", 120)
-        tempo_fase_s = payload.get("tempoFaseS", 300)
-        tempo_fase3_s = payload.get("tempoFase3S", 60)
-
-        resultado = gerar_grade_coordenada(
-            disciplinas_raw, bloqueios_raw, turno, aulas_por_dia, turmas_raw,
-            n_tentativas=n_tentativas,
-            tempo_coordenacao_s=tempo_coordenacao_s,
-            tempo_fase_s=tempo_fase_s,
-            tempo_fase3_s=tempo_fase3_s,
-        )
-
-        if not resultado.get("viavel"):
-            resultado["mensagem_ia"] = explicar_inviabilidade_com_gemini(
-                dados_requisicao=payload,
-                log_solver=resultado.get("mensagem", "")
-            )
-
-        return resultado
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
 @app.post("/gerar-grade")
 def gerar_grade_endpoint(payload: dict):
     try:
@@ -116,10 +74,53 @@ def gerar_grade_endpoint(payload: dict):
             turno,
             aulas_por_dia,
             turmas_raw,
-            tempo_limite_s
+            tempo_limite_s,
+            payload.get("recursos", []),
         )
 
         if not resultado.get("viavel") or resultado.get("status") in ["INFEASIBLE", "MODEL_INVALID"]:
+            resultado["mensagem_ia"] = explicar_inviabilidade_com_gemini(
+                dados_requisicao=payload,
+                log_solver=resultado.get("mensagem", "")
+            )
+
+        return resultado
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/gerar-grade-coordenada")
+def gerar_grade_coordenada_endpoint(payload: dict):
+    try:
+        disciplinas_raw = payload.get("disciplinasTurma", [])
+        bloqueios_raw = payload.get("bloqueiosProfessor", [])
+        turno = payload.get("turno", "matutino")
+        aulas_por_dia = payload.get("aulasPorDia", 5)
+        turmas_raw = payload.get("turmas", [])
+        n_tentativas = payload.get("nTentativas", 5)
+        tempo_coordenacao_s = payload.get("tempoCoordenacaoS", 120)
+        tempo_fase_s = payload.get("tempoFaseS", 300)
+        tempo_fase3_s = payload.get("tempoFase3S", 60)
+
+        import json
+        with open("/home/simone/cpsat-service/payload_producao_real.json", "w") as fp:
+            fp.write(json.dumps({"turno": turno, "aulasPorDia": aulas_por_dia, "turmas": turmas_raw, "disciplinasTurma": disciplinas_raw, "bloqueiosProfessor": bloqueios_raw}))
+        with open("/home/simone/cpsat-service/debug_coordenada.log", "a") as f:
+            f.write(json.dumps({"n_turmas": len(turmas_raw), "n_disciplinas": len(disciplinas_raw), "n_bloqueios": len(bloqueios_raw), "aulas_por_dia": aulas_por_dia, "n_tentativas": n_tentativas, "tempo_coordenacao_s": tempo_coordenacao_s, "tempo_fase_s": tempo_fase_s, "tempo_fase3_s": tempo_fase3_s}) + "\n")
+        resultado = gerar_grade_coordenada(
+            disciplinas_raw,
+            bloqueios_raw,
+            turno,
+            aulas_por_dia,
+            turmas_raw,
+            n_tentativas,
+            tempo_coordenacao_s,
+            tempo_fase_s,
+            tempo_fase3_s,
+        )
+
+        with open("/home/simone/cpsat-service/debug_coordenada.log", "a") as f:
+            f.write(json.dumps({"viavel": resultado.get("viavel"), "mensagem": resultado.get("mensagem"), "janelasProfessor": resultado.get("janelasProfessor"), "tentativas": resultado.get("tentativas")}) + "\n---\n")
+        if not resultado.get("viavel"):
             resultado["mensagem_ia"] = explicar_inviabilidade_com_gemini(
                 dados_requisicao=payload,
                 log_solver=resultado.get("mensagem", "")

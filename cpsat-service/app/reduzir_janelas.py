@@ -201,31 +201,58 @@ def _aplicar_troca(aulas, unidade_a, unidade_b):
     return nova
 
 
+def _aplicar_cadeia(aulas, lista_unidades):
+    """
+    Rotaciona (dia, aula) ciclicamente entre 3+ unidades: a unidade[0]
+    recebe a posicao da unidade[1], a unidade[1] recebe a da
+    unidade[2], ..., a ultima recebe a posicao da primeira.
+
+    Existe pra escapar de minimos locais que o swap de par simples nao
+    alcanca: numa grade 100% compacta (sem slot vazio), as vezes
+    nenhuma troca de DUAS posicoes melhora nada, mas uma rotacao de
+    TRES ou mais sim (tecnica conhecida como Kempe chain / cadeia de
+    swaps na literatura de timetabling).
+    """
+    nova = [dict(x) for x in aulas]
+    posicoes = [(nova[u[0]]["dia"], nova[u[0]]["aula"]) for u in lista_unidades]
+    n = len(lista_unidades)
+    for idx, u in enumerate(lista_unidades):
+        dia_novo, aula_novo = posicoes[(idx + 1) % n]
+        for i in u:
+            nova[i]["dia"], nova[i]["aula"] = dia_novo, aula_novo
+    return nova
+
+
 def gerar_trocas_candidatas(aulas, ctx, k, rng):
     """
     IMPORTANTE: trocar duas aulas do MESMO professor entre si e um
     no-op pra janela dele (o conjunto de horarios ocupados nao muda,
     so troca qual materia fica onde). Pra reduzir janela de verdade a
-    troca precisa envolver DOIS PROFESSORES DIFERENTES - um cede o
-    horario que o outro precisa, e vice-versa.
+    troca precisa envolver PROFESSORES DIFERENTES - um cede o horario
+    que o outro precisa, e vice-versa.
+
+    Gera dois tipos de movimento:
+      - swap de PAR (2 unidades) - a maioria das trocas, mais barato
+        de validar
+      - cadeia de 3-4 unidades (rotacao ciclica) - pra escapar de
+        minimos locais que o swap de par nao alcanca numa grade 100%
+        compacta
 
     Unidades marcadas como fixas (ctx["unidades_fixas"]) NUNCA entram
-    como candidatas - nem como origem nem como destino da troca. Sao
-    posicoes travadas por um `fixar` anterior (ex.: professor-ponte ja
-    coordenado entre Fundamental e Medio/Tecnico) e mexer nelas aqui
-    desfaria essa coordenacao.
+    como candidatas - sao posicoes travadas por um `fixar` anterior
+    (ex.: professor-ponte ja coordenado entre Fundamental e Medio/
+    Tecnico) e mexer nelas aqui desfaria essa coordenacao.
 
-    Pra acelerar a convergencia, prioriza escolher a unidade A entre
-    professores que JA TEM janela agora (em vez de sortear 100% as
-    cegas) - a unidade B continua aleatoria entre TODAS as unidades
-    moviveis de outros professores.
+    Pra acelerar a convergencia, prioriza escolher a unidade inicial
+    entre professores que JA TEM janela agora (em vez de sortear 100%
+    as cegas).
     """
     candidatos = []
     unidades = ctx["unidades"]
     unidades_fixas = ctx["unidades_fixas"]
     n = len(unidades)
     tentativas = 0
-    max_tentativas = k * 10
+    max_tentativas = k * 12
 
     professores_por_unidade = [{aulas[i]["professor"] for i in u} for u in unidades]
     indices_moviveis = [i for i in range(n) if not unidades_fixas[i]]
@@ -234,33 +261,47 @@ def gerar_trocas_candidatas(aulas, ctx, k, rng):
 
     prof_com_janela = _professores_com_janela(aulas)
 
+    def escolher_unidade_inicial():
+        if prof_com_janela and rng.random() < 0.7:
+            prof_alvo = rng.choice(list(prof_com_janela))
+            candidatas = [
+                idx for idx in indices_moviveis if prof_alvo in professores_por_unidade[idx]
+            ]
+            if candidatas:
+                return rng.choice(candidatas)
+        return rng.choice(indices_moviveis)
+
     while len(candidatos) < k and tentativas < max_tentativas:
         tentativas += 1
 
-        if prof_com_janela and rng.random() < 0.7:
-            prof_alvo = rng.choice(list(prof_com_janela))
-            candidatas_a = [
-                idx for idx in indices_moviveis if prof_alvo in professores_por_unidade[idx]
+        usar_cadeia = rng.random() < 0.4  # 40% cadeia (3-4), 60% swap de par
+
+        if not usar_cadeia:
+            ua = escolher_unidade_inicial()
+            profs_a = professores_por_unidade[ua]
+            candidatas_b = [
+                idx for idx in indices_moviveis
+                if idx != ua and professores_por_unidade[idx] - profs_a
             ]
-            if not candidatas_a:
+            if not candidatas_b:
                 continue
-            ua = rng.choice(candidatas_a)
+            ub = rng.choice(candidatas_b)
+            nova = _aplicar_troca(aulas, unidades[ua], unidades[ub])
         else:
-            ua = rng.choice(indices_moviveis)
+            tamanho = 3 if rng.random() < 0.7 else 4
+            primeira = escolher_unidade_inicial()
+            pool_resto = [idx for idx in indices_moviveis if idx != primeira]
+            if len(pool_resto) < tamanho - 1:
+                continue
+            resto = rng.sample(pool_resto, tamanho - 1)
+            cadeia_idxs = [primeira] + resto
+            profs_envolvidos = set()
+            for idx in cadeia_idxs:
+                profs_envolvidos |= professores_por_unidade[idx]
+            if len(profs_envolvidos) < 2:
+                continue  # todo mundo do mesmo professor -- no-op
+            nova = _aplicar_cadeia(aulas, [unidades[idx] for idx in cadeia_idxs])
 
-        # unidade B tem que ter pelo menos um professor DIFERENTE do
-        # conjunto de professores da unidade A (senao vira no-op), e
-        # tambem precisa ser movivel
-        profs_a = professores_por_unidade[ua]
-        candidatas_b = [
-            idx for idx in indices_moviveis
-            if idx != ua and professores_por_unidade[idx] - profs_a
-        ]
-        if not candidatas_b:
-            continue
-        ub = rng.choice(candidatas_b)
-
-        nova = _aplicar_troca(aulas, unidades[ua], unidades[ub])
         if _restricoes_ok(nova, ctx):
             candidatos.append(nova)
 
