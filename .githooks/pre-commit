@@ -1,0 +1,16 @@
+#!/bin/sh
+# [REGRA-BLOQUEIO-REAL] Recusa commit que trate hora-atividade (HA) como bloqueio.
+# Regra unica: ehBloqueioReal() em artifacts/api-server/src/lib/bloqueio-real.ts
+padrao='disponivel[[:space:]]*\|\|[[:space:]]*[A-Za-z_.]*horaAtividadeObrigatoria|horaAtividadeObrigatoria[[:space:]]*\|\|[[:space:]]*!?[A-Za-z_.]*disponivel'
+achados=$(git diff --cached -U0 --diff-filter=AM -- '*.ts' '*.tsx' '*.js' '*.cjs' '*.mjs' | grep -E '^\+[^+]' | grep -E "$padrao")
+if [ -n "$achados" ]; then
+  echo ""
+  echo "COMMIT RECUSADO [REGRA-BLOQUEIO-REAL]"
+  echo "Filtro que trata hora-atividade (HA) como bloqueio:"
+  echo "$achados"
+  echo ""
+  echo "Use ehBloqueioReal(d) de artifacts/api-server/src/lib/bloqueio-real.ts"
+  echo "(HA e calculada depois da grade e nunca entra como bloqueio)."
+  exit 1
+fi
+exit 0
