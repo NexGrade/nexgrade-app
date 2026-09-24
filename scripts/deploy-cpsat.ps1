@@ -18,11 +18,14 @@ function Get-HashLF([string]$caminho) {
 }
 
 $listaRemota = ($arquivos | ForEach-Object { "$remoto/$_" }) -join " "
-$saidaRemota = gcloud compute ssh $vm --zone=$zona --command=("sudo sha256sum " + $listaRemota)
+$cmdHash = "sudo sha256sum " + $listaRemota
+$saidaRemota = gcloud compute ssh $vm --zone=$zona "--command=$cmdHash"
 $hashRemoto = @{}
 foreach ($linha in $saidaRemota) {
   if ($linha -match '^([0-9a-f]{64})\s+.*/([^/]+)$') { $hashRemoto[$Matches[2]] = $Matches[1] }
 }
+
+if ($hashRemoto.Count -ne $arquivos.Count) { "ERRO: nao consegui ler os hashes de todos os arquivos no GCP. Nada feito."; exit 1 }
 
 $mudados = @()
 "=== comparacao repo x GCP ==="
@@ -68,5 +71,5 @@ $cmd = @(
   'echo SAUDE: $(curl -s -m 5 http://localhost:8000/)',
   'echo ROTAS: $(curl -s -m 5 http://localhost:8000/openapi.json | grep -o -e /gerar-grade-coordenada -e /gerar-grade -e /melhorar-grade | sort -u | xargs)'
 ) -join ' && '
-gcloud compute ssh $vm --zone=$zona --command=$cmd
+gcloud compute ssh $vm --zone=$zona "--command=$cmd"
 "Publicado: $($mudados -join ', ')"
