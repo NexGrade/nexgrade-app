@@ -512,6 +512,18 @@ export default function MinhaAgendaPage() {
                                   <div className="text-xs text-muted-foreground truncate">
                                     {aula.turmaNome}{aula.sala ? ` · ${aula.sala}` : ""}
                                   </div>
+                                  {(aula as any).assincrona && (() => {
+                                    const nums = Array.from({ length: maxAula }, (_, k) => k + 1).filter((n) =>
+                                      aulas?.some((x) => x.diaSemana === diaIdx && x.numeroAula === n) || ehHoraAtividade(diaIdx, n));
+                                    const aviso = numeroAula === Math.min(...nums) ? "registrar entrada (login no início)"
+                                      : numeroAula === Math.max(...nums) ? "registrar saída (login no fim)" : null;
+                                    return (
+                                      <div className="mt-1 flex flex-wrap items-center gap-1">
+                                        <span className="text-[10px] font-bold uppercase tracking-wide rounded bg-violet-100 text-violet-800 px-1.5 py-0.5">Assíncrona</span>
+                                        {aviso && <span className="text-[10px] font-semibold text-rose-700">{aviso}</span>}
+                                      </div>
+                                    );
+                                  })()}{/* [ASSINCRONA-EXIBICAO] */}
                                 </div>
                               ) : ehHoraAtividade(diaIdx, numeroAula) ? (
                                 <div className="h-full rounded-md p-2 border-l-4 bg-amber-50 border-amber-400 flex items-center justify-center imprimir-cartao-aula">

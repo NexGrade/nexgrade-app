@@ -436,7 +436,8 @@ router.get("/grade-pdf/turma", async (req, res) => {
         return {
           diaSemana: primeiro.diaSemana,
           numeroAula: primeiro.numeroAula,
-          linha1: siglaOuFallback(disciplinas.find((d) => d.id === primeiro.disciplinaId)),
+          // [ASSINCRONA-EXIBICAO] todas as siglas do horario (trio mostra as 3) + marca de assincrona
+          linha1: [...new Set(grupo.map((s) => siglaOuFallback(disciplinas.find((d) => d.id === s.disciplinaId))))].join("/") + (grupo.some((s) => s.assincrona) ? " (ASS)" : ""),
           linha2: nomesProfessores,
         };
       });
@@ -577,6 +578,17 @@ router.get("/grade-pdf/professor", async (req, res) => {
           linha1: "HA",
           destacado: true,
         }));
+
+      // [ASSINCRONA-EXIBICAO] aula assincrona: marca (ASS) e, se for a primeira ou a
+      // ultima atividade do professor no dia (aula ou HA), o aviso de ponto (SEED/PR 2026).
+      for (const s of slotsDoProfNesseTurno) {
+        if (!s.assincrona) continue;
+        const cel = aulasDoProf.find((x) => x.diaSemana === s.diaSemana && x.numeroAula === s.numeroAula);
+        if (!cel) continue;
+        const doDia = [...aulasDoProf, ...haDoProf].filter((x) => x.diaSemana === s.diaSemana).map((x) => x.numeroAula);
+        const ponto = s.numeroAula === Math.min(...doDia) ? " ENTRADA" : s.numeroAula === Math.max(...doDia) ? " SAIDA" : "";
+        cel.linha2 = `${cel.linha2 ?? ""} (ASS)${ponto}`;
+      }
 
       // [NOVO] Dia/horario em que o professor esta bloqueado
       // (indisponivel, sem ser HA) nesse turno -- desenhado com

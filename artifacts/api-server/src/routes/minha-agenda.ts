@@ -1,4 +1,4 @@
-﻿import { Router } from "express";
+import { Router } from "express";
 import { getAuth, clerkClient } from "@clerk/express";
 import { db } from "@workspace/db";
 import {
@@ -70,6 +70,7 @@ router.get("/horario", async (req, res) => {
       sala: horariosTable.sala,
       disciplinaNome: disciplinasTable.nome,
       disciplinaSigla: disciplinasTable.sigla,
+      assincrona: horariosTable.assincrona, // [ASSINCRONA-EXIBICAO]
       disciplinaCor: disciplinasTable.cor,
       turmaNome: turmasTable.nome,
     })
