@@ -12,12 +12,17 @@ import {
   getListDisponibilidadeQueryKey,
   getListHorariosQueryKey,
   getListHorarioSlotsQueryKey,
+  useListAulasFixas, // [AULA-FIXA-DISP]
+  useCriarAulaFixa,
+  useDeleteAulaFixa,
+  getListAulasFixasQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Users, Save, RotateCcw, Lock, CheckCircle2, Info, GraduationCap, BookOpen } from "lucide-react";
+import { Users, Save, RotateCcw, Lock, CheckCircle2, Info, GraduationCap, BookOpen, Pin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SeletorBusca } from "@/components/seletor-busca";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"; // [AULA-FIXA-DISP]
 
 const DIAS = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
 const DIAS_ABREV = ["SEG", "TER", "QUA", "QUI", "SEX"];
@@ -105,6 +110,33 @@ export default function DisponibilidadePage() {
     () => horariosProf.filter((h: any) => h.turma?.turno === turno),
     [horariosProf, turno],
   );
+
+  // [AULA-FIXA-DISP] Fixar aula direto na disponibilidade: grava no mesmo
+  // cadastro de Aulas Fixas da aba Esquema (o CP-SAT respeita as duas origens).
+  const anoLetivoAtual = new Date().getFullYear();
+  const [modoFixarAula, setModoFixarAula] = useState(false);
+  const [celulaFixar, setCelulaFixar] = useState<{ dia: number; numeroAula: number } | null>(null);
+  const [opcaoFixar, setOpcaoFixar] = useState("");
+  const { data: todasAulasFixas = [] } = useListAulasFixas(undefined, { query: { queryKey: getListAulasFixasQueryKey(undefined) } });
+  const criarAulaFixa = useCriarAulaFixa();
+  const apagarAulaFixa = useDeleteAulaFixa();
+  const opcoesTurmaDisc = useMemo(() => {
+    const m = new Map<string, { turmaId: number; disciplinaId: number; rotulo: string }>();
+    for (const h of horariosDoTurno as any[]) {
+      const tId = h.turmaId ?? h.turma?.id;
+      const dId = h.disciplinaId ?? h.disciplina?.id;
+      if (tId == null || dId == null) continue;
+      m.set(`${tId}-${dId}`, { turmaId: tId, disciplinaId: dId, rotulo: `${h.turma?.nome ?? `Turma ${tId}`} — ${h.disciplina?.nome ?? `Disciplina ${dId}`}` });
+    }
+    return [...m.values()].sort((x, y) => x.rotulo.localeCompare(y.rotulo));
+  }, [horariosDoTurno]);
+  const turmaIdsDoTurno = useMemo(() => new Set(opcoesTurmaDisc.map((o) => o.turmaId)), [opcoesTurmaDisc]);
+  const rotuloTurmaDisc = useMemo(() => new Map(opcoesTurmaDisc.map((o) => [`${o.turmaId}-${o.disciplinaId}`, o.rotulo])), [opcoesTurmaDisc]);
+  function aulaFixaNaCelula(dia: number, numeroAula: number): any {
+    return (todasAulasFixas as any[]).find((af) =>
+      af.professorId === professorIdNum && af.anoLetivo === anoLetivoAtual &&
+      af.diaSemana === dia && af.numeroAula === numeroAula && turmaIdsDoTurno.has(af.turmaId));
+  }
   function aulaReal(dia: number, numeroAula: number) {
     return horariosDoTurno.find((h: any) => h.diaSemana === dia && h.numeroAula === numeroAula);
   }
@@ -153,6 +185,7 @@ export default function DisponibilidadePage() {
   const hasChanges = JSON.stringify(matriz) !== JSON.stringify(original);
 
   const toggle = (dia: number, numeroAula: number) => {
+    if (modoFixarAula) { setOpcaoFixar(""); setCelulaFixar({ dia, numeroAula }); return; } // [AULA-FIXA-DISP]
     const key = cellKey(dia, numeroAula);
     const estadoAtual = matriz[key] ?? "disponivel";
     const proximo = proximoEstado(estadoAtual);
@@ -171,6 +204,28 @@ export default function DisponibilidadePage() {
     setMatriz((prev) => ({ ...prev, [key]: proximo }));
   };
 
+  // [AULA-FIXA-DISP] fixar / soltar
+  const recarregarAulasFixas = () => queryClient.invalidateQueries({ queryKey: getListAulasFixasQueryKey(undefined) });
+  const fixarAulaNaCelula = () => {
+    if (!celulaFixar || !professorIdNum || !opcaoFixar) return;
+    const [tStr, dStr] = opcaoFixar.split("-");
+    criarAulaFixa.mutate(
+      { data: { turmaId: Number(tStr), disciplinaId: Number(dStr), professorId: professorIdNum, diaSemana: celulaFixar.dia, numeroAula: celulaFixar.numeroAula, anoLetivo: anoLetivoAtual } },
+      {
+        onSuccess: () => { toast({ title: "Aula fixada", description: "O CP-SAT vai manter esta aula neste horário." }); recarregarAulasFixas(); setCelulaFixar(null); },
+        onError: (err) => toast({ title: "Não foi possível fixar a aula", description: err instanceof Error ? err.message : undefined, variant: "destructive" }),
+      },
+    );
+  };
+  const soltarAulaFixa = (id: number) => {
+    apagarAulaFixa.mutate(
+      { id },
+      {
+        onSuccess: () => { toast({ title: "Aula solta", description: "O motor volta a poder mover esta aula." }); recarregarAulasFixas(); setCelulaFixar(null); },
+        onError: (err) => toast({ title: "Não foi possível soltar a aula", description: err instanceof Error ? err.message : undefined, variant: "destructive" }),
+      },
+    );
+  };
   const bloquearDia = (dia: number) => {
     setMatriz((prev) => {
       const next = { ...prev };
@@ -300,7 +355,50 @@ export default function DisponibilidadePage() {
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-4 h-4 rounded bg-amber-100 border border-amber-300" />
-              <span className="text-muted-foreground">Hora-Atividade obrigatória</span><span className="ml-3 inline-flex items-center gap-1 text-muted-foreground"><GraduationCap className="w-3 h-3 text-amber-800" /><Lock className="w-3 h-3 text-amber-800" />HA fixa (o motor não move)</span>{/* [HA-FIXA] */}
+              <span className="text-muted-foreground">Hora-Atividade obrigatória</span><span className="ml-3 inline-flex items-center gap-1 text-muted-foreground"><GraduationCap className="w-3 h-3 text-amber-800" /><Lock className="w-3 h-3 text-amber-800" />HA fixa (o motor não move)</span>{/* [HA-FIXA] */}<Button size="sm" variant={modoFixarAula ? "default" : "outline"} className="ml-3 h-7 gap-1" onClick={() => setModoFixarAula((v) => !v)} title="Ligado: clicar numa célula fixa ou solta uma aula nesse horário">
+  <Pin className="w-3 h-3" />{modoFixarAula ? "Modo fixar aula: LIGADO" : "Modo fixar aula"}
+</Button>
+<Dialog open={!!celulaFixar} onOpenChange={(v) => { if (!v) setCelulaFixar(null); }}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>{celulaFixar ? `Aula fixa — ${DIAS[celulaFixar.dia]}, ${celulaFixar.numeroAula}ª aula` : "Aula fixa"}</DialogTitle>
+    </DialogHeader>
+    {celulaFixar && (() => {
+      const af = aulaFixaNaCelula(celulaFixar.dia, celulaFixar.numeroAula);
+      const estadoCel = matriz[cellKey(celulaFixar.dia, celulaFixar.numeroAula)];
+      if (af) {
+        return (
+          <div className="space-y-3 text-sm">
+            <p>Aula fixada aqui: <strong>{rotuloTurmaDisc.get(`${af.turmaId}-${af.disciplinaId}`) ?? "turma/disciplina"}</strong>. O CP-SAT mantém esta aula neste horário.</p>
+            <DialogFooter>
+              <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => soltarAulaFixa(af.id)} disabled={apagarAulaFixa.isPending}>
+                {apagarAulaFixa.isPending ? "Soltando..." : "Soltar aula"}
+              </Button>
+            </DialogFooter>
+          </div>
+        );
+      }
+      return (
+        <div className="space-y-3 text-sm">
+          <p className="text-muted-foreground">Escolha a turma e a disciplina. Na próxima geração ou melhoria com o CP-SAT, esta aula fica obrigatoriamente neste horário.</p>
+          <select className="w-full border rounded-md h-9 px-2 bg-background" value={opcaoFixar} onChange={(e) => setOpcaoFixar(e.target.value)}>
+            <option value="">Turma e disciplina...</option>
+            {opcoesTurmaDisc.map((o) => (<option key={`${o.turmaId}-${o.disciplinaId}`} value={`${o.turmaId}-${o.disciplinaId}`}>{o.rotulo}</option>))}
+          </select>
+          {opcoesTurmaDisc.length === 0 && <p className="text-xs text-muted-foreground">Este professor ainda não tem aulas neste turno.</p>}
+          {(estadoCel === "bloqueado" || estadoCel === "ha_fixa") && (
+            <p className="text-xs text-rose-600">Atenção: este horário está {estadoCel === "bloqueado" ? "bloqueado" : "com HA fixa"} para o professor. A geração vai recusar uma aula fixa aqui.</p>
+          )}
+          <DialogFooter>
+            <Button onClick={fixarAulaNaCelula} disabled={!opcaoFixar || criarAulaFixa.isPending} className="gap-1">
+              <Pin className="w-3.5 h-3.5" />{criarAulaFixa.isPending ? "Fixando..." : "Fixar aula"}
+            </Button>
+          </DialogFooter>
+        </div>
+      );
+    })()}
+  </DialogContent>
+</Dialog>{/* [AULA-FIXA-DISP] */}
             </div>
             <div className="flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5 text-blue-600" />
@@ -423,6 +521,7 @@ export default function DisponibilidadePage() {
                               {estado === "bloqueado" && <Lock className="w-3.5 h-3.5 mx-auto" />}
                               {estado === "ha_obrigatoria" && <GraduationCap className="w-3.5 h-3.5 mx-auto" />}
                               {estado === "ha_fixa" && (<span className="inline-flex items-center justify-center gap-0.5 w-full"><GraduationCap className="w-3.5 h-3.5" /><Lock className="w-3 h-3" /></span>)}{/* [HA-FIXA] */}
+                              {(() => { const af = aulaFixaNaCelula(dia, slot.numeroAula); return af ? (<span className="absolute bottom-0.5 left-0.5 text-violet-700" title={`Aula fixa: ${rotuloTurmaDisc.get(`${af.turmaId}-${af.disciplinaId}`) ?? "turma/disciplina"}`}><Pin className="w-3 h-3" /></span>) : null; })()}{/* [AULA-FIXA-DISP] */}
                               {real && (
                                 <span className="absolute top-0.5 right-0.5 text-blue-600">
                                   <BookOpen className="w-2.5 h-2.5" />
