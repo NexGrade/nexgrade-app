@@ -438,6 +438,25 @@ export async function calcularHAIdeal(
       }
     }
 
+    // [HA-EXCECAO-4A] Excecao institucional (decisao 25/09/2026): se AINDA
+    // sobrar HA depois de esgotar tudo com o limite normal por dia (turnos
+    // de ensino, espaco extra e contraturno), aceita UMA HA a mais por dia
+    // (padrao: a 4a) nos turnos de ensino. So entra quando nao ha outra
+    // opcao -- nunca muda o que ja coube com o limite normal.
+    // RECALCULO_HA_MAX_POR_DIA_EXCECAO=0 desliga a excecao.
+    const MAX_HA_POR_DIA_EXCECAO = Number(process.env.RECALCULO_HA_MAX_POR_DIA_EXCECAO ?? "4");
+    if (sobraGeral > 0 && MAX_HA_POR_DIA_EXCECAO > MAX_HA_POR_DIA_ENSINO) {
+      for (const turno of Object.keys(aulasPorTurno)) {
+        if (sobraGeral <= 0) break;
+        const ocupExcecao = new Set<string>(ocupadoPorTurnoOriginal.get(turno) ?? new Set<string>());
+        for (let dia = 0; dia < 5; dia++) {
+          const pos = haPosicoesPorDiaProfessor.get(`${turno}-${dia}`);
+          if (pos) for (const aula of pos) ocupExcecao.add(`${dia}-${aula}`);
+        }
+        sobraGeral = preencherGuloso(turno, sobraGeral, ocupExcecao, contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_EXCECAO, undefined, MAX_HA_SEGUIDAS_ENSINO);
+      }
+    }
+
     // Se AINDA sobrar depois de tentar todo turno de ensino E todo
     // contraturno (bloqueios cobrindo a semana inteira em todo turno),
     // fica como pendencia real -- a conferencia de conflitos acusa ate
