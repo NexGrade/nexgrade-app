@@ -17,3 +17,28 @@ export function ehBloqueioReal(d: {
 }): boolean {
   return !d.disponivel && !d.horaAtividadeObrigatoria;
 }
+
+/**
+ * [HA-FIXA] HA fixa: hora-atividade definida manualmente para um caso
+ * excepcional (reuniao fixa de area, acordo com a direcao...). Continua
+ * sendo HA em tudo (PDF, capacidade, recalculo, conflitos), mas o MOTOR a
+ * trata como bloqueio: nunca coloca aula nesse horario.
+ * A marca fica no motivo da linha de disponibilidade.
+ */
+export const MOTIVO_HA_FIXA = "HA fixa (definida manualmente)";
+
+export function ehHaFixa(d: {
+  horaAtividadeObrigatoria: boolean | null | undefined;
+  motivo?: string | null;
+}): boolean {
+  return !!d.horaAtividadeObrigatoria && (d.motivo ?? "").startsWith("HA fixa");
+}
+
+/** Bloqueio para o MOTOR (heuristico e CP-SAT): bloqueio real + HA fixa. */
+export function ehBloqueioParaMotor(d: {
+  disponivel: boolean | null | undefined;
+  horaAtividadeObrigatoria: boolean | null | undefined;
+  motivo?: string | null;
+}): boolean {
+  return ehBloqueioReal(d) || ehHaFixa(d);
+}

@@ -7,7 +7,7 @@
  */
 import { db, turmasTable, turmaDisciplinasTable, disciplinasTable, professoresTable, disponibilidadeTable, horarioSlotsTable, professorDisciplinasTable, itensMatrizTable } from "@workspace/db";
 import { and, eq, inArray } from "drizzle-orm";
-import { ehBloqueioReal } from "./bloqueio-real";
+import { ehBloqueioReal, ehHaFixa } from "./bloqueio-real"; // [HA-FIXA]
 import { calcularHoraAtividadeInstitucional } from "./recalcular-ha";
 import { calcularHoraAtividadePorTurno } from "./hora-atividade";
 
@@ -87,10 +87,14 @@ export async function calcularCargaPorProfessor(escolaId: string): Promise<{ car
 // [HA-NO-CPSAT] Cota de HA de cada professor NUM turno (nome -> HA), pela
 // mesma divisao proporcional do recalculo. Vai no payload do CP-SAT.
 export async function calcularCotaHaPorTurno(escolaId: string, turno: string): Promise<Record<string, number>> {
-  const { cargas } = await calcularCargaPorProfessor(escolaId);
+  const { cargas, disp } = await calcularCargaPorProfessor(escolaId);
+  // [HA-FIXA] HA fixa ja ocupa o horario (o motor a ve como bloqueio):
+  // desconta da cota para o motor nao reservar espaco em dobro.
+  const fixasPorProfessor = new Map<number, number>();
+  for (const d of disp) if (d.turno === turno && ehHaFixa(d)) fixasPorProfessor.set(d.professorId, (fixasPorProfessor.get(d.professorId) ?? 0) + 1);
   const r: Record<string, number> = {};
   for (const c of cargas) {
-    const cota = calcularHoraAtividadePorTurno(c.aulasPorTurno)[turno] ?? 0;
+    const cota = Math.max(0, (calcularHoraAtividadePorTurno(c.aulasPorTurno)[turno] ?? 0) - (fixasPorProfessor.get(c.professorId) ?? 0));
     if (cota > 0) r[c.professor] = cota;
   }
   return r;
