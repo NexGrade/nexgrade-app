@@ -112,6 +112,7 @@ def gerar_grade_coordenada_endpoint(payload: dict):
             tempo_coordenacao_s,
             tempo_fase_s,
             tempo_fase3_s,
+            fixas_usuario=payload.get("recursos"),  # [AULA-FIXA]
         )
 
         if not resultado.get("viavel"):
@@ -144,6 +145,7 @@ def melhorar_grade_endpoint(payload: dict):
             payload.get("turmas", []),
             int(payload.get("tempoLimiteS", 120)),
             aulas_iniciais=aulas_iniciais,
+            fixar_raw=payload.get("recursos"),  # [AULA-FIXA]
             ha_por_professor=payload.get("haPorProfessor"),  # [HA-NO-CPSAT]
         )
         resultado["janelasProfessorAntes"] = contar_janelas_professor(aulas_iniciais)

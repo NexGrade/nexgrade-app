@@ -48,8 +48,18 @@ def _checar_conflito_entre_fases(aulas_fund, aulas_medio):
     return conflitos
 
 
+# [AULA-FIXA] lista {turma, codigoSae, professor, dia, aula} -> dict do resolver
+def _fixar_dict(fixas):
+    if not fixas:
+        return None
+    d = {}
+    for item in fixas:
+        d.setdefault((item["turma"], item["codigoSae"], item["professor"]), []).append((item["dia"], item["aula"]))
+    return d
+
+
 def _coordenar_pontes(disciplinas_turma_raw, bloqueios_raw, turno, aulas_por_dia,
-                       nomes_fundamental, nomes_medio, tempo_limite_s):
+                       nomes_fundamental, nomes_medio, tempo_limite_s, fixas_usuario=None):  # [AULA-FIXA]
     profs_fund = {d["professor"] for d in disciplinas_turma_raw if d["turma"] in nomes_fundamental}
     profs_medio = {d["professor"] for d in disciplinas_turma_raw if d["turma"] in nomes_medio}
     pontes = profs_fund & profs_medio
@@ -69,7 +79,7 @@ def _coordenar_pontes(disciplinas_turma_raw, bloqueios_raw, turno, aulas_por_dia
 
     solver_obj, status, aula_var = resolver(
         disciplinas_turma, bloqueios, turno, aulas_por_dia, todas_turmas_nomes,
-        tempo_limite_s=tempo_limite_s, apenas_turma=False,
+        tempo_limite_s=tempo_limite_s, apenas_turma=False, fixar=_fixar_dict(fixas_usuario),  # [AULA-FIXA]
     )
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         return None
@@ -90,13 +100,14 @@ def _coordenar_pontes(disciplinas_turma_raw, bloqueios_raw, turno, aulas_por_dia
 
 def _rodar_uma_tentativa(disciplinas_turma_raw, bloqueios_raw, turno, aulas_por_dia,
                           turmas_raw, nomes_fundamental, nomes_medio,
-                          tempo_coordenacao_s, tempo_fase_s, tempo_fase3_s):
+                          tempo_coordenacao_s, tempo_fase_s, tempo_fase3_s, fixas_usuario=None):  # [AULA-FIXA]
     fixar_raw = _coordenar_pontes(
         disciplinas_turma_raw, bloqueios_raw, turno, aulas_por_dia,
-        nomes_fundamental, nomes_medio, tempo_coordenacao_s,
+        nomes_fundamental, nomes_medio, tempo_coordenacao_s, fixas_usuario=fixas_usuario,  # [AULA-FIXA]
     )
     if fixar_raw is None:
         return None
+    fixar_raw = fixar_raw + list(fixas_usuario or [])  # [AULA-FIXA] pontes + aulas fixas
 
     disc_fund = [d for d in disciplinas_turma_raw if d["turma"] in nomes_fundamental]
     disc_medio = [d for d in disciplinas_turma_raw if d["turma"] in nomes_medio]
@@ -150,6 +161,7 @@ def gerar_grade_coordenada(
     tempo_coordenacao_s: int = 120,
     tempo_fase_s: int = 300,
     tempo_fase3_s: int = 60,
+    fixas_usuario: list[dict] | None = None,  # [AULA-FIXA]
 ) -> dict:
     """
     Gera a grade de um turno que mistura Fundamental e Medio/Tecnico,
@@ -195,7 +207,7 @@ def gerar_grade_coordenada(
         resultado = _rodar_uma_tentativa(
             disciplinas_turma_raw, bloqueios_raw, turno, aulas_por_dia, turmas_raw,
             nomes_fundamental, nomes_medio,
-            tempo_coordenacao_s, tempo_fase_s, tempo_fase3_s,
+            tempo_coordenacao_s, tempo_fase_s, tempo_fase3_s, fixas_usuario=fixas_usuario,  # [AULA-FIXA]
         )
         if resultado is None:
             continue

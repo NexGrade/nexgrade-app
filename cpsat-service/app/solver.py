@@ -174,7 +174,9 @@ def resolver(
     for dt_idx, dt in enumerate(disciplinas_turma):
         for dia in range(len(DIAS)):
             total_dia = sum(aula_var[(dt_idx, dia, aula)] for aula in range(1, aulas_por_dia + 1))
-            model.Add(total_dia <= dt.max_aulas_dia)
+            # [AULA-FIXA] aulas fixas pelo coordenador podem passar do limite do dia
+            fix_dia = sum(1 for (df, _af) in (fixar or {}).get((dt.turma, dt.codigo_sae, dt.professor), []) if df == dia)
+            model.Add(total_dia <= max(dt.max_aulas_dia, fix_dia))
 
     # RESTRICAO 5b -- maximo 3 aulas no dia do mesmo par
     # (professor, turma), somando TODAS as disciplinas desse professor
@@ -203,7 +205,9 @@ def resolver(
                 for aula in range(1, aulas_por_dia + 1)
             )
             model.Add(total_dia_par <= 6)
-            for inicio_janela in range(1, aulas_por_dia - 2):
+            # [AULA-FIXA] se o coordenador fixou 4+ aulas do par no dia, a regra cede
+            fix_par_dia = sum(1 for i in indices_par for (df, _af) in (fixar or {}).get((disciplinas_turma[i].turma, disciplinas_turma[i].codigo_sae, disciplinas_turma[i].professor), []) if df == dia)
+            for inicio_janela in (range(1, aulas_por_dia - 2) if fix_par_dia < 4 else []):
                 soma_janela = sum(
                     aula_var[(i, dia, aula)]
                     for i in indices_par
