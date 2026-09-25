@@ -30,7 +30,7 @@ const TURNOS = [
 
 type Turno = (typeof TURNOS)[number]["value"];
 
-type CelulaEstado = "disponivel" | "bloqueado" | "ha_obrigatoria";
+type CelulaEstado = "disponivel" | "bloqueado" | "ha_obrigatoria" | "ha_fixa"; // [HA-FIXA]
 type CelulaState = Record<string, CelulaEstado>;
 
 function cellKey(dia: number, numeroAula: number) {
@@ -40,6 +40,7 @@ function cellKey(dia: number, numeroAula: number) {
 function proximoEstado(atual: CelulaEstado): CelulaEstado {
   if (atual === "disponivel") return "bloqueado";
   if (atual === "bloqueado") return "ha_obrigatoria";
+  if (atual === "ha_obrigatoria") return "ha_fixa"; // [HA-FIXA]
   return "disponivel";
 }
 
@@ -122,7 +123,7 @@ export default function DisponibilidadePage() {
       .forEach((r) => {
         const key = cellKey(r.diaSemana, r.horarioSlot);
         if (r.horaAtividadeObrigatoria) {
-          m[key] = "ha_obrigatoria";
+          m[key] = ((r as { motivo?: string | null }).motivo ?? "").startsWith("HA fixa") ? "ha_fixa" : "ha_obrigatoria"; // [HA-FIXA]
         } else if (!r.disponivel) {
           m[key] = "bloqueado";
         } else {
@@ -148,7 +149,7 @@ export default function DisponibilidadePage() {
 
   const professorSelecionado = professores.find((p) => String(p.id) === professorId);
   const totalBloqueios = Object.values(matriz).filter((v) => v === "bloqueado").length;
-  const totalHA = Object.values(matriz).filter((v) => v === "ha_obrigatoria").length;
+  const totalHA = Object.values(matriz).filter((v) => v === "ha_obrigatoria" || v === "ha_fixa").length; // [HA-FIXA]
   const hasChanges = JSON.stringify(matriz) !== JSON.stringify(original);
 
   const toggle = (dia: number, numeroAula: number) => {
@@ -202,6 +203,7 @@ export default function DisponibilidadePage() {
       disponivel: boolean;
       turno: Turno;
       horaAtividadeObrigatoria: boolean;
+      motivo?: string; // [HA-FIXA]
     }[] = [];
 
     chaves.forEach((key) => {
@@ -215,7 +217,10 @@ export default function DisponibilidadePage() {
         horarioSlot: Number(slotStr),
         disponivel: estadoAtual !== "bloqueado",
         turno,
-        horaAtividadeObrigatoria: estadoAtual === "ha_obrigatoria",
+        horaAtividadeObrigatoria: estadoAtual === "ha_obrigatoria" || estadoAtual === "ha_fixa",
+        // [HA-FIXA] motivo explicito: sem isso, trocar de fixa para HA comum
+        // manteria a marca antiga no banco (o motivo omitido nao e alterado).
+        motivo: estadoAtual === "ha_fixa" ? "HA fixa (definida manualmente)" : estadoAtual === "ha_obrigatoria" ? "HA manual (definida na tela)" : undefined,
       });
     });
 
@@ -295,7 +300,7 @@ export default function DisponibilidadePage() {
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-4 h-4 rounded bg-amber-100 border border-amber-300" />
-              <span className="text-muted-foreground">Hora-Atividade obrigatória</span>
+              <span className="text-muted-foreground">Hora-Atividade obrigatória</span><span className="ml-3 inline-flex items-center gap-1 text-muted-foreground"><GraduationCap className="w-3 h-3 text-amber-800" /><Lock className="w-3 h-3 text-amber-800" />HA fixa (o motor não move)</span>{/* [HA-FIXA] */}
             </div>
             <div className="flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5 text-blue-600" />
@@ -400,6 +405,8 @@ export default function DisponibilidadePage() {
                                   "bg-rose-50 border-rose-300 text-rose-600 hover:bg-rose-100",
                                 estado === "ha_obrigatoria" &&
                                   "bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100",
+                                estado === "ha_fixa" &&
+                                  "bg-amber-100 border-amber-500 text-amber-800 hover:bg-amber-200", // [HA-FIXA]
                               )}
                               title={
                                 (real ? `Aula real: ${real.turma?.nome ?? "?"} — ${real.disciplina?.nome ?? "?"}. ` : "") +
@@ -407,12 +414,15 @@ export default function DisponibilidadePage() {
                                   ? "Disponível — clique para bloquear"
                                   : estado === "bloqueado"
                                     ? "Bloqueado — clique para marcar Hora-Atividade obrigatória"
-                                    : "Hora-Atividade obrigatória — clique para liberar")
+                                    : estado === "ha_obrigatoria"
+                                      ? "Hora-Atividade obrigatória — clique para fixar (HA fixa: o motor nunca coloca aula aqui)"
+                                      : "HA fixa — o motor nunca coloca aula aqui — clique para liberar") /* [HA-FIXA] */
                               }
                             >
                               {estado === "disponivel" && "✓"}
                               {estado === "bloqueado" && <Lock className="w-3.5 h-3.5 mx-auto" />}
                               {estado === "ha_obrigatoria" && <GraduationCap className="w-3.5 h-3.5 mx-auto" />}
+                              {estado === "ha_fixa" && (<span className="inline-flex items-center justify-center gap-0.5 w-full"><GraduationCap className="w-3.5 h-3.5" /><Lock className="w-3 h-3" /></span>)}{/* [HA-FIXA] */}
                               {real && (
                                 <span className="absolute top-0.5 right-0.5 text-blue-600">
                                   <BookOpen className="w-2.5 h-2.5" />
@@ -430,7 +440,7 @@ export default function DisponibilidadePage() {
 
             <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 rounded-lg p-3">
               <Info className="w-3.5 h-3.5 shrink-0" />
-              Clique numa célula para alternar entre Disponível → Bloqueado → Hora-Atividade obrigatória. Use os
+              Clique numa célula para alternar entre Disponível → Bloqueado → Hora-Atividade obrigatória → HA fixa (casos excepcionais: o motor nunca coloca aula nela). Use os
               botões "Bloquear/Liberar" para afetar um dia inteiro de uma vez. O ícone de livro no canto mostra onde o
               professor já dá aula de verdade (turma + disciplina aparecem ao passar o mouse). O motor de geração de
               horários nunca alocará o professor em slots bloqueados ou marcados como Hora-Atividade obrigatória.
