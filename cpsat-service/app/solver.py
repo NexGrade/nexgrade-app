@@ -47,6 +47,7 @@ def resolver(
     hints: dict | None = None,
     forcar_zero_janela: bool = False,
     fixar: dict | None = None,
+    ha_por_professor: dict | None = None,  # [HA-NO-CPSAT]
 ):
     model = cp_model.CpModel()
 
@@ -314,7 +315,36 @@ def resolver(
     # o solver passa a aceitar mais janela de turma em troca de menos
     # janela de professor.
     peso_professor = int(os.getenv("CPSAT_PESO_JANELA_PROFESSOR", "1"))
-    model.Minimize(sum(penalidades_turma) + peso_professor * sum(penalidades_professor))
+    # [HA-NO-CPSAT] Reserva espaco para a hora-atividade de cada professor
+    # neste turno: por dia, os horarios livres (sem bloqueio e sem aula)
+    # contam ate RECALCULO_HA_MAX_POR_DIA (mesmo limite do recalculo de HA).
+    # O que faltar para a cota do professor vira "deficit", penalizado com
+    # peso alto no objetivo. Sem cotas (payload antigo), nada muda.
+    deficits_ha = []
+    if ha_por_professor:
+        teto_ha_dia = int(os.getenv("RECALCULO_HA_MAX_POR_DIA", "3"))
+        for prof, cota in sorted(ha_por_professor.items()):
+            cota = int(cota or 0)
+            indices_prof_ha = [i for i, dt in enumerate(disciplinas_turma) if dt.professor == prof]
+            if cota <= 0 or not indices_prof_ha:
+                continue
+            capacidades = []
+            for dia in range(len(DIAS)):
+                livres = []
+                for aula in range(1, aulas_por_dia + 1):
+                    if (prof, dia, aula) in bloqueios:
+                        continue
+                    livres.append(1 - sum(aula_var[(i, dia, aula)] for i in indices_prof_ha))
+                if not livres:
+                    continue
+                cap = model.NewIntVar(0, teto_ha_dia, f"cap_ha_{prof}_{dia}")
+                model.Add(cap <= sum(livres))
+                capacidades.append(cap)
+            deficit = model.NewIntVar(0, cota, f"deficit_ha_{prof}")
+            model.Add(deficit >= cota - sum(capacidades))
+            deficits_ha.append(deficit)
+    peso_ha = int(os.getenv("CPSAT_PESO_DEFICIT_HA", "10"))
+    model.Minimize(sum(penalidades_turma) + peso_professor * sum(penalidades_professor) + peso_ha * sum(deficits_ha))
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = tempo_limite_s
@@ -372,6 +402,7 @@ def gerar_grade(
     tempo_limite_s: int = 120,
     fixar_raw: list[dict] | None = None,
     aulas_iniciais: list[dict] | None = None,
+    ha_por_professor: dict | None = None,  # [HA-NO-CPSAT]
 ) -> dict:
     """
     Recebe o mesmo formato JSON exportado por scripts/exportar-dados-cpsat.ts
@@ -448,7 +479,7 @@ def gerar_grade(
             hints_f1 = {k: solver_f1.Value(v) for k, v in aula_var_f1.items()}
             solver_f2, status_f2, aula_var_f2 = resolver(
                 disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
-                int(tempo_restante), apenas_turma=False, hints=hints_ini or hints_f1, fixar=fixar,  # [WARM-START]
+                int(tempo_restante), apenas_turma=False, hints=hints_ini or hints_f1, fixar=fixar, ha_por_professor=ha_por_professor,  # [WARM-START] [HA-NO-CPSAT]
             )
             if status_f2 in (cp_model.OPTIMAL, cp_model.FEASIBLE):
                 solver, status, aula_var = solver_f2, status_f2, aula_var_f2
@@ -470,7 +501,7 @@ def gerar_grade(
         tempo_rigida = min(TETO_TENTATIVA_RIGIDA_S, max(5, tempo_limite_s // 3))
         solver_rigido, status_rigido, aula_var_rigido = resolver(
             disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
-            tempo_rigida, apenas_turma=False, forcar_zero_janela=True, fixar=fixar, hints=hints_ini,  # [WARM-START]
+            tempo_rigida, apenas_turma=False, forcar_zero_janela=True, fixar=fixar, hints=hints_ini, ha_por_professor=ha_por_professor,  # [WARM-START] [HA-NO-CPSAT]
         )
         if status_rigido in (cp_model.OPTIMAL, cp_model.FEASIBLE):
             solver, status, aula_var = solver_rigido, status_rigido, aula_var_rigido
@@ -478,7 +509,7 @@ def gerar_grade(
             tempo_suave = max(5, tempo_limite_s - tempo_rigida)
             solver, status, aula_var = resolver(
                 disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
-                tempo_suave, apenas_turma=False, fixar=fixar, hints=hints_ini,  # [WARM-START]
+                tempo_suave, apenas_turma=False, fixar=fixar, hints=hints_ini, ha_por_professor=ha_por_professor,  # [WARM-START] [HA-NO-CPSAT]
             )
     duracao = time.time() - inicio
 

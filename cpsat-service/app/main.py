@@ -76,6 +76,7 @@ def gerar_grade_endpoint(payload: dict):
             turmas_raw,
             tempo_limite_s,
             payload.get("recursos", []),
+            ha_por_professor=payload.get("haPorProfessor"),  # [HA-NO-CPSAT]
         )
 
         if not resultado.get("viavel") or resultado.get("status") in ["INFEASIBLE", "MODEL_INVALID"]:
@@ -143,6 +144,7 @@ def melhorar_grade_endpoint(payload: dict):
             payload.get("turmas", []),
             int(payload.get("tempoLimiteS", 120)),
             aulas_iniciais=aulas_iniciais,
+            ha_por_professor=payload.get("haPorProfessor"),  # [HA-NO-CPSAT]
         )
         resultado["janelasProfessorAntes"] = contar_janelas_professor(aulas_iniciais)
         if resultado.get("aulas"):
