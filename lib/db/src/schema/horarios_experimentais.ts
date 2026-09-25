@@ -13,6 +13,7 @@ export const horariosExperimentaisTable = pgTable("horarios_experimentais", {
   numeroAula: integer("numero_aula").notNull(),
   sala: text("sala"),
   assincrona: boolean("assincrona").notNull().default(false), // [ASSINCRONA-TRIO]
+  fixa: boolean("fixa").notNull().default(false), // [AULA-FIXA] travada pelo coordenador: o motor nunca move
   ativo: boolean("ativo").notNull().default(true),
   criadoPor: text("criado_por"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

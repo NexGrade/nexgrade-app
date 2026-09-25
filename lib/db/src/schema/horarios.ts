@@ -16,6 +16,7 @@ export const horariosTable = pgTable("horarios", {
   sala: text("sala"),
   versaoGrade: text("versao_grade").default("oficial"),
   assincrona: boolean("assincrona").notNull().default(false), // [ASSINCRONA-TRIO]
+  fixa: boolean("fixa").notNull().default(false), // [AULA-FIXA] travada pelo coordenador: o motor nunca move
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
