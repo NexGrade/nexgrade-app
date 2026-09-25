@@ -27,7 +27,7 @@ import { getEscolaId } from "../lib/escola-id";
 import { randomUUID } from "node:crypto";
 import { recalcularHoraAtividade } from "../lib/recalcular-ha";
 import { ehBloqueioReal } from "../lib/bloqueio-real";
-import { validarCapacidadeProfessores } from "../lib/capacidade-professor";
+import { validarCapacidadeProfessores, calcularCotaHaPorTurno } from "../lib/capacidade-professor";
 
 const router = Router();
 
@@ -1581,6 +1581,13 @@ async function runCpsatGeneracaoUnica(
       tempoFase3S,
     } : {}),
   };
+  // [HA-NO-CPSAT] cota de HA de cada professor neste turno (mesma divisao do
+  // recalculo). O motor reserva espaco para ela; sem cotas, gera como antes.
+  const haPorProfessor = await calcularCotaHaPorTurno(escolaId, turno).catch((err) => {
+    console.error("[HA-NO-CPSAT] cota de HA indisponivel, gerando sem ela:", err);
+    return {} as Record<string, number>;
+  });
+  const payloadComHa = { ...payload, haPorProfessor };
   console.log("[DEBUG-CPSAT-PAYLOAD]", JSON.stringify(payload));
 
   let resultado:
@@ -1644,7 +1651,7 @@ async function runCpsatGeneracaoUnica(
       // que o undici trava/falha silenciosamente com corpos de requisicao
       // medios/grandes (60KB+) na rede interna do Render, mesmo dentro do
       // timeout configurado. axios usa http/https nativos do Node.
-      const axiosResponse = await axios.post(`${CPSAT_SERVICE_URL}/${modoMelhoria ? "melhorar-grade" : usarCoordenacao ? "gerar-grade-coordenada" : "gerar-grade"}`, modoMelhoria ? { ...payload, aulasIniciais } : payload, { // [MELHORAR-GRADE]
+      const axiosResponse = await axios.post(`${CPSAT_SERVICE_URL}/${modoMelhoria ? "melhorar-grade" : usarCoordenacao ? "gerar-grade-coordenada" : "gerar-grade"}`, modoMelhoria ? { ...payloadComHa, aulasIniciais } : payloadComHa, { // [MELHORAR-GRADE] [HA-NO-CPSAT]
         headers: { "Content-Type": "application/json" },
         timeout: timeoutMs,
         validateStatus: () => true,

@@ -9,6 +9,7 @@ import { db, turmasTable, turmaDisciplinasTable, disciplinasTable, professoresTa
 import { and, eq, inArray } from "drizzle-orm";
 import { ehBloqueioReal } from "./bloqueio-real";
 import { calcularHoraAtividadeInstitucional } from "./recalcular-ha";
+import { calcularHoraAtividadePorTurno } from "./hora-atividade";
 
 export interface ProblemaCapacidade {
   professorId: number;
@@ -21,9 +22,18 @@ export interface ProblemaCapacidade {
   livresPorTurno: Record<string, number>;
 }
 
-export async function validarCapacidadeProfessores(escolaId: string): Promise<ProblemaCapacidade[]> {
+export interface CargaProfessor {
+  professorId: number;
+  professor: string;
+  aulasPorTurno: Record<string, number>;
+}
+
+// [CARGA-PROFESSOR] Aulas de cada professor por turno, pela MESMA regra de
+// carga do payload do CP-SAT (override -> matriz -> padrao da disciplina).
+// Fonte unica usada pela validacao de capacidade e pela cota de HA do motor.
+export async function calcularCargaPorProfessor(escolaId: string): Promise<{ cargas: CargaProfessor[]; slots: (typeof horarioSlotsTable.$inferSelect)[]; disp: (typeof disponibilidadeTable.$inferSelect)[] }> {
   const turmas = await db.select().from(turmasTable).where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.fantasma, false)));
-  if (turmas.length === 0) return [];
+  if (turmas.length === 0) return { cargas: [], slots: [], disp: [] };
   const turmaIds = turmas.map((t) => t.id);
   const matrizIds = [...new Set(turmas.map((t) => t.matrizCurricularId).filter((id): id is number => id != null))];
   const [tds, disciplinas, professores, profDiscs, itensMatriz, slots] = await Promise.all([
@@ -65,6 +75,31 @@ export async function validarCapacidadeProfessores(escolaId: string): Promise<Pr
     r[turma.turno] = (r[turma.turno] ?? 0) + n;
     aulas.set(prof.id, r);
   }
+
+  const cargas: CargaProfessor[] = [];
+  for (const [pid, porTurno] of aulas) {
+    const p = profMap.get(pid);
+    if (p) cargas.push({ professorId: pid, professor: p.nome, aulasPorTurno: porTurno });
+  }
+  return { cargas, slots, disp };
+}
+
+// [HA-NO-CPSAT] Cota de HA de cada professor NUM turno (nome -> HA), pela
+// mesma divisao proporcional do recalculo. Vai no payload do CP-SAT.
+export async function calcularCotaHaPorTurno(escolaId: string, turno: string): Promise<Record<string, number>> {
+  const { cargas } = await calcularCargaPorProfessor(escolaId);
+  const r: Record<string, number> = {};
+  for (const c of cargas) {
+    const cota = calcularHoraAtividadePorTurno(c.aulasPorTurno)[turno] ?? 0;
+    if (cota > 0) r[c.professor] = cota;
+  }
+  return r;
+}
+
+export async function validarCapacidadeProfessores(escolaId: string): Promise<ProblemaCapacidade[]> {
+  const { cargas, slots, disp } = await calcularCargaPorProfessor(escolaId);
+  const aulas = new Map(cargas.map((c) => [c.professorId, c.aulasPorTurno]));
+  const profMap = new Map(cargas.map((c) => [c.professorId, { nome: c.professor }]));
 
   const maxAulaTurno = new Map<string, number>();
   for (const s of slots) {
