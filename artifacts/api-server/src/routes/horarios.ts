@@ -27,6 +27,7 @@ import { getEscolaId } from "../lib/escola-id";
 import { randomUUID } from "node:crypto";
 import { recalcularHoraAtividade } from "../lib/recalcular-ha";
 import { ehBloqueioParaMotor } from "../lib/bloqueio-real"; // [HA-FIXA]
+import { aulasFixasTable } from "@workspace/db"; // [AULA-FIXA-CADASTRO]
 import { validarCapacidadeProfessores, calcularCotaHaPorTurno } from "../lib/capacidade-professor";
 
 const router = Router();
@@ -1651,11 +1652,18 @@ async function runCpsatGeneracaoUnica(
   const bloqueioSetFixa = new Set(bloqueiosDisponibilidade.map((b) => `${b.professor}|${b.dia}|${b.aula}`));
   const oficiaisFixas = await db.select().from(horariosTable)
     .where(and(inArray(horariosTable.turmaId, turmaIds), eq(horariosTable.fixa, true)));
+  // [AULA-FIXA-CADASTRO] tambem o cadastro de Aulas Fixas (aba Esquema), do ano letivo atual
+  const cadastroFixas = await db.select().from(aulasFixasTable)
+    .where(and(eq(aulasFixasTable.escolaId, escolaId), inArray(aulasFixasTable.turmaId, turmaIds), eq(aulasFixasTable.anoLetivo, new Date().getFullYear())));
+  const todasFixas = [
+    ...oficiaisFixas.map((h) => ({ turmaId: h.turmaId, disciplinaId: h.disciplinaId, professorId: h.professorId, diaSemana: h.diaSemana, numeroAula: h.numeroAula, assincrona: h.assincrona })),
+    ...cadastroFixas.map((af) => ({ turmaId: af.turmaId, disciplinaId: af.disciplinaId, professorId: af.professorId ?? 0, diaSemana: af.diaSemana, numeroAula: af.numeroAula, assincrona: false })),
+  ];
   const recursosFixos: Array<{ turma: string; codigoSae: string; professor: string; dia: number; aula: number }> = [];
   const chavesFixas = new Set<string>();
   const fixasImpossiveis: string[] = [];
   const DIAS_FIXA = ["Seg", "Ter", "Qua", "Qui", "Sex"];
-  for (const h of oficiaisFixas) {
+  for (const h of todasFixas) { // [AULA-FIXA-CADASTRO]
     const turmaH = turmaMap.get(h.turmaId);
     const profNome = professorMap.get(h.professorId)?.nome;
     const onde = `${turmaH?.nome ?? `turma #${h.turmaId}`} ${DIAS_FIXA[h.diaSemana] ?? h.diaSemana} ${h.numeroAula}a aula (${profNome ?? `professor #${h.professorId}`})`;
