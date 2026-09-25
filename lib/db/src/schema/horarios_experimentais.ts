@@ -12,6 +12,7 @@ export const horariosExperimentaisTable = pgTable("horarios_experimentais", {
   diaSemana: integer("dia_semana").notNull(),
   numeroAula: integer("numero_aula").notNull(),
   sala: text("sala"),
+  assincrona: boolean("assincrona").notNull().default(false), // [ASSINCRONA-TRIO]
   ativo: boolean("ativo").notNull().default(true),
   criadoPor: text("criado_por"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

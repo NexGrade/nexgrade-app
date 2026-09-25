@@ -70,6 +70,13 @@ export const turmaDisciplinasTable = pgTable("turma_disciplinas", {
   // manualmente (fluxo antigo, sem matriz) — nesse caso o valor global
   // continua sendo usado, sem quebrar turmas já existentes.
   cargaHorariaSemanalOverride: integer("carga_horaria_semanal_override"),
+  // [ASSINCRONA-TRIO] quantas das aulas semanais dessa disciplina sao
+  // ASSINCRONAS (SEED/PR 2026): ocupam horario do professor e da turma,
+  // nao usam sala, e o motor prefere os horarios do meio do turno.
+  aulasAssincronas: integer("aulas_assincronas").notNull().default(0),
+  // [ASSINCRONA-TRIO] DOCENCIA POR TRIO: as 3 disciplinas da turma com o
+  // mesmo valor aqui (ex.: "trio1") caem sempre no mesmo dia e horario.
+  grupoTrio: text("grupo_trio"),
   // RNF-SEED-03: limite de aulas consecutivas dessa disciplina, nessa
   // turma, no mesmo dia ("aulas geminadas" / Max_Aulas_Dia). Nulo = usa
   // o padrão geral definido em configuracoes (chave

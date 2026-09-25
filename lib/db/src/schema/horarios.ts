@@ -1,4 +1,4 @@
-import { pgTable, serial, timestamp, integer, text } from "drizzle-orm/pg-core";
+import { pgTable, serial, timestamp, integer, text, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { turmasTable } from "./turmas";
@@ -15,6 +15,7 @@ export const horariosTable = pgTable("horarios", {
   numeroAula: integer("numero_aula").notNull(),
   sala: text("sala"),
   versaoGrade: text("versao_grade").default("oficial"),
+  assincrona: boolean("assincrona").notNull().default(false), // [ASSINCRONA-TRIO]
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
