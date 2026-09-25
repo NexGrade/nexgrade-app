@@ -430,7 +430,7 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     // em NENHUM turno (sinal real de que a HA dele nunca foi
     // registrada, não uma diferença legítima de turno alternado).
     Object.entries(turnosComAula).forEach(([turno, total]) => {
-      if (total <= horaAtividadeMesmoTurnoAte && turnosComHA.size === 0) {
+      if (exigido > 0 && total <= horaAtividadeMesmoTurnoAte && turnosComHA.size === 0) { // [HA-ZERO-NAO-E-CONFLITO] 1-2 aulas no total = 0 HA pela tabela oficial
         conflitos.push({
           tipo: "hora_atividade_turno_incorreto",
           descricao: `Prof. ${prof.nome} tem ${total} aulas no turno ${turno} (<= ${horaAtividadeMesmoTurnoAte}) mas nenhuma hora-atividade obrigatória marcada em turno nenhum`,
