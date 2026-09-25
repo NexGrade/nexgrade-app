@@ -173,7 +173,7 @@ export async function calcularHAIdeal(
     // tomada por fora do sistema (autorizacao da coordenacao), sempre
     // respeitada e nunca recalculada por aqui. Conta pro total exigido.
     const haManualContraturno = disponibilidades.filter(
-      (d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && d.motivo !== MOTIVO_HA_AUTO, // [FIX-HA-AUTO-NAO-E-MANUAL] [HA-MANUAL-QUALQUER-TURNO] toda HA nao automatica e preservada, em qualquer turno
+      (d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && d.motivo !== MOTIVO_HA_AUTO && !ocupadoPorTurnoOriginal.get(d.turno ?? "")?.has(`${d.diaSemana}-${d.horarioSlot}`), // [FIX-HA-AUTO-NAO-E-MANUAL] [HA-MANUAL-QUALQUER-TURNO] [HA-MANUAL-CEDE-A-AULA] HA nao automatica e preservada em qualquer turno, exceto se uma aula passou a ocupar o horario
     );
     for (const m of haManualContraturno) {
       marcasFinais.push({ professorId: prof.id, turno: m.turno ?? "sem_turno", diaSemana: m.diaSemana, horarioSlot: m.horarioSlot });
