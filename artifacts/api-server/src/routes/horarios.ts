@@ -763,6 +763,25 @@ router.delete("/:id", async (req, res) => {
     .where(and(eq(horariosTable.id, parsed.data.id), eq(horariosTable.escolaId, escolaId)));
   res.status(204).send();
 });
+// [AULA-FIXA] Fixa ou solta uma aula da grade OFICIAL. Aula fixa: o motor
+// nunca a move (geracao, melhoria e coordenacao a mandam como trava rigida).
+router.patch("/:id/fixa", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const id = Number(req.params.id);
+  const fixa = req.body?.fixa;
+  if (!Number.isInteger(id) || id <= 0 || typeof fixa !== "boolean") {
+    res.status(400).json({ error: "Informe um id valido e fixa: true ou false" });
+    return;
+  }
+  const [atualizada] = await db.update(horariosTable).set({ fixa })
+    .where(and(eq(horariosTable.id, id), eq(horariosTable.escolaId, escolaId)))
+    .returning();
+  if (!atualizada) {
+    res.status(404).json({ error: "Aula nao encontrada nesta escola" });
+    return;
+  }
+  res.json(atualizada);
+});
 
 // ── EXPERIMENTAIS ────────────────────────────────────────────────────
 
@@ -871,6 +890,7 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     numeroAula: s.numeroAula,
     sala: s.sala,
     assincrona: s.assincrona, // [ASSINCRONA-TRIO]
+    fixa: s.fixa, // [AULA-FIXA]
   }));
 
   // [FIX-PROMOVER-NAO-APAGAR-TUDO] Antes apagava TODAS as aulas da
@@ -1619,13 +1639,53 @@ async function runCpsatGeneracaoUnica(
       tempoFase3S,
     } : {}),
   };
+  // [AULA-FIXA] Aulas oficiais travadas pelo coordenador vao ao motor como
+  // "recursos" (trava rigida). Antes, confere se alguma ficou impossivel --
+  // melhor parar com uma mensagem clara do que o motor falhar sem explicar.
+  const codigoParaFixa = new Map<string, string>();
+  for (const d of disciplinasTurma) {
+    const idsD = chaveParaIds.get(`${d.turma}||${d.codigoSae}`);
+    if (idsD) codigoParaFixa.set(`${idsD.turmaId}|${idsD.disciplinaId}|${d.professor}|${idsD.assincrona ? 1 : 0}`, d.codigoSae);
+  }
+  const ultimaAulaPorTurma = new Map(disciplinasTurma.map((d) => [d.turma, d.ultimaAulaTurma]));
+  const bloqueioSetFixa = new Set(bloqueiosDisponibilidade.map((b) => `${b.professor}|${b.dia}|${b.aula}`));
+  const oficiaisFixas = await db.select().from(horariosTable)
+    .where(and(inArray(horariosTable.turmaId, turmaIds), eq(horariosTable.fixa, true)));
+  const recursosFixos: Array<{ turma: string; codigoSae: string; professor: string; dia: number; aula: number }> = [];
+  const chavesFixas = new Set<string>();
+  const fixasImpossiveis: string[] = [];
+  const DIAS_FIXA = ["Seg", "Ter", "Qua", "Qui", "Sex"];
+  for (const h of oficiaisFixas) {
+    const turmaH = turmaMap.get(h.turmaId);
+    const profNome = professorMap.get(h.professorId)?.nome;
+    const onde = `${turmaH?.nome ?? `turma #${h.turmaId}`} ${DIAS_FIXA[h.diaSemana] ?? h.diaSemana} ${h.numeroAula}a aula (${profNome ?? `professor #${h.professorId}`})`;
+    const codigo = turmaH && profNome ? codigoParaFixa.get(`${h.turmaId}|${h.disciplinaId}|${profNome}|${h.assincrona ? 1 : 0}`) : undefined;
+    if (!turmaH || !profNome || !codigo) {
+      fixasImpossiveis.push(`${onde}: a disciplina ou o professor desta aula mudou -- solte ou refaca a aula fixa`);
+      continue;
+    }
+    if (bloqueioSetFixa.has(`${profNome}|${h.diaSemana}|${h.numeroAula}`)) {
+      fixasImpossiveis.push(`${onde}: o professor esta bloqueado (ou com HA fixa) neste horario`);
+      continue;
+    }
+    const ultimaT = ultimaAulaPorTurma.get(turmaH.nome);
+    if (ultimaT && h.numeroAula > ultimaT) {
+      fixasImpossiveis.push(`${onde}: depois da ultima aula da turma (${ultimaT}a)`);
+      continue;
+    }
+    recursosFixos.push({ turma: turmaH.nome, codigoSae: codigo, professor: profNome, dia: h.diaSemana, aula: h.numeroAula });
+    chavesFixas.add(`${h.turmaId}|${h.disciplinaId}|${h.professorId}|${h.diaSemana}|${h.numeroAula}`);
+  }
+  if (fixasImpossiveis.length > 0) {
+    return { httpStatus: 400, body: { error: "Ha aula(s) fixa(s) impossivel(is) de manter -- ajuste antes de gerar.", fixasImpossiveis } };
+  }
   // [HA-NO-CPSAT] cota de HA de cada professor neste turno (mesma divisao do
   // recalculo). O motor reserva espaco para ela; sem cotas, gera como antes.
   const haPorProfessor = await calcularCotaHaPorTurno(escolaId, turno).catch((err) => {
     console.error("[HA-NO-CPSAT] cota de HA indisponivel, gerando sem ela:", err);
     return {} as Record<string, number>;
   });
-  const payloadComHa = { ...payload, haPorProfessor };
+  const payloadComHa = { ...payload, haPorProfessor, recursos: recursosFixos }; // [AULA-FIXA]
   console.log("[DEBUG-CPSAT-PAYLOAD]", JSON.stringify(payload));
 
   let resultado:
@@ -1782,6 +1842,7 @@ async function runCpsatGeneracaoUnica(
     escolaId: string; nome: string; turmaId: number; disciplinaId: number;
     professorId: number; diaSemana: number; numeroAula: number;
     assincrona: boolean; // [ASSINCRONA-TRIO]
+    fixa: boolean; // [AULA-FIXA]
   }> = [];
   const naoMapeadas: typeof resultado.aulas = [];
 
@@ -1801,6 +1862,7 @@ async function runCpsatGeneracaoUnica(
       diaSemana: aula.dia,
       numeroAula: aula.aula,
       assincrona: ids.assincrona ?? false, // [ASSINCRONA-TRIO]
+      fixa: chavesFixas.has(`${ids.turmaId}|${ids.disciplinaId}|${professorId}|${aula.dia}|${aula.aula}`), // [AULA-FIXA]
     });
   }
 
