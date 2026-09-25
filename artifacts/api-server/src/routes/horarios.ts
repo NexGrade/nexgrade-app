@@ -870,6 +870,7 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     diaSemana: s.diaSemana,
     numeroAula: s.numeroAula,
     sala: s.sala,
+    assincrona: s.assincrona, // [ASSINCRONA-TRIO]
   }));
 
   // [FIX-PROMOVER-NAO-APAGAR-TUDO] Antes apagava TODAS as aulas da
@@ -1406,7 +1407,7 @@ async function runCpsatGeneracaoUnica(
   const professorMap = new Map(professoresTodos.map((p) => [p.id, p]));
   const turmaMap = new Map(turmasDoTurno.map((t) => [t.id, t]));
 
-  const chaveParaIds = new Map<string, { turmaId: number; disciplinaId: number }>();
+  const chaveParaIds = new Map<string, { turmaId: number; disciplinaId: number; assincrona?: boolean }>(); // [ASSINCRONA-TRIO]
   const nomeParaProfessorId = new Map<string, number>();
   professoresTodos.forEach((p) => nomeParaProfessorId.set(p.nome, p.id));
 
@@ -1449,14 +1450,22 @@ async function runCpsatGeneracaoUnica(
     contagemPorTurmaDisc.set(chave, (contagemPorTurmaDisc.get(chave) ?? 0) + 1);
   }
 
+  // [ASSINCRONA-TRIO] Cada turma+disciplina pode virar ate DUAS linhas para o
+  // motor: a parte presencial e a parte assincrona (codigo "#ASS"). Linhas com
+  // o mesmo grupo_trio na turma formam um grupo (mesmo mecanismo da dupla) e
+  // caem sempre no mesmo dia/horario -- os 3 professores juntos.
+  type LinhaMotor = {
+    turma: string; codigoSae: string; nome: string; aulasSemana: number; professor: string;
+    maxAulasDia: number; ultimaAulaTurma: number; grupoDupla: string | null; assincrona: boolean;
+  };
   const disciplinasTurma = turmaDiscsTodos
-    .map((td) => {
+    .flatMap((td): LinhaMotor[] => {
       const turma = turmaMap.get(td.turmaId)!;
       const disc = disciplinaMap.get(td.disciplinaId);
       const prof = resolverProfessor(td, turma);
       if (!prof) {
         semProfessorResolvido.push({ turma: turma.nome, disciplina: disc?.nome ?? `Disciplina #${td.disciplinaId}` });
-        return null;
+        return [];
       }
       const codigoSae = disc?.codigoSae ?? disc?.sigla ?? String(td.disciplinaId);
       const chaveTurmaDisc = `${td.turmaId}::${td.disciplinaId}`;
@@ -1464,20 +1473,49 @@ async function runCpsatGeneracaoUnica(
       // codigoSae de chaveParaIds precisa ser unico por linha quando ha dupla,
       // senao a segunda linha sobrescreve a primeira no Map
       const codigoSaeChave = ehDupla ? `${codigoSae}#${td.id}` : codigoSae;
-      chaveParaIds.set(`${turma.nome}||${codigoSaeChave}`, { turmaId: td.turmaId, disciplinaId: td.disciplinaId });
-      return {
+      const trio = td.grupoTrio?.trim();
+      const grupo = trio ? `trio::${td.turmaId}::${trio}` : (ehDupla ? chaveTurmaDisc : null);
+      const aulasTotal = td.cargaHorariaSemanalOverride ?? itensMatrizMap.get(`${turma.matrizCurricularId}-${td.disciplinaId}`)?.cargaHorariaSemanal ?? disc?.cargaSemanal ?? 0;
+      const aulasAssinc = Math.max(0, Math.min(td.aulasAssincronas ?? 0, aulasTotal));
+      const base = {
         turma: turma.nome,
-        codigoSae: codigoSaeChave,
         nome: disc?.nome ?? `Disciplina #${td.disciplinaId}`,
-        aulasSemana: td.cargaHorariaSemanalOverride ?? itensMatrizMap.get(`${turma.matrizCurricularId}-${td.disciplinaId}`)?.cargaHorariaSemanal ?? disc?.cargaSemanal ?? 0,
         professor: prof.nome,
         maxAulasDia: td.maxAulasConsecutivasDia ?? maxGeminadasPadraoCpsat,
         ultimaAulaTurma: maxAulaPorNivelEnsino.get(turma.nivelEnsino ?? "__sem_nivel__") ?? maxAulaGlobalFallback,
-        grupoDupla: ehDupla ? chaveTurmaDisc : null,
       };
+      chaveParaIds.set(`${turma.nome}||${codigoSaeChave}`, { turmaId: td.turmaId, disciplinaId: td.disciplinaId });
+      const linhas: LinhaMotor[] = [{ ...base, codigoSae: codigoSaeChave, aulasSemana: aulasTotal - aulasAssinc, grupoDupla: grupo, assincrona: false }];
+      if (aulasAssinc > 0) {
+        const codigoAss = `${codigoSaeChave}#ASS`;
+        chaveParaIds.set(`${turma.nome}||${codigoAss}`, { turmaId: td.turmaId, disciplinaId: td.disciplinaId, assincrona: true });
+        linhas.push({ ...base, codigoSae: codigoAss, aulasSemana: aulasAssinc, grupoDupla: grupo ? `${grupo}#ASS` : null, assincrona: true });
+      }
+      return linhas;
     })
-    .filter((d): d is NonNullable<typeof d> => d !== null)
     .filter((d) => d.aulasSemana > 0);
+
+  // [ASSINCRONA-TRIO] Trava: todas as linhas de um mesmo grupo (dupla ou trio)
+  // precisam ter a MESMA quantidade de aulas -- senao o motor fica inviavel sem
+  // explicacao. Para aqui com uma mensagem que diz exatamente o que ajustar.
+  const aulasPorGrupo = new Map<string, Array<{ nome: string; turma: string; aulas: number }>>();
+  for (const d of disciplinasTurma) {
+    if (!d.grupoDupla) continue;
+    const lista = aulasPorGrupo.get(d.grupoDupla) ?? [];
+    lista.push({ nome: d.nome, turma: d.turma, aulas: d.aulasSemana });
+    aulasPorGrupo.set(d.grupoDupla, lista);
+  }
+  const gruposInconsistentes: string[] = [];
+  for (const [grupo, lista] of aulasPorGrupo) {
+    if (new Set(lista.map((l) => l.aulas)).size > 1) {
+      const tipo = grupo.startsWith("trio::") ? "Trio" : "Dupla";
+      const parte = grupo.endsWith("#ASS") ? " (parte assincrona)" : "";
+      gruposInconsistentes.push(`${tipo}${parte} da turma ${lista[0]!.turma}: ${lista.map((l) => `${l.nome} ${l.aulas}`).join(", ")}`);
+    }
+  }
+  if (gruposInconsistentes.length > 0) {
+    return { httpStatus: 400, body: { error: "Dupla ou trio com quantidades de aulas diferentes entre as disciplinas -- ajuste a carga antes de gerar.", gruposInconsistentes } };
+  }
 
   if (disciplinasTurma.length === 0) {
     return { httpStatus: 400, body: { error: "Nenhuma disciplina com carga horaria > 0 e professor definido para este turno" } };
@@ -1612,14 +1650,14 @@ async function runCpsatGeneracaoUnica(
     const codigoPorChave = new Map<string, { codigoSae: string; disciplina: string }>();
     for (const d of disciplinasTurma) {
       const ids = chaveParaIds.get(`${d.turma}||${d.codigoSae}`);
-      if (ids) codigoPorChave.set(`${ids.turmaId}|${ids.disciplinaId}|${d.professor}`, { codigoSae: d.codigoSae, disciplina: d.nome });
+      if (ids) codigoPorChave.set(`${ids.turmaId}|${ids.disciplinaId}|${d.professor}|${ids.assincrona ? 1 : 0}`, { codigoSae: d.codigoSae, disciplina: d.nome }); // [ASSINCRONA-TRIO]
     }
     const oficiais = await db.select().from(horariosTable).where(inArray(horariosTable.turmaId, turmaIds));
     const semMapa: string[] = [];
     for (const h of oficiais) {
       const turmaH = turmaMap.get(h.turmaId);
       const profNome = h.professorId != null ? professorMap.get(h.professorId)?.nome : undefined;
-      const info = turmaH && profNome ? codigoPorChave.get(`${h.turmaId}|${h.disciplinaId}|${profNome}`) : undefined;
+      const info = turmaH && profNome ? codigoPorChave.get(`${h.turmaId}|${h.disciplinaId}|${profNome}|${h.assincrona ? 1 : 0}`) : undefined; // [ASSINCRONA-TRIO]
       if (!turmaH || !profNome || !info) {
         semMapa.push(`${turmaH?.nome ?? `turma #${h.turmaId}`} | disciplina #${h.disciplinaId} | ${profNome ?? `professor #${h.professorId}`} | dia ${h.diaSemana} aula ${h.numeroAula}`);
         continue;
@@ -1743,6 +1781,7 @@ async function runCpsatGeneracaoUnica(
   const linhasParaGravar: Array<{
     escolaId: string; nome: string; turmaId: number; disciplinaId: number;
     professorId: number; diaSemana: number; numeroAula: number;
+    assincrona: boolean; // [ASSINCRONA-TRIO]
   }> = [];
   const naoMapeadas: typeof resultado.aulas = [];
 
@@ -1761,6 +1800,7 @@ async function runCpsatGeneracaoUnica(
       professorId,
       diaSemana: aula.dia,
       numeroAula: aula.aula,
+      assincrona: ids.assincrona ?? false, // [ASSINCRONA-TRIO]
     });
   }
 

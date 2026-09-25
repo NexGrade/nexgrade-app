@@ -34,6 +34,9 @@ class DisciplinaTurma:
     # (ou mais) professores dando aula juntos, ao mesmo tempo, pra mesma
     # turma (ex.: Rec. Aprend. L. Port com 2 professores simultaneos).
     grupo_dupla: str | None = None
+    # [ASSINCRONA-TRIO] aula assincrona (SEED/PR 2026): ocupa professor e
+    # turma normalmente; o motor so prefere os horarios do meio do dia.
+    assincrona: bool = False
 
 
 def resolver(
@@ -344,7 +347,21 @@ def resolver(
             model.Add(deficit >= cota - sum(capacidades))
             deficits_ha.append(deficit)
     peso_ha = int(os.getenv("CPSAT_PESO_DEFICIT_HA", "10"))
-    model.Minimize(sum(penalidades_turma) + peso_professor * sum(penalidades_professor) + peso_ha * sum(deficits_ha))
+    # [ASSINCRONA-TRIO] Aula assincrona na 1a ou na ultima aula do dia da
+    # turma exige registro extra de ponto (SEED/PR 2026): penaliza de leve
+    # para o motor preferir os horarios do meio do turno.
+    penalidades_assincrona = []
+    for i_as, dt_as in enumerate(disciplinas_turma):
+        if not dt_as.assincrona:
+            continue
+        ultima_as = dt_as.ultima_aula_turma if dt_as.ultima_aula_turma else aulas_por_dia
+        ultima_as = min(ultima_as, aulas_por_dia)
+        for dia in range(len(DIAS)):
+            penalidades_assincrona.append(aula_var[(i_as, dia, 1)])
+            if ultima_as > 1:
+                penalidades_assincrona.append(aula_var[(i_as, dia, ultima_as)])
+    peso_assincrona = int(os.getenv("CPSAT_PESO_ASSINCRONA_PONTA", "2"))
+    model.Minimize(sum(penalidades_turma) + peso_professor * sum(penalidades_professor) + peso_ha * sum(deficits_ha) + peso_assincrona * sum(penalidades_assincrona))
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = tempo_limite_s
@@ -418,6 +435,7 @@ def gerar_grade(
             max_aulas_dia=d["maxAulasDia"],
             ultima_aula_turma=d.get("ultimaAulaTurma"),
             grupo_dupla=d.get("grupoDupla"),
+            assincrona=bool(d.get("assincrona", False)),  # [ASSINCRONA-TRIO]
         )
         for d in disciplinas_turma_raw
     ]

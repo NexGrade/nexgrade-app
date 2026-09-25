@@ -61,6 +61,7 @@ def _coordenar_pontes(disciplinas_turma_raw, bloqueios_raw, turno, aulas_por_dia
             aulas_semana=d["aulasSemana"], professor=d["professor"],
             max_aulas_dia=d["maxAulasDia"], ultima_aula_turma=d.get("ultimaAulaTurma"),
             grupo_dupla=d.get("grupoDupla"),
+            assincrona=bool(d.get("assincrona", False)),  # [ASSINCRONA-TRIO]
         )
         for d in disciplinas_turma_raw if d["turma"] in todas_turmas_nomes
     ]
