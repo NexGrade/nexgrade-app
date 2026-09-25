@@ -1,3 +1,4 @@
+import { customFetch } from "@workspace/api-client-react"; // [MODALIDADE]
 import { useState } from "react";
 import {
   useGetConfiguracao, useUpsertConfiguracao, getGetConfiguracaoQueryKey,
@@ -136,6 +137,20 @@ function SecaoEspecifico() {
     );
   }
 
+  // [MODALIDADE] aulas assincronas e trio (rota propria /modalidade)
+  async function salvarModalidade(disciplinaId: number, dados: { aulasAssincronas?: number; grupoTrio?: string | null }) {
+    try {
+      await customFetch(`/api/turmas/${turmaId}/disciplinas/${disciplinaId}/modalidade`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dados),
+      });
+      toast({ title: "Salvo!" });
+      queryClient.invalidateQueries({ queryKey: getGetTurmaQueryKey(Number(turmaId)) });
+    } catch (err) {
+      toast({ title: "Erro ao salvar", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+    }
+  }
   return (
     <div className="pt-2 space-y-4">
       <Select value={turmaId} onValueChange={setTurmaId}>
@@ -155,9 +170,30 @@ function SecaoEspecifico() {
               className="w-16 h-8"
               onBlur={(e) => e.target.value && salvarLimite(d.disciplinaId, e.target.value)}
             />
+            <span className="text-xs text-muted-foreground ml-2">assíncronas/sem.:</span>
+            <Input
+              type="number" min={0} max={20}
+              defaultValue={(d as any).aulasAssincronas ?? 0}
+              className="w-14 h-8"
+              onBlur={(e) => { const v = Number(e.target.value || 0); if (v !== ((d as any).aulasAssincronas ?? 0)) salvarModalidade(d.disciplinaId, { aulasAssincronas: v }); }}
+            />
+            <span className="text-xs text-muted-foreground ml-2">trio:</span>
+            <Input
+              defaultValue={(d as any).grupoTrio ?? ""}
+              placeholder="—"
+              maxLength={20}
+              className="w-16 h-8"
+              onBlur={(e) => { const v = e.target.value.trim(); if (v !== ((d as any).grupoTrio ?? "")) salvarModalidade(d.disciplinaId, { grupoTrio: v || null }); }}
+            />{/* [MODALIDADE] */}
           </div>
         </div>
       ))}
+      {turmaId && (turma?.disciplinasComCarga?.length ?? 0) > 0 && (
+        <p className="text-xs text-muted-foreground">
+          <strong>Assíncronas/sem.:</strong> quantas das aulas semanais da disciplina são assíncronas (ocupam o horário, sem sala; o motor prefere o meio do turno). 
+          <strong>Trio:</strong> dê o mesmo rótulo (ex.: A) às 3 disciplinas que acontecem juntas, no mesmo horário, com os 3 professores — todas precisam ter a mesma carga semanal.
+        </p>
+      )}{/* [MODALIDADE] */}
       {turmaId && turma?.disciplinasComCarga?.length === 0 && (
         <p className="text-xs text-muted-foreground">Esta turma ainda não tem disciplinas vinculadas.</p>
       )}

@@ -93,6 +93,8 @@ async function getTurmaWithDisciplinas(id: number, escolaId: string) {
         origemMatriz: l.cargaHorariaSemanalOverride !== null,
         maxAulasConsecutivasDia: l.maxAulasConsecutivasDia,
         grupoCompartilhadoId: l.grupoCompartilhadoId,
+        aulasAssincronas: l.aulasAssincronas, // [MODALIDADE]
+        grupoTrio: l.grupoTrio,
         professorId: l.professorId,
         professorNome: prof?.nome ?? null,
       };
@@ -519,4 +521,45 @@ router.get("/:id/horario", async (req, res) => {
   res.json(result);
 });
 
+// [MODALIDADE] Aulas assincronas e docencia por trio, por disciplina da turma
+// (SEED/PR 2026). Rota propria para nao depender do schema gerado do
+// UpdateTurmaBody (que descartaria campos novos). Atualiza TODAS as linhas da
+// disciplina na turma (inclusive dupla docencia).
+const ModalidadeInput = z.object({
+  aulasAssincronas: z.number().int().min(0).max(20).optional(),
+  grupoTrio: z.string().trim().max(20).nullable().optional(),
+});
+
+router.patch("/:id/disciplinas/:disciplinaId/modalidade", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const turmaId = Number(req.params.id);
+  const disciplinaId = Number(req.params.disciplinaId);
+  const parsed = ModalidadeInput.safeParse(req.body);
+  if (!Number.isInteger(turmaId) || !Number.isInteger(disciplinaId) || !parsed.success) {
+    res.status(400).json({ error: "Dados invalidos" });
+    return;
+  }
+  const turma = await db.select().from(turmasTable)
+    .where(and(eq(turmasTable.id, turmaId), eq(turmasTable.escolaId, escolaId)))
+    .then((r) => r[0]);
+  if (!turma) {
+    res.status(404).json({ error: "Turma nao encontrada nesta escola" });
+    return;
+  }
+  const patch: Partial<typeof turmaDisciplinasTable.$inferInsert> = {};
+  if (parsed.data.aulasAssincronas !== undefined) patch.aulasAssincronas = parsed.data.aulasAssincronas;
+  if (parsed.data.grupoTrio !== undefined) patch.grupoTrio = parsed.data.grupoTrio ? parsed.data.grupoTrio : null;
+  if (Object.keys(patch).length === 0) {
+    res.status(400).json({ error: "Nada para atualizar" });
+    return;
+  }
+  const linhas = await db.update(turmaDisciplinasTable).set(patch)
+    .where(and(eq(turmaDisciplinasTable.turmaId, turmaId), eq(turmaDisciplinasTable.disciplinaId, disciplinaId)))
+    .returning();
+  if (linhas.length === 0) {
+    res.status(404).json({ error: "Disciplina nao vinculada a esta turma" });
+    return;
+  }
+  res.json({ atualizadas: linhas.length });
+});
 export default router;
