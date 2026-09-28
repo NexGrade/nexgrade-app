@@ -77,6 +77,7 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
           ? <span className="text-xs font-medium text-amber-700">{semProfessor} sem professor</span>
           : <span className="text-xs font-medium text-emerald-700">todas distribuídas</span>}
       </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-1.5">{/* [TURMA-DIALOGO-ROLAGEM] */}
       {linhas.map((l) => {
         const ativos = professores.filter((p) => p.ativo !== false);
         const habilitados = ativos.filter((p) => (p.disciplinaIds ?? []).includes(l.disciplinaId));
@@ -85,7 +86,7 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
           <div key={l.turmaDisciplinaId} className={`flex items-center gap-3 rounded px-2 py-1.5 ${l.professorId ? "bg-muted/40" : "bg-amber-50"}`}>
             <span className="text-sm flex-1 truncate">{l.nome} <span className="text-muted-foreground">({l.cargaHorariaSemanal}h)</span></span>
             <Select value={l.professorId ? String(l.professorId) : ""} onValueChange={(v) => definir(l.turmaDisciplinaId, v)} disabled={salvandoLinha === l.turmaDisciplinaId}>
-              <SelectTrigger className="w-64 h-8"><SelectValue placeholder="Escolher professor" /></SelectTrigger>
+              <SelectTrigger className="w-52 h-8 shrink-0"><SelectValue placeholder="Escolher professor" /></SelectTrigger>
               <SelectContent>
                 {habilitados.length > 0 && (
                   <SelectGroup>
@@ -103,6 +104,7 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
           </div>
         );
       })}
+      </div>
       <p className="text-[11px] text-muted-foreground">A escolha grava na hora. Co-docência (dois professores na mesma aula) continua sendo configurada na grade.</p>
     </div>
   );
@@ -145,7 +147,7 @@ export default function TurmasList() {
           <DialogTrigger asChild>
             <Button onClick={handleOpenCreate}><Plus className="mr-2 h-4 w-4" />Nova Turma</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:max-w-3xl">{/* [TURMA-DIALOGO-ROLAGEM] */}
             {isDialogOpen && (
               <TurmaForm
                 key={editingId ?? "nova-turma"}
