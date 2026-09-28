@@ -36,7 +36,6 @@ import {
 
 const ABAS = [
   { key: "esquema", label: "Esquema", icon: Clock },
-  { key: "regras", label: "Regras de Distribuição", icon: ListChecks },
   { key: "grade", label: "Grade", icon: Calendar },
   { key: "conflitos", label: "Conflitos", icon: AlertTriangle },
   { key: "experimental", label: "Modo Experimental", icon: FlaskConical },
@@ -126,6 +125,7 @@ export default function HorarioHubPage() {
   // "/conflitos") e caíam em 404.
   const search = useSearch();
   const tabParam = new URLSearchParams(search).get("tab");
+  if (tabParam === "regras" && typeof window !== "undefined") window.location.replace("/regras-distribuicao"); // [FASE-A] Regras agora so no menu
   const abaInicial = (ABAS.some((a) => a.key === tabParam) ? tabParam : "esquema") as AbaKey;
   const [aba, setAba] = useState<AbaKey>(abaInicial);
 
@@ -154,7 +154,6 @@ export default function HorarioHubPage() {
       </div>
 
       {aba === "esquema" && <AbaEsquema />}
-      {aba === "regras" && <AbaRegras />}
       {aba === "grade" && <AbaGrade />}
       {aba === "conflitos" && <AbaConflitos />}
       {aba === "experimental" && <AbaExperimental />}
@@ -302,8 +301,6 @@ function AbaEsquema() {
 
       {isLoading ? (
         <Skeleton className="h-[400px] w-full" />
-      ) : modoAvancado ? (
-        <AulaFixaForm turno={turno} onFechar={() => setModoAvancado(false)} />
       ) : (
         <Card className="p-6">
           <div className="flex justify-between items-center mb-5">
@@ -317,9 +314,7 @@ function AbaEsquema() {
                 </div>
               ))}
             </div>
-            <button onClick={() => setModoAvancado(true)} className="text-xs text-primary font-medium flex items-center gap-1">
-              <Lock className="h-3 w-3" /> Modo avançado
-            </button>
+            <a href="/disponibilidade" className="text-xs text-primary font-medium flex items-center gap-1" title="Aulas fixas agora ficam na Disponibilidade de cada professor (Modo fixar aula)"><Lock className="h-3 w-3" /> Aulas fixas: na Disponibilidade</a>{/* [FASE-A] */}
           </div>
 
           {step === 1 && (
@@ -393,403 +388,8 @@ function AbaEsquema() {
   );
 }
 
-function AulaFixaForm({ turno, onFechar }: { turno: Turno; onFechar: () => void }) {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [turmaId, setTurmaId] = useState("");
-  const [disciplinaId, setDisciplinaId] = useState("");
-  const [professorId, setProfessorId] = useState("");
-  const [diaSemana, setDiaSemana] = useState("0");
-  const [numeroAula, setNumeroAula] = useState("1");
-
-  const { data: turmas } = useListTurmas();
-  const { data: disciplinas } = useListDisciplinas();
-  const { data: professores } = useListProfessores();
-  const { data: aulasFixas } = useListAulasFixas(
-    turmaId ? { turmaId: Number(turmaId) } : undefined,
-    { query: { queryKey: getListAulasFixasQueryKey(turmaId ? { turmaId: Number(turmaId) } : undefined), enabled: !!turmaId } },
-  );
-  const criar = useCriarAulaFixa();
-
-  const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
-
-  function salvar() {
-    if (!turmaId || !disciplinaId || !professorId) return;
-    criar.mutate(
-      {
-        data: {
-          turmaId: Number(turmaId),
-          disciplinaId: Number(disciplinaId),
-          professorId: Number(professorId),
-          diaSemana: Number(diaSemana),
-          numeroAula: Number(numeroAula),
-          anoLetivo: new Date().getFullYear(),
-        },
-      },
-      {
-        onSuccess: () => {
-          toast({ title: "Aula fixa criada!" });
-          queryClient.invalidateQueries({ queryKey: getListAulasFixasQueryKey({ turmaId: Number(turmaId) }) });
-        },
-        onError: (err) => {
-          toast({ title: "Erro ao criar aula fixa", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
-        },
-      },
-    );
-  }
-
-  return (
-    <Card className="p-6">
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-2">
-          <Lock className="h-4 w-4 text-primary" />
-          <h3 className="font-semibold">Travar aula manualmente</h3>
-        </div>
-        <button onClick={onFechar} className="text-xs text-muted-foreground">Fechar</button>
-      </div>
-      <p className="text-xs text-muted-foreground mb-4">
-        Define uma aula fixa antes do gerador rodar. Útil para professores com disponibilidade muito restrita.
-      </p>
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <Select value={turmaId} onValueChange={setTurmaId}>
-          <SelectTrigger><SelectValue placeholder="Turma" /></SelectTrigger>
-          <SelectContent>{turmas?.map((t) => <SelectItem key={t.id} value={String(t.id)}>{t.nome}</SelectItem>)}</SelectContent>
-        </Select>
-        <Select value={disciplinaId} onValueChange={setDisciplinaId}>
-          <SelectTrigger><SelectValue placeholder="Disciplina" /></SelectTrigger>
-          <SelectContent>{disciplinas?.map((d) => <SelectItem key={d.id} value={String(d.id)}>{d.nome}</SelectItem>)}</SelectContent>
-        </Select>
-        <Select value={professorId} onValueChange={setProfessorId}>
-          <SelectTrigger><SelectValue placeholder="Professor" /></SelectTrigger>
-          <SelectContent>{professores?.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}</SelectContent>
-        </Select>
-        <Select value={diaSemana} onValueChange={setDiaSemana}>
-          <SelectTrigger><SelectValue placeholder="Dia" /></SelectTrigger>
-          <SelectContent>{diasSemana.map((d, i) => <SelectItem key={i} value={String(i)}>{d}</SelectItem>)}</SelectContent>
-        </Select>
-      </div>
-      <Button onClick={salvar} disabled={criar.isPending || !turmaId || !disciplinaId || !professorId}>
-        <Check className="h-4 w-4 mr-1" /> {criar.isPending ? "Salvando..." : "Salvar aula fixa"}
-      </Button>
-
-      {aulasFixas && aulasFixas.length > 0 && (
-        <div className="mt-5 pt-4 border-t">
-          <p className="text-xs font-semibold text-muted-foreground mb-2">Aulas fixas desta turma</p>
-          <div className="space-y-1">
-            {aulasFixas.map((a) => (
-              <div key={a.id} className="text-xs bg-muted/50 rounded px-2 py-1.5">
-                {diasSemana[a.diaSemana]} · {a.numeroAula}ª aula
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </Card>
-  );
-}
-
-// ═══════════════════════════════════════════════ ABA: REGRAS ═══════════════════════════════════════════════
-
-const CHAVE_MAX_GEMINADAS = "seed_pr.max_aulas_geminadas_padrao";
-
-function AbaRegras() {
-  const [aberto, setAberto] = useState<"geral" | "especifico" | "complementar" | null>("geral");
-
-  const secoes = [
-    { key: "geral" as const, titulo: "Tipos gerais", subtitulo: "Regra padrão para toda a escola" },
-    { key: "especifico" as const, titulo: "Tipos específicos", subtitulo: "Por disciplina/turma — sobrescreve o geral" },
-    { key: "complementar" as const, titulo: "Complementares", subtitulo: "Professor com múltiplas disciplinas na mesma turma" },
-  ];
-
-  return (
-    <div className="space-y-3 pt-2">
-      {secoes.map((s, i) => {
-        const isOpen = aberto === s.key;
-        return (
-          <Card key={s.key} className="overflow-hidden">
-            <button
-              onClick={() => setAberto(isOpen ? null : s.key)}
-              className={`w-full flex justify-between items-center px-5 py-4 text-left ${isOpen ? "bg-muted/30" : ""}`}
-            >
-              <div className="flex items-center gap-2">
-                {isOpen ? <ChevronDown className="h-4 w-4 text-primary" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-                <div>
-                  <div className="font-semibold">{i + 1}. {s.titulo}</div>
-                  <div className="text-xs text-muted-foreground">{s.subtitulo}</div>
-                </div>
-              </div>
-            </button>
-            {isOpen && (
-              <div className="px-5 pb-5">
-                {s.key === "geral" && <SecaoGeral />}
-                {s.key === "especifico" && <SecaoEspecifico />}
-                {s.key === "complementar" && <SecaoComplementar />}
-              </div>
-            )}
-          </Card>
-        );
-      })}
-    </div>
-  );
-}
-
-function SecaoGeral() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { data: config, isLoading } = useGetConfiguracao(CHAVE_MAX_GEMINADAS, {
-    query: { queryKey: getGetConfiguracaoQueryKey(CHAVE_MAX_GEMINADAS), retry: false },
-  });
-  const [valor, setValor] = useState("2");
-  const salvar = useUpsertConfiguracao();
-
-  const valorAtual = typeof config?.valor === "number" ? config.valor : Number(valor);
-
-  function salvarValor() {
-    salvar.mutate(
-      { chave: CHAVE_MAX_GEMINADAS, data: { valor: Number(valor), descricao: "Máximo de aulas geminadas por padrão, quando a disciplina/turma não tem override específico." } },
-      {
-        onSuccess: () => {
-          toast({ title: "Padrão salvo!" });
-          queryClient.invalidateQueries({ queryKey: getGetConfiguracaoQueryKey(CHAVE_MAX_GEMINADAS) });
-        },
-        onError: () => toast({ title: "Erro ao salvar", variant: "destructive" }),
-      },
-    );
-  }
-
-  const CHAVE_MAX_COMPLEMENTAR = "seed_pr.max_aulas_complementar_padrao";
-  const { data: configComplementar, isLoading: isLoadingComplementar } = useGetConfiguracao(CHAVE_MAX_COMPLEMENTAR, {
-    query: { queryKey: getGetConfiguracaoQueryKey(CHAVE_MAX_COMPLEMENTAR), retry: false },
-  });
-  const [valorComplementar, setValorComplementar] = useState("");
-  const salvarComplementar = useUpsertConfiguracao();
-
-  const valorComplementarAtual = typeof configComplementar?.valor === "number" ? configComplementar.valor : (valorComplementar ? Number(valorComplementar) : undefined);
-
-  function salvarValorComplementar() {
-    if (!valorComplementar) return;
-    salvarComplementar.mutate(
-      { chave: CHAVE_MAX_COMPLEMENTAR, data: { valor: Number(valorComplementar), descricao: "Máximo de aulas por dia com a mesma turma, por padrão, quando um professor dá mais de uma disciplina pra ela e não tem regra específica na seção Complementares." } },
-      {
-        onSuccess: () => {
-          toast({ title: "Padrão salvo!" });
-          queryClient.invalidateQueries({ queryKey: getGetConfiguracaoQueryKey(CHAVE_MAX_COMPLEMENTAR) });
-        },
-        onError: () => toast({ title: "Erro ao salvar", variant: "destructive" }),
-      },
-    );
-  }
-
-  return (
-    <div className="pt-2">
-      <div className="bg-muted/50 rounded-lg p-4">
-        <label className="text-sm font-medium block mb-1">Máximo de aulas geminadas (padrão da escola)</label>
-        <p className="text-xs text-muted-foreground mb-3">
-          Vale para toda disciplina/turma que não tiver um limite específico configurado na seção abaixo.
-        </p>
-        <div className="flex items-center gap-2">
-          <Input
-            type="number" min={1} max={6}
-            defaultValue={isLoading ? undefined : valorAtual}
-            onChange={(e) => setValor(e.target.value)}
-            className="w-24"
-          />
-          <Button size="sm" onClick={salvarValor} disabled={salvar.isPending}>
-            <Check className="h-3.5 w-3.5 mr-1" /> Salvar
-          </Button>
-        </div>
-      </div>
-
-      <div className="bg-muted/50 rounded-lg p-4 mt-3">
-        <label className="text-sm font-medium block mb-1">Máximo de aulas por dia com a mesma turma (padrão da escola)</label>
-        <p className="text-xs text-muted-foreground mb-3">
-          Vale pra qualquer professor que dê mais de uma disciplina numa turma e não tenha uma regra específica configurada na seção "Complementares" (por professor, ou por professor+turma). Deixe em branco pra não aplicar limite nenhum por padrão.
-        </p>
-        <div className="flex items-center gap-2">
-          <Input
-            type="number" min={1} max={6}
-            placeholder="sem limite"
-            defaultValue={isLoadingComplementar ? undefined : valorComplementarAtual}
-            onChange={(e) => setValorComplementar(e.target.value)}
-            className="w-24"
-          />
-          <Button size="sm" onClick={salvarValorComplementar} disabled={salvarComplementar.isPending || !valorComplementar}>
-            <Check className="h-3.5 w-3.5 mr-1" /> Salvar
-          </Button>
-        </div>
-      </div>
-
-      <p className="text-xs text-amber-600 mt-3">
-        Compactação de carga horária e bloqueio de janelas ainda não têm um padrão configurável aqui — hoje são escolhidos a cada geração de horário, na aba de Esquema.
-      </p>
-    </div>
-  );
-}
-
-function SecaoEspecifico() {
-  const [turmaId, setTurmaId] = useState("");
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { data: turmas } = useListTurmas();
-  const { data: turma } = useGetTurma(Number(turmaId), { query: { enabled: !!turmaId, queryKey: getGetTurmaQueryKey(Number(turmaId)) } });
-  const atualizar = useUpdateTurma();
-
-  function salvarLimite(disciplinaId: number, valor: string) {
-    const numero = Number(valor);
-    if (!numero || numero < 1) return;
-    atualizar.mutate(
-      { id: Number(turmaId), data: { disciplinasConfig: { [disciplinaId]: { maxAulasConsecutivasDia: numero } } } },
-      {
-        onSuccess: () => {
-          toast({ title: "Limite salvo!" });
-          queryClient.invalidateQueries({ queryKey: getGetTurmaQueryKey(Number(turmaId)) });
-        },
-        onError: () => toast({ title: "Erro ao salvar", variant: "destructive" }),
-      },
-    );
-  }
-
-  // [MODALIDADE] aulas assincronas e trio (rota propria /modalidade)
-  async function salvarModalidade(disciplinaId: number, dados: { aulasAssincronas?: number; grupoTrio?: string | null }) {
-    try {
-      await customFetch(`/api/turmas/${turmaId}/disciplinas/${disciplinaId}/modalidade`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dados),
-      });
-      toast({ title: "Salvo!" });
-      queryClient.invalidateQueries({ queryKey: getGetTurmaQueryKey(Number(turmaId)) });
-    } catch (err) {
-      toast({ title: "Erro ao salvar", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
-    }
-  }
-  return (
-    <div className="pt-2 space-y-4">
-      <Select value={turmaId} onValueChange={setTurmaId}>
-        <SelectTrigger className="w-64"><SelectValue placeholder="Selecione a turma" /></SelectTrigger>
-        <SelectContent>{turmas?.map((t) => <SelectItem key={t.id} value={String(t.id)}>{t.nome}</SelectItem>)}</SelectContent>
-      </Select>
-
-      {turma?.disciplinasComCarga?.map((d) => (
-        <div key={d.disciplinaId} className="flex items-center justify-between bg-muted/50 rounded px-3 py-2">
-          <span className="text-sm">{d.nome}</span>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">máx. geminadas/dia:</span>
-            <Input
-              type="number" min={1} max={6}
-              defaultValue={d.maxAulasConsecutivasDia ?? ""}
-              placeholder="padrão"
-              className="w-16 h-8"
-              onBlur={(e) => e.target.value && salvarLimite(d.disciplinaId, e.target.value)}
-            />
-            <span className="text-xs text-muted-foreground ml-2">assíncronas/sem.:</span>
-            <Input
-              type="number" min={0} max={20}
-              defaultValue={(d as any).aulasAssincronas ?? 0}
-              className="w-14 h-8"
-              onBlur={(e) => { const v = Number(e.target.value || 0); if (v !== ((d as any).aulasAssincronas ?? 0)) salvarModalidade(d.disciplinaId, { aulasAssincronas: v }); }}
-            />
-            <span className="text-xs text-muted-foreground ml-2">trio:</span>
-            <Input
-              defaultValue={(d as any).grupoTrio ?? ""}
-              placeholder="—"
-              maxLength={20}
-              className="w-16 h-8"
-              onBlur={(e) => { const v = e.target.value.trim(); if (v !== ((d as any).grupoTrio ?? "")) salvarModalidade(d.disciplinaId, { grupoTrio: v || null }); }}
-            />{/* [MODALIDADE] */}
-          </div>
-        </div>
-      ))}
-      {turmaId && (turma?.disciplinasComCarga?.length ?? 0) > 0 && (
-        <p className="text-xs text-muted-foreground">
-          <strong>Assíncronas/sem.:</strong> quantas das aulas semanais da disciplina são assíncronas (ocupam o horário, sem sala; o motor prefere o meio do turno). 
-          <strong>Trio:</strong> dê o mesmo rótulo (ex.: A) às 3 disciplinas que acontecem juntas, no mesmo horário, com os 3 professores — todas precisam ter a mesma carga semanal.
-        </p>
-      )}{/* [MODALIDADE] */}
-      {turmaId && turma?.disciplinasComCarga?.length === 0 && (
-        <p className="text-xs text-muted-foreground">Esta turma ainda não tem disciplinas vinculadas.</p>
-      )}
-    </div>
-  );
-}
-
-function SecaoComplementar() {
-  const [aberto, setAberto] = useState(false);
-  const [professorId, setProfessorId] = useState("");
-  const [turmaId, setTurmaId] = useState<string>("");
-  const [maxAulas, setMaxAulas] = useState("2");
-
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { data: professores } = useListProfessores();
-  const { data: turmas } = useListTurmas();
-  const { data: limites } = useListLimitesDiariosProfessor(undefined, { query: { queryKey: getListLimitesDiariosProfessorQueryKey() } });
-  const salvar = useSetLimiteDiarioProfessor();
-
-  function salvarLimite() {
-    if (!professorId) return;
-    salvar.mutate(
-      { data: { professorId: Number(professorId), turmaId: turmaId ? Number(turmaId) : null, maxAulasPorDia: Number(maxAulas) } },
-      {
-        onSuccess: () => {
-          toast({ title: "Limite salvo!" });
-          queryClient.invalidateQueries({ queryKey: getListLimitesDiariosProfessorQueryKey() });
-          setAberto(false);
-        },
-        onError: () => toast({ title: "Erro ao salvar", variant: "destructive" }),
-      },
-    );
-  }
-
-  function nomeProfessor(id: number) {
-    return professores?.find((p) => p.id === id)?.nome ?? `#${id}`;
-  }
-  function nomeTurma(id: number | null | undefined) {
-    if (id === null || id === undefined) return "Qualquer turma (padrão do professor)";
-    return turmas?.find((t) => t.id === id)?.nome ?? `#${id}`;
-  }
-
-  return (
-    <div className="pt-2 space-y-2">
-      {limites?.map((l) => (
-        <div key={l.id} className="flex items-center justify-between bg-muted/50 rounded px-3 py-2 text-sm">
-          <span>{nomeProfessor(l.professorId)}</span>
-          <span className="text-xs text-muted-foreground">{nomeTurma(l.turmaId)} · máx. {l.maxAulasPorDia}/dia</span>
-        </div>
-      ))}
-
-      {!aberto ? (
-        <button onClick={() => setAberto(true)} className="text-xs text-primary font-medium flex items-center gap-1 mt-2">
-          <Plus className="h-3.5 w-3.5" /> Adicionar regra
-        </button>
-      ) : (
-        <div className="flex flex-wrap items-end gap-2 mt-3 pt-3 border-t">
-          <div className="w-48">
-            <label className="text-xs text-muted-foreground block mb-1">Professor</label>
-            <Select value={professorId} onValueChange={setProfessorId}>
-              <SelectTrigger><SelectValue placeholder="Professor" /></SelectTrigger>
-              <SelectContent>{professores?.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div className="w-48">
-            <label className="text-xs text-muted-foreground block mb-1">Turma (opcional)</label>
-            <Select value={turmaId} onValueChange={setTurmaId}>
-              <SelectTrigger><SelectValue placeholder="Qualquer turma" /></SelectTrigger>
-              <SelectContent>{turmas?.map((t) => <SelectItem key={t.id} value={String(t.id)}>{t.nome}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">Máx./dia</label>
-            <Input type="number" min={1} value={maxAulas} onChange={(e) => setMaxAulas(e.target.value)} className="w-20" />
-          </div>
-          <Button size="sm" onClick={salvarLimite} disabled={salvar.isPending || !professorId}>
-            <Check className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-}
+// [FASE-A] AulaFixaForm e aba Regras removidos: aula fixa fica na Disponibilidade;
+// regras de distribuicao ficam so na pagina do menu (/regras-distribuicao).
 
 // ═══════════════════════════════════════════════ ABA: GRADE ═══════════════════════════════════════════════
 
@@ -1037,7 +637,7 @@ function DialogDetalheAula({
 }
 
 function AbaGrade() {
-  const [turmaId, setTurmaId] = useState<string>("all");
+  const [turmaId, setTurmaId] = useState<string>(() => new URLSearchParams(window.location.search).get("turma") ?? "all"); // [FASE-A] ?turma=
   const [professorId, setProfessorId] = useState<string>("all");
   const [turno, setTurno] = useState<string>("all");
   const [gerando, setGerando] = useState(false);
