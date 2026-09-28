@@ -317,6 +317,7 @@ export default function MinhaAgendaPage() {
     query: { queryKey: getGetMinhaAgendaHorarioQueryKey(), enabled: !!professor },
   });
   const aulas = dadosHorario?.aulas;
+  const [turnoAba, setTurnoAba] = useState<string | null>(null); // [AGENDA-ABAS]
   const horasAtividade = dadosHorario?.horasAtividade ?? [];
   const ehHoraAtividade = (diaIdx: number, numeroAula: number) =>
     horasAtividade.some((h) => h.diaSemana === diaIdx && h.numeroAula === numeroAula);
@@ -484,7 +485,28 @@ export default function MinhaAgendaPage() {
                   const turnos = ORDEM.filter((tn) => listaAulas.some((a) => a.turno === tn) || listaHA.some((h) => h.turno === tn));
                   const semTurno = turnos.length === 0 || listaAulas.some((a) => a.turno === undefined);
                   const grupos: Array<string | null> = semTurno ? [null] : turnos;
-                  return grupos.map((turno) => {
+                  // [AGENDA-ABAS] abre no turno do momento (ou no proximo turno do professor no dia)
+                  const hAgora = new Date().getHours();
+                  const turnoAgora = hAgora < 12 ? "matutino" : hAgora < 18 ? "vespertino" : "noturno";
+                  const padrao = (grupos.find((g) => g !== null && ORDEM.indexOf(g) >= ORDEM.indexOf(turnoAgora)) ?? grupos[0]) as string | null;
+                  const selecionado = turnoAba !== null && grupos.includes(turnoAba) ? turnoAba : padrao;
+                  const abas = grupos.length > 1 ? (
+                    <div key="abas-turno" className="flex items-center gap-1 border-b border-border mb-4 overflow-x-auto">
+                      {grupos.map((g) => (
+                        <button
+                          key={g ?? "unico"}
+                          type="button"
+                          onClick={() => setTurnoAba(g)}
+                          className={`px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
+                            g === selecionado ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          {NOME_TURNO[g ?? ""] ?? g}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null;
+                  return [abas, ...grupos.filter((g) => g === selecionado).map((turno) => {
                     const aulasT = listaAulas.filter((a) => turno === null || a.turno === turno);
                     const haT = listaHA.filter((h) => turno === null || h.turno === turno);
                     const horaDe = (n: number) => {
@@ -500,7 +522,7 @@ export default function MinhaAgendaPage() {
                     const ehHA = (d: number, n: number) => haT.some((h) => h.diaSemana === d && h.numeroAula === n);
                     return (
                       <div key={turno ?? "unico"} className="mb-6 last:mb-0">
-                        {turno && grupos.length > 0 && (
+                        {turno && grupos.length === 1 && (
                           <h3 className="text-sm font-semibold text-muted-foreground mb-2">{NOME_TURNO[turno] ?? turno}</h3>
                         )}
                         <table className="w-full text-sm border-collapse imprimir-compacto">
@@ -568,7 +590,7 @@ export default function MinhaAgendaPage() {
                         </table>
                       </div>
                     );
-                  });
+                  })];
                 })()}
               </div>
             )}
