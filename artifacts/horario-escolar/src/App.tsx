@@ -45,6 +45,7 @@ const PlanosPage = lazy(() => import("@/pages/planos/index"));
 const MasterPage = lazy(() => import("@/pages/master/index"));
 const OnboardingPage = lazy(() => import("@/pages/onboarding/index"));
 const CursosList = lazy(() => import("@/pages/cursos/index"));
+const CursosDisciplinasPage = lazy(() => import("@/pages/cursos-disciplinas/index")); // [FASE-C2]
 const DisponibilidadePage = lazy(() => import("@/pages/disponibilidade/index"));
 const CalendarioEscolarPage = lazy(() => import("@/pages/calendario/index"));
 const ReservasPage = lazy(() => import("@/pages/reservas/index"));
@@ -341,8 +342,8 @@ function Router() {
       <Route path="/professores/novo" component={() => <ProtectedRoute component={ProfessorNovo} />} />
       <Route path="/professores/:id" component={() => <ProtectedRoute component={ProfessorEditar} />} />
       <Route path="/disponibilidade" component={() => <ProtectedRoute component={DisponibilidadePage} />} />
-      <Route path="/disciplinas" component={() => <ProtectedRoute component={DisciplinasList} />} />
-      <Route path="/cursos" component={() => <ProtectedRoute component={CursosList} />} />
+      <Route path="/disciplinas"><Redirect to="/cursos?tab=disciplinas" /></Route>{/* [FASE-C2] */}
+      <Route path="/cursos" component={() => <ProtectedRoute component={CursosDisciplinasPage} />} />
       <Route path="/turmas" component={() => <ProtectedRoute component={TurmasList} />} />
       <Route path="/turmas/:id/horario" component={() => <ProtectedRoute component={TurmaHorario} />} />
       <Route path="/salas" component={() => <ProtectedRoute component={SalasList} />} />

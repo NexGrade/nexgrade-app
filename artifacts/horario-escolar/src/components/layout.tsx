@@ -27,8 +27,7 @@ const navGroups = [
     label: "Montagem da escola",
     items: [
       { href: "/calendario", label: "Calendário Escolar", icon: CalendarDays },
-      { href: "/disciplinas", label: "Disciplinas", icon: BookOpen },
-      { href: "/cursos", label: "Cursos e Matriz Curricular", icon: Library },
+      { href: "/cursos", label: "Cursos e Disciplinas", icon: Library }, // [FASE-C2] cursos, matrizes e disciplinas
       { href: "/professores", label: "Professores", icon: Users },
       { href: "/turmas", label: "Turmas", icon: GraduationCap },
       { href: "/disponibilidade", label: "Disponibilidade", icon: Clock },
