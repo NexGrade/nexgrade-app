@@ -581,6 +581,23 @@ export async function gerarAlgoritmoMelhorTentativa(opts: GerarOpts, tentativas 
   return melhor!;
 }
 
+// [HEURISTICO-TRAVA] O gerador heuristico (simples) nao conhece aula fixa, trio
+// nem aula assincrona. Para turmas que usam essas regras, recusa gerar -- evita
+// desfazer a configuracao da escola sem querer. Use a geracao com CP-SAT.
+async function motivoRecusaHeuristico(escolaId: string, turmaIds: number[]): Promise<string | null> {
+  if (turmaIds.length === 0) return null;
+  const tds = await db.select().from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, turmaIds));
+  const fixasCadastro = await db.select({ id: aulasFixasTable.id }).from(aulasFixasTable)
+    .where(and(eq(aulasFixasTable.escolaId, escolaId), inArray(aulasFixasTable.turmaId, turmaIds), eq(aulasFixasTable.anoLetivo, new Date().getFullYear())));
+  const fixasGrade = await db.select({ id: horariosTable.id }).from(horariosTable)
+    .where(and(inArray(horariosTable.turmaId, turmaIds), eq(horariosTable.fixa, true)));
+  const motivos: string[] = [];
+  if (fixasCadastro.length > 0 || fixasGrade.length > 0) motivos.push("aulas fixas");
+  if (tds.some((td) => (td.grupoTrio ?? "").trim() !== "")) motivos.push("docencia por trio");
+  if (tds.some((td) => (td.aulasAssincronas ?? 0) > 0)) motivos.push("aulas assincronas");
+  if (motivos.length === 0) return null;
+  return `O gerador simples nao respeita ${motivos.join(", ")}, configuradas nestas turmas. Use a geracao com CP-SAT.`;
+}
 router.post("/gerar", async (req, res) => {
   const escolaId = getEscolaId(req);
   const parsed = GerarHorarioBody.safeParse(req.body);
@@ -598,6 +615,9 @@ router.post("/gerar", async (req, res) => {
     experimental?: boolean;
     nomeExperimental?: string;
   };
+
+  const recusa = await motivoRecusaHeuristico(escolaId, [data.turmaId]); // [HEURISTICO-TRAVA]
+  if (recusa) { res.status(409).json({ error: recusa }); return; }
 
   try {
     const result = await gerarAlgoritmoMelhorTentativa({
@@ -988,6 +1008,8 @@ router.post("/gerar-lote", async (req, res) => {
   }
 
   const turmaIdsAlvo = turmasAlvo.map((t) => t.id);
+  const recusaLote = await motivoRecusaHeuristico(escolaId, turmaIdsAlvo); // [HEURISTICO-TRAVA]
+  if (recusaLote) { res.status(409).json({ error: recusaLote }); return; }
   await db.delete(horariosExperimentaisTable).where(and(
     eq(horariosExperimentaisTable.escolaId, escolaId),
     eq(horariosExperimentaisTable.nome, nomeExperimental),

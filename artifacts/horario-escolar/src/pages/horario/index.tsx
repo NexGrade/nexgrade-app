@@ -113,6 +113,12 @@ async function pollarStatusCpsat(jobId: string): Promise<StatusCpsatResult> {
   }
   return statusResult;
 }
+// [HEURISTICO-ESCONDIDO] O gerador simples (heuristico) fica escondido por
+// padrao: nao respeita aula fixa, HA fixa, trio, aula assincrona nem a reserva
+// de HA. So para emergencia (CP-SAT fora do ar). Preferencia lembrada no navegador.
+function mostrarGeradorSimples(): boolean {
+  try { return localStorage.getItem("nexgrade.geradorSimples") === "1"; } catch { return false; }
+}
 export default function HorarioHubPage() {
   // [NOVO] Deep-link pra uma aba específica via "?tab=..." (ex.:
   // /horario?tab=conflitos) -- usado pelos cards da Visão Geral, que
@@ -1275,10 +1281,12 @@ function AbaGrade() {
             <Plus className="w-4 h-4 mr-2" />
             Adicionar aula manual
           </Button>
-          <Button onClick={handleGerarGrade} disabled={!isTurmaSelected || gerando}>
+          {mostrarGeradorSimples() && (
+          <Button onClick={handleGerarGrade} disabled={!isTurmaSelected || gerando} variant="outline" className="border-rose-300 text-rose-700" title="Gerador simples: substitui a grade OFICIAL da turma e NAO respeita aula fixa, HA fixa, trio, assincrona nem a reserva de HA">
             <RefreshCw className={`w-4 h-4 mr-2 ${gerando ? "animate-spin" : ""}`} />
-            {gerando ? "Gerando..." : "Gerar Grade"}
+            {gerando ? "Gerando..." : "Gerar Grade (simples)"}
           </Button>
+          )}{/* [HEURISTICO-ESCONDIDO] */}
         </CardContent>
       </Card>
       {!isTurmaSelected && (
@@ -1667,6 +1675,8 @@ function AbaExperimental() {
   });
 
   const [openGerarLote, setOpenGerarLote] = useState(false);
+  const [geradorSimplesVisivel, setGeradorSimplesVisivel] = useState(mostrarGeradorSimples()); // [HEURISTICO-ESCONDIDO]
+  const alternarGeradorSimples = (v: boolean) => { try { localStorage.setItem("nexgrade.geradorSimples", v ? "1" : "0"); } catch { /* sem storage */ } setGeradorSimplesVisivel(v); };
   const [gerandoLote, setGerandoLote] = useState(false);
   const [loteForm, setLoteForm] = useState({
     turno: "matutino",
@@ -2210,8 +2220,10 @@ function AbaExperimental() {
               </Button>
             </div>
           </div>
+          {geradorSimplesVisivel ? (
           <div className="pt-2 border-t">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Motor heurístico (rápido, menos preciso)</p>
+            <p className="text-[10px] text-rose-600 mb-1.5">Emergência: não respeita aulas fixas, HA fixa, trio, aulas assíncronas nem a reserva de HA. Use só se o CP-SAT estiver fora do ar.</p>
             <div className="flex flex-col gap-2">
               <Button variant="outline" className="w-full justify-start" onClick={() => setOpenGerar(true)}>
                 <Plus className="w-4 h-4 mr-2" />Turma
@@ -2220,7 +2232,13 @@ function AbaExperimental() {
                 <RefreshCw className="w-4 h-4 mr-2" />Turno inteiro
               </Button>
             </div>
+            <button className="text-[10px] text-muted-foreground underline mt-1.5" onClick={() => alternarGeradorSimples(false)}>Ocultar gerador simples</button>
           </div>
+          ) : (
+          <div className="pt-2 border-t">
+            <button className="text-[10px] text-muted-foreground underline" onClick={() => alternarGeradorSimples(true)}>Mostrar gerador simples (emergência)</button>
+          </div>
+          )}{/* [HEURISTICO-ESCONDIDO] */}
         </div>
       </div>
 
