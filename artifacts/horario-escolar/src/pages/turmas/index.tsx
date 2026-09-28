@@ -2,6 +2,7 @@ import {
   useListTurmas, useCreateTurma, useUpdateTurma, useDeleteTurma, getListTurmasQueryKey,
   useListDisciplinas, useListCursos, useListMatrizesCurriculares, getListMatrizesCurricularesQueryKey,
   useAplicarMatrizTurma, useGetMatrizCurricularPorId, getGetMatrizCurricularPorIdQueryKey,
+  useGetTurma, getGetTurmaQueryKey, useListProfessores, customFetch, // [PROF-DISCIPLINA]
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -23,7 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select"; // [PROF-DISCIPLINA]
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { useListaFiltrada } from "@/hooks/use-lista-filtrada";
@@ -38,6 +39,74 @@ const turmaSchema = z.object({
 });
 type TurmaFormValues = z.infer<typeof turmaSchema>;
 
+// [PROF-DISCIPLINA] Distribuicao de aulas: professor de cada disciplina da turma.
+// Grava na hora pela rota PATCH /turmas/:turmaId/disciplinas/linha/:linhaId.
+function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { data: turma, isLoading } = useGetTurma(turmaId, { query: { queryKey: getGetTurmaQueryKey(turmaId) } });
+  const { data: professores = [] } = useListProfessores();
+  const [salvandoLinha, setSalvandoLinha] = useState<number | null>(null);
+  const linhas = ((turma as any)?.disciplinasComCarga ?? []) as any[];
+  const semProfessor = linhas.filter((l) => !l.professorId).length;
+
+  async function definir(linhaId: number, valor: string) {
+    setSalvandoLinha(linhaId);
+    try {
+      await customFetch(`/api/turmas/${turmaId}/disciplinas/linha/${linhaId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ professorId: valor === "__nenhum__" ? null : Number(valor) }),
+      });
+      await queryClient.invalidateQueries({ queryKey: getGetTurmaQueryKey(turmaId) });
+      toast({ title: valor === "__nenhum__" ? "Professor removido" : "Professor definido" });
+    } catch (err) {
+      toast({ title: "Erro ao definir professor", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+    } finally {
+      setSalvandoLinha(null);
+    }
+  }
+
+  if (isLoading) return <Skeleton className="h-24 w-full" />;
+  if (linhas.length === 0) return null;
+  return (
+    <div className="rounded-lg border p-4 space-y-2">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium">Professor por disciplina</p>
+        {semProfessor > 0
+          ? <span className="text-xs font-medium text-amber-700">{semProfessor} sem professor</span>
+          : <span className="text-xs font-medium text-emerald-700">todas distribuídas</span>}
+      </div>
+      {linhas.map((l) => {
+        const ativos = professores.filter((p) => p.ativo !== false);
+        const habilitados = ativos.filter((p) => (p.disciplinaIds ?? []).includes(l.disciplinaId));
+        const outros = ativos.filter((p) => !(p.disciplinaIds ?? []).includes(l.disciplinaId));
+        return (
+          <div key={l.turmaDisciplinaId} className={`flex items-center gap-3 rounded px-2 py-1.5 ${l.professorId ? "bg-muted/40" : "bg-amber-50"}`}>
+            <span className="text-sm flex-1 truncate">{l.nome} <span className="text-muted-foreground">({l.cargaHorariaSemanal}h)</span></span>
+            <Select value={l.professorId ? String(l.professorId) : ""} onValueChange={(v) => definir(l.turmaDisciplinaId, v)} disabled={salvandoLinha === l.turmaDisciplinaId}>
+              <SelectTrigger className="w-64 h-8"><SelectValue placeholder="Escolher professor" /></SelectTrigger>
+              <SelectContent>
+                {habilitados.length > 0 && (
+                  <SelectGroup>
+                    <SelectLabel>Habilitados nesta disciplina</SelectLabel>
+                    {habilitados.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
+                  </SelectGroup>
+                )}
+                <SelectGroup>
+                  <SelectLabel>Outros professores</SelectLabel>
+                  {outros.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
+                </SelectGroup>
+                {l.professorId && <SelectItem value="__nenhum__">— remover professor —</SelectItem>}
+              </SelectContent>
+            </Select>
+          </div>
+        );
+      })}
+      <p className="text-[11px] text-muted-foreground">A escolha grava na hora. Co-docência (dois professores na mesma aula) continua sendo configurada na grade.</p>
+    </div>
+  );
+}
 export default function TurmasList() {
   const { data: turmas, isLoading } = useListTurmas();
   const { busca, setBusca, itensFiltrados: turmasFiltradas } = useListaFiltrada(turmas, (t) => t.nome);
@@ -313,6 +382,8 @@ function TurmaForm({ editingId, turmaAtual, onFechar }: { editingId: number | nu
               </div>
             )}
           </div>
+
+          {editingId && <ProfessoresPorDisciplina turmaId={editingId} />}{/* [PROF-DISCIPLINA] */}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField control={form.control} name="nome" render={({ field }) => (
