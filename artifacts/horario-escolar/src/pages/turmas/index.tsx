@@ -448,7 +448,11 @@ function TurmaForm({ editingId, turmaAtual, onFechar, onCriada }: { editingId: n
         const nova = await createTurma.mutateAsync({ data: matrizId ? { ...data, disciplinaIds: undefined } : data });
         turmaId = nova.id;
       }
-      if (matrizId && turmaId) {
+      // [MATRIZ-SO-SE-TROCOU] So reaplica a matriz se o usuario escolheu uma matriz
+      // DIFERENTE da ja aplicada. Antes reaplicava em todo "Salvar" (o campo vem
+      // preenchido com a matriz atual) e isso refazia os vinculos da turma.
+      const trocouMatriz = !!matrizIdOverride && matrizIdOverride !== (matrizJaAplicadaId ? String(matrizJaAplicadaId) : "");
+      if (trocouMatriz && turmaId) {
         await aplicarMatriz.mutateAsync({ id: turmaId, data: { matrizCurricularId: Number(matrizId) } });
       }
       queryClient.invalidateQueries({ queryKey: getListTurmasQueryKey() });

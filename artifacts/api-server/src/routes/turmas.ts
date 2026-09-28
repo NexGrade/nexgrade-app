@@ -305,14 +305,30 @@ router.post("/:id/aplicar-matriz", async (req, res) => {
   }
 
   await db.transaction(async (tx) => {
-    await tx.delete(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.turmaId, turmaId));
-    await tx.insert(turmaDisciplinasTable).values(
-      itens.map((item) => ({
-        turmaId,
-        disciplinaId: item.disciplinaId,
-        cargaHorariaSemanalOverride: item.cargaHorariaSemanal,
-      })),
-    );
+    // [MATRIZ-PRESERVA] Antes apagava TODOS os vinculos e recriava -- perdia
+    // professor, co-docencia, trio, assincronas e limites por dia a cada
+    // reaplicacao. Agora: disciplinas que continuam na matriz so atualizam a
+    // carga (mantem o resto); as que sairam sao removidas; as novas entram.
+    const existentes = await tx.select().from(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.turmaId, turmaId));
+    const idsNaMatriz = new Set(itens.map((item) => item.disciplinaId));
+    const remover = existentes.filter((e) => !idsNaMatriz.has(e.disciplinaId)).map((e) => e.id);
+    if (remover.length > 0) {
+      await tx.delete(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.id, remover));
+    }
+    for (const item of itens) {
+      const jaExiste = existentes.some((e) => e.disciplinaId === item.disciplinaId);
+      if (jaExiste) {
+        await tx.update(turmaDisciplinasTable)
+          .set({ cargaHorariaSemanalOverride: item.cargaHorariaSemanal })
+          .where(and(eq(turmaDisciplinasTable.turmaId, turmaId), eq(turmaDisciplinasTable.disciplinaId, item.disciplinaId)));
+      } else {
+        await tx.insert(turmaDisciplinasTable).values({
+          turmaId,
+          disciplinaId: item.disciplinaId,
+          cargaHorariaSemanalOverride: item.cargaHorariaSemanal,
+        });
+      }
+    }
     await tx.update(turmasTable)
       .set({ matrizCurricularId: matriz.id })
       .where(eq(turmasTable.id, turmaId));
