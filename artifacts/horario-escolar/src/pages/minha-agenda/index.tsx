@@ -129,7 +129,7 @@ function NovaReservaDialog({ professorId }: { professorId: number }) {
       <DialogTrigger asChild>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
-          Nova reserva
+          <span className="hidden sm:inline">Nova reserva</span><span className="sm:hidden">Reservar</span>
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -405,23 +405,23 @@ export default function MinhaAgendaPage() {
       </header>
 
       <main className="p-4 md:p-6 space-y-6 max-w-5xl mx-auto">
-        <div className="flex flex-wrap gap-2 justify-end print:hidden">
+        <div className="flex flex-nowrap sm:flex-wrap gap-2 justify-end print:hidden [&>button]:px-3 sm:[&>button]:px-4">{/* [AGENDA-BOTOES] */}
           <Button
             variant={mostrarCalendario ? "default" : "outline"}
             onClick={() => setMostrarCalendario((v) => !v)}
           >
             <CalendarDays className="h-4 w-4 mr-2" />
-            {mostrarCalendario ? "Ocultar calendário" : "Ver calendário"}
+            <span className="hidden sm:inline">{mostrarCalendario ? "Ocultar calendário" : "Ver calendário"}</span><span className="sm:hidden">Calendário</span>
           </Button>
           {podeInstalar && (
             <Button variant="outline" onClick={instalar}>
               <MonitorSmartphone className="h-4 w-4 mr-2" />
-              Instalar app
+              <span className="hidden sm:inline">Instalar app</span><span className="sm:hidden">App</span>
             </Button>
           )}
           <Button variant="outline" onClick={handleBaixarPdf}>
             <Download className="h-4 w-4 mr-2" />
-            Baixar PDF
+            <span className="hidden sm:inline">Baixar PDF</span><span className="sm:hidden">PDF</span>
           </Button>
           <NovaReservaDialog professorId={professor.id} />
         </div>
