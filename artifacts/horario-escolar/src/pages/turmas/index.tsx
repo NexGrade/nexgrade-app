@@ -49,6 +49,8 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
   const { data: professores = [] } = useListProfessores();
   const [salvando, setSalvando] = useState<string | null>(null);
   const [abrirCodoc, setAbrirCodoc] = useState<number | null>(null);
+  const [criandoTrio, setCriandoTrio] = useState(false); // [CRIAR-TRIO]
+  const [selTrio, setSelTrio] = useState<number[]>([]);
   const linhas = ((turma as any)?.disciplinasComCarga ?? []) as any[];
 
   // agrupa as linhas por disciplina (co-docencia = 2 linhas da mesma disciplina)
@@ -72,6 +74,28 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
     else if (new Set(ds.map((d) => d.carga)).size > 1) avisosTrio.push(`Trio "${rotulo}" com cargas diferentes: ${ds.map((d) => `${d.nome} ${d.carga}h`).join(", ")} — precisam ser iguais.`);
   }
 
+  // [CRIAR-TRIO] rotulo automatico (A, B, C...) e validacao: 3 disciplinas, mesma carga, com professor
+  const letrasUsadas = new Set(grupos.map((g) => g.trio).filter(Boolean));
+  const proximaLetra = ["A", "B", "C", "D", "E", "F", "G", "H"].find((l) => !letrasUsadas.has(l)) ?? `T${letrasUsadas.size + 1}`;
+  const selecionados = grupos.filter((g) => selTrio.includes(g.disciplinaId));
+  const cargasSel = new Set(selecionados.map((g) => g.carga));
+  const todosComProfessor = selecionados.every((g) => g.linhas.every((l) => l.professorId));
+  const trioValido = selecionados.length === 3 && cargasSel.size === 1 && todosComProfessor;
+  async function confirmarTrio() {
+    if (!trioValido) return;
+    const letra = proximaLetra;
+    for (const g of selecionados) {
+      await chamar(`/api/turmas/${turmaId}/disciplinas/${g.disciplinaId}/modalidade`, "PATCH", { grupoTrio: letra }, `Trio ${letra}: ${g.nome}`);
+    }
+    setCriandoTrio(false);
+    setSelTrio([]);
+  }
+  async function desfazerTrio(rotulo: string) {
+    if (!confirm(`Desfazer o trio ${rotulo}? As disciplinas voltam a ser independentes.`)) return;
+    for (const g of grupos.filter((x) => x.trio === rotulo)) {
+      await chamar(`/api/turmas/${turmaId}/disciplinas/${g.disciplinaId}/modalidade`, "PATCH", { grupoTrio: null }, `${g.nome} saiu do trio ${rotulo}`);
+    }
+  }
   async function chamar(url: string, method: string, body: unknown, msg: string) {
     setSalvando(url);
     try {
@@ -130,6 +154,54 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
           {avisosTrio.map((a) => <p key={a}>{a}</p>)}
         </div>
       )}
+      <div className="rounded-md border border-violet-200 bg-violet-50/50 p-3 space-y-2">{/* [CRIAR-TRIO] */}
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium text-violet-900">Trios</p>
+          {!criandoTrio && (
+            <Button type="button" size="sm" variant="outline" className="h-8" disabled={salvando !== null} onClick={() => { setCriandoTrio(true); setSelTrio([]); }}>+ Criar trio</Button>
+          )}
+        </div>
+        {trios.size === 0 && !criandoTrio && (
+          <p className="text-xs text-muted-foreground">Nenhum trio nesta turma. Trio = 3 disciplinas, cada uma com seu professor, sempre no mesmo dia e horário.</p>
+        )}
+        {[...trios.keys()].map((rotulo) => (
+          <div key={rotulo} className="flex items-center justify-between gap-2 text-sm bg-background rounded px-2 py-1.5 border">
+            <span>
+              <strong>Trio {rotulo}:</strong>{" "}
+              {grupos.filter((g) => g.trio === rotulo).map((g) => `${g.nome} (${g.linhas.map((l) => l.professorNome ?? "sem professor").join(" + ")})`).join(" · ")}
+            </span>
+            <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-destructive hover:text-destructive shrink-0" disabled={salvando !== null} onClick={() => desfazerTrio(rotulo)}>desfazer</Button>
+          </div>
+        ))}
+        {criandoTrio && (
+          <div className="bg-background rounded border p-3 space-y-2">
+            <p className="text-xs text-muted-foreground">Marque as <strong>3 disciplinas</strong> do trio {proximaLetra} — mesma carga semanal, cada uma já com professor:</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+              {grupos.filter((g) => !g.trio).map((g) => {
+                const marcado = selTrio.includes(g.disciplinaId);
+                const bloqueado = !marcado && selTrio.length >= 3;
+                return (
+                  <label key={g.disciplinaId} className={`flex items-start gap-2 text-sm rounded px-2 py-1 ${bloqueado ? "opacity-50" : "hover:bg-muted/50 cursor-pointer"}`}>
+                    <Checkbox className="mt-0.5" checked={marcado} disabled={bloqueado}
+                      onCheckedChange={(c) => setSelTrio((s) => (c === true ? [...s, g.disciplinaId] : s.filter((x) => x !== g.disciplinaId)))} />
+                    <span>{g.nome} <span className="text-muted-foreground">({g.carga}h · {g.linhas[0]?.professorNome ?? "sem professor"})</span></span>
+                  </label>
+                );
+              })}
+            </div>
+            {selecionados.length === 3 && cargasSel.size > 1 && (
+              <p className="text-xs text-rose-600">As 3 disciplinas precisam ter a mesma carga semanal.</p>
+            )}
+            {selecionados.length > 0 && !todosComProfessor && (
+              <p className="text-xs text-rose-600">Defina o professor de cada disciplina antes de criar o trio.</p>
+            )}
+            <div className="flex gap-2 justify-end">
+              <Button type="button" size="sm" variant="ghost" onClick={() => { setCriandoTrio(false); setSelTrio([]); }}>Cancelar</Button>
+              <Button type="button" size="sm" disabled={!trioValido || salvando !== null} onClick={confirmarTrio}>Criar trio {proximaLetra} ({selecionados.length}/3)</Button>
+            </div>
+          </div>
+        )}
+      </div>
       <div className="space-y-2">
         {grupos.map((g) => {
           const urlModalidade = `/api/turmas/${turmaId}/disciplinas/${g.disciplinaId}/modalidade`;
@@ -161,10 +233,6 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
                   : <Button type="button" size="sm" variant="outline" className="h-8" disabled={!g.linhas[0]?.professorId || salvando !== null} onClick={() => setAbrirCodoc(g.disciplinaId)} title="Dois professores dando a mesma aula juntos">+ co-docência</Button>)}
               </div>
               <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-                <label className="flex items-center gap-1.5">Trio:
-                  <Input key={`trio-${g.disciplinaId}-${g.trio}`} defaultValue={g.trio} placeholder="—" maxLength={20} className="w-16 h-7" onKeyDown={semEnter}
-                    onBlur={(e) => { const v = e.target.value.trim(); if (v !== g.trio) chamar(urlModalidade, "PATCH", { grupoTrio: v || null }, v ? `Trio ${v} definido` : "Trio removido"); }} />
-                </label>
                 <label className="flex items-center gap-1.5">Assíncronas/sem.:
                   <Input key={`assinc-${g.disciplinaId}-${g.assinc}`} type="number" min={0} max={20} defaultValue={g.assinc} className="w-16 h-7" onKeyDown={semEnter}
                     onBlur={(e) => { const v = Number(e.target.value || 0); if (v !== g.assinc) chamar(urlModalidade, "PATCH", { aulasAssincronas: v }, "Aulas assíncronas atualizadas"); }} />
@@ -175,7 +243,7 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
         })}
       </div>
       <p className="text-[11px] text-muted-foreground">
-        Tudo grava na hora. <strong>Co-docência:</strong> dois professores dando a mesma aula juntos. <strong>Trio:</strong> dê o mesmo rótulo (ex.: A) às 3 disciplinas que acontecem juntas — elas precisam ter a mesma carga. <strong>Assíncronas:</strong> quantas das aulas semanais da disciplina são assíncronas.
+        Tudo grava na hora. <strong>Co-docência:</strong> dois professores dando a mesma aula juntos. <strong>Trio:</strong> use "Criar trio" e marque as 3 disciplinas que acontecem juntas (mesma carga, cada uma com seu professor). <strong>Assíncronas:</strong> quantas das aulas semanais da disciplina são assíncronas.
       </p>
     </div>
   );
