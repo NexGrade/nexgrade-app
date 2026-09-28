@@ -319,6 +319,7 @@ export default function MinhaAgendaPage() {
   const aulas = dadosHorario?.aulas;
   const [turnoAba, setTurnoAba] = useState<string | null>(null); // [AGENDA-ABAS]
   const { organization } = useOrganization(); // [AGENDA-ESCOLA]
+  const [diaSel, setDiaSel] = useState<number | null>(null); // [AGENDA-DIA]
   const horasAtividade = dadosHorario?.horasAtividade ?? [];
   const ehHoraAtividade = (diaIdx: number, numeroAula: number) =>
     horasAtividade.some((h) => h.diaSemana === diaIdx && h.numeroAula === numeroAula);
@@ -521,11 +522,18 @@ export default function MinhaAgendaPage() {
                       ...horarios.filter((x) => x.turno === turno).map((x) => x.numeroAula),
                     );
                     const ehHA = (d: number, n: number) => haT.some((h) => h.diaSemana === d && h.numeroAula === n);
+                    // [AGENDA-DIA] dia mostrado no celular: o escolhido, ou hoje (no fim de semana, segunda)
+                    const diaAtivo = diaSel ?? (hojeDiaSemana >= 0 && hojeDiaSemana <= 4 ? hojeDiaSemana : 0);
+                    const avisoPonto = (d: number, n: number) => {
+                      const nums = Array.from({ length: maxT }, (_, k) => k + 1).filter((x) => aulasT.some((a) => a.diaSemana === d && a.numeroAula === x) || ehHA(d, x));
+                      return n === Math.min(...nums) ? "registrar entrada (login no início)" : n === Math.max(...nums) ? "registrar saída (login no fim)" : null;
+                    };
                     return (
                       <div key={turno ?? "unico"} className="mb-6 last:mb-0">
                         {turno && grupos.length === 1 && (
                           <h3 className="text-sm font-semibold text-muted-foreground mb-2">{NOME_TURNO[turno] ?? turno}</h3>
                         )}
+                        <div className="hidden md:block print:block">
                         <table className="w-full text-sm border-collapse imprimir-compacto">
                           <thead>
                             <tr>
@@ -589,6 +597,62 @@ export default function MinhaAgendaPage() {
                             ))}
                           </tbody>
                         </table>
+                        </div>
+                        {/* [AGENDA-DIA] celular na vertical: um dia por vez, em lista */}
+                        <div className="md:hidden print:hidden">
+                          <div className="flex gap-1 mb-3">
+                            {DIAS.map((d, idx) => (
+                              <button
+                                key={d}
+                                type="button"
+                                onClick={() => setDiaSel(idx)}
+                                className={`flex-1 rounded-md px-1 py-2 text-sm font-medium border transition-colors ${
+                                  idx === diaAtivo ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground"
+                                }`}
+                              >
+                                {d.slice(0, 3)}{idx === hojeDiaSemana ? " •" : ""}
+                              </button>
+                            ))}
+                          </div>
+                          <div className="space-y-2">
+                            {Array.from({ length: maxT }, (_, i) => i + 1).map((n) => {
+                              const aula = aulasT.find((a) => a.diaSemana === diaAtivo && a.numeroAula === n);
+                              const aviso = aula?.assincrona ? avisoPonto(diaAtivo, n) : null;
+                              return (
+                                <div key={n} className="flex items-stretch gap-3">
+                                  <div className="w-14 shrink-0 pt-1">
+                                    <div className="font-medium text-sm">{n}ª</div>
+                                    {horaDe(n) && <div className="text-[11px] text-muted-foreground">{horaDe(n)}</div>}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    {aula ? (
+                                      <div
+                                        className="rounded-md px-3 py-2 border-l-4"
+                                        style={{ backgroundColor: `${aula.disciplinaCor ?? "#1565C0"}15`, borderLeftColor: aula.disciplinaCor ?? "#1565C0" }}
+                                      >
+                                        <div className="font-semibold text-sm">{aula.disciplinaSigla ? String(aula.disciplinaSigla).toUpperCase() : aula.disciplinaNome}</div>
+                                        <div className="text-xs text-muted-foreground">
+                                          {aula.turmaNome}{aula.sala ? ` · ${aula.sala}` : ""}
+                                          {aula.disciplinaSigla && <span> · {aula.disciplinaNome}</span>}
+                                        </div>
+                                        {aula.assincrona && (
+                                          <div className="mt-1 flex flex-wrap items-center gap-1">
+                                            <span className="text-[10px] font-bold uppercase tracking-wide rounded bg-violet-100 text-violet-800 px-1.5 py-0.5">Assíncrona</span>
+                                            {aviso && <span className="text-[10px] font-semibold text-rose-700">{aviso}</span>}
+                                          </div>
+                                        )}
+                                      </div>
+                                    ) : ehHA(diaAtivo, n) ? (
+                                      <div className="rounded-md px-3 py-2 border-l-4 bg-amber-50 border-amber-400 text-sm font-semibold text-amber-700">HA</div>
+                                    ) : (
+                                      <div className="rounded-md px-3 py-2 border border-dashed text-xs text-muted-foreground">Livre</div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
                     );
                   })];
