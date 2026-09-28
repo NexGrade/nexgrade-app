@@ -26,7 +26,7 @@ const navGroups = [
     // porque na edicao da turma se escolhe o professor de cada disciplina.
     label: "Montagem da escola",
     items: [
-      { href: "/calendario", label: "Calendário Escolar", icon: CalendarDays },
+      { href: "/calendario", label: "Calendário e Turnos", icon: CalendarDays }, // [FASE-C3]
       { href: "/cursos", label: "Cursos e Disciplinas", icon: Library }, // [FASE-C2] cursos, matrizes e disciplinas
       { href: "/professores", label: "Professores", icon: Users },
       { href: "/turmas", label: "Turmas", icon: GraduationCap },

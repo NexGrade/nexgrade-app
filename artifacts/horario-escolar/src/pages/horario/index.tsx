@@ -35,7 +35,6 @@ import {
 // unificando as antigas 5 telas separadas num fluxo em cascata só.
 
 const ABAS = [
-  { key: "esquema", label: "Esquema", icon: Clock },
   { key: "grade", label: "Grade", icon: Calendar },
   { key: "conflitos", label: "Conflitos", icon: AlertTriangle },
   { key: "experimental", label: "Modo Experimental", icon: FlaskConical },
@@ -126,7 +125,8 @@ export default function HorarioHubPage() {
   const search = useSearch();
   const tabParam = new URLSearchParams(search).get("tab");
   if (tabParam === "regras" && typeof window !== "undefined") window.location.replace("/regras-distribuicao"); // [FASE-A] Regras agora so no menu
-  const abaInicial = (ABAS.some((a) => a.key === tabParam) ? tabParam : "esquema") as AbaKey;
+  if (tabParam === "esquema" && typeof window !== "undefined") window.location.replace("/calendario?tab=turnos"); // [FASE-C3]
+  const abaInicial = (ABAS.some((a) => a.key === tabParam) ? tabParam : "grade") as AbaKey; // [FASE-C3] Horario abre na Grade
   const [aba, setAba] = useState<AbaKey>(abaInicial);
 
   return (
@@ -153,7 +153,6 @@ export default function HorarioHubPage() {
         ))}
       </div>
 
-      {aba === "esquema" && <AbaEsquema />}
       {aba === "grade" && <AbaGrade />}
       {aba === "conflitos" && <AbaConflitos />}
       {aba === "experimental" && <AbaExperimental />}
@@ -204,7 +203,7 @@ function abreviarNomeProfessor(nomeCompleto: string | undefined, todosProfessore
   return inicialSegundoNome ? `${primeiroNome} ${inicialSegundoNome}.` : primeiroNome;
 }
 
-function AbaEsquema() {
+export function AbaEsquema() { // [FASE-C3] usada em Calendario e Turnos
   const [turno, setTurno] = useState<Turno>("matutino");
   const [nivelEnsino, setNivelEnsino] = useState<"fundamental" | "medio_tecnico">("fundamental");
   const [step, setStep] = useState(1);

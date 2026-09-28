@@ -48,6 +48,7 @@ const CursosList = lazy(() => import("@/pages/cursos/index"));
 const CursosDisciplinasPage = lazy(() => import("@/pages/cursos-disciplinas/index")); // [FASE-C2]
 const DisponibilidadePage = lazy(() => import("@/pages/disponibilidade/index"));
 const CalendarioEscolarPage = lazy(() => import("@/pages/calendario/index"));
+const CalendarioTurnosPage = lazy(() => import("@/pages/calendario-turnos/index")); // [FASE-C3]
 const ReservasPage = lazy(() => import("@/pages/reservas/index"));
 const RegrasReservasPage = lazy(() => import("@/pages/reservas/regras"));
 const MinhaAgendaPage = lazy(() => import("@/pages/minha-agenda/index"));
@@ -349,7 +350,7 @@ function Router() {
       <Route path="/salas" component={() => <ProtectedRoute component={SalasList} />} />
       <Route path="/licencas" component={() => <ProtectedRoute component={LicencasList} />} />
       <Route path="/comunicados" component={() => <ProtectedRoute component={ComunicadosList} />} />
-      <Route path="/calendario" component={() => <ProtectedRoute component={CalendarioEscolarPage} />} />
+      <Route path="/calendario" component={() => <ProtectedRoute component={CalendarioTurnosPage} />} />
       <Route path="/regras-distribuicao" component={() => <ProtectedRoute component={RegrasDistribuicaoPage} />} />
       <Route path="/usuarios" component={() => <ProtectedRoute component={UsuariosList} />} />
       <Route path="/audit" component={() => <ProtectedRoute component={AuditList} />} />
