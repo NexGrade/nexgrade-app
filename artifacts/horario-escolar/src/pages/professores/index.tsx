@@ -34,7 +34,7 @@ export default function ProfessoresList() {
   const [filtroDisciplina, setFiltroDisciplina] = useState<string>("todas");
   const [modo, setModo] = useState<ModoVisualizacao>("grade");
 
-  // Busca + ordena��o alfab�tica primeiro, filtro de disciplina depois �
+  // Busca + ordenação alfabética primeiro, filtro de disciplina depois —
   // os dois funcionam juntos.
   const { busca, setBusca, itensFiltrados: professoresOrdenados } = useListaFiltrada(professores, (p) => p.nome);
 
@@ -71,7 +71,7 @@ export default function ProfessoresList() {
         <AlertDialogHeader>
           <AlertDialogTitle>Remover professor?</AlertDialogTitle>
           <AlertDialogDescription>
-            Isso tamb�m remover� a disponibilidade e os hor�rios vinculados a "{professor.nome}".
+            Isso também removerá a disponibilidade e os horários vinculados a "{professor.nome}".
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -145,7 +145,7 @@ export default function ProfessoresList() {
         <div className="text-center py-12 bg-card rounded-lg border border-border">
           <Users className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
           <h3 className="text-lg font-medium text-foreground">Nenhum professor cadastrado</h3>
-          <p className="text-sm text-muted-foreground mt-1">Cadastre os professores para montar a grade hor�ria.</p>
+          <p className="text-sm text-muted-foreground mt-1">Cadastre os professores para montar a grade horária.</p>
         </div>
       ) : professoresFiltrados.length === 0 ? (
         <div className="text-center py-12 bg-card rounded-lg border border-border">
@@ -204,7 +204,7 @@ export default function ProfessoresList() {
             <span>Nome</span>
             <span>Disciplinas</span>
             <span>Contato</span>
-            <span className="w-20 text-center">A��es</span>
+            <span className="w-20 text-center">Ações</span>
           </div>
           <div className="divide-y divide-border">
             {professoresFiltrados.map((professor) => (
@@ -221,11 +221,11 @@ export default function ProfessoresList() {
                     <Badge variant="outline" className="text-[10px]">+{professor.disciplinaIds!.length - 3}</Badge>
                   )}
                   {(professor.disciplinaIds ?? []).length === 0 && (
-                    <span className="text-muted-foreground text-xs">�</span>
+                    <span className="text-muted-foreground text-xs">—</span>
                   )}
                 </div>
                 <div className="text-xs text-muted-foreground truncate">
-                  {professor.email || professor.telefone || "�"}
+                  {professor.email || professor.telefone || "—"}
                 </div>
                 <div className="w-20 flex items-center justify-center gap-1">
                   <Link href={`/professores/${professor.id}`}>
