@@ -256,6 +256,11 @@ router.post("/:id/convidar-portal", async (req, res) => {
     res.status(404).json({ error: "Professor nao encontrado." });
     return;
   }
+  // [CONVITE-MENSAGENS] mensagens claras para cada situacao (antes: sempre "tente novamente")
+  if (!professor.email || !professor.email.includes("@")) {
+    res.status(400).json({ error: "Cadastre um e-mail válido do professor antes de convidar." });
+    return;
+  }
   try {
     await clerkClient.organizations.createOrganizationInvitation({
       organizationId: escolaId,
@@ -263,10 +268,24 @@ router.post("/:id/convidar-portal", async (req, res) => {
       emailAddress: professor.email,
       role: "org:member",
     });
-    res.status(201).json({ ok: true });
+    res.status(201).json({ ok: true, mensagem: `Convite enviado para ${professor.email}. O professor vai receber um e-mail para acessar o portal.` });
   } catch (err: any) {
-    const mensagem = err?.errors?.[0]?.message ?? "Nao foi possivel enviar o convite.";
-    res.status(422).json({ error: mensagem });
+    const bruto: string = err?.errors?.[0]?.longMessage ?? err?.errors?.[0]?.message ?? "";
+    const codigo: string = err?.errors?.[0]?.code ?? "";
+    const t = `${codigo} ${bruto}`.toLowerCase();
+    if (t.includes("already a member")) {
+      res.status(200).json({ ok: true, jaMembro: true, mensagem: "Este professor já tem acesso ao portal: é só entrar com o e-mail cadastrado." });
+      return;
+    }
+    if ((t.includes("already") && t.includes("invit")) || t.includes("duplicate")) {
+      res.status(409).json({ error: "Já existe um convite pendente para este e-mail. Peça ao professor para conferir a caixa de entrada e o spam." });
+      return;
+    }
+    if (t.includes("email") && (t.includes("invalid") || t.includes("format"))) {
+      res.status(422).json({ error: "O e-mail cadastrado do professor parece inválido. Confira no cadastro." });
+      return;
+    }
+    res.status(422).json({ error: bruto || "Não foi possível enviar o convite." });
   }
 });
 

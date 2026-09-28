@@ -26,8 +26,12 @@ import limitesDiariosProfessorRouter from "./limites-diarios-professor";
 import matrizesOficiaisRouter from "./matrizes-oficiais";
 import reservasRouter from "./reservas";
 import minhaAgendaRouter from "./minha-agenda";
+import { exigirAdminParaAlterar } from "../lib/permissao"; // [PERMISSAO-PAPEL]
 
 const router: IRouter = Router();
+
+// [PERMISSAO-PAPEL] alteracoes so para a coordenacao (org:admin); ver lib/permissao.ts
+router.use(exigirAdminParaAlterar);
 
 router.use("/professores", professoresRouter);
 router.use("/disciplinas", disciplinasRouter);

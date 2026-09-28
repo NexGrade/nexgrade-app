@@ -219,6 +219,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 // recém-logado — mesmo entrando direto por um link profundo — passe pelo
 // onboarding antes de acessar o restante do produto.
 function EscolaGate({ component: Component }: { component: React.ComponentType }) {
+  const { orgRole } = useAuth(); // [PERMISSAO-PAPEL]
   const { data, isLoading } = useGetEscolaAtual({
     query: { queryKey: getGetEscolaAtualQueryKey() },
   });
@@ -234,6 +235,11 @@ function EscolaGate({ component: Component }: { component: React.ComponentType }
 
   if (!data?.cadastrada) {
     return <Redirect to="/onboarding" />;
+  }
+
+  // [PERMISSAO-PAPEL] telas da coordenacao: quem nao e admin vai para o portal do professor
+  if (orgRole && orgRole !== "org:admin") {
+    return <Redirect to="/minha-agenda" />;
   }
 
   return (
