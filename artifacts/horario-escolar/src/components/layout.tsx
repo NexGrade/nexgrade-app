@@ -56,11 +56,9 @@ const navGroups = [
   {
     label: "Sistema",
     items: [
-      { href: "/dados-escola", label: "Dados da Escola", icon: Landmark },
-      { href: "/assinatura", label: "Assinatura", icon: CreditCard },
+      { href: "/escola", label: "Escola", icon: Landmark }, // [FASE-C1] dados, configuracoes e assinatura
       { href: "/usuarios", label: "Usuários", icon: Shield },
       { href: "/audit", label: "Histórico", icon: History },
-      { href: "/configuracoes", label: "Configurações", icon: Settings },
     ],
   },
 ];

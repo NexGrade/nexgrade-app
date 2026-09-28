@@ -37,6 +37,7 @@ const ConfiguracoesList = lazy(() => import("@/pages/configuracoes/index"));
 const ConformidadeSeedPrPage = lazy(() => import("@/pages/configuracoes/seed-pr"));
 const DadosEscolaPage = lazy(() => import("@/pages/dados-escola/index"));
 const AssinaturaPage = lazy(() => import("@/pages/assinatura/index"));
+const EscolaPage = lazy(() => import("@/pages/escola/index")); // [FASE-C1]
 const ExportPage = lazy(() => import("@/pages/export/index"));
 const AssistentePage = lazy(() => import("@/pages/assistente/index"));
 const ImportarPage = lazy(() => import("@/pages/importar/index"));
@@ -351,14 +352,15 @@ function Router() {
       <Route path="/regras-distribuicao" component={() => <ProtectedRoute component={RegrasDistribuicaoPage} />} />
       <Route path="/usuarios" component={() => <ProtectedRoute component={UsuariosList} />} />
       <Route path="/audit" component={() => <ProtectedRoute component={AuditList} />} />
-      <Route path="/configuracoes" component={() => <ProtectedRoute component={ConfiguracoesList} />} />
+      <Route path="/escola" component={() => <ProtectedRoute component={EscolaPage} />} />
+        <Route path="/configuracoes"><Redirect to="/escola?tab=configuracoes" /></Route>{/* [FASE-C1] */}
       <Route path="/configuracoes/seed-pr" component={() => <ProtectedRoute component={ConformidadeSeedPrPage} />} />
       <Route path="/export" component={() => <ProtectedRoute component={ExportPage} />} />
       <Route path="/assistente" component={() => <ProtectedRoute component={AssistentePage} />} />
       <Route path="/importar" component={() => <ProtectedRoute component={ImportarPage} />} />
       <Route path="/planos" component={() => <ProtectedRoute component={PlanosPage} />} />
-      <Route path="/dados-escola" component={() => <ProtectedRoute component={DadosEscolaPage} />} />
-      <Route path="/assinatura" component={() => <ProtectedRoute component={AssinaturaPage} />} />
+      <Route path="/dados-escola"><Redirect to="/escola?tab=dados" /></Route>
+      <Route path="/assinatura"><Redirect to="/escola?tab=assinatura" /></Route>
       <Route path="/reservas" component={() => <ProtectedRoute component={ReservasPage} />} />
       <Route path="/reservas/regras" component={() => <ProtectedRoute component={RegrasReservasPage} />} />
       <Route path="/minha-agenda" component={() => <ProfessorRoute component={MinhaAgendaPage} />} />
