@@ -1,3 +1,4 @@
+import { clerkPtBR } from "@/lib/clerk-ptbr"; // [CLERK-PTBR]
 import { useEffect, useRef, lazy, Suspense } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -492,6 +493,7 @@ function App() {
       proxyUrl={clerkProxyUrl}
       routerPush={(to) => window.history.pushState(null, "", to)}
       routerReplace={(to) => window.history.replaceState(null, "", to)}
+      localization={clerkPtBR as any} // [CLERK-PTBR]
       appearance={{ variables: clerkAppearance.variables }} // [CLERK-CONTA] largura fixa so no login/cadastro
       // [FIX] Em versões recentes do Clerk (6.x), afterSignOutUrl saiu
       // de ser prop do <UserButton> individual e passou a ser opção
