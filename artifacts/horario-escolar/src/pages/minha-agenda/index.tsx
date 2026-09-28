@@ -473,72 +473,103 @@ export default function MinhaAgendaPage() {
               <Skeleton className="h-48 w-full" />
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm border-collapse imprimir-compacto">
-                  <thead>
-                    <tr>
-                      <th className="text-left p-2 border-b">Aula</th>
-                      {DIAS.map((d, idx) => (
-                        <th
-                          key={d}
-                          className={`text-left p-2 border-b ${
-                            idx === hojeDiaSemana ? "text-primary font-semibold" : ""
-                          }`}
-                        >
-                          {d}
-                          {idx === hojeDiaSemana && (
-                            <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-primary align-middle" />
-                          )}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Array.from({ length: maxAula }, (_, i) => i + 1).map((numeroAula) => (
-                      <tr key={numeroAula} className="imprimir-sem-quebra">
-                        <td className="p-2 border-b font-medium">{numeroAula}ª</td>
-                        {DIAS.map((_, diaIdx) => {
-                          const aula = aulas?.find((a) => a.diaSemana === diaIdx && a.numeroAula === numeroAula);
-                          return (
-                            <td key={diaIdx} className="p-2 border-b">
-                              {aula ? (
-                                <div
-                                  className="h-full rounded-md p-2 border-l-4 imprimir-cartao-aula"
-                                  style={{
-                                    backgroundColor: `${aula.disciplinaCor ?? "#1565C0"}15`,
-                                    borderLeftColor: aula.disciplinaCor ?? "#1565C0",
-                                  }}
-                                >
-                                  <div className="font-semibold text-sm truncate">{(aula.disciplinaSigla || aula.disciplinaNome.slice(0, 8)).toUpperCase()}</div>
-                                  <div className="text-xs text-muted-foreground truncate">
-                                    {aula.turmaNome}{aula.sala ? ` · ${aula.sala}` : ""}
-                                  </div>
-                                  {(aula as any).assincrona && (() => {
-                                    const nums = Array.from({ length: maxAula }, (_, k) => k + 1).filter((n) =>
-                                      aulas?.some((x) => x.diaSemana === diaIdx && x.numeroAula === n) || ehHoraAtividade(diaIdx, n));
-                                    const aviso = numeroAula === Math.min(...nums) ? "registrar entrada (login no início)"
-                                      : numeroAula === Math.max(...nums) ? "registrar saída (login no fim)" : null;
-                                    return (
-                                      <div className="mt-1 flex flex-wrap items-center gap-1">
-                                        <span className="text-[10px] font-bold uppercase tracking-wide rounded bg-violet-100 text-violet-800 px-1.5 py-0.5">Assíncrona</span>
-                                        {aviso && <span className="text-[10px] font-semibold text-rose-700">{aviso}</span>}
-                                      </div>
-                                    );
-                                  })()}{/* [ASSINCRONA-EXIBICAO] */}
-                                </div>
-                              ) : ehHoraAtividade(diaIdx, numeroAula) ? (
-                                <div className="h-full rounded-md p-2 border-l-4 bg-amber-50 border-amber-400 flex items-center justify-center imprimir-cartao-aula">
-                                  <span className="text-xs font-semibold text-amber-700">HA</span>
-                                </div>
-                              ) : (
-                                <span className="text-xs text-muted-foreground italic">Livre</span>
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                {(() => {
+                  // [AGENDA-TURNOS] uma grade por turno (Manha, Tarde, Noite), com o horario de
+                  // cada aula; sigla ou nome inteiro; celula livre vazia; coluna de hoje destacada.
+                  const ORDEM = ["matutino", "vespertino", "noturno"];
+                  const NOME_TURNO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
+                  const listaAulas = (aulas ?? []) as any[];
+                  const listaHA = (((dadosHorario as any)?.horasAtividade) ?? []) as any[];
+                  const horarios = (((dadosHorario as any)?.horarios) ?? []) as any[];
+                  const turnos = ORDEM.filter((tn) => listaAulas.some((a) => a.turno === tn) || listaHA.some((h) => h.turno === tn));
+                  const semTurno = turnos.length === 0 || listaAulas.some((a) => a.turno === undefined);
+                  const grupos: Array<string | null> = semTurno ? [null] : turnos;
+                  return grupos.map((turno) => {
+                    const aulasT = listaAulas.filter((a) => turno === null || a.turno === turno);
+                    const haT = listaHA.filter((h) => turno === null || h.turno === turno);
+                    const horaDe = (n: number) => {
+                      const s = horarios.find((x) => x.turno === turno && x.numeroAula === n);
+                      return s?.horaInicio ? String(s.horaInicio).slice(0, 5) : "";
+                    };
+                    const maxT = Math.max(
+                      5,
+                      ...aulasT.map((a) => a.numeroAula),
+                      ...haT.map((h) => h.numeroAula),
+                      ...horarios.filter((x) => x.turno === turno).map((x) => x.numeroAula),
+                    );
+                    const ehHA = (d: number, n: number) => haT.some((h) => h.diaSemana === d && h.numeroAula === n);
+                    return (
+                      <div key={turno ?? "unico"} className="mb-6 last:mb-0">
+                        {turno && grupos.length > 0 && (
+                          <h3 className="text-sm font-semibold text-muted-foreground mb-2">{NOME_TURNO[turno] ?? turno}</h3>
+                        )}
+                        <table className="w-full text-sm border-collapse imprimir-compacto">
+                          <thead>
+                            <tr>
+                              <th className="text-left p-2 border-b w-20">Aula</th>
+                              {DIAS.map((d, idx) => (
+                                <th key={d} className={`text-left p-2 border-b ${idx === hojeDiaSemana ? "text-primary font-semibold bg-primary/5" : ""}`}>
+                                  {d}
+                                  {idx === hojeDiaSemana && (
+                                    <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-primary align-middle" />
+                                  )}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {Array.from({ length: maxT }, (_, i) => i + 1).map((numeroAula) => (
+                              <tr key={numeroAula} className="imprimir-sem-quebra">
+                                <td className="p-2 border-b align-top">
+                                  <div className="font-medium">{numeroAula}ª</div>
+                                  {horaDe(numeroAula) && <div className="text-[11px] text-muted-foreground">{horaDe(numeroAula)}</div>}
+                                </td>
+                                {DIAS.map((_, diaIdx) => {
+                                  const aula = aulasT.find((a) => a.diaSemana === diaIdx && a.numeroAula === numeroAula);
+                                  const hoje = diaIdx === hojeDiaSemana;
+                                  return (
+                                    <td key={diaIdx} className={`p-2 border-b h-14 ${hoje ? "bg-primary/5" : ""}`}>
+                                      {aula ? (
+                                        <div
+                                          className="h-full rounded-md p-2 border-l-4 imprimir-cartao-aula"
+                                          style={{ backgroundColor: `${aula.disciplinaCor ?? "#1565C0"}15`, borderLeftColor: aula.disciplinaCor ?? "#1565C0" }}
+                                          title={`${aula.disciplinaNome} — ${aula.turmaNome}${aula.sala ? " · " + aula.sala : ""}`}
+                                        >
+                                          <div className="font-semibold text-sm leading-tight break-words">
+                                            {aula.disciplinaSigla ? String(aula.disciplinaSigla).toUpperCase() : aula.disciplinaNome}
+                                          </div>
+                                          <div className="text-xs text-muted-foreground truncate">
+                                            {aula.turmaNome}{aula.sala ? ` · ${aula.sala}` : ""}
+                                          </div>
+                                          {aula.assincrona && (() => {
+                                            const nums = Array.from({ length: maxT }, (_, k) => k + 1).filter((n) =>
+                                              aulasT.some((x) => x.diaSemana === diaIdx && x.numeroAula === n) || ehHA(diaIdx, n));
+                                            const aviso = numeroAula === Math.min(...nums) ? "registrar entrada (login no início)"
+                                              : numeroAula === Math.max(...nums) ? "registrar saída (login no fim)" : null;
+                                            return (
+                                              <div className="mt-1 flex flex-wrap items-center gap-1">
+                                                <span className="text-[10px] font-bold uppercase tracking-wide rounded bg-violet-100 text-violet-800 px-1.5 py-0.5">Assíncrona</span>
+                                                {aviso && <span className="text-[10px] font-semibold text-rose-700">{aviso}</span>}
+                                              </div>
+                                            );
+                                          })()}
+                                        </div>
+                                      ) : ehHA(diaIdx, numeroAula) ? (
+                                        <div className="h-full rounded-md p-2 border-l-4 bg-amber-50 border-amber-400 flex items-center justify-center imprimir-cartao-aula">
+                                          <span className="text-xs font-semibold text-amber-700">HA</span>
+                                        </div>
+                                      ) : null}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             )}
           </CardContent>

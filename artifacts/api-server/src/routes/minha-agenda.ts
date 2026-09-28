@@ -1,3 +1,4 @@
+import { horarioSlotsTable } from "@workspace/db"; // [AGENDA-TURNOS]
 import { Router } from "express";
 import { getAuth, clerkClient } from "@clerk/express";
 import { db } from "@workspace/db";
@@ -73,6 +74,7 @@ router.get("/horario", async (req, res) => {
       assincrona: horariosTable.assincrona, // [ASSINCRONA-EXIBICAO]
       disciplinaCor: disciplinasTable.cor,
       turmaNome: turmasTable.nome,
+      turno: turmasTable.turno, // [AGENDA-TURNOS]
     })
     .from(horariosTable)
     .innerJoin(disciplinasTable, eq(disciplinasTable.id, horariosTable.disciplinaId))
@@ -93,6 +95,7 @@ router.get("/horario", async (req, res) => {
     .select({
       diaSemana: disponibilidadeTable.diaSemana,
       numeroAula: disponibilidadeTable.horarioSlot,
+      turno: disponibilidadeTable.turno, // [AGENDA-TURNOS]
     })
     .from(disponibilidadeTable)
     .where(
@@ -102,7 +105,18 @@ router.get("/horario", async (req, res) => {
       ),
     );
 
-  res.json({ aulas: linhas, horasAtividade });
+  // [AGENDA-TURNOS] horario de inicio de cada aula, por turno (esquema de aulas da escola)
+  const slots = await db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId));
+  const horarios: Array<{ turno: string; numeroAula: number; horaInicio: string }> = [];
+  for (const s of slots) {
+    if (s.letivo === false) continue;
+    const turnoS = String(s.turno ?? "");
+    if (!horarios.some((h) => h.turno === turnoS && h.numeroAula === s.numeroAula)) {
+      horarios.push({ turno: turnoS, numeroAula: s.numeroAula, horaInicio: String(s.horaInicio ?? "") });
+    }
+  }
+
+  res.json({ aulas: linhas, horasAtividade, horarios });
 });
 
 router.get("/reservas", async (req, res) => {
