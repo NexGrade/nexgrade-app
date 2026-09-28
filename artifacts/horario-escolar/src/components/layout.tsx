@@ -12,45 +12,50 @@ import {
 import { cn } from "@/lib/utils";
 
 const navGroups = [
+  // [FASE-B] Menu reorganizado na ordem em que a escola trabalha (28/09/2026).
   {
     label: "Principal",
     items: [
       { href: "/dashboard", label: "Visão Geral", icon: LayoutDashboard },
       { href: "/horario", label: "Horário", icon: Calendar },
-      { href: "/calendario", label: "Calendário Escolar", icon: CalendarDays },
       { href: "/assistente", label: "Assistente de IA", icon: Sparkles, badge: "IA" },
     ],
   },
   {
-    label: "Cadastros",
+    // Ordem do cadastro de uma escola nova: professores ANTES de turmas,
+    // porque na edicao da turma se escolhe o professor de cada disciplina.
+    label: "Montagem da escola",
     items: [
-      { href: "/professores", label: "Professores", icon: Users },
-      { href: "/disponibilidade", label: "Disponibilidade", icon: Clock },
-      // [NOVO] Página já existia pronta em disco, só nunca tinha sido
-      // ligada nem ao App.tsx nem ao menu -- achada na faxina de código
-      // órfão. Cada escola configura suas próprias regras (máximo de
-      // aulas geminadas, limites por disciplina/turma, limites por
-      // professor) que o gerador de horário usa.
-      { href: "/regras-distribuicao", label: "Regras de Distribuição", icon: SlidersHorizontal },
+      { href: "/calendario", label: "Calendário Escolar", icon: CalendarDays },
       { href: "/disciplinas", label: "Disciplinas", icon: BookOpen },
       { href: "/cursos", label: "Cursos e Matriz Curricular", icon: Library },
+      { href: "/professores", label: "Professores", icon: Users },
       { href: "/turmas", label: "Turmas", icon: GraduationCap },
+      { href: "/disponibilidade", label: "Disponibilidade", icon: Clock },
       { href: "/salas", label: "Salas", icon: Building2 },
+      // Cada escola configura suas proprias regras (maximo de aulas geminadas,
+      // limites por disciplina/turma e por professor) que o gerador usa.
+      { href: "/regras-distribuicao", label: "Regras de Distribuição", icon: SlidersHorizontal },
     ],
   },
   {
-    label: "Gestão",
+    label: "Dia a dia",
     items: [
+      { href: "/reservas", label: "Reservas", icon: DoorOpen },
       { href: "/licencas", label: "Licenças", icon: FileText },
       { href: "/comunicados", label: "Comunicados", icon: Bell },
+    ],
+  },
+  {
+    label: "Dados",
+    items: [
       { href: "/importar", label: "Importar Dados", icon: Upload },
-      { href: "/reservas", label: "Reservas", icon: DoorOpen },
+      { href: "/export", label: "Exportar Dados", icon: Download },
     ],
   },
   {
     label: "Sistema",
     items: [
-      { href: "/export", label: "Exportar Dados", icon: Download },
       { href: "/dados-escola", label: "Dados da Escola", icon: Landmark },
       { href: "/assinatura", label: "Assinatura", icon: CreditCard },
       { href: "/usuarios", label: "Usuários", icon: Shield },
