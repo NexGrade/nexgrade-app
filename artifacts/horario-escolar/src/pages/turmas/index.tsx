@@ -39,73 +39,144 @@ const turmaSchema = z.object({
 });
 type TurmaFormValues = z.infer<typeof turmaSchema>;
 
-// [PROF-DISCIPLINA] Distribuicao de aulas: professor de cada disciplina da turma.
-// Grava na hora pela rota PATCH /turmas/:turmaId/disciplinas/linha/:linhaId.
+// [PROF-DISCIPLINA] [MONTAR-TURMA] Montagem da turma num lugar so: professor de
+// cada disciplina, co-docencia (2o professor), trio e aulas assincronas.
+// Tudo grava na hora, pelas rotas ja existentes de turmas.
 function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: turma, isLoading } = useGetTurma(turmaId, { query: { queryKey: getGetTurmaQueryKey(turmaId) } });
   const { data: professores = [] } = useListProfessores();
-  const [salvandoLinha, setSalvandoLinha] = useState<number | null>(null);
+  const [salvando, setSalvando] = useState<string | null>(null);
+  const [abrirCodoc, setAbrirCodoc] = useState<number | null>(null);
   const linhas = ((turma as any)?.disciplinasComCarga ?? []) as any[];
+
+  // agrupa as linhas por disciplina (co-docencia = 2 linhas da mesma disciplina)
+  const grupos: Array<{ disciplinaId: number; nome: string; carga: number; linhas: any[]; trio: string; assinc: number }> = [];
+  for (const l of linhas) {
+    let g = grupos.find((x) => x.disciplinaId === l.disciplinaId);
+    if (!g) {
+      g = { disciplinaId: l.disciplinaId, nome: l.nome, carga: l.cargaHorariaSemanal, linhas: [], trio: (l.grupoTrio ?? "").trim(), assinc: l.aulasAssincronas ?? 0 };
+      grupos.push(g);
+    }
+    g.linhas.push(l);
+  }
   const semProfessor = linhas.filter((l) => !l.professorId).length;
 
-  async function definir(linhaId: number, valor: string) {
-    setSalvandoLinha(linhaId);
+  // avisos de trio: cada rotulo precisa de exatamente 3 disciplinas, com a mesma carga
+  const trios = new Map<string, Array<{ nome: string; carga: number }>>();
+  for (const g of grupos) if (g.trio) trios.set(g.trio, [...(trios.get(g.trio) ?? []), { nome: g.nome, carga: g.carga }]);
+  const avisosTrio: string[] = [];
+  for (const [rotulo, ds] of trios) {
+    if (ds.length !== 3) avisosTrio.push(`Trio "${rotulo}" tem ${ds.length} disciplina(s) — precisa de exatamente 3.`);
+    else if (new Set(ds.map((d) => d.carga)).size > 1) avisosTrio.push(`Trio "${rotulo}" com cargas diferentes: ${ds.map((d) => `${d.nome} ${d.carga}h`).join(", ")} — precisam ser iguais.`);
+  }
+
+  async function chamar(url: string, method: string, body: unknown, msg: string) {
+    setSalvando(url);
     try {
-      await customFetch(`/api/turmas/${turmaId}/disciplinas/linha/${linhaId}`, {
-        method: "PATCH",
+      await customFetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ professorId: valor === "__nenhum__" ? null : Number(valor) }),
+        body: body === undefined ? undefined : JSON.stringify(body),
       });
       await queryClient.invalidateQueries({ queryKey: getGetTurmaQueryKey(turmaId) });
-      toast({ title: valor === "__nenhum__" ? "Professor removido" : "Professor definido" });
+      toast({ title: msg });
     } catch (err) {
-      toast({ title: "Erro ao definir professor", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+      toast({ title: "Não foi possível salvar", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
     } finally {
-      setSalvandoLinha(null);
+      setSalvando(null);
     }
   }
 
+  const semEnter = (e: any) => { if (e.key === "Enter") { e.preventDefault(); (e.target as HTMLInputElement).blur(); } };
+
+  function seletor(disciplinaId: number, valor: number | null, onEscolher: (v: string) => void, permitirRemover: boolean, chave: string) {
+    const ativos = professores.filter((p) => p.ativo !== false);
+    const habilitados = ativos.filter((p) => (p.disciplinaIds ?? []).includes(disciplinaId));
+    const outros = ativos.filter((p) => !(p.disciplinaIds ?? []).includes(disciplinaId));
+    return (
+      <Select key={chave} value={valor ? String(valor) : ""} onValueChange={onEscolher} disabled={salvando !== null}>
+        <SelectTrigger className="w-60 h-8"><SelectValue placeholder="Escolher professor" /></SelectTrigger>
+        <SelectContent>
+          {habilitados.length > 0 && (
+            <SelectGroup>
+              <SelectLabel>Habilitados nesta disciplina</SelectLabel>
+              {habilitados.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
+            </SelectGroup>
+          )}
+          <SelectGroup>
+            <SelectLabel>Outros professores</SelectLabel>
+            {outros.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
+          </SelectGroup>
+          {permitirRemover && <SelectItem value="__nenhum__">— remover professor —</SelectItem>}
+        </SelectContent>
+      </Select>
+    );
+  }
+
   if (isLoading) return <Skeleton className="h-24 w-full" />;
-  if (linhas.length === 0) return null;
+  if (grupos.length === 0) return null;
   return (
-    <div className="rounded-lg border p-4 space-y-2">
+    <div className="rounded-lg border p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium">Professor por disciplina</p>
+        <p className="text-sm font-medium">Professores, co-docência e trio</p>
         {semProfessor > 0
           ? <span className="text-xs font-medium text-amber-700">{semProfessor} sem professor</span>
           : <span className="text-xs font-medium text-emerald-700">todas distribuídas</span>}
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-1.5">{/* [TURMA-DIALOGO-ROLAGEM] */}
-      {linhas.map((l) => {
-        const ativos = professores.filter((p) => p.ativo !== false);
-        const habilitados = ativos.filter((p) => (p.disciplinaIds ?? []).includes(l.disciplinaId));
-        const outros = ativos.filter((p) => !(p.disciplinaIds ?? []).includes(l.disciplinaId));
-        return (
-          <div key={l.turmaDisciplinaId} className={`flex items-center gap-3 rounded px-2 py-1.5 ${l.professorId ? "bg-muted/40" : "bg-amber-50"}`}>
-            <span className="text-sm flex-1 truncate">{l.nome} <span className="text-muted-foreground">({l.cargaHorariaSemanal}h)</span></span>
-            <Select value={l.professorId ? String(l.professorId) : ""} onValueChange={(v) => definir(l.turmaDisciplinaId, v)} disabled={salvandoLinha === l.turmaDisciplinaId}>
-              <SelectTrigger className="w-52 h-8 shrink-0"><SelectValue placeholder="Escolher professor" /></SelectTrigger>
-              <SelectContent>
-                {habilitados.length > 0 && (
-                  <SelectGroup>
-                    <SelectLabel>Habilitados nesta disciplina</SelectLabel>
-                    {habilitados.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
-                  </SelectGroup>
-                )}
-                <SelectGroup>
-                  <SelectLabel>Outros professores</SelectLabel>
-                  {outros.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
-                </SelectGroup>
-                {l.professorId && <SelectItem value="__nenhum__">— remover professor —</SelectItem>}
-              </SelectContent>
-            </Select>
-          </div>
-        );
-      })}
+      {avisosTrio.length > 0 && (
+        <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded p-2 space-y-0.5">
+          {avisosTrio.map((a) => <p key={a}>{a}</p>)}
+        </div>
+      )}
+      <div className="space-y-2">
+        {grupos.map((g) => {
+          const urlModalidade = `/api/turmas/${turmaId}/disciplinas/${g.disciplinaId}/modalidade`;
+          const faltaProfessor = g.linhas.some((l) => !l.professorId);
+          return (
+            <div key={g.disciplinaId} className={`rounded-md border p-3 space-y-2 ${faltaProfessor ? "bg-amber-50/70 border-amber-200" : "bg-muted/30"}`}>
+              <p className="text-sm font-medium leading-snug">
+                {g.nome} <span className="text-muted-foreground font-normal">({g.carga}h)</span>
+                {g.linhas.length > 1 && <span className="ml-2 text-[11px] font-semibold rounded bg-blue-100 text-blue-800 px-1.5 py-0.5">co-docência</span>}
+                {g.trio && <span className="ml-2 text-[11px] font-semibold rounded bg-violet-100 text-violet-800 px-1.5 py-0.5">trio {g.trio}</span>}
+                {g.assinc > 0 && <span className="ml-2 text-[11px] font-semibold rounded bg-slate-200 text-slate-800 px-1.5 py-0.5">{g.assinc} assíncrona(s)</span>}
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                {g.linhas.map((l, i) => (
+                  <div key={l.turmaDisciplinaId} className="flex items-center gap-1">
+                    {seletor(g.disciplinaId, l.professorId ?? null,
+                      (v) => chamar(`/api/turmas/${turmaId}/disciplinas/linha/${l.turmaDisciplinaId}`, "PATCH", { professorId: v === "__nenhum__" ? null : Number(v) }, v === "__nenhum__" ? "Professor removido" : "Professor definido"),
+                      !!l.professorId && i === 0 && g.linhas.length === 1, `prof-${l.turmaDisciplinaId}`)}
+                    {i > 0 && (
+                      <Button type="button" size="sm" variant="ghost" className="h-8 px-2 text-destructive hover:text-destructive" disabled={salvando !== null}
+                        onClick={() => { if (confirm(`Remover o 2º professor de ${g.nome}? A disciplina continua com o 1º professor.`)) chamar(`/api/turmas/${turmaId}/disciplinas/linha/${l.turmaDisciplinaId}`, "DELETE", undefined, "Co-docência removida"); }}>
+                        remover
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                {g.linhas.length === 1 && (abrirCodoc === g.disciplinaId
+                  ? seletor(g.disciplinaId, null, (v) => { setAbrirCodoc(null); chamar(`/api/turmas/${turmaId}/disciplinas/${g.disciplinaId}/dupla`, "POST", { professorId: Number(v) }, "Co-docência criada"); }, false, `codoc-${g.disciplinaId}`)
+                  : <Button type="button" size="sm" variant="outline" className="h-8" disabled={!g.linhas[0]?.professorId || salvando !== null} onClick={() => setAbrirCodoc(g.disciplinaId)} title="Dois professores dando a mesma aula juntos">+ co-docência</Button>)}
+              </div>
+              <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                <label className="flex items-center gap-1.5">Trio:
+                  <Input key={`trio-${g.disciplinaId}-${g.trio}`} defaultValue={g.trio} placeholder="—" maxLength={20} className="w-16 h-7" onKeyDown={semEnter}
+                    onBlur={(e) => { const v = e.target.value.trim(); if (v !== g.trio) chamar(urlModalidade, "PATCH", { grupoTrio: v || null }, v ? `Trio ${v} definido` : "Trio removido"); }} />
+                </label>
+                <label className="flex items-center gap-1.5">Assíncronas/sem.:
+                  <Input key={`assinc-${g.disciplinaId}-${g.assinc}`} type="number" min={0} max={20} defaultValue={g.assinc} className="w-16 h-7" onKeyDown={semEnter}
+                    onBlur={(e) => { const v = Number(e.target.value || 0); if (v !== g.assinc) chamar(urlModalidade, "PATCH", { aulasAssincronas: v }, "Aulas assíncronas atualizadas"); }} />
+                </label>
+              </div>
+            </div>
+          );
+        })}
       </div>
-      <p className="text-[11px] text-muted-foreground">A escolha grava na hora. Co-docência (dois professores na mesma aula) continua sendo configurada na grade.</p>
+      <p className="text-[11px] text-muted-foreground">
+        Tudo grava na hora. <strong>Co-docência:</strong> dois professores dando a mesma aula juntos. <strong>Trio:</strong> dê o mesmo rótulo (ex.: A) às 3 disciplinas que acontecem juntas — elas precisam ter a mesma carga. <strong>Assíncronas:</strong> quantas das aulas semanais da disciplina são assíncronas.
+      </p>
     </div>
   );
 }
