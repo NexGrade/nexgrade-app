@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { UserButton } from "@clerk/react";
+import { UserButton, useOrganization } from "@clerk/react";
 import {
   useGetMinhaAgendaNotificacoes,
   useMarcarMinhaNotificacaoLida,
@@ -318,6 +318,7 @@ export default function MinhaAgendaPage() {
   });
   const aulas = dadosHorario?.aulas;
   const [turnoAba, setTurnoAba] = useState<string | null>(null); // [AGENDA-ABAS]
+  const { organization } = useOrganization(); // [AGENDA-ESCOLA]
   const horasAtividade = dadosHorario?.horasAtividade ?? [];
   const ehHoraAtividade = (diaIdx: number, numeroAula: number) =>
     horasAtividade.some((h) => h.diaSemana === diaIdx && h.numeroAula === numeroAula);
@@ -391,7 +392,7 @@ export default function MinhaAgendaPage() {
       <header className="border-b p-4 flex items-center justify-between print:hidden">
         <div>
           <h1 className="text-lg font-semibold">Minha Agenda</h1>
-          <p className="text-sm text-muted-foreground">{professor.nome}</p>
+          <p className="text-sm text-muted-foreground">{professor.nome}{organization?.name && <> &middot; <span className="font-medium text-foreground">{organization.name}</span></>}</p>
         </div>
         <div className="flex items-center gap-2">
           <NotificationBell
