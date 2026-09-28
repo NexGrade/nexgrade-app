@@ -290,7 +290,7 @@ export default function TurmasList() {
             {isDialogOpen && (
               <TurmaForm
                 key={editingId ?? "nova-turma"}
-                editingId={editingId}
+                editingId={editingId} onCriada={(id: number) => setEditingId(id)}
                 turmaAtual={editingId ? turmas?.find((t) => t.id === editingId) : undefined}
                 onFechar={() => setIsDialogOpen(false)}
               />
@@ -369,7 +369,7 @@ export default function TurmasList() {
 
 // ── Formulário (criar/editar), com integração Curso > Matriz ───────────
 
-function TurmaForm({ editingId, turmaAtual, onFechar }: { editingId: number | null; turmaAtual: any; onFechar: () => void }) {
+function TurmaForm({ editingId, turmaAtual, onFechar, onCriada }: { editingId: number | null; turmaAtual: any; onFechar: () => void; onCriada?: (id: number) => void }) {
   const { data: disciplinas } = useListDisciplinas();
   const { data: cursos } = useListCursos();
   // [FIX 03/09 v2 -- causa raiz corrigida] Antes, o valor da matriz ja
@@ -451,8 +451,14 @@ function TurmaForm({ editingId, turmaAtual, onFechar }: { editingId: number | nu
       if (matrizId && turmaId) {
         await aplicarMatriz.mutateAsync({ id: turmaId, data: { matrizCurricularId: Number(matrizId) } });
       }
-      toast({ title: editingId ? "Turma atualizada com sucesso!" : "Turma criada com sucesso!" });
       queryClient.invalidateQueries({ queryKey: getListTurmasQueryKey() });
+      // [NOVA-TURMA-CONTINUA] turma nova: nao fecha -- passa para a edicao e mostra a distribuicao
+      if (!editingId && turmaId && onCriada) {
+        toast({ title: "Turma criada! Agora distribua os professores, co-docência e trios." });
+        onCriada(turmaId);
+        return;
+      }
+      toast({ title: editingId ? "Turma atualizada com sucesso!" : "Turma criada com sucesso!" });
       onFechar();
     } catch {
       toast({ title: "Erro ao salvar turma", variant: "destructive" });
