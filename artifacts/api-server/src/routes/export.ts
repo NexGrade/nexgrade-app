@@ -135,7 +135,7 @@ async function buscarHorariosPorAula(
   // sem nenhuma aula real ali -- e o padrao visual do proprio Urania.
   // numeroAula 0 nunca e usado por aula de verdade, entao essa linha
   // sempre aparece vazia.
-  if (turno === "noturno") mapa[0] = "18:00";
+  if (turno === "noturno" && rows.some((r) => r.horaInicio.startsWith("18:00"))) mapa[0] = "18:00"; // [LINHA-1800-SE-EXISTE]
   return mapa;
 }
 

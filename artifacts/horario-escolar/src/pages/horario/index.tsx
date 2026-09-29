@@ -639,6 +639,9 @@ function AbaGrade() {
   const [turmaId, setTurmaId] = useState<string>(() => new URLSearchParams(window.location.search).get("turma") ?? "all"); // [FASE-A] ?turma=
   const [professorId, setProfessorId] = useState<string>("all");
   const [turno, setTurno] = useState<string>("all");
+  // [LINHA-1800-SE-EXISTE] a linha "18:00" do noturno so aparece se o esquema da escola tiver aula as 18:00
+  const { data: slotsDoTurnoGrade } = useListHorarioSlots({ turno: turno as any }, { query: { queryKey: getListHorarioSlotsQueryKey({ turno: turno as any }) } });
+  const temLinha1800 = turno === "noturno" && (slotsDoTurnoGrade ?? []).some((s: any) => String(s.horaInicio ?? "").startsWith("18:00"));
   const [gerando, setGerando] = useState(false);
 
   // [NOVO] Estado do dialog de aula manual -- ver DialogAdicionarAula
@@ -926,7 +929,7 @@ function AbaGrade() {
               // professor, não de turma), então a linha aparece
               // sempre vazia aqui -- mas precisa aparecer, pra bater
               // com a realidade da grade impressa.
-              const numerosAula = turno === "noturno"
+              const numerosAula = temLinha1800 // [LINHA-1800-SE-EXISTE]
                 ? [0, ...Array.from({ length: maxAulaTurma }, (_, i) => i + 1)]
                 : Array.from({ length: maxAulaTurma }, (_, i) => i + 1);
               return (
