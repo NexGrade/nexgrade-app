@@ -1532,7 +1532,7 @@ async function runCpsatGeneracaoUnica(
       if (aulasAssinc > 0) {
         const codigoAss = `${codigoSaeChave}#ASS`;
         chaveParaIds.set(`${turma.nome}||${codigoAss}`, { turmaId: td.turmaId, disciplinaId: td.disciplinaId, assincrona: true });
-        linhas.push({ ...base, codigoSae: codigoAss, aulasSemana: aulasAssinc, grupoDupla: grupo ? `${grupo}#ASS` : null, assincrona: true });
+        linhas.push({ ...base, codigoSae: codigoAss, aulasSemana: aulasAssinc, grupoDupla: null /* [ASSINC-SO-PROF] assincrona do trio e individual */, assincrona: true });
       }
       return linhas;
     })

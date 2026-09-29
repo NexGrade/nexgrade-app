@@ -107,7 +107,7 @@ def resolver(
         vistos_dupla = set()
         indices_turma = []
         for i, dt in enumerate(disciplinas_turma):
-            if dt.turma != turma:
+            if dt.turma != turma or dt.assincrona:  # [ASSINC-SO-PROF] assincrona nao ocupa a turma
                 continue
             if dt.grupo_dupla is not None:
                 if dt.grupo_dupla in vistos_dupla:
@@ -155,7 +155,7 @@ def resolver(
             vistos_dupla_fzj = set()
             indices_turma_fzj = []
             for i, dt in enumerate(disciplinas_turma):
-                if dt.turma != turma:
+                if dt.turma != turma or dt.assincrona:  # [ASSINC-SO-PROF] assincrona nao ocupa a turma
                     continue
                 if dt.grupo_dupla is not None:
                     if dt.grupo_dupla in vistos_dupla_fzj:
@@ -189,7 +189,7 @@ def resolver(
     for prof, turma in sorted(pares_prof_turma):
         indices_par = [
             i for i, dt in enumerate(disciplinas_turma)
-            if dt.professor == prof and dt.turma == turma
+            if dt.professor == prof and dt.turma == turma and not dt.assincrona  # [ASSINC-SO-PROF]
         ]
         if len(indices_par) < 2:
             continue  # so uma disciplina desse par -- RESTRICAO 5 ja cobre
@@ -253,7 +253,7 @@ def resolver(
         vistos_dupla_obj = set()
         indices_turma = []
         for i, dt in enumerate(disciplinas_turma):
-            if dt.turma != turma:
+            if dt.turma != turma or dt.assincrona:  # [ASSINC-SO-PROF] assincrona nao ocupa a turma
                 continue
             if dt.grupo_dupla is not None:
                 if dt.grupo_dupla in vistos_dupla_obj:
