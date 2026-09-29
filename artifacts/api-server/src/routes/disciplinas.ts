@@ -1,3 +1,4 @@
+import { padronizarNomeDisciplina } from "../lib/padronizar-nome-disciplina"; // [PADRAO-NOME-DISCIPLINA]
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { disciplinasTable } from "@workspace/db";
@@ -30,6 +31,7 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
+  if (typeof req.body?.nome === "string") req.body.nome = padronizarNomeDisciplina(req.body.nome); // [PADRAO-NOME-DISCIPLINA]
   const escolaId = getEscolaId(req);
   const parsed = CreateDisciplinaBody.safeParse(req.body);
   if (!parsed.success) {
@@ -85,6 +87,7 @@ router.get("/:id", async (req, res) => {
 });
 
 router.patch("/:id", async (req, res) => {
+  if (typeof req.body?.nome === "string") req.body.nome = padronizarNomeDisciplina(req.body.nome); // [PADRAO-NOME-DISCIPLINA]
   const escolaId = getEscolaId(req);
   const paramsParsed = UpdateDisciplinaParams.safeParse({ id: Number(req.params.id) });
   if (!paramsParsed.success) {

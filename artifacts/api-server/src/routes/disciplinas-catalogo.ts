@@ -1,3 +1,4 @@
+import { padronizarNomeDisciplina } from "../lib/padronizar-nome-disciplina"; // [PADRAO-NOME-DISCIPLINA]
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { disciplinasCatalogoTable, disciplinasTable } from "@workspace/db";
@@ -60,7 +61,7 @@ router.post("/adicionar-selecionadas", async (req, res) => {
   const criadas = await db.insert(disciplinasTable).values(
     paraCriar.map(item => ({
       escolaId,
-      nome: item.nome,
+      nome: padronizarNomeDisciplina(item.nome), // [PADRAO-NOME-DISCIPLINA]
       codigoSae: item.codigoSae,
       categoriaCurricularPadrao: item.categoriaCurricularPadrao,
       cargaSemanal: item.cargaSemanalSugerida,

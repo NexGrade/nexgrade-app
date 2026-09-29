@@ -1,3 +1,4 @@
+import { padronizarNomeDisciplina } from "./padronizar-nome-disciplina"; // [PADRAO-NOME-DISCIPLINA]
 /**
  * [CATALOGO] Semeia o catalogo oficial SEED-PR numa escola (29/09/2026).
  *
@@ -74,7 +75,7 @@ export async function semearCatalogoEscola(escolaId: string): Promise<ResultadoS
 
   const discExistentes = await db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId));
   const discPorNome = new Map<string, number>();
-  for (const d of discExistentes) discPorNome.set(chaveNome(d.nome), d.id);
+  for (const d of discExistentes) discPorNome.set(chaveNome(padronizarNomeDisciplina(d.nome)), d.id); // [PADRAO-NOME-DISCIPLINA]
 
   for (const m of modelos()) {
     await db.transaction(async (tx) => {
@@ -107,11 +108,11 @@ export async function semearCatalogoEscola(escolaId: string): Promise<ResultadoS
 
         const linhas: any[] = [];
         for (const it of itens) {
-          const k = chaveNome(it.nome);
+          const k = chaveNome(padronizarNomeDisciplina(it.nome)); // [PADRAO-NOME-DISCIPLINA]
           let discId = discPorNome.get(k);
           if (!discId) {
             const [nova] = await tx.insert(disciplinasTable).values({
-              escolaId, nome: it.nome, cargaSemanal: Number(it.cargaHorariaSemanal) || 2,
+              escolaId, nome: padronizarNomeDisciplina(it.nome), cargaSemanal: Number(it.cargaHorariaSemanal) || 2,
               categoriaCurricularPadrao: it.categoria as any,
             } as any).returning();
             discId = nova.id;
