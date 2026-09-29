@@ -2,7 +2,7 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { escolasTable, planosTable, cursosTable } from "@workspace/db";
 import { semearCatalogoEscola } from "../lib/semear-catalogo"; // [CATALOGO]
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
 import { limitadorConsultaSensivel } from "../middlewares/rateLimit";
 import { registrarAuditoria } from "../lib/audit";
@@ -93,6 +93,24 @@ router.post("/semear", async (req, res) => {
   }
 });
 
+// [DISC-EM-USO] Disciplinas que a escola usa: em alguma turma, na matriz de um curso
+// ofertado, ou avulsas (criadas a mao / fora de qualquer matriz da escola).
+router.get("/disciplinas-em-uso", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const r: any = await db.execute(sql`
+    select d.id from disciplinas d
+    where d.escola_id = ${escolaId} and (
+      exists (select 1 from turma_disciplinas td join turmas t on t.id = td.turma_id
+              where td.disciplina_id = d.id and t.escola_id = ${escolaId})
+      or exists (select 1 from itens_matriz i join matrizes_curriculares m on m.id = i.matriz_curricular_id
+                 join cursos c on c.id = m.curso_id
+                 where i.disciplina_id = d.id and c.escola_id = ${escolaId} and c.ofertado)
+      or not exists (select 1 from itens_matriz i join matrizes_curriculares m on m.id = i.matriz_curricular_id
+                     where i.disciplina_id = d.id and m.escola_id = ${escolaId})
+    )`);
+  const linhas = (r?.rows ?? r ?? []) as any[];
+  res.json(linhas.map((x) => Number(x.id)));
+});
 // [CATALOGO] Liga/desliga a oferta de um curso da escola.
 router.patch("/cursos/:id/ofertado", async (req, res) => {
   const escolaId = getEscolaId(req);

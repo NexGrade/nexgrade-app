@@ -9,7 +9,8 @@ import {
   getListDisciplinasCatalogoQueryKey,
   useAdicionarDisciplinasCatalogoSelecionadas,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { customFetch } from "@workspace/api-client-react"; // [DISC-EM-USO]
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2, BookOpen, LayoutGrid, List, LibraryBig } from "lucide-react";
@@ -73,7 +74,15 @@ type DisciplinaFormValues = z.infer<typeof disciplinaSchema>;
 type ModoVisualizacao = "grade" | "lista";
 
 export default function DisciplinasList() {
-  const { data: disciplinas, isLoading } = useListDisciplinas();
+  const { data: disciplinasTodas, isLoading } = useListDisciplinas();
+  // [DISC-EM-USO] por padrao, so as disciplinas usadas pela escola (turmas + cursos ofertados + avulsas)
+  const [mostrarCatalogo, setMostrarCatalogo] = useState(false);
+  const { data: emUso } = useQuery({
+    queryKey: ["/matrizes-oficiais/disciplinas-em-uso"],
+    queryFn: () => customFetch<number[]>("/api/matrizes-oficiais/disciplinas-em-uso", { responseType: "json" } as any),
+  });
+  const idsEmUso = new Set(emUso ?? []);
+  const disciplinas = mostrarCatalogo || !emUso ? disciplinasTodas : disciplinasTodas?.filter((d) => idsEmUso.has(d.id));
   const { busca, setBusca, itensFiltrados: disciplinasFiltradas } = useListaFiltrada(
     disciplinas,
     (d) => `${d.nome} ${d.sigla ?? ""}`,
@@ -388,12 +397,23 @@ export default function DisciplinasList() {
         </div>
       </div>
 
-      <CampoBusca
-        value={busca}
-        onChange={setBusca}
-        placeholder="Buscar por nome ou sigla..."
-        className="max-w-sm"
-      />
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">{/* [DISC-EM-USO] */}
+        <CampoBusca
+          value={busca}
+          onChange={setBusca}
+          placeholder="Buscar por nome ou sigla..."
+          className="max-w-sm"
+        />
+        <label className="flex items-center gap-2 text-sm cursor-pointer whitespace-nowrap">
+          <input type="checkbox" className="h-4 w-4" checked={mostrarCatalogo} onChange={(e) => setMostrarCatalogo(e.target.checked)} />
+          Mostrar catálogo completo
+        </label>
+        {emUso && (
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            {idsEmUso.size} em uso · {disciplinasTodas?.length ?? 0} no catálogo
+          </span>
+        )}
+      </div>
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
