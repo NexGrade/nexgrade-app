@@ -956,7 +956,7 @@ function AbaGrade() {
                               // [FIX-DUPLA-DOCENCIA] mesmo fix do Modo Experimental: pega
                               // TODOS os slots do dia+aula (nao so o primeiro com .find()),
                               // pra dupla docencia mostrar os dois professores juntos.
-                              const slotsAqui = slotsDaTurma.filter((s) => s.diaSemana === colIndex && s.numeroAula === aulaNum);
+                              const slotsAqui = slotsDaTurma.filter((s) => s.diaSemana === colIndex && s.numeroAula === aulaNum && !(s as any).assincrona); // [ASSINC-FORA-DA-TURMA]
                               const slot = slotsAqui[0];
                               if (!slot) {
                                 return (
@@ -1015,7 +1015,7 @@ function AbaGrade() {
                       // [FIX-DUPLA-DOCENCIA] getSlot() só achava o primeiro professor do
                       // slot -- troca pra getSlots() (plural, já existia pro clique de
                       // edição) pra também mostrar os dois professores juntos na exibição.
-                      const slotsAqui = getSlots(colIndex, aulaNum, slotId);
+                      const slotsAqui = getSlots(colIndex, aulaNum, slotId).filter((s: any) => isProfessorSelected || !s.assincrona); // [ASSINC-FORA-DA-TURMA]
                       const slot = slotsAqui[0];
                       if (!slot) {
                         const temHA = isProfessorSelected && getHA(colIndex, aulaNum);
@@ -2021,7 +2021,7 @@ function AbaExperimental() {
                                   // mesmo dia+aula, professores diferentes), isso escondia o
                                   // segundo professor. Agora pega TODOS e junta com " + ",
                                   // mesmo padrão já usado na grade oficial (turmas/horario.tsx).
-                                  const slotsAqui = slotsGrade.filter((s) => s.diaSemana === colIndex && s.numeroAula === aulaNum);
+                                  const slotsAqui = slotsGrade.filter((s) => s.diaSemana === colIndex && s.numeroAula === aulaNum && !(s as any).assincrona); // [ASSINC-FORA-DA-TURMA]
                                   const slot = slotsAqui[0];
                                   if (!slot) {
                                     return (
