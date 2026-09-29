@@ -4,7 +4,22 @@ import {
   professoresTable, turmasTable, disciplinasTable, horariosTable,
   salasTable, licencasTable, comunicadosTable,
 } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
+// [DISC-EM-USO] mesmo criterio da aba Disciplinas: em alguma turma, na matriz de um curso ofertado, ou avulsa
+async function contarDisciplinasEmUso(escolaId: string): Promise<number> {
+  const r: any = await db.execute(sql`
+    select count(*)::int n from disciplinas d
+    where d.escola_id = ${escolaId} and (
+      exists (select 1 from turma_disciplinas td join turmas t on t.id = td.turma_id
+              where td.disciplina_id = d.id and t.escola_id = ${escolaId})
+      or exists (select 1 from itens_matriz i join matrizes_curriculares m on m.id = i.matriz_curricular_id
+                 join cursos c on c.id = m.curso_id
+                 where i.disciplina_id = d.id and c.escola_id = ${escolaId} and c.ofertado)
+      or not exists (select 1 from itens_matriz i join matrizes_curriculares m on m.id = i.matriz_curricular_id
+                     where i.disciplina_id = d.id and m.escola_id = ${escolaId})
+    )`);
+  return Number((r?.rows ?? r ?? [])[0]?.n ?? 0);
+}
 import { getEscolaId } from "../lib/escola-id";
 import { detectarConflitos } from "./conflitos";
 
@@ -40,7 +55,7 @@ router.get("/", async (req, res) => {
   res.json({
     totalProfessores: professores.length,
     totalTurmas: turmas.length,
-    totalDisciplinas: disciplinas.length,
+    totalDisciplinas: await contarDisciplinasEmUso(escolaId), // [DISC-EM-USO]
     turmasSemHorario,
     totalConflitos: conflitos.length,
     aulasDistribuidas: horarios.length,
