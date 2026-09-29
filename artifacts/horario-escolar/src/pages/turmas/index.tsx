@@ -392,7 +392,8 @@ function TurmaForm({ editingId, turmaAtual, onFechar, onCriada }: { editingId: n
   const nivel = nivelOverride ?? matrizDaTurma?.nivel ?? "";
   const cursoId = cursoIdOverride ?? (matrizDaTurma ? String(matrizDaTurma.cursoId) : "");
   const matrizId = matrizIdOverride ?? (matrizDaTurma ? String(matrizDaTurma.id) : "");
-  const cursosFiltrados = nivel ? cursos?.filter((c) => c.nivel === nivel) : cursos;
+  const cursosOfertados = cursos?.filter((c: any) => c.ofertado !== false || String(c.id) === cursoId); // [CATALOGO]
+  const cursosFiltrados = nivel ? cursosOfertados?.filter((c) => c.nivel === nivel) : cursosOfertados;
   const { data: matrizes } = useListMatrizesCurriculares(
     Number(cursoId),
     { query: { enabled: !!cursoId, queryKey: getListMatrizesCurricularesQueryKey(Number(cursoId)) } },

@@ -4,15 +4,17 @@
 // para /cursos?tab=disciplinas (ver App.tsx).
 import { lazy, Suspense, useState } from "react";
 import { useSearch } from "wouter";
-import { Library, BookOpen } from "lucide-react";
+import { Library, BookOpen, ListChecks } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const CursosList = lazy(() => import("@/pages/cursos/index"));
 const DisciplinasList = lazy(() => import("@/pages/disciplinas/index"));
+const CatalogoSeed = lazy(() => import("./catalogo")); // [CATALOGO]
 
 const ABAS = [
   { key: "cursos", label: "Cursos e Matriz Curricular", icon: Library },
   { key: "disciplinas", label: "Disciplinas", icon: BookOpen },
+  { key: "catalogo", label: "Catálogo SEED-PR", icon: ListChecks },
 ] as const;
 type AbaKey = (typeof ABAS)[number]["key"];
 
@@ -54,6 +56,7 @@ export default function CursosDisciplinasPage() {
       <Suspense fallback={<Skeleton className="h-64 w-full" />}>
         {aba === "cursos" && <CursosList />}
         {aba === "disciplinas" && <DisciplinasList />}
+        {aba === "catalogo" && <CatalogoSeed />}
       </Suspense>
     </div>
   );

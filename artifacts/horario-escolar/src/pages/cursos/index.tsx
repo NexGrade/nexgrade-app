@@ -86,7 +86,8 @@ const cursoSchema = z.object({
 type CursoFormValues = z.infer<typeof cursoSchema>;
 
 export default function CursosList() {
-  const { data: cursos, isLoading } = useListCursos();
+  const { data: cursosTodos, isLoading } = useListCursos();
+  const cursos = cursosTodos?.filter((c: any) => c.ofertado !== false); // [CATALOGO] so os ofertados
   const { busca, setBusca, itensFiltrados: cursosFiltrados } = useListaFiltrada(cursos, (c) => c.nome);
   const createCurso = useCreateCurso();
   const deleteCurso = useDeleteCurso();
@@ -343,7 +344,7 @@ export default function CursosList() {
         <Card>
           <CardContent className="py-16 flex flex-col items-center gap-3 text-center">
             <Library className="w-10 h-10 text-muted-foreground" />
-            <h3 className="text-lg font-medium">Nenhum curso cadastrado</h3>
+            <h3 className="text-lg font-medium">Nenhum curso ofertado</h3><p className="text-sm text-muted-foreground mt-1">Ative os cursos que a escola oferece na aba <strong>Catálogo SEED-PR</strong>.</p>
             <p className="text-muted-foreground max-w-sm">Cadastre um curso para começar a montar sua Matriz Curricular por série.</p>
           </CardContent>
         </Card>
