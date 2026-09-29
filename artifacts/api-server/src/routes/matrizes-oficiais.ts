@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { escolasTable, planosTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { escolasTable, planosTable, cursosTable } from "@workspace/db";
+import { semearCatalogoEscola } from "../lib/semear-catalogo"; // [CATALOGO]
+import { and, eq } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
 import { limitadorConsultaSensivel } from "../middlewares/rateLimit";
 import { registrarAuditoria } from "../lib/audit";
@@ -69,6 +70,39 @@ router.get("/gerais", limitadorConsultaSensivel, async (req, res) => {
     acao: "consulta", dadosAnteriores: null, dadosNovos: { tipo: "gerais" },
   });
   res.json(MATRIZES_OFICIAIS_SEED_PR);
+});
+
+// [CATALOGO] Importa o catalogo oficial completo para a escola (cursos, matrizes,
+// disciplinas e cargas). Seguro para repetir: nada existente e alterado.
+router.post("/semear", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  if (!(await checarAcessoMatrizes(escolaId))) {
+    res.status(403).json({ error: "Catálogo de matrizes oficiais disponível só durante o período de avaliação ou em planos pagos." });
+    return;
+  }
+  try {
+    const resultado = await semearCatalogoEscola(escolaId);
+    await registrarAuditoria({
+      req, escolaId, entidade: "matrizes-oficiais", entidadeId: 0,
+      acao: "alteracao", dadosAnteriores: null, dadosNovos: { tipo: "semear", ...resultado },
+    });
+    res.json(resultado);
+  } catch (err: any) {
+    console.error("[catalogo] falha ao semear", escolaId, err);
+    res.status(500).json({ error: "Não foi possível importar o catálogo. Tente novamente." });
+  }
+});
+
+// [CATALOGO] Liga/desliga a oferta de um curso da escola.
+router.patch("/cursos/:id/ofertado", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) { res.status(400).json({ error: "ID inválido" }); return; }
+  const ofertado = req.body?.ofertado === true;
+  const [curso] = await db.update(cursosTable).set({ ofertado } as any)
+    .where(and(eq(cursosTable.id, id), eq(cursosTable.escolaId, escolaId))).returning();
+  if (!curso) { res.status(404).json({ error: "Curso não encontrado" }); return; }
+  res.json(curso);
 });
 
 export default router;

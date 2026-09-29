@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 import { limitadorCadastro } from "../middlewares/rateLimit";
 import { criarOuReaproveitarCustomer, criarSubscription } from "../lib/asaas";
+import { semearCatalogoEscola } from "../lib/semear-catalogo"; // [CATALOGO]
 
 const router = Router();
 
@@ -134,6 +135,8 @@ router.post("/", limitadorCadastro, async (req, res) => {
         planoId, planoAtivo: true, trialEndsAt,
       })
       .returning();
+    // [CATALOGO] escola nova nasce com o catalogo oficial SEED-PR (cursos desligados ate a escola marcar)
+    semearCatalogoEscola(escolaId).catch((err) => console.error("[catalogo] falha ao semear escola nova", escolaId, err));
     res.status(201).json(created);
   }
 });

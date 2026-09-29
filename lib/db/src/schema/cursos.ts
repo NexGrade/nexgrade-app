@@ -15,6 +15,8 @@ export const cursosTable = pgTable("cursos", {
   // "concomitante_intercomplementar" quando dois cursos técnicos têm o
   // mesmo nome mas são ofertas administrativas diferentes.
   formaOferta: formaOfertaEnum("forma_oferta"),
+  // [CATALOGO] curso ofertado pela escola (catalogo oficial entra desligado; cursos criados a mao, ligados)
+  ofertado: boolean("ofertado").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
