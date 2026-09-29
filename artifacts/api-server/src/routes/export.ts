@@ -65,6 +65,12 @@ function toCSV(headers: string[], rows: string[][]): string {
 
 // Primeiro nome apenas (ex.: "Anderson Silva" -> "ANDERSON") -- formato
 // real confirmado nos PDFs do Urânia, que nunca mostram sobrenome.
+// [PDF-NOME-PROF] primeiro nome + inicial do sobrenome ("JOÃO L."), para distinguir professores com o mesmo primeiro nome
+function nomeCurto(nomeCompleto: string): string {
+  const p = nomeCompleto.trim().split(/\s+/);
+  const resto = p.slice(1).map((x) => x.replace(/[^A-Za-zÀ-ÿ]/g, "")).find((x) => x.length > 0 && !/^(da|de|do|das|dos|e)$/i.test(x));
+  return (p[0] + (resto ? " " + resto[0] + "." : "")).toUpperCase();
+}
 function primeiroNome(nomeCompleto: string): string {
   return (nomeCompleto.split(" ")[0] ?? nomeCompleto).toUpperCase();
 }
@@ -424,6 +430,7 @@ router.get("/grade-pdf/turma", async (req, res) => {
       const slotsDaTurma = slots.filter((s) => s.turmaId === turma.id);
       const agrupado = new Map<string, typeof slotsDaTurma>();
       slotsDaTurma.forEach((s) => {
+        if ((s as any).assincrona) return; // [PDF-TURMA-SEM-ASSINC] a assincrona nao e aula da turma
         const chave = `${s.diaSemana}-${s.numeroAula}`;
         if (!agrupado.has(chave)) agrupado.set(chave, []);
         agrupado.get(chave)!.push(s);
@@ -431,7 +438,7 @@ router.get("/grade-pdf/turma", async (req, res) => {
       return [...agrupado.values()].map((grupo) => {
         const primeiro = grupo[0]!;
         const nomesProfessores = grupo
-          .map((s) => primeiroNome(professores.find((p) => p.id === s.professorId)?.nome ?? "?"))
+          .map((s) => nomeCurto(professores.find((p) => p.id === s.professorId)?.nome ?? "?")) // [PDF-NOME-PROF]
           .join(" + ");
         return {
           diaSemana: primeiro.diaSemana,
@@ -610,8 +617,8 @@ router.get("/grade-pdf/professor", async (req, res) => {
       // Rótulo só mostra o turno quando o professor dá aula em mais de
       // um (senão fica redundante, ex. "ALINE (Manhã)" toda vez).
       const rotulo = turnosDoProf.length > 1
-        ? `${primeiroNome(prof.nome)} (${TURNO_ROTULO[turno] ?? turno})`
-        : primeiroNome(prof.nome);
+        ? `${prof.nome.toUpperCase()} (${TURNO_ROTULO[turno] ?? turno})`
+        : prof.nome.toUpperCase();
 
       blocos.push({
         rotulo,

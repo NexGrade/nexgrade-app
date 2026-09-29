@@ -1,4 +1,4 @@
-﻿import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 
 const DIAS_CURTOS = ["Seg", "Ter", "Qua", "Qui", "Sex"];
 
@@ -115,13 +115,8 @@ function desenharBloco(
       const corFundo = slot?.destacado ? AMARELO_HA : corFundoLinha;
       page.drawRectangle({ x, y: yLinha, width: colDiaLargura, height: alturaLinhaDado, color: corFundo, borderColor: CINZA_BORDA, borderWidth: 0.4 });
       if (slot) {
-        const maxChars = Math.floor(colDiaLargura / 3.6);
-        if (slot.linha2) {
-          const texto = truncar(`${slot.linha1}/${slot.linha2}`, maxChars);
-          page.drawText(texto, { x: x + 3, y: yLinha + alturaLinhaDado / 2 - 3, size: 6.5, font, color: PRETO });
-        } else {
-          const texto = truncar(slot.linha1, maxChars);
-          page.drawText(texto, { x: x + 3, y: yLinha + alturaLinhaDado / 2 - 3, size: 7, font: fontBold, color: PRETO });
+        // [PDF-CABE-NA-CELULA] mede a largura real: 1 linha se couber; senao 2 linhas e fonte menor; so entao reticencias
+        desenharTextoNaCelula(page, slot.linha2 ? [slot.linha1, slot.linha2] : [slot.linha1], slot.linha2 ? font : fontBold, x, yLinha, colDiaLargura - 6, alturaLinhaDado, slot.linha2 ? 6.5 : 7);
         }
       } else {
         const bloqueada = bloco.celulasBloqueadas?.some(
@@ -135,6 +130,39 @@ function desenharBloco(
   return yTopo - alturaDoBloco(bloco, alturaLinhaDado, alturaLinhaCabecalho);
 }
 
+// [PDF-CABE-NA-CELULA] Texto de celula sempre dentro da celula, medindo a largura real com a fonte do PDF.
+function cortarParaCaber(texto: string, f: PDFFont, tamanho: number, largura: number): string {
+  if (f.widthOfTextAtSize(texto, tamanho) <= largura) return texto;
+  let t = texto;
+  while (t.length > 1 && f.widthOfTextAtSize(t + "…", tamanho) > largura) t = t.slice(0, -1);
+  return t + "…";
+}
+function dividirEmDuas(t: string): string[] {
+  const meio = t.length / 2; let melhor = -1;
+  for (let j = 1; j < t.length - 1; j++) if ((t[j] === "/" || t[j] === " ") && (melhor < 0 || Math.abs(j - meio) < Math.abs(melhor - meio))) melhor = j;
+  if (melhor < 0) return [t];
+  return [t.slice(0, t[melhor] === "/" ? melhor + 1 : melhor).trim(), t.slice(melhor + 1).trim()];
+}
+function desenharTextoNaCelula(page: PDFPage, linhas: string[], f: PDFFont, x: number, yLinha: number, largura: number, altura: number, tamanhoBase: number): void {
+  const MIN = 5;
+  const junto = linhas.join("/");
+  if (f.widthOfTextAtSize(junto, tamanhoBase) <= largura) {
+    page.drawText(junto, { x: x + 3, y: yLinha + altura / 2 - 3, size: tamanhoBase, font: f, color: PRETO });
+    return;
+  }
+  const partes = linhas.length > 1 ? linhas : dividirEmDuas(linhas[0]);
+  if (partes.length === 2 && altura >= 2 * MIN + 2) {
+    let tam = Math.min(tamanhoBase, (altura - 3) / 2);
+    while (tam > MIN && Math.max(...partes.map((q) => f.widthOfTextAtSize(q, tam))) > largura) tam -= 0.25;
+    const meio = yLinha + altura / 2;
+    page.drawText(cortarParaCaber(partes[0], f, tam, largura), { x: x + 3, y: meio + 1, size: tam, font: f, color: PRETO });
+    page.drawText(cortarParaCaber(partes[1], f, tam, largura), { x: x + 3, y: meio - tam, size: tam, font: f, color: PRETO });
+    return;
+  }
+  let tam = tamanhoBase;
+  while (tam > MIN && f.widthOfTextAtSize(junto, tam) > largura) tam -= 0.25;
+  page.drawText(cortarParaCaber(junto, f, tam, largura), { x: x + 3, y: yLinha + altura / 2 - 3, size: tam, font: f, color: PRETO });
+}
 export async function gerarPdfGradeCompacta(
   nomeEscola: string,
   tituloDocumento: string,
