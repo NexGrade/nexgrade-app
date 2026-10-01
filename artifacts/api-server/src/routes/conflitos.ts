@@ -4,6 +4,7 @@ import { horariosTable, professoresTable, disciplinasTable, turmasTable, turmaDi
 import { eq, inArray, and, isNull } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
 import { calcularHoraAtividadePorTurno } from "../lib/hora-atividade";
+import { limitesLetivosPorTurno, PARES_TURNO } from "../lib/intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 
 const router = Router();
 
@@ -463,11 +464,84 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
       }
     });
   }
+  // [INTERVALO-ENTRE-TURNOS] professor com a 1a aula letiva do turno seguinte
+  // num dia precisa ter a ULTIMA aula letiva do turno anterior vaga (sem aula e
+  // sem HA). Pares: matutino->vespertino e vespertino->noturno.
+  {
+    const limites = await limitesLetivosPorTurno(escolaId);
+    const DIAS_NOME = ["segunda", "terça", "quarta", "quinta", "sexta", "sábado", "domingo"];
+    const turnoDaTurma = new Map(turmas.filter((t) => !t.fantasma).map((t) => [t.id, t.turno]));
+    const nomeDaTurma = new Map(turmas.map((t) => [t.id, t.nome]));
+    const aulaEm = new Map<string, number[]>();
+    for (const s of slots) {
+      const tu = turnoDaTurma.get(s.turmaId);
+      if (!tu || s.professorId == null) continue;
+      const k = `${s.professorId}|${tu}|${s.diaSemana}|${s.numeroAula}`;
+      const lista = aulaEm.get(k);
+      if (lista) lista.push(s.turmaId); else aulaEm.set(k, [s.turmaId]);
+    }
+    const profIds = professores.map((p) => p.id);
+    const haRows = profIds.length
+      ? await db
+          .select({ professorId: disponibilidadeTable.professorId, diaSemana: disponibilidadeTable.diaSemana, horarioSlot: disponibilidadeTable.horarioSlot, turno: disponibilidadeTable.turno })
+          .from(disponibilidadeTable)
+          .where(and(inArray(disponibilidadeTable.professorId, profIds), eq(disponibilidadeTable.horaAtividadeObrigatoria, true)))
+      : [];
+    const haEm = new Set(haRows.map((d) => `${d.professorId}|${d.turno}|${d.diaSemana}|${d.horarioSlot}`));
+    const nomes = (ids: number[]) => ids.map((id) => nomeDaTurma.get(id) ?? "?").join(" + ");
+
+    for (const prof of professores) {
+      for (const [ant, seg] of PARES_TURNO) {
+        const lAnt = limites.get(ant);
+        const lSeg = limites.get(seg);
+        if (!lAnt || !lSeg) continue;
+        for (let dia = 0; dia < 7; dia++) {
+          const naPrimeira = aulaEm.get(`${prof.id}|${seg}|${dia}|${lSeg.primeira}`);
+          if (!naPrimeira) continue;
+          const naUltima = aulaEm.get(`${prof.id}|${ant}|${dia}|${lAnt.ultima}`);
+          const diaNome = DIAS_NOME[dia] ?? String(dia);
+          if (naUltima) {
+            conflitos.push({
+              tipo: "intervalo_entre_turnos",
+              descricao: `Prof. ${prof.nome} tem aula na última do ${ant} (${lAnt.ultima}ª, ${nomes(naUltima)}) e na 1ª do ${seg} (${nomes(naPrimeira)}) na ${diaNome} -- precisa de intervalo entre os turnos`,
+              gravidade: "alto",
+              turmaId: naUltima[0] ?? null,
+              professorId: prof.id,
+              diaSemana: dia,
+              numeroAula: lAnt.ultima,
+            });
+          } else if (haEm.has(`${prof.id}|${ant}|${dia}|${lAnt.ultima}`)) {
+            conflitos.push({
+              tipo: "intervalo_entre_turnos",
+              descricao: `Prof. ${prof.nome} tem HA na última do ${ant} (${lAnt.ultima}ª) e aula na 1ª do ${seg} (${nomes(naPrimeira)}) na ${diaNome} -- recalcular a HA libera o intervalo`,
+              gravidade: "medio",
+              turmaId: null,
+              professorId: prof.id,
+              diaSemana: dia,
+              numeroAula: lAnt.ultima,
+            });
+          }
+        }
+      }
+    }
+  }
+
   return conflitos;
 }
 
 function gerarSugestoes(conflito: Conflito): string[] {
   switch (conflito.tipo) {
+    case "intervalo_entre_turnos": // [INTERVALO-ENTRE-TURNOS]
+      return conflito.gravidade === "medio"
+        ? [
+            "Recalcular a hora-atividade: a regra nova nao coloca HA nesse horario",
+            "Se a HA foi marcada manualmente, mover para outro horario na tela de Disponibilidade",
+          ]
+        : [
+            "Gerar novo experimento do turno pelo CP-SAT: a regra nova ja deixa essa vaga livre",
+            "Trocar manualmente a aula da ultima aula do turno anterior com outro professor da turma",
+            "Ou trocar a 1a aula do turno seguinte, se for mais facil naquela turma",
+          ];
     case "periodo_invalido":
       return [
         "Este slot foi gravado com um número de período que não existe no esquema atual da turma — use 'Substituir tudo' ou o motor CP-SAT para regenerar a grade, ambos garantem que nenhum período inválido é gerado",

@@ -27,6 +27,7 @@ import { getEscolaId } from "../lib/escola-id";
 import { randomUUID } from "node:crypto";
 import { recalcularHoraAtividade } from "../lib/recalcular-ha";
 import { ehBloqueioParaMotor } from "../lib/bloqueio-real"; // [HA-FIXA]
+import { bloqueiosIntervaloEntreTurnos } from "../lib/intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 import { aulasFixasTable } from "@workspace/db"; // [AULA-FIXA-CADASTRO]
 import { validarCapacidadeProfessores, calcularCotaHaPorTurno } from "../lib/capacidade-professor";
 
@@ -1638,7 +1639,17 @@ async function runCpsatGeneracaoUnica(
     }
   }
 
-  const bloqueiosProfessor = [...bloqueiosDisponibilidade, ...bloqueiosOutrasTurmas, ...bloqueiosPeriodoNaoLetivo];
+  // [INTERVALO-ENTRE-TURNOS] ultima aula do turno anterior x 1a aula do turno
+  // seguinte no mesmo dia: par proibido (ver lib/intervalo-entre-turnos.ts).
+  const bloqueiosIntervaloTurnos: Array<{ professor: string; dia: number; aula: number }> =
+    (await bloqueiosIntervaloEntreTurnos(escolaId, turno, [...professorIdsUsados])).map((b) => ({
+      professor: professorMap.get(b.professorId)?.nome ?? `Professor #${b.professorId}`,
+      dia: b.dia,
+      aula: b.aula,
+    }));
+  console.log(`[INTERVALO-ENTRE-TURNOS] turno=${turno} bloqueios=${bloqueiosIntervaloTurnos.length}`);
+
+  const bloqueiosProfessor = [...bloqueiosDisponibilidade, ...bloqueiosOutrasTurmas, ...bloqueiosPeriodoNaoLetivo, ...bloqueiosIntervaloTurnos];
 
   const aulasPorDia = horarioSlotsTurno.length > 0
     ? Math.max(...horarioSlotsTurno.map((s) => s.numeroAula))

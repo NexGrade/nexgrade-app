@@ -33,6 +33,7 @@ import {
   disponibilidadeTable,
 } from "@workspace/db";
 import { eq, inArray, sql } from "drizzle-orm";
+import { PARES_TURNO } from "./intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 
 const MOTIVO_HA_AUTO = "Hora-atividade institucional (recalculada automaticamente)";
 
@@ -134,6 +135,19 @@ export async function calcularHAIdeal(
     if (s.numeroAula > atual) maxAulaPorTurno.set(s.turno, s.numeroAula);
   }
 
+  // [INTERVALO-ENTRE-TURNOS] primeira e ultima aula LETIVA de cada turno
+  // (letivo=false, ex. entrada do noturno, nao conta).
+  const limitesLetivos = new Map<string, { primeira: number; ultima: number }>();
+  for (const s of horarioSlots) {
+    if (!s.turno || s.letivo === false) continue;
+    const atual = limitesLetivos.get(s.turno);
+    if (!atual) limitesLetivos.set(s.turno, { primeira: s.numeroAula, ultima: s.numeroAula });
+    else {
+      if (s.numeroAula < atual.primeira) atual.primeira = s.numeroAula;
+      if (s.numeroAula > atual.ultima) atual.ultima = s.numeroAula;
+    }
+  }
+
   const marcasFinais: MarcaHACalculada[] = [];
 
   for (const prof of professores) {
@@ -165,6 +179,20 @@ export async function calcularHAIdeal(
       } else {
         if (!bloqueadoPorTurno.has(d.turno)) bloqueadoPorTurno.set(d.turno, new Set());
         bloqueadoPorTurno.get(d.turno)!.add(chave);
+      }
+    }
+
+    // [INTERVALO-ENTRE-TURNOS] dia com AULA na 1a aula letiva do turno seguinte:
+    // a ultima aula letiva do turno anterior fica vaga (nunca recebe HA).
+    for (const [ant, seg] of PARES_TURNO) {
+      const lAnt = limitesLetivos.get(ant);
+      const lSeg = limitesLetivos.get(seg);
+      const ocupSeg = ocupadoPorTurnoOriginal.get(seg);
+      if (!lAnt || !lSeg || !ocupSeg) continue;
+      for (let dia = 0; dia < 7; dia++) {
+        if (!ocupSeg.has(`${dia}-${lSeg.primeira}`)) continue;
+        if (!bloqueadoPorTurno.has(ant)) bloqueadoPorTurno.set(ant, new Set());
+        bloqueadoPorTurno.get(ant)!.add(`${dia}-${lAnt.ultima}`);
       }
     }
 
