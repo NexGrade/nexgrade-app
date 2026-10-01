@@ -1,4 +1,4 @@
-import { ocupacaoDoDia } from "../lib/ocupacao-reservas"; // [OCUPACAO-SALAS]
+import { ocupacaoDoDia, ocupacaoDoMes } from "../lib/ocupacao-reservas"; // [OCUPACAO-SALAS] [CALENDARIO-RESERVA]
 import { horarioSlotsTable } from "@workspace/db"; // [AGENDA-TURNOS]
 import { Router } from "express";
 import { getAuth, clerkClient } from "@clerk/express";
@@ -262,6 +262,23 @@ router.get("/ocupacao", async (req, res) => {
     return;
   }
   res.json(await ocupacaoDoDia(getEscolaId(req), data));
+});
+
+// [CALENDARIO-RESERVA] ocupacao de um espaco no mes (sem nomes), para o calendario
+// da "Nova reserva".
+router.get("/ocupacao-mes", async (req, res) => {
+  const professor = await resolverProfessorLogado(req);
+  if (!professor) {
+    res.status(404).json({ error: "Nenhum professor vinculado a esta conta." });
+    return;
+  }
+  const salaId = Number(req.query.salaId);
+  const mes = typeof req.query.mes === "string" && /^\d{4}-\d{2}$/.test(req.query.mes) ? req.query.mes : null;
+  if (!Number.isInteger(salaId) || salaId <= 0 || !mes) {
+    res.status(400).json({ error: "Informe o espaço (salaId) e o mês (AAAA-MM)." });
+    return;
+  }
+  res.json(await ocupacaoDoMes(getEscolaId(req), salaId, mes));
 });
 
 router.get("/notificacoes", async (req, res) => {

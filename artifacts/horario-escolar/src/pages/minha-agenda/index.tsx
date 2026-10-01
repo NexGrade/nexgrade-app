@@ -1,3 +1,6 @@
+import { Calendar as CalendarioUI } from "@/components/ui/calendar"; // [CALENDARIO-RESERVA]
+import { ptBR as ptBRCalendario } from "react-day-picker/locale"; // [CALENDARIO-RESERVA]
+import { format as formatarDataCal } from "date-fns"; // [CALENDARIO-RESERVA]
 import { useQuery as useQueryOcupacao } from "@tanstack/react-query"; // [OCUPACAO-SALAS]
 import { customFetch as customFetchOcupacao } from "@workspace/api-client-react"; // [OCUPACAO-SALAS]
 import { useMemo, useState } from "react";
@@ -173,8 +176,10 @@ function NovaReservaDialog({ professorId }: { professorId: number }) {
                 <FormItem>
                   <FormLabel>Data</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
+                    <div>
+                      <CalendarioReserva salaId={Number(salaSel) || 0} value={field.value} onChange={field.onChange} />
+                    </div>
+                  </FormControl>{/* [CALENDARIO-RESERVA] antes: <Input type="date"> (seletor nativo nao mostra reservas) */}
                   <FormMessage />
                 </FormItem>
               )}
@@ -757,6 +762,77 @@ function DisponibilidadeSala({ salaId, data, aulaSelecionada, onEscolher }: {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+// [CALENDARIO-RESERVA] calendario do mes com a ocupacao do espaco escolhido.
+// verde = livre | ambar = parcialmente ocupado | cinza = lotado (nao escolhe).
+// Dias passados e fins de semana desabilitados. Sem nomes de quem reservou.
+type OcupacaoMesResp = { mes: string; maxAula: number; dias: Record<string, { confirmadas: number; pendentes: number }> };
+
+function CalendarioReserva({ salaId, value, onChange }: { salaId: number; value: string; onChange: (iso: string) => void }) {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const selecionada = /^\d{4}-\d{2}-\d{2}$/.test(value ?? "")
+    ? new Date(Number(value.slice(0, 4)), Number(value.slice(5, 7)) - 1, Number(value.slice(8, 10)))
+    : undefined;
+  const [mesVisivel, setMesVisivel] = useState<Date>(selecionada ?? hoje);
+  const mesISO = formatarDataCal(mesVisivel, "yyyy-MM");
+  const { data: oc } = useQueryOcupacao({
+    queryKey: ["ocupacao-mes", salaId, mesISO],
+    queryFn: () => customFetchOcupacao<OcupacaoMesResp>(
+      "/api/minha-agenda/ocupacao-mes?salaId=" + salaId + "&mes=" + mesISO,
+      { responseType: "json" },
+    ),
+    enabled: salaId > 0,
+  });
+
+  const livre: Date[] = [];
+  const parcial: Date[] = [];
+  const lotado: Date[] = [];
+  if (oc) {
+    const ano = mesVisivel.getFullYear();
+    const mes = mesVisivel.getMonth();
+    const total = new Date(ano, mes + 1, 0).getDate();
+    for (let d = 1; d <= total; d++) {
+      const dia = new Date(ano, mes, d);
+      const dow = dia.getDay();
+      if (dow === 0 || dow === 6 || dia < hoje) continue;
+      const info = oc.dias[formatarDataCal(dia, "yyyy-MM-dd")];
+      if (!info || info.confirmadas + info.pendentes === 0) livre.push(dia);
+      else if (info.confirmadas >= oc.maxAula) lotado.push(dia);
+      else parcial.push(dia);
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <CalendarioUI
+        mode="single"
+        locale={ptBRCalendario}
+        selected={selecionada}
+        onSelect={(d) => { if (d) onChange(formatarDataCal(d, "yyyy-MM-dd")); }}
+        month={mesVisivel}
+        onMonthChange={setMesVisivel}
+        disabled={[{ before: hoje }, { dayOfWeek: [0, 6] }, ...lotado]}
+        modifiers={{ livre, parcial, lotado }}
+        modifiersClassNames={{
+          livre: "[&>button]:bg-emerald-50 [&>button]:text-emerald-800",
+          parcial: "[&>button]:bg-amber-100 [&>button]:text-amber-900",
+          lotado: "[&>button]:bg-muted [&>button]:text-muted-foreground [&>button]:line-through",
+        }}
+        className="rounded-md border"
+      />
+      {salaId > 0 ? (
+        <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-1"><i className="h-2.5 w-2.5 rounded-sm bg-emerald-100 ring-1 ring-emerald-300" /> Livre</span>
+          <span className="flex items-center gap-1"><i className="h-2.5 w-2.5 rounded-sm bg-amber-100 ring-1 ring-amber-300" /> Algumas aulas reservadas</span>
+          <span className="flex items-center gap-1"><i className="h-2.5 w-2.5 rounded-sm bg-muted ring-1 ring-border" /> Lotado</span>
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">Escolha o espaço para ver a ocupação dos dias.</p>
+      )}
     </div>
   );
 }
