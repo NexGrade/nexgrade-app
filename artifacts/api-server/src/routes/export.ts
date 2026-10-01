@@ -510,6 +510,10 @@ router.get("/grade-pdf/professor", async (req, res) => {
   // turmas que o experimento NÃO toca (turmas de fora do escopo dele),
   // pra representar a semana completa do professor de verdade.
   const haSimulada: MarcaHACalculada[] = [];
+  // [HA-CONTRATURNO-ASTERISCO] semana completa (aulas) de cada professor, usada
+  // para saber em quais turnos ele da aula. Oficial: as proprias aulas. Previa:
+  // aulas do experimento + oficiais fora do escopo (overrideCompleto, abaixo).
+  let semanaCompletaProf: Array<{ professorId: number; turmaId: number }> = slots;
   if (nomeExperimental) {
     const turmaIdsNoExperimento = new Set(slots.map((s) => s.turmaId));
     const slotsOficiaisForaDoEscopo = await db
@@ -520,8 +524,22 @@ router.get("/grade-pdf/professor", async (req, res) => {
       ...slots.map((s) => ({ professorId: s.professorId, turmaId: s.turmaId, diaSemana: s.diaSemana, numeroAula: s.numeroAula })),
       ...slotsOficiaisForaDoEscopo,
     ];
+    semanaCompletaProf = overrideCompleto;
     haSimulada.push(...(await calcularHAIdeal(escolaId, overrideCompleto)));
   }
+  // [HA-CONTRATURNO-ASTERISCO] turnos em que cada professor tem pelo menos uma
+  // aula na semana. HA num turno fora desse conjunto e HA de contraturno (mesma
+  // regra do recalcular-ha.ts: turno onde o professor nao da aula).
+  const turnoDaTurma = new Map(turmas.map((t) => [t.id, t.turno]));
+  const turnosComAulaPorProf = new Map<number, Set<string>>();
+  for (const s of semanaCompletaProf) {
+    const t = turnoDaTurma.get(s.turmaId);
+    if (!t) continue;
+    if (!turnosComAulaPorProf.has(s.professorId)) turnosComAulaPorProf.set(s.professorId, new Set());
+    turnosComAulaPorProf.get(s.professorId)!.add(t);
+  }
+  const ORDEM_TURNOS = ["matutino", "vespertino", "noturno"];
+  const posTurno = (t: string) => { const i = ORDEM_TURNOS.indexOf(t); return i === -1 ? 99 : i; };
   // [FIX] Ordem alfabetica por nome -- padrao ja usado em todas as
   // outras listas do sistema (dropdowns, tabelas de Professores/
   // Turmas/Disciplinas/Cursos etc.), essa rota ainda nao seguia.
@@ -534,9 +552,20 @@ router.get("/grade-pdf/professor", async (req, res) => {
   const blocos: BlocoGrade[] = [];
   for (const prof of professores) {
     const slotsDoProf = slots.filter((s) => s.professorId === prof.id);
-    const turnosDoProf = [...new Set(
+    const turnosComAulaNoEscopo = [...new Set(
       slotsDoProf.map((s) => turmas.find((t) => t.id === s.turmaId)?.turno).filter((t): t is string => !!t)
     )];
+    // [HA-CONTRATURNO-ASTERISCO] antes so turnos com aula viravam bloco, entao
+    // HA de contraturno nunca aparecia no PDF. Agora entra tambem o turno em que
+    // o professor so tem HA (sem nenhuma aula na semana inteira).
+    const turnosAulaSemana = turnosComAulaPorProf.get(prof.id) ?? new Set<string>();
+    const turnosSoComHA = [...new Set(
+      (nomeExperimental
+        ? haSimulada.filter((m) => m.professorId === prof.id).map((m) => m.turno)
+        : disponibilidades.filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria).map((d) => d.turno))
+        .filter((t): t is string => !!t && !turnosAulaSemana.has(t) && !turnosComAulaNoEscopo.includes(t))
+    )];
+    const turnosDoProf = [...turnosComAulaNoEscopo, ...turnosSoComHA].sort((a, b) => posTurno(a) - posTurno(b));
     const turnosParaRenderizar = turnoFiltroProf ? turnosDoProf.filter((t) => t === turnoFiltroProf) : turnosDoProf;
 
     for (const turno of turnosParaRenderizar) {
@@ -560,6 +589,13 @@ router.get("/grade-pdf/professor", async (req, res) => {
       const niveisDoProfNesseTurno = [...new Set(
         slotsDoProfNesseTurno.map((s) => turmas.find((t) => t.id === s.turmaId)?.nivelEnsino).filter((n): n is string => !!n)
       )];
+      // [HA-CONTRATURNO-ASTERISCO] turno so com HA nao tem turma do professor:
+      // usa os niveis de todas as turmas do turno, para nao cortar a 6a aula.
+      if (niveisDoProfNesseTurno.length === 0) {
+        niveisDoProfNesseTurno.push(...new Set(
+          turmas.filter((t) => t.turno === turno).map((t) => t.nivelEnsino).filter((n): n is string => !!n)
+        ));
+      }
       let horariosPorAula = await buscarHorariosPorAula(escolaId, turno, niveisDoProfNesseTurno[0] ?? null);
       for (const nivel of niveisDoProfNesseTurno.slice(1)) {
         const candidato = await buscarHorariosPorAula(escolaId, turno, nivel);
@@ -573,6 +609,9 @@ router.get("/grade-pdf/professor", async (req, res) => {
       // cima da própria prévia) em vez da disponibilidade oficial --
       // assim o PDF mostra como a HA ficaria se essa grade fosse
       // promovida, não a HA de uma grade antiga/diferente.
+      // [HA-CONTRATURNO-ASTERISCO] HA em turno onde o professor nao tem nenhuma
+      // aula na semana = contraturno -> rotulo "HA*".
+      const ehContraturno = !turnosAulaSemana.has(turno);
       const haDoProf: BlocoGrade["slots"] = (nomeExperimental
         ? haSimulada.filter((m) => m.professorId === prof.id && m.turno === turno)
         : disponibilidades
@@ -582,7 +621,7 @@ router.get("/grade-pdf/professor", async (req, res) => {
         .map((m) => ({
           diaSemana: m.diaSemana,
           numeroAula: m.horarioSlot,
-          linha1: "HA",
+          linha1: ehContraturno ? "HA*" : "HA",
           destacado: true,
         }));
 
