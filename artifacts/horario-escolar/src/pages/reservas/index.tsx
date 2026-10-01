@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { useAuth } from "@clerk/react"; // [PAPEL-RESERVAS]
+import { PAPEL_RESERVAS } from "@/lib/papeis"; // [PAPEL-RESERVAS]
 import {
   AlertTriangle,
   ArrowRight,
@@ -434,9 +436,7 @@ export default function ReservasPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button data-testid="button-reservation-rules" variant="outline" asChild>
-            <Link href="/reservas/regras"><UsersRound className="mr-2 h-4 w-4" /> Regras por professor</Link>
-          </Button>
+          <BotaoRegrasPorProfessor />{/* [PAPEL-RESERVAS] */}
           <Button data-testid="button-new-reservation" onClick={openCreate} className="bg-primary text-primary-foreground shadow-sm hover:bg-primary/90">
             <Plus className="mr-2 h-4 w-4" /> Nova reserva
           </Button>
@@ -554,5 +554,17 @@ export default function ReservasPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+// [PAPEL-RESERVAS] o gestor de reservas nao ve o atalho para as regras por
+// professor (prioridade e limite semanal sao da coordenacao/direcao).
+function BotaoRegrasPorProfessor() {
+  const { orgRole } = useAuth();
+  if (orgRole === PAPEL_RESERVAS) return null;
+  return (
+    <Button data-testid="button-reservation-rules" variant="outline" asChild>
+      <Link href="/reservas/regras"><UsersRound className="mr-2 h-4 w-4" /> Regras por professor</Link>
+    </Button>
   );
 }

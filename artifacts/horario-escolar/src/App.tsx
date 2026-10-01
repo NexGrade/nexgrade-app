@@ -1,6 +1,7 @@
 import { clerkPtBR } from "@/lib/clerk-ptbr"; // [CLERK-PTBR]
+import { PAPEL_ADMIN, PAPEL_RESERVAS } from "@/lib/papeis"; // [PAPEL-RESERVAS]
 import { useEffect, useRef, lazy, Suspense } from "react";
-import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
+import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ClerkProvider, SignIn, SignUp, Show, useAuth, OrganizationSwitcher } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
@@ -189,7 +190,8 @@ function HomeRedirect() {
   // direto pra agenda restrita dele -- so a coordenacao (admin) ve o
   // painel administrativo completo.
   const { orgRole } = useAuth();
-  const destino = orgRole && orgRole !== "org:admin" ? "/minha-agenda" : "/dashboard";
+  const destino = orgRole === PAPEL_RESERVAS ? "/reservas" // [PAPEL-RESERVAS]
+    : orgRole && orgRole !== PAPEL_ADMIN ? "/minha-agenda" : "/dashboard";
   return (
     <>
       <Show when="signed-in">
@@ -221,6 +223,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 // onboarding antes de acessar o restante do produto.
 function EscolaGate({ component: Component }: { component: React.ComponentType }) {
   const { orgRole } = useAuth(); // [PERMISSAO-PAPEL]
+  const [rotaAtual] = useLocation(); // [PAPEL-RESERVAS]
   const { data, isLoading } = useGetEscolaAtual({
     query: { queryKey: getGetEscolaAtualQueryKey() },
   });
@@ -239,7 +242,11 @@ function EscolaGate({ component: Component }: { component: React.ComponentType }
   }
 
   // [PERMISSAO-PAPEL] telas da coordenacao: quem nao e admin vai para o portal do professor
-  if (orgRole && orgRole !== "org:admin") {
+  // [PAPEL-RESERVAS] gestor de reservas: so a agenda de reservas. As regras por
+  // professor (prioridade/limite) sao da coordenacao -- /reservas/regras volta tambem.
+  if (orgRole === PAPEL_RESERVAS) {
+    if (rotaAtual !== "/reservas") return <Redirect to="/reservas" />;
+  } else if (orgRole && orgRole !== PAPEL_ADMIN) {
     return <Redirect to="/minha-agenda" />;
   }
 

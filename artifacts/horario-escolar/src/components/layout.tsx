@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
-import { UserButton } from "@clerk/react";
+import { UserButton, useAuth } from "@clerk/react";
+import { PAPEL_RESERVAS } from "@/lib/papeis"; // [PAPEL-RESERVAS]
 import { useQueryClient } from "@tanstack/react-query";
 import { useMasterWhoami, useListComunicados, useMarcarComunicadoLido, getListComunicadosQueryKey } from "@workspace/api-client-react";
 import { NotificationBell } from "@/components/notification-bell";
@@ -99,10 +100,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // backend (requireMaster) e na rota (MasterGate em App.tsx); isto
   // aqui só é para não poluir o menu de quem não precisa dele.
   const { data: whoami } = useMasterWhoami();
+  const { orgRole } = useAuth(); // [PAPEL-RESERVAS]
 
-  const grupos = whoami?.isMaster
+  const gruposCompletos = whoami?.isMaster
     ? [...navGroups, { label: "Administração", items: [{ href: "/master", label: "Painel Master", icon: ShieldCheck }] }]
     : navGroups;
+  // [PAPEL-RESERVAS] gestor de reservas ve so o item Reservas no menu
+  const grupos = orgRole === PAPEL_RESERVAS
+    ? navGroups
+        .map((g) => ({ ...g, items: g.items.filter((i) => i.href === "/reservas") }))
+        .filter((g) => g.items.length > 0)
+    : gruposCompletos;
 
   const isActive = (href: string) =>
     location === href || (href !== "/dashboard" && location.startsWith(href));

@@ -18,6 +18,17 @@ import type { Request, Response, NextFunction } from "express";
 import { getAuth } from "@clerk/express";
 
 const METODOS_LEITURA = new Set(["GET", "HEAD", "OPTIONS"]);
+
+// [PAPEL-RESERVAS] gestor da agenda de reservas (papel personalizado no Clerk).
+// Pode criar, confirmar/recusar e excluir reservas; NAO altera as regras por
+// professor (prioridade/limite semanal sao da coordenacao) nem a grade.
+export const PAPEL_ADMIN = "org:admin";
+export const PAPEL_RESERVAS = "org:reservas";
+
+function ehAlteracaoDeReservaPermitida(caminho: string): boolean {
+  if (caminho.startsWith("/reservas/regras-professores")) return false;
+  return caminho === "/reservas" || caminho === "/reservas/" || caminho.startsWith("/reservas/");
+}
 const PREFIXOS_LIBERADOS = ["/minha-agenda", "/master"];
 
 export function exigirAdminParaAlterar(req: Request, res: Response, next: NextFunction) {
@@ -26,6 +37,11 @@ export function exigirAdminParaAlterar(req: Request, res: Response, next: NextFu
   const { userId, orgId, orgRole } = getAuth(req);
   if (!userId) return next();
   if (!orgId) return next();
-  if (orgRole === "org:admin") return next();
+  if (orgRole === PAPEL_ADMIN) return next();
+  if (orgRole === PAPEL_RESERVAS) { // [PAPEL-RESERVAS]
+    if (ehAlteracaoDeReservaPermitida(req.path)) return next();
+    res.status(403).json({ error: "Seu acesso permite apenas administrar reservas." });
+    return;
+  }
   res.status(403).json({ error: "Apenas a coordenação da escola pode alterar estes dados." });
 }
