@@ -6,13 +6,14 @@ import { Router } from "express";
 import { getAuth, clerkClient } from "@clerk/express";
 import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
+import { limparCacheGestor } from "../lib/permissao"; // [GESTOR-METADATA]
 
 const router = Router();
 
 export const CARGOS = {
   direcao: { papel: "org:admin", rotulo: "Direção" },
   coordenacao: { papel: "org:admin", rotulo: "Coordenação" },
-  reservas: { papel: "org:reservas", rotulo: "Gestor de reservas" },
+  reservas: { papel: "org:member", rotulo: "Gestor de reservas" }, // [GESTOR-METADATA] cargo vai no publicMetadata
   professor: { papel: "org:member", rotulo: "Professor" },
 } as const;
 type Cargo = keyof typeof CARGOS;
@@ -122,9 +123,9 @@ router.patch("/membros/:userId", async (req, res) => {
   const org: any = clerkClient.organizations;
   try {
     await org.updateOrganizationMembership({ organizationId, userId, role: CARGOS[cargo].papel });
-    try { // so para exibir Direcao x Coordenacao; nao muda acesso
-      await org.updateOrganizationMembershipMetadata({ organizationId, userId, publicMetadata: { cargo } });
-    } catch { /* nao bloqueia */ }
+    // [GESTOR-METADATA] o cargo no publicMetadata define o acesso do gestor de reservas
+    await org.updateOrganizationMembershipMetadata({ organizationId, userId, publicMetadata: { cargo } });
+    limparCacheGestor(organizationId, userId);
     res.json({ ok: true, mensagem: "Cargo alterado para " + CARGOS[cargo].rotulo + "." });
   } catch (err) {
     const m = mensagemClerk(err);

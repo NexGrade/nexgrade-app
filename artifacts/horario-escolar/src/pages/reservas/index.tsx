@@ -4,8 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { useAuth } from "@clerk/react"; // [PAPEL-RESERVAS]
-import { PAPEL_RESERVAS } from "@/lib/papeis"; // [PAPEL-RESERVAS]
+import { useEhGestorReservas } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA]
 import { BotaoRelatorioReservas } from "@/components/relatorio-reservas"; // [RELATORIO-RESERVAS]
 import {
   AlertTriangle,
@@ -562,8 +561,8 @@ export default function ReservasPage() {
 // [PAPEL-RESERVAS] o gestor de reservas nao ve o atalho para as regras por
 // professor (prioridade e limite semanal sao da coordenacao/direcao).
 function BotaoRegrasPorProfessor() {
-  const { orgRole } = useAuth();
-  if (orgRole === PAPEL_RESERVAS) return null;
+  const ehGestor = useEhGestorReservas(); // [GESTOR-METADATA]
+  if (ehGestor) return null;
   return (
     <Button data-testid="button-reservation-rules" variant="outline" asChild>
       <Link href="/reservas/regras"><UsersRound className="mr-2 h-4 w-4" /> Regras por professor</Link>

@@ -1,5 +1,5 @@
 import { clerkPtBR } from "@/lib/clerk-ptbr"; // [CLERK-PTBR]
-import { PAPEL_ADMIN, PAPEL_RESERVAS } from "@/lib/papeis"; // [PAPEL-RESERVAS]
+import { PAPEL_ADMIN, usePapelEfetivo } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA]
 import { useEffect, useRef, lazy, Suspense } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -190,7 +190,9 @@ function HomeRedirect() {
   // direto pra agenda restrita dele -- so a coordenacao (admin) ve o
   // painel administrativo completo.
   const { orgRole } = useAuth();
-  const destino = orgRole === PAPEL_RESERVAS ? "/reservas" // [PAPEL-RESERVAS]
+  const { ehGestor, carregando } = usePapelEfetivo(); // [GESTOR-METADATA]
+  if (carregando) return null;
+  const destino = ehGestor ? "/reservas" // [PAPEL-RESERVAS]
     : orgRole && orgRole !== PAPEL_ADMIN ? "/minha-agenda" : "/dashboard";
   return (
     <>
@@ -224,11 +226,12 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 function EscolaGate({ component: Component }: { component: React.ComponentType }) {
   const { orgRole } = useAuth(); // [PERMISSAO-PAPEL]
   const [rotaAtual] = useLocation(); // [PAPEL-RESERVAS]
+  const { ehGestor, carregando: carregandoPapel } = usePapelEfetivo(); // [GESTOR-METADATA]
   const { data, isLoading } = useGetEscolaAtual({
     query: { queryKey: getGetEscolaAtualQueryKey() },
   });
 
-  if (isLoading) {
+  if (isLoading || carregandoPapel) {
     return (
       <div className="p-6 space-y-4">
         <Skeleton className="h-10 w-1/3" />
@@ -244,7 +247,7 @@ function EscolaGate({ component: Component }: { component: React.ComponentType }
   // [PERMISSAO-PAPEL] telas da coordenacao: quem nao e admin vai para o portal do professor
   // [PAPEL-RESERVAS] gestor de reservas: so a agenda de reservas. As regras por
   // professor (prioridade/limite) sao da coordenacao -- /reservas/regras volta tambem.
-  if (orgRole === PAPEL_RESERVAS) {
+  if (ehGestor) { // [GESTOR-METADATA]
     if (rotaAtual !== "/reservas" && rotaAtual !== "/horario") return <Redirect to="/reservas" />; // [CONSULTA-GESTOR] grade so consulta
   } else if (orgRole && orgRole !== PAPEL_ADMIN) {
     return <Redirect to="/minha-agenda" />;
