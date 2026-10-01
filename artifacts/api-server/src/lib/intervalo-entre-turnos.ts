@@ -1,7 +1,7 @@
 // [INTERVALO-ENTRE-TURNOS] Regra (2026-10-01): professor com aula em dois turnos
 // no mesmo dia precisa de intervalo entre eles. Se ele tem a 1a aula LETIVA do
 // turno seguinte, a ULTIMA aula LETIVA do turno anterior nesse dia fica vaga
-// (sem aula e sem HA). Pares: matutino->vespertino e vespertino->noturno.
+// (sem aula e sem HA). Par: matutino->vespertino (tarde->noite retirado em 2026-10-01).
 //
 // "Letiva": horario_slots com letivo != false (ex.: noturno aula 1 as 18:00 e so
 // entrada em algumas escolas, nao conta como 1a aula).
@@ -18,9 +18,10 @@ import type { getEscolaId } from "./escola-id";
 
 type EscolaId = ReturnType<typeof getEscolaId>;
 
+// [INTERVALO-SEM-NOTURNO] (2026-10-01) so manha->tarde. O par tarde->noite
+// (["vespertino", "noturno"]) foi retirado: gerava conflitos demais.
 export const PARES_TURNO: ReadonlyArray<readonly [string, string]> = [
   ["matutino", "vespertino"],
-  ["vespertino", "noturno"],
 ];
 
 export type LimitesTurno = { primeira: number; ultima: number };
