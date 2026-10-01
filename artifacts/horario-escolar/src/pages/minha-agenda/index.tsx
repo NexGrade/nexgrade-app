@@ -522,6 +522,10 @@ export default function MinhaAgendaPage() {
                       ...horarios.filter((x) => x.turno === turno).map((x) => x.numeroAula),
                     );
                     const ehHA = (d: number, n: number) => haT.some((h) => h.diaSemana === d && h.numeroAula === n);
+                    // [HA-CONTRATURNO-ASTERISCO] aba de turno sem nenhuma aula na semana = contraturno
+                    const haContraturno = turno !== null && aulasT.length === 0;
+                    const rotuloHA = haContraturno ? "HA*" : "HA";
+                    const dicaHA = haContraturno ? "Hora-atividade em contraturno (turno sem aula)" : "Hora-atividade";
                     // [AGENDA-DIA] dia mostrado no celular: o escolhido, ou hoje (no fim de semana, segunda)
                     const diaAtivo = diaSel ?? (hojeDiaSemana >= 0 && hojeDiaSemana <= 4 ? hojeDiaSemana : 0);
                     const avisoPonto = (d: number, n: number) => {
@@ -587,7 +591,7 @@ export default function MinhaAgendaPage() {
                                         </div>
                                       ) : ehHA(diaIdx, numeroAula) ? (
                                         <div className="h-full rounded-md p-2 border-l-4 bg-amber-50 border-amber-400 flex items-center justify-center imprimir-cartao-aula">
-                                          <span className="text-xs font-semibold text-amber-700">HA</span>
+                                          <span className="text-xs font-semibold text-amber-700" title={dicaHA}>{rotuloHA}</span>
                                         </div>
                                       ) : null}
                                     </td>
@@ -643,7 +647,7 @@ export default function MinhaAgendaPage() {
                                         )}
                                       </div>
                                     ) : ehHA(diaAtivo, n) ? (
-                                      <div className="rounded-md px-3 py-2 border-l-4 bg-amber-50 border-amber-400 text-sm font-semibold text-amber-700">HA</div>
+                                      <div className="rounded-md px-3 py-2 border-l-4 bg-amber-50 border-amber-400 text-sm font-semibold text-amber-700" title={dicaHA}>{rotuloHA}</div>
                                     ) : (
                                       <div className="rounded-md px-3 py-2 border border-dashed text-xs text-muted-foreground">Livre</div>
                                     )}

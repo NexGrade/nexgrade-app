@@ -4,6 +4,7 @@ import { disponibilidadeTable, professoresTable } from "@workspace/db";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
+import { turnosComAulaPorProfessor, marcarContraturno } from "../lib/ha-contraturno"; // [HA-CONTRATURNO-ASTERISCO]
 
 // RF-DISP-01 a RF-DISP-03, RF-PROF-04: CRUD da disponibilidade semanal do
 // professor, consumida pelo algoritmo de geração de horário
@@ -85,7 +86,8 @@ router.get("/", async (req, res) => {
       return;
     }
     const rows = await db.select().from(disponibilidadeTable).where(eq(disponibilidadeTable.professorId, professorId));
-    res.json(rows);
+    // [HA-CONTRATURNO-ASTERISCO] marca HA fora dos turnos de aula (tela mostra "HA*")
+    res.json(marcarContraturno(rows, await turnosComAulaPorProfessor(escolaId, [professorId])));
     return;
   }
 
@@ -97,7 +99,8 @@ router.get("/", async (req, res) => {
   const rows = ids.length
     ? await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, ids))
     : [];
-  res.json(rows);
+  // [HA-CONTRATURNO-ASTERISCO] marca HA fora dos turnos de aula (tela mostra "HA*")
+  res.json(marcarContraturno(rows, await turnosComAulaPorProfessor(escolaId, ids)));
 });
 
 router.post("/", async (req, res) => {

@@ -707,7 +707,7 @@ function AbaGrade() {
       // [FIX] fetch() sem token Bearer -- voltava 401, e o "HA"
       // (Hora-Atividade) simplesmente nunca aparecia destacado na
       // grade por professor. customFetch já anexa o token.
-      customFetch<Array<{ diaSemana: number; horarioSlot: number; turno: string | null; horaAtividadeObrigatoria: boolean }>>(
+      customFetch<Array<{ diaSemana: number; horarioSlot: number; turno: string | null; horaAtividadeObrigatoria: boolean; contraturno?: boolean }>>(
         `/api/disponibilidade?professorId=${professorIdSelecionado}`,
         { responseType: "json" },
       ),
@@ -728,10 +728,29 @@ function AbaGrade() {
     );
   };
 
+  // [HA-CONTRATURNO-ASTERISCO] HA em turno sem nenhuma aula do professor na
+  // semana (campo calculado pela /api/disponibilidade) -> celula mostra "HA*".
+  const getHAContraturno = (diaSemana: number, numeroAula: number) => {
+    if (!professorIdSelecionado || !disponibilidadeProf) return false;
+    return disponibilidadeProf.some((d) =>
+      d.horaAtividadeObrigatoria &&
+      d.contraturno === true &&
+      d.diaSemana === diaSemana &&
+      d.horarioSlot === numeroAula &&
+      (d.turno ?? turnoEmUso) === turnoEmUso,
+    );
+  };
+
   const getMaxAulas = () => {
-    if (!horarios || horarios.length === 0) return 5;
-    const max = Math.max(...horarios.map((s) => s.numeroAula));
-    return Math.max(max, 5);
+    // [HA-CONTRATURNO-ASTERISCO] considera tambem a HA do professor no turno em
+    // uso: num turno so com HA, cortar em 5 linhas escondia HA na 6a aula.
+    const haNums = professorIdSelecionado && disponibilidadeProf
+      ? disponibilidadeProf
+          .filter((d) => d.horaAtividadeObrigatoria && (d.turno ?? turnoEmUso) === turnoEmUso)
+          .map((d) => d.horarioSlot)
+      : [];
+    const aulaNums = (horarios ?? []).map((s) => s.numeroAula);
+    return Math.max(5, ...aulaNums, ...haNums);
   };
 
   const numRows = getMaxAulas();
@@ -1028,7 +1047,7 @@ function AbaGrade() {
                           >
                             {temHA ? (
                               <div className="h-full w-full rounded-md p-2 border-l-4 bg-amber-50 border-amber-400 flex items-center justify-center">
-                                <span className="text-xs font-semibold text-amber-700">HA</span>
+                                <span className="text-xs font-semibold text-amber-700" title={getHAContraturno(colIndex, aulaNum) ? "Hora-atividade em contraturno (turno sem aula)" : "Hora-atividade"}>{getHAContraturno(colIndex, aulaNum) ? "HA*" : "HA"}</span>
                               </div>
                             ) : (
                               <span className="text-xs text-muted-foreground/30 group-hover:text-primary group-hover:font-medium flex items-center gap-1">
