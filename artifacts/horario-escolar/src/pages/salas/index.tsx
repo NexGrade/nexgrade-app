@@ -23,16 +23,22 @@ import { Badge } from "@/components/ui/badge";
 import { useListaFiltrada } from "@/hooks/use-lista-filtrada";
 import { CampoBusca } from "@/components/campo-busca";
 
+// [TIPO-LIVRE] opcoes prontas; qualquer outro tipo pode ser digitado no formulario
 const TIPOS_SALA = [
-  { value: "comum", label: "Sala Comum" },
-  { value: "laboratorio", label: "Laboratório de Informática" },
-  { value: "quadra", label: "Quadra Poliesportiva" },
+  { value: "sala_aula", label: "Sala de aula" },
+  { value: "laboratorio", label: "Laboratório" },
+  { value: "informatica", label: "Laboratório de Informática" },
+  { value: "quadra", label: "Quadra poliesportiva" },
+  { value: "auditorio", label: "Auditório" },
+  { value: "biblioteca", label: "Biblioteca" },
+  { value: "sala_arte", label: "Sala de arte" },
 ];
+const OPCAO_OUTRO_TIPO = "__outro_tipo__";
 
 const salaSchema = z.object({
   nome: z.string().min(1, "O nome é obrigatório"),
   capacidade: z.coerce.number().min(1),
-  tipo: z.string().default("comum"),
+  tipo: z.string().trim().min(1, "Informe o tipo").max(60, "Use até 60 caracteres").default("sala_aula"), // [TIPO-LIVRE]
 });
 type SalaFormValues = z.infer<typeof salaSchema>;
 
@@ -49,18 +55,18 @@ export default function SalasList() {
 
   const form = useForm<SalaFormValues>({
     resolver: zodResolver(salaSchema),
-    defaultValues: { nome: "", capacidade: 30, tipo: "comum" },
+    defaultValues: { nome: "", capacidade: 30, tipo: "sala_aula" },
   });
 
   const handleOpenCreate = () => {
     setEditingId(null);
-    form.reset({ nome: "", capacidade: 30, tipo: "comum" });
+    form.reset({ nome: "", capacidade: 30, tipo: "sala_aula" });
     setIsDialogOpen(true);
   };
 
   const handleOpenEdit = (sala: any) => {
     setEditingId(sala.id);
-    form.reset({ nome: sala.nome, capacidade: sala.capacidade, tipo: sala.tipo ?? "comum" });
+    form.reset({ nome: sala.nome, capacidade: sala.capacidade, tipo: sala.tipo ?? "sala_aula" });
     setIsDialogOpen(true);
   };
 
@@ -97,7 +103,9 @@ export default function SalasList() {
   };
 
   function tipoLabel(tipo?: string) {
-    return TIPOS_SALA.find((t) => t.value === tipo)?.label ?? "Sala Comum";
+    // [TIPO-LIVRE] tipo pronto -> nome amigavel; tipo digitado -> como foi escrito
+    if (tipo === "outro") return "Outro";
+    return TIPOS_SALA.find((t) => t.value === tipo)?.label ?? (tipo && tipo.trim() ? tipo : "Sala de aula");
   }
 
   return (
@@ -148,12 +156,7 @@ export default function SalasList() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Tipo</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
-                          {TIPOS_SALA.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
+                      <CampoTipoSala value={field.value ?? ""} onChange={field.onChange} />{/* [TIPO-LIVRE] */}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -226,6 +229,40 @@ export default function SalasList() {
             </Card>
           ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+// [TIPO-LIVRE] campo Tipo: opcoes prontas ou texto livre ("Outro tipo (digitar)...").
+// Ao editar uma sala com tipo digitado, ja abre no modo "outro" com o texto.
+function CampoTipoSala({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const ehPronto = TIPOS_SALA.some((t) => t.value === value);
+  const [modoOutro, setModoOutro] = useState(!!value && !ehPronto);
+  const mostrarOutro = modoOutro || (!!value && !ehPronto);
+  return (
+    <div className="space-y-2">
+      <Select
+        value={mostrarOutro ? OPCAO_OUTRO_TIPO : value}
+        onValueChange={(v) => {
+          if (v === OPCAO_OUTRO_TIPO) { setModoOutro(true); onChange(""); }
+          else { setModoOutro(false); onChange(v); }
+        }}
+      >
+        <FormControl><SelectTrigger><SelectValue placeholder="Escolha o tipo" /></SelectTrigger></FormControl>
+        <SelectContent>
+          {TIPOS_SALA.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+          <SelectItem value={OPCAO_OUTRO_TIPO}>Outro tipo (digitar)...</SelectItem>
+        </SelectContent>
+      </Select>
+      {mostrarOutro && (
+        <Input
+          autoFocus
+          maxLength={60}
+          placeholder="Ex.: Laboratório de Química, Sala Maker, Ateliê"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
       )}
     </div>
   );

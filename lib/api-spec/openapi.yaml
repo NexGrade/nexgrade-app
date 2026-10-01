@@ -2291,7 +2291,7 @@ components:
       properties:
         id: { type: integer }
         nome: { type: string }
-        tipo: { type: string, enum: [sala_aula, laboratorio, quadra, informatica, auditorio, biblioteca, sala_arte, outro] }
+        tipo: { type: string, minLength: 1, maxLength: 60 } # [TIPO-LIVRE]
         capacidade: { type: integer }
         ativa: { type: boolean }
         observacoes: { type: ["string", "null"] }
@@ -2301,7 +2301,7 @@ components:
       required: [nome]
       properties:
         nome: { type: string, minLength: 1 }
-        tipo: { type: string, enum: [sala_aula, laboratorio, quadra, informatica, auditorio, biblioteca, sala_arte, outro] }
+        tipo: { type: string, minLength: 1, maxLength: 60 } # [TIPO-LIVRE]
         capacidade: { type: integer }
         observacoes: { type: string }
 

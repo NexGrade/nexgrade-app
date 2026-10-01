@@ -9,7 +9,8 @@ const router = Router();
 
 const SalaInput = z.object({
   nome: z.string().min(1),
-  tipo: z.enum(["sala_aula", "laboratorio", "quadra", "informatica", "auditorio", "biblioteca", "sala_arte", "outro"]).default("sala_aula"),
+  // [TIPO-LIVRE] a escola cadastra o tipo de espaco que quiser (antes: lista fixa)
+  tipo: z.string().trim().min(1).max(60).default("sala_aula"),
   capacidade: z.number().int().min(1).default(35),
   observacoes: z.string().optional(),
 });
