@@ -7,6 +7,7 @@ import {
 } from "@workspace/db";
 import { and, eq, isNull, notInArray } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
+import { buscarReservasParaRelatorio, gerarPdfReservasPorProfessor } from "../lib/relatorio-reservas"; // [RELATORIO-RESERVAS]
 import { ehBloqueioReal } from "../lib/bloqueio-real";
 import { gerarPdfGradeCompacta, type BlocoGrade } from "../lib/pdf-grade";
 import { gerarPdfCargaProfessores, type RelatorioProfessor } from "../lib/pdf-carga-professor";
@@ -823,6 +824,33 @@ router.get("/carga-horaria-pdf", async (req, res) => {
   const pdfBytes = await gerarPdfCargaHoraria(await buscarNomeEscola(escolaId), ano, turmasComItens);
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", `attachment; filename="carga_horaria_${ano}.pdf"`);
+  res.send(Buffer.from(pdfBytes));
+});
+
+// ------------------------------------------------------------------
+// [RELATORIO-RESERVAS] Relatorio de reservas por professor (todas, inclusive
+// canceladas). ?inicio=AAAA-MM-DD&fim=AAAA-MM-DD opcionais. Leitura (GET):
+// liberado para a coordenacao e para o gestor de reservas.
+// ------------------------------------------------------------------
+function lerPeriodoReservas(query: Record<string, unknown>): { inicio?: string; fim?: string } {
+  const valida = (v: unknown) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined);
+  return { inicio: valida(query.inicio), fim: valida(query.fim) };
+}
+
+router.get("/reservas-dados", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const { inicio, fim } = lerPeriodoReservas(req.query as Record<string, unknown>);
+  res.json(await buscarReservasParaRelatorio(escolaId, inicio, fim));
+});
+
+router.get("/reservas-pdf", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const { inicio, fim } = lerPeriodoReservas(req.query as Record<string, unknown>);
+  const linhas = await buscarReservasParaRelatorio(escolaId, inicio, fim);
+  const pdfBytes = await gerarPdfReservasPorProfessor(await buscarNomeEscola(escolaId), { inicio, fim }, linhas);
+  const sufixo = (inicio ? "_" + inicio : "") + (fim ? "_a_" + fim : "");
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="reservas_por_professor${sufixo}.pdf"`);
   res.send(Buffer.from(pdfBytes));
 });
 

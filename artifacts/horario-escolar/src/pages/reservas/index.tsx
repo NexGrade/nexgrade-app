@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useAuth } from "@clerk/react"; // [PAPEL-RESERVAS]
 import { PAPEL_RESERVAS } from "@/lib/papeis"; // [PAPEL-RESERVAS]
+import { BotaoRelatorioReservas } from "@/components/relatorio-reservas"; // [RELATORIO-RESERVAS]
 import {
   AlertTriangle,
   ArrowRight,
@@ -437,6 +438,7 @@ export default function ReservasPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <BotaoRegrasPorProfessor />{/* [PAPEL-RESERVAS] */}
+          <BotaoRelatorioReservas />{/* [RELATORIO-RESERVAS] */}
           <Button data-testid="button-new-reservation" onClick={openCreate} className="bg-primary text-primary-foreground shadow-sm hover:bg-primary/90">
             <Plus className="mr-2 h-4 w-4" /> Nova reserva
           </Button>
