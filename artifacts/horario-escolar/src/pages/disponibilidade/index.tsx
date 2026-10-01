@@ -165,6 +165,12 @@ export default function DisponibilidadePage() {
     return m;
   };
 
+  // [HA-CONTRATURNO-ASTERISCO] contraturno vale para o turno inteiro: se alguma
+  // HA deste turno veio com contraturno=true da API, o turno e contraturno.
+  const turnoEhContraturno = (disponibilidadeRows ?? []).some(
+    (r) => (r.turno ?? null) === turno && r.horaAtividadeObrigatoria && (r as { contraturno?: boolean }).contraturno === true,
+  );
+
   const matrizAtual = useMemo(() => {
     if (!professorIdNum || carregandoDisponibilidade || carregandoSlots) return {};
     return carregarMatriz();
@@ -514,13 +520,15 @@ export default function DisponibilidadePage() {
                                     ? "Bloqueado — clique para marcar Hora-Atividade obrigatória"
                                     : estado === "ha_obrigatoria"
                                       ? "Hora-Atividade obrigatória — clique para fixar (HA fixa: o motor nunca coloca aula aqui)"
-                                      : "HA fixa — o motor nunca coloca aula aqui — clique para liberar") /* [HA-FIXA] */
+                                      : "HA fixa — o motor nunca coloca aula aqui — clique para liberar") /* [HA-FIXA] */ +
+                                ((estado === "ha_obrigatoria" || estado === "ha_fixa") && turnoEhContraturno ? " — HA em contraturno (turno sem aula)" : "") /* [HA-CONTRATURNO-ASTERISCO] */
                               }
                             >
                               {estado === "disponivel" && "✓"}
                               {estado === "bloqueado" && <Lock className="w-3.5 h-3.5 mx-auto" />}
                               {estado === "ha_obrigatoria" && <GraduationCap className="w-3.5 h-3.5 mx-auto" />}
                               {estado === "ha_fixa" && (<span className="inline-flex items-center justify-center gap-0.5 w-full"><GraduationCap className="w-3.5 h-3.5" /><Lock className="w-3 h-3" /></span>)}{/* [HA-FIXA] */}
+                              {(estado === "ha_obrigatoria" || estado === "ha_fixa") && turnoEhContraturno && (<span className="absolute top-0 left-1 text-sm font-bold text-amber-800">*</span>)}{/* [HA-CONTRATURNO-ASTERISCO] */}
                               {(() => { const af = aulaFixaNaCelula(dia, slot.numeroAula); return af ? (<span className="absolute bottom-0.5 left-0.5 text-violet-700" title={`Aula fixa: ${rotuloTurmaDisc.get(`${af.turmaId}-${af.disciplinaId}`) ?? "turma/disciplina"}`}><Pin className="w-3 h-3" /></span>) : null; })()}{/* [AULA-FIXA-DISP] */}
                               {real && (
                                 <span className="absolute top-0.5 right-0.5 text-blue-600">

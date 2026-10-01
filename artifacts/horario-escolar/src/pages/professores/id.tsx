@@ -407,12 +407,25 @@ export default function ProfessorEditar() {
                       <span className="font-medium">{cargaData.haInstitucionalTotal ?? 0} aula(s)</span>
                     </div>
                     <div className="space-y-1.5 mt-1">
-                      {Object.entries(cargaData.haInstitucionalPorTurno ?? {}).map(([turno, necessaria]) => {
+                      {/* [HA-CONTRATURNO-ASTERISCO] antes so listava turnos com HA necessaria
+                          (= turnos com aula), escondendo a HA alocada em contraturno */}
+                      {Array.from(new Set([
+                        ...Object.keys(cargaData.haInstitucionalPorTurno ?? {}),
+                        ...Object.keys(cargaData.haAlocadaPorTurno ?? {}),
+                      ])).map((turno) => {
+                        const necessaria = (cargaData.haInstitucionalPorTurno ?? {})[turno] ?? 0;
                         const alocada = (cargaData.haAlocadaPorTurno ?? {})[turno] ?? 0;
+                        const contraturno = !(((cargaData.porTurno ?? {})[turno] ?? 0) > 0);
+                        if (alocada === 0 && necessaria === 0) return null;
                         return (
                           <div key={turno} className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span className="capitalize">{turno}</span>
-                            <span>{alocada} / {necessaria} alocada(s)</span>
+                            <span className="capitalize">
+                              {turno}
+                              {contraturno && (
+                                <span className="ml-1 normal-case font-semibold text-amber-700" title="Hora-atividade em contraturno (turno sem aula)">HA* (contraturno)</span>
+                              )}
+                            </span>
+                            <span>{contraturno ? `${alocada} alocada(s)` : `${alocada} / ${necessaria} alocada(s)`}</span>
                           </div>
                         );
                       })}
