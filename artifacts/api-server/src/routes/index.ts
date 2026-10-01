@@ -9,6 +9,7 @@ import salasRouter from "./salas";
 import licencasRouter from "./licencas";
 import comunicadosRouter from "./comunicados";
 import usuariosRouter from "./usuarios";
+import usuariosAcessosRouter from "./usuarios-acessos"; // [USUARIOS-CARGOS]
 import auditRouter from "./audit";
 import configuracoesRouter from "./configuracoes";
 import exportRouter from "./export";
@@ -43,6 +44,7 @@ router.use("/salas", salasRouter);
 router.use("/licencas", licencasRouter);
 router.use("/comunicados", comunicadosRouter);
 router.use("/usuarios", usuariosRouter);
+router.use("/usuarios-acessos", usuariosAcessosRouter); // [USUARIOS-CARGOS]
 router.use("/audit", auditRouter);
 router.use("/configuracoes", configuracoesRouter);
 router.use("/export", exportRouter);

@@ -1,202 +1,213 @@
-import { useListUsuarios, useCreateUsuario, useUpdateUsuario, getListUsuariosQueryKey } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+// [USUARIOS-CARGOS] (2026-10-01) Usuarios da escola direto do Clerk, com cargo.
+// Direcao/Coordenacao = acesso total | Gestor de reservas = so Reservas |
+// Professor = so a Minha Agenda. (Versao anterior: index.tsx.bak_20261001_usuarios_cargos)
+import { useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { customFetch } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Shield, Mail } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
-} from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { useListaFiltrada } from "@/hooks/use-lista-filtrada";
-import { CampoBusca } from "@/components/campo-busca";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { Plus, Shield, Mail, Search, Trash2, X, Loader2 } from "lucide-react";
 
-const PERFIS = [
-  { value: "direcao", label: "Direção" },
-  { value: "coordenacao", label: "Coordenação" },
-  { value: "professor", label: "Professor" },
-  { value: "secretaria", label: "Secretaria" },
+type Cargo = "direcao" | "coordenacao" | "reservas" | "professor";
+type Acesso = {
+  tipo: "membro" | "convite";
+  id: string;
+  nome: string;
+  email: string;
+  cargo: Cargo;
+  rotuloCargo: string;
+  papel: string;
+  ehVoce: boolean;
+};
+
+const CARGOS: Array<{ valor: Cargo; rotulo: string; descricao: string }> = [
+  { valor: "direcao", rotulo: "Direção", descricao: "Acesso total ao sistema" },
+  { valor: "coordenacao", rotulo: "Coordenação", descricao: "Acesso total ao sistema" },
+  { valor: "reservas", rotulo: "Gestor de reservas", descricao: "Só a agenda de reservas (sem regras por professor e sem a grade)" },
+  { valor: "professor", rotulo: "Professor", descricao: "Só a Minha Agenda" },
 ];
+const COR_CARGO: Record<Cargo, string> = {
+  direcao: "bg-blue-100 text-blue-800 border-blue-200",
+  coordenacao: "bg-blue-100 text-blue-800 border-blue-200",
+  reservas: "bg-violet-100 text-violet-800 border-violet-200",
+  professor: "bg-slate-100 text-slate-700 border-slate-200",
+};
+const URL_BASE = "/api/usuarios-acessos";
+const CHAVE = ["usuarios-acessos"];
 
-const usuarioSchema = z.object({
-  nome: z.string().min(1, "O nome é obrigatório"),
-  email: z.string().email("E-mail inválido"),
-  perfil: z.string().default("secretaria"),
-});
-type UsuarioFormValues = z.infer<typeof usuarioSchema>;
+function mensagemErro(err: unknown): string {
+  const e = err as { data?: { error?: string }; message?: string };
+  return e?.data?.error ?? e?.message ?? "Tente novamente.";
+}
 
-export default function UsuariosList() {
-  const { data: usuarios, isLoading } = useListUsuarios();
-  const { busca, setBusca, itensFiltrados: usuariosFiltrados } = useListaFiltrada(usuarios, (u) => u.nome);
-  const createUsuario = useCreateUsuario();
-  const updateUsuario = useUpdateUsuario();
+export default function UsuariosPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [busca, setBusca] = useState("");
+  const [aberto, setAberto] = useState(false);
+  const [form, setForm] = useState<{ nome: string; email: string; cargo: Cargo }>({ nome: "", email: "", cargo: "reservas" });
 
-  const form = useForm<UsuarioFormValues>({
-    resolver: zodResolver(usuarioSchema),
-    defaultValues: { nome: "", email: "", perfil: "secretaria" },
+  const { data: acessos, isLoading, isError, error } = useQuery({
+    queryKey: CHAVE,
+    queryFn: () => customFetch<Acesso[]>(URL_BASE, { responseType: "json" }),
   });
 
-  const handleOpenCreate = () => {
-    setEditingId(null);
-    form.reset({ nome: "", email: "", perfil: "secretaria" });
-    setIsDialogOpen(true);
-  };
+  const filtrados = useMemo(() => {
+    const t = busca.trim().toLowerCase();
+    const l = acessos ?? [];
+    return t ? l.filter((a) => a.nome.toLowerCase().includes(t) || a.email.toLowerCase().includes(t)) : l;
+  }, [acessos, busca]);
 
-  const handleOpenEdit = (usuario: any) => {
-    setEditingId(usuario.id);
-    form.reset({ nome: usuario.nome, email: usuario.email, perfil: usuario.perfil ?? "secretaria" });
-    setIsDialogOpen(true);
-  };
+  const aoTerminar = (titulo: string) => ({
+    onSuccess: (data: unknown) => {
+      queryClient.invalidateQueries({ queryKey: CHAVE });
+      toast({ title: titulo, description: (data as { mensagem?: string })?.mensagem });
+    },
+    onError: (err: unknown) => toast({ title: "Não foi possível concluir", description: mensagemErro(err), variant: "destructive" }),
+  });
 
-  const onSubmit = (data: UsuarioFormValues) => {
-    if (editingId) {
-      updateUsuario.mutate({ id: editingId, data: data as any }, {
-        onSuccess: () => {
-          toast({ title: "Usuário atualizado!" });
-          queryClient.invalidateQueries({ queryKey: getListUsuariosQueryKey() });
-          setIsDialogOpen(false);
-        },
-        onError: () => toast({ title: "Erro ao atualizar", variant: "destructive" }),
-      });
-    } else {
-      createUsuario.mutate({ data: data as any }, {
-        onSuccess: () => {
-          toast({ title: "Usuário criado!" });
-          queryClient.invalidateQueries({ queryKey: getListUsuariosQueryKey() });
-          setIsDialogOpen(false);
-        },
-        onError: () => toast({ title: "Erro ao criar", variant: "destructive" }),
-      });
-    }
-  };
+  const enviar = (url: string, method: string, body?: unknown) =>
+    customFetch<{ ok: boolean; mensagem?: string }>(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
+      responseType: "json",
+    });
 
-  function perfilLabel(perfil?: string) {
-    return PERFIS.find((p) => p.value === perfil)?.label ?? "Secretaria";
-  }
+  const convidar = useMutation({
+    mutationFn: () => enviar(URL_BASE + "/convites", "POST", form),
+    ...aoTerminar("Convite enviado"),
+  });
+  const trocarCargo = useMutation({
+    mutationFn: (v: { userId: string; cargo: Cargo }) => enviar(URL_BASE + "/membros/" + encodeURIComponent(v.userId), "PATCH", { cargo: v.cargo }),
+    ...aoTerminar("Cargo alterado"),
+  });
+  const remover = useMutation({
+    mutationFn: (a: Acesso) =>
+      enviar(URL_BASE + (a.tipo === "membro" ? "/membros/" : "/convites/") + encodeURIComponent(a.id), "DELETE"),
+    ...aoTerminar("Pronto"),
+  });
+
+  const abrirNovo = () => { setForm({ nome: "", email: "", cargo: "reservas" }); setAberto(true); };
+  const salvarNovo = () => convidar.mutate(undefined, { onSuccess: () => setAberto(false) });
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Usuários</h1>
-          <p className="text-muted-foreground">Gerencie os usuários com acesso ao sistema.</p>
+          <p className="text-muted-foreground">Quem tem acesso ao sistema nesta escola, e com qual cargo.</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleOpenCreate}><Plus className="mr-2 h-4 w-4" />Novo Usuário</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{editingId ? "Editar Usuário" : "Novo Usuário"}</DialogTitle>
-              <DialogDescription>
-                {editingId ? "Altere os dados do usuário abaixo." : "Preencha os dados do novo usuário."}
-              </DialogDescription>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="nome"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome</FormLabel>
-                      <FormControl><Input placeholder="Ex: Maria Silva" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>E-mail</FormLabel>
-                      <FormControl><Input type="email" placeholder="usuario@escola.pr.gov.br" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="perfil"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Perfil</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
-                          {PERFIS.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="flex justify-end pt-2">
-                  <Button type="submit" disabled={createUsuario.isPending || updateUsuario.isPending}>
-                    {createUsuario.isPending || updateUsuario.isPending ? "Salvando..." : "Salvar"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={abrirNovo}><Plus className="mr-2 h-4 w-4" /> Novo Usuário</Button>
       </div>
 
-      <CampoBusca
-        value={busca}
-        onChange={setBusca}
-        placeholder="Buscar usuário por nome..."
-        className="max-w-sm"
-      />
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input className="pl-9" placeholder="Buscar por nome ou e-mail..." value={busca} onChange={(e) => setBusca(e.target.value)} />
+      </div>
 
       {isLoading ? (
-        <div className="space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 w-full" />)}</div>
-      ) : usuarios?.length === 0 ? (
-        <div className="text-center py-12 bg-card rounded-lg border border-border">
-          <Shield className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
-          <h3 className="text-lg font-medium text-foreground">Nenhum usuário cadastrado</h3>
-          <p className="text-sm text-muted-foreground mt-1">Cadastre usuários para acessar o sistema.</p>
-        </div>
-      ) : usuariosFiltrados.length === 0 ? (
-        <div className="text-center py-12 bg-card rounded-lg border border-border">
-          <p className="text-sm text-muted-foreground">Nenhum usuário encontrado para "{busca}".</p>
-        </div>
+        <div className="space-y-3">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-20 w-full" />)}</div>
+      ) : isError ? (
+        <Card><CardContent className="py-10 text-center text-sm text-destructive">{mensagemErro(error)}</CardContent></Card>
+      ) : filtrados.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-2 py-12 text-center">
+            <Shield className="h-10 w-10 text-muted-foreground/50" />
+            <p className="font-semibold">{busca ? "Ninguém encontrado" : "Nenhum usuário com acesso"}</p>
+            <p className="text-sm text-muted-foreground">Use "Novo Usuário" para convidar alguém por e-mail.</p>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="grid gap-3">
-          {usuariosFiltrados.map((usuario) => (
-            <Card key={usuario.id}>
-              <CardContent className="py-4 flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold">{usuario.nome}</h3>
-                    <Badge variant="outline">{perfilLabel(usuario.perfil)}</Badge>
-                    {!usuario.ativo && <Badge variant="secondary">Inativo</Badge>}
+        <div className="space-y-2">
+          {filtrados.map((a) => (
+            <Card key={a.tipo + a.id}>
+              <CardContent className="flex flex-wrap items-center gap-3 p-4">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold">{a.nome}</span>
+                    {a.ehVoce && <Badge variant="outline">Você</Badge>}
+                    <Badge variant="outline" className={COR_CARGO[a.cargo]}>{a.rotuloCargo}</Badge>
+                    {a.tipo === "convite" && <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200">Convite pendente</Badge>}
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1 min-w-0">
-                    <Mail className="w-3.5 h-3.5 shrink-0" /><span className="truncate">{usuario.email}</span>
+                  <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <Mail className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{a.email}</span>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(usuario)}>
-                  <Edit className="w-4 h-4" />
-                </Button>
+                {a.tipo === "membro" && !a.ehVoce && (
+                  <Select
+                    value={a.cargo}
+                    onValueChange={(v) => {
+                      if (v !== a.cargo && window.confirm("Mudar o cargo de " + a.nome + " para " + (CARGOS.find((c) => c.valor === v)?.rotulo ?? v) + "?")) {
+                        trocarCargo.mutate({ userId: a.id, cargo: v as Cargo });
+                      }
+                    }}
+                    disabled={trocarCargo.isPending}
+                  >
+                    <SelectTrigger className="w-[190px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>{CARGOS.map((c) => <SelectItem key={c.valor} value={c.valor}>{c.rotulo}</SelectItem>)}</SelectContent>
+                  </Select>
+                )}
+                {!a.ehVoce && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title={a.tipo === "membro" ? "Remover acesso" : "Cancelar convite"}
+                    disabled={remover.isPending}
+                    onClick={() => {
+                      const pergunta = a.tipo === "membro" ? "Remover o acesso de " + a.nome + " a esta escola?" : "Cancelar o convite de " + a.email + "?";
+                      if (window.confirm(pergunta)) remover.mutate(a);
+                    }}
+                  >
+                    {a.tipo === "membro" ? <Trash2 className="h-4 w-4 text-destructive" /> : <X className="h-4 w-4" />}
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      <Dialog open={aberto} onOpenChange={setAberto}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo Usuário</DialogTitle>
+            <DialogDescription>A pessoa recebe um convite por e-mail e entra já com o cargo escolhido.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="nu-nome">Nome</Label>
+              <Input id="nu-nome" value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="Nome completo" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="nu-email">E-mail</Label>
+              <Input id="nu-email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="usuario@escola.pr.gov.br" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Cargo</Label>
+              <Select value={form.cargo} onValueChange={(v) => setForm({ ...form, cargo: v as Cargo })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{CARGOS.map((c) => <SelectItem key={c.valor} value={c.valor}>{c.rotulo}</SelectItem>)}</SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">{CARGOS.find((c) => c.valor === form.cargo)?.descricao}</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAberto(false)}>Cancelar</Button>
+            <Button onClick={salvarNovo} disabled={convidar.isPending || form.nome.trim().length < 2 || !form.email.includes("@")}>
+              {convidar.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+              Enviar convite
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
