@@ -117,7 +117,6 @@ function desenharBloco(
       if (slot) {
         // [PDF-CABE-NA-CELULA] mede a largura real: 1 linha se couber; senao 2 linhas e fonte menor; so entao reticencias
         desenharTextoNaCelula(page, slot.linha2 ? [slot.linha1, slot.linha2] : [slot.linha1], slot.linha2 ? font : fontBold, x, yLinha, colDiaLargura - 6, alturaLinhaDado, slot.linha2 ? 6.5 : 7);
-        }
       } else {
         const bloqueada = bloco.celulasBloqueadas?.some(
           (c) => c.diaSemana === diaSemana && c.numeroAula === numeroAula,
