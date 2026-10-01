@@ -1,3 +1,5 @@
+import { useQuery as useQueryOcupacao } from "@tanstack/react-query"; // [OCUPACAO-SALAS]
+import { customFetch as customFetchOcupacao } from "@workspace/api-client-react"; // [OCUPACAO-SALAS]
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -86,6 +88,8 @@ function NovaReservaDialog({ professorId }: { professorId: number }) {
     resolver: zodResolver(ReservaFormSchema),
     defaultValues: { salaId: 0, data: "", numeroAula: 1, titulo: "", observacoes: "" },
   });
+  const salaSel = form.watch("salaId"); // [OCUPACAO-SALAS]
+  const dataSel = form.watch("data");
 
   const criar = useCreateMinhaReserva({
     mutation: {
@@ -184,6 +188,7 @@ function NovaReservaDialog({ professorId }: { professorId: number }) {
                   <FormControl>
                     <Input type="number" min={1} {...field} />
                   </FormControl>
+                  <DisponibilidadeSala salaId={Number(salaSel) || 0} data={dataSel} aulaSelecionada={Number(field.value)} onEscolher={(n) => field.onChange(n)} />{/* [OCUPACAO-SALAS] */}
                   <FormMessage />
                 </FormItem>
               )}
@@ -703,3 +708,55 @@ export default function MinhaAgendaPage() {
   );
 }
 
+// [OCUPACAO-SALAS] disponibilidade do espaco na data, por aula, na "Nova reserva".
+// Mostra so livre/ocupada/em analise -- sem nome de quem reservou.
+type OcupacaoDiaResp = { data: string; maxAula: number; ocupacao: Array<{ salaId: number; numeroAula: number; status: string }> };
+
+function DisponibilidadeSala({ salaId, data, aulaSelecionada, onEscolher }: {
+  salaId: number;
+  data: string;
+  aulaSelecionada: number;
+  onEscolher: (n: number) => void;
+}) {
+  const ativo = salaId > 0 && /^\d{4}-\d{2}-\d{2}$/.test(data ?? "");
+  const { data: oc, isLoading, isError } = useQueryOcupacao({
+    queryKey: ["ocupacao-salas", data],
+    queryFn: () => customFetchOcupacao<OcupacaoDiaResp>("/api/minha-agenda/ocupacao?data=" + encodeURIComponent(data), { responseType: "json" }),
+    enabled: ativo,
+  });
+  if (!ativo) return <p className="text-xs text-muted-foreground">Escolha o espaço e a data para ver as aulas livres.</p>;
+  if (isLoading) return <p className="text-xs text-muted-foreground">Verificando disponibilidade...</p>;
+  if (isError || !oc) return <p className="text-xs text-destructive">Não foi possível verificar a disponibilidade agora.</p>;
+  const daSala = oc.ocupacao.filter((o) => o.salaId === salaId);
+  return (
+    <div className="space-y-1.5">
+      <p className="text-xs text-muted-foreground">Disponibilidade deste espaço na data (clique numa aula livre):</p>
+      <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
+        {Array.from({ length: oc.maxAula }, (_, i) => i + 1).map((n) => {
+          const o = daSala.find((x) => x.numeroAula === n);
+          const ocupada = o?.status === "confirmada";
+          const analise = o?.status === "pendente";
+          const sel = aulaSelecionada === n;
+          const cor = ocupada
+            ? "bg-muted text-muted-foreground line-through cursor-not-allowed"
+            : analise
+              ? "bg-amber-50 text-amber-800 ring-1 ring-amber-300 hover:bg-amber-100"
+              : "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-300 hover:bg-emerald-100";
+          return (
+            <button
+              key={n}
+              type="button"
+              disabled={ocupada}
+              onClick={() => onEscolher(n)}
+              className={"rounded-md px-2 py-1.5 text-left text-xs transition-colors " + cor + (sel ? " outline outline-2 outline-primary" : "")}
+              title={ocupada ? "Já reservado nesta aula" : analise ? "Há uma solicitação em análise nesta aula" : "Livre"}
+            >
+              <span className="block font-bold">{n}ª aula</span>
+              <span>{ocupada ? "Ocupada" : analise ? "Em análise" : "Livre"}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

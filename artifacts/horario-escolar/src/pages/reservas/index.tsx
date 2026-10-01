@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useEhGestorReservas } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA]
 import { BotaoRelatorioReservas } from "@/components/relatorio-reservas"; // [RELATORIO-RESERVAS]
+import { MapaOcupacaoSalas } from "@/components/mapa-ocupacao-salas"; // [OCUPACAO-SALAS]
 import {
   AlertTriangle,
   ArrowRight,
@@ -488,6 +489,7 @@ export default function ReservasPage() {
         </Card>
       ) : (
         <div className="space-y-3">
+          <MapaOcupacaoSalas salas={salasQuery.data ?? []} reservas={reservas} />{/* [OCUPACAO-SALAS] */}
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-heading text-lg font-bold">Agenda do dia</h2>

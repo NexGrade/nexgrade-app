@@ -1,3 +1,4 @@
+import { ocupacaoDoDia } from "../lib/ocupacao-reservas"; // [OCUPACAO-SALAS]
 import { horarioSlotsTable } from "@workspace/db"; // [AGENDA-TURNOS]
 import { Router } from "express";
 import { getAuth, clerkClient } from "@clerk/express";
@@ -246,6 +247,23 @@ router.post("/reservas", async (req, res) => {
 
 // [NOTIFICACOES] Lista notificacoes visiveis para o professor logado:
 // gerais (professorId null) + as direcionadas especificamente a ele.
+// [OCUPACAO-SALAS] ocupacao dos espacos num dia (sem nomes), para o professor
+// ver o que esta livre antes de reservar.
+router.get("/ocupacao", async (req, res) => {
+  const professor = await resolverProfessorLogado(req);
+  if (!professor) {
+    res.status(404).json({ error: "Nenhum professor vinculado a esta conta." });
+    return;
+  }
+  const q = req.query.data;
+  const data = typeof q === "string" && /^\d{4}-\d{2}-\d{2}$/.test(q) ? q : null;
+  if (!data) {
+    res.status(400).json({ error: "Informe a data (AAAA-MM-DD)." });
+    return;
+  }
+  res.json(await ocupacaoDoDia(getEscolaId(req), data));
+});
+
 router.get("/notificacoes", async (req, res) => {
   const professor = await resolverProfessorLogado(req);
   if (!professor) {
