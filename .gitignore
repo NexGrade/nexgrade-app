@@ -61,3 +61,12 @@ Thumbs.db
 *.zip
 
 lib/db/_arquivo/
+
+# Arquivos locais de trabalho (backups, patches, cache, logs)
+*.bak
+*.bak_*
+__pycache__/
+*.pyc
+cpsat-service/app/cpsat-logs-*.json
+aplicar_patch_*.py
+lib/db/backup-*.json
