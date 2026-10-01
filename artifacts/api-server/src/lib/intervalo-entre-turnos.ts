@@ -18,11 +18,11 @@ import type { getEscolaId } from "./escola-id";
 
 type EscolaId = ReturnType<typeof getEscolaId>;
 
-// [INTERVALO-SEM-NOTURNO] (2026-10-01) so manha->tarde. O par tarde->noite
-// (["vespertino", "noturno"]) foi retirado: gerava conflitos demais.
-export const PARES_TURNO: ReadonlyArray<readonly [string, string]> = [
-  ["matutino", "vespertino"],
-];
+// [INTERVALO-DESLIGADO] (2026-10-01) regra DESATIVADA: deixou o vespertino inviavel
+// no CP-SAT (INFEASIBLE). Lista vazia = nenhum bloqueio no CP-SAT, nenhuma restricao
+// na HA e nenhum conflito. Historico: tarde->noite ja tinha saido antes (conflitos
+// demais). Para religar so manha->tarde: [["matutino", "vespertino"]].
+export const PARES_TURNO: ReadonlyArray<readonly [string, string]> = [];
 
 export type LimitesTurno = { primeira: number; ultima: number };
 
