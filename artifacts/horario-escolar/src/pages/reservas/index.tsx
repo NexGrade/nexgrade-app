@@ -489,7 +489,7 @@ export default function ReservasPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          <MapaOcupacaoSalas salas={salasQuery.data ?? []} reservas={reservas} />{/* [OCUPACAO-SALAS] */}
+          <MapaOcupacaoSalas salas={salasQuery.data ?? []} reservas={reservas} maxAulaMinimo={(horariosQuery.data ?? []).reduce((m, h) => Math.max(m, h.numeroAula), 0)} />{/* [MAPA-AULAS-GRADE] */}{/* [OCUPACAO-SALAS] */}
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-heading text-lg font-bold">Agenda do dia</h2>

@@ -10,10 +10,10 @@ type ReservaMapa = {
   professor?: { nome?: string | null } | null;
 };
 
-export function MapaOcupacaoSalas({ salas, reservas }: { salas: ReadonlyArray<SalaMapa>; reservas: ReadonlyArray<ReservaMapa> }) {
+export function MapaOcupacaoSalas({ salas, reservas, maxAulaMinimo = 0 }: { salas: ReadonlyArray<SalaMapa>; reservas: ReadonlyArray<ReservaMapa>; maxAulaMinimo?: number }) { // [MAPA-AULAS-GRADE]
   const ativas = salas.filter((s) => s.ativa !== false);
   const validas = reservas.filter((r) => r.status !== "cancelada");
-  const maxAula = Math.max(5, ...validas.map((r) => r.numeroAula));
+  const maxAula = Math.max(5, maxAulaMinimo, ...validas.map((r) => r.numeroAula)); // [MAPA-AULAS-GRADE]
   const aulas = Array.from({ length: maxAula }, (_, i) => i + 1);
   if (ativas.length === 0) return null;
 
