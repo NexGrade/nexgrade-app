@@ -1,3 +1,4 @@
+import { useEhGestorReservas } from "@/lib/papeis"; // [CONSULTA-GESTOR]
 import { useState, useEffect } from "react";
 import { useSearch, Link } from "wouter";
 import {
@@ -128,6 +129,7 @@ export default function HorarioHubPage() {
   if (tabParam === "esquema" && typeof window !== "undefined") window.location.replace("/calendario?tab=turnos"); // [FASE-C3]
   const abaInicial = (ABAS.some((a) => a.key === tabParam) ? tabParam : "grade") as AbaKey; // [FASE-C3] Horario abre na Grade
   const [aba, setAba] = useState<AbaKey>(abaInicial);
+  const somenteConsulta = useEhGestorReservas(); // [CONSULTA-GESTOR]
 
   return (
     <div className="space-y-6">
@@ -135,9 +137,14 @@ export default function HorarioHubPage() {
         <h1 className="text-3xl font-bold tracking-tight">Horário</h1>
         <p className="text-muted-foreground">Configure, gere e acompanhe a grade horária da escola.</p>
       </div>
+      {somenteConsulta && (
+        <div className="rounded-md border border-violet-200 bg-violet-50 px-4 py-2 text-sm text-violet-800">
+          Modo consulta: você pode visualizar a grade e os horários dos professores, mas não alterar.
+        </div>
+      )}{/* [CONSULTA-GESTOR] */}
 
       <div className="flex items-center gap-1 border-b border-border overflow-x-auto">
-        {ABAS.map((a) => (
+        {ABAS.filter((a) => !somenteConsulta || a.key === "grade").map((a) => ( // [CONSULTA-GESTOR]
           <button
             key={a.key}
             onClick={() => setAba(a.key)}
@@ -153,9 +160,9 @@ export default function HorarioHubPage() {
         ))}
       </div>
 
-      {aba === "grade" && <AbaGrade />}
-      {aba === "conflitos" && <AbaConflitos />}
-      {aba === "experimental" && <AbaExperimental />}
+      {(aba === "grade" || somenteConsulta) && <AbaGrade somenteConsulta={somenteConsulta} />}{/* [CONSULTA-GESTOR] */}
+      {!somenteConsulta && aba === "conflitos" && <AbaConflitos />}
+      {!somenteConsulta && aba === "experimental" && <AbaExperimental />}
     </div>
   );
 }
@@ -602,7 +609,7 @@ function DialogAdicionarAula({
 // necessidade aqui é só "ver o que tem e decidir o que fazer", não um
 // formulário completo.
 function DialogDetalheAula({
-  open, onOpenChange, slots, disciplinaNome, onEditar, onExcluir, excluindo,
+  open, onOpenChange, slots, disciplinaNome, onEditar, onExcluir, excluindo, somenteConsulta = false,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -611,6 +618,7 @@ function DialogDetalheAula({
   onEditar: () => void;
   onExcluir: () => void;
   excluindo: boolean;
+  somenteConsulta?: boolean; // [CONSULTA-GESTOR]
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -624,18 +632,18 @@ function DialogDetalheAula({
             <p className="text-xs text-muted-foreground">Aula com co-docência — os dois professores acima dão essa aula juntos.</p>
           )}
         </div>
-        <DialogFooter>
+        {!somenteConsulta && (<DialogFooter>{/* [CONSULTA-GESTOR] */}
           <Button variant="outline" className="text-destructive hover:text-destructive" onClick={onExcluir} disabled={excluindo}>
             <Trash2 className="h-3.5 w-3.5 mr-1" /> {excluindo ? "Excluindo..." : (slots.length > 1 ? "Excluir aula (os dois)" : "Excluir aula")}
           </Button>
           <Button onClick={onEditar}>Editar</Button>
-        </DialogFooter>
+        </DialogFooter>)}
       </DialogContent>
     </Dialog>
   );
 }
 
-function AbaGrade() {
+function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { // [CONSULTA-GESTOR]
   const [turmaId, setTurmaId] = useState<string>(() => new URLSearchParams(window.location.search).get("turma") ?? "all"); // [FASE-A] ?turma=
   const [professorId, setProfessorId] = useState<string>("all");
   const [turno, setTurno] = useState<string>("all");
@@ -790,6 +798,7 @@ function AbaGrade() {
   // turma específica está selecionada (senão não dá pra saber pra
   // qual turma é a aula).
   function abrirAdicionarNaCelula(dia: number, aula: number) {
+    if (somenteConsulta) return; // [CONSULTA-GESTOR]
     if (!isTurmaSelected) {
       toast({ title: "Selecione uma turma específica primeiro", description: "Pra adicionar aula clicando na célula, é preciso saber de qual turma é.", variant: "destructive" });
       return;
@@ -898,11 +907,13 @@ function AbaGrade() {
             />
           </div>
           <Button variant="outline" onClick={() => { setTurmaId("all"); setProfessorId("all"); setTurno("all"); }}>Limpar</Button>
+          {!somenteConsulta && (
           <Button variant="outline" onClick={abrirAdicionarGeral}>
             <Plus className="w-4 h-4 mr-2" />
             Adicionar aula manual
           </Button>
-          {mostrarGeradorSimples() && (
+          )}{/* [CONSULTA-GESTOR] */}
+          {!somenteConsulta && mostrarGeradorSimples() && ( // [CONSULTA-GESTOR]
           <Button onClick={handleGerarGrade} disabled={!isTurmaSelected || gerando} variant="outline" className="border-rose-300 text-rose-700" title="Gerador simples: substitui a grade OFICIAL da turma e NAO respeita aula fixa, HA fixa, trio, assincrona nem a reserva de HA">
             <RefreshCw className={`w-4 h-4 mr-2 ${gerando ? "animate-spin" : ""}`} />
             {gerando ? "Gerando..." : "Gerar Grade (simples)"}
@@ -1112,7 +1123,7 @@ function AbaGrade() {
         aulaExistente={aulaParaEditar}
       />
 
-      <DialogDetalheAula
+      <DialogDetalheAula somenteConsulta={somenteConsulta}
         open={openDetalhe}
         onOpenChange={setOpenDetalhe}
         slots={detalheSlots}

@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Download, FileText, Table, BarChart3, FileDown, ClipboardList, TrendingUp, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { BotaoRelatorioReservas } from "@/components/relatorio-reservas"; // [RELATORIO-RESERVAS]
 
 function buildUrl(path: string, params: Record<string, string | undefined>) {
   const url = new URL(path, window.location.origin);
@@ -344,6 +345,19 @@ export default function ExportPage() {
             >
               {baixando["pdf"] ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}{baixando["pdf"] ? "Gerando..." : "Baixar PDF"}
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* [RELATORIO-RESERVAS] Relatório de Reservas por Professor */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ClipboardList className="w-4 h-4" /> Relatório de Reservas
+            </CardTitle>
+            <CardDescription>Reservas de salas e espaços por professor, num período: confirmadas, pendentes e canceladas. Em PDF ou Excel.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <BotaoRelatorioReservas />
           </CardContent>
         </Card>
 

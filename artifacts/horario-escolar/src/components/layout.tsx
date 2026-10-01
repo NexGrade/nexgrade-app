@@ -108,7 +108,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // [PAPEL-RESERVAS] gestor de reservas ve so o item Reservas no menu
   const grupos = orgRole === PAPEL_RESERVAS
     ? navGroups
-        .map((g) => ({ ...g, items: g.items.filter((i) => i.href === "/reservas") }))
+        .map((g) => ({ ...g, items: g.items.filter((i) => i.href === "/horario" || i.href === "/reservas") })) // [CONSULTA-GESTOR]
         .filter((g) => g.items.length > 0)
     : gruposCompletos;
 
