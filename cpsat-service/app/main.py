@@ -1,9 +1,30 @@
 import os
-from fastapi import FastAPI, HTTPException
+import hmac  # [CPSAT-TOKEN]
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse  # [CPSAT-TOKEN]
 from google import genai
 from .solver import gerar_grade
 from .pipeline_coordenada import gerar_grade_coordenada
 app = FastAPI(title="Nexgrade CP-SAT Solver API")
+
+# [CPSAT-TOKEN] (2026-10-01) Chave secreta compartilhada com a API do NexGrade.
+# Com CPSAT_TOKEN definido, toda rota exceto "/" (saude) exige o cabecalho
+# X-NexGrade-Token com a chave certa; sem ele, responde 401 e nao roda o solver.
+# Sem CPSAT_TOKEN, segue aberto (como antes) e avisa no log.
+CPSAT_TOKEN = os.getenv("CPSAT_TOKEN", "").strip().strip('"').strip("'")
+if not CPSAT_TOKEN:
+    print("[CPSAT-TOKEN] AVISO: CPSAT_TOKEN nao definido -- rotas de geracao ABERTAS sem chave.", flush=True)
+else:
+    print("[CPSAT-TOKEN] protecao ativa: rotas de geracao exigem X-NexGrade-Token.", flush=True)
+
+
+@app.middleware("http")
+async def exigir_chave_nexgrade(request: Request, call_next):
+    if CPSAT_TOKEN and request.url.path != "/":
+        enviada = request.headers.get("x-nexgrade-token", "")
+        if not hmac.compare_digest(enviada.encode("utf-8"), CPSAT_TOKEN.encode("utf-8")):
+            return JSONResponse(status_code=401, content={"detail": "Nao autorizado."})
+    return await call_next(request)
 api_key = os.getenv("GEMINI_API_KEY", "").strip().strip('"').strip("'")
 gemini_client = genai.Client(api_key=api_key) if api_key else None
 def gerar_diagnostico_fallback(dados_requisicao: dict, log_solver: str = "") -> str:

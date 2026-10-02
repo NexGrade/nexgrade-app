@@ -1248,6 +1248,9 @@ router.post("/corrigir-professor", async (req, res) => {
 // ── GERAÇÃO COM CP-SAT (OR-Tools) ───────────────────────────────────
 
 const CPSAT_SERVICE_URL = process.env.CPSAT_SERVICE_URL || "https://nexgrade-cpsat.onrender.com";
+// [CPSAT-TOKEN] chave secreta compartilhada com o CP-SAT (variavel de ambiente no Render).
+// Enviada no cabecalho X-NexGrade-Token; o CP-SAT recusa (401) quem nao envia.
+const CPSAT_TOKEN = (process.env.CPSAT_TOKEN ?? "").trim();
 
 async function aguardarCpsatServiceAcordado(maxEsperaMs = 90_000): Promise<void> {
   const inicio = Date.now();
@@ -1791,7 +1794,7 @@ async function runCpsatGeneracaoUnica(
       // medios/grandes (60KB+) na rede interna do Render, mesmo dentro do
       // timeout configurado. axios usa http/https nativos do Node.
       const axiosResponse = await axios.post(`${CPSAT_SERVICE_URL}/${modoMelhoria ? "melhorar-grade" : usarCoordenacao ? "gerar-grade-coordenada" : "gerar-grade"}`, modoMelhoria ? { ...payloadComHa, aulasIniciais } : payloadComHa, { // [MELHORAR-GRADE] [HA-NO-CPSAT]
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(CPSAT_TOKEN ? { "X-NexGrade-Token": CPSAT_TOKEN } : {}) }, // [CPSAT-TOKEN]
         timeout: timeoutMs,
         validateStatus: () => true,
         signal,
