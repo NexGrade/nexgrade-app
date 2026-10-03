@@ -33,7 +33,7 @@ jobs:
           test -n "$RUN" || { echo "::error::Nenhuma copia de backup com sucesso encontrada"; exit 1; }
           echo "Execucao do backup usada: $RUN"
           gh run download "$RUN" -R "$GITHUB_REPOSITORY" -D baixado
-          ARQ=$(find baixado -name '*.gpg' | head -n 1)
+          ARQ=$(find baixado -type f -name '*.gpg' | head -n 1)
           test -n "$ARQ" || { echo "::error::Arquivo .gpg nao encontrado"; exit 1; }
           echo "Copia: $(basename "$ARQ") ($(du -h "$ARQ" | cut -f1))"
           echo "ARQ=$ARQ" >> "$GITHUB_ENV"
