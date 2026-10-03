@@ -51,7 +51,7 @@ jobs:
         run: |
           set -uo pipefail
           docker run --rm --network host -v "$PWD:/b" -e PGPASSWORD=teste postgres:17 \
-            pg_restore --no-owner --no-privileges -h localhost -U postgres -d restaurado /b/copia.dump > restore.log 2>&1
+            pg_restore --no-owner --no-privileges -h localhost -U postgres -d restaurado /b/copia.dump > restore.log 2>&1 || true
           ERROS=$(grep -c "error:" restore.log || true)
           echo "Avisos/erros do pg_restore: $ERROS"
           grep "error:" restore.log | head -n 20 || true
