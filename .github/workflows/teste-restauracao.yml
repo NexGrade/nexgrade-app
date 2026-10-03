@@ -1,0 +1,80 @@
+# Teste de restauracao: restaura a copia mais recente num banco TEMPORARIO e compara com a producao.
+# Nao altera a producao (so le). Rodar pelo botao "Run workflow".
+name: Teste de restauracao do backup
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  restaurar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      teste:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: teste
+          POSTGRES_DB: restaurado
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - name: Baixar a copia mais recente
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          RUN=$(gh run list -R "$GITHUB_REPOSITORY" --workflow backup-banco.yml --status success --limit 1 --json databaseId,createdAt -q '.[0].databaseId')
+          test -n "$RUN" || { echo "::error::Nenhuma copia de backup com sucesso encontrada"; exit 1; }
+          echo "Execucao do backup usada: $RUN"
+          gh run download "$RUN" -R "$GITHUB_REPOSITORY" -D baixado
+          ARQ=$(find baixado -name '*.gpg' | head -n 1)
+          test -n "$ARQ" || { echo "::error::Arquivo .gpg nao encontrado"; exit 1; }
+          echo "Copia: $(basename "$ARQ") ($(du -h "$ARQ" | cut -f1))"
+          echo "ARQ=$ARQ" >> "$GITHUB_ENV"
+
+      - name: Abrir a criptografia
+        env:
+          SENHA: ${{ secrets.BACKUP_SENHA }}
+        run: |
+          set -euo pipefail
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$SENHA" -o copia.dump -d "$ARQ"
+          test -s copia.dump
+          echo "Criptografia aberta com sucesso."
+
+      - name: Restaurar no banco temporario
+        run: |
+          set -uo pipefail
+          docker run --rm --network host -v "$PWD:/b" -e PGPASSWORD=teste postgres:17 \
+            pg_restore --no-owner --no-privileges -h localhost -U postgres -d restaurado /b/copia.dump > restore.log 2>&1
+          ERROS=$(grep -c "error:" restore.log || true)
+          echo "Avisos/erros do pg_restore: $ERROS"
+          grep "error:" restore.log | head -n 20 || true
+          echo "ERROS=$ERROS" >> "$GITHUB_ENV"
+
+      - name: Comparar com a producao
+        env:
+          PROD: ${{ secrets.BACKUP_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          Q="select 'escolas', count(*) from escolas union all select 'professores', count(*) from professores union all select 'turmas', count(*) from turmas union all select 'disciplinas', count(*) from disciplinas union all select 'turma_disciplinas', count(*) from turma_disciplinas union all select 'horarios (grade)', count(*) from horarios union all select 'disponibilidade', count(*) from disponibilidade_professores"
+          docker run --rm --network host -e PGPASSWORD=teste postgres:17 psql -h localhost -U postgres -d restaurado -At -F '|' -c "$Q" > restaurado.txt
+          docker run --rm -e PROD postgres:17 sh -c 'psql "$PROD" -At -F "|" -c "$0"' "$Q" > producao.txt
+          echo "TABELA | RESTAURADO | PRODUCAO AGORA"
+          DIF=0
+          while IFS='|' read -r t r; do
+            p=$(grep "^$t|" producao.txt | cut -d'|' -f2)
+            marca=""; [ "$r" = "$p" ] || { marca="  <- diferente"; DIF=$((DIF+1)); }
+            echo "$t | $r | $p$marca"
+          done < restaurado.txt
+          echo ""
+          if [ "$(grep '^escolas|' restaurado.txt | cut -d'|' -f2)" -gt 0 ]; then
+            echo "RESULTADO: copia restaurada com sucesso ($DIF tabela(s) com diferenca desde a hora da copia; $ERROS aviso(s) do pg_restore)."
+          else
+            echo "::error::A copia restaurada nao tem escolas."; exit 1
+          fi
