@@ -1,0 +1,58 @@
+# Backup diario do banco do NexGrade (pg_dump criptografado, guardado 14 dias como artefato).
+# Ponte gratuita ate a migracao para o backup diario do Supabase Pro.
+# Segredos usados: BACKUP_DATABASE_URL (pooler, porta 5432) e BACKUP_SENHA (criptografia).
+name: Backup diario do banco
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # todo dia as 06:00 UTC = 03:00 em Brasilia
+  workflow_dispatch:      # botao "Run workflow" para rodar na hora
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-banco
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Conferir os segredos
+        env:
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          SENHA: ${{ secrets.BACKUP_SENHA }}
+        run: |
+          test -n "$DATABASE_URL" || { echo "::error::Falta o segredo BACKUP_DATABASE_URL"; exit 1; }
+          test -n "$SENHA" || { echo "::error::Falta o segredo BACKUP_SENHA"; exit 1; }
+          echo "ARQ=nexgrade-$(TZ=America/Sao_Paulo date +%Y%m%d-%H%M).dump" >> "$GITHUB_ENV"
+
+      - name: Copiar o banco (pg_dump)
+        env:
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          docker run --rm -e DATABASE_URL postgres:17 \
+            sh -c 'pg_dump --format=custom --no-owner --no-privileges --schema=public --schema=drizzle "$DATABASE_URL"' > "$ARQ"
+          test -s "$ARQ" || { echo "::error::A copia saiu vazia"; exit 1; }
+          echo "Tamanho da copia: $(du -h "$ARQ" | cut -f1)"
+          docker run --rm -v "$PWD:/b" postgres:17 pg_restore --list "/b/$ARQ" | grep -c "TABLE DATA" | xargs -I{} echo "Tabelas com dados na copia: {}"
+
+      - name: Criptografar
+        env:
+          SENHA: ${{ secrets.BACKUP_SENHA }}
+        run: |
+          set -euo pipefail
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$SENHA" --symmetric --cipher-algo AES256 -o "$ARQ.gpg" "$ARQ"
+          rm -f "$ARQ"
+          ls -lh "$ARQ.gpg"
+
+      - name: Guardar a copia (14 dias)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARQ }}.gpg
+          path: ${{ env.ARQ }}.gpg
+          retention-days: 14
+          if-no-files-found: error
