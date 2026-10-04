@@ -8,7 +8,8 @@ import { Send, Bot, User, Sparkles, AlertCircle, Plus, Check, X } from "lucide-r
 import { cn } from "@/lib/utils";
 
 type AcaoPendente =
-  | { tipo: "definir_disponibilidade"; payload: { professorId: number; diaSemana: number; horarioSlot: number; disponivel: boolean; motivo?: string } }
+  | { tipo: "definir_disponibilidade"; payload: { professorId: number; diaSemana: number; horarioSlot: number; disponivel: boolean; motivo?: string; turno: "matutino" | "vespertino" | "noturno" } }
+  // [IA-AMPLIADA] desativado no servidor; mantido so para conversas antigas
   | { tipo: "gerar_horario_turma"; payload: { turmaId: number; substituir: boolean } };
 
 type Msg = {

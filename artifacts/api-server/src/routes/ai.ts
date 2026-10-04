@@ -3,12 +3,14 @@ import { db } from "@workspace/db";
 import {
   professoresTable, turmasTable, disciplinasTable, horariosTable,
   aiConversasTable, aiMensagensTable, disponibilidadeTable, auditLogsTable,
+  reservasTable, salasTable, regrasReservaProfessorTable, horarioSlotsTable,
 } from "@workspace/db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, or, isNull, gte, lte, ne } from "drizzle-orm";
 import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
-import { gerarAlgoritmo } from "./horarios";
 import { limitadorIA } from "../middlewares/rateLimit";
+// [IA-AMPLIADA] gerarAlgoritmo (motor simples antigo) nao e mais usado aqui:
+// a geracao de grade saiu do assistente -- ver "gerar_horario_turma" abaixo.
 
 const router = Router();
 
@@ -19,6 +21,25 @@ router.use(["/chat", "/executar-acao"], limitadorIA);
 function getUsuarioId(req: any): string | null {
   return req.auth?.userId ?? null;
 }
+
+// [IA-SEGURANCA] Confere se a conversa pertence a escola logada. Antes o
+// /chat e o /executar-acao aceitavam qualquer conversaId vindo do cliente
+// (liam o historico e gravavam mensagens em conversa de outra escola).
+async function conversaEhDaEscola(conversaId: number, escolaId: string): Promise<boolean> {
+  if (!Number.isInteger(conversaId)) return false;
+  const [c] = await db
+    .select({ id: aiConversasTable.id })
+    .from(aiConversasTable)
+    .where(and(eq(aiConversasTable.id, conversaId), eq(aiConversasTable.escolaId, escolaId)));
+  return !!c;
+}
+
+// [IA-AMPLIADA] Mesmo filtro da Minha Agenda e das Reservas: so a grade
+// oficial (ou linhas antigas sem versao) -- nunca rascunho/experimento.
+const SO_GRADE_OFICIAL = or(eq(horariosTable.versaoGrade, "oficial"), isNull(horariosTable.versaoGrade));
+
+const TURNOS = ["matutino", "vespertino", "noturno"] as const;
+type Turno = (typeof TURNOS)[number];
 
 // GET /ai/conversas — lista conversas da escola
 router.get("/conversas", async (req, res) => {
@@ -55,6 +76,11 @@ router.delete("/conversas/:id", async (req, res) => {
 // GET /ai/conversas/:id/mensagens
 router.get("/conversas/:id/mensagens", async (req, res) => {
   const id = Number(req.params.id);
+  // [IA-SEGURANCA] so devolve mensagens de conversa da propria escola
+  if (!(await conversaEhDaEscola(id, getEscolaId(req)))) {
+    res.status(404).json({ error: "Conversa não encontrada" });
+    return;
+  }
   const mensagens = await db
     .select()
     .from(aiMensagensTable)
@@ -112,21 +138,69 @@ const tools = [
         horarioSlot: { type: "integer", description: "Número do período/aula dentro do dia, começando em 1" },
         disponivel: { type: "boolean", description: "true para marcar como disponível, false para indisponível" },
         motivo: { type: "string", description: "Motivo opcional da indisponibilidade" },
+        // [IA-AMPLIADA] sem turno, "terça 2ª aula" de professor com aula de
+        // manha e de noite era ambiguo (mesmo problema do Bug 4 da HA).
+        turno: { type: "string", enum: ["matutino", "vespertino", "noturno"], description: "Turno da aula. Informe se o usuário disse (manhã=matutino, tarde=vespertino, noite=noturno); se não disse, omita." },
       },
       required: ["professorNome", "diaSemana", "horarioSlot", "disponivel"],
     },
   },
+  // [IA-AMPLIADA] "gerar_horario_turma" foi RETIRADO do assistente: usava o
+  // motor simples antigo (5 aulas fixas, sem HA, sem CP-SAT) e, com
+  // substituir=true, podia trocar a grade oficial da turma por uma pior.
+  // Geracao de grade agora so pelas telas (CP-SAT) -- o assistente orienta.
+  // ── CONSULTAS NOVAS (so leitura, nunca alteram nada) ──────────────────
   {
     type: "function" as const,
-    name: "gerar_horario_turma",
-    description: "Gera (ou regenera) automaticamente a grade horária de uma turma específica.",
+    name: "consultar_grade_professor",
+    description:
+      "Mostra a grade oficial de UM professor: dia, aula, turma, disciplina, turno e se é assíncrona, mais as horas-atividade (HA) dele (HA* = HA em contraturno). Use para 'qual o horário do professor X', 'quando a X dá aula', 'quando é a HA do Y', 'em que turma o Z está na quarta'.",
+    parameters: {
+      type: "object" as const,
+      properties: { professorNome: { type: "string", description: "Nome (ou parte do nome) do professor" } },
+      required: ["professorNome"],
+    },
+  },
+  {
+    type: "function" as const,
+    name: "consultar_grade_turma",
+    description:
+      "Mostra a grade oficial de UMA turma: dia, aula, disciplina e professor. Use para 'qual o horário da turma X', 'quem dá aula no 2A na terça', 'que aula o 3D tem na 1ª aula de sexta'.",
+    parameters: {
+      type: "object" as const,
+      properties: { turmaNome: { type: "string", description: "Nome da turma (ex.: 2A, 3D TEC)" } },
+      required: ["turmaNome"],
+    },
+  },
+  {
+    type: "function" as const,
+    name: "consultar_professores_livres",
+    description:
+      "Lista os professores SEM aula e SEM bloqueio (HA, indisponibilidade) num dia/aula/turno — útil para achar quem pode cobrir uma falta ou substituir. Também separa quem está livre mas em HA. Use para 'quem está livre', 'quem pode substituir', 'quem cobre a aula de'.",
     parameters: {
       type: "object" as const,
       properties: {
-        turmaNome: { type: "string", description: "Nome da turma mencionada pelo usuário" },
-        substituir: { type: "boolean", description: "Se true, substitui o horário já existente da turma" },
+        diaSemana: { type: "integer", description: "0=Segunda, 1=Terça, 2=Quarta, 3=Quinta, 4=Sexta" },
+        numeroAula: { type: "integer", description: "Número da aula no dia, começando em 1" },
+        turno: { type: "string", enum: ["matutino", "vespertino", "noturno"], description: "Turno (manhã=matutino, tarde=vespertino, noite=noturno)" },
       },
-      required: ["turmaNome"],
+      required: ["diaSemana", "numeroAula", "turno"],
+    },
+  },
+  {
+    type: "function" as const,
+    name: "consultar_reservas",
+    description:
+      "Consulta reservas de salas/espaços num período (padrão: hoje até 7 dias), com filtros opcionais de professor e sala. Devolve também o limite semanal e quantas reservas ativas o professor tem na semana. Use para 'reservas da semana', 'o laboratório está livre', 'quantas reservas a professora X ainda pode fazer'.",
+    parameters: {
+      type: "object" as const,
+      properties: {
+        dataInicio: { type: "string", description: "Data inicial AAAA-MM-DD (padrão: hoje)" },
+        dataFim: { type: "string", description: "Data final AAAA-MM-DD (padrão: 7 dias depois do início)" },
+        professorNome: { type: "string", description: "Filtrar por professor (opcional)" },
+        salaNome: { type: "string", description: "Filtrar por sala/espaço (opcional)" },
+        incluirCanceladas: { type: "boolean", description: "Incluir reservas canceladas (padrão: false)" },
+      },
     },
   },
   // [NOVO] Primeira ferramenta de CONSULTA (só leitura) do assistente --
@@ -159,18 +233,55 @@ const tools = [
 ];
 
 type AcaoPendente =
-  | { tipo: "definir_disponibilidade"; payload: { professorId: number; diaSemana: number; horarioSlot: number; disponivel: boolean; motivo?: string } }
-  | { tipo: "gerar_horario_turma"; payload: { turmaId: number; substituir: boolean } };
+  | { tipo: "definir_disponibilidade"; payload: { professorId: number; diaSemana: number; horarioSlot: number; disponivel: boolean; motivo?: string; turno: Turno } };
 
-// [NOVO] Mesma lógica de "janela" (buraco entre aulas no mesmo dia) já
-// usada visualmente na aba Grade/Modo Experimental do front -- aqui
-// calculada uma vez pra escola inteira, pra alimentar a ferramenta de
-// consulta do assistente. Considera só do primeiro ao último horário
-// ocupado do professor naquele dia (não conta antes/depois como
-// janela, só o que está "no meio").
+// ── CONSULTAS DO ASSISTENTE (so leitura) ───────────────────────────────
+// [IA-AMPLIADA] Todas filtram por escolaId e so leem a grade OFICIAL.
+
+const nomeDia = (d: number) => DIAS_SEMANA[d] ?? `dia ${d}`;
+
+// Busca por nome igual ao das acoes: ignora maiusculas/acentos e, se
+// houver um nome EXATO entre varios parecidos, fica com ele.
+function semAcento(s: string) {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+}
+function buscarPorNome<T extends { nome: string }>(lista: T[], termo: string): T[] {
+  const t = semAcento(termo);
+  if (!t) return [];
+  const exatos = lista.filter((x) => semAcento(x.nome) === t);
+  if (exatos.length === 1) return exatos;
+  return lista.filter((x) => semAcento(x.nome).includes(t));
+}
+// Resposta padrao quando o nome nao bate com exatamente um cadastro.
+function resultadoNomeAmbiguo(tipo: string, termo: string, candidatos: Array<{ nome: string }>) {
+  return candidatos.length === 0
+    ? { erro: `Nenhum(a) ${tipo} encontrado(a) com o nome "${termo}".` }
+    : { erro: `Mais de um(a) ${tipo} com esse nome — pergunte ao usuário qual é.`, opcoes: candidatos.slice(0, 15).map((c) => c.nome) };
+}
+
+// Linhas da grade oficial da escola, ja com o turno da turma.
+async function gradeOficialComTurno(escolaId: string) {
+  return db
+    .select({
+      professorId: horariosTable.professorId,
+      turmaId: horariosTable.turmaId,
+      disciplinaId: horariosTable.disciplinaId,
+      diaSemana: horariosTable.diaSemana,
+      numeroAula: horariosTable.numeroAula,
+      assincrona: horariosTable.assincrona,
+      turno: turmasTable.turno,
+    })
+    .from(horariosTable)
+    .innerJoin(turmasTable, eq(turmasTable.id, horariosTable.turmaId))
+    .where(and(eq(horariosTable.escolaId, escolaId), SO_GRADE_OFICIAL));
+}
+
+// Mesma logica de "janela" (buraco entre aulas no mesmo dia) da aba
+// Grade. [IA-AMPLIADA] Agora por TURNO + dia: professor com aula de manha
+// e de noite nao ganha mais "janela" falsa no intervalo entre os turnos.
 async function calcularJanelasProfessores(escolaId: string) {
   const [slots, profs] = await Promise.all([
-    db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
+    gradeOficialComTurno(escolaId),
     db.select({ id: professoresTable.id, nome: professoresTable.nome })
       .from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
   ]);
@@ -184,39 +295,39 @@ async function calcularJanelasProfessores(escolaId: string) {
   return profs
     .map((p) => {
       const slotsProf = porProf.get(p.id) ?? [];
-      const porDia = new Map<number, number[]>();
+      const porTurnoDia = new Map<string, { turno: string; dia: number; aulas: number[] }>();
       slotsProf.forEach((s) => {
-        if (!porDia.has(s.diaSemana)) porDia.set(s.diaSemana, []);
-        porDia.get(s.diaSemana)!.push(s.numeroAula);
+        const k = `${s.turno}-${s.diaSemana}`;
+        if (!porTurnoDia.has(k)) porTurnoDia.set(k, { turno: s.turno, dia: s.diaSemana, aulas: [] });
+        porTurnoDia.get(k)!.aulas.push(s.numeroAula);
       });
 
       let totalJanelas = 0;
-      const detalhePorDia: Record<string, number> = {};
-      for (const [dia, aulas] of porDia.entries()) {
-        const ordenado = [...aulas].sort((a, b) => a - b);
+      const detalhe: Record<string, number> = {};
+      for (const { turno, dia, aulas } of porTurnoDia.values()) {
+        const ordenado = [...new Set(aulas)].sort((a, b) => a - b);
         const min = ordenado[0]!;
         const max = ordenado[ordenado.length - 1]!;
         const ocupados = new Set(ordenado);
-        let janelasDoDia = 0;
-        for (let i = min; i <= max; i++) if (!ocupados.has(i)) janelasDoDia++;
-        if (janelasDoDia > 0) detalhePorDia[DIAS_SEMANA[dia] ?? `dia ${dia}`] = janelasDoDia;
-        totalJanelas += janelasDoDia;
+        let janelas = 0;
+        for (let i = min; i <= max; i++) if (!ocupados.has(i)) janelas++;
+        if (janelas > 0) detalhe[`${nomeDia(dia)} (${turno})`] = janelas;
+        totalJanelas += janelas;
       }
 
-      return { professor: p.nome, totalAulas: slotsProf.length, totalJanelas, detalhePorDia };
+      return { professor: p.nome, totalAulas: slotsProf.length, totalJanelas, detalhe };
     })
     .sort((a, b) => b.totalJanelas - a.totalJanelas);
 }
 
-// [NOVO] Mesma lógica já usada em routes/stats.ts pro card "Turmas sem
-// Horário" da Visão Geral -- aqui devolve também os NOMES (o card só
-// mostrava o número), que é o que o assistente precisa pra responder
-// "quais" turmas, não só "quantas".
+// Mesma logica do card "Turmas sem Horario" da Visao Geral, com os NOMES.
+// [IA-AMPLIADA] so grade oficial e sem turmas fantasma (PAEE).
 async function consultarTurmasSemHorario(escolaId: string) {
   const [turmas, horarios] = await Promise.all([
     db.select({ id: turmasTable.id, nome: turmasTable.nome, turno: turmasTable.turno })
-      .from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
-    db.select({ turmaId: horariosTable.turmaId }).from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
+      .from(turmasTable).where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.fantasma, false))),
+    db.select({ turmaId: horariosTable.turmaId }).from(horariosTable)
+      .where(and(eq(horariosTable.escolaId, escolaId), SO_GRADE_OFICIAL)),
   ]);
   const turmasComHorario = new Set(horarios.map((h) => h.turmaId));
   const semHorario = turmas.filter((t) => !turmasComHorario.has(t.id));
@@ -227,25 +338,307 @@ async function consultarTurmasSemHorario(escolaId: string) {
   };
 }
 
-// [NOVO] Total de aulas alocadas por dia da semana e por turno -- pra
-// responder se a grade está "equilibrada" (ex: sexta muito mais vazia
-// que segunda) sem o usuário precisar abrir a aba Grade e contar na mão.
+// Total de aulas por dia da semana e por turno (so grade oficial).
 async function consultarDistribuicaoSemanal(escolaId: string) {
-  const [horarios, turmas] = await Promise.all([
-    db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
-    db.select({ id: turmasTable.id, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
-  ]);
-  const turmaTurno = new Map(turmas.map((t) => [t.id, t.turno]));
+  const horarios = await gradeOficialComTurno(escolaId);
   const porDia: Record<string, number> = {};
   const porDiaETurno: Record<string, Record<string, number>> = {};
   horarios.forEach((h) => {
-    const dia = DIAS_SEMANA[h.diaSemana] ?? `dia ${h.diaSemana}`;
-    const turno = turmaTurno.get(h.turmaId) ?? "desconhecido";
+    const dia = nomeDia(h.diaSemana);
+    const turno = h.turno ?? "desconhecido";
     porDia[dia] = (porDia[dia] ?? 0) + 1;
     porDiaETurno[dia] = porDiaETurno[dia] ?? {};
     porDiaETurno[dia]![turno] = (porDiaETurno[dia]![turno] ?? 0) + 1;
   });
   return { totalAulas: horarios.length, porDia, porDiaETurno };
+}
+
+// [IA-AMPLIADA] Horario de inicio de cada aula por turno (esquema da escola),
+// para a IA poder dizer "2ª aula (08:20)". Matutino pode ter dois esquemas
+// (Fundamental/Medio) -- o horario de inicio e o mesmo nas aulas em comum.
+async function horaInicioPorTurno(escolaId: string) {
+  const slots = await db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId));
+  const mapa = new Map<string, string>();
+  for (const s of slots) {
+    if ((s as { letivo?: boolean | null }).letivo === false) continue;
+    const k = `${s.turno}-${s.numeroAula}`;
+    if (!mapa.has(k)) mapa.set(k, String(s.horaInicio ?? "").slice(0, 5));
+  }
+  return mapa;
+}
+
+// Turnos em que o professor tem aula na grade oficial (base do HA*).
+async function turnosComAulaOficial(escolaId: string, professorId: number): Promise<Set<string>> {
+  const linhas = await db
+    .select({ turno: turmasTable.turno })
+    .from(horariosTable)
+    .innerJoin(turmasTable, eq(turmasTable.id, horariosTable.turmaId))
+    .where(and(eq(horariosTable.escolaId, escolaId), eq(horariosTable.professorId, professorId), SO_GRADE_OFICIAL));
+  return new Set(linhas.map((l) => l.turno).filter(Boolean));
+}
+
+async function consultarGradeProfessor(escolaId: string, professorNome: string) {
+  const profs = await db.select({ id: professoresTable.id, nome: professoresTable.nome })
+    .from(professoresTable).where(eq(professoresTable.escolaId, escolaId));
+  const candidatos = buscarPorNome(profs, professorNome);
+  if (candidatos.length !== 1) return resultadoNomeAmbiguo("professor", professorNome, candidatos);
+  const prof = candidatos[0]!;
+
+  const [aulas, bloqueios, horas, turnosComAula] = await Promise.all([
+    db
+      .select({
+        diaSemana: horariosTable.diaSemana,
+        numeroAula: horariosTable.numeroAula,
+        assincrona: horariosTable.assincrona,
+        turma: turmasTable.nome,
+        turno: turmasTable.turno,
+        disciplina: disciplinasTable.nome,
+      })
+      .from(horariosTable)
+      .innerJoin(turmasTable, eq(turmasTable.id, horariosTable.turmaId))
+      .innerJoin(disciplinasTable, eq(disciplinasTable.id, horariosTable.disciplinaId))
+      .where(and(eq(horariosTable.escolaId, escolaId), eq(horariosTable.professorId, prof.id), SO_GRADE_OFICIAL))
+      .orderBy(horariosTable.diaSemana, horariosTable.numeroAula),
+    db.select().from(disponibilidadeTable)
+      .where(and(eq(disponibilidadeTable.professorId, prof.id), eq(disponibilidadeTable.disponivel, false))),
+    horaInicioPorTurno(escolaId),
+    turnosComAulaOficial(escolaId, prof.id),
+  ]);
+
+  const ha = bloqueios.filter((b) => b.horaAtividadeObrigatoria);
+  const outros = bloqueios.filter((b) => !b.horaAtividadeObrigatoria);
+  return {
+    professor: prof.nome,
+    totalAulas: aulas.length,
+    aulas: aulas.map((a) => ({
+      dia: nomeDia(a.diaSemana),
+      aula: a.numeroAula,
+      inicio: horas.get(`${a.turno}-${a.numeroAula}`) ?? null,
+      turno: a.turno,
+      turma: a.turma,
+      disciplina: a.disciplina,
+      ...(a.assincrona ? { assincrona: true } : {}),
+    })),
+    horaAtividade: {
+      total: ha.length,
+      observacao: "HA* = hora-atividade em contraturno (num turno em que o professor não tem aula).",
+      slots: ha
+        .sort((a, b) => a.diaSemana - b.diaSemana || a.horarioSlot - b.horarioSlot)
+        .map((h) => ({
+          dia: nomeDia(h.diaSemana),
+          aula: h.horarioSlot,
+          turno: h.turno ?? "sem turno",
+          inicio: h.turno ? horas.get(`${h.turno}-${h.horarioSlot}`) ?? null : null,
+          rotulo: h.turno && !turnosComAula.has(h.turno) ? "HA*" : "HA",
+        })),
+    },
+    outrasIndisponibilidades: outros.map((o) => ({
+      dia: nomeDia(o.diaSemana), aula: o.horarioSlot, turno: o.turno ?? "sem turno", motivo: o.motivo ?? null,
+    })),
+  };
+}
+
+async function consultarGradeTurma(escolaId: string, turmaNome: string) {
+  const turmas = await db.select({ id: turmasTable.id, nome: turmasTable.nome, turno: turmasTable.turno })
+    .from(turmasTable).where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.fantasma, false)));
+  const candidatas = buscarPorNome(turmas, turmaNome);
+  if (candidatas.length !== 1) return resultadoNomeAmbiguo("turma", turmaNome, candidatas);
+  const turma = candidatas[0]!;
+
+  const [aulas, horas] = await Promise.all([
+    db
+      .select({
+        diaSemana: horariosTable.diaSemana,
+        numeroAula: horariosTable.numeroAula,
+        assincrona: horariosTable.assincrona,
+        disciplina: disciplinasTable.nome,
+        professor: professoresTable.nome,
+      })
+      .from(horariosTable)
+      .innerJoin(disciplinasTable, eq(disciplinasTable.id, horariosTable.disciplinaId))
+      .innerJoin(professoresTable, eq(professoresTable.id, horariosTable.professorId))
+      .where(and(eq(horariosTable.escolaId, escolaId), eq(horariosTable.turmaId, turma.id), SO_GRADE_OFICIAL))
+      .orderBy(horariosTable.diaSemana, horariosTable.numeroAula),
+    horaInicioPorTurno(escolaId),
+  ]);
+
+  return {
+    turma: turma.nome,
+    turno: turma.turno,
+    totalAulas: aulas.filter((a) => !a.assincrona).length,
+    observacao: "Aulas assíncronas (docência em trio) são do professor, não ocupam a turma presencialmente.",
+    aulas: aulas.map((a) => ({
+      dia: nomeDia(a.diaSemana),
+      aula: a.numeroAula,
+      inicio: horas.get(`${turma.turno}-${a.numeroAula}`) ?? null,
+      disciplina: a.disciplina,
+      professor: a.professor,
+      ...(a.assincrona ? { assincrona: true } : {}),
+    })),
+  };
+}
+
+async function consultarProfessoresLivres(escolaId: string, diaSemana: number, numeroAula: number, turno: Turno) {
+  const [profs, grade, bloqueios] = await Promise.all([
+    db.select({ id: professoresTable.id, nome: professoresTable.nome, ativo: professoresTable.ativo })
+      .from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
+    gradeOficialComTurno(escolaId),
+    db
+      .select({
+        professorId: disponibilidadeTable.professorId,
+        turno: disponibilidadeTable.turno,
+        ha: disponibilidadeTable.horaAtividadeObrigatoria,
+        motivo: disponibilidadeTable.motivo,
+      })
+      .from(disponibilidadeTable)
+      .innerJoin(professoresTable, eq(professoresTable.id, disponibilidadeTable.professorId))
+      .where(and(
+        eq(professoresTable.escolaId, escolaId),
+        eq(disponibilidadeTable.diaSemana, diaSemana),
+        eq(disponibilidadeTable.horarioSlot, numeroAula),
+        eq(disponibilidadeTable.disponivel, false),
+      )),
+  ]);
+
+  const turnosDoProf = new Map<number, Set<string>>();
+  const ocupados = new Set<number>();
+  for (const g of grade) {
+    if (!turnosDoProf.has(g.professorId)) turnosDoProf.set(g.professorId, new Set());
+    turnosDoProf.get(g.professorId)!.add(g.turno);
+    if (g.diaSemana === diaSemana && g.numeroAula === numeroAula && g.turno === turno) ocupados.add(g.professorId);
+  }
+  // Bloqueio do mesmo turno (ou antigo, sem turno) conta.
+  const bloqueioPorProf = new Map<number, { ha: boolean; motivo: string | null }>();
+  for (const b of bloqueios) {
+    if (b.turno && b.turno !== turno) continue;
+    const atual = bloqueioPorProf.get(b.professorId);
+    bloqueioPorProf.set(b.professorId, { ha: (atual?.ha ?? false) || b.ha, motivo: atual?.motivo ?? b.motivo });
+  }
+
+  const livresNoTurno: string[] = [];
+  const livresDeOutroTurno: string[] = [];
+  const emHA: string[] = [];
+  const indisponiveis: Array<{ professor: string; motivo: string | null }> = [];
+  for (const p of profs) {
+    if (p.ativo === false || ocupados.has(p.id)) continue;
+    const bloq = bloqueioPorProf.get(p.id);
+    if (bloq?.ha) { emHA.push(p.nome); continue; }
+    if (bloq) { indisponiveis.push({ professor: p.nome, motivo: bloq.motivo }); continue; }
+    if (turnosDoProf.get(p.id)?.has(turno)) livresNoTurno.push(p.nome);
+    else livresDeOutroTurno.push(p.nome);
+  }
+
+  return {
+    consulta: { dia: nomeDia(diaSemana), aula: numeroAula, turno },
+    livresQueJaDaoAulaNesseTurno: livresNoTurno.sort(),
+    livresMasSemAulaNesseTurno: livresDeOutroTurno.sort(),
+    emHoraAtividade: emHA.sort(),
+    indisponiveis,
+    observacao: "Prefira sugerir quem já dá aula nesse turno (está na escola). Quem está em HA está livre de turma mas cumprindo hora-atividade.",
+  };
+}
+
+function dataISO(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+function hojeSaoPaulo() {
+  return new Date(Date.now() - 3 * 60 * 60 * 1000); // UTC-3, so para escolher o "hoje" padrao
+}
+// Segunda-feira da semana de uma data (AAAA-MM-DD), em UTC.
+function segundaDaSemana(iso: string) {
+  const d = new Date(`${iso}T00:00:00Z`);
+  const dow = d.getUTCDay(); // 0=domingo
+  d.setUTCDate(d.getUTCDate() - (dow === 0 ? 6 : dow - 1));
+  return d;
+}
+
+async function consultarReservas(
+  escolaId: string,
+  args: { dataInicio?: string; dataFim?: string; professorNome?: string; salaNome?: string; incluirCanceladas?: boolean },
+) {
+  const reData = /^\d{4}-\d{2}-\d{2}$/;
+  const inicio = args.dataInicio && reData.test(args.dataInicio) ? args.dataInicio : dataISO(hojeSaoPaulo());
+  let fim = args.dataFim && reData.test(args.dataFim) ? args.dataFim : "";
+  if (!fim) {
+    const f = new Date(`${inicio}T00:00:00Z`);
+    f.setUTCDate(f.getUTCDate() + 7);
+    fim = dataISO(f);
+  }
+
+  const condicoes = [eq(reservasTable.escolaId, escolaId), gte(reservasTable.data, inicio), lte(reservasTable.data, fim)];
+  if (!args.incluirCanceladas) condicoes.push(ne(reservasTable.status, "cancelada"));
+
+  let professorFiltro: { id: number; nome: string } | null = null;
+  if (args.professorNome) {
+    const profs = await db.select({ id: professoresTable.id, nome: professoresTable.nome })
+      .from(professoresTable).where(eq(professoresTable.escolaId, escolaId));
+    const c = buscarPorNome(profs, args.professorNome);
+    if (c.length !== 1) return resultadoNomeAmbiguo("professor", args.professorNome, c);
+    professorFiltro = c[0]!;
+    condicoes.push(eq(reservasTable.professorId, professorFiltro.id));
+  }
+  if (args.salaNome) {
+    const salas = await db.select({ id: salasTable.id, nome: salasTable.nome })
+      .from(salasTable).where(eq(salasTable.escolaId, escolaId));
+    const c = buscarPorNome(salas, args.salaNome);
+    if (c.length !== 1) return resultadoNomeAmbiguo("sala", args.salaNome, c);
+    condicoes.push(eq(reservasTable.salaId, c[0]!.id));
+  }
+
+  const linhas = await db
+    .select({
+      data: reservasTable.data,
+      diaSemana: reservasTable.diaSemana,
+      numeroAula: reservasTable.numeroAula,
+      titulo: reservasTable.titulo,
+      status: reservasTable.status,
+      sala: salasTable.nome,
+      professor: professoresTable.nome,
+    })
+    .from(reservasTable)
+    .innerJoin(salasTable, eq(salasTable.id, reservasTable.salaId))
+    .innerJoin(professoresTable, eq(professoresTable.id, reservasTable.professorId))
+    .where(and(...condicoes))
+    .orderBy(reservasTable.data, reservasTable.numeroAula)
+    .limit(200);
+
+  // Limite semanal do professor (regra da coordenacao; vale para todos).
+  let limite: Record<string, unknown> | undefined;
+  if (professorFiltro) {
+    const seg = segundaDaSemana(inicio);
+    const sex = new Date(seg); sex.setUTCDate(sex.getUTCDate() + 6);
+    const [regra, naSemana] = await Promise.all([
+      db.select().from(regrasReservaProfessorTable).where(and(
+        eq(regrasReservaProfessorTable.escolaId, escolaId),
+        eq(regrasReservaProfessorTable.professorId, professorFiltro.id),
+      )).then((r) => r[0]),
+      db.select({ id: reservasTable.id }).from(reservasTable).where(and(
+        eq(reservasTable.escolaId, escolaId),
+        eq(reservasTable.professorId, professorFiltro.id),
+        ne(reservasTable.status, "cancelada"),
+        gte(reservasTable.data, dataISO(seg)),
+        lte(reservasTable.data, dataISO(sex)),
+      )),
+    ]);
+    const limiteSemanal = regra?.limiteSemanal ?? 2;
+    limite = {
+      semanaDe: dataISO(seg),
+      limiteSemanal,
+      reservasAtivasNaSemana: naSemana.length,
+      restantes: Math.max(0, limiteSemanal - naSemana.length),
+      prioridade: regra?.prioridade ?? 3,
+    };
+  }
+
+  return {
+    periodo: { inicio, fim },
+    total: linhas.length,
+    reservas: linhas.map((r) => ({
+      data: r.data, dia: nomeDia(r.diaSemana), aula: r.numeroAula, sala: r.sala,
+      professor: r.professor, titulo: r.titulo, status: r.status,
+    })),
+    ...(limite ? { limiteDoProfessor: limite } : {}),
+  };
 }
 
 // Formato de um step de function_call na resposta da Interactions API.
@@ -388,36 +781,77 @@ router.post("/chat", async (req, res) => {
     return;
   }
 
+  // [IA-SEGURANCA] conversaId vindo do cliente so vale se for da escola
+  if (conversaId != null && !(await conversaEhDaEscola(Number(conversaId), escolaId))) {
+    res.status(404).json({ error: "Conversa não encontrada" });
+    return;
+  }
+
   const [professores, turmas, disciplinas] = await Promise.all([
     db.select({ nome: professoresTable.nome, id: professoresTable.id })
       .from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
-    db.select({ nome: turmasTable.nome, id: turmasTable.id })
-      .from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
-    db.select({ nome: disciplinasTable.nome, cargaSemanal: disciplinasTable.cargaSemanal })
+    db.select({ nome: turmasTable.nome, id: turmasTable.id, turno: turmasTable.turno })
+      .from(turmasTable).where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.fantasma, false))),
+    db.select({ nome: disciplinasTable.nome })
       .from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
   ]);
 
-  const systemPrompt = `Você é o Assistente de IA do NexGrade, um sistema de gestão de horários escolares.
+  // [IA-AMPLIADA] Antes so iam os 10 primeiros nomes de cada lista; agora a
+  // lista inteira (com teto de seguranca), para a IA reconhecer qualquer
+  // professor/turma citado. Disciplinas so como contagem (a consulta
+  // detalhada vem das funcoes).
+  const lista = (nomes: string[], teto: number) =>
+    nomes.slice(0, teto).join(", ") + (nomes.length > teto ? ` e mais ${nomes.length - teto}` : "");
+  const hoje = hojeSaoPaulo();
+  const diaHoje = DIAS_SEMANA[(hoje.getUTCDay() + 6) % 7];
+
+  const systemPrompt = `Você é o Assistente de IA do NexGrade, sistema de gestão de horários escolares usado por escolas estaduais do Paraná (SEED-PR). Você ajuda a direção e a coordenação nas dúvidas do dia a dia.
+
+HOJE: ${dataISO(hoje)} (${diaHoje}).
+Dias: 0=Segunda, 1=Terça, 2=Quarta, 3=Quinta, 4=Sexta. Turnos: matutino (manhã), vespertino (tarde), noturno (noite).
 
 CONTEXTO DA ESCOLA:
-- Professores cadastrados (${professores.length}): ${professores.map(p => p.nome).slice(0, 10).join(", ")}${professores.length > 10 ? " e mais..." : ""}
-- Turmas cadastradas (${turmas.length}): ${turmas.map(t => t.nome).slice(0, 10).join(", ")}${turmas.length > 10 ? " e mais..." : ""}
-- Disciplinas (${disciplinas.length}): ${disciplinas.map(d => `${d.nome} (${d.cargaSemanal}x/sem)`).slice(0, 10).join(", ")}
+- Professores (${professores.length}): ${lista(professores.map((p) => p.nome), 150)}
+- Turmas (${turmas.length}): ${lista(turmas.map((t) => `${t.nome} [${t.turno}]`), 80)}
+- Disciplinas cadastradas: ${disciplinas.length}
 
-Você pode:
-1. Responder perguntas sobre a grade horária e situação da escola — use consultar_janelas_professores (janelas/buracos de professor), consultar_turmas_sem_horario (turmas sem grade gerada) ou consultar_distribuicao_semanal (equilíbrio de aulas entre os dias) quando a pergunta se encaixar em alguma dessas, em vez de responder de memória.
-2. Sugerir como distribuir disciplinas ou professores
-3. Identificar conflitos e propor soluções
-4. Executar duas ações concretas, sempre chamando a função correspondente: marcar disponibilidade de um professor, ou gerar o horário de uma turma. Você NUNCA aplica a ação diretamente — o sistema sempre pede confirmação ao usuário antes.
+REGRAS IMPORTANTES:
+1. Para qualquer pergunta sobre dados da escola, CHAME a função de consulta adequada — nunca responda de memória nem invente horários:
+   - consultar_grade_professor: horário de um professor, quando dá aula, quando é a HA dele.
+   - consultar_grade_turma: horário de uma turma, quem dá aula em que dia/aula.
+   - consultar_professores_livres: quem está livre / pode substituir num dia, aula e turno (se faltar o turno, pergunte).
+   - consultar_reservas: reservas de salas/espaços, se um espaço está livre, quantas reservas um professor ainda pode fazer.
+   - consultar_janelas_professores, consultar_turmas_sem_horario, consultar_distribuicao_semanal: análises da grade.
+2. Ação: você só pode PROPOR marcar disponibilidade/indisponibilidade de um professor (definir_disponibilidade). O sistema sempre pede confirmação antes de gravar. Hora-atividade (HA) não pode ser alterada por você.
+3. Você NÃO gera nem altera a grade. Se pedirem para gerar/refazer horário, explique: menu Horário → selecionar a turma → "Gerar via CP-SAT" (ou gerar o turno inteiro pelo Modo Experimental e depois promover para oficial). Isso garante HA, regras SEED-PR e menos janelas.
+4. HA = hora-atividade; HA* = hora-atividade em contraturno (num turno em que o professor não tem aula). Aula assíncrona (docência em trio) é do professor e não ocupa a turma presencialmente.
+5. Se um nome for ambíguo, pergunte qual é — nunca adivinhe.
 
-Seja direto, útil e use linguagem educacional brasileira.`;
+COMO USAR O NEXGRADE (para dúvidas de "como faço"):
+- Visão Geral: resumo da escola (turmas sem horário, totais).
+- Horário: abas Grade, Conflitos e Modo Experimental (testar uma grade nova sem mexer na oficial e promover quando estiver boa).
+- Calendário e Turnos: horários das aulas de cada turno e calendário escolar.
+- Cursos e Disciplinas: catálogo SEED-PR, cursos ofertados, matrizes e disciplinas.
+- Professores: cadastro, disciplinas de cada professor, convite para o portal do professor (Minha Agenda).
+- Turmas: cadastro das turmas e o horário de cada uma.
+- Disponibilidade: bloqueios e HA de cada professor por dia/aula/turno.
+- Salas: espaços da escola (salas, laboratórios etc.).
+- Regras de Distribuição: regras usadas na geração da grade.
+- Reservas: agenda de reservas de espaços; as regras por professor (limite semanal e prioridade) são definidas pela coordenação/direção.
+- Licenças e Comunicados: afastamentos e avisos.
+- Importar Dados / Exportar Dados: importação de cadastros e exportação (PDFs da grade, relatório de reservas em PDF e Excel).
+- Escola: dados da escola, configurações e assinatura. Usuários: convidar pessoas e escolher o cargo. Histórico: registro de alterações.
+Se não souber como fazer algo no sistema, diga que não tem certeza em vez de inventar um caminho.
+
+Seja direto e claro, em português do Brasil. Use tabelas curtas quando listar horários.`;
 
   let historico: { role: string; content: string }[] = [];
   if (conversaId) {
     const msgs = await db.select().from(aiMensagensTable)
       .where(eq(aiMensagensTable.conversaId, conversaId))
       .orderBy(aiMensagensTable.createdAt);
-    historico = msgs.map(m => ({ role: m.role, content: m.content }));
+    // [IA-AMPLIADA] so as ultimas 20 mensagens -- conversa longa nao estoura o limite/custo
+    historico = msgs.slice(-20).map(m => ({ role: m.role, content: m.content }));
   }
 
   let cidAtual = conversaId;
@@ -436,9 +870,7 @@ Seja direto, útil e use linguagem educacional brasileira.`;
   try {
     // [TROCADO 2] Contexto da escola + histórico da conversa + mensagem
     // atual, tudo embutido num texto só (ver comentário acima da rota
-    // sobre não arriscar o nome do campo de system prompt). O histórico
-    // fica em formato "Usuário: ... / Assistente: ..." simples, que
-    // qualquer modelo Gemini lê bem como transcript de conversa.
+    // sobre não arriscar o nome do campo de system prompt).
     const contextoHistorico = historico.length
       ? historico.map(h => `${h.role === "assistant" ? "Assistente" : "Usuário"}: ${h.content}`).join("\n") + "\n"
       : "";
@@ -460,13 +892,14 @@ Seja direto, útil e use linguagem educacional brasileira.`;
 
     let respostaTexto: string;
     let acaoPendente: AcaoPendente | null = null;
+    const responderCom = (dados: unknown) =>
+      pedirRespostaComResultadoFuncao(apiKey, interaction.id, functionCall!, dados);
 
     if (functionCall?.name === "definir_disponibilidade") {
       const args = functionCall.arguments as {
-        professorNome: string; diaSemana: number; horarioSlot: number; disponivel: boolean; motivo?: string;
+        professorNome: string; diaSemana: number; horarioSlot: number; disponivel: boolean; motivo?: string; turno?: string;
       };
-      const termo = args.professorNome.trim().toLowerCase();
-      const candidatos = professores.filter(p => p.nome.toLowerCase().includes(termo));
+      const candidatos = buscarPorNome(professores, args.professorNome ?? "");
 
       if (candidatos.length === 0) {
         respostaTexto = `Não encontrei nenhum professor chamado "${args.professorNome}" cadastrado. Verifique o nome e tente novamente.`;
@@ -475,40 +908,56 @@ Seja direto, útil e use linguagem educacional brasileira.`;
       } else {
         const prof = candidatos[0]!;
         const dia = DIAS_SEMANA[args.diaSemana] ?? `dia ${args.diaSemana}`;
-        respostaTexto = `Confirma marcar **${prof.nome}** como **${args.disponivel ? "disponível" : "indisponível"}** na ${dia}-feira, ${args.horarioSlot}ª aula${args.motivo ? ` (motivo: ${args.motivo})` : ""}?`;
-        acaoPendente = {
-          tipo: "definir_disponibilidade",
-          payload: { professorId: prof.id, diaSemana: args.diaSemana, horarioSlot: args.horarioSlot, disponivel: args.disponivel, motivo: args.motivo },
-        };
-      }
-    } else if (functionCall?.name === "gerar_horario_turma") {
-      const args = functionCall.arguments as { turmaNome: string; substituir?: boolean };
-      const termo = args.turmaNome.trim().toLowerCase();
-      const candidatas = turmas.filter(t => t.nome.toLowerCase().includes(termo));
-
-      if (candidatas.length === 0) {
-        respostaTexto = `Não encontrei nenhuma turma chamada "${args.turmaNome}" cadastrada. Verifique o nome e tente novamente.`;
-      } else if (candidatas.length > 1) {
-        respostaTexto = `Encontrei mais de uma turma com esse nome: ${candidatas.map(t => t.nome).join(", ")}. Qual delas você quer dizer?`;
-      } else {
-        const turma = candidatas[0]!;
-        respostaTexto = `Confirma gerar${args.substituir ? " (substituindo o horário atual d" : " o horário d"}a turma **${turma.nome}**?`;
-        acaoPendente = {
-          tipo: "gerar_horario_turma",
-          payload: { turmaId: turma.id, substituir: args.substituir ?? false },
-        };
+        // [IA-AMPLIADA] Turno: o informado; senao, o unico turno em que o
+        // professor da aula; se ele tem aula em mais de um, pergunta.
+        let turno: Turno | null = (TURNOS as readonly string[]).includes(args.turno ?? "") ? (args.turno as Turno) : null;
+        if (!turno) {
+          const turnosProf = [...(await turnosComAulaOficial(escolaId, prof.id))].filter((t): t is Turno =>
+            (TURNOS as readonly string[]).includes(t));
+          if (turnosProf.length === 1) turno = turnosProf[0]!;
+        }
+        if (!turno) {
+          respostaTexto = `${prof.nome} tem aula em mais de um turno (ou ainda não tem aula na grade). Em qual turno é a ${args.horarioSlot}ª aula de ${dia.toLowerCase()}: manhã, tarde ou noite?`;
+        } else {
+          // [IA-SEGURANCA] HA obrigatoria nao e alterada pelo assistente
+          const [existente] = await db.select().from(disponibilidadeTable).where(and(
+            eq(disponibilidadeTable.professorId, prof.id),
+            eq(disponibilidadeTable.diaSemana, args.diaSemana),
+            eq(disponibilidadeTable.horarioSlot, args.horarioSlot),
+            eq(disponibilidadeTable.turno, turno),
+          ));
+          if (existente?.horaAtividadeObrigatoria) {
+            respostaTexto = `Esse horário (${dia}, ${args.horarioSlot}ª aula, ${turno}) é **hora-atividade (HA)** de ${prof.nome}. Por segurança, o assistente não altera HA — faça pela tela **Disponibilidade**.`;
+          } else {
+            respostaTexto = `Confirma marcar **${prof.nome}** como **${args.disponivel ? "disponível" : "indisponível"}** na ${dia}-feira, ${args.horarioSlot}ª aula do turno **${turno}**${args.motivo ? ` (motivo: ${args.motivo})` : ""}?`;
+            acaoPendente = {
+              tipo: "definir_disponibilidade",
+              payload: { professorId: prof.id, diaSemana: args.diaSemana, horarioSlot: args.horarioSlot, disponivel: args.disponivel, motivo: args.motivo, turno },
+            };
+          }
+        }
       }
     } else if (functionCall?.name === "consultar_janelas_professores") {
       const janelas = await calcularJanelasProfessores(escolaId);
-      respostaTexto = await pedirRespostaComResultadoFuncao(
-        apiKey, interaction.id, functionCall, { janelas: janelas.slice(0, 30) },
-      );
+      respostaTexto = await responderCom({ janelas: janelas.slice(0, 30) });
     } else if (functionCall?.name === "consultar_turmas_sem_horario") {
-      const dados = await consultarTurmasSemHorario(escolaId);
-      respostaTexto = await pedirRespostaComResultadoFuncao(apiKey, interaction.id, functionCall, dados);
+      respostaTexto = await responderCom(await consultarTurmasSemHorario(escolaId));
     } else if (functionCall?.name === "consultar_distribuicao_semanal") {
-      const dados = await consultarDistribuicaoSemanal(escolaId);
-      respostaTexto = await pedirRespostaComResultadoFuncao(apiKey, interaction.id, functionCall, dados);
+      respostaTexto = await responderCom(await consultarDistribuicaoSemanal(escolaId));
+    } else if (functionCall?.name === "consultar_grade_professor") {
+      const a = functionCall.arguments as { professorNome?: string };
+      respostaTexto = await responderCom(await consultarGradeProfessor(escolaId, a.professorNome ?? ""));
+    } else if (functionCall?.name === "consultar_grade_turma") {
+      const a = functionCall.arguments as { turmaNome?: string };
+      respostaTexto = await responderCom(await consultarGradeTurma(escolaId, a.turmaNome ?? ""));
+    } else if (functionCall?.name === "consultar_professores_livres") {
+      const a = functionCall.arguments as { diaSemana?: number; numeroAula?: number; turno?: string };
+      const turnoOk = (TURNOS as readonly string[]).includes(a.turno ?? "");
+      respostaTexto = turnoOk && Number.isInteger(a.diaSemana) && Number.isInteger(a.numeroAula)
+        ? await responderCom(await consultarProfessoresLivres(escolaId, a.diaSemana!, a.numeroAula!, a.turno as Turno))
+        : "Para ver quem está livre, preciso do dia, do número da aula e do turno (manhã, tarde ou noite).";
+    } else if (functionCall?.name === "consultar_reservas") {
+      respostaTexto = await responderCom(await consultarReservas(escolaId, functionCall.arguments as Parameters<typeof consultarReservas>[1]));
     } else {
       respostaTexto = textoDireto ?? "Não consegui gerar uma resposta. Tente reformular a pergunta.";
     }
@@ -526,8 +975,11 @@ Seja direto, útil e use linguagem educacional brasileira.`;
 });
 
 // ── EXECUÇÃO DA AÇÃO CONFIRMADA (RF-IA-03) ─────────────────────────────
-// [NAO MUDOU] Esta rota nunca fala com o Gemini -- so aplica no banco a
-// acao que o usuario ja confirmou. Preservada 100% identica.
+// Esta rota nunca fala com o Gemini -- so aplica no banco a acao que o
+// usuario ja confirmou. Alteracoes so para org:admin (filtro global
+// exigirAdminParaAlterar em routes/index.ts).
+// [IA-AMPLIADA] mudancas: turno obrigatorio na disponibilidade, HA
+// protegida, conversaId conferido e "gerar_horario_turma" desativado.
 
 const ExecutarAcaoInput = z.discriminatedUnion("tipo", [
   z.object({
@@ -539,15 +991,15 @@ const ExecutarAcaoInput = z.discriminatedUnion("tipo", [
       horarioSlot: z.number().int().min(1),
       disponivel: z.boolean(),
       motivo: z.string().optional(),
+      turno: z.enum(TURNOS),
     }),
   }),
+  // Mantido so para responder com mensagem clara a botoes antigos que
+  // ainda estejam na tela de alguma conversa anterior.
   z.object({
     tipo: z.literal("gerar_horario_turma"),
     conversaId: z.number().int().optional(),
-    payload: z.object({
-      turmaId: z.number().int(),
-      substituir: z.boolean().default(false),
-    }),
+    payload: z.unknown(),
   }),
 ]);
 
@@ -556,91 +1008,76 @@ router.post("/executar-acao", async (req, res) => {
   const usuarioId = getUsuarioId(req);
   const parsed = ExecutarAcaoInput.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: "Ação inválida ou desatualizada. Peça de novo ao assistente." });
     return;
   }
 
-  if (parsed.data.tipo === "definir_disponibilidade") {
-    const { professorId, diaSemana, horarioSlot, disponivel, motivo } = parsed.data.payload;
-
-    const professor = await db.select().from(professoresTable)
-      .where(and(eq(professoresTable.id, professorId), eq(professoresTable.escolaId, escolaId)))
-      .then(r => r[0]);
-    if (!professor) {
-      res.status(404).json({ error: "Professor não encontrado" });
-      return;
-    }
-
-    const existente = await db.select().from(disponibilidadeTable)
-      .where(and(
-        eq(disponibilidadeTable.professorId, professorId),
-        eq(disponibilidadeTable.diaSemana, diaSemana),
-        eq(disponibilidadeTable.horarioSlot, horarioSlot),
-      ))
-      .then(r => r[0]);
-
-    const registro = existente
-      ? (await db.update(disponibilidadeTable)
-          .set({ disponivel, motivo })
-          .where(eq(disponibilidadeTable.id, existente.id))
-          .returning())[0]
-      : (await db.insert(disponibilidadeTable)
-          .values({ professorId, diaSemana, horarioSlot, disponivel, motivo })
-          .returning())[0];
-
-    await db.insert(auditLogsTable).values({
-      escolaId,
-      entidade: "disponibilidade_professores",
-      entidadeId: registro!.id,
-      acao: existente ? "alteracao" : "criacao",
-      dadosAnteriores: existente ?? null,
-      dadosNovos: registro,
-      usuarioId,
-      usuarioNome: "Assistente de IA (confirmado pelo usuário)",
+  if (parsed.data.tipo === "gerar_horario_turma") {
+    res.status(410).json({
+      error: "Gerar horário pelo assistente foi desativado. Use Horário → selecione a turma → \"Gerar via CP-SAT\".",
     });
-
-    const mensagem = `✅ ${professor.nome} marcado(a) como ${disponivel ? "disponível" : "indisponível"} na ${DIAS_SEMANA[diaSemana]}-feira, ${horarioSlot}ª aula.`;
-    if (parsed.data.conversaId) {
-      await db.insert(aiMensagensTable).values({ conversaId: parsed.data.conversaId, role: "assistant", content: mensagem });
-    }
-
-    res.json({ mensagem, resultado: registro });
     return;
   }
 
-  // gerar_horario_turma
-  const { turmaId, substituir } = parsed.data.payload;
-  try {
-    const resultado = await gerarAlgoritmo({
-      escolaId,
-      turmaId,
-      aulaspordia: 5,
-      substituir,
-      reduzirJanelas: false,
-      fatorPedagogico: false,
-      experimental: false,
-    });
+  // [IA-SEGURANCA] so grava mensagem em conversa da propria escola
+  const conversaId = parsed.data.conversaId != null && (await conversaEhDaEscola(parsed.data.conversaId, escolaId))
+    ? parsed.data.conversaId
+    : null;
 
-    await db.insert(auditLogsTable).values({
-      escolaId,
-      entidade: "horarios",
-      entidadeId: turmaId,
-      acao: "criacao",
-      dadosAnteriores: null,
-      dadosNovos: { slotsGerados: resultado.slotsGerados, conflitos: resultado.conflitos },
-      usuarioId,
-      usuarioNome: "Assistente de IA (confirmado pelo usuário)",
-    });
+  const { professorId, diaSemana, horarioSlot, disponivel, motivo, turno } = parsed.data.payload;
 
-    const mensagem = `✅ Horário gerado: ${resultado.slotsGerados} aula(s) alocada(s)${resultado.conflitos.length ? `, com ${resultado.conflitos.length} aviso(s) — confira a página de conflitos.` : "."}`;
-    if (parsed.data.conversaId) {
-      await db.insert(aiMensagensTable).values({ conversaId: parsed.data.conversaId, role: "assistant", content: mensagem });
-    }
-
-    res.json({ mensagem, resultado });
-  } catch (err) {
-    res.status(400).json({ error: err instanceof Error ? err.message : "Erro ao gerar horário" });
+  const professor = await db.select().from(professoresTable)
+    .where(and(eq(professoresTable.id, professorId), eq(professoresTable.escolaId, escolaId)))
+    .then(r => r[0]);
+  if (!professor) {
+    res.status(404).json({ error: "Professor não encontrado" });
+    return;
   }
+
+  // Mesma chave da tela Disponibilidade: professor + dia + aula + TURNO
+  // (indice unico no banco). Antes faltava o turno.
+  const existente = await db.select().from(disponibilidadeTable)
+    .where(and(
+      eq(disponibilidadeTable.professorId, professorId),
+      eq(disponibilidadeTable.diaSemana, diaSemana),
+      eq(disponibilidadeTable.horarioSlot, horarioSlot),
+      eq(disponibilidadeTable.turno, turno),
+    ))
+    .then(r => r[0]);
+
+  // [IA-SEGURANCA] confere de novo na hora de gravar (a HA pode ter sido
+  // recalculada entre a pergunta e o clique em Confirmar).
+  if (existente?.horaAtividadeObrigatoria) {
+    res.status(409).json({ error: "Esse horário é hora-atividade (HA). Altere pela tela Disponibilidade." });
+    return;
+  }
+
+  const registro = existente
+    ? (await db.update(disponibilidadeTable)
+        .set({ disponivel, motivo })
+        .where(eq(disponibilidadeTable.id, existente.id))
+        .returning())[0]
+    : (await db.insert(disponibilidadeTable)
+        .values({ professorId, diaSemana, horarioSlot, disponivel, motivo, turno })
+        .returning())[0];
+
+  await db.insert(auditLogsTable).values({
+    escolaId,
+    entidade: "disponibilidade_professores",
+    entidadeId: registro!.id,
+    acao: existente ? "alteracao" : "criacao",
+    dadosAnteriores: existente ?? null,
+    dadosNovos: registro,
+    usuarioId,
+    usuarioNome: "Assistente de IA (confirmado pelo usuário)",
+  });
+
+  const mensagem = `✅ ${professor.nome} marcado(a) como ${disponivel ? "disponível" : "indisponível"} na ${DIAS_SEMANA[diaSemana]}-feira, ${horarioSlot}ª aula (${turno}).`;
+  if (conversaId) {
+    await db.insert(aiMensagensTable).values({ conversaId, role: "assistant", content: mensagem });
+  }
+
+  res.json({ mensagem, resultado: registro });
 });
 
 export default router;
