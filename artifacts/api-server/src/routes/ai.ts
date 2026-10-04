@@ -9,6 +9,7 @@ import { eq, and, desc, or, isNull, gte, lte, ne } from "drizzle-orm";
 import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 import { limitadorIA } from "../middlewares/rateLimit";
+import { GUIA_NEXGRADE, TOPICOS_GUIA, buscarNoGuia } from "../lib/guia-nexgrade"; // [GUIA-IA]
 // [IA-AMPLIADA] gerarAlgoritmo (motor simples antigo) nao e mais usado aqui:
 // a geracao de grade saiu do assistente -- ver "gerar_horario_turma" abaixo.
 
@@ -185,6 +186,19 @@ const tools = [
         turno: { type: "string", enum: ["matutino", "vespertino", "noturno"], description: "Turno (manhã=matutino, tarde=vespertino, noite=noturno)" },
       },
       required: ["diaSemana", "numeroAula", "turno"],
+    },
+  },
+  {
+    type: "function" as const,
+    name: "consultar_guia_sistema",
+    description:
+      "Busca o passo a passo oficial de uma tela ou tarefa do NexGrade (como cadastrar, configurar, gerar, exportar etc.). Use SEMPRE que a pergunta for 'como faço', 'onde fica', 'como cadastro', 'para que serve' alguma coisa do sistema.",
+    parameters: {
+      type: "object" as const,
+      properties: {
+        tema: { type: "string", enum: TOPICOS_GUIA, description: "Assunto do guia mais próximo da pergunta" },
+      },
+      required: ["tema"],
     },
   },
   {
@@ -827,21 +841,11 @@ REGRAS IMPORTANTES:
 4. HA = hora-atividade; HA* = hora-atividade em contraturno (num turno em que o professor não tem aula). Aula assíncrona (docência em trio) é do professor e não ocupa a turma presencialmente.
 5. Se um nome for ambíguo, pergunte qual é — nunca adivinhe.
 
-COMO USAR O NEXGRADE (para dúvidas de "como faço"):
-- Visão Geral: resumo da escola (turmas sem horário, totais).
-- Horário: abas Grade, Conflitos e Modo Experimental (testar uma grade nova sem mexer na oficial e promover quando estiver boa).
-- Calendário e Turnos: horários das aulas de cada turno e calendário escolar.
-- Cursos e Disciplinas: catálogo SEED-PR, cursos ofertados, matrizes e disciplinas.
-- Professores: cadastro, disciplinas de cada professor, convite para o portal do professor (Minha Agenda).
-- Turmas: cadastro das turmas e o horário de cada uma.
-- Disponibilidade: bloqueios e HA de cada professor por dia/aula/turno.
-- Salas: espaços da escola (salas, laboratórios etc.).
-- Regras de Distribuição: regras usadas na geração da grade.
-- Reservas: agenda de reservas de espaços; as regras por professor (limite semanal e prioridade) são definidas pela coordenação/direção.
-- Licenças e Comunicados: afastamentos e avisos.
-- Importar Dados / Exportar Dados: importação de cadastros e exportação (PDFs da grade, relatório de reservas em PDF e Excel).
-- Escola: dados da escola, configurações e assinatura. Usuários: convidar pessoas e escolher o cargo. Histórico: registro de alterações.
-Se não souber como fazer algo no sistema, diga que não tem certeza em vez de inventar um caminho.
+COMO USAR O NEXGRADE (dúvidas de "como faço", "onde fica", "como cadastro"):
+- Chame consultar_guia_sistema com o assunto e responda em passos numerados, usando exatamente os nomes de menus e botões que vierem no guia.
+- Assuntos do guia: ${TOPICOS_GUIA.map((k) => `${k} (${GUIA_NEXGRADE[k]!.titulo})`).join("; ")}.
+- Se a pergunta envolver mais de um assunto (ex.: cadastrar professor E marcar disponibilidade), consulte o principal e cite o outro passo resumido, oferecendo detalhar.
+Se o guia não cobrir o que foi perguntado, diga que não tem certeza em vez de inventar um caminho.
 
 Seja direto e claro, em português do Brasil. Use tabelas curtas quando listar horários.`;
 
@@ -956,6 +960,12 @@ Seja direto e claro, em português do Brasil. Use tabelas curtas quando listar h
       respostaTexto = turnoOk && Number.isInteger(a.diaSemana) && Number.isInteger(a.numeroAula)
         ? await responderCom(await consultarProfessoresLivres(escolaId, a.diaSemana!, a.numeroAula!, a.turno as Turno))
         : "Para ver quem está livre, preciso do dia, do número da aula e do turno (manhã, tarde ou noite).";
+    } else if (functionCall?.name === "consultar_guia_sistema") {
+      const a = functionCall.arguments as { tema?: string };
+      const trechos = buscarNoGuia(a.tema ?? "");
+      respostaTexto = await responderCom(trechos.length
+        ? { guia: trechos }
+        : { erro: "Assunto não encontrado no guia.", assuntosDisponiveis: TOPICOS_GUIA });
     } else if (functionCall?.name === "consultar_reservas") {
       respostaTexto = await responderCom(await consultarReservas(escolaId, functionCall.arguments as Parameters<typeof consultarReservas>[1]));
     } else {

@@ -441,7 +441,7 @@ export default function DisponibilidadePage() {
             <Info className="w-12 h-12 mx-auto mb-3 opacity-20" />
             <p>
               Nenhum esquema de horário configurado para o turno {TURNOS.find((t) => t.value === turno)?.label}.
-              Configure em Horários → Esquema antes de gerenciar a disponibilidade deste turno.
+              Configure em Calendário e Turnos → Esquema de aulas por turno antes de gerenciar a disponibilidade deste turno.
             </p>
           </CardContent>
         </Card>
