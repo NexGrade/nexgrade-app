@@ -40,7 +40,7 @@ import { MOTIVO_HA_AUTO, MOTIVO_HA_AUTO_OUTRO_TURNO } from "./ha-contraturno"; /
 // [HA-NA-ENTRADA-NOTURNO] motivo do bloqueio gravado em 2026-09-23 na aula 1 do
 // noturno (18:00, so entrada, letivo=false). Bloqueia aula, nao hora-atividade.
 const MOTIVO_BLOQUEIO_NAO_LETIVO = "Bloqueio automatico: aula 1 do noturno";
-function ehBloqueioPeriodoNaoLetivo(motivo: string | null | undefined): boolean {
+export function ehBloqueioPeriodoNaoLetivo(motivo: string | null | undefined): boolean {
   return (motivo ?? "").startsWith(MOTIVO_BLOQUEIO_NAO_LETIVO);
 }
 

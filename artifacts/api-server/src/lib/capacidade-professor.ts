@@ -4,11 +4,13 @@
  * HA exigida (mesma formula do recalcular-ha) contra horarios livres
  * (mesma regra de bloqueio, ehBloqueioReal). Nao grava nada.
  * Limite: nao enxerga o limite de HA por dia (so aparece depois de gerar).
+ * [CAPACIDADE-NAO-LETIVO] (05/10/2026) periodo nao letivo (noturno 18:00) nao
+ * conta para aula, mas conta para HA (mesma regra do recalculo de HA).
  */
 import { db, turmasTable, turmaDisciplinasTable, disciplinasTable, professoresTable, disponibilidadeTable, horarioSlotsTable, professorDisciplinasTable, itensMatrizTable } from "@workspace/db";
 import { and, eq, inArray } from "drizzle-orm";
 import { ehBloqueioReal, ehHaFixa } from "./bloqueio-real"; // [HA-FIXA]
-import { calcularHoraAtividadeInstitucional } from "./recalcular-ha";
+import { calcularHoraAtividadeInstitucional, ehBloqueioPeriodoNaoLetivo } from "./recalcular-ha";
 import { calcularHoraAtividadePorTurno } from "./hora-atividade";
 
 export interface ProblemaCapacidade {
@@ -111,6 +113,13 @@ export async function validarCapacidadeProfessores(escolaId: string): Promise<Pr
     if (s.numeroAula > (maxAulaTurno.get(s.turno) ?? 0)) maxAulaTurno.set(s.turno, s.numeroAula);
   }
   const turnos = [...maxAulaTurno.keys()];
+  // [CAPACIDADE-NAO-LETIVO] periodos nao letivos de cada turno (ex.: noturno aula 1, 18:00)
+  const naoLetivos = new Map<string, Set<number>>();
+  for (const s of slots) {
+    if (s.letivo !== false || !s.turno) continue;
+    if (!naoLetivos.has(s.turno)) naoLetivos.set(s.turno, new Set());
+    naoLetivos.get(s.turno)!.add(s.numeroAula);
+  }
 
   const problemas: ProblemaCapacidade[] = [];
   for (const [pid, porTurno] of aulas) {
@@ -125,18 +134,30 @@ export async function validarCapacidadeProfessores(escolaId: string): Promise<Pr
         bloqueados.get(t)!.add(`${d.diaSemana}-${d.horarioSlot}`);
       }
     }
-    const livres: Record<string, number> = {};
+    // [CAPACIDADE-NAO-LETIVO] bloqueio automatico do periodo nao letivo so impede aula
+    const bloqueioSoDeAula = new Set<string>();
+    for (const d of disp) if (d.professorId === pid && d.turno && ehBloqueioReal(d) && ehBloqueioPeriodoNaoLetivo(d.motivo)) bloqueioSoDeAula.add(`${d.turno}|${d.diaSemana}-${d.horarioSlot}`);
+    const livres: Record<string, number> = {}; // horarios livres para AULA (so periodo letivo)
+    const livresSoHA: Record<string, number> = {}; // periodo nao letivo livre: so HA, e so em dia com horario de aula livre
     for (const t of turnos) {
       const mx = maxAulaTurno.get(t) ?? 0;
+      const nl = naoLetivos.get(t) ?? new Set<number>();
       let n = 0;
-      for (let dia = 0; dia < 5; dia++) for (let a = 1; a <= mx; a++) if (!bloqueados.get(t)?.has(`${dia}-${a}`)) n++;
+      let soHA = 0;
+      for (let dia = 0; dia < 5; dia++) {
+        let livresNoDia = 0;
+        for (let a = 1; a <= mx; a++) if (!nl.has(a) && !bloqueados.get(t)?.has(`${dia}-${a}`)) livresNoDia++;
+        n += livresNoDia;
+        if (livresNoDia > 0) for (const a of nl) if (!bloqueados.get(t)?.has(`${dia}-${a}`) || bloqueioSoDeAula.has(`${t}|${dia}-${a}`)) soHA++;
+      }
       livres[t] = n;
+      livresSoHA[t] = soHA;
     }
     const aulasTotal = Object.values(porTurno).reduce((s, n) => s + n, 0);
     const ha = calcularHoraAtividadeInstitucional(aulasTotal);
     const turnosEnsino = Object.keys(porTurno);
-    const livresEnsino = turnosEnsino.reduce((s, t) => s + (livres[t] ?? 0), 0);
-    const livresTotal = turnos.reduce((s, t) => s + (livres[t] ?? 0), 0);
+    const livresEnsino = turnosEnsino.reduce((s, t) => s + (livres[t] ?? 0) + (livresSoHA[t] ?? 0), 0); // [CAPACIDADE-NAO-LETIVO]
+    const livresTotal = turnos.reduce((s, t) => s + (livres[t] ?? 0) + (livresSoHA[t] ?? 0), 0);
     const base = { professorId: pid, professor: p.nome, aulasPorTurno: porTurno, aulasTotal, haExigida: ha, livresPorTurno: livres };
     for (const t of turnosEnsino) {
       const l = livres[t] ?? 0;
