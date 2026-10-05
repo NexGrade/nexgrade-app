@@ -257,6 +257,7 @@ export async function calcularHAIdeal(
       diasPermitidos?: Set<number>, // [FIX-CONTRATURNO-SO-DIA-COM-AULA]
       maxSeguidas?: number, // [HA-MAX-SEGUIDAS]
       outroTurno = false, // [HA-OUTRO-TURNO]
+      ladoPreferido?: (dia: number) => "inicio" | "fim" | undefined, // [CONTRATURNO-ENCOSTADO]
     ): number {
       let orcamento = orcamentoInicial;
       const maxAula = maxAulaPorTurno.get(turno) ?? 6;
@@ -353,7 +354,11 @@ export async function calcularHAIdeal(
           const janelas = contarJanelas(testado);
           const diaCount = contagemDiaAtual.get(c.dia) ?? 0;
           const colado = ocupado.has(`${c.dia}-${c.aula - 1}`) || ocupado.has(`${c.dia}-${c.aula + 1}`);
-          const dist = Math.min(c.aula - 1, maxAula - c.aula);
+          // [CONTRATURNO-ENCOSTADO] no contraturno, a "borda" preferida e a do lado
+          // do turno em que o professor da aula naquele dia (ex.: professor da tarde
+          // faz HA* no fim da manha, encostado nas aulas -- igual ao Urania).
+          const lado = ladoPreferido?.(c.dia);
+          const dist = lado === "fim" ? maxAula - c.aula : lado === "inicio" ? c.aula - 1 : Math.min(c.aula - 1, maxAula - c.aula);
 
           // [REVERTIDO] a ordem colado-antes-de-diaCount tentada hoje foi
           // revertida -- essa ordem original (diaCount antes de colado) ja
@@ -498,7 +503,17 @@ export async function calcularHAIdeal(
         const jaManualNesseTurno = new Set(
           haManualContraturno.filter((m) => (m.turno ?? "sem_turno") === turno).map((m) => `${m.diaSemana}-${m.horarioSlot}`),
         );
-        const resto = preencherGuloso(turno, pedir, jaManualNesseTurno, contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_CONTRATURNO, diasComAula, undefined, true);
+        // [CONTRATURNO-ENCOSTADO] em cada dia, encosta a HA* no lado do turno em que o
+        // professor tem aula nesse dia: turno de aula depois -> fim; antes -> inicio.
+        const ORDEM = ["matutino", "vespertino", "noturno"];
+        const posContra = ORDEM.indexOf(turno);
+        const ladoPreferido = (dia: number): "inicio" | "fim" | undefined => {
+          const turnosDoDia = Object.keys(aulasPorTurno).filter((t) => [...(ocupadoPorTurnoOriginal.get(t) ?? [])].some((k) => k.startsWith(`${dia}-`)));
+          if (turnosDoDia.some((t) => ORDEM.indexOf(t) > posContra)) return "fim";
+          if (turnosDoDia.some((t) => ORDEM.indexOf(t) < posContra)) return "inicio";
+          return undefined;
+        };
+        const resto = preencherGuloso(turno, pedir, jaManualNesseTurno, contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_CONTRATURNO, diasComAula, undefined, true, ladoPreferido);
         consumirSobra(pedir - resto, null, false);
       }
     }
