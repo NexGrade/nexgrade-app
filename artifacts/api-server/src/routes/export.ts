@@ -409,7 +409,7 @@ router.get("/grade-pdf/turma", async (req, res) => {
     db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
     db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
   ]);
-  const slots = slotsBrutos as Array<{ turmaId: number; disciplinaId: number; professorId: number; diaSemana: number; numeroAula: number }>;
+  const slots = slotsBrutos as Array<{ turmaId: number; disciplinaId: number; professorId: number; diaSemana: number; numeroAula: number; assincrona?: boolean | null }>;
   let turmas = turmaIdFiltro ? turmasTodas.filter((t) => t.id === turmaIdFiltro) : turmasTodas;
   if (turnoFiltro) turmas = turmas.filter((t) => t.turno === turnoFiltro);
   // no modo experimental, só mostra turmas que de fato têm alguma
@@ -500,7 +500,7 @@ router.get("/grade-pdf/professor", async (req, res) => {
     db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
     db.select().from(disponibilidadeTable),
   ]);
-  const slots = slotsBrutos as Array<{ turmaId: number; disciplinaId: number; professorId: number; diaSemana: number; numeroAula: number }>;
+  const slots = slotsBrutos as Array<{ turmaId: number; disciplinaId: number; professorId: number; diaSemana: number; numeroAula: number; assincrona?: boolean | null }>;
   // [FIX-HA-SIMULADA] O experimento pode cobrir só ALGUNS turmas/turnos
   // (ex.: "Turno Inteiro" gerado só pro matutino). Sem isso, um
   // professor que também dá aula no vespertino/noturno tinha essas
@@ -601,19 +601,21 @@ router.get("/grade-pdf/professor", async (req, res) => {
       // Agora testa todos os niveis presentes nas turmas desse
       // professor nesse turno e usa o que renderiza MAIS linhas.
       const niveisDoProfNesseTurno = [...new Set(
-        slotsDoProfNesseTurno.map((s) => turmas.find((t) => t.id === s.turmaId)?.nivelEnsino).filter((n): n is string => !!n)
+        slotsDoProfNesseTurno.map((s) => turmas.find((t) => t.id === s.turmaId)?.nivelEnsino).filter((n): n is NonNullable<typeof n> => !!n)
       )];
       // [HA-CONTRATURNO-ASTERISCO] turno so com HA nao tem turma do professor:
       // usa os niveis de todas as turmas do turno, para nao cortar a 6a aula.
       if (niveisDoProfNesseTurno.length === 0) {
         niveisDoProfNesseTurno.push(...new Set(
-          turmas.filter((t) => t.turno === turno).map((t) => t.nivelEnsino).filter((n): n is string => !!n)
+          turmas.filter((t) => t.turno === turno).map((t) => t.nivelEnsino).filter((n): n is NonNullable<typeof n> => !!n)
         ));
       }
       let horariosPorAula = await buscarHorariosPorAula(escolaId, turno, niveisDoProfNesseTurno[0] ?? null);
       for (const nivel of niveisDoProfNesseTurno.slice(1)) {
         const candidato = await buscarHorariosPorAula(escolaId, turno, nivel);
-        if (candidato.length > horariosPorAula.length) horariosPorAula = candidato;
+        // [FIX-6A-AULA] Record nao tem .length (comparacao dava sempre false e
+        // valia o 1o nivel da lista -- Fundamental cortava a 6a aula).
+        if (Object.keys(candidato).length > Object.keys(horariosPorAula).length) horariosPorAula = candidato;
       }
 
       // "HA" literal, igual ao Urânia — sem linha2 pra não formatar como
@@ -673,6 +675,18 @@ router.get("/grade-pdf/professor", async (req, res) => {
       const rotulo = turnosParaRenderizar.length > 1
         ? `${prof.nome.toUpperCase()} (${TURNO_ROTULO[turno] ?? turno})`
         : prof.nome.toUpperCase();
+
+      // [FIX-6A-AULA] Linha que tem aula, HA ou bloqueio mas nao existe no
+      // horario do nivel escolhido (ex.: HA na 6a aula 11:55 de professor so
+      // do Fundamental, igual ao Urania) -- busca o horario nos dois niveis
+      // do turno e acrescenta so as linhas usadas, senao a celula sumia do PDF.
+      const numerosUsados = [...aulasDoProf, ...haDoProf, ...bloqueadasDoProf].map((x) => x.numeroAula);
+      if (numerosUsados.some((n) => !(n in horariosPorAula))) {
+        const horariosTodosNiveis = await buscarHorariosPorAula(escolaId, turno, null);
+        for (const n of numerosUsados) {
+          if (!(n in horariosPorAula) && horariosTodosNiveis[n]) horariosPorAula = { ...horariosPorAula, [n]: horariosTodosNiveis[n] };
+        }
+      }
 
       blocos.push({
         rotulo,
