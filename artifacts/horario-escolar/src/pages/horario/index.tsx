@@ -1816,6 +1816,27 @@ function AbaExperimental() {
     }
   };
 
+  // [SIMULAR-PROMOCAO] (05/10/2026) compara janelas (aula + HA recalculada +
+  // atividade do Urania) da grade oficial com a do experimento, sem gravar nada.
+  type JanelaSim = { professorNome: string; turno: string; dia: string; janelas: number; dia_detalhe: string };
+  type ResultadoSim = {
+    turnos: string[];
+    oficial: { janelas: number; diasComConflito: number; detalhe: JanelaSim[] };
+    experimento: { janelas: number; diasComConflito: number; detalhe: JanelaSim[] };
+    professoresComHAMudando: number;
+    veredito: "melhor" | "empate" | "pior";
+  };
+  const [simulacoes, setSimulacoes] = useState<Record<string, ResultadoSim | "carregando" | { erro: string }>>({});
+  const simularPromocao = async (nome: string) => {
+    setSimulacoes((s) => ({ ...s, [nome]: "carregando" }));
+    try {
+      const r = await customFetch<ResultadoSim>(`/api/horarios/experimentais/${encodeURIComponent(nome)}/simulacao`, { responseType: "json" });
+      setSimulacoes((s) => ({ ...s, [nome]: r }));
+    } catch {
+      setSimulacoes((s) => ({ ...s, [nome]: { erro: "Não foi possível simular agora. Tente de novo." } }));
+    }
+  };
+
   const handleDelete = async (nome: string) => {
     if (!confirm(`Remover o experimento "${nome}"?`)) return;
     await deleteExp({ nome });
@@ -2010,6 +2031,15 @@ function AbaExperimental() {
                         <Download className="w-3.5 h-3.5" />
                         {baixandoPdf === `${nome}-professor` ? "Gerando..." : "PDF por professor"}
                       </Button>
+                      <Button
+                        size="sm" variant="outline" className="gap-1.5"
+                        onClick={() => simularPromocao(nome)}
+                        disabled={simulacoes[nome] === "carregando"}
+                        title="Mostra como ficariam as janelas dos professores (com a HA recalculada) se este experimento fosse promovido -- nada e gravado"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        {simulacoes[nome] === "carregando" ? "Simulando..." : "Simular promoção"}
+                      </Button>
                       <Button size="sm" variant="outline" className="border-green-300 text-green-700 hover:bg-green-50 gap-1.5" onClick={() => handlePromover(nome)}>
                         <ArrowUpCircle className="w-3.5 h-3.5" />Promover para oficial
                       </Button>
@@ -2020,6 +2050,40 @@ function AbaExperimental() {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
+                  {(() => { // [SIMULAR-PROMOCAO]
+                    const sim = simulacoes[nome];
+                    if (!sim || sim === "carregando") return null;
+                    if ("erro" in sim) return <div className="mb-3 text-xs text-destructive">{sim.erro}</div>;
+                    const cor = sim.veredito === "melhor" ? "border-green-300 bg-green-50 text-green-800"
+                      : sim.veredito === "empate" ? "border-slate-300 bg-slate-50 text-slate-700"
+                      : "border-amber-300 bg-amber-50 text-amber-800";
+                    const titulo = sim.veredito === "melhor" ? "Experimento MELHOR que a oficial"
+                      : sim.veredito === "empate" ? "Empate com a oficial -- promover não ganha nada em janelas"
+                      : "Oficial MELHOR -- recomendado não promover";
+                    const lista = (det: JanelaSim[]) => det.length === 0
+                      ? <div className="text-muted-foreground">nenhuma janela</div>
+                      : det.slice(0, 8).map((d, i) => (
+                        <div key={i}>{d.professorNome} · {d.dia} ({d.turno}): {d.janelas} janela(s){d.janelas >= 2 ? " — aparece em Conflitos" : ""} <span className="text-muted-foreground">[{d.dia_detalhe}]</span></div>
+                      ));
+                    return (
+                      <div className={`mb-3 rounded-md border p-3 text-xs ${cor}`}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="font-semibold text-sm">{titulo}</div>
+                          <button type="button" className="opacity-60 hover:opacity-100" onClick={() => setSimulacoes((s) => { const n = { ...s }; delete n[nome]; return n; })}><X className="w-3.5 h-3.5" /></button>
+                        </div>
+                        <div className="mt-1">
+                          Janelas de professor ({sim.turnos.join(", ")}), contando aula + HA recalculada + atividade do Urânia:
+                          {" "}<strong>experimento {sim.experimento.janelas}</strong> × <strong>oficial {sim.oficial.janelas}</strong>.
+                          {" "}Ao promover, a HA de {sim.professoresComHAMudando} professor(es) mudaria de lugar.
+                        </div>
+                        <div className="mt-2 grid gap-2 md:grid-cols-2">
+                          <div><div className="font-medium mb-0.5">Experimento</div>{lista(sim.experimento.detalhe)}</div>
+                          <div><div className="font-medium mb-0.5">Oficial atual</div>{lista(sim.oficial.detalhe)}</div>
+                        </div>
+                        <div className="mt-2 text-[11px] opacity-70">Simulação: nada foi gravado.</div>
+                      </div>
+                    );
+                  })()}
                   <div className="flex flex-wrap gap-1.5">
                     {Array.from({ length: 5 }).map((_, dia) => {
                       const aulasNoDia = slots.filter((s) => s.diaSemana === dia).sort((a, b) => a.numeroAula - b.numeroAula);

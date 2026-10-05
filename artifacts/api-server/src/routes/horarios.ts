@@ -26,6 +26,7 @@ import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 import { randomUUID } from "node:crypto";
 import { recalcularHoraAtividade } from "../lib/recalcular-ha";
+import { simularPromocao } from "../lib/simular-promocao"; // [SIMULAR-PROMOCAO]
 import { ehBloqueioParaMotor } from "../lib/bloqueio-real"; // [HA-FIXA]
 import { bloqueiosIntervaloEntreTurnos } from "../lib/intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 import { aulasFixasTable } from "@workspace/db"; // [AULA-FIXA-CADASTRO]
@@ -877,6 +878,19 @@ router.post("/experimentais", async (req, res) => {
 async function travarGradeOficial(tx: Parameters<Parameters<typeof db.transaction>[0]>[0], escolaId: string): Promise<void> {
   await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${"grade-oficial:" + escolaId}))`);
 }
+
+// [SIMULAR-PROMOCAO] mostra, sem gravar nada, como ficariam as janelas (com a
+// HA recalculada) se o experimento fosse promovido, comparando com a oficial.
+router.get("/experimentais/:nome/simulacao", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  try {
+    const r = await simularPromocao(escolaId, req.params.nome);
+    if (!r) { res.status(404).json({ error: "Horário experimental não encontrado" }); return; }
+    res.json(r);
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao simular a promoção.", detalhe: err instanceof Error ? err.message : String(err) });
+  }
+});
 
 router.post("/experimentais/:nome/promover", async (req, res) => {
   const escolaId = getEscolaId(req);
