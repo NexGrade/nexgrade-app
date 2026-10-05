@@ -613,28 +613,37 @@ function DialogDetalheAula({
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  slots: Array<{ id: number; professorNome: string }>;
+  slots: Array<{ id: number; professorNome: string; disciplinaId?: number; disciplinaNome?: string; presencial?: boolean | null }>;
   disciplinaNome: string;
   onEditar: () => void;
   onExcluir: () => void;
   excluindo: boolean;
   somenteConsulta?: boolean; // [CONSULTA-GESTOR]
 }) {
+  const ehTrio = new Set(slots.map((s) => s.disciplinaId).filter((d) => d != null)).size > 1; // [DETALHE-TRIO]
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader><DialogTitle>{disciplinaNome}</DialogTitle></DialogHeader>
+        {/* [DETALHE-TRIO] trio = disciplinas diferentes no mesmo horario; co-docencia = mesma disciplina, 2 professores */}
+        <DialogHeader><DialogTitle>{ehTrio ? "Docência por trio" : disciplinaNome}</DialogTitle></DialogHeader>
         <div className="space-y-2 py-2">
           {slots.map((s) => (
-            <div key={s.id} className="text-sm bg-muted/50 rounded px-3 py-2">{s.professorNome}</div>
+            <div key={s.id} className="text-sm bg-muted/50 rounded px-3 py-2 flex items-center justify-between gap-2">
+              <span>{ehTrio && s.disciplinaNome ? <><span className="font-medium">{s.disciplinaNome}</span> — {s.professorNome}</> : s.professorNome}</span>
+              {ehTrio && s.presencial != null && (
+                <span className={`text-[10px] font-bold uppercase tracking-wide rounded px-1.5 py-0.5 shrink-0 ${s.presencial ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-700"}`}>{s.presencial ? "presencial esta semana" : "suporte"}</span>
+              )}
+            </div>
           ))}
-          {slots.length > 1 && (
-            <p className="text-xs text-muted-foreground">Aula com co-docência — os dois professores acima dão essa aula juntos.</p>
+          {ehTrio ? (
+            <p className="text-xs text-muted-foreground">Docência por trio — as {slots.length} disciplinas acontecem no mesmo horário. A cada semana um professor fica presencial com a turma e os outros ficam em suporte (revezamento definido em Turmas).</p>
+          ) : slots.length > 1 && (
+            <p className="text-xs text-muted-foreground">Aula com co-docência — os {slots.length === 2 ? "dois" : slots.length} professores acima dão essa aula juntos.</p>
           )}
         </div>
         {!somenteConsulta && (<DialogFooter>{/* [CONSULTA-GESTOR] */}
           <Button variant="outline" className="text-destructive hover:text-destructive" onClick={onExcluir} disabled={excluindo}>
-            <Trash2 className="h-3.5 w-3.5 mr-1" /> {excluindo ? "Excluindo..." : (slots.length > 1 ? "Excluir aula (os dois)" : "Excluir aula")}
+            <Trash2 className="h-3.5 w-3.5 mr-1" /> {excluindo ? "Excluindo..." : (slots.length > 2 ? `Excluir aula (os ${slots.length})` : slots.length > 1 ? "Excluir aula (os dois)" : "Excluir aula")}
           </Button>
           <Button onClick={onEditar}>Editar</Button>
         </DialogFooter>)}
@@ -843,6 +852,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
     setDetalheSlots(slots.map((s) => ({
       id: s.id, disciplinaId: s.disciplinaId, professorId: s.professorId,
       professorNome: s.professor?.nome ?? `Professor #${s.professorId}`,
+      disciplinaNome: s.disciplina?.nome, presencial: (s as any).revezamento ? (s as any).revezamento.presencial : null, // [DETALHE-TRIO]
     })));
     setOpenDetalhe(true);
   }
