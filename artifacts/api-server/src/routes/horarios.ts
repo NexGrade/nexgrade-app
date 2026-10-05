@@ -15,7 +15,7 @@ import {
   horarioSlotsTable,
   itensMatrizTable,
 } from "@workspace/db";
-import { eq, and, inArray, isNull } from "drizzle-orm";
+import { eq, and, inArray, isNull, sql } from "drizzle-orm";
 import {
   CreateHorarioBody,
   DeleteHorarioParams,
@@ -480,6 +480,7 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
       return tx.insert(horariosExperimentaisTable).values(linhas).returning();
     }
 
+    await travarGradeOficial(tx, escolaId); // [TRAVA-GRADE-OFICIAL]
     if (substituir) {
       const condicaoDelete = opts.apenasProfessorId
         ? and(eq(horariosTable.turmaId, turmaId), eq(horariosTable.escolaId, escolaId), inArray(horariosTable.disciplinaId, [...discIdsAlvo]))
@@ -868,6 +869,15 @@ router.post("/experimentais", async (req, res) => {
   res.status(201).json(slot);
 });
 
+// [TRAVA-GRADE-OFICIAL] (05/10/2026) Quem grava na grade OFICIAL (promover e
+// gerar/corrigir professor) pega esta trava dentro da transacao: uma gravacao
+// espera a outra terminar. Sem ela, uma correcao de professor ainda em andamento
+// e uma promocao 30s depois gravaram as mesmas aulas da Francielle duas vezes
+// (a promocao nao enxergou as linhas ainda nao confirmadas para apagar).
+async function travarGradeOficial(tx: Parameters<Parameters<typeof db.transaction>[0]>[0], escolaId: string): Promise<void> {
+  await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${"grade-oficial:" + escolaId}))`);
+}
+
 router.post("/experimentais/:nome/promover", async (req, res) => {
   const escolaId = getEscolaId(req);
   const nome = req.params.nome;
@@ -928,6 +938,7 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     .map((k) => { const [t, p] = k.split("|"); return { turmaId: Number(t), professorId: Number(p) }; });
 
   const inserted = await db.transaction(async (tx) => {
+    await travarGradeOficial(tx, escolaId); // [TRAVA-GRADE-OFICIAL]
     for (const { turmaId, professorId } of turmaProfessorPares) {
       await tx.delete(horariosTable)
         .where(and(eq(horariosTable.turmaId, turmaId), eq(horariosTable.escolaId, escolaId), eq(horariosTable.professorId, professorId)));

@@ -181,9 +181,14 @@ export async function calcularHAIdeal(
       // [HA-NA-ENTRADA-NOTURNO] (05/10/2026, igual ao Urania) o bloqueio automatico
       // da aula 1 do noturno (18:00, nao letiva) so impede AULA -- a geracao ja
       // ignora periodo nao letivo sozinha. Hora-atividade pode ficar nesse horario,
-      // mas so em dia em que o professor ja tem aula nesse turno (nunca faz o
-      // professor ir a escola so pela HA das 18:00).
-      if (ehBloqueioPeriodoNaoLetivo(d.motivo) && d.turno && [...(ocupadoPorTurnoOriginal.get(d.turno) ?? [])].some((k) => k.startsWith(`${d.diaSemana}-`))) continue;
+      // mas so em dia em que o professor tem a 1a aula LETIVA do turno (18:45):
+      // a HA das 18:00 emenda direto na aula, como no Urania. [HA-1800-SO-COLADA]
+      // (05/10/2026) antes bastava ter aula no dia, e a HA das 18:00 criava janela
+      // em quem so comecava as 19:35 (Dorival, Geverson).
+      if (ehBloqueioPeriodoNaoLetivo(d.motivo) && d.turno) {
+        const primeiraLetiva = limitesLetivos.get(d.turno)?.primeira;
+        if (primeiraLetiva != null && ocupadoPorTurnoOriginal.get(d.turno)?.has(`${d.diaSemana}-${primeiraLetiva}`)) continue;
+      }
       const chave = `${d.diaSemana}-${d.horarioSlot}`;
       if (d.turno == null) {
         for (const turno of Object.keys(aulasPorTurno)) {
