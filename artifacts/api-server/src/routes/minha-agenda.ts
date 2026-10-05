@@ -15,6 +15,7 @@ import {
 } from "@workspace/db";
 import { and, eq, gte, ne, or, isNull } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
+import { ehHAOutroTurno } from "../lib/ha-contraturno"; // [HA-OUTRO-TURNO]
 import { z } from "zod";
 import { validateReserva, publicReserva } from "./reservas";
 import { regrasReservaProfessorTable } from "@workspace/db";
@@ -92,11 +93,12 @@ router.get("/horario", async (req, res) => {
   // [HA] Hora-Atividade obrigatoria do professor -- slots vazios na
   // grade (sem aula de nenhuma turma) que ainda assim sao
   // "ocupados" por HA, pra distinguir de horario realmente livre.
-  const horasAtividade = await db
+  const horasAtividadeBrutas = await db
     .select({
       diaSemana: disponibilidadeTable.diaSemana,
       numeroAula: disponibilidadeTable.horarioSlot,
       turno: disponibilidadeTable.turno, // [AGENDA-TURNOS]
+      motivo: disponibilidadeTable.motivo, // [HA-OUTRO-TURNO]
     })
     .from(disponibilidadeTable)
     .where(
@@ -105,6 +107,9 @@ router.get("/horario", async (req, res) => {
         eq(disponibilidadeTable.horaAtividadeObrigatoria, true),
       ),
     );
+
+  // [HA-OUTRO-TURNO] devolve so a marca (HA de aulas de outro turno = HA*), nunca o motivo
+  const horasAtividade = horasAtividadeBrutas.map(({ motivo, ...h }) => ({ ...h, outroTurno: ehHAOutroTurno(motivo) }));
 
   // [AGENDA-TURNOS] horario de inicio de cada aula, por turno (esquema de aulas da escola)
   const slots = await db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId));

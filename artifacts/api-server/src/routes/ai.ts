@@ -10,6 +10,7 @@ import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 import { limitadorIA } from "../middlewares/rateLimit";
 import { GUIA_NEXGRADE, TOPICOS_GUIA, buscarNoGuia } from "../lib/guia-nexgrade"; // [GUIA-IA]
+import { ehHAOutroTurno } from "../lib/ha-contraturno"; // [HA-OUTRO-TURNO]
 // [IA-AMPLIADA] gerarAlgoritmo (motor simples antigo) nao e mais usado aqui:
 // a geracao de grade saiu do assistente -- ver "gerar_horario_turma" abaixo.
 
@@ -435,7 +436,7 @@ async function consultarGradeProfessor(escolaId: string, professorNome: string) 
     })),
     horaAtividade: {
       total: ha.length,
-      observacao: "HA* = hora-atividade em contraturno (num turno em que o professor não tem aula).",
+      observacao: "HA* = hora-atividade em contraturno (num turno em que o professor não tem aula) ou referente a aulas de outro turno.",
       slots: ha
         .sort((a, b) => a.diaSemana - b.diaSemana || a.horarioSlot - b.horarioSlot)
         .map((h) => ({
@@ -443,7 +444,7 @@ async function consultarGradeProfessor(escolaId: string, professorNome: string) 
           aula: h.horarioSlot,
           turno: h.turno ?? "sem turno",
           inicio: h.turno ? horas.get(`${h.turno}-${h.horarioSlot}`) ?? null : null,
-          rotulo: h.turno && !turnosComAula.has(h.turno) ? "HA*" : "HA",
+          rotulo: (h.turno && !turnosComAula.has(h.turno)) || ehHAOutroTurno(h.motivo) ? "HA*" : "HA", // [HA-OUTRO-TURNO]
         })),
     },
     outrasIndisponibilidades: outros.map((o) => ({

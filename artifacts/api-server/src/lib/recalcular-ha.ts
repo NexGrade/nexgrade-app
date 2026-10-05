@@ -35,7 +35,7 @@ import {
 import { eq, inArray, sql } from "drizzle-orm";
 import { PARES_TURNO } from "./intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 
-const MOTIVO_HA_AUTO = "Hora-atividade institucional (recalculada automaticamente)";
+import { MOTIVO_HA_AUTO, MOTIVO_HA_AUTO_OUTRO_TURNO } from "./ha-contraturno"; // [HA-OUTRO-TURNO]
 
 const TABELA_OFICIAL_HA: readonly number[] = [
   0,
@@ -94,6 +94,7 @@ export interface MarcaHACalculada {
   turno: string;
   diaSemana: number;
   horarioSlot: number;
+  outroTurno?: boolean; // [HA-OUTRO-TURNO] HA de aulas de outro turno (sai como HA*)
 }
 
 /**
@@ -201,7 +202,7 @@ export async function calcularHAIdeal(
     // tomada por fora do sistema (autorizacao da coordenacao), sempre
     // respeitada e nunca recalculada por aqui. Conta pro total exigido.
     const haManualContraturno = disponibilidades.filter(
-      (d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && d.motivo !== MOTIVO_HA_AUTO && !ocupadoPorTurnoOriginal.get(d.turno ?? "")?.has(`${d.diaSemana}-${d.horarioSlot}`), // [FIX-HA-AUTO-NAO-E-MANUAL] [HA-MANUAL-QUALQUER-TURNO] [HA-MANUAL-CEDE-A-AULA] HA nao automatica e preservada em qualquer turno, exceto se uma aula passou a ocupar o horario
+      (d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && !(d.motivo ?? "").startsWith(MOTIVO_HA_AUTO) && !ocupadoPorTurnoOriginal.get(d.turno ?? "")?.has(`${d.diaSemana}-${d.horarioSlot}`), // [FIX-HA-AUTO-NAO-E-MANUAL] [HA-MANUAL-QUALQUER-TURNO] [HA-MANUAL-CEDE-A-AULA] HA nao automatica e preservada em qualquer turno, exceto se uma aula passou a ocupar o horario
     );
     for (const m of haManualContraturno) {
       marcasFinais.push({ professorId: prof.id, turno: m.turno ?? "sem_turno", diaSemana: m.diaSemana, horarioSlot: m.horarioSlot });
@@ -242,6 +243,7 @@ export async function calcularHAIdeal(
       maxHaPorDia: number,
       diasPermitidos?: Set<number>, // [FIX-CONTRATURNO-SO-DIA-COM-AULA]
       maxSeguidas?: number, // [HA-MAX-SEGUIDAS]
+      outroTurno = false, // [HA-OUTRO-TURNO]
     ): number {
       let orcamento = orcamentoInicial;
       const maxAula = maxAulaPorTurno.get(turno) ?? 6;
@@ -359,7 +361,7 @@ export async function calcularHAIdeal(
         }
         if (!melhor) break;
 
-        marcasFinais.push({ professorId: prof.id, turno, diaSemana: melhor.dia, horarioSlot: melhor.aula });
+        marcasFinais.push({ professorId: prof.id, turno, diaSemana: melhor.dia, horarioSlot: melhor.aula, ...(outroTurno ? { outroTurno: true } : {}) });
         ocupado.add(`${melhor.dia}-${melhor.aula}`);
         contagemDiaAtual.set(melhor.dia, (contagemDiaAtual.get(melhor.dia) ?? 0) + 1);
         const chaveTurnoDia = `${turno}-${melhor.dia}`;
@@ -384,32 +386,51 @@ export async function calcularHAIdeal(
     // por professor.
     const contagemDiaAtualProfessor = new Map<number, number>();
     const haPosicoesPorDiaProfessor = new Map<string, Set<number>>();
-    let sobraGeral = 0;
+    // [HA-OUTRO-TURNO] sobra guardada por turno de ORIGEM (o turno cujas aulas
+    // geraram a HA). HA cumprida num turno diferente do de origem e "HA de outro
+    // turno" e sai como HA* (decisao 05/10/2026, igual ao Urania) -- mesmo quando
+    // o professor tambem da aula no turno onde ela e cumprida.
+    const sobraPorTurno: Record<string, number> = {};
+    const totalSobra = (): number => Object.values(sobraPorTurno).reduce((s, n) => s + n, 0);
+    const sobraDeOutros = (turno: string): number => totalSobra() - (sobraPorTurno[turno] ?? 0);
+    // desconta n da sobra: do proprio turno de destino primeiro (se permitido), depois dos outros
+    const consumirSobra = (n: number, turnoDestino: string | null, incluirProprio: boolean): void => {
+      let resta = n;
+      if (incluirProprio && turnoDestino) {
+        const p = Math.min(resta, sobraPorTurno[turnoDestino] ?? 0);
+        sobraPorTurno[turnoDestino] = (sobraPorTurno[turnoDestino] ?? 0) - p;
+        resta -= p;
+      }
+      for (const t of Object.keys(sobraPorTurno)) {
+        if (resta <= 0) break;
+        if (t === turnoDestino) continue;
+        const q = Math.min(resta, sobraPorTurno[t] ?? 0);
+        sobraPorTurno[t] = (sobraPorTurno[t] ?? 0) - q;
+        resta -= q;
+      }
+    };
     for (const turno of Object.keys(aulasPorTurno)) {
       const orcamento = orcamentoPorTurno[turno] ?? 0;
       if (orcamento <= 0) continue;
       const restante = preencherGuloso(turno, orcamento, ocupadoPorTurnoOriginal.get(turno) ?? new Set(), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_ENSINO, undefined, MAX_HA_SEGUIDAS_ENSINO);
-      sobraGeral += restante;
+      if (restante > 0) sobraPorTurno[turno] = restante;
     }
 
-    // [FIX-SOBRA-ENTRE-TURNOS-DE-ENSINO] professor em 3+ turnos pode nao
-    // ter NENHUM turno de contraturno puro (turno sem nenhuma aula) --
-    // nesse caso a sobra nunca tinha pra onde ir, mesmo com espaco livre
-    // de verdade sobrando em outro turno de ENSINO dele (achado real:
-    // Elisangela e Dorival, ambos em matutino+vespertino+noturno,
-    // 2026-09-17). Tenta de novo, dessa vez nos proprios turnos de
-    // ensino, usando o espaco que sobrou alem do orcamento proporcional
-    // original de cada um.
-    if (sobraGeral > 0) {
-      const turnosDeEnsino = Object.keys(aulasPorTurno);
-      const ocupadoAtual = (turno: string): Set<string> => {
-        const s = new Set(ocupadoPorTurnoOriginal.get(turno) ?? new Set());
-        for (let dia = 0; dia < 5; dia++) {
-          const pos = haPosicoesPorDiaProfessor.get(`${turno}-${dia}`);
-          if (pos) for (const aula of pos) s.add(`${dia}-${aula}`);
-        }
-        return s;
-      };
+    // HA ja colocada + aula real do turno (base dos passos seguintes)
+    const ocupadoAtual = (turno: string): Set<string> => {
+      const s = new Set<string>(ocupadoPorTurnoOriginal.get(turno) ?? new Set<string>());
+      for (let dia = 0; dia < 5; dia++) {
+        const pos = haPosicoesPorDiaProfessor.get(`${turno}-${dia}`);
+        if (pos) for (const aula of pos) s.add(`${dia}-${aula}`);
+      }
+      return s;
+    };
+
+    // [FIX-SOBRA-ENTRE-TURNOS-DE-ENSINO] professor em 2+ turnos de ensino: a
+    // sobra de um turno tenta caber no espaco livre de OUTRO turno de ensino
+    // dele (achado real: Elisangela e Dorival, 2026-09-17). [HA-OUTRO-TURNO]
+    // o que entra aqui e HA de outro turno (HA*).
+    if (totalSobra() > 0) {
       const espacoLivreEnsino = (turno: string): number => {
         const maxAula = maxAulaPorTurno.get(turno) ?? 6;
         const bloqueado = bloqueadoPorTurno.get(turno) ?? new Set();
@@ -422,25 +443,23 @@ export async function calcularHAIdeal(
         }
         return livre;
       };
-      const ordenados = [...turnosDeEnsino].sort((a, b) => espacoLivreEnsino(b) - espacoLivreEnsino(a));
+      const ordenados = Object.keys(aulasPorTurno).sort((a, b) => espacoLivreEnsino(b) - espacoLivreEnsino(a));
       for (const turno of ordenados) {
-        if (sobraGeral <= 0) break;
-        sobraGeral = preencherGuloso(turno, sobraGeral, ocupadoAtual(turno), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_ENSINO, undefined, MAX_HA_SEGUIDAS_ENSINO);
+        const pedir = sobraDeOutros(turno);
+        if (pedir <= 0) continue;
+        const resto = preencherGuloso(turno, pedir, ocupadoAtual(turno), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_ENSINO, undefined, MAX_HA_SEGUIDAS_ENSINO, true);
+        consumirSobra(pedir - resto, turno, false);
       }
     }
 
-    // [CONTRATURNO-AUTOMATICO] O que nao coube no(s) turno(s) de
-    // ensino (turno lotado -- aula real ocupando quase tudo) e
-    // colocado automaticamente em contraturno, no(s) turno(s) onde o
-    // professor NAO da aula nenhuma. Prioriza o turno com mais espaco
-    // livre primeiro. So entra aqui quando de fato faltou espaco --
-    // nunca reduz o que ja coube no turno de ensino.
-    if (sobraGeral > 0) {
+    // [CONTRATURNO-AUTOMATICO] O que nao coube nos turnos de ensino vai para
+    // contraturno (turno onde o professor NAO da aula), so em dia com aula.
+    // [CONTRATURNO-VIZINHO] (decisao 05/10/2026, igual ao Urania) preferencia
+    // pelo turno DIURNO vizinho: professor da tarde faz HA* de manha, o da manha
+    // faz a tarde, o da noite faz a tarde; a noite so entra se nao couber no
+    // diurno. Empate: turno com mais horario livre (regra anterior).
+    if (totalSobra() > 0) {
       const turnosContraturno = [...maxAulaPorTurno.keys()].filter((t) => !(t in aulasPorTurno));
-      // ordena pelo turno com mais slots livres primeiro, pra
-      // distribuir de forma mais equilibrada quando ha mais de uma
-      // opcao de contraturno (ex.: professor so do vespertino tem
-      // tanto matutino quanto noturno como opcao)
       const espacoLivre = (turno: string) => {
         const maxAula = maxAulaPorTurno.get(turno) ?? 6;
         const bloqueado = bloqueadoPorTurno.get(turno) ?? new Set();
@@ -452,17 +471,22 @@ export async function calcularHAIdeal(
         }
         return livre;
       };
-      turnosContraturno.sort((a, b) => espacoLivre(b) - espacoLivre(a));
+      const VIZINHOS: ReadonlyArray<readonly [string, string]> = [["matutino", "vespertino"], ["vespertino", "noturno"]];
+      const ehVizinho = (t: string) => Object.keys(aulasPorTurno).some((e) => VIZINHOS.some(([a, b]) => (a === t && b === e) || (b === t && a === e)));
+      const prioridade = (t: string) => (t === "noturno" ? 2 : 0) + (ehVizinho(t) ? 0 : 1);
+      turnosContraturno.sort((a, b) => prioridade(a) - prioridade(b) || espacoLivre(b) - espacoLivre(a));
 
       for (const turno of turnosContraturno) {
-        if (sobraGeral <= 0) break;
+        const pedir = totalSobra();
+        if (pedir <= 0) break;
         // [FIX] semeia com a HA manual ja existente nesse contraturno
         // (se houver) -- senao o preenchimento automatico podia
         // escolher o MESMO slot que já tem uma marca manual ali.
         const jaManualNesseTurno = new Set(
           haManualContraturno.filter((m) => (m.turno ?? "sem_turno") === turno).map((m) => `${m.diaSemana}-${m.horarioSlot}`),
         );
-        sobraGeral = preencherGuloso(turno, sobraGeral, jaManualNesseTurno, contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_CONTRATURNO, diasComAula);
+        const resto = preencherGuloso(turno, pedir, jaManualNesseTurno, contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_CONTRATURNO, diasComAula, undefined, true);
+        consumirSobra(pedir - resto, null, false);
       }
     }
 
@@ -472,16 +496,22 @@ export async function calcularHAIdeal(
     // (padrao: a 4a) nos turnos de ensino. So entra quando nao ha outra
     // opcao -- nunca muda o que ja coube com o limite normal.
     // RECALCULO_HA_MAX_POR_DIA_EXCECAO=0 desliga a excecao.
+    // [HA-OUTRO-TURNO] em cada turno, primeiro a sobra do proprio turno (HA),
+    // depois a dos outros (HA*).
     const MAX_HA_POR_DIA_EXCECAO = Number(process.env.RECALCULO_HA_MAX_POR_DIA_EXCECAO ?? "4");
-    if (sobraGeral > 0 && MAX_HA_POR_DIA_EXCECAO > MAX_HA_POR_DIA_ENSINO) {
+    if (totalSobra() > 0 && MAX_HA_POR_DIA_EXCECAO > MAX_HA_POR_DIA_ENSINO) {
       for (const turno of Object.keys(aulasPorTurno)) {
-        if (sobraGeral <= 0) break;
-        const ocupExcecao = new Set<string>(ocupadoPorTurnoOriginal.get(turno) ?? new Set<string>());
-        for (let dia = 0; dia < 5; dia++) {
-          const pos = haPosicoesPorDiaProfessor.get(`${turno}-${dia}`);
-          if (pos) for (const aula of pos) ocupExcecao.add(`${dia}-${aula}`);
+        if (totalSobra() <= 0) break;
+        const proprio = sobraPorTurno[turno] ?? 0;
+        if (proprio > 0) {
+          const resto = preencherGuloso(turno, proprio, ocupadoAtual(turno), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_EXCECAO, undefined, MAX_HA_SEGUIDAS_ENSINO);
+          consumirSobra(proprio - resto, turno, true);
         }
-        sobraGeral = preencherGuloso(turno, sobraGeral, ocupExcecao, contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_EXCECAO, undefined, MAX_HA_SEGUIDAS_ENSINO);
+        const outros = sobraDeOutros(turno);
+        if (outros > 0) {
+          const resto = preencherGuloso(turno, outros, ocupadoAtual(turno), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_EXCECAO, undefined, MAX_HA_SEGUIDAS_ENSINO, true);
+          consumirSobra(outros - resto, turno, false);
+        }
       }
     }
 
@@ -555,6 +585,13 @@ async function recalcularHoraAtividadeUmaPassada(escolaId: string): Promise<Resu
 
   const paraInserirBruto = marcasFinais.filter((m) => !existentesPorChave.has(chaveMarca(m)));
   const paraInserir = [...new Map(paraInserirBruto.map((m) => [chaveMarca(m), m])).values()];
+  // [HA-OUTRO-TURNO] motivo de cada HA automatica: o sufixo marca HA de outro turno (HA*)
+  const motivoDe = (m: MarcaHACalculada) => (m.outroTurno ? MOTIVO_HA_AUTO_OUTRO_TURNO : MOTIVO_HA_AUTO);
+  // HA automatica que continua no mesmo lugar mas mudou de origem: so troca o motivo
+  const paraTrocarMotivo = [...new Map(marcasFinais
+    .map((m) => ({ m, d: existentesPorChave.get(chaveMarca(m)) }))
+    .filter((x) => x.d && (x.d.motivo ?? "").startsWith(MOTIVO_HA_AUTO) && x.d.motivo !== motivoDe(x.m))
+    .map((x) => [x.d!.id, { id: x.d!.id, motivo: motivoDe(x.m), professorId: x.d!.professorId }] as const)).values()];
   const paraRemoverIds = disponibilidades
     .filter((d) => !finaisSet.has(chaveMarca({ professorId: d.professorId, turno: d.turno ?? "sem_turno", diaSemana: d.diaSemana, horarioSlot: d.horarioSlot })))
     .map((d) => d.id);
@@ -562,9 +599,10 @@ async function recalcularHoraAtividadeUmaPassada(escolaId: string): Promise<Resu
   const professoresAfetadosSet = new Set<number>([
     ...paraInserir.map((m) => m.professorId),
     ...disponibilidades.filter((d) => paraRemoverIds.includes(d.id)).map((d) => d.professorId),
+    ...paraTrocarMotivo.map((t) => t.professorId),
   ]);
 
-  if (paraInserir.length === 0 && paraRemoverIds.length === 0) {
+  if (paraInserir.length === 0 && paraRemoverIds.length === 0 && paraTrocarMotivo.length === 0) {
     return { inseridas: 0, removidas: 0, professoresAfetados: 0, professoresAfetadosIds: [] };
   }
 
@@ -589,11 +627,11 @@ async function recalcularHoraAtividadeUmaPassada(escolaId: string): Promise<Resu
           horarioSlot: i.horarioSlot,
           disponivel: true,
           horaAtividadeObrigatoria: true,
-          motivo: MOTIVO_HA_AUTO,
+          motivo: motivoDe(i), // [HA-OUTRO-TURNO]
         })),
       ).onConflictDoUpdate({
         target: [disponibilidadeTable.professorId, disponibilidadeTable.diaSemana, disponibilidadeTable.horarioSlot, disponibilidadeTable.turno],
-        set: { disponivel: true, horaAtividadeObrigatoria: true, motivo: MOTIVO_HA_AUTO },
+        set: { disponivel: true, horaAtividadeObrigatoria: true, motivo: sql`excluded.motivo` }, // [HA-OUTRO-TURNO]
         // [FIX-GRAVAR-LINHA-LIVRE] converte tambem linha livre (disponivel=true, sem HA) em HA;
         // nunca sobrescreve bloqueio real (disponivel=false) nem marcador "ocupado" do Urania.
         where: sql`${disponibilidadeTable.horaAtividadeObrigatoria} = true OR (${disponibilidadeTable.disponivel} = true AND COALESCE(${disponibilidadeTable.motivo}, '') NOT LIKE '%ocupado:%')`,
@@ -602,6 +640,11 @@ async function recalcularHoraAtividadeUmaPassada(escolaId: string): Promise<Resu
     }
     if (paraRemoverIds.length > 0) {
       await tx.delete(disponibilidadeTable).where(inArray(disponibilidadeTable.id, paraRemoverIds));
+    }
+    // [HA-OUTRO-TURNO] so troca o motivo (HA <-> HA*), sem mexer no horario
+    for (const motivo of [MOTIVO_HA_AUTO, MOTIVO_HA_AUTO_OUTRO_TURNO]) {
+      const ids = paraTrocarMotivo.filter((t) => t.motivo === motivo).map((t) => t.id);
+      if (ids.length > 0) await tx.update(disponibilidadeTable).set({ motivo }).where(inArray(disponibilidadeTable.id, ids));
     }
   });
 

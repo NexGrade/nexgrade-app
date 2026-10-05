@@ -9,6 +9,15 @@ import type { getEscolaId } from "./escola-id";
 
 type EscolaId = ReturnType<typeof getEscolaId>;
 
+// [HA-OUTRO-TURNO] Motivo gravado pelo recalculo automatico de HA. HA referente
+// a aulas de OUTRO turno (decisao 05/10/2026, igual ao Urania) ganha o sufixo
+// abaixo e tambem aparece como "HA*", mesmo num turno em que o professor da aula.
+export const MOTIVO_HA_AUTO = "Hora-atividade institucional (recalculada automaticamente)";
+export const MOTIVO_HA_AUTO_OUTRO_TURNO = `${MOTIVO_HA_AUTO} -- HA de outro turno (HA*)`;
+export function ehHAOutroTurno(motivo: string | null | undefined): boolean {
+  return (motivo ?? "").includes("HA de outro turno");
+}
+
 /** Turnos em que cada professor tem pelo menos uma aula na grade oficial. */
 export async function turnosComAulaPorProfessor(
   escolaId: EscolaId,
@@ -30,12 +39,14 @@ export async function turnosComAulaPorProfessor(
   return mapa;
 }
 
-/** Acrescenta "contraturno" em cada linha (true so para HA fora dos turnos de aula). */
+/** Acrescenta "contraturno" (HA fora dos turnos de aula) e "outroTurno" (HA de
+ *  aulas de outro turno, cumprida num turno de aula). As telas mostram "HA*" nos dois. */
 export function marcarContraturno<
-  T extends { professorId: number | null; turno?: string | null; horaAtividadeObrigatoria?: boolean | null },
->(rows: T[], turnosComAula: Map<number, Set<string>>): Array<T & { contraturno: boolean }> {
+  T extends { professorId: number | null; turno?: string | null; horaAtividadeObrigatoria?: boolean | null; motivo?: string | null },
+>(rows: T[], turnosComAula: Map<number, Set<string>>): Array<T & { contraturno: boolean; outroTurno: boolean }> {
   return rows.map((r) => ({
     ...r,
+    outroTurno: !!r.horaAtividadeObrigatoria && ehHAOutroTurno(r.motivo), // [HA-OUTRO-TURNO]
     contraturno:
       !!r.horaAtividadeObrigatoria &&
       !!r.turno &&

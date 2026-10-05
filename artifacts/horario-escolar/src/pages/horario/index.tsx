@@ -715,7 +715,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
       // [FIX] fetch() sem token Bearer -- voltava 401, e o "HA"
       // (Hora-Atividade) simplesmente nunca aparecia destacado na
       // grade por professor. customFetch já anexa o token.
-      customFetch<Array<{ diaSemana: number; horarioSlot: number; turno: string | null; horaAtividadeObrigatoria: boolean; contraturno?: boolean }>>(
+      customFetch<Array<{ diaSemana: number; horarioSlot: number; turno: string | null; horaAtividadeObrigatoria: boolean; contraturno?: boolean; outroTurno?: boolean }>>(
         `/api/disponibilidade?professorId=${professorIdSelecionado}`,
         { responseType: "json" },
       ),
@@ -742,7 +742,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
     if (!professorIdSelecionado || !disponibilidadeProf) return false;
     return disponibilidadeProf.some((d) =>
       d.horaAtividadeObrigatoria &&
-      d.contraturno === true &&
+      (d.contraturno === true || d.outroTurno === true) && // [HA-OUTRO-TURNO]
       d.diaSemana === diaSemana &&
       d.horarioSlot === numeroAula &&
       (d.turno ?? turnoEmUso) === turnoEmUso,

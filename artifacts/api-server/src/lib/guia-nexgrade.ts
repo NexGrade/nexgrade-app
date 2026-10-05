@@ -131,7 +131,7 @@ HORÁRIO DA TURMA
 3. Clique em "Salvar" (ou "Desfazer" para descartar). Repita para cada turno em que o professor trabalha.
 - Se o horário já tem aula real e você bloqueia, o sistema avisa que isso vai gerar conflito "professor indisponível".
 - Se aparecer "Nenhum esquema de horário configurado para o turno", configure antes em Calendário e Turnos → Esquema de aulas por turno.
-- HA* = hora-atividade em contraturno (num turno em que o professor não tem aula). Aparece assim na Grade, na Minha Agenda, no perfil e nos PDFs.
+- HA* = hora-atividade em contraturno (num turno em que o professor não tem aula) ou referente a aulas de outro turno (ex.: HA das aulas da tarde cumprida de manhã). Aparece assim na Grade, na Minha Agenda, no perfil e nos PDFs.
 
 FIXAR UMA AULA (o CP-SAT mantém a aula naquele horário)
 1. Ligue "Modo fixar aula".

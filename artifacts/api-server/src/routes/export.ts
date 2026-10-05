@@ -13,6 +13,7 @@ import { gerarPdfGradeCompacta, type BlocoGrade } from "../lib/pdf-grade";
 import { gerarPdfCargaProfessores, type RelatorioProfessor } from "../lib/pdf-carga-professor";
 import { gerarPdfCargaHoraria, type TurmaCargaHoraria } from "../lib/pdf-carga-horaria";
 import { calcularHAIdeal, type MarcaHACalculada } from "../lib/recalcular-ha";
+import { ehHAOutroTurno } from "../lib/ha-contraturno"; // [HA-OUTRO-TURNO]
 
 const router = Router();
 
@@ -650,12 +651,12 @@ router.get("/grade-pdf/professor", async (req, res) => {
         ? haSimulada.filter((m) => m.professorId === prof.id && m.turno === turno)
         : disponibilidades
             .filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && d.turno === turno)
-            .map((d) => ({ diaSemana: d.diaSemana, horarioSlot: d.horarioSlot })))
+            .map((d) => ({ diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, outroTurno: ehHAOutroTurno(d.motivo) })))
         .filter((m) => !aulasDoProf.some((a) => a.diaSemana === m.diaSemana && a.numeroAula === m.horarioSlot))
         .map((m) => ({
           diaSemana: m.diaSemana,
           numeroAula: m.horarioSlot,
-          linha1: ehContraturno ? "HA*" : "HA",
+          linha1: ehContraturno || m.outroTurno ? "HA*" : "HA", // [HA-OUTRO-TURNO] HA de aulas de outro turno tambem e HA*
           destacado: true,
         }));
 
