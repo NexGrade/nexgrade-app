@@ -151,7 +151,10 @@ async function buscarHorariosPorAula(
   // sem nenhuma aula real ali -- e o padrao visual do proprio Urania.
   // numeroAula 0 nunca e usado por aula de verdade, entao essa linha
   // sempre aparece vazia.
-  if (turno === "noturno" && rows.some((r) => r.horaInicio.startsWith("18:00"))) mapa[0] = "18:00"; // [LINHA-1800-SE-EXISTE]
+  // [FIX-1800-DUPLICADO] (05/10/2026) a linha extra 0 = "18:00" so era criada
+  // quando JA existia um horario real as 18:00 (aula 1 nao letiva) -- o PDF saia
+  // com "18:00" duas vezes. O Urania mostra 18:00 uma vez so (a propria aula 1),
+  // entao a linha extra saiu: o 18:00 continua aparecendo pela aula 1.
   return mapa;
 }
 

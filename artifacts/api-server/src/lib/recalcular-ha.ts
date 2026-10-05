@@ -37,6 +37,13 @@ import { PARES_TURNO } from "./intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURN
 
 import { MOTIVO_HA_AUTO, MOTIVO_HA_AUTO_OUTRO_TURNO } from "./ha-contraturno"; // [HA-OUTRO-TURNO]
 
+// [HA-NA-ENTRADA-NOTURNO] motivo do bloqueio gravado em 2026-09-23 na aula 1 do
+// noturno (18:00, so entrada, letivo=false). Bloqueia aula, nao hora-atividade.
+const MOTIVO_BLOQUEIO_NAO_LETIVO = "Bloqueio automatico: aula 1 do noturno";
+function ehBloqueioPeriodoNaoLetivo(motivo: string | null | undefined): boolean {
+  return (motivo ?? "").startsWith(MOTIVO_BLOQUEIO_NAO_LETIVO);
+}
+
 const TABELA_OFICIAL_HA: readonly number[] = [
   0,
   0, 0, 1, 1, 2, 2, 2, 2, 3, 3,
@@ -171,6 +178,12 @@ export async function calcularHAIdeal(
     const bloqueadoPorTurno = new Map<string, Set<string>>();
     for (const d of disponibilidades) {
       if (d.professorId !== prof.id || d.disponivel) continue;
+      // [HA-NA-ENTRADA-NOTURNO] (05/10/2026, igual ao Urania) o bloqueio automatico
+      // da aula 1 do noturno (18:00, nao letiva) so impede AULA -- a geracao ja
+      // ignora periodo nao letivo sozinha. Hora-atividade pode ficar nesse horario,
+      // mas so em dia em que o professor ja tem aula nesse turno (nunca faz o
+      // professor ir a escola so pela HA das 18:00).
+      if (ehBloqueioPeriodoNaoLetivo(d.motivo) && d.turno && [...(ocupadoPorTurnoOriginal.get(d.turno) ?? [])].some((k) => k.startsWith(`${d.diaSemana}-`))) continue;
       const chave = `${d.diaSemana}-${d.horarioSlot}`;
       if (d.turno == null) {
         for (const turno of Object.keys(aulasPorTurno)) {
@@ -634,7 +647,8 @@ async function recalcularHoraAtividadeUmaPassada(escolaId: string): Promise<Resu
         set: { disponivel: true, horaAtividadeObrigatoria: true, motivo: sql`excluded.motivo` }, // [HA-OUTRO-TURNO]
         // [FIX-GRAVAR-LINHA-LIVRE] converte tambem linha livre (disponivel=true, sem HA) em HA;
         // nunca sobrescreve bloqueio real (disponivel=false) nem marcador "ocupado" do Urania.
-        where: sql`${disponibilidadeTable.horaAtividadeObrigatoria} = true OR (${disponibilidadeTable.disponivel} = true AND COALESCE(${disponibilidadeTable.motivo}, '') NOT LIKE '%ocupado:%')`,
+        // [HA-NA-ENTRADA-NOTURNO] tambem aceita o bloqueio automatico do periodo nao letivo (18:00).
+        where: sql`${disponibilidadeTable.horaAtividadeObrigatoria} = true OR (${disponibilidadeTable.disponivel} = true AND COALESCE(${disponibilidadeTable.motivo}, '') NOT LIKE '%ocupado:%') OR COALESCE(${disponibilidadeTable.motivo}, '') LIKE ${MOTIVO_BLOQUEIO_NAO_LETIVO + "%"}`,
       }).returning({ id: disponibilidadeTable.id });
       gravadas = gravadasRows.length;
     }
