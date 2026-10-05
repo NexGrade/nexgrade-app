@@ -112,6 +112,14 @@ function lerOffsetSemana(req: { query: { semana?: unknown } }): number {
   return req.query.semana === "proxima" ? 1 : 0;
 }
 
+// [ROTULO-BLOQUEIO] Codigo da atividade que o Urania grava no motivo do bloqueio
+// ("Sincronizado do PDF oficial Urania (ocupado: PAEE) -- ..."): PAEE, COORD, PAC,
+// LAB, FORM, REP* etc. Sai escrito na celula do PDF, como no proprio Urania.
+function rotuloDoBloqueio(motivo: string | null | undefined): string | undefined {
+  const m = /\(ocupado:\s*([^)]+?)\s*\)/.exec(motivo ?? "");
+  return m ? m[1] : undefined;
+}
+
 async function buscarHorariosPorAula(
   escolaId: string,
   turno: string,
@@ -558,7 +566,9 @@ router.get("/grade-pdf/professor", async (req, res) => {
     ? professoresTodos.filter((p) =>
         slots.some((s) => s.professorId === p.id) ||
         // quem so tem HA* num turno deste PDF tambem precisa aparecer nele
-        haSimulada.some((m) => m.professorId === p.id && !!m.turno && (!turnosDoPdf || turnosDoPdf.has(m.turno))))
+        haSimulada.some((m) => m.professorId === p.id && !!m.turno && (!turnosDoPdf || turnosDoPdf.has(m.turno))) ||
+        // [ROTULO-BLOQUEIO] professor so com atividade (PAEE, COORD, PAC...) num turno deste PDF
+        disponibilidades.some((d) => d.professorId === p.id && !!d.turno && (!turnosDoPdf || turnosDoPdf.has(d.turno)) && ehBloqueioReal(d) && !!rotuloDoBloqueio(d.motivo)))
     : professoresTodos;
   const professores = (professorIdFiltro ? professoresBase.filter((p) => p.id === professorIdFiltro) : professoresBase)
     .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
@@ -579,7 +589,15 @@ router.get("/grade-pdf/professor", async (req, res) => {
         : disponibilidades.filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria).map((d) => d.turno))
         .filter((t): t is string => !!t && !turnosAulaSemana.has(t) && !turnosComAulaNoEscopo.includes(t))
     )];
-    const turnosDoProf = [...turnosComAulaNoEscopo, ...turnosSoComHA].sort((a, b) => posTurno(a) - posTurno(b));
+    // [ROTULO-BLOQUEIO] turno em que o professor so tem atividade (PAEE, COORD, PAC...)
+    // tambem vira bloco, como no Urania (antes esses professores nem apareciam).
+    const turnosSoComAtividade = [...new Set(
+      disponibilidades
+        .filter((d) => d.professorId === prof.id && ehBloqueioReal(d) && !!rotuloDoBloqueio(d.motivo))
+        .map((d) => d.turno)
+        .filter((t): t is string => !!t && !turnosComAulaNoEscopo.includes(t) && !turnosSoComHA.includes(t))
+    )];
+    const turnosDoProf = [...turnosComAulaNoEscopo, ...turnosSoComHA, ...turnosSoComAtividade].sort((a, b) => posTurno(a) - posTurno(b));
     const turnosParaRenderizar = turnosDoPdf ? turnosDoProf.filter((t) => turnosDoPdf.has(t)) : turnosDoProf;
 
     for (const turno of turnosParaRenderizar) {
@@ -667,7 +685,7 @@ router.get("/grade-pdf/professor", async (req, res) => {
       const bloqueadasDoProf: NonNullable<BlocoGrade["celulasBloqueadas"]> = disponibilidades
         .filter((d) => d.professorId === prof.id && ehBloqueioReal(d) && d.turno === turno)
         .filter((d) => !aulasDoProf.some((a) => a.diaSemana === d.diaSemana && a.numeroAula === d.horarioSlot))
-        .map((d) => ({ diaSemana: d.diaSemana, numeroAula: d.horarioSlot }));
+        .map((d) => ({ diaSemana: d.diaSemana, numeroAula: d.horarioSlot, rotulo: rotuloDoBloqueio(d.motivo) })); // [ROTULO-BLOQUEIO]
 
       // Rótulo só mostra o turno quando o professor dá aula em mais de
       // um (senão fica redundante, ex. "ALINE (Manhã)" toda vez).

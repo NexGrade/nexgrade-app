@@ -19,7 +19,7 @@ type SlotGrade = {
   destacado?: boolean;
 };
 
-type CelulaBloqueada = { diaSemana: number; numeroAula: number };
+type CelulaBloqueada = { diaSemana: number; numeroAula: number; rotulo?: string }; // [ROTULO-BLOQUEIO]
 
 type BlocoGrade = {
   rotulo: string;
@@ -118,10 +118,13 @@ function desenharBloco(
         // [PDF-CABE-NA-CELULA] mede a largura real: 1 linha se couber; senao 2 linhas e fonte menor; so entao reticencias
         desenharTextoNaCelula(page, slot.linha2 ? [slot.linha1, slot.linha2] : [slot.linha1], slot.linha2 ? font : fontBold, x, yLinha, colDiaLargura - 6, alturaLinhaDado, slot.linha2 ? 6.5 : 7);
       } else {
-        const bloqueada = bloco.celulasBloqueadas?.some(
+        const bloqueada = bloco.celulasBloqueadas?.find(
           (c) => c.diaSemana === diaSemana && c.numeroAula === numeroAula,
         );
-        if (bloqueada) desenharPontilhado(page, x, yLinha, colDiaLargura, alturaLinhaDado);
+        // [ROTULO-BLOQUEIO] atividade com nome (PAEE, COORD, LAB...) sai escrita, como no Urania;
+        // bloqueio sem nome continua com a hachura pontilhada.
+        if (bloqueada?.rotulo) desenharTextoNaCelula(page, [sanitizarTextoPdf(bloqueada.rotulo)], font, x, yLinha, colDiaLargura - 6, alturaLinhaDado, 7);
+        else if (bloqueada) desenharPontilhado(page, x, yLinha, colDiaLargura, alturaLinhaDado);
       }
     });
   });
