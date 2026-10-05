@@ -544,8 +544,21 @@ router.get("/grade-pdf/professor", async (req, res) => {
   // [FIX] Ordem alfabetica por nome -- padrao ja usado em todas as
   // outras listas do sistema (dropdowns, tabelas de Professores/
   // Turmas/Disciplinas/Cursos etc.), essa rota ainda nao seguia.
+  // [HA-CONTRATURNO-SEPARADO] turnos que ESTE PDF cobre. Com ?turno=X, so X.
+  // Na previa sem ?turno, os turnos das turmas do experimento (ex.: experimento
+  // do matutino -> so matutino). A HA* de contraturno (ex.: noite de quem da
+  // aula de manha) sai no PDF do turno em que e cumprida, nao no do turno de aula.
+  // Oficial sem ?turno continua mostrando todos os turnos.
+  const turnosDoPdf: Set<string> | null = turnoFiltroProf
+    ? new Set([turnoFiltroProf])
+    : nomeExperimental
+      ? new Set(slots.map((s) => turnoDaTurma.get(s.turmaId)).filter((t): t is string => !!t))
+      : null;
   const professoresBase = nomeExperimental
-    ? professoresTodos.filter((p) => slots.some((s) => s.professorId === p.id))
+    ? professoresTodos.filter((p) =>
+        slots.some((s) => s.professorId === p.id) ||
+        // quem so tem HA* num turno deste PDF tambem precisa aparecer nele
+        haSimulada.some((m) => m.professorId === p.id && !!m.turno && (!turnosDoPdf || turnosDoPdf.has(m.turno))))
     : professoresTodos;
   const professores = (professorIdFiltro ? professoresBase.filter((p) => p.id === professorIdFiltro) : professoresBase)
     .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
@@ -567,7 +580,7 @@ router.get("/grade-pdf/professor", async (req, res) => {
         .filter((t): t is string => !!t && !turnosAulaSemana.has(t) && !turnosComAulaNoEscopo.includes(t))
     )];
     const turnosDoProf = [...turnosComAulaNoEscopo, ...turnosSoComHA].sort((a, b) => posTurno(a) - posTurno(b));
-    const turnosParaRenderizar = turnoFiltroProf ? turnosDoProf.filter((t) => t === turnoFiltroProf) : turnosDoProf;
+    const turnosParaRenderizar = turnosDoPdf ? turnosDoProf.filter((t) => turnosDoPdf.has(t)) : turnosDoProf;
 
     for (const turno of turnosParaRenderizar) {
       const slotsDoProfNesseTurno = slotsDoProf.filter((s) => turmas.find((t) => t.id === s.turmaId)?.turno === turno);
@@ -656,7 +669,8 @@ router.get("/grade-pdf/professor", async (req, res) => {
 
       // Rótulo só mostra o turno quando o professor dá aula em mais de
       // um (senão fica redundante, ex. "ALINE (Manhã)" toda vez).
-      const rotulo = turnosDoProf.length > 1
+      // [HA-CONTRATURNO-SEPARADO] conta so os turnos que saem NESTE PDF.
+      const rotulo = turnosParaRenderizar.length > 1
         ? `${prof.nome.toUpperCase()} (${TURNO_ROTULO[turno] ?? turno})`
         : prof.nome.toUpperCase();
 
