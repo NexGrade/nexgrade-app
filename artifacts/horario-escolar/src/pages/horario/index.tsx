@@ -769,7 +769,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
     // uso: num turno so com HA, cortar em 5 linhas escondia HA na 6a aula.
     const haNums = professorIdSelecionado && disponibilidadeProf
       ? disponibilidadeProf
-          .filter((d) => d.horaAtividadeObrigatoria && (d.turno ?? turnoEmUso) === turnoEmUso)
+          .filter((d) => (d.horaAtividadeObrigatoria || /\(ocupado:/.test(d.motivo ?? "")) && (d.turno ?? turnoEmUso) === turnoEmUso) // [GRADE-ROTULO-ATIVIDADE] atividade na 6a aula tambem abre a linha
           .map((d) => d.horarioSlot)
       : [];
     const aulaNums = (horarios ?? []).map((s) => s.numeroAula);
