@@ -1019,6 +1019,11 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                                   >
                                     <div className="font-semibold truncate">{slot.disciplina?.nome}</div>
                                     <div className="text-muted-foreground truncate">{nomesProfessores}</div>
+                                    {/* [REVEZAMENTO-TRIO-COMPACTO] trio: quem esta presencial nesta semana */}
+                                    {(() => {
+                                      const pres = slotsAqui.filter((s: any) => s.revezamento?.presencial).map((s) => abreviarNomeProfessor(s.professor?.nome, professores));
+                                      return pres.length ? <div className="mt-0.5 self-start inline-block rounded px-1 font-bold text-emerald-800 bg-emerald-100">Presencial: {pres.join(" + ")}</div> : null;
+                                    })()}
                                   </div>
                                 </div>
                               );

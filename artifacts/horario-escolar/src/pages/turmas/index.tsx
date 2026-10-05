@@ -100,6 +100,9 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
     setCriandoTrio(false);
     setSelTrio([]);
   }
+  async function salvarInicioTrio(gs: Array<{ disciplinaId: number }>, rotulo: string, v: string) { // [REVEZAMENTO-INICIO-SALVA]
+    for (const g of gs) await chamar(`/api/turmas/${turmaId}/disciplinas/${g.disciplinaId}/modalidade`, "PATCH", { trioInicio: v }, `Trio ${rotulo}: semana 1 = ${v.split("-").reverse().join("/")}`);
+  }
   async function desfazerTrio(rotulo: string) {
     if (!confirm(`Desfazer o trio ${rotulo}? As disciplinas voltam a ser independentes.`)) return;
     for (const g of grupos.filter((x) => x.trio === rotulo)) {
@@ -195,8 +198,11 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
               <span className="font-medium text-violet-900">Revezamento semanal:</span>
               <label className="flex items-center gap-1">semana 1 começa em
                 <Input key={`ini-${rotulo}-${inicio}`} type="date" defaultValue={inicio} className="h-7 w-36" disabled={salvando !== null} onKeyDown={semEnter}
-                  onBlur={async (e) => { const v = e.target.value; if (v && v !== inicio) { for (const g of gs) await chamar(urlMod(g), "PATCH", { trioInicio: v }, `Trio ${rotulo}: revezamento a partir de ${v.split("-").reverse().join("/")}`); } }} />
+                  onChange={(e) => { const v = e.target.value; if (/^20\d\d-\d\d-\d\d$/.test(v) && v !== inicio) void salvarInicioTrio(gs, rotulo, v); }} />
               </label>
+              {/* [REVEZAMENTO-INICIO-SALVA] grava na hora (antes so no blur e a data se perdia) + atalho */}
+              <Button type="button" size="sm" variant="outline" className="h-7 px-2 text-xs" disabled={salvando !== null}
+                onClick={() => salvarInicioTrio(gs, rotulo, segundaDestaSemanaISO())}>esta semana é a 1</Button>
               {gs.map((g) => (
                 <label key={g.disciplinaId} className="flex items-center gap-1">{g.nome}:
                   <select className="h-7 rounded border bg-background px-1" value={g.trioOrdem ?? ""} disabled={salvando !== null}
