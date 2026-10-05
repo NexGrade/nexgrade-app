@@ -715,7 +715,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
       // [FIX] fetch() sem token Bearer -- voltava 401, e o "HA"
       // (Hora-Atividade) simplesmente nunca aparecia destacado na
       // grade por professor. customFetch já anexa o token.
-      customFetch<Array<{ diaSemana: number; horarioSlot: number; turno: string | null; horaAtividadeObrigatoria: boolean; contraturno?: boolean; outroTurno?: boolean }>>(
+      customFetch<Array<{ diaSemana: number; horarioSlot: number; turno: string | null; horaAtividadeObrigatoria: boolean; contraturno?: boolean; outroTurno?: boolean; motivo?: string | null }>>(
         `/api/disponibilidade?professorId=${professorIdSelecionado}`,
         { responseType: "json" },
       ),
@@ -747,6 +747,21 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
       d.horarioSlot === numeroAula &&
       (d.turno ?? turnoEmUso) === turnoEmUso,
     );
+  };
+
+  // [GRADE-ROTULO-ATIVIDADE] (05/10/2026) horario bloqueado com atividade do
+  // Urania ("(ocupado: FORM)", "(ocupado: IF-1B)"...) aparece com o rotulo na
+  // grade por professor, igual ao PDF -- antes saia "Vago" e parecia janela.
+  const getAtividade = (diaSemana: number, numeroAula: number): string | undefined => {
+    if (!professorIdSelecionado || !disponibilidadeProf) return undefined;
+    const d = disponibilidadeProf.find((x) =>
+      !x.horaAtividadeObrigatoria &&
+      x.diaSemana === diaSemana &&
+      x.horarioSlot === numeroAula &&
+      (x.turno ?? turnoEmUso) === turnoEmUso,
+    );
+    const m = /\(ocupado:\s*([^)]+?)\s*\)/.exec(d?.motivo ?? "");
+    return m ? m[1] : undefined;
   };
 
   const getMaxAulas = () => {
@@ -1049,6 +1064,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                       const slot = slotsAqui[0];
                       if (!slot) {
                         const temHA = isProfessorSelected && getHA(colIndex, aulaNum);
+                        const atividade = isProfessorSelected && !temHA ? getAtividade(colIndex, aulaNum) : undefined; // [GRADE-ROTULO-ATIVIDADE]
                         return (
                           <button
                             key={`${aulaNum}-${colIndex}`}
@@ -1059,6 +1075,10 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                             {temHA ? (
                               <div className="h-full w-full rounded-md p-2 border-l-4 bg-amber-50 border-amber-400 flex items-center justify-center">
                                 <span className="text-xs font-semibold text-amber-700" title={getHAContraturno(colIndex, aulaNum) ? "Hora-atividade em contraturno (turno sem aula)" : "Hora-atividade"}>{getHAContraturno(colIndex, aulaNum) ? "HA*" : "HA"}</span>
+                              </div>
+                            ) : atividade ? (
+                              <div className="h-full w-full rounded-md p-2 border-l-4 bg-slate-100 border-slate-400 flex items-center justify-center">
+                                <span className="text-xs font-semibold text-slate-600" title="Atividade fora da sala (bloqueio sincronizado do Urania) -- nao e janela">{atividade}</span>
                               </div>
                             ) : (
                               <span className="text-xs text-muted-foreground/30 group-hover:text-primary group-hover:font-medium flex items-center gap-1">
