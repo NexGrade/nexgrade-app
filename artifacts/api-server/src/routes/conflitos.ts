@@ -128,8 +128,15 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     if (!slotProfMap[key]) slotProfMap[key] = [];
     slotProfMap[key]!.push(s.id);
   });
+  // [TRIO-MESMO-PROFESSOR] mesmo professor em 2+ disciplinas do MESMO trio,
+  // na mesma turma e horario, e esperado (uma aula so, carga das duas) -- nao e choque.
+  const trioDe = new Map(turmaDiscsTodos.filter((td) => td.grupoTrio?.trim() && td.professorId != null)
+    .map((td) => [`${td.turmaId}|${td.disciplinaId}|${td.professorId}`, `${td.turmaId}|${td.grupoTrio!.trim()}`]));
+  const slotPorId = new Map(slots.map((s) => [s.id, s]));
   Object.entries(slotProfMap).forEach(([key, ids]) => {
     if (ids.length > 1) {
+      const grupos = new Set(ids.map((id) => { const s = slotPorId.get(id)!; return trioDe.get(`${s.turmaId}|${s.disciplinaId}|${s.professorId}`) ?? `avulsa-${id}`; }));
+      if (grupos.size === 1) return; // [TRIO-MESMO-PROFESSOR]
       const partes = key.split("-");
       const profId = Number(partes[0]);
       const dia = Number(partes[2]);

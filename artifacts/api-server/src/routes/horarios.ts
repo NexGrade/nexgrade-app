@@ -1598,6 +1598,27 @@ async function runCpsatGeneracaoUnica(
     return { httpStatus: 400, body: { error: "Nenhuma disciplina com carga horaria > 0 e professor definido para este turno" } };
   }
 
+  // [TRIO-MESMO-PROFESSOR] O mesmo professor pode dar 2 (ou 3) disciplinas do
+  // mesmo trio. Como o trio cai sempre no mesmo horario, para o motor isso e
+  // UMA aula so desse professor naquele horario: so a 1a linha (base) vai ao
+  // CP-SAT; as outras ("espelho") recebem os mesmos dia/aula da base na volta
+  // e sao gravadas normalmente -- o professor continua com as DUAS aulas.
+  // A parte assincrona continua individual (vai ao motor normalmente).
+  const espelhosTrio = new Map<string, string[]>(); // "turma||codigoBase" -> codigos espelho
+  const baseDeEspelho = new Map<string, string>(); // "turma||codigoEspelho" -> codigoBase
+  const baseTrioProf = new Map<string, string>(); // "grupo|professor" -> codigoBase
+  const disciplinasMotor = disciplinasTurma.filter((d) => {
+    if (d.assincrona || !d.grupoDupla?.startsWith("trio::")) return true;
+    const k = `${d.grupoDupla}|${d.professor}`;
+    const base = baseTrioProf.get(k);
+    if (!base) { baseTrioProf.set(k, d.codigoSae); return true; }
+    const kb = `${d.turma}||${base}`;
+    espelhosTrio.set(kb, [...(espelhosTrio.get(kb) ?? []), d.codigoSae]);
+    baseDeEspelho.set(`${d.turma}||${d.codigoSae}`, base);
+    return false;
+  });
+  if (baseDeEspelho.size > 0) console.log(`[TRIO-MESMO-PROFESSOR] ${baseDeEspelho.size} linha(s) espelho no trio`);
+
   const professorIdsUsados = new Set(disciplinasTurma.map((d) => nomeParaProfessorId.get(d.professor)).filter((id): id is number => id != null));
   const bloqueiosDisponibilidade = disponibilidades
     .filter((d) => professorIdsUsados.has(d.professorId) && ehBloqueioParaMotor(d) && (d.turno === turno || d.turno == null)) // [REGRA-BLOQUEIO-REAL] ver lib/bloqueio-real.ts
@@ -1696,7 +1717,7 @@ async function runCpsatGeneracaoUnica(
     turno,
     aulasPorDia,
     turmas: turmasDoTurno.map((t) => ({ nome: t.nome, turno: t.turno, nivelEnsino: t.nivelEnsino })),
-    disciplinasTurma,
+    disciplinasTurma: disciplinasMotor, // [TRIO-MESMO-PROFESSOR]
     bloqueiosProfessor,
     tempoLimiteS: tempoLimiteS ?? 120,
     ...(usarCoordenacao ? {
@@ -1747,7 +1768,10 @@ async function runCpsatGeneracaoUnica(
       fixasImpossiveis.push(`${onde}: depois da ultima aula da turma (${ultimaT}a)`);
       continue;
     }
-    recursosFixos.push({ turma: turmaH.nome, codigoSae: codigo, professor: profNome, dia: h.diaSemana, aula: h.numeroAula });
+    const codigoMotor = baseDeEspelho.get(`${turmaH.nome}||${codigo}`) ?? codigo; // [TRIO-MESMO-PROFESSOR]
+    if (!recursosFixos.some((r) => r.turma === turmaH.nome && r.codigoSae === codigoMotor && r.dia === h.diaSemana && r.aula === h.numeroAula)) {
+      recursosFixos.push({ turma: turmaH.nome, codigoSae: codigoMotor, professor: profNome, dia: h.diaSemana, aula: h.numeroAula });
+    }
     chavesFixas.add(`${h.turmaId}|${h.disciplinaId}|${h.professorId}|${h.diaSemana}|${h.numeroAula}`);
   }
   if (fixasImpossiveis.length > 0) {
@@ -1796,6 +1820,7 @@ async function runCpsatGeneracaoUnica(
         semMapa.push(`${turmaH?.nome ?? `turma #${h.turmaId}`} | disciplina #${h.disciplinaId} | ${profNome ?? `professor #${h.professorId}`} | dia ${h.diaSemana} aula ${h.numeroAula}`);
         continue;
       }
+      if (baseDeEspelho.has(`${turmaH.nome}||${info.codigoSae}`)) continue; // [TRIO-MESMO-PROFESSOR] a base ja representa esta aula
       aulasIniciais.push({ turma: turmaH.nome, codigoSae: info.codigoSae, disciplina: info.disciplina, professor: profNome, dia: h.diaSemana, diaNome: DIAS_NOME[h.diaSemana] ?? String(h.diaSemana), aula: h.numeroAula });
     }
     if (aulasIniciais.length === 0 || semMapa.length > 0) {
@@ -1938,6 +1963,16 @@ async function runCpsatGeneracaoUnica(
       assincrona: ids.assincrona ?? false, // [ASSINCRONA-TRIO]
       fixa: chavesFixas.has(`${ids.turmaId}|${ids.disciplinaId}|${professorId}|${aula.dia}|${aula.aula}`), // [AULA-FIXA]
     });
+    // [TRIO-MESMO-PROFESSOR] replica a aula para as disciplinas espelho do mesmo professor no trio
+    for (const codEsp of espelhosTrio.get(`${aula.turma}||${aula.codigoSae}`) ?? []) {
+      const idsE = chaveParaIds.get(`${aula.turma}||${codEsp}`);
+      if (!idsE) continue;
+      linhasParaGravar.push({
+        escolaId, nome: nomeExperimental, turmaId: idsE.turmaId, disciplinaId: idsE.disciplinaId, professorId,
+        diaSemana: aula.dia, numeroAula: aula.aula, assincrona: false,
+        fixa: chavesFixas.has(`${idsE.turmaId}|${idsE.disciplinaId}|${professorId}|${aula.dia}|${aula.aula}`),
+      });
+    }
   }
 
   if (linhasParaGravar.length === 0) {
