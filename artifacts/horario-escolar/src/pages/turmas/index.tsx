@@ -39,6 +39,15 @@ const turmaSchema = z.object({
 });
 type TurmaFormValues = z.infer<typeof turmaSchema>;
 
+// [REVEZAMENTO-TRIO] mesma conta do backend (lib/revezamento-trio.ts): semanas
+// corridas a partir da semana do inicio; ordem 1, 2, 3 e repete.
+function segundaUTC(d: Date) { const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())); x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7)); return x; }
+function ordemPresencialTrio(inicio: string, data: Date) {
+  const s = Math.round((segundaUTC(data).getTime() - segundaUTC(new Date(`${inicio}T12:00:00Z`)).getTime()) / (7 * 86_400_000));
+  return (((s % 3) + 3) % 3) + 1;
+}
+function segundaDestaSemanaISO() { return segundaUTC(new Date(Date.now() - 3 * 3_600_000)).toISOString().slice(0, 10); }
+
 // [PROF-DISCIPLINA] [MONTAR-TURMA] Montagem da turma num lugar so: professor de
 // cada disciplina, co-docencia (2o professor), trio e aulas assincronas.
 // Tudo grava na hora, pelas rotas ja existentes de turmas.
@@ -54,11 +63,11 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
   const linhas = ((turma as any)?.disciplinasComCarga ?? []) as any[];
 
   // agrupa as linhas por disciplina (co-docencia = 2 linhas da mesma disciplina)
-  const grupos: Array<{ disciplinaId: number; nome: string; carga: number; linhas: any[]; trio: string; assinc: number }> = [];
+  const grupos: Array<{ disciplinaId: number; nome: string; carga: number; linhas: any[]; trio: string; assinc: number; trioOrdem: number | null; trioInicio: string | null }> = [];
   for (const l of linhas) {
     let g = grupos.find((x) => x.disciplinaId === l.disciplinaId);
     if (!g) {
-      g = { disciplinaId: l.disciplinaId, nome: l.nome, carga: l.cargaHorariaSemanal, linhas: [], trio: (l.grupoTrio ?? "").trim(), assinc: l.aulasAssincronas ?? 0 };
+      g = { disciplinaId: l.disciplinaId, nome: l.nome, carga: l.cargaHorariaSemanal, linhas: [], trio: (l.grupoTrio ?? "").trim(), assinc: l.aulasAssincronas ?? 0, trioOrdem: l.trioOrdem ?? null, trioInicio: l.trioInicio ?? null };
       grupos.push(g);
     }
     g.linhas.push(l);
@@ -84,8 +93,9 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
   async function confirmarTrio() {
     if (!trioValido) return;
     const letra = proximaLetra;
-    for (const g of selecionados) {
-      await chamar(`/api/turmas/${turmaId}/disciplinas/${g.disciplinaId}/modalidade`, "PATCH", { grupoTrio: letra }, `Trio ${letra}: ${g.nome}`);
+    const inicio = segundaDestaSemanaISO(); // [REVEZAMENTO-TRIO] ja nasce com o revezamento: ordem da selecao, a partir desta semana
+    for (const [i, g] of selecionados.entries()) {
+      await chamar(`/api/turmas/${turmaId}/disciplinas/${g.disciplinaId}/modalidade`, "PATCH", { grupoTrio: letra, trioOrdem: i + 1, trioInicio: inicio }, `Trio ${letra}: ${g.nome}`);
     }
     setCriandoTrio(false);
     setSelTrio([]);
@@ -164,15 +174,44 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
         {trios.size === 0 && !criandoTrio && (
           <p className="text-xs text-muted-foreground">Nenhum trio nesta turma. Trio = 3 disciplinas, cada uma com seu professor, sempre no mesmo dia e horário.</p>
         )}
-        {[...trios.keys()].map((rotulo) => (
-          <div key={rotulo} className="flex items-center justify-between gap-2 text-sm bg-background rounded px-2 py-1.5 border">
-            <span>
-              <strong>Trio {rotulo}:</strong>{" "}
-              {grupos.filter((g) => g.trio === rotulo).map((g) => `${g.nome} (${g.linhas.map((l) => l.professorNome ?? "sem professor").join(" + ")})`).join(" · ")}
-            </span>
-            <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-destructive hover:text-destructive shrink-0" disabled={salvando !== null} onClick={() => desfazerTrio(rotulo)}>desfazer</Button>
+        {[...trios.keys()].map((rotulo) => {
+          const gs = grupos.filter((g) => g.trio === rotulo);
+          const inicio = gs[0]?.trioInicio ?? "";
+          const ordens = gs.map((g) => g.trioOrdem);
+          const revezOk = !!inicio && gs.length === 3 && new Set(ordens).size === 3 && ordens.every((o) => o != null && o >= 1 && o <= 3);
+          const presente = revezOk ? gs.find((g) => g.trioOrdem === ordemPresencialTrio(inicio, new Date(Date.now() - 3 * 3_600_000))) : undefined;
+          const urlMod = (g: { disciplinaId: number }) => `/api/turmas/${turmaId}/disciplinas/${g.disciplinaId}/modalidade`;
+          return (
+          <div key={rotulo} className="text-sm bg-background rounded px-2 py-1.5 border space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <span>
+                <strong>Trio {rotulo}:</strong>{" "}
+                {gs.map((g) => `${g.nome} (${g.linhas.map((l) => l.professorNome ?? "sem professor").join(" + ")})`).join(" · ")}
+              </span>
+              <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-destructive hover:text-destructive shrink-0" disabled={salvando !== null} onClick={() => desfazerTrio(rotulo)}>desfazer</Button>
+            </div>
+            {/* [REVEZAMENTO-TRIO] cada semana um professor presencial, os outros 2 em suporte */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+              <span className="font-medium text-violet-900">Revezamento semanal:</span>
+              <label className="flex items-center gap-1">semana 1 começa em
+                <Input key={`ini-${rotulo}-${inicio}`} type="date" defaultValue={inicio} className="h-7 w-36" disabled={salvando !== null} onKeyDown={semEnter}
+                  onBlur={async (e) => { const v = e.target.value; if (v && v !== inicio) { for (const g of gs) await chamar(urlMod(g), "PATCH", { trioInicio: v }, `Trio ${rotulo}: revezamento a partir de ${v.split("-").reverse().join("/")}`); } }} />
+              </label>
+              {gs.map((g) => (
+                <label key={g.disciplinaId} className="flex items-center gap-1">{g.nome}:
+                  <select className="h-7 rounded border bg-background px-1" value={g.trioOrdem ?? ""} disabled={salvando !== null}
+                    onChange={(e) => chamar(urlMod(g), "PATCH", { trioOrdem: e.target.value ? Number(e.target.value) : null }, `${g.nome}: ${e.target.value ? e.target.value + "ª semana" : "sem ordem"} do revezamento`)}>
+                    <option value="">—</option><option value="1">1ª semana</option><option value="2">2ª semana</option><option value="3">3ª semana</option>
+                  </select>
+                </label>
+              ))}
+              {revezOk
+                ? <span className="font-semibold text-emerald-700">Esta semana: presencial {presente?.linhas.map((l) => l.professorNome).join(" + ") ?? "?"} ({presente?.nome})</span>
+                : <span className="text-amber-700">Defina a data de início e uma semana diferente (1ª, 2ª, 3ª) para cada disciplina.</span>}
+            </div>
           </div>
-        ))}
+          );
+        })}
         {criandoTrio && (
           <div className="bg-background rounded border p-3 space-y-2">
             <p className="text-xs text-muted-foreground">Marque as <strong>3 disciplinas</strong> do trio {proximaLetra} — mesma carga semanal, cada uma já com professor:</p>

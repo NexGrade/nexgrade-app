@@ -16,6 +16,7 @@ import {
 import { and, eq, gte, ne, or, isNull } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
 import { ehHAOutroTurno } from "../lib/ha-contraturno"; // [HA-OUTRO-TURNO]
+import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
 import { z } from "zod";
 import { validateReserva, publicReserva } from "./reservas";
 import { regrasReservaProfessorTable } from "@workspace/db";
@@ -74,6 +75,8 @@ router.get("/horario", async (req, res) => {
       disciplinaNome: disciplinasTable.nome,
       disciplinaSigla: disciplinasTable.sigla,
       assincrona: horariosTable.assincrona, // [ASSINCRONA-EXIBICAO]
+      turmaId: horariosTable.turmaId, // [REVEZAMENTO-TRIO]
+      disciplinaId: horariosTable.disciplinaId,
       disciplinaCor: disciplinasTable.cor,
       turmaNome: turmasTable.nome,
       turno: turmasTable.turno, // [AGENDA-TURNOS]
@@ -122,7 +125,13 @@ router.get("/horario", async (req, res) => {
     }
   }
 
-  res.json({ aulas: linhas, horasAtividade, horarios });
+  // [REVEZAMENTO-TRIO] aula de trio: presencial ou suporte nesta semana
+  const revez = await mapaRevezamento([...new Set(linhas.map((l) => l.turmaId))], hojeBrasil());
+  const aulas = linhas.map(({ turmaId, disciplinaId, ...l }) => ({
+    ...l,
+    trio: l.assincrona ? null : revez.get(`${turmaId}|${disciplinaId}|${professor.id}`) ?? null,
+  }));
+  res.json({ aulas, horasAtividade, horarios });
 });
 
 router.get("/reservas", async (req, res) => {

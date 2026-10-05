@@ -27,6 +27,7 @@ import { getEscolaId } from "../lib/escola-id";
 import { randomUUID } from "node:crypto";
 import { recalcularHoraAtividade } from "../lib/recalcular-ha";
 import { simularPromocao } from "../lib/simular-promocao"; // [SIMULAR-PROMOCAO]
+import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
 import { ehBloqueioParaMotor } from "../lib/bloqueio-real"; // [HA-FIXA]
 import { bloqueiosIntervaloEntreTurnos } from "../lib/intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 import { aulasFixasTable } from "@workspace/db"; // [AULA-FIXA-CADASTRO]
@@ -682,8 +683,12 @@ router.get("/", async (req, res) => {
   const profMap = new Map(professores.map(p => [p.id, p]));
   const turmaMap = new Map(turmas.map(t => [t.id, t]));
 
+  // [REVEZAMENTO-TRIO] quem esta presencial no trio na semana (?data=AAAA-MM-DD; padrao: hoje)
+  const dataRef = typeof req.query.data === "string" && /^\d{4}-\d{2}-\d{2}$/.test(req.query.data) ? new Date(`${req.query.data}T12:00:00Z`) : hojeBrasil();
+  const revez = await mapaRevezamento(turmaIds, dataRef);
   const enriched = slots.map(s => ({
     ...s,
+    revezamento: s.assincrona ? null : revez.get(`${s.turmaId}|${s.disciplinaId}|${s.professorId}`) ?? null,
     disciplina: discMap.get(s.disciplinaId),
     professor: profMap.get(s.professorId),
     turma: turmaMap.get(s.turmaId),

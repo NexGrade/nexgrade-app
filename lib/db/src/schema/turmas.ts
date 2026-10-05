@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, pgEnum , boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, pgEnum , boolean, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { matrizesCurricularesTable } from "./cursos";
@@ -77,6 +77,12 @@ export const turmaDisciplinasTable = pgTable("turma_disciplinas", {
   // [ASSINCRONA-TRIO] DOCENCIA POR TRIO: as 3 disciplinas da turma com o
   // mesmo valor aqui (ex.: "trio1") caem sempre no mesmo dia e horario.
   grupoTrio: text("grupo_trio"),
+  // [REVEZAMENTO-TRIO] (05/10/2026) revezamento semanal do trio: cada semana um
+  // dos 3 professores fica presencial e os outros 2 em suporte. trioOrdem = vez
+  // da disciplina (1, 2 ou 3); trioInicio = segunda-feira da semana em que a
+  // ordem 1 esta presencial (igual nas 3 linhas). Semanas corridas do calendario.
+  trioOrdem: integer("trio_ordem"),
+  trioInicio: date("trio_inicio", { mode: "string" }),
   // RNF-SEED-03: limite de aulas consecutivas dessa disciplina, nessa
   // turma, no mesmo dia ("aulas geminadas" / Max_Aulas_Dia). Nulo = usa
   // o padrão geral definido em configuracoes (chave

@@ -95,6 +95,8 @@ async function getTurmaWithDisciplinas(id: number, escolaId: string) {
         grupoCompartilhadoId: l.grupoCompartilhadoId,
         aulasAssincronas: l.aulasAssincronas, // [MODALIDADE]
         grupoTrio: l.grupoTrio,
+        trioOrdem: l.trioOrdem, // [REVEZAMENTO-TRIO]
+        trioInicio: l.trioInicio,
         professorId: l.professorId,
         professorNome: prof?.nome ?? null,
       };
@@ -544,6 +546,8 @@ router.get("/:id/horario", async (req, res) => {
 const ModalidadeInput = z.object({
   aulasAssincronas: z.number().int().min(0).max(20).optional(),
   grupoTrio: z.string().trim().max(20).nullable().optional(),
+  trioOrdem: z.number().int().min(1).max(3).nullable().optional(), // [REVEZAMENTO-TRIO]
+  trioInicio: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
 });
 
 router.patch("/:id/disciplinas/:disciplinaId/modalidade", async (req, res) => {
@@ -565,6 +569,9 @@ router.patch("/:id/disciplinas/:disciplinaId/modalidade", async (req, res) => {
   const patch: Partial<typeof turmaDisciplinasTable.$inferInsert> = {};
   if (parsed.data.aulasAssincronas !== undefined) patch.aulasAssincronas = parsed.data.aulasAssincronas;
   if (parsed.data.grupoTrio !== undefined) patch.grupoTrio = parsed.data.grupoTrio ? parsed.data.grupoTrio : null;
+  if (parsed.data.trioOrdem !== undefined) patch.trioOrdem = parsed.data.trioOrdem; // [REVEZAMENTO-TRIO]
+  if (parsed.data.trioInicio !== undefined) patch.trioInicio = parsed.data.trioInicio;
+  if (parsed.data.grupoTrio === null) { patch.trioOrdem = null; patch.trioInicio = null; } // desfazer o trio limpa o revezamento
   if (Object.keys(patch).length === 0) {
     res.status(400).json({ error: "Nada para atualizar" });
     return;

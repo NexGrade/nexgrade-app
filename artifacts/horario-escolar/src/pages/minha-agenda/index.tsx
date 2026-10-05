@@ -588,6 +588,11 @@ export default function MinhaAgendaPage() {
                                           <div className="text-xs text-muted-foreground truncate">
                                             {aula.turmaNome}{aula.sala ? ` · ${aula.sala}` : ""}
                                           </div>
+                                          {(aula as any).trio && (
+                                            <div className="mt-1">{/* [REVEZAMENTO-TRIO] */}
+                                              <span className={`text-[10px] font-bold uppercase tracking-wide rounded px-1.5 py-0.5 ${(aula as any).trio.presencial ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-700"}`}>{(aula as any).trio.presencial ? "Trio: presencial esta semana" : "Trio: suporte esta semana"}</span>
+                                            </div>
+                                          )}
                                           {aula.assincrona && (() => {
                                             const nums = Array.from({ length: maxT }, (_, k) => k + 1).filter((n) =>
                                               aulasT.some((x) => x.diaSemana === diaIdx && x.numeroAula === n) || ehHA(diaIdx, n));
@@ -651,6 +656,11 @@ export default function MinhaAgendaPage() {
                                           {aula.turmaNome}{aula.sala ? ` · ${aula.sala}` : ""}
                                           {aula.disciplinaSigla && <span> · {aula.disciplinaNome}</span>}
                                         </div>
+                                        {(aula as any).trio && (
+                                          <div className="mt-1">{/* [REVEZAMENTO-TRIO] */}
+                                            <span className={`text-[10px] font-bold uppercase tracking-wide rounded px-1.5 py-0.5 ${(aula as any).trio.presencial ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-700"}`}>{(aula as any).trio.presencial ? "Trio: presencial esta semana" : "Trio: suporte esta semana"}</span>
+                                          </div>
+                                        )}
                                         {aula.assincrona && (
                                           <div className="mt-1 flex flex-wrap items-center gap-1">
                                             <span className="text-[10px] font-bold uppercase tracking-wide rounded bg-violet-100 text-violet-800 px-1.5 py-0.5">Assíncrona</span>

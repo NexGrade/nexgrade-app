@@ -1121,6 +1121,17 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                               ) : (
                                 <span className="font-medium truncate text-foreground/80">{nomesProfessoresCelula}</span>
                               )}
+                              {/* [REVEZAMENTO-TRIO] trio: quem esta presencial nesta semana */}
+                              {(() => {
+                                const rv = slotsAqui.map((s: any) => ({ s, r: s.revezamento as { presencial: boolean } | null })).filter((x) => x.r);
+                                if (rv.length === 0) return null;
+                                if (isProfessorSelected) {
+                                  const r = rv[0]!.r!;
+                                  return <span className={`self-start text-[10px] font-bold uppercase tracking-wide rounded px-1.5 py-0.5 ${r.presencial ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-700"}`}>{r.presencial ? "Trio: presencial esta semana" : "Trio: suporte esta semana"}</span>;
+                                }
+                                const pres = rv.filter((x) => x.r!.presencial).map((x) => abreviarNomeProfessor(x.s.professor?.nome, professores));
+                                return pres.length ? <span className="self-start text-[10px] font-bold uppercase tracking-wide rounded px-1.5 py-0.5 bg-emerald-100 text-emerald-800">Presencial: {pres.join(" + ")}</span> : null;
+                              })()}
                             </div>
                           </div>
                         </div>

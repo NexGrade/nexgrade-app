@@ -14,6 +14,7 @@ import { gerarPdfCargaProfessores, type RelatorioProfessor } from "../lib/pdf-ca
 import { gerarPdfCargaHoraria, type TurmaCargaHoraria } from "../lib/pdf-carga-horaria";
 import { calcularHAIdeal, type MarcaHACalculada } from "../lib/recalcular-ha";
 import { ehHAOutroTurno } from "../lib/ha-contraturno"; // [HA-OUTRO-TURNO]
+import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
 
 const router = Router();
 
@@ -432,6 +433,8 @@ router.get("/grade-pdf/turma", async (req, res) => {
     turmas = turmas.filter((t) => turmaIdsNoExperimento.has(t.id));
   }
 
+  // [REVEZAMENTO-TRIO] trio: marca (P) no professor presencial da semana do PDF
+  const revezTurma = await mapaRevezamento(turmas.map((t) => t.id), hojeBrasil(lerOffsetSemana(req)));
   const blocos: BlocoGrade[] = await Promise.all(turmas.map(async (turma) => ({
     rotulo: `Turma: ${turma.nome}`,
     horariosPorAula: await buscarHorariosPorAula(escolaId, turma.turno, turma.nivelEnsino),
@@ -451,7 +454,8 @@ router.get("/grade-pdf/turma", async (req, res) => {
       return [...agrupado.values()].map((grupo) => {
         const primeiro = grupo[0]!;
         const nomesProfessores = grupo
-          .map((s) => nomeCurto(professores.find((p) => p.id === s.professorId)?.nome ?? "?")) // [PDF-NOME-PROF]
+          .map((s) => nomeCurto(professores.find((p) => p.id === s.professorId)?.nome ?? "?") // [PDF-NOME-PROF]
+            + (revezTurma.get(`${s.turmaId}|${s.disciplinaId}|${s.professorId}`)?.presencial ? " (P)" : "")) // [REVEZAMENTO-TRIO]
           .join(" + ");
         return {
           diaSemana: primeiro.diaSemana,
@@ -513,6 +517,8 @@ router.get("/grade-pdf/professor", async (req, res) => {
     db.select().from(disponibilidadeTable),
   ]);
   const slots = slotsBrutos as Array<{ turmaId: number; disciplinaId: number; professorId: number; diaSemana: number; numeroAula: number; assincrona?: boolean | null }>;
+  // [REVEZAMENTO-TRIO] trio: (P) presencial / (S) suporte na semana do PDF
+  const revezProf = await mapaRevezamento(turmas.map((t) => t.id), hojeBrasil(lerOffsetSemana(req)));
   // [FIX-HA-SIMULADA] O experimento pode cobrir só ALGUNS turmas/turnos
   // (ex.: "Turno Inteiro" gerado só pro matutino). Sem isso, um
   // professor que também dá aula no vespertino/noturno tinha essas
@@ -672,6 +678,12 @@ router.get("/grade-pdf/professor", async (req, res) => {
         const doDia = [...aulasDoProf, ...haDoProf].filter((x) => x.diaSemana === s.diaSemana).map((x) => x.numeroAula);
         const ponto = s.numeroAula === Math.min(...doDia) ? " ENTRADA" : s.numeroAula === Math.max(...doDia) ? " SAIDA" : "";
         cel.linha2 = `${cel.linha2 ?? ""} (ASS)${ponto}`;
+      }
+      for (const s of slotsDoProfNesseTurno) { // [REVEZAMENTO-TRIO]
+        if (s.assincrona) continue;
+        const r = revezProf.get(`${s.turmaId}|${s.disciplinaId}|${s.professorId}`);
+        const cel = r && aulasDoProf.find((x) => x.diaSemana === s.diaSemana && x.numeroAula === s.numeroAula);
+        if (r && cel) cel.linha2 = `${cel.linha2 ?? ""} ${r.presencial ? "(P)" : "(S)"}`;
       }
 
       // [NOVO] Dia/horario em que o professor esta bloqueado
