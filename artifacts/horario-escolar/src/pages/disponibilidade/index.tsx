@@ -18,7 +18,7 @@ import {
   getListAulasFixasQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Users, Save, RotateCcw, Lock, CheckCircle2, Info, GraduationCap, BookOpen, Pin } from "lucide-react";
+import { Users, Save, RotateCcw, Lock, CheckCircle2, Info, GraduationCap, BookOpen, Pin, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SeletorBusca } from "@/components/seletor-busca";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -35,8 +35,30 @@ const TURNOS = [
 
 type Turno = (typeof TURNOS)[number]["value"];
 
-type CelulaEstado = "disponivel" | "bloqueado" | "ha_obrigatoria" | "ha_fixa"; // [HA-FIXA]
+type CelulaEstado = "disponivel" | "bloqueado" | "ha_obrigatoria" | "ha_fixa" | "atividade"; // [HA-FIXA] [ATIVIDADE-FORA-DE-SALA]
 type CelulaState = Record<string, CelulaEstado>;
+
+// [ATIVIDADE-FORA-DE-SALA] (05/10/2026) a escola passa a cadastrar no NexGrade
+// (nao mais no Urania) as atividades fora de sala. Gravadas como bloqueio com
+// "(ocupado: ROTULO)" no motivo -- o mesmo formato que Conflitos, HA, PDF e a
+// tela Grade ja entendem (horario ocupado, nao janela, com o rotulo visivel).
+const ATIVIDADES_SUGERIDAS = [
+  { rotulo: "FORM", descricao: "Formação" },
+  { rotulo: "COORD", descricao: "Coordenação" },
+  { rotulo: "PAEE", descricao: "Atendimento educacional especializado" },
+  { rotulo: "PAC", descricao: "PAC" },
+  { rotulo: "LAB", descricao: "Laboratório" },
+  { rotulo: "TEATR", descricao: "Teatro" },
+  { rotulo: "REP", descricao: "Reposição" },
+];
+const RE_ATIVIDADE = /\(ocupado:\s*([^)]+?)\s*\)/;
+function rotuloDoMotivo(motivo: string | null | undefined): string | undefined {
+  const m = RE_ATIVIDADE.exec(motivo ?? "");
+  return m ? m[1] : undefined;
+}
+function limparRotulo(r: string): string {
+  return r.replace(/[()]/g, "").replace(/\s+/g, " ").trim().toUpperCase().slice(0, 12);
+}
 
 function cellKey(dia: number, numeroAula: number) {
   return `${dia}-${numeroAula}`;
@@ -46,7 +68,7 @@ function proximoEstado(atual: CelulaEstado): CelulaEstado {
   if (atual === "disponivel") return "bloqueado";
   if (atual === "bloqueado") return "ha_obrigatoria";
   if (atual === "ha_obrigatoria") return "ha_fixa"; // [HA-FIXA]
-  return "disponivel";
+  return "disponivel"; // ha_fixa e atividade voltam para disponivel
 }
 
 function formatHora(horaInicio: string) {
@@ -60,6 +82,11 @@ export default function DisponibilidadePage() {
   const [turno, setTurno] = useState<Turno>("matutino");
   const [matriz, setMatriz] = useState<CelulaState>({});
   const [original, setOriginal] = useState<CelulaState>({});
+  const [rotulos, setRotulos] = useState<Record<string, string>>({}); // [ATIVIDADE-FORA-DE-SALA]
+  const [rotulosOriginais, setRotulosOriginais] = useState<Record<string, string>>({});
+  const [modoAtividade, setModoAtividade] = useState(false);
+  const [celulaAtividade, setCelulaAtividade] = useState<{ dia: number; numeroAula: number } | null>(null);
+  const [rotuloEscolhido, setRotuloEscolhido] = useState("");
 
   // Permite chegar nesta página já com um professor pré-selecionado,
   // via link tipo /disponibilidade?professorId=42 — usado pelo botão
@@ -145,6 +172,7 @@ export default function DisponibilidadePage() {
 
   const carregarMatriz = () => {
     const m: CelulaState = {};
+    const rot: Record<string, string> = {}; // [ATIVIDADE-FORA-DE-SALA]
     slotsOrdenados.forEach((slot) => {
       DIAS.forEach((_, dia) => {
         m[cellKey(dia, slot.numeroAula)] = "disponivel";
@@ -157,12 +185,13 @@ export default function DisponibilidadePage() {
         if (r.horaAtividadeObrigatoria) {
           m[key] = ((r as { motivo?: string | null }).motivo ?? "").startsWith("HA fixa") ? "ha_fixa" : "ha_obrigatoria"; // [HA-FIXA]
         } else if (!r.disponivel) {
-          m[key] = "bloqueado";
+          const rotulo = rotuloDoMotivo((r as { motivo?: string | null }).motivo); // [ATIVIDADE-FORA-DE-SALA]
+          if (rotulo) { m[key] = "atividade"; rot[key] = rotulo; } else m[key] = "bloqueado";
         } else {
           m[key] = "disponivel";
         }
       });
-    return m;
+    return { m, rot };
   };
 
   // [HA-CONTRATURNO-ASTERISCO] contraturno vale para o turno inteiro: se alguma
@@ -171,27 +200,33 @@ export default function DisponibilidadePage() {
     (r) => (r.turno ?? null) === turno && r.horaAtividadeObrigatoria && (r as { contraturno?: boolean }).contraturno === true,
   );
 
-  const matrizAtual = useMemo(() => {
-    if (!professorIdNum || carregandoDisponibilidade || carregandoSlots) return {};
+  const matrizAtual = useMemo((): { m: CelulaState; rot: Record<string, string> } | null => {
+    if (!professorIdNum || carregandoDisponibilidade || carregandoSlots) return null;
     return carregarMatriz();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [professorIdNum, turno, disponibilidadeRows, slotsOrdenados, carregandoDisponibilidade, carregandoSlots]);
 
   const matrizKey = JSON.stringify(matrizAtual);
   const [ultimaMatrizKey, setUltimaMatrizKey] = useState("");
-  if (matrizKey !== ultimaMatrizKey && Object.keys(matrizAtual).length > 0) {
+  if (matrizKey !== ultimaMatrizKey && matrizAtual && Object.keys(matrizAtual.m).length > 0) {
     setUltimaMatrizKey(matrizKey);
-    setMatriz(matrizAtual);
-    setOriginal(matrizAtual);
+    setMatriz(matrizAtual.m);
+    setOriginal(matrizAtual.m);
+    setRotulos(matrizAtual.rot); // [ATIVIDADE-FORA-DE-SALA]
+    setRotulosOriginais(matrizAtual.rot);
   }
 
   const professorSelecionado = professores.find((p) => String(p.id) === professorId);
   const totalBloqueios = Object.values(matriz).filter((v) => v === "bloqueado").length;
   const totalHA = Object.values(matriz).filter((v) => v === "ha_obrigatoria" || v === "ha_fixa").length; // [HA-FIXA]
-  const hasChanges = JSON.stringify(matriz) !== JSON.stringify(original);
+  const totalAtividades = Object.values(matriz).filter((v) => v === "atividade").length; // [ATIVIDADE-FORA-DE-SALA]
+  const rotuloSeAtividade = (m: CelulaState, r: Record<string, string>, key: string) => (m[key] === "atividade" ? r[key] ?? "" : "");
+  const hasChanges = JSON.stringify(matriz) !== JSON.stringify(original) ||
+    Object.keys(matriz).some((k) => rotuloSeAtividade(matriz, rotulos, k) !== rotuloSeAtividade(original, rotulosOriginais, k));
 
   const toggle = (dia: number, numeroAula: number) => {
     if (modoFixarAula) { setOpcaoFixar(""); setCelulaFixar({ dia, numeroAula }); return; } // [AULA-FIXA-DISP]
+    if (modoAtividade) { setRotuloEscolhido(rotulos[cellKey(dia, numeroAula)] ?? ""); setCelulaAtividade({ dia, numeroAula }); return; } // [ATIVIDADE-FORA-DE-SALA]
     const key = cellKey(dia, numeroAula);
     const estadoAtual = matriz[key] ?? "disponivel";
     const proximo = proximoEstado(estadoAtual);
@@ -208,6 +243,25 @@ export default function DisponibilidadePage() {
       }
     }
     setMatriz((prev) => ({ ...prev, [key]: proximo }));
+  };
+
+  // [ATIVIDADE-FORA-DE-SALA] marcar / remover atividade na celula escolhida
+  const marcarAtividade = () => {
+    if (!celulaAtividade) return;
+    const rotulo = limparRotulo(rotuloEscolhido);
+    if (!rotulo) return;
+    const real = aulaReal(celulaAtividade.dia, celulaAtividade.numeroAula);
+    if (real && !confirm(`Esse horário já tem aula real marcada (${real.turma?.nome ?? "?"} — ${real.disciplina?.nome ?? "?"}). Marcar uma atividade aqui vai gerar um conflito de "professor indisponível". Continuar mesmo assim?`)) return;
+    const key = cellKey(celulaAtividade.dia, celulaAtividade.numeroAula);
+    setMatriz((prev) => ({ ...prev, [key]: "atividade" }));
+    setRotulos((prev) => ({ ...prev, [key]: rotulo }));
+    setCelulaAtividade(null);
+  };
+  const removerAtividade = () => {
+    if (!celulaAtividade) return;
+    const key = cellKey(celulaAtividade.dia, celulaAtividade.numeroAula);
+    setMatriz((prev) => ({ ...prev, [key]: "disponivel" }));
+    setCelulaAtividade(null);
   };
 
   // [AULA-FIXA-DISP] fixar / soltar
@@ -252,7 +306,7 @@ export default function DisponibilidadePage() {
     });
   };
 
-  const resetar = () => setMatriz({ ...original });
+  const resetar = () => { setMatriz({ ...original }); setRotulos({ ...rotulosOriginais }); };
 
   const salvar = async () => {
     if (!professorIdNum) return;
@@ -270,18 +324,23 @@ export default function DisponibilidadePage() {
     chaves.forEach((key) => {
       const estadoAtual = matriz[key] ?? "disponivel";
       const estadoOriginal = original[key] ?? "disponivel";
-      if (estadoAtual === estadoOriginal) return;
+      if (estadoAtual === estadoOriginal && rotuloSeAtividade(matriz, rotulos, key) === rotuloSeAtividade(original, rotulosOriginais, key)) return;
 
       const [diaStr, slotStr] = key.split("-");
       itens.push({
         diaSemana: Number(diaStr),
         horarioSlot: Number(slotStr),
-        disponivel: estadoAtual !== "bloqueado",
+        disponivel: estadoAtual !== "bloqueado" && estadoAtual !== "atividade", // [ATIVIDADE-FORA-DE-SALA]
         turno,
         horaAtividadeObrigatoria: estadoAtual === "ha_obrigatoria" || estadoAtual === "ha_fixa",
         // [HA-FIXA] motivo explicito: sem isso, trocar de fixa para HA comum
         // manteria a marca antiga no banco (o motivo omitido nao e alterado).
-        motivo: estadoAtual === "ha_fixa" ? "HA fixa (definida manualmente)" : estadoAtual === "ha_obrigatoria" ? "HA manual (definida na tela)" : undefined,
+        // [ATIVIDADE-FORA-DE-SALA] atividade grava o rotulo; ao sair de uma atividade o
+        // motivo e limpo explicitamente (senao o "(ocupado: X)" antigo ficaria no banco).
+        motivo: estadoAtual === "ha_fixa" ? "HA fixa (definida manualmente)" : estadoAtual === "ha_obrigatoria" ? "HA manual (definida na tela)"
+          : estadoAtual === "atividade" ? `Atividade fora de sala (ocupado: ${rotulos[key]})`
+          : estadoOriginal === "atividade" ? (estadoAtual === "bloqueado" ? "Bloqueio (definido na tela)" : "")
+          : undefined,
       });
     });
 
@@ -290,6 +349,7 @@ export default function DisponibilidadePage() {
     try {
       await salvarLote.mutateAsync({ data: { professorId: professorIdNum, itens } });
       setOriginal({ ...matriz });
+      setRotulosOriginais({ ...rotulos }); // [ATIVIDADE-FORA-DE-SALA]
       queryClient.invalidateQueries({ queryKey: getListDisponibilidadeQueryKey({ professorId: professorIdNum }) });
       toast({
         title: `✅ Disponibilidade de ${professorSelecionado?.nome ?? "professor"} salva!`,
@@ -361,7 +421,7 @@ export default function DisponibilidadePage() {
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-4 h-4 rounded bg-amber-100 border border-amber-300" />
-              <span className="text-muted-foreground">Hora-Atividade obrigatória</span><span className="ml-3 inline-flex items-center gap-1 text-muted-foreground"><GraduationCap className="w-3 h-3 text-amber-800" /><Lock className="w-3 h-3 text-amber-800" />HA fixa (o motor não move)</span>{/* [HA-FIXA] */}<Button size="sm" variant={modoFixarAula ? "default" : "outline"} className="ml-3 h-7 gap-1" onClick={() => setModoFixarAula((v) => !v)} title="Ligado: clicar numa célula fixa ou solta uma aula nesse horário">
+              <span className="text-muted-foreground">Hora-Atividade obrigatória</span><span className="ml-3 inline-flex items-center gap-1 text-muted-foreground"><GraduationCap className="w-3 h-3 text-amber-800" /><Lock className="w-3 h-3 text-amber-800" />HA fixa (o motor não move)</span>{/* [HA-FIXA] */}<Button size="sm" variant={modoFixarAula ? "default" : "outline"} className="ml-3 h-7 gap-1" onClick={() => { setModoFixarAula((v) => !v); setModoAtividade(false); }} title="Ligado: clicar numa célula fixa ou solta uma aula nesse horário">
   <Pin className="w-3 h-3" />{modoFixarAula ? "Modo fixar aula: LIGADO" : "Modo fixar aula"}
 </Button>
 <Dialog open={!!celulaFixar} onOpenChange={(v) => { if (!v) setCelulaFixar(null); }}>
@@ -410,10 +470,48 @@ export default function DisponibilidadePage() {
               <BookOpen className="w-3.5 h-3.5 text-blue-600" />
               <span className="text-muted-foreground">Aula real marcada</span>
             </div>
+            {/* [ATIVIDADE-FORA-DE-SALA] */}
+            <div className="flex items-center gap-1.5">
+              <div className="w-4 h-4 rounded bg-slate-100 border border-slate-400" />
+              <span className="text-muted-foreground">Atividade fora de sala</span>
+              <Button size="sm" variant={modoAtividade ? "default" : "outline"} className="ml-2 h-7 gap-1" onClick={() => { setModoAtividade((v) => !v); setModoFixarAula(false); }} title="Ligado: clicar numa célula marca ou remove uma atividade fora de sala (FORM, COORD, PAEE...)">
+                <Tag className="w-3 h-3" />{modoAtividade ? "Modo atividade: LIGADO" : "Modo atividade"}
+              </Button>
+            </div>
+            <Dialog open={!!celulaAtividade} onOpenChange={(v) => { if (!v) setCelulaAtividade(null); }}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{celulaAtividade ? `Atividade fora de sala — ${DIAS[celulaAtividade.dia]}, ${celulaAtividade.numeroAula}ª aula` : "Atividade"}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3 text-sm">
+                  <p className="text-muted-foreground">O professor está na escola, mas fora de sala. O motor não coloca aula nem HA aqui, e o horário não conta como janela.</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {ATIVIDADES_SUGERIDAS.map((a) => (
+                      <Button key={a.rotulo} size="sm" type="button" variant={limparRotulo(rotuloEscolhido) === a.rotulo ? "default" : "outline"} className="h-7" title={a.descricao} onClick={() => setRotuloEscolhido(a.rotulo)}>
+                        {a.rotulo}
+                      </Button>
+                    ))}
+                  </div>
+                  <input className="w-full border rounded-md h-9 px-2 bg-background" placeholder="Ou digite outra sigla (ex.: IF-1B)" maxLength={12} value={rotuloEscolhido} onChange={(e) => setRotuloEscolhido(e.target.value)} />
+                  <DialogFooter className="gap-2">
+                    {celulaAtividade && matriz[cellKey(celulaAtividade.dia, celulaAtividade.numeroAula)] === "atividade" && (
+                      <Button variant="outline" className="text-destructive hover:text-destructive" onClick={removerAtividade}>Remover atividade</Button>
+                    )}
+                    <Button onClick={marcarAtividade} disabled={!limparRotulo(rotuloEscolhido)} className="gap-1"><Tag className="w-3.5 h-3.5" />Marcar</Button>
+                  </DialogFooter>
+                </div>
+              </DialogContent>
+            </Dialog>
             {totalBloqueios > 0 && (
               <Badge variant="outline" className="text-rose-600 border-rose-200">
                 <Lock className="w-3 h-3 mr-1" />
                 {totalBloqueios} bloqueio(s)
+              </Badge>
+            )}
+            {totalAtividades > 0 && (
+              <Badge variant="outline" className="text-slate-600 border-slate-300">
+                <Tag className="w-3 h-3 mr-1" />
+                {totalAtividades} atividade(s)
               </Badge>
             )}
             {totalHA > 0 && (
@@ -511,6 +609,8 @@ export default function DisponibilidadePage() {
                                   "bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100",
                                 estado === "ha_fixa" &&
                                   "bg-amber-100 border-amber-500 text-amber-800 hover:bg-amber-200", // [HA-FIXA]
+                                estado === "atividade" &&
+                                  "bg-slate-100 border-slate-400 text-slate-700 hover:bg-slate-200", // [ATIVIDADE-FORA-DE-SALA]
                               )}
                               title={
                                 (real ? `Aula real: ${real.turma?.nome ?? "?"} — ${real.disciplina?.nome ?? "?"}. ` : "") +
@@ -520,12 +620,15 @@ export default function DisponibilidadePage() {
                                     ? "Bloqueado — clique para marcar Hora-Atividade obrigatória"
                                     : estado === "ha_obrigatoria"
                                       ? "Hora-Atividade obrigatória — clique para fixar (HA fixa: o motor nunca coloca aula aqui)"
-                                      : "HA fixa — o motor nunca coloca aula aqui — clique para liberar") /* [HA-FIXA] */ +
+                                      : estado === "atividade"
+                                        ? `Atividade fora de sala: ${rotulos[cellKey(dia, slot.numeroAula)] ?? ""} — clique para liberar (ou use o Modo atividade para trocar)`
+                                        : "HA fixa — o motor nunca coloca aula aqui — clique para liberar") /* [HA-FIXA] [ATIVIDADE-FORA-DE-SALA] */ +
                                 ((estado === "ha_obrigatoria" || estado === "ha_fixa") && turnoEhContraturno ? " — HA em contraturno (turno sem aula)" : "") /* [HA-CONTRATURNO-ASTERISCO] */
                               }
                             >
                               {estado === "disponivel" && "✓"}
                               {estado === "bloqueado" && <Lock className="w-3.5 h-3.5 mx-auto" />}
+                              {estado === "atividade" && <span className="text-[11px] font-bold tracking-tight">{rotulos[cellKey(dia, slot.numeroAula)]}</span>}{/* [ATIVIDADE-FORA-DE-SALA] */}
                               {estado === "ha_obrigatoria" && <GraduationCap className="w-3.5 h-3.5 mx-auto" />}
                               {estado === "ha_fixa" && (<span className="inline-flex items-center justify-center gap-0.5 w-full"><GraduationCap className="w-3.5 h-3.5" /><Lock className="w-3 h-3" /></span>)}{/* [HA-FIXA] */}
                               {(estado === "ha_obrigatoria" || estado === "ha_fixa") && turnoEhContraturno && (<span className="absolute top-0 left-1 text-sm font-bold text-amber-800">*</span>)}{/* [HA-CONTRATURNO-ASTERISCO] */}
@@ -547,7 +650,8 @@ export default function DisponibilidadePage() {
 
             <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 rounded-lg p-3">
               <Info className="w-3.5 h-3.5 shrink-0" />
-              Clique numa célula para alternar entre Disponível → Bloqueado → Hora-Atividade obrigatória → HA fixa (casos excepcionais: o motor nunca coloca aula nela). Use os
+              Clique numa célula para alternar entre Disponível → Bloqueado → Hora-Atividade obrigatória → HA fixa (casos excepcionais: o motor nunca coloca aula nela). Atividades fora de sala (FORM, COORD, PAEE...) são marcadas com o
+              botão "Modo atividade". Use os
               botões "Bloquear/Liberar" para afetar um dia inteiro de uma vez. O ícone de livro no canto mostra onde o
               professor já dá aula de verdade (turma + disciplina aparecem ao passar o mouse). O motor de geração de
               horários nunca alocará o professor em slots bloqueados ou marcados como Hora-Atividade obrigatória.
