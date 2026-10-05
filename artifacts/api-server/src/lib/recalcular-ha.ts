@@ -201,6 +201,38 @@ export async function calcularHAIdeal(
       }
     }
 
+    // [HA-1800-PELO-ESQUEMA] (05/10/2026) a regra da HA no periodo nao letivo
+    // (18:00) vale pelo ESQUEMA de horarios (letivo=false), nao so pela linha de
+    // bloqueio automatico: quando uma HA ocupava essa linha e depois saia, a linha
+    // sumia e o 18:00 ficava livre sem regra (Dorival, seg: HA* as 18:00 e aula so
+    // as 19:35). Periodo nao letivo so aceita HA em dia com a 1a aula letiva.
+    for (const s of horarioSlots) {
+      if (s.letivo !== false || !s.turno) continue;
+      const primeiraLetiva = limitesLetivos.get(s.turno)?.primeira;
+      const ocup = ocupadoPorTurnoOriginal.get(s.turno);
+      for (let dia = 0; dia < 5; dia++) {
+        if (primeiraLetiva != null && ocup?.has(`${dia}-${primeiraLetiva}`)) continue;
+        if (!bloqueadoPorTurno.has(s.turno)) bloqueadoPorTurno.set(s.turno, new Set());
+        bloqueadoPorTurno.get(s.turno)!.add(`${dia}-${s.numeroAula}`);
+      }
+    }
+
+    // [HA-1800-PELO-ESQUEMA] (05/10/2026) a regra da HA no periodo nao letivo
+    // (18:00) vale pelo ESQUEMA de horarios (letivo=false), nao so pela linha de
+    // bloqueio automatico: quando uma HA ocupava essa linha e depois saia, a linha
+    // sumia e o 18:00 ficava livre sem regra (Dorival, seg: HA* as 18:00 e aula so
+    // as 19:35). Periodo nao letivo so aceita HA em dia com a 1a aula letiva.
+    for (const s of horarioSlots) {
+      if (s.letivo !== false || !s.turno) continue;
+      const primeiraLetiva = limitesLetivos.get(s.turno)?.primeira;
+      const ocup = ocupadoPorTurnoOriginal.get(s.turno);
+      for (let dia = 0; dia < 5; dia++) {
+        if (primeiraLetiva != null && ocup?.has(`${dia}-${primeiraLetiva}`)) continue;
+        if (!bloqueadoPorTurno.has(s.turno)) bloqueadoPorTurno.set(s.turno, new Set());
+        bloqueadoPorTurno.get(s.turno)!.add(`${dia}-${s.numeroAula}`);
+      }
+    }
+
     // [INTERVALO-ENTRE-TURNOS] dia com AULA na 1a aula letiva do turno seguinte:
     // a ultima aula letiva do turno anterior fica vaga (nunca recebe HA).
     for (const [ant, seg] of PARES_TURNO) {
