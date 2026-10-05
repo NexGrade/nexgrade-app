@@ -209,11 +209,23 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
       if (!slotsProf[chaveProfTurno]![d.diaSemana]) slotsProf[chaveProfTurno]![d.diaSemana] = [];
       slotsProf[chaveProfTurno]![d.diaSemana]!.push(d.horarioSlot);
     });
+  // [JANELA-ATIVIDADE-OCUPADA] (05/10/2026) horario bloqueado com atividade
+  // ("(ocupado: FORM)", "(ocupado: IF-1B)"... vindo do Urania) e o professor
+  // trabalhando fora da sala, nao janela: aula, FORM, FORM, HA dava "2 janelas"
+  // (Eduarda, ter). So preenche buraco -- nao estica o inicio/fim do dia.
+  const ocupadoPorAtividade = new Set(
+    disponibilidades
+      .filter(d => !d.horaAtividadeObrigatoria && d.turno && /\(ocupado:\s*[^)]+\)/.test(d.motivo ?? ""))
+      .map(d => `${d.professorId}-${d.turno}|${d.diaSemana}|${d.horarioSlot}`),
+  );
   Object.entries(slotsProf).forEach(([chaveProfTurno, diasMap]) => {
     const profIdStr = chaveProfTurno.split("-")[0];
     Object.entries(diasMap).forEach(([dia, aulas]) => {
-      const sorted = aulas.sort((a, b) => a - b);
-      const janelas = (sorted[sorted.length - 1]! - sorted[0]! + 1) - sorted.length;
+      const sorted = [...new Set(aulas)].sort((a, b) => a - b);
+      let janelas = 0;
+      for (let a = sorted[0]! + 1; a < sorted[sorted.length - 1]!; a++) {
+        if (!sorted.includes(a) && !ocupadoPorAtividade.has(`${chaveProfTurno}|${dia}|${a}`)) janelas++;
+      }
       if (janelas >= 2) {
         const prof = professores.find(p => p.id === Number(profIdStr));
         conflitos.push({
