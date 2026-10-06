@@ -17,6 +17,10 @@ export const disciplinasTable = pgTable("disciplinas", {
   // Estado do Paraná). Opcional: nem toda escola/disciplina tem um
   // vínculo já mapeado. RF-DISC-01/02.
   codigoSae: text("codigo_sae"),
+  // [CODIGO-EXTERNO-RCO] (06/10/2026) "Codigo Externo" do RCO gravado direto na
+  // disciplina da escola (campo CODDISC do XML). Tem prioridade sobre o caminho
+  // codigo_sae -> codigos_rco_disciplina; serve para disciplinas sem SAE.
+  codigoExternoRco: integer("codigo_externo_rco"),
   // RNF-SEED-02: quando preenchido, toda aula dessa disciplina deve
   // acontecer numa sala com esse mesmo `tipo` (ver salasTable.tipo —
   // ex. "laboratorio", "quadra"). Nulo = sem restrição de espaço.
