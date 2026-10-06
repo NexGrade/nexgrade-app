@@ -1282,6 +1282,41 @@ const CPSAT_SERVICE_URL = process.env.CPSAT_SERVICE_URL || "https://nexgrade-cps
 // Enviada no cabecalho X-NexGrade-Token; o CP-SAT recusa (401) quem nao envia.
 const CPSAT_TOKEN = (process.env.CPSAT_TOKEN ?? "").trim();
 
+// [CPSAT-DESPERTADOR] a maquina do CP-SAT (GCP) liga sob demanda: antes de gerar,
+// o NexGrade chama a funcao "acordar-cpsat" (Cloud Run), que liga a maquina se
+// estiver desligada. A maquina se desliga sozinha quando fica ociosa
+// (cpsat-auto-desligar.timer). Sem as duas variaveis abaixo, nada muda.
+const CPSAT_DESPERTADOR_URL = (process.env.CPSAT_DESPERTADOR_URL ?? "").trim();
+const CPSAT_DESPERTADOR_TOKEN = (process.env.CPSAT_DESPERTADOR_TOKEN ?? "").trim();
+
+async function acordarMaquinaCpsat(maxEsperaMs = 120_000): Promise<void> {
+  if (!CPSAT_DESPERTADOR_URL || !CPSAT_DESPERTADOR_TOKEN) return;
+  const inicio = Date.now();
+  while (Date.now() - inicio < maxEsperaMs) {
+    try {
+      const r = await axios.post(CPSAT_DESPERTADOR_URL, {}, {
+        headers: { "X-Token": CPSAT_DESPERTADOR_TOKEN },
+        timeout: 30_000,
+        validateStatus: () => true,
+      });
+      if (r.status === 200 || r.status === 202) {
+        console.log(`[CPSAT-DESPERTADOR] maquina ${r.data?.status ?? "?"} (acao: ${r.data?.acao ?? "?"})`);
+        return;
+      }
+      if (r.status !== 409) {
+        // Falha do despertador nao bloqueia: segue para a espera normal.
+        console.error(`[CPSAT-DESPERTADOR] resposta ${r.status}: ${JSON.stringify(r.data)}`);
+        return;
+      }
+      // 409 = maquina ainda desligando; espera e pede para ligar de novo.
+    } catch (err) {
+      console.error("[CPSAT-DESPERTADOR] falha ao chamar o despertador:", err);
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 10_000));
+  }
+}
+
 async function aguardarCpsatServiceAcordado(maxEsperaMs = 90_000): Promise<void> {
   const inicio = Date.now();
   while (Date.now() - inicio < maxEsperaMs) {
@@ -1835,7 +1870,9 @@ async function runCpsatGeneracaoUnica(
     }
   }
 
-  await aguardarCpsatServiceAcordado();
+  await acordarMaquinaCpsat(); // [CPSAT-DESPERTADOR]
+  // [CPSAT-DESPERTADOR] com a maquina sob demanda, o boot + uvicorn leva ~1-2 min.
+  await aguardarCpsatServiceAcordado(CPSAT_DESPERTADOR_URL ? 240_000 : 90_000);
 
   const MAX_TENTATIVAS_CPSAT = 2;
   let ultimoErroCpsat: unknown = null;
