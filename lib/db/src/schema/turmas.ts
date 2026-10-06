@@ -35,6 +35,10 @@ export const turmasTable = pgTable("turmas", {
   // turma. Nulo enquanto a turma não estiver associada a uma matriz.
   matrizCurricularId: integer("matriz_curricular_id")
     .references(() => matrizesCurricularesTable.id, { onDelete: "set null" }),
+  // [CODIGOS-RCO] codigo da turma no SERE (CODTURMA do arquivo do RCO). O 3o ano da
+  // matriz antiga e DUAS turmas no RCO: codigoSere = FGB, codigoSereIf = IF.
+  codigoSere: integer("codigo_sere"),
+  codigoSereIf: integer("codigo_sere_if"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
