@@ -3,9 +3,10 @@ import { db } from "@workspace/db";
 import {
   horariosTable, professoresTable, disciplinasTable, turmasTable, disponibilidadeTable,
   horarioSlotsTable, turmaDisciplinasTable, trimestresLetivosTable, matrizesCurricularesTable, itensMatrizTable,
-  escolasTable, horariosExperimentaisTable,
+  escolasTable, horariosExperimentaisTable, codigosRcoDisciplinaTable, // [RCO-EXPORT-BANCO]
 } from "@workspace/db";
-import { and, eq, isNull, notInArray } from "drizzle-orm";
+import { and, eq, isNull, notInArray, sql } from "drizzle-orm";
+import { GRADES_SEED_RCO } from "../lib/grades-seed-rco"; // [RCO-EXPORT-BANCO]
 import { getEscolaId } from "../lib/escola-id";
 import { buscarReservasParaRelatorio, gerarPdfReservasPorProfessor } from "../lib/relatorio-reservas"; // [RELATORIO-RESERVAS]
 import { ehBloqueioReal } from "../lib/bloqueio-real";
@@ -241,25 +242,26 @@ router.get("/ponto", async (req, res) => {
   res.send('\uFEFF' + csv);
 });
 
-// [DICIONARIO CONFIRMADO 03/09/2026] So o que ainda NAO e o Codigo SAE
-// oficial cadastrado em disciplinas.codigoSae (a maioria do nucleo
-// comum e tecnico ja foi corrigida direto no banco, confirmada contra
-// o portal SERE e o XML real do Urania do Mario Braga). Ensino
-// Religioso e Educacao Ambiental ainda usam um valor pendente de
-// confirmacao oficial.
+// [RCO-EXPORT-BANCO] (06/10/2026) Arquivo IMPORT_URANIA para o RCO com os codigos do BANCO
+// (mesma regra do lib/db/gerar-xml-sere.cjs, que o RCO ja aceitou):
+//  - CODDISC  = disciplinas.codigo_externo_rco; senao codigos_rco_disciplina pelo codigo_sae;
+//               senao o dicionario abaixo (codigos externos confirmados por nome).
+//               NUNCA o SAE puro (o RCO responde "turma nao encontrada").
+//  - CODTURMA = turmas.codigo_sere (parte FGB / formacao geral) ou codigo_sere_if (parte IF).
+//               Numero sequencial o RCO recusa (NullPointerException).
+//  - Turma com 2 codigos: cada disciplina vai para a parte cuja grade SEED a contem
+//    (GRADES_SEED_RCO); sem grade conhecida, pela categoria FGB da matriz.
+//  - So a grade oficial; assincronas ficam fora (?assincronas=1 inclui).
+//  - Bloqueia (400) em vez de gerar arquivo que o RCO vai recusar.
 const DICIONARIO_CODDISC_PENDENTE: Record<string, number> = {
   "Ensino Religioso": 33,
   "Educação Ambiental": 89,
 };
-// [CONHECIDO] Valores de codigo_sae que sao placeholder antigo, nao
-// Codigo SAE de verdade -- se algum dia aparecerem de novo (ex.:
-// escola nova cadastrada a partir de um molde desatualizado), nao
-// devem ser usados sem confirmar no portal SERE primeiro.
-const CODDISC_PLACEHOLDERS_SUSPEITOS = new Set([101, 701, 1101, 1501, 1901, 2001]);
 
-function resolverCoddisc(disciplinaNome: string, codigoSae: string | null): number | null {
-  if (disciplinaNome in DICIONARIO_CODDISC_PENDENTE) return DICIONARIO_CODDISC_PENDENTE[disciplinaNome];
-  if (codigoSae != null && !CODDISC_PLACEHOLDERS_SUSPEITOS.has(Number(codigoSae))) return Number(codigoSae);
+function resolverCoddisc(l: { disciplinaNome: string; codigoExternoRco: number | null; externoPeloSae: number | null }): number | null {
+  if (l.codigoExternoRco != null) return Number(l.codigoExternoRco);
+  if (l.externoPeloSae != null) return Number(l.externoPeloSae);
+  if (l.disciplinaNome in DICIONARIO_CODDISC_PENDENTE) return DICIONARIO_CODDISC_PENDENTE[l.disciplinaNome];
   return null;
 }
 
@@ -269,6 +271,7 @@ router.get("/relatorio-seed", async (req, res) => {
   const escolaId = getEscolaId(req);
   const estado = (req.query.estado as string) ?? "PR";
   const turno = req.query.turno as string | undefined;
+  const comAssincronas = req.query.assincronas === "1";
 
   if (estado !== "PR") {
     res.status(400).json({ error: `Exportação no formato SERE/Urânia só está implementada para o Paraná (PR) no momento.` });
@@ -285,42 +288,92 @@ router.get("/relatorio-seed", async (req, res) => {
     return;
   }
 
-  const linhas = await db
+  const todas = await db
     .select({
       diaSemana: horariosTable.diaSemana,
       numeroAula: horariosTable.numeroAula,
+      assincrona: horariosTable.assincrona,
       turmaId: turmasTable.id,
       turmaNome: turmasTable.nome,
       turmaNivelEnsino: turmasTable.nivelEnsino,
+      codigoSere: turmasTable.codigoSere,
+      codigoSereIf: turmasTable.codigoSereIf,
       disciplinaNome: disciplinasTable.nome,
-      codigoSae: disciplinasTable.codigoSae,
+      codigoExternoRco: disciplinasTable.codigoExternoRco,
+      externoPeloSae: codigosRcoDisciplinaTable.codigoExterno,
+      categoriaMatriz: itensMatrizTable.categoriaCurricular,
       professorId: professoresTable.id,
     })
     .from(horariosTable)
     .innerJoin(turmasTable, eq(turmasTable.id, horariosTable.turmaId))
     .innerJoin(disciplinasTable, eq(disciplinasTable.id, horariosTable.disciplinaId))
     .innerJoin(professoresTable, eq(professoresTable.id, horariosTable.professorId))
-    .where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.turno, turno)));
+    .leftJoin(codigosRcoDisciplinaTable, sql`${codigosRcoDisciplinaTable.codigoSae}::text = ${disciplinasTable.codigoSae}`)
+    .leftJoin(itensMatrizTable, and(
+      eq(itensMatrizTable.matrizCurricularId, turmasTable.matrizCurricularId),
+      eq(itensMatrizTable.disciplinaId, horariosTable.disciplinaId),
+    ))
+    .where(and(
+      eq(turmasTable.escolaId, escolaId),
+      eq(turmasTable.turno, turno),
+      sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`,
+    ))
+    .orderBy(turmasTable.nome, horariosTable.diaSemana, horariosTable.numeroAula);
+  const linhas = comAssincronas ? todas : todas.filter((l) => !l.assincrona);
 
   if (linhas.length === 0) {
     res.status(400).json({ error: `Nenhuma aula encontrada para o turno "${turno}". A grade foi gerada e homologada?` });
     return;
   }
 
-  // bloqueia ANTES de gerar qualquer coisa -- nunca manda XML parcial
-  // ou com codigo chutado
+  // 1) codigo da disciplina -- bloqueia ANTES de gerar (nunca manda XML parcial ou codigo chutado)
   const semCodigo = new Map<string, number>();
   for (const l of linhas) {
-    if (resolverCoddisc(l.disciplinaNome, l.codigoSae) === null) {
-      semCodigo.set(l.disciplinaNome, (semCodigo.get(l.disciplinaNome) ?? 0) + 1);
-    }
+    if (resolverCoddisc(l) === null) semCodigo.set(l.disciplinaNome, (semCodigo.get(l.disciplinaNome) ?? 0) + 1);
   }
   if (semCodigo.size > 0) {
     res.status(400).json({
-      error: "Algumas disciplinas ainda não têm Código SAE cadastrado. Preencha em Disciplinas antes de exportar.",
-      disciplinasSemCodigo: [...semCodigo.entries()]
-        .sort((a, b) => b[1] - a[1])
-        .map(([nome, aulas]) => ({ nome, aulas })),
+      error: "Algumas disciplinas ainda não têm o Código Externo do RCO cadastrado. Cadastre o código dessas disciplinas antes de exportar.",
+      disciplinasSemCodigo: [...semCodigo.entries()].sort((a, b) => b[1] - a[1]).map(([nome, aulas]) => ({ nome, aulas })),
+    });
+    return;
+  }
+
+  // 2) parte do RCO (FGB/IF) e conferencia com a grade SEED da turma
+  const grade = (cod: number | null) => (cod != null && GRADES_SEED_RCO[String(cod)] ? new Set(GRADES_SEED_RCO[String(cod)]) : null);
+  const foraDaGrade = new Map<string, number>();
+  const registros = linhas.map((l) => {
+    const cod = resolverCoddisc(l)!;
+    let parte: "FGB" | "IF" | null = null;
+    if (l.codigoSereIf != null) {
+      const gP = grade(l.codigoSere), gI = grade(l.codigoSereIf);
+      if (gP?.has(cod)) parte = "FGB";
+      else if (gI?.has(cod)) parte = "IF";
+      else {
+        parte = l.categoriaMatriz === "FGB" ? "FGB" : "IF";
+        if (gP || gI) foraDaGrade.set(`${l.turmaNome}: ${l.disciplinaNome}`, (foraDaGrade.get(`${l.turmaNome}: ${l.disciplinaNome}`) ?? 0) + 1);
+      }
+    } else {
+      const g = grade(l.codigoSere);
+      if (g && !g.has(cod)) foraDaGrade.set(`${l.turmaNome}: ${l.disciplinaNome}`, (foraDaGrade.get(`${l.turmaNome}: ${l.disciplinaNome}`) ?? 0) + 1);
+    }
+    const codTurma = parte === "IF" ? l.codigoSereIf : l.codigoSere;
+    return { ...l, coddisc: cod, codTurma, turmaRco: parte ? `${l.turmaNome} (${parte})` : l.turmaNome };
+  });
+  if (foraDaGrade.size > 0) {
+    res.status(400).json({
+      error: "Algumas disciplinas não fazem parte da grade SEED da turma — o RCO vai recusar. Corrija a disciplina dessas aulas antes de exportar.",
+      disciplinasSemCodigo: [...foraDaGrade.entries()].map(([nome, aulas]) => ({ nome, aulas })),
+    });
+    return;
+  }
+
+  // 3) codigo SERE da turma
+  const semSere = [...new Set(registros.filter((r) => r.codTurma == null).map((r) => r.turmaRco))];
+  if (semSere.length > 0) {
+    res.status(400).json({
+      error: "Algumas turmas ainda não têm o código da turma no SERE cadastrado (o RCO recusa sem ele). Cadastre o código dessas turmas antes de exportar.",
+      turmasSemNivel: semSere,
     });
     return;
   }
@@ -350,7 +403,7 @@ router.get("/relatorio-seed", async (req, res) => {
   // esquema de horario usar -- bloqueia com erro claro em vez de
   // adivinhar
   if (turno === "matutino") {
-    const semNivel = new Set(linhas.filter(l => !l.turmaNivelEnsino).map(l => l.turmaNome));
+    const semNivel = new Set(registros.filter(l => !l.turmaNivelEnsino).map(l => l.turmaNome));
     if (semNivel.size > 0) {
       res.status(400).json({
         error: "Algumas turmas do matutino não têm o nível de ensino definido (Fundamental ou Médio/Técnico), necessário para saber o esquema de horário correto. Edite essas turmas antes de exportar.",
@@ -360,28 +413,25 @@ router.get("/relatorio-seed", async (req, res) => {
     }
   }
 
-  const codTurmaMap = new Map<number, number>();
+  // CODPROF sequencial por arquivo (o RCO aceitou; o professor vem do vinculo no RCO)
   const codProfMap = new Map<number, number>();
-  let proxTurma = 1, proxProf = 1;
-  for (const l of linhas) {
-    if (!codTurmaMap.has(l.turmaId)) codTurmaMap.set(l.turmaId, proxTurma++);
-    if (!codProfMap.has(l.professorId)) codProfMap.set(l.professorId, proxProf++);
-  }
+  let proxProf = 1;
+  for (const l of registros) if (!codProfMap.has(l.professorId)) codProfMap.set(l.professorId, proxProf++);
 
   const partes: string[] = [`<IMPORT_URANIA>`, `<CODESCOLA>${escola.codigoInep}</CODESCOLA>`, `<HORARIO>`];
-  for (const l of linhas) {
+  for (const l of registros) {
     const chave = chaveSlot(l.numeroAula, turno === "matutino" ? l.turmaNivelEnsino : null);
     const [horaInicio, horaFim] = horarioPorSlot.get(chave) ?? ["00:00", "00:00"];
     partes.push(
       `<REGISTRO>`,
-      `<CODTURMA>${codTurmaMap.get(l.turmaId)}</CODTURMA>`,
+      `<CODTURMA>${l.codTurma}</CODTURMA>`,
       `<TIPOTURMA>1</TIPOTURMA>`,
       `<DIA>${DIA_SEMANA_CODIGO[l.diaSemana]}</DIA>`,
       `<HOR>${String(l.numeroAula).padStart(2, "0")}</HOR>`,
       `<HORA_INICIO>${horaInicio}</HORA_INICIO>`,
       `<HORA_FIM>${horaFim}</HORA_FIM>`,
       `<CODPROF>${codProfMap.get(l.professorId)}</CODPROF>`,
-      `<CODDISC>${resolverCoddisc(l.disciplinaNome, l.codigoSae)}</CODDISC>`,
+      `<CODDISC>${l.coddisc}</CODDISC>`,
       `</REGISTRO>`,
     );
   }
@@ -389,7 +439,7 @@ router.get("/relatorio-seed", async (req, res) => {
 
   const dataHoje = new Date().toISOString().slice(0, 10);
   res.setHeader("Content-Type", "application/xml");
-  res.setHeader("Content-Disposition", `attachment; filename="export-sere-${turno}-${dataHoje}.xml"`);
+  res.setHeader("Content-Disposition", `attachment; filename="IMPORT_URANIA-${turno}-${dataHoje}.xml"`);
   res.send(partes.join("\r\n"));
 });
 
