@@ -418,6 +418,18 @@ router.get("/relatorio-seed", async (req, res) => {
   let proxProf = 1;
   for (const l of registros) if (!codProfMap.has(l.professorId)) codProfMap.set(l.professorId, proxProf++);
 
+  // [RCO-LINHA-UNICA] mesma disciplina no mesmo horario da turma (2 professores) = 1 linha so;
+  // disciplinas diferentes no mesmo horario (trio, assincrona) continuam todas.
+  // (CODPROF ja foi numerado acima com todos os professores, igual ao gerar-xml-sere.cjs)
+  const vistosRco = new Set<string>();
+  const unicos = registros.filter((l) => {
+    const k = `${l.codTurma}|${l.diaSemana}|${l.numeroAula}|${l.coddisc}`;
+    if (vistosRco.has(k)) return false;
+    vistosRco.add(k);
+    return true;
+  });
+  registros.splice(0, registros.length, ...unicos);
+
   const partes: string[] = [`<IMPORT_URANIA>`, `<CODESCOLA>${escola.codigoInep}</CODESCOLA>`, `<HORARIO>`];
   for (const l of registros) {
     const chave = chaveSlot(l.numeroAula, turno === "matutino" ? l.turmaNivelEnsino : null);
