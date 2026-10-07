@@ -36,6 +36,7 @@ import { eq, inArray, sql } from "drizzle-orm";
 import { PARES_TURNO } from "./intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 
 import { MOTIVO_HA_AUTO, MOTIVO_HA_AUTO_OUTRO_TURNO } from "./ha-contraturno"; // [HA-OUTRO-TURNO]
+import { montarMapaPrincipal, principalDe } from "./professor-principal"; // [MESMA-PESSOA-HA]
 
 // [HA-NA-ENTRADA-NOTURNO] motivo do bloqueio gravado em 2026-09-23 na aula 1 do
 // noturno (18:00, so entrada, letivo=false). Bloqueia aula, nao hora-atividade.
@@ -158,8 +159,14 @@ export async function calcularHAIdeal(
 
   const marcasFinais: MarcaHACalculada[] = [];
 
+  // [MESMA-PESSOA-HA] cadastros ligados (ex.: "Jessica (IFA)" -> "Jessica") sao uma
+  // pessoa so: o secundario nao recebe HA e as aulas dele entram na conta do principal
+  // (somam para a tabela oficial e ocupam o horario).
+  const mapaPrincipal = montarMapaPrincipal(professores);
+
   for (const prof of professores) {
-    const aulasDoProf = horarios.filter((h) => h.professorId === prof.id);
+    if (principalDe(mapaPrincipal, prof.id) !== prof.id) continue; // [MESMA-PESSOA-HA] secundario
+    const aulasDoProf = horarios.filter((h) => principalDe(mapaPrincipal, h.professorId) === prof.id);
     if (aulasDoProf.length === 0) continue;
 
     const aulasPorTurno: Record<string, number> = {};

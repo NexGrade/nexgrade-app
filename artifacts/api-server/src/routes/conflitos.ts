@@ -4,6 +4,7 @@ import { horariosTable, professoresTable, disciplinasTable, turmasTable, turmaDi
 import { eq, inArray, and, isNull } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
 import { calcularHoraAtividadePorTurno } from "../lib/hora-atividade";
+import { montarMapaPrincipal, principalDe } from "../lib/professor-principal"; // [MESMA-PESSOA-HA]
 import { limitesLetivosPorTurno, PARES_TURNO } from "../lib/intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 
 const router = Router();
@@ -398,9 +399,12 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
   // cobrados de 9h de HA institucional como se fossem professores reais
   // de 20h. Nenhum professor de verdade tem 0h contratada, então usamos
   // isso como sinal seguro pra pular a checagem de HA só pra eles.
-  professores.filter((prof) => prof.cargaHorariaTotal > 0).forEach((prof) => {
+  // [MESMA-PESSOA-HA] cadastro secundario (ex.: "Jessica (IFA)") nao e cobrado de HA:
+  // as aulas dele somam na conta do principal, que recebe a HA toda.
+  const mapaPrincipalHA = montarMapaPrincipal(professores);
+  professores.filter((prof) => prof.cargaHorariaTotal > 0 && principalDe(mapaPrincipalHA, prof.id) === prof.id).forEach((prof) => {
     const turnosComAula: Record<string, number> = {};
-    slots.filter((s) => s.professorId === prof.id).forEach((s) => {
+    slots.filter((s) => principalDe(mapaPrincipalHA, s.professorId) === prof.id).forEach((s) => {
       const turma = turmas.find((t) => t.id === s.turmaId);
       if (!turma) return;
       // [FIX] Mesma excecao do teto de aulas/turno: disciplinas "semTurma"

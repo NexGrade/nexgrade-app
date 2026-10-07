@@ -204,8 +204,29 @@ router.get("/:id/carga", async (req, res) => {
     porTurno[s.turno] = (porTurno[s.turno] ?? 0) + 1;
   });
 
+  // [MESMA-PESSOA-HA] cadastro secundario (ex.: "Jessica (IFA)") nao tem HA propria;
+  // o principal soma as aulas dos cadastros ligados a ele para a HA necessaria.
+  let porTurnoHA: Record<string, number> = porTurno;
+  if (professor.professorPrincipalId != null) {
+    porTurnoHA = {};
+  } else {
+    const secundarios = await db
+      .select({ id: professoresTable.id })
+      .from(professoresTable)
+      .where(and(eq(professoresTable.professorPrincipalId, parsed.data.id), eq(professoresTable.escolaId, escolaId)));
+    if (secundarios.length > 0) {
+      const slotsSec = await db
+        .select({ turno: turmasTable.turno })
+        .from(horariosTable)
+        .innerJoin(turmasTable, eq(horariosTable.turmaId, turmasTable.id))
+        .where(and(inArray(horariosTable.professorId, secundarios.map((x) => x.id)), eq(horariosTable.escolaId, escolaId)));
+      porTurnoHA = { ...porTurno };
+      slotsSec.forEach((s) => (porTurnoHA[s.turno] = (porTurnoHA[s.turno] ?? 0) + 1));
+    }
+  }
+
   // [NOVO] RNF-SEED-01: HA institucional necessária, por turno.
-  const haInstitucionalPorTurno = calcularHoraAtividadePorTurno(porTurno);
+  const haInstitucionalPorTurno = calcularHoraAtividadePorTurno(porTurnoHA);
   const haInstitucionalTotal = Object.values(haInstitucionalPorTurno).reduce((a, b) => a + b, 0);
 
   // [NOVO] Quantas HA obrigatórias já estão de fato marcadas em

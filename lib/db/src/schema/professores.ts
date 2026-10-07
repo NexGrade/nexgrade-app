@@ -12,6 +12,9 @@ export const professoresTable = pgTable("professores", {
   telefone: text("telefone"),
   cargaHorariaTotal: integer("carga_horaria_total").notNull().default(20),
   ativo: boolean("ativo").notNull().default(true),
+  // [MESMA-PESSOA-HA] (07/10/2026) cadastro secundario da mesma pessoa (ex.: "Jessica (IFA)"
+  // aponta para "Jessica"). A HA soma as aulas dos dois e fica no principal.
+  professorPrincipalId: integer("professor_principal_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

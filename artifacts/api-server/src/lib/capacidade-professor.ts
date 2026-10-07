@@ -12,6 +12,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { ehBloqueioReal, ehHaFixa } from "./bloqueio-real"; // [HA-FIXA]
 import { calcularHoraAtividadeInstitucional, ehBloqueioPeriodoNaoLetivo } from "./recalcular-ha";
 import { calcularHoraAtividadePorTurno } from "./hora-atividade";
+import { montarMapaPrincipal, ehSecundario, principalDe } from "./professor-principal"; // [MESMA-PESSOA-HA]
 
 export interface ProblemaCapacidade {
   professorId: number;
@@ -33,9 +34,9 @@ export interface CargaProfessor {
 // [CARGA-PROFESSOR] Aulas de cada professor por turno, pela MESMA regra de
 // carga do payload do CP-SAT (override -> matriz -> padrao da disciplina).
 // Fonte unica usada pela validacao de capacidade e pela cota de HA do motor.
-export async function calcularCargaPorProfessor(escolaId: string): Promise<{ cargas: CargaProfessor[]; slots: (typeof horarioSlotsTable.$inferSelect)[]; disp: (typeof disponibilidadeTable.$inferSelect)[] }> {
+export async function calcularCargaPorProfessor(escolaId: string): Promise<{ cargas: CargaProfessor[]; slots: (typeof horarioSlotsTable.$inferSelect)[]; disp: (typeof disponibilidadeTable.$inferSelect)[]; principal: Map<number, number> }> {
   const turmas = await db.select().from(turmasTable).where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.fantasma, false)));
-  if (turmas.length === 0) return { cargas: [], slots: [], disp: [] };
+  if (turmas.length === 0) return { cargas: [], slots: [], disp: [], principal: new Map() };
   const turmaIds = turmas.map((t) => t.id);
   const matrizIds = [...new Set(turmas.map((t) => t.matrizCurricularId).filter((id): id is number => id != null))];
   const [tds, disciplinas, professores, profDiscs, itensMatriz, slots] = await Promise.all([
@@ -83,27 +84,43 @@ export async function calcularCargaPorProfessor(escolaId: string): Promise<{ car
     const p = profMap.get(pid);
     if (p) cargas.push({ professorId: pid, professor: p.nome, aulasPorTurno: porTurno });
   }
-  return { cargas, slots, disp };
+  return { cargas, slots, disp, principal: montarMapaPrincipal(professores) };
+}
+
+// [MESMA-PESSOA-HA] aulas por turno usadas para a HA: o principal soma as aulas
+// dos cadastros ligados a ele; o secundario nao entra (nao recebe HA).
+function aulasParaHA(cargas: CargaProfessor[], principal: Map<number, number>): Map<number, Record<string, number>> {
+  const r = new Map<number, Record<string, number>>();
+  for (const c of cargas) {
+    const alvo = principalDe(principal, c.professorId);
+    const acc = r.get(alvo) ?? {};
+    for (const [t, n] of Object.entries(c.aulasPorTurno)) acc[t] = (acc[t] ?? 0) + n;
+    r.set(alvo, acc);
+  }
+  return r;
 }
 
 // [HA-NO-CPSAT] Cota de HA de cada professor NUM turno (nome -> HA), pela
 // mesma divisao proporcional do recalculo. Vai no payload do CP-SAT.
 export async function calcularCotaHaPorTurno(escolaId: string, turno: string): Promise<Record<string, number>> {
-  const { cargas, disp } = await calcularCargaPorProfessor(escolaId);
+  const { cargas, disp, principal } = await calcularCargaPorProfessor(escolaId);
+  const porTurnoHA = aulasParaHA(cargas, principal); // [MESMA-PESSOA-HA]
   // [HA-FIXA] HA fixa ja ocupa o horario (o motor a ve como bloqueio):
   // desconta da cota para o motor nao reservar espaco em dobro.
   const fixasPorProfessor = new Map<number, number>();
   for (const d of disp) if (d.turno === turno && ehHaFixa(d)) fixasPorProfessor.set(d.professorId, (fixasPorProfessor.get(d.professorId) ?? 0) + 1);
   const r: Record<string, number> = {};
   for (const c of cargas) {
-    const cota = Math.max(0, (calcularHoraAtividadePorTurno(c.aulasPorTurno)[turno] ?? 0) - (fixasPorProfessor.get(c.professorId) ?? 0));
+    if (ehSecundario(principal, c.professorId)) continue; // [MESMA-PESSOA-HA]
+    const cota = Math.max(0, (calcularHoraAtividadePorTurno(porTurnoHA.get(c.professorId) ?? c.aulasPorTurno)[turno] ?? 0) - (fixasPorProfessor.get(c.professorId) ?? 0));
     if (cota > 0) r[c.professor] = cota;
   }
   return r;
 }
 
 export async function validarCapacidadeProfessores(escolaId: string): Promise<ProblemaCapacidade[]> {
-  const { cargas, slots, disp } = await calcularCargaPorProfessor(escolaId);
+  const { cargas, slots, disp, principal } = await calcularCargaPorProfessor(escolaId);
+  const porTurnoHA = aulasParaHA(cargas, principal); // [MESMA-PESSOA-HA]
   const aulas = new Map(cargas.map((c) => [c.professorId, c.aulasPorTurno]));
   const profMap = new Map(cargas.map((c) => [c.professorId, { nome: c.professor }]));
 
@@ -154,7 +171,8 @@ export async function validarCapacidadeProfessores(escolaId: string): Promise<Pr
       livresSoHA[t] = soHA;
     }
     const aulasTotal = Object.values(porTurno).reduce((s, n) => s + n, 0);
-    const ha = calcularHoraAtividadeInstitucional(aulasTotal);
+    // [MESMA-PESSOA-HA] secundario nao tem HA; principal usa o total da pessoa
+    const ha = ehSecundario(principal, pid) ? 0 : calcularHoraAtividadeInstitucional(Object.values(porTurnoHA.get(pid) ?? porTurno).reduce((s, n) => s + n, 0));
     const turnosEnsino = Object.keys(porTurno);
     const livresEnsino = turnosEnsino.reduce((s, t) => s + (livres[t] ?? 0) + (livresSoHA[t] ?? 0), 0); // [CAPACIDADE-NAO-LETIVO]
     const livresTotal = turnos.reduce((s, t) => s + (livres[t] ?? 0) + (livresSoHA[t] ?? 0), 0);
