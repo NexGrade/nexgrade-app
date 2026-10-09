@@ -167,7 +167,7 @@ export default function ExportPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Exportar Dados</h1>
-        <p className="text-muted-foreground mt-1">Exporte a grade horária, controle de ponto e relatórios SEED.</p>
+        <p className="text-muted-foreground mt-1">Exporte a grade horária, controle de ponto e relatórios para o RCO.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -445,9 +445,9 @@ export default function ExportPage() {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <BarChart3 className="w-4 h-4" /> Relatório SEED
+              <BarChart3 className="w-4 h-4" /> Exportar para o RCO (XML)
             </CardTitle>
-            <CardDescription>Exporta o relatório no formato compatível com o sistema SEED do estado selecionado.</CardDescription>
+            <CardDescription>Gera o arquivo XML da grade no formato que o RCO importa (SEED-PR). Antes de exportar, confira se o Código INEP da escola (em Dados da Escola) e os códigos SERE das turmas estão cadastrados. O envio ao RCO é feito pela escola, manualmente.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-end gap-4">
@@ -475,7 +475,7 @@ export default function ExportPage() {
               )}
               <Button onClick={handleSeedDownload} disabled={loadingSeed}>
                 <Download className="w-4 h-4 mr-2" />
-                {loadingSeed ? "Gerando..." : `Baixar Relatório SEED-${seedEstado}`}
+                {loadingSeed ? "Gerando..." : `Baixar XML para o RCO (${seedEstado})`}
               </Button>
             </div>
             {seedErro && (
