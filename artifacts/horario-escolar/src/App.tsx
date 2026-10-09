@@ -545,6 +545,7 @@ function GlobalTopBar() {
             elements: {
               rootBox: "flex items-center",
               organizationSwitcherTrigger: "px-3 py-1.5 rounded-md border border-slate-200 text-sm text-slate-700 hover:bg-slate-50",
+              organizationPreviewMainIdentifier: { color: "#334155", fontWeight: 500 }, // [LOGIN] contraste: o nome da escola ficava quase invisivel
             },
           }}
         />
