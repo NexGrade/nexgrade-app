@@ -161,7 +161,7 @@ const BENEFICIOS = [
   { icon: Library, titulo: "Matrizes curriculares oficiais", texto: "Cursos e matrizes já cadastrados para começar mais rápido." },
   { icon: DoorOpen, titulo: "Reservas de salas", texto: "Agenda de reservas com regras de prioridade por professor." },
   { icon: Download, titulo: "Importação e exportação", texto: "Importe dados existentes e exporte a grade em PDF e CSV (Excel)." },
-  { icon: FileUp, titulo: "Arquivo para o sistema oficial", texto: "Gera o arquivo da grade no formato aceito pelo sistema oficial da rede, para importar lá sem redigitar." },
+  { icon: FileUp, titulo: "Arquivo para o sistema oficial", texto: "Gera o arquivo da grade no formato aceito pelo sistema oficial da rede, pronto para importar sem redigitar os dados." },
   { icon: History, titulo: "Histórico de alterações", texto: "Acompanhe quem alterou o quê e quando na grade da escola." },
   { icon: Sparkles, titulo: "Assistente de IA", texto: "Tire dúvidas e receba ajuda na montagem da grade." },
   { icon: ShieldCheck, titulo: "Acesso por cargo", texto: "Direção, coordenação, gestor de reservas e professores, cada um com o seu acesso." },
