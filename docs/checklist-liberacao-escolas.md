@@ -27,7 +27,7 @@ Legenda: ✅ feito e conferido · 🟡 falta testar · ⬜ pendente
 
 **Pendente**
 - ⬜ Grade SEED (lista da GEHA/SEED) das 13 turmas do Romário que ainda não têm, para o RCO conferir "disciplina fora da grade" também nelas. Hoje só as 4 turmas do 3º ano (FGB/IF) têm.
-- ⬜ Horário da **3ª aula do noturno do Romário**: o XML (vindo do cadastro de horários do NexGrade) diz `20:30 a 21:20`, e o PDF do Urânia mostra `20:35`. Confirmar com a escola o horário real e, se for 20:35, ajustar em *Calendário e Turnos → Esquema de aulas* (o XML segue o cadastro).
+- ✅ Horário da 3ª aula do noturno do Romário alinhado ao Urânia em 09/10/2026 (`lib/db/ajustar-horario-noturno-romario.cjs`): de `20:30` (50 min) para `20:35` (45 min, termina às 21:20). A duração de 45 min foi deduzida do início da 4ª aula no PDF do Urânia; confirmar com a escola. Falta reexportar o noturno para conferir o XML.
 - ⬜ Turma `2640411` = **3STM (FGB)** sem a disciplina `3780` (Projeto de Vida) que a grade SEED prevê. O Urânia também não a mostra nessa turma (o Projeto de Vida só aparece na 3ADM, sexta 09:10); confirmar com a escola.
 - ⬜ Trilhas de aprofundamento (`TIPODISC`): a lista no gerador está vazia, tanto para o Romário quanto para o Mário Braga. Confirmar se a escola tem trilhas.
 - ⬜ Fazer o merge do PR 1 e confirmar como o deploy sai (automático da `main`, ou manual).
