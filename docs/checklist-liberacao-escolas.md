@@ -22,11 +22,11 @@ Legenda: ✅ feito e conferido · 🟡 falta testar · ⬜ pendente
 - 🟡 Tela de Reservas por semana (segunda a sexta), com dados reais: criar sala, professor e 2 a 3 reservas; conferir os totais da semana, o filtro por Pendentes e Confirmadas (cartões clicáveis) e o clique no cartão de reserva (abre a edição).
 - 🟡 Gestor: `/usuarios` e `/reservas/regras` voltam para `/reservas`; Horário em "Modo consulta"; Calendário só com a aba do calendário letivo.
 - 🟡 ADM: cartão "Turmas sem Horário" da Visão Geral abre a lista filtrada (`/turmas?filtro=sem-horario`).
-- 🟡 Exportar para o RCO: caixa "Incluir aulas assíncronas". Exportar o matutino do Romário sem e com a opção; o esperado é 2 registros a mais com ela.
+- ✅ Exportar para o RCO com e sem aulas assíncronas (matutino do Romário, 09/10/2026, pelo script `gerar-xml-sere.cjs`): 420 aulas sem e 422 com; as 2 extras são da 3STM (FGB) (André, quarta aula 2, e Elisiane, terça aula 3) e **não colidem** com outra aula da mesma turma, porque a aula regular desses horários está na parte IF. Professor igual ao do Urânia em 420 de 420 aulas; cada CODDISC corresponde a uma única disciplina do Urânia. Falta só testar a caixa da tela (precisa do deploy).
 
 **Pendente**
 - ⬜ Grade SEED (lista da GEHA/SEED) das 13 turmas do Romário que ainda não têm, para o RCO conferir "disciplina fora da grade" também nelas. Hoje só as 4 turmas do 3º ano (FGB/IF) têm.
-- ⬜ Turma `2640411` (3º ano, parte IF) sem a disciplina `3780` (Projeto de Vida) que a grade SEED prevê; confirmar com a escola.
+- ⬜ Turma `2640411` = **3STM (FGB)** sem a disciplina `3780` (Projeto de Vida) que a grade SEED prevê. O Urânia também não a mostra nessa turma (o Projeto de Vida só aparece na 3ADM, sexta 09:10); confirmar com a escola.
 - ⬜ Trilhas de aprofundamento (`TIPODISC`): a lista no gerador está vazia, tanto para o Romário quanto para o Mário Braga. Confirmar se a escola tem trilhas.
 - ⬜ Fazer o merge do PR 1 e confirmar como o deploy sai (automático da `main`, ou manual).
 
