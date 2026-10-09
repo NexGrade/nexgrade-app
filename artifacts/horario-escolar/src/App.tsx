@@ -138,6 +138,7 @@ const clerkAppearance = {
     identityPreviewEditButton: "text-[#1565C0]",
     formFieldSuccessText: "text-green-600",
     alertText: "text-slate-700",
+    avatarImageActionsUpload: { color: "#334155", fontWeight: 500 }, // [LOGIN] contraste do botao "Enviar foto"
     logoBox: "flex justify-center",
     logoImage: "h-10 w-10",
     socialButtonsBlockButton: "border border-slate-200 hover:bg-slate-50",

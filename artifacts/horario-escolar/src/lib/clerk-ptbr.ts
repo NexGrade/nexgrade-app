@@ -175,6 +175,26 @@ export const clerkPtBR = {
       resendButton: "Não recebeu o código? Reenviar",
     },
   },
+  // [LOGIN-PTBR] etapa de cadastro da escola (organizacao) logo apos criar a conta
+  taskChooseOrganization: {
+    chooseOrganization: {
+      title: "Escolha a sua escola",
+      subtitle: "Selecione a escola para continuar.",
+    },
+    createOrganization: {
+      title: "Cadastre a sua escola",
+      subtitle: "Informe o nome da escola para continuar.",
+      formButtonSubmit: "Continuar",
+    },
+    signOut: {
+      actionText: "Conectado como {{identifier}}",
+      actionLink: "Sair",
+    },
+  },
+  formFieldLabel__organizationName: "Nome da escola",
+  formFieldInputPlaceholder__organizationName: "Ex.: Escola Municipal Alfa",
+  formFieldLabel__organizationSlug: "Endereço da escola",
+  formFieldLabel__name: "Nome da escola",
   badge__primary: "Principal",
   badge__thisDevice: "Este dispositivo",
   badge__unverified: "Não verificado",
