@@ -20,7 +20,7 @@ Legenda: ✅ feito e conferido · 🟡 falta testar · ⬜ pendente
 - ✅ XML do RCO do matutino do Romário: estrutura, `CODESCOLA`, horários, sem aula repetida e sem professor em duas turmas ao mesmo tempo.
 
 **Implementado, falta testar no navegador**
-- 🟡 Tela de Reservas por semana (segunda a sexta), com dados reais: criar sala, professor e 2 a 3 reservas; conferir os totais da semana, o filtro por Pendentes e Confirmadas (cartões clicáveis) e o clique no cartão de reserva (abre a edição).
+- ⏸️ **Adiado para um segundo PR:** tela de Reservas por semana (segunda a sexta), com totais da semana, filtro por Pendentes e Confirmadas e clique no cartão. O código está na branch `claude/reservas-semana` e **não** entra no PR 1, porque ainda não foi testado com reservas reais (criar sala, professor e 2 a 3 reservas e conferir). Enquanto isso, a tela de Reservas continua por dia, como antes.
 - 🟡 Gestor: `/usuarios` e `/reservas/regras` voltam para `/reservas`; Horário em "Modo consulta"; Calendário só com a aba do calendário letivo.
 - 🟡 ADM: cartão "Turmas sem Horário" da Visão Geral abre a lista filtrada (`/turmas?filtro=sem-horario`).
 - ✅ Exportar para o RCO com e sem aulas assíncronas (matutino do Romário, 09/10/2026, pelo script `gerar-xml-sere.cjs`): 420 aulas sem e 422 com; as 2 extras são da 3STM (FGB) (André, quarta aula 2, e Elisiane, terça aula 3) e **não colidem** com outra aula da mesma turma, porque a aula regular desses horários está na parte IF. Professor igual ao do Urânia em 420 de 420 aulas; cada CODDISC corresponde a uma única disciplina do Urânia. Falta só testar a caixa da tela (precisa do deploy).
