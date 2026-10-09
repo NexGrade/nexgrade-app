@@ -11,7 +11,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Layout } from "@/components/layout";
-import { Sparkles, Clock, Lock, CalendarDays, Library, DoorOpen, Download, History, ShieldCheck } from "lucide-react"; // [LOGIN]
+import { Sparkles, Clock, Lock, CalendarDays, Library, DoorOpen, Download, FileUp, History, ShieldCheck } from "lucide-react"; // [LOGIN]
 
 // [FIX] Divisão do pacote JS (code-splitting) -- antes, todas as ~24
 // telas eram importadas de forma estática aqui no topo, o que fazia o
@@ -161,6 +161,7 @@ const BENEFICIOS = [
   { icon: Library, titulo: "Matrizes curriculares oficiais", texto: "Cursos e matrizes já cadastrados para começar mais rápido." },
   { icon: DoorOpen, titulo: "Reservas de salas", texto: "Agenda de reservas com regras de prioridade por professor." },
   { icon: Download, titulo: "Importação e exportação", texto: "Importe dados existentes e exporte a grade em PDF e CSV (Excel)." },
+  { icon: FileUp, titulo: "Arquivo para o sistema oficial", texto: "Gera o arquivo da grade no formato aceito pelo sistema oficial da rede, para importar lá sem redigitar." },
   { icon: History, titulo: "Histórico de alterações", texto: "Acompanhe quem alterou o quê e quando na grade da escola." },
   { icon: Sparkles, titulo: "Assistente de IA", texto: "Tire dúvidas e receba ajuda na montagem da grade." },
   { icon: ShieldCheck, titulo: "Acesso por cargo", texto: "Direção, coordenação, gestor de reservas e professores, cada um com o seu acesso." },
@@ -190,7 +191,7 @@ function AuthShell({ subtitulo, aviso, children }: { subtitulo: string; aviso: s
           </p>
           <div className="mt-5 grid grid-cols-2 gap-3">
             {BENEFICIOS.map((b) => (
-              <div key={b.titulo} className="flex gap-2.5 rounded-lg border border-slate-200 bg-white p-3">
+              <div key={b.titulo} className="flex gap-2.5 rounded-lg border border-slate-200 bg-white p-3 [&:last-child:nth-child(odd)]:col-span-2">
                 <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-blue-50 text-[#1565C0]">
                   <b.icon className="h-4 w-4" />
                 </span>
