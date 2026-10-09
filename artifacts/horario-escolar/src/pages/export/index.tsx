@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox"; // [RCO-ASSINCRONAS]
 import { Download, FileText, Table, BarChart3, FileDown, ClipboardList, TrendingUp, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BotaoRelatorioReservas } from "@/components/relatorio-reservas"; // [RELATORIO-RESERVAS]
@@ -53,6 +54,7 @@ export default function ExportPage() {
   });
   const [seedEstado, setSeedEstado] = useState("PR");
   const [seedTurno, setSeedTurno] = useState("matutino");
+  const [seedAssinc, setSeedAssinc] = useState(false); // [RCO-ASSINCRONAS] incluir aulas assincronas no XML
   const [loadingSeed, setLoadingSeed] = useState(false);
   // [NOVO] Erro estruturado do backend (disciplinas sem codigo SAE ou
   // turmas sem nivel de ensino definido) -- mostrado na tela em vez de
@@ -136,11 +138,11 @@ export default function ExportPage() {
     setLoadingSeed(true);
     setSeedErro(null);
     try {
-      const url = buildUrl("/api/export/relatorio-seed", { estado: seedEstado, turno: seedTurno });
+      const url = buildUrl("/api/export/relatorio-seed", { estado: seedEstado, turno: seedTurno, assincronas: seedAssinc && seedEstado === "PR" ? "1" : undefined });
       const blob = await customFetch<Blob>(url, { responseType: "blob" });
       const objUrl = URL.createObjectURL(blob);
       const extensao = seedEstado === "PR" ? "xml" : "json";
-      handleDownload(objUrl, `relatorio_seed_${seedEstado}_${seedTurno}_${new Date().getFullYear()}.${extensao}`);
+      handleDownload(objUrl, `relatorio_seed_${seedEstado}_${seedTurno}_${new Date().getFullYear()}${seedAssinc && seedEstado === "PR" ? "_com-assincronas" : ""}.${extensao}`);
       URL.revokeObjectURL(objUrl);
     } catch (err) {
       if (err instanceof ApiError && err.data && typeof err.data === "object") {
@@ -478,6 +480,17 @@ export default function ExportPage() {
                 {loadingSeed ? "Gerando..." : `Baixar XML para o RCO (${seedEstado})`}
               </Button>
             </div>
+            {seedEstado === "PR" && (
+              <div className="mt-4 flex items-start gap-2.5">
+                <Checkbox id="seed-assinc" checked={seedAssinc} onCheckedChange={(c) => setSeedAssinc(c === true)} className="mt-0.5" />
+                <div className="space-y-0.5">
+                  <Label htmlFor="seed-assinc" className="cursor-pointer">Incluir aulas assíncronas</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Por padrão elas ficam de fora, porque a aula assíncrona não ocupa a turma. Se incluir, ela entra como uma linha a mais no mesmo horário de outra aula da turma, e o RCO pode recusar esse conflito. Marque só se o RCO exigir.
+                  </p>
+                </div>
+              </div>
+            )}
             {seedErro && (
               <div className="mt-4 rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm">
                 <p className="font-medium text-destructive">{seedErro.mensagem}</p>
