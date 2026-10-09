@@ -6,12 +6,13 @@ Legenda: ✅ feito e conferido · 🟡 falta testar · ⬜ pendente
 
 ## 1. Código e PR
 
-Última verificação: `pnpm run typecheck` passou nos três projetos com o código do commit `0d6d73e` (inclui as mudanças abaixo).
+Última verificação: `pnpm run typecheck` passou nos três projetos com o código do commit `d7d6b19` (inclui as mudanças abaixo e a marca única na barra de cima).
 
 **Conferido**
 - ✅ Menu do ADM completo (navegador).
 - ✅ Menu do Gestor: Horário, Calendário (consulta) e Reservas, sob o grupo "Consulta" (navegador).
 - ✅ Convidado entra direto na escola, sem cair no cadastro de escola nova (testado com o gestor).
+- ✅ Marca (logo e nome) aparece uma vez só, na barra de cima; o menu lateral não repete (conferido no navegador).
 - ✅ Falha de conexão com o banco mostra "Não foi possível carregar a sua escola" com *Tentar novamente*, em vez de mandar para o cadastro.
 - ✅ Grade matutina do Romário conferida contra o PDF do Urânia: 420 aulas de cada lado, mesmas turmas, nenhuma diferença de professor. Ficaram só diferenças de rótulo da HA (`HA*` e `H.A.T`), um professor `JOSELEINE` com `R.9M` que só existe no Urânia e abreviações de disciplina (o NexGrade corta em 8 letras).
 - ✅ XML do RCO do matutino do Romário: estrutura, `CODESCOLA`, horários, sem aula repetida e sem professor em duas turmas ao mesmo tempo.
