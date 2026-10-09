@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useEhGestorReservas } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA]
 import { BotaoRelatorioReservas } from "@/components/relatorio-reservas"; // [RELATORIO-RESERVAS]
@@ -25,15 +25,14 @@ import {
   X,
 } from "lucide-react";
 import {
-  getGetReservasResumoQueryKey,
   getListHorariosQueryKey,
   getListRegrasReservaProfessoresQueryKey,
   getListReservasQueryKey,
   getListSalasQueryKey,
+  listReservas,
   getListProfessoresQueryKey,
   useCreateReserva,
   useDeleteReserva,
-  useGetReservasResumo,
   useListHorarios,
   useListProfessores,
   useListReservas,
@@ -107,6 +106,27 @@ function displayDate(date: string) {
     day: "2-digit",
     month: "long",
   }).format(new Date(`${date}T12:00:00`));
+}
+
+// [SEMANA-RESERVAS] a tela mostra a semana inteira (segunda a sexta) de uma vez.
+function addDays(date: string, amount: number) {
+  const next = new Date(`${date}T12:00:00`);
+  next.setDate(next.getDate() + amount);
+  return localDateInput(next);
+}
+
+// segunda-feira da semana da data; sabado e domingo mostram a semana seguinte
+function mondayOf(date: string) {
+  const d = new Date(`${date}T12:00:00`);
+  const dow = d.getDay();
+  if (dow === 6) d.setDate(d.getDate() + 2);
+  else if (dow === 0) d.setDate(d.getDate() + 1);
+  else d.setDate(d.getDate() - (dow - 1));
+  return localDateInput(d);
+}
+
+function shortDate(date: string) {
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long" }).format(new Date(`${date}T12:00:00`));
 }
 
 function statusLabel(status: string) {
@@ -297,11 +317,14 @@ export default function ReservasPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const reservationsQuery = useListReservas({ data: selectedDate }, {
-    query: { queryKey: getListReservasQueryKey({ data: selectedDate }) },
-  });
-  const summaryQuery = useGetReservasResumo({ data: selectedDate }, {
-    query: { queryKey: getGetReservasResumoQueryKey({ data: selectedDate }) },
+  // [SEMANA-RESERVAS] uma consulta por dia util da semana (a API lista por data)
+  const weekStart = mondayOf(selectedDate);
+  const weekDates = useMemo(() => [0, 1, 2, 3, 4].map((i) => addDays(weekStart, i)), [weekStart]);
+  const weekQueries = useQueries({
+    queries: weekDates.map((d) => ({
+      queryKey: getListReservasQueryKey({ data: d }),
+      queryFn: ({ signal }: { signal: AbortSignal }) => listReservas({ data: d }, { signal }),
+    })),
   });
   const salasQuery = useListSalas({ query: { queryKey: getListSalasQueryKey() } });
   const professoresQuery = useListProfessores({ query: { queryKey: getListProfessoresQueryKey() } });
@@ -310,19 +333,28 @@ export default function ReservasPage() {
   const updateReserva = useUpdateReserva();
   const deleteReserva = useDeleteReserva();
 
-  const reservas = reservationsQuery.data ?? [];
+  const reservasPorDia = weekDates.map((_, i) => weekQueries[i]?.data ?? []);
+  const reservas = reservasPorDia.flat();
   const salas = salasQuery.data ?? [];
   const professores = professoresQuery.data ?? [];
   const horarios = horariosQuery.data ?? [];
-  const summary = summaryQuery.data;
-  const isLoading = reservationsQuery.isLoading || salasQuery.isLoading || professoresQuery.isLoading;
-  const isError = reservationsQuery.isError || summaryQuery.isError;
+  const ativas = reservas.filter((r) => r.status !== "cancelada");
+  const summary = {
+    total: ativas.length,
+    confirmadas: ativas.filter((r) => r.status === "confirmada").length,
+    pendentes: ativas.filter((r) => r.status === "pendente").length,
+    salasOcupadas: new Set(ativas.map((r) => r.salaId)).size,
+  };
+  const defaultNewDate = weekdayFor(selectedDate) >= 0 ? selectedDate : weekDates[0];
+  const isLoading = weekQueries.some((q) => q.isLoading) || salasQuery.isLoading || professoresQuery.isLoading;
+  const isError = weekQueries.some((q) => q.isError);
+  const refetchSemana = () => { weekQueries.forEach((q) => { void q.refetch(); }); };
 
   const conflicts = useMemo(() => {
     const keys = new Map<string, number>();
     reservas.forEach((reserva) => {
       if (reserva.status !== "cancelada") {
-        const key = `${reserva.salaId}-${reserva.numeroAula}`;
+        const key = `${reserva.data.slice(0, 10)}-${reserva.salaId}-${reserva.numeroAula}`;
         keys.set(key, (keys.get(key) ?? 0) + 1);
       }
     });
@@ -343,13 +375,12 @@ export default function ReservasPage() {
 
   const invalidateReservations = () => {
     queryClient.invalidateQueries({ queryKey: getListReservasQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetReservasResumoQueryKey({ data: selectedDate }) });
     queryClient.invalidateQueries({ queryKey: getListRegrasReservaProfessoresQueryKey() });
   };
 
   const openCreate = () => {
     setEditing(null);
-    form.reset({ salaId: 0, professorId: 0, data: selectedDate, numeroAula: 1, titulo: "", observacoes: "" });
+    form.reset({ salaId: 0, professorId: 0, data: defaultNewDate, numeroAula: 1, titulo: "", observacoes: "" });
     setDialogOpen(true);
   };
 
@@ -414,95 +445,14 @@ export default function ReservasPage() {
     });
   };
 
-  const shiftDate = (amount: number) => {
-    const next = new Date(`${selectedDate}T12:00:00`);
-    next.setDate(next.getDate() + amount);
-    setSelectedDate(localDateInput(next));
-  };
+  const shiftWeek = (amount: number) => setSelectedDate(addDays(weekStart, amount * 7));
 
   const scheduleFor = (reserva: (typeof reservas)[number]) =>
     horarios.find((slot) => slot.professorId === reserva.professorId && slot.diaSemana === reserva.diaSemana && slot.numeroAula === reserva.numeroAula);
 
-  return (
-    <div className="animate-rise-in space-y-6 pb-10">
-      <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
-        <div>
-          <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-primary">
-            <span className="h-2 w-2 rounded-full bg-accent" />
-            Operação semanal
-          </div>
-          <h1 className="font-heading text-4xl font-bold tracking-tight text-foreground">Reservas de espaços</h1>
-          <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
-            Um quadro único para proteger salas, quadras e laboratórios do improviso — sempre alinhado ao horário dos professores.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <BotaoRegrasPorProfessor />{/* [PAPEL-RESERVAS] */}
-          <BotaoRelatorioReservas />{/* [RELATORIO-RESERVAS] */}
-          <Button data-testid="button-new-reservation" onClick={openCreate} className="bg-primary text-primary-foreground shadow-sm hover:bg-primary/90">
-            <Plus className="mr-2 h-4 w-4" /> Nova reserva
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-3 shadow-[0_8px_30px_hsl(174_29%_14%/_.035)] sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
-          <Button data-testid="button-previous-day" variant="ghost" size="icon" onClick={() => shiftDate(-1)}><ChevronLeft className="h-4 w-4" /></Button>
-          <div className="min-w-[220px] text-center">
-            <p className="font-heading text-base font-bold capitalize" data-testid="text-selected-date">{displayDate(selectedDate)}</p>
-            <p className="text-xs text-muted-foreground">{days[weekdayFor(selectedDate)] ?? "Fim de semana"} · {selectedDate.slice(0, 4)}</p>
-          </div>
-          <Button data-testid="button-next-day" variant="ghost" size="icon" onClick={() => shiftDate(1)}><ChevronRight className="h-4 w-4" /></Button>
-        </div>
-        <div className="flex items-center gap-2">
-          <Input data-testid="input-filter-date" type="date" value={selectedDate} onChange={(event) => setSelectedDate(event.target.value)} className="h-9 w-auto bg-background" />
-          <Button data-testid="button-today" variant="secondary" size="sm" onClick={() => setSelectedDate(today)}>Hoje</Button>
-        </div>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard label="Reservas do dia" value={summary?.total ?? "—"} detail="solicitações registradas" tone="bg-primary" icon={CalendarDays} />
-        <SummaryCard label="Confirmadas" value={summary?.confirmadas ?? "—"} detail="espaços protegidos" tone="bg-[#5eaa83]" icon={ShieldCheck} />
-        <SummaryCard label="Pendentes" value={summary?.pendentes ?? "—"} detail="aguardando decisão" tone="bg-accent" icon={Clock3} />
-        <SummaryCard label="Salas ocupadas" value={summary?.salasOcupadas ?? "—"} detail="com pelo menos uma reserva" tone="bg-[#d07b54]" icon={DoorOpen} />
-      </div>
-
-      {isError ? (
-        <Card className="border-[#e7b9b0] bg-[#fff7f4]">
-          <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
-            <AlertTriangle className="h-8 w-8 text-destructive" />
-            <p className="font-heading text-lg font-bold">Não conseguimos carregar o quadro</p>
-            <p className="max-w-md text-sm text-muted-foreground">A agenda não foi alterada. Tente atualizar para buscar os dados mais recentes.</p>
-            <Button data-testid="button-retry-reservations" variant="outline" onClick={() => reservationsQuery.refetch()}><RefreshCcw className="mr-2 h-4 w-4" /> Tentar novamente</Button>
-          </CardContent>
-        </Card>
-      ) : isLoading ? (
-        <ReservationSkeleton />
-      ) : reservas.length === 0 ? (
-        <Card className="border-dashed border-[#b7d5c4] bg-[#f6fbf7]">
-          <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
-            <div className="rounded-2xl bg-[#dcefe3] p-4 text-primary"><DoorOpen className="h-7 w-7" /></div>
-            <p className="font-heading text-xl font-bold">Dia livre de reservas</p>
-            <p className="max-w-md text-sm leading-relaxed text-muted-foreground">Nenhum espaço foi solicitado para {displayDate(selectedDate)}. Registre uma reserva quando uma atividade precisar sair da sala de aula.</p>
-            <Button data-testid="button-empty-new-reservation" onClick={openCreate}><Plus className="mr-2 h-4 w-4" /> Registrar primeira reserva</Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          <MapaOcupacaoSalas salas={salasQuery.data ?? []} reservas={reservas} maxAulaMinimo={(horariosQuery.data ?? []).reduce((m, h) => Math.max(m, h.numeroAula), 0)} />{/* [MAPA-AULAS-GRADE] */}{/* [OCUPACAO-SALAS] */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="font-heading text-lg font-bold">Agenda do dia</h2>
-              <p className="text-xs text-muted-foreground">{reservas.length} registro{reservas.length === 1 ? "" : "s"} · ordenados por aula</p>
-            </div>
-            <div className="hidden items-center gap-3 text-[11px] font-medium text-muted-foreground sm:flex">
-              <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-[#5eaa83]" /> Confirmada</span>
-              <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-accent" /> Pendente</span>
-            </div>
-          </div>
-          {reservas.slice().sort((a, b) => a.numeroAula - b.numeroAula).map((reserva) => {
+  const renderReserva = (reserva: (typeof reservas)[number]) => {
             const schedule = scheduleFor(reserva);
-            const roomConflict = conflicts.has(`${reserva.salaId}-${reserva.numeroAula}`);
+            const roomConflict = conflicts.has(`${reserva.data.slice(0, 10)}-${reserva.salaId}-${reserva.numeroAula}`);
             return (
               <Card key={reserva.id} data-testid={`card-reservation-${reserva.id}`} className={`overflow-hidden border-border bg-card transition-shadow hover:shadow-[0_10px_28px_hsl(174_29%_14%/_.07)] ${roomConflict ? "border-l-4 border-l-destructive" : "border-l-4 border-l-primary"}`}>
                 <CardContent className="p-0">
@@ -536,7 +486,105 @@ export default function ReservasPage() {
                 </CardContent>
               </Card>
             );
+  };
+
+  const maxAulaGrade = horarios.reduce((m, h) => Math.max(m, h.numeroAula), 0);
+
+  return (
+    <div className="animate-rise-in space-y-6 pb-10">
+      <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+        <div>
+          <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-primary">
+            <span className="h-2 w-2 rounded-full bg-accent" />
+            Operação semanal
+          </div>
+          <h1 className="font-heading text-4xl font-bold tracking-tight text-foreground">Reservas de espaços</h1>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+            Um quadro único para proteger salas, quadras e laboratórios do improviso — sempre alinhado ao horário dos professores.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <BotaoRegrasPorProfessor />{/* [PAPEL-RESERVAS] */}
+          <BotaoRelatorioReservas />{/* [RELATORIO-RESERVAS] */}
+          <Button data-testid="button-new-reservation" onClick={openCreate} className="bg-primary text-primary-foreground shadow-sm hover:bg-primary/90">
+            <Plus className="mr-2 h-4 w-4" /> Nova reserva
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-3 shadow-[0_8px_30px_hsl(174_29%_14%/_.035)] sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2">
+          <Button data-testid="button-previous-week" variant="ghost" size="icon" onClick={() => shiftWeek(-1)}><ChevronLeft className="h-4 w-4" /></Button>
+          <div className="min-w-[260px] text-center">
+            <p className="font-heading text-base font-bold" data-testid="text-selected-week">{shortDate(weekDates[0])} a {shortDate(weekDates[4])}</p>
+            <p className="text-xs text-muted-foreground">Semana de segunda a sexta · {weekDates[4].slice(0, 4)}</p>
+          </div>
+          <Button data-testid="button-next-week" variant="ghost" size="icon" onClick={() => shiftWeek(1)}><ChevronRight className="h-4 w-4" /></Button>
+        </div>
+        <div className="flex items-center gap-2">
+          <Input data-testid="input-filter-date" type="date" value={selectedDate} onChange={(event) => event.target.value && setSelectedDate(event.target.value)} className="h-9 w-auto bg-background" aria-label="Ir para a semana desta data" />
+          <Button data-testid="button-today" variant="secondary" size="sm" onClick={() => setSelectedDate(today)}>Esta semana</Button>
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <SummaryCard label="Reservas da semana" value={isLoading ? "—" : summary.total} detail="solicitações registradas" tone="bg-primary" icon={CalendarDays} />
+        <SummaryCard label="Confirmadas" value={isLoading ? "—" : summary.confirmadas} detail="espaços protegidos" tone="bg-[#5eaa83]" icon={ShieldCheck} />
+        <SummaryCard label="Pendentes" value={isLoading ? "—" : summary.pendentes} detail="aguardando decisão" tone="bg-accent" icon={Clock3} />
+        <SummaryCard label="Salas ocupadas" value={isLoading ? "—" : summary.salasOcupadas} detail="com pelo menos uma reserva na semana" tone="bg-[#d07b54]" icon={DoorOpen} />
+      </div>
+
+      {isError ? (
+        <Card className="border-[#e7b9b0] bg-[#fff7f4]">
+          <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
+            <AlertTriangle className="h-8 w-8 text-destructive" />
+            <p className="font-heading text-lg font-bold">Não conseguimos carregar o quadro</p>
+            <p className="max-w-md text-sm text-muted-foreground">A agenda não foi alterada. Tente atualizar para buscar os dados mais recentes.</p>
+            <Button data-testid="button-retry-reservations" variant="outline" onClick={refetchSemana}><RefreshCcw className="mr-2 h-4 w-4" /> Tentar novamente</Button>
+          </CardContent>
+        </Card>
+      ) : isLoading ? (
+        <ReservationSkeleton />
+      ) : (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-heading text-lg font-bold">Agenda da semana</h2>
+              <p className="text-xs text-muted-foreground">{reservas.length} registro{reservas.length === 1 ? "" : "s"} · por dia, ordenados por aula</p>
+            </div>
+            <div className="hidden items-center gap-3 text-[11px] font-medium text-muted-foreground sm:flex">
+              <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-[#5eaa83]" /> Confirmada</span>
+              <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-accent" /> Pendente</span>
+            </div>
+          </div>
+          {weekDates.map((dia, i) => {
+            const doDia = reservasPorDia[i].slice().sort((a, b) => a.numeroAula - b.numeroAula);
+            return (
+              <section key={dia} data-testid={`day-${dia}`} className="space-y-3">
+                <div className="flex items-baseline justify-between border-b border-border pb-1.5">
+                  <h3 className="font-heading text-base font-bold">{days[i]} <span className="font-normal text-muted-foreground">· {shortDate(dia)}{dia === today ? " · hoje" : ""}</span></h3>
+                  <span className="text-xs text-muted-foreground">{doDia.length} reserva{doDia.length === 1 ? "" : "s"}</span>
+                </div>
+                {doDia.length === 0 ? (
+                  <p className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">Nenhuma reserva neste dia.</p>
+                ) : (
+                  <>
+                    {doDia.map((reserva) => renderReserva(reserva))}
+                    <details className="rounded-lg border border-border bg-card">
+                      <summary className="cursor-pointer px-4 py-2 text-xs font-semibold text-muted-foreground">Ver mapa de ocupação de {days[i].toLowerCase()}</summary>
+                      <MapaOcupacaoSalas salas={salas} reservas={doDia} maxAulaMinimo={maxAulaGrade} />{/* [MAPA-AULAS-GRADE] [OCUPACAO-SALAS] */}
+                    </details>
+                  </>
+                )}
+              </section>
+            );
           })}
+          {reservas.length === 0 && (
+            <div className="flex flex-col items-center gap-3 py-6 text-center">
+              <p className="max-w-md text-sm leading-relaxed text-muted-foreground">Nenhum espaço foi solicitado nesta semana. Registre uma reserva quando uma atividade precisar sair da sala de aula.</p>
+              <Button data-testid="button-empty-new-reservation" onClick={openCreate}><Plus className="mr-2 h-4 w-4" /> Registrar primeira reserva</Button>
+            </div>
+          )}
         </div>
       )}
 
