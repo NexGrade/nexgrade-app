@@ -16,6 +16,7 @@ Legenda: ✅ feito e conferido · 🟡 falta testar · ⬜ pendente
 - ✅ Marca (logo e nome) aparece uma vez só, na barra de cima; o menu lateral não repete (conferido no navegador).
 - ✅ Falha de conexão com o banco mostra "Não foi possível carregar a sua escola" com *Tentar novamente*, em vez de mandar para o cadastro.
 - ✅ Grade matutina do Romário conferida contra o PDF do Urânia: 420 aulas de cada lado, mesmas turmas, nenhuma diferença de professor. Ficaram só diferenças de rótulo da HA (`HA*` e `H.A.T`), um professor `JOSELEINE` com `R.9M` que só existe no Urânia e abreviações de disciplina (o NexGrade corta em 8 letras).
+- ✅ Romário vespertino e noturno conferidos contra os PDFs do Urânia (09/10/2026; PDFs do Urânia de 06/10 e 05/10): vespertino 346 aulas, 14 turmas, mesmos horários e **mesmo professor em 346 de 346**; noturno 181 aulas, 10 turmas (3º ano dividido em FGB/IF), **mesmo professor em 181 de 181**, incluindo os 3 trios de terça (1NA, 1NB e 2NA-HUM). Em ambos cada código de disciplina corresponde a uma única disciplina do Urânia. Não comparado: hora-atividade e marcações próprias do Urânia (`IFA`, `A.3A`, `R.6M`, `COORD` etc.), que não vão no XML.
 - ✅ XML do RCO do matutino do Romário: estrutura, `CODESCOLA`, horários, sem aula repetida e sem professor em duas turmas ao mesmo tempo.
 
 **Implementado, falta testar no navegador**
@@ -26,6 +27,7 @@ Legenda: ✅ feito e conferido · 🟡 falta testar · ⬜ pendente
 
 **Pendente**
 - ⬜ Grade SEED (lista da GEHA/SEED) das 13 turmas do Romário que ainda não têm, para o RCO conferir "disciplina fora da grade" também nelas. Hoje só as 4 turmas do 3º ano (FGB/IF) têm.
+- ⬜ Horário da **3ª aula do noturno do Romário**: o XML (vindo do cadastro de horários do NexGrade) diz `20:30 a 21:20`, e o PDF do Urânia mostra `20:35`. Confirmar com a escola o horário real e, se for 20:35, ajustar em *Calendário e Turnos → Esquema de aulas* (o XML segue o cadastro).
 - ⬜ Turma `2640411` = **3STM (FGB)** sem a disciplina `3780` (Projeto de Vida) que a grade SEED prevê. O Urânia também não a mostra nessa turma (o Projeto de Vida só aparece na 3ADM, sexta 09:10); confirmar com a escola.
 - ⬜ Trilhas de aprofundamento (`TIPODISC`): a lista no gerador está vazia, tanto para o Romário quanto para o Mário Braga. Confirmar se a escola tem trilhas.
 - ⬜ Fazer o merge do PR 1 e confirmar como o deploy sai (automático da `main`, ou manual).
