@@ -108,7 +108,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // [PAPEL-RESERVAS] gestor de reservas ve so o item Reservas no menu
   const grupos = ehGestorMenu
     ? navGroups
-        .map((g) => ({ ...g, items: g.items
+        .map((g) => ({ ...g, label: g.label === "Montagem da escola" ? "Consulta" : g.label, items: g.items
           .filter((i) => i.href === "/horario" || i.href === "/reservas" || i.href === "/calendario") // [CONSULTA-GESTOR]
           .map((i) => (i.href === "/calendario" ? { ...i, label: "Calendário" } : i)) })) // [CALENDARIO-GESTOR] so a aba do calendario letivo, somente leitura
         .filter((g) => g.items.length > 0)
