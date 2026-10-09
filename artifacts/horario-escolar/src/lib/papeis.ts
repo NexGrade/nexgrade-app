@@ -41,6 +41,8 @@ export function useAtivarEscolaDoMembro(): { aguardando: boolean } {
     }
   }, [authOk, orgId, isLoaded, primeira, setActive]);
   if (!authOk || orgId) return { aguardando: false };
-  if (!isLoaded || userMemberships?.isLoading) return { aguardando: true };
+  // espera a lista de escolas do usuario chegar de verdade: antes disso (data ainda
+  // indefinido) nao da para saber se ele ja pertence a alguma escola
+  if (!isLoaded || !userMemberships || userMemberships.isLoading || userMemberships.data === undefined) return { aguardando: true };
   return { aguardando: !!primeira };
 }

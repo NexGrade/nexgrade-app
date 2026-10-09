@@ -344,13 +344,23 @@ function ProfessorRoute({ component: Component }: { component: React.ComponentTy
   );
 }
 
+// [ORG-AUTO] quem ja e membro de uma escola nao deve cair no cadastro de escola nova:
+// ativa a escola dele (a pagina recarrega sozinha para o painel) em vez de mostrar o formulario.
+function OnboardingConteudo() {
+  const { aguardando } = useAtivarEscolaDoMembro();
+  if (aguardando) return <PaginaCarregando />;
+  return (
+    <Suspense fallback={<PaginaCarregando />}>
+      <OnboardingPage />
+    </Suspense>
+  );
+}
+
 function OnboardingRoute() {
   return (
     <>
       <Show when="signed-in">
-        <Suspense fallback={<PaginaCarregando />}>
-          <OnboardingPage />
-        </Suspense>
+        <OnboardingConteudo />
       </Show>
       <Show when="signed-out">
         <Redirect to="/sign-in" />
