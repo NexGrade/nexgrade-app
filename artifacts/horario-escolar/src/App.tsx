@@ -3,7 +3,7 @@ import { PAPEL_ADMIN, usePapelEfetivo, useAtivarEscolaDoMembro } from "@/lib/pap
 import { useEffect, useRef, lazy, Suspense } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ClerkProvider, SignIn, SignUp, Show, useAuth, OrganizationSwitcher } from "@clerk/react";
+import { ClerkProvider, SignIn, SignUp, Show, useAuth, useUser, SignOutButton, OrganizationSwitcher } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
 import { useGetEscolaAtual, getGetEscolaAtualQueryKey, useMasterWhoami, getMasterWhoamiQueryKey, setAuthTokenGetter } from "@workspace/api-client-react";
@@ -348,11 +348,21 @@ function ProfessorRoute({ component: Component }: { component: React.ComponentTy
 // ativa a escola dele (a pagina recarrega sozinha para o painel) em vez de mostrar o formulario.
 function OnboardingConteudo() {
   const { aguardando } = useAtivarEscolaDoMembro();
+  const { user } = useUser();
   if (aguardando) return <PaginaCarregando />;
   return (
-    <Suspense fallback={<PaginaCarregando />}>
-      <OnboardingPage />
-    </Suspense>
+    <>
+      <Suspense fallback={<PaginaCarregando />}>
+        <OnboardingPage />
+      </Suspense>
+      {/* [ORG-AUTO] quem cai aqui precisa ver em qual conta esta e poder sair */}
+      <p className="pb-6 text-center text-xs text-slate-500">
+        Conectado como {user?.primaryEmailAddress?.emailAddress ?? "—"} ·{" "}
+        <SignOutButton redirectUrl="/sign-in">
+          <button type="button" className="underline hover:text-slate-700">Sair</button>
+        </SignOutButton>
+      </p>
+    </>
   );
 }
 
