@@ -1,5 +1,5 @@
 import { clerkPtBR } from "@/lib/clerk-ptbr"; // [CLERK-PTBR]
-import { PAPEL_ADMIN, usePapelEfetivo } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA]
+import { PAPEL_ADMIN, usePapelEfetivo, useAtivarEscolaDoMembro } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA]
 import { useEffect, useRef, lazy, Suspense } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -106,7 +106,7 @@ const clerkAppearance = {
   baseTheme: shadcn,
   cssLayerName: "clerk",
   options: {
-    logoPlacement: "inside" as const,
+    logoPlacement: "none" as const, // [LOGIN] logo ja aparece no cabecalho da pagina
     logoLinkUrl: basePath || "/",
     logoImageUrl: `${window.location.origin}${basePath}/logo.svg`,
   },
@@ -151,37 +151,51 @@ const clerkAppearance = {
   },
 };
 
-function SignInPage() {
+// [LOGIN] Moldura comum do login/cadastro: marca, orientacao para convidados e rodape de suporte.
+function AuthShell({ subtitulo, aviso, children }: { subtitulo: string; aviso: string; children: React.ReactNode }) {
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-slate-50 px-4">
+    <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-slate-50 px-4 py-8">
       <div className="w-full max-w-sm space-y-4">
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-2 mb-1">
             <img src="/logo.svg" alt="NexGrade" className="w-8 h-8 rounded-lg" />
             <h1 className="text-2xl font-bold text-slate-900 font-heading">NexGrade</h1>
           </div>
-          <p className="text-slate-500 text-sm mt-1">Sistema de Gestão de Horários Escolares</p>
+          <p className="text-slate-500 text-sm mt-1">{subtitulo}</p>
         </div>
-        <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} appearance={clerkAppearance} />
+        {children}
+        <p className="text-center text-xs text-slate-500 leading-relaxed">{aviso}</p>
       </div>
+      <footer className="mt-8 text-center text-[11px] text-slate-400 leading-relaxed">
+        <p>NexGrade by Nexus Core Tecnologia</p>
+        <p>
+          Precisa de ajuda?{" "}
+          <a href="mailto:contato@nexuscoretecnologia.com.br" className="underline hover:text-slate-600">Fale com o suporte</a>
+        </p>
+      </footer>
     </div>
+  );
+}
+
+function SignInPage() {
+  return (
+    <AuthShell
+      subtitulo="Sistema de Gestão de Horários Escolares"
+      aviso="Foi convidado por uma escola? Abra o link do convite que chegou no seu e-mail para criar o seu acesso."
+    >
+      <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} appearance={clerkAppearance} />
+    </AuthShell>
   );
 }
 
 function SignUpPage() {
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-sm space-y-4">
-        <div className="text-center mb-6">
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <img src="/logo.svg" alt="NexGrade" className="w-8 h-8 rounded-lg" />
-            <h1 className="text-2xl font-bold text-slate-900 font-heading">NexGrade</h1>
-          </div>
-          <p className="text-slate-500 text-sm mt-1">Crie sua conta para começar</p>
-        </div>
-        <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} appearance={clerkAppearance} />
-      </div>
-    </div>
+    <AuthShell
+      subtitulo="Crie o seu acesso ao NexGrade"
+      aviso="Se a sua escola já usa o NexGrade, use o e-mail que recebeu o convite. Para cadastrar uma escola nova, siga em frente."
+    >
+      <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} appearance={clerkAppearance} />
+    </AuthShell>
   );
 }
 
@@ -227,11 +241,12 @@ function EscolaGate({ component: Component }: { component: React.ComponentType }
   const { orgRole } = useAuth(); // [PERMISSAO-PAPEL]
   const [rotaAtual] = useLocation(); // [PAPEL-RESERVAS]
   const { ehGestor, carregando: carregandoPapel } = usePapelEfetivo(); // [GESTOR-METADATA]
+  const { aguardando: ativandoEscola } = useAtivarEscolaDoMembro(); // [ORG-AUTO]
   const { data, isLoading } = useGetEscolaAtual({
     query: { queryKey: getGetEscolaAtualQueryKey() },
   });
 
-  if (isLoading || carregandoPapel) {
+  if (isLoading || carregandoPapel || ativandoEscola) {
     return (
       <div className="p-6 space-y-4">
         <Skeleton className="h-10 w-1/3" />

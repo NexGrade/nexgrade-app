@@ -56,8 +56,25 @@ export async function ehGestorReservasPorMetadata(orgId: string, userId: string)
 }
 const PREFIXOS_LIBERADOS = ["/minha-agenda", "/master"];
 
+// [LEITURA-ADMIN] consultas restritas a coordenacao: historico, lista de usuarios e
+// relatorios de ponto/carga horaria. Gestor de reservas e professor nao leem via API.
+const LEITURAS_SOMENTE_ADMIN = [
+  "/audit", "/usuarios-acessos", "/export/ponto", "/export/relatorio-seed",
+  "/export/relatorio-carga-pdf", "/export/carga-horaria-pdf",
+];
+function ehLeituraSomenteAdmin(caminho: string): boolean {
+  if (caminho === "/usuarios" || caminho === "/usuarios/") return true; // /usuarios/me segue liberado
+  return LEITURAS_SOMENTE_ADMIN.some((p) => caminho === p || caminho.startsWith(p + "/"));
+}
+
 export function exigirAdminParaAlterar(req: Request, res: Response, next: NextFunction) {
-  if (METODOS_LEITURA.has(req.method)) return next();
+  if (METODOS_LEITURA.has(req.method)) {
+    if (!ehLeituraSomenteAdmin(req.path)) return next();
+    const { userId, orgId, orgRole } = getAuth(req);
+    if (!userId || !orgId || orgRole === PAPEL_ADMIN) return next();
+    res.status(403).json({ error: "Apenas a coordenação da escola pode consultar estes dados." });
+    return;
+  }
   if (PREFIXOS_LIBERADOS.some((p) => req.path === p || req.path.startsWith(p + "/"))) return next();
   const { userId, orgId, orgRole } = getAuth(req);
   if (!userId) return next();
