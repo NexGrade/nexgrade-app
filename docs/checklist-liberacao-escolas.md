@@ -1,18 +1,31 @@
 # Checklist de liberação para as escolas
 
-Atualizado em 09/10/2026. Perfis liberados: **ADM** (Direção/Coordenação) e **Gestor de Reservas**.
+Atualizado em 09/10/2026 (parte 1 revisada à tarde). Perfis liberados: **ADM** (Direção/Coordenação) e **Gestor de Reservas**.
 
 Legenda: ✅ feito e conferido · 🟡 falta testar · ⬜ pendente
 
 ## 1. Código e PR
 
-- ✅ `pnpm run typecheck` passou nos três projetos (commit `8aaafe2`).
-- ✅ Menu do ADM completo (conferido no navegador).
-- ✅ Menu do Gestor: Horário, Calendário (consulta) e Reservas (conferido).
-- ✅ Convidado entra direto na escola, sem cair no cadastro de escola nova (conferido com o gestor).
-- 🟡 Tela de Reservas por semana, com dados reais: criar sala, professor e 2 a 3 reservas; conferir os filtros Pendentes e Confirmadas e o clique no cartão.
-- 🟡 Gestor: `/usuarios` e `/reservas/regras` voltam para `/reservas`; Horário em "Modo consulta"; Calendário sem a aba de turnos.
-- 🟡 ADM: cartão "Turmas sem Horário" da Visão Geral abre a lista filtrada.
+Última verificação: `pnpm run typecheck` passou nos três projetos com o código do commit `0d6d73e` (inclui as mudanças abaixo).
+
+**Conferido**
+- ✅ Menu do ADM completo (navegador).
+- ✅ Menu do Gestor: Horário, Calendário (consulta) e Reservas, sob o grupo "Consulta" (navegador).
+- ✅ Convidado entra direto na escola, sem cair no cadastro de escola nova (testado com o gestor).
+- ✅ Falha de conexão com o banco mostra "Não foi possível carregar a sua escola" com *Tentar novamente*, em vez de mandar para o cadastro.
+- ✅ Grade matutina do Romário conferida contra o PDF do Urânia: 420 aulas de cada lado, mesmas turmas, nenhuma diferença de professor. Ficaram só diferenças de rótulo da HA (`HA*` e `H.A.T`), um professor `JOSELEINE` com `R.9M` que só existe no Urânia e abreviações de disciplina (o NexGrade corta em 8 letras).
+- ✅ XML do RCO do matutino do Romário: estrutura, `CODESCOLA`, horários, sem aula repetida e sem professor em duas turmas ao mesmo tempo.
+
+**Implementado, falta testar no navegador**
+- 🟡 Tela de Reservas por semana (segunda a sexta), com dados reais: criar sala, professor e 2 a 3 reservas; conferir os totais da semana, o filtro por Pendentes e Confirmadas (cartões clicáveis) e o clique no cartão de reserva (abre a edição).
+- 🟡 Gestor: `/usuarios` e `/reservas/regras` voltam para `/reservas`; Horário em "Modo consulta"; Calendário só com a aba do calendário letivo.
+- 🟡 ADM: cartão "Turmas sem Horário" da Visão Geral abre a lista filtrada (`/turmas?filtro=sem-horario`).
+- 🟡 Exportar para o RCO: caixa "Incluir aulas assíncronas". Exportar o matutino do Romário sem e com a opção; o esperado é 2 registros a mais com ela.
+
+**Pendente**
+- ⬜ Grade SEED (lista da GEHA/SEED) das 13 turmas do Romário que ainda não têm, para o RCO conferir "disciplina fora da grade" também nelas. Hoje só as 4 turmas do 3º ano (FGB/IF) têm.
+- ⬜ Turma `2640411` (3º ano, parte IF) sem a disciplina `3780` (Projeto de Vida) que a grade SEED prevê; confirmar com a escola.
+- ⬜ Trilhas de aprofundamento (`TIPODISC`): a lista no gerador está vazia, tanto para o Romário quanto para o Mário Braga. Confirmar se a escola tem trilhas.
 - ⬜ Fazer o merge do PR 1 e confirmar como o deploy sai (automático da `main`, ou manual).
 
 ## 2. Clerk (ambiente de produção)
