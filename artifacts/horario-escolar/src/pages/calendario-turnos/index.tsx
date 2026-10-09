@@ -22,7 +22,8 @@ export default function CalendarioTurnosPage() {
   const tabParam = new URLSearchParams(search).get("tab");
   const inicial = (ABAS.some((a) => a.key === tabParam) ? tabParam : "calendario") as AbaKey;
   const somenteConsulta = useEhGestorReservas(); // [CALENDARIO-GESTOR] gestor de reservas ve so o calendario letivo
-  const [aba, setAba] = useState<AbaKey>(somenteConsulta ? "calendario" : inicial);
+  const [abaEscolhida, setAba] = useState<AbaKey>(inicial);
+  const aba: AbaKey = somenteConsulta ? "calendario" : abaEscolhida; // [CALENDARIO-GESTOR] gestor so ve o calendario, mesmo que o papel chegue depois
 
   function trocarAba(k: AbaKey) {
     setAba(k);

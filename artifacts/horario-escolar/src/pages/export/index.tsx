@@ -455,7 +455,7 @@ export default function ExportPage() {
             <div className="flex items-end gap-4">
               <div className="space-y-1.5 w-40">
                 <Label>Estado</Label>
-                <Select value={seedEstado} onValueChange={setSeedEstado}>
+                <Select value={seedEstado} onValueChange={(v) => { setSeedEstado(v); setSeedAssinc(false); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {["SP","MG","RJ","BA","PR","RS","PE","CE","GO","AM"].map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}

@@ -299,11 +299,12 @@ function EscolaGate({ component: Component }: { component: React.ComponentType }
   const { orgRole } = useAuth(); // [PERMISSAO-PAPEL]
   const [rotaAtual] = useLocation(); // [PAPEL-RESERVAS]
   const { ehGestor, carregando: carregandoPapel } = usePapelEfetivo(); // [GESTOR-METADATA]
-  const { aguardando: ativandoEscola } = useAtivarEscolaDoMembro(); // [ORG-AUTO]
+  const { aguardando: ativandoEscola, falhou: falhouAtivar } = useAtivarEscolaDoMembro(); // [ORG-AUTO]
   const { data, isLoading, isError, refetch } = useGetEscolaAtual({
     query: { queryKey: getGetEscolaAtualQueryKey() },
   });
 
+  if (falhouAtivar) return <ErroCarregarEscola onTentar={() => window.location.reload()} />; // [ORG-AUTO]
   if (isError) return <ErroCarregarEscola onTentar={() => { void refetch(); }} />; // [ERRO-ESCOLA]
 
   if (isLoading || carregandoPapel || ativandoEscola) {
@@ -366,8 +367,9 @@ function ProfessorRoute({ component: Component }: { component: React.ComponentTy
 // [ORG-AUTO] quem ja e membro de uma escola nao deve cair no cadastro de escola nova:
 // ativa a escola dele (a pagina recarrega sozinha para o painel) em vez de mostrar o formulario.
 function OnboardingConteudo() {
-  const { aguardando } = useAtivarEscolaDoMembro();
+  const { aguardando, falhou } = useAtivarEscolaDoMembro();
   const { user } = useUser();
+  if (falhou) return <ErroCarregarEscola onTentar={() => window.location.reload()} />;
   if (aguardando) return <PaginaCarregando />;
   return (
     <>

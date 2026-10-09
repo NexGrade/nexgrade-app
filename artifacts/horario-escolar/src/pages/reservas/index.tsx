@@ -358,7 +358,8 @@ export default function ReservasPage() {
   };
   const defaultNewDate = weekdayFor(selectedDate) >= 0 ? selectedDate : weekDates[0];
   const isLoading = weekQueries.some((q) => q.isLoading) || salasQuery.isLoading || professoresQuery.isLoading;
-  const isError = weekQueries.some((q) => q.isError);
+  const isError = weekQueries.every((q) => q.isError); // [SEMANA-RESERVAS] erro total: nenhum dia carregou
+  const algumaFalha = weekQueries.some((q) => q.isError); // falha parcial: avisa e mantem os dias que carregaram
   const filtrarPor = (f: "todas" | "confirmada" | "pendente") => {
     setFiltroStatus((atual) => (atual === f ? "todas" : f));
     window.setTimeout(() => document.getElementById("agenda-semana")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
@@ -572,24 +573,34 @@ export default function ReservasPage() {
               <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-accent" /> Pendente</span>
             </div>
           </div>
+          {algumaFalha && (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#e7b9b0] bg-[#fff7f4] px-4 py-3 text-sm text-destructive">
+              <span>Alguns dias não carregaram. Os totais da semana podem estar incompletos.</span>
+              <Button variant="outline" size="sm" onClick={refetchSemana}><RefreshCcw className="mr-2 h-3.5 w-3.5" /> Tentar novamente</Button>
+            </div>
+          )}
           {weekDates.map((dia, i) => {
-            const doDia = reservasPorDia[i].filter((r) => filtroStatus === "todas" || r.status === filtroStatus).sort((a, b) => a.numeroAula - b.numeroAula);
+            const delDia = reservasPorDia[i]; // [MAPA-COMPLETO] o mapa usa todas as reservas do dia, sem o filtro de status
+            const doDia = delDia.filter((r) => filtroStatus === "todas" || r.status === filtroStatus).sort((a, b) => a.numeroAula - b.numeroAula);
+            const diaFalhou = weekQueries[i]?.isError;
             return (
               <section key={dia} data-testid={`day-${dia}`} className="space-y-3">
                 <div className="flex items-baseline justify-between border-b border-border pb-1.5">
                   <h3 className="font-heading text-base font-bold">{days[i]} <span className="font-normal text-muted-foreground">· {shortDate(dia)}{dia === today ? " · hoje" : ""}</span></h3>
                   <span className="text-xs text-muted-foreground">{doDia.length} reserva{doDia.length === 1 ? "" : "s"}</span>
                 </div>
-                {doDia.length === 0 ? (
-                  <p className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">Nenhuma reserva neste dia.</p>
+                {diaFalhou ? (
+                  <p className="rounded-lg border border-dashed border-[#e7b9b0] px-4 py-3 text-sm text-destructive">Não foi possível carregar as reservas deste dia.</p>
+                ) : doDia.length === 0 ? (
+                  <p className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">{delDia.length > 0 ? "Nenhuma reserva neste dia com o filtro escolhido." : "Nenhuma reserva neste dia."}</p>
                 ) : (
-                  <>
-                    {doDia.map((reserva) => renderReserva(reserva))}
-                    <details className="rounded-lg border border-border bg-card">
-                      <summary className="cursor-pointer px-4 py-2 text-xs font-semibold text-muted-foreground">Ver mapa de ocupação de {days[i].toLowerCase()}</summary>
-                      <MapaOcupacaoSalas salas={salas} reservas={doDia} maxAulaMinimo={maxAulaGrade} />{/* [MAPA-AULAS-GRADE] [OCUPACAO-SALAS] */}
-                    </details>
-                  </>
+                  doDia.map((reserva) => renderReserva(reserva))
+                )}
+                {!diaFalhou && delDia.length > 0 && (
+                  <details className="rounded-lg border border-border bg-card">
+                    <summary className="cursor-pointer px-4 py-2 text-xs font-semibold text-muted-foreground">Ver mapa de ocupação de {days[i].toLowerCase()}</summary>
+                    <MapaOcupacaoSalas salas={salas} reservas={delDia} maxAulaMinimo={maxAulaGrade} />{/* [MAPA-AULAS-GRADE] [OCUPACAO-SALAS] */}
+                  </details>
                 )}
               </section>
             );

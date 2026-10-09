@@ -299,7 +299,7 @@ export default function TurmasList() {
   // [FILTRO-SEM-HORARIO] vindo do cartao "Turmas sem Horario" da Visao Geral (?filtro=sem-horario)
   const search = useSearch();
   const soSemHorario = new URLSearchParams(search).get("filtro") === "sem-horario";
-  const { data: horariosTodos } = useListHorarios(undefined, { query: { queryKey: getListHorariosQueryKey(), enabled: soSemHorario } });
+  const { data: horariosTodos, isError: erroHorarios } = useListHorarios(undefined, { query: { queryKey: getListHorariosQueryKey(), enabled: soSemHorario } });
   const turmasComHorario = new Set((horariosTodos ?? []).map((h) => h.turmaId));
   const turmasFiltradas = soSemHorario && horariosTodos ? turmasBuscadas.filter((t) => !turmasComHorario.has(t.id)) : turmasBuscadas;
   const deleteTurma = useDeleteTurma();
@@ -359,7 +359,9 @@ export default function TurmasList() {
 
       {soSemHorario && (
         <div className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900">
-          <span>Mostrando só as turmas <strong>sem horário</strong> ({horariosTodos ? turmasFiltradas.length : "…"}).</span>
+          {erroHorarios
+            ? <span>Não foi possível aplicar o filtro de turmas sem horário (falha ao carregar os horários). Mostrando <strong>todas</strong> as turmas.</span>
+            : <span>Mostrando só as turmas <strong>sem horário</strong> ({horariosTodos ? turmasFiltradas.length : "…"}).</span>}
           <Link href="/turmas" className="font-medium underline">Ver todas as turmas</Link>
         </div>
       )}
