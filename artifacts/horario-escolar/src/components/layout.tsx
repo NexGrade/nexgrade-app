@@ -81,18 +81,6 @@ function NotificationBellAdmin() {
   );
 }
 
-function NexGradeLogo() {
-  return (
-    <div className="flex items-center gap-2.5">
-      <img src="/logo.svg" alt="NexGrade" className="w-7 h-7 rounded-lg shrink-0 shadow-sm" />
-      <div className="leading-none">
-        <span className="font-bold text-[15px] tracking-tight text-foreground font-heading">NexGrade</span>
-        <span className="block text-[10px] text-muted-foreground font-medium tracking-wide -mt-0.5">by Nexus Core Tecnologia</span>
-      </div>
-    </div>
-  );
-}
-
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   // RF-MASTER: o link só aparece pra quem de fato é administrador da
@@ -127,10 +115,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     // container pai (flex-1) calculou para ele.
     <div className="h-full flex w-full bg-background overflow-hidden">
       <aside className="w-64 border-r border-border bg-card flex flex-col">
-        <div className="h-16 flex items-center px-5 border-b border-border">
-          <NexGradeLogo />
-        </div>
-        <nav className="flex-1 py-3 px-3 pb-6 space-y-5 overflow-y-auto">
+        <nav className="flex-1 py-4 px-3 pb-6 space-y-5 overflow-y-auto">
           {grupos.map((group) => (
             <div key={group.label}>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-3 mb-1">
@@ -184,9 +169,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </nav>
       </aside>
       <main className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 flex items-center px-8 border-b border-border bg-card gap-4">
-          <div className="flex-1" />
-        </header>
         <div className="flex-1 overflow-auto p-8">
           <div className="max-w-6xl mx-auto">
             {children}

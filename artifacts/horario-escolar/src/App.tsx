@@ -560,8 +560,11 @@ function GlobalTopBar() {
     <Show when="signed-in">
       <div className="h-14 shrink-0 flex items-center justify-between px-5 border-b border-border bg-card">
         <div className="flex items-center gap-2">
-          <img src="/logo.svg" alt="NexGrade" className="w-6 h-6 rounded-md shrink-0" />
-          <span className="text-sm font-semibold text-foreground font-heading hidden sm:inline">NexGrade</span>
+          <img src="/logo.svg" alt="NexGrade" className="w-7 h-7 rounded-lg shrink-0 shadow-sm" />
+          <div className="leading-none hidden sm:block">
+            <span className="font-bold text-[15px] tracking-tight text-foreground font-heading">NexGrade</span>
+            <span className="block text-[10px] text-muted-foreground font-medium tracking-wide -mt-0.5">by Nexus Core Tecnologia</span>
+          </div>{/* [MARCA-UNICA] a marca aparece so aqui; o menu lateral nao repete */}
         </div>
         {/* [FIX] Props afterCreateOrganizationUrl/afterSelectOrganizationUrl/
             afterLeaveOrganizationUrl removidas -- elas navegam atraves do
