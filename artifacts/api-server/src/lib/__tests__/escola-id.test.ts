@@ -1,4 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+// O @clerk/express 2.x so aceita, em getAuth, um req.auth criado pelo clerkMiddleware real (uma funcao
+// marcada por dentro). Aqui o foco e a REGRA DA ESCOLA, nao o Clerk: trocamos o getAuth por um que
+// devolve o req.auth do teste.
+vi.mock("@clerk/express", () => ({ getAuth: (req: any) => req.auth ?? {} }));
+
 import { getEscolaId } from "../escola-id";
 
 // RNF-SEG-04: este é exatamente o mecanismo que mantém os dados de
@@ -7,9 +13,7 @@ import { getEscolaId } from "../escola-id";
 // deixar orgId="" cair no fallback errado) reintroduziria os
 // vazamentos multi-tenant corrigidos na revisão de segurança.
 function reqComAuth(auth: { orgId?: string; userId?: string } | undefined) {
-  // No @clerk/express 2.x, req.auth e uma FUNCAO registrada pelo clerkMiddleware (getAuth chama req.auth()).
-  // Sem sessao, ela devolve um objeto vazio.
-  return { auth: () => auth ?? {} } as any;
+  return { auth } as any;
 }
 
 describe("getEscolaId", () => {
