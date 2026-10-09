@@ -2,10 +2,10 @@ import {
   useListTurmas, useCreateTurma, useUpdateTurma, useDeleteTurma, getListTurmasQueryKey,
   useListDisciplinas, useListCursos, useListMatrizesCurriculares, getListMatrizesCurricularesQueryKey,
   useAplicarMatrizTurma, useGetMatrizCurricularPorId, getGetMatrizCurricularPorIdQueryKey,
-  useGetTurma, getGetTurmaQueryKey, useListProfessores, customFetch, // [PROF-DISCIPLINA]
+  useGetTurma, getGetTurmaQueryKey, useListProfessores, customFetch, useListHorarios, getListHorariosQueryKey, // [PROF-DISCIPLINA] [FILTRO-SEM-HORARIO]
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2, GraduationCap, CalendarDays } from "lucide-react";
@@ -295,7 +295,13 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
 }
 export default function TurmasList() {
   const { data: turmas, isLoading } = useListTurmas();
-  const { busca, setBusca, itensFiltrados: turmasFiltradas } = useListaFiltrada(turmas, (t) => t.nome);
+  const { busca, setBusca, itensFiltrados: turmasBuscadas } = useListaFiltrada(turmas, (t) => t.nome);
+  // [FILTRO-SEM-HORARIO] vindo do cartao "Turmas sem Horario" da Visao Geral (?filtro=sem-horario)
+  const search = useSearch();
+  const soSemHorario = new URLSearchParams(search).get("filtro") === "sem-horario";
+  const { data: horariosTodos, isError: erroHorarios } = useListHorarios(undefined, { query: { queryKey: getListHorariosQueryKey(), enabled: soSemHorario } });
+  const turmasComHorario = new Set((horariosTodos ?? []).map((h) => h.turmaId));
+  const turmasFiltradas = soSemHorario && horariosTodos ? turmasBuscadas.filter((t) => !turmasComHorario.has(t.id)) : turmasBuscadas;
   const deleteTurma = useDeleteTurma();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -351,6 +357,15 @@ export default function TurmasList() {
         className="max-w-sm"
       />
 
+      {soSemHorario && (
+        <div className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900">
+          {erroHorarios
+            ? <span>Não foi possível aplicar o filtro de turmas sem horário (falha ao carregar os horários). Mostrando <strong>todas</strong> as turmas.</span>
+            : <span>Mostrando só as turmas <strong>sem horário</strong> ({horariosTodos ? turmasFiltradas.length : "…"}).</span>}
+          <Link href="/turmas" className="font-medium underline">Ver todas as turmas</Link>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="space-y-4">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 w-full" />)}</div>
       ) : turmas?.length === 0 ? (
@@ -361,7 +376,7 @@ export default function TurmasList() {
         </div>
       ) : turmasFiltradas.length === 0 ? (
         <div className="text-center py-12 bg-card rounded-lg border border-border">
-          <p className="text-sm text-muted-foreground">Nenhuma turma encontrada para "{busca}".</p>
+          <p className="text-sm text-muted-foreground">{soSemHorario && !busca ? "Todas as turmas já têm horário." : `Nenhuma turma encontrada para "${busca}".`}</p>
         </div>
       ) : (
         <div className="grid gap-4">

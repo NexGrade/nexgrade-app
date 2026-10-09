@@ -6,6 +6,7 @@ import { lazy, Suspense, useState } from "react";
 import { useSearch } from "wouter";
 import { CalendarDays, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEhGestorReservas } from "@/lib/papeis"; // [CALENDARIO-GESTOR]
 
 const CalendarioEscolarPage = lazy(() => import("@/pages/calendario/index"));
 const AbaEsquema = lazy(() => import("@/pages/horario/index").then((m) => ({ default: m.AbaEsquema })));
@@ -20,7 +21,9 @@ export default function CalendarioTurnosPage() {
   const search = useSearch();
   const tabParam = new URLSearchParams(search).get("tab");
   const inicial = (ABAS.some((a) => a.key === tabParam) ? tabParam : "calendario") as AbaKey;
-  const [aba, setAba] = useState<AbaKey>(inicial);
+  const somenteConsulta = useEhGestorReservas(); // [CALENDARIO-GESTOR] gestor de reservas ve so o calendario letivo
+  const [abaEscolhida, setAba] = useState<AbaKey>(inicial);
+  const aba: AbaKey = somenteConsulta ? "calendario" : abaEscolhida; // [CALENDARIO-GESTOR] gestor so ve o calendario, mesmo que o papel chegue depois
 
   function trocarAba(k: AbaKey) {
     setAba(k);
@@ -30,12 +33,12 @@ export default function CalendarioTurnosPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Calendário e Turnos</h1>
-        <p className="text-muted-foreground">Dias letivos do ano e os horários das aulas em cada turno.</p>
+        <h1 className="text-3xl font-bold tracking-tight">{somenteConsulta ? "Calendário" : "Calendário e Turnos"}</h1>
+        <p className="text-muted-foreground">{somenteConsulta ? "Dias letivos do ano, somente para consulta." : "Dias letivos do ano e os horários das aulas em cada turno."}</p>
       </div>
 
       <div className="flex items-center gap-1 border-b border-border overflow-x-auto">
-        {ABAS.map((a) => (
+        {ABAS.filter((a) => !somenteConsulta || a.key === "calendario").map((a) => (
           <button
             key={a.key}
             onClick={() => trocarAba(a.key)}
@@ -53,7 +56,7 @@ export default function CalendarioTurnosPage() {
 
       <Suspense fallback={<Skeleton className="h-64 w-full" />}>
         {aba === "calendario" && <CalendarioEscolarPage />}
-        {aba === "turnos" && <AbaEsquema />}
+        {!somenteConsulta && aba === "turnos" && <AbaEsquema />}
       </Suspense>
     </div>
   );

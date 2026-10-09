@@ -1,4 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+// O @clerk/express 2.x so aceita, em getAuth, um req.auth criado pelo clerkMiddleware real (uma funcao
+// marcada por dentro). Aqui o foco e a REGRA DA ESCOLA, nao o Clerk: trocamos o getAuth por um que
+// devolve o req.auth do teste.
+vi.mock("@clerk/express", () => ({ getAuth: (req: any) => req.auth ?? {} }));
+
 import { getEscolaId } from "../escola-id";
 
 // RNF-SEG-04: este é exatamente o mecanismo que mantém os dados de

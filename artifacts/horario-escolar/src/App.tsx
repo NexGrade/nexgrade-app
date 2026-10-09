@@ -1,9 +1,9 @@
 import { clerkPtBR } from "@/lib/clerk-ptbr"; // [CLERK-PTBR]
-import { PAPEL_ADMIN, usePapelEfetivo } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA]
+import { PAPEL_ADMIN, usePapelEfetivo, useAtivarEscolaDoMembro } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA]
 import { useEffect, useRef, lazy, Suspense } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ClerkProvider, SignIn, SignUp, Show, useAuth, OrganizationSwitcher } from "@clerk/react";
+import { ClerkProvider, SignIn, SignUp, Show, useAuth, useUser, SignOutButton, OrganizationSwitcher } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
 import { useGetEscolaAtual, getGetEscolaAtualQueryKey, useMasterWhoami, getMasterWhoamiQueryKey, setAuthTokenGetter } from "@workspace/api-client-react";
@@ -11,6 +11,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Layout } from "@/components/layout";
+import { Sparkles, Clock, Lock, CalendarDays, Library, DoorOpen, Download, FileUp, History, ShieldCheck } from "lucide-react"; // [LOGIN]
 
 // [FIX] Divisão do pacote JS (code-splitting) -- antes, todas as ~24
 // telas eram importadas de forma estática aqui no topo, o que fazia o
@@ -64,6 +65,22 @@ const NotFound = lazy(() => import("@/pages/not-found"));
 // Esqueleto mostrado enquanto o arquivo .js de uma tela ainda está
 // carregando -- mesmo visual já usado nos gates de autenticação abaixo,
 // pra não introduzir um estilo de loading diferente.
+// [ERRO-ESCOLA] falha ao consultar a escola (rede, banco fora do ar): nunca tratar como
+// "escola nao cadastrada", senao quem ja tem escola cairia no formulario de cadastro.
+function ErroCarregarEscola({ onTentar }: { onTentar: () => void }) {
+  return (
+    <div className="mx-auto max-w-md p-8 text-center space-y-3">
+      <h2 className="text-lg font-semibold text-slate-900">Não foi possível carregar a sua escola</h2>
+      <p className="text-sm text-slate-500">
+        Houve uma falha de conexão com o servidor. Os seus dados não foram alterados. Tente novamente em instantes.
+      </p>
+      <button type="button" onClick={onTentar} className="rounded-md bg-[#1565C0] px-4 py-2 text-sm font-medium text-white hover:bg-[#0D47A1]">
+        Tentar novamente
+      </button>
+    </div>
+  );
+}
+
 function PaginaCarregando() {
   return (
     <div className="p-6 space-y-4">
@@ -106,7 +123,7 @@ const clerkAppearance = {
   baseTheme: shadcn,
   cssLayerName: "clerk",
   options: {
-    logoPlacement: "inside" as const,
+    logoPlacement: "none" as const, // [LOGIN] logo ja aparece no cabecalho da pagina
     logoLinkUrl: basePath || "/",
     logoImageUrl: `${window.location.origin}${basePath}/logo.svg`,
   },
@@ -124,12 +141,12 @@ const clerkAppearance = {
   },
   elements: {
     rootBox: "w-full flex justify-center",
-    cardBox: "bg-white rounded-2xl w-[440px] max-w-full overflow-hidden shadow-xl",
-    card: "!shadow-none !border-0 !bg-transparent !rounded-none",
+    cardBox: { width: "100%", maxWidth: "440px", overflow: "hidden", boxShadow: "none", border: "none", background: "transparent", borderRadius: 0 }, // [LOGIN] sem cartao proprio: ja fica dentro da moldura da pagina
+    card: { boxShadow: "none", border: "none", background: "transparent", borderRadius: 0 },
     footer: "!shadow-none !border-0 !bg-transparent !rounded-none",
     headerTitle: "text-slate-900 font-bold",
     headerSubtitle: "text-slate-500",
-    socialButtonsBlockButtonText: "text-slate-700",
+    socialButtonsBlockButtonText: { color: "#334155", fontWeight: 500 }, // [LOGIN] contraste: o tema do Clerk deixava o texto quase invisivel
     formFieldLabel: "text-slate-700 font-medium",
     footerActionLink: "text-[#1565C0] hover:text-[#0D47A1] font-medium",
     footerActionText: "text-slate-500",
@@ -137,6 +154,7 @@ const clerkAppearance = {
     identityPreviewEditButton: "text-[#1565C0]",
     formFieldSuccessText: "text-green-600",
     alertText: "text-slate-700",
+    avatarImageActionsUpload: { color: "#334155", fontWeight: 500 }, // [LOGIN] contraste do botao "Enviar foto"
     logoBox: "flex justify-center",
     logoImage: "h-10 w-10",
     socialButtonsBlockButton: "border border-slate-200 hover:bg-slate-50",
@@ -151,37 +169,91 @@ const clerkAppearance = {
   },
 };
 
+// [LOGIN] Beneficios mostrados ao lado do formulario (so o que o NexGrade tem hoje).
+const BENEFICIOS = [
+  { icon: Sparkles, titulo: "Geração automática da grade", texto: "Monta combinações de horários respeitando as regras da escola." },
+  { icon: Clock, titulo: "Disponibilidade dos professores", texto: "Considera horários disponíveis, bloqueios e limites de cada professor." },
+  { icon: Lock, titulo: "Aulas fixas e em conjunto", texto: "Fixe aulas e organize disciplinas que precisam acontecer juntas." },
+  { icon: CalendarDays, titulo: "Turnos e calendário letivo", texto: "Matutino, vespertino e noturno, com calendário da escola." },
+  { icon: Library, titulo: "Matrizes curriculares oficiais", texto: "Cursos e matrizes já cadastrados para começar mais rápido." },
+  { icon: DoorOpen, titulo: "Reservas de salas", texto: "Agenda de reservas com regras de prioridade por professor." },
+  { icon: Download, titulo: "Importação e exportação", texto: "Importe dados existentes e exporte a grade em PDF e CSV (Excel)." },
+  { icon: FileUp, titulo: "Arquivo para o sistema oficial", texto: "Gera o arquivo da grade no formato aceito pelo sistema oficial da rede, pronto para importar, sem retrabalho." },
+  { icon: History, titulo: "Histórico de alterações", texto: "Acompanhe quem alterou o quê e quando na grade da escola." },
+  { icon: Sparkles, titulo: "Assistente de IA", texto: "Tire dúvidas e receba ajuda na montagem da grade." },
+  { icon: ShieldCheck, titulo: "Acesso por cargo", texto: "Direção, coordenação, gestor de reservas e professores, cada um com o seu acesso." },
+];
+
+// [LOGIN] Moldura comum do login/cadastro: formulario a esquerda, beneficios a direita
+// (no celular fica so o formulario), com orientacao para convidados e rodape de suporte.
+function AuthShell({ subtitulo, aviso, children }: { subtitulo: string; aviso: string; children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-slate-50 px-4 py-8">
+      <div className="w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-xl lg:grid lg:grid-cols-[minmax(0,460px)_1fr]">
+        <div className="flex flex-col items-center px-4 py-8 sm:px-6">
+          <div className="text-center mb-4">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <img src="/logo.svg" alt="NexGrade" className="w-8 h-8 rounded-lg" />
+              <h1 className="text-2xl font-bold text-slate-900 font-heading">NexGrade</h1>
+            </div>
+            <p className="text-slate-500 text-sm mt-1">{subtitulo}</p>
+          </div>
+          {children}
+          <p className="mt-2 max-w-[400px] text-center text-xs text-slate-500 leading-relaxed">{aviso}</p>
+        </div>
+        <aside className="hidden lg:block border-l border-slate-100 bg-slate-50 px-8 py-8">
+          <h2 className="text-lg font-bold text-slate-900 font-heading">O que o NexGrade resolve</h2>
+          <p className="mt-1 text-sm text-slate-500 leading-relaxed">
+            Uma plataforma para montar e acompanhar a grade horária da escola, com regras reais de turmas, turnos e professores.
+          </p>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            {BENEFICIOS.map((b) => (
+              <div key={b.titulo} className="flex gap-2.5 rounded-lg border border-slate-200 bg-white p-3 [&:last-child:nth-child(odd)]:col-span-2">
+                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-blue-50 text-[#1565C0]">
+                  <b.icon className="h-4 w-4" />
+                </span>
+                <div>
+                  <p className="text-[13px] font-semibold leading-snug text-slate-900">{b.titulo}</p>
+                  <p className="mt-0.5 text-xs leading-snug text-slate-500">{b.texto}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs leading-snug text-emerald-800">
+            Pensado para a realidade de cada escola, do ensino fundamental ao médio técnico.
+          </p>
+        </aside>
+      </div>
+      <footer className="mt-6 text-center text-[11px] text-slate-400 leading-relaxed">
+        <p>NexGrade by Nexus Core Tecnologia</p>
+        <p>
+          Precisa de ajuda?{" "}
+          <a href="mailto:contato@nexuscoretecnologia.com.br" className="underline hover:text-slate-600">Fale com o suporte</a>
+        </p>
+      </footer>
+    </div>
+  );
+}
+
 function SignInPage() {
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-sm space-y-4">
-        <div className="text-center mb-6">
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <img src="/logo.svg" alt="NexGrade" className="w-8 h-8 rounded-lg" />
-            <h1 className="text-2xl font-bold text-slate-900 font-heading">NexGrade</h1>
-          </div>
-          <p className="text-slate-500 text-sm mt-1">Sistema de Gestão de Horários Escolares</p>
-        </div>
-        <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} appearance={clerkAppearance} />
-      </div>
-    </div>
+    <AuthShell
+      subtitulo="Sistema de Gestão de Horários Escolares"
+      aviso="Foi convidado por uma escola? Abra o link do convite que chegou no seu e-mail para criar o seu acesso."
+    >
+      <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} appearance={clerkAppearance} />
+    </AuthShell>
   );
 }
 
 function SignUpPage() {
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-sm space-y-4">
-        <div className="text-center mb-6">
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <img src="/logo.svg" alt="NexGrade" className="w-8 h-8 rounded-lg" />
-            <h1 className="text-2xl font-bold text-slate-900 font-heading">NexGrade</h1>
-          </div>
-          <p className="text-slate-500 text-sm mt-1">Crie sua conta para começar</p>
-        </div>
-        <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} appearance={clerkAppearance} />
-      </div>
-    </div>
+    <AuthShell
+      subtitulo="Crie o seu acesso ao NexGrade"
+      aviso="Se a sua escola já usa o NexGrade, use o e-mail que recebeu o convite. Para cadastrar uma escola nova, siga em frente."
+    >
+      <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} appearance={clerkAppearance} />
+    </AuthShell>
   );
 }
 
@@ -227,11 +299,15 @@ function EscolaGate({ component: Component }: { component: React.ComponentType }
   const { orgRole } = useAuth(); // [PERMISSAO-PAPEL]
   const [rotaAtual] = useLocation(); // [PAPEL-RESERVAS]
   const { ehGestor, carregando: carregandoPapel } = usePapelEfetivo(); // [GESTOR-METADATA]
-  const { data, isLoading } = useGetEscolaAtual({
+  const { aguardando: ativandoEscola, falhou: falhouAtivar } = useAtivarEscolaDoMembro(); // [ORG-AUTO]
+  const { data, isLoading, isError, refetch } = useGetEscolaAtual({
     query: { queryKey: getGetEscolaAtualQueryKey() },
   });
 
-  if (isLoading || carregandoPapel) {
+  if (falhouAtivar) return <ErroCarregarEscola onTentar={() => window.location.reload()} />; // [ORG-AUTO]
+  if (isError) return <ErroCarregarEscola onTentar={() => { void refetch(); }} />; // [ERRO-ESCOLA]
+
+  if (isLoading || carregandoPapel || ativandoEscola) {
     return (
       <div className="p-6 space-y-4">
         <Skeleton className="h-10 w-1/3" />
@@ -248,7 +324,7 @@ function EscolaGate({ component: Component }: { component: React.ComponentType }
   // [PAPEL-RESERVAS] gestor de reservas: so a agenda de reservas. As regras por
   // professor (prioridade/limite) sao da coordenacao -- /reservas/regras volta tambem.
   if (ehGestor) { // [GESTOR-METADATA]
-    if (rotaAtual !== "/reservas" && rotaAtual !== "/horario") return <Redirect to="/reservas" />; // [CONSULTA-GESTOR] grade so consulta
+    if (rotaAtual !== "/reservas" && rotaAtual !== "/horario" && rotaAtual !== "/calendario") return <Redirect to="/reservas" />; // [CONSULTA-GESTOR] grade e calendario so consulta
   } else if (orgRole && orgRole !== PAPEL_ADMIN) {
     return <Redirect to="/minha-agenda" />;
   }
@@ -263,9 +339,10 @@ function EscolaGate({ component: Component }: { component: React.ComponentType }
 }
 
 function ProfessorRoute({ component: Component }: { component: React.ComponentType }) {
-  const { data, isLoading } = useGetEscolaAtual({
+  const { data, isLoading, isError, refetch } = useGetEscolaAtual({
     query: { queryKey: getGetEscolaAtualQueryKey() },
   });
+  if (isError) return <ErroCarregarEscola onTentar={() => { void refetch(); }} />; // [ERRO-ESCOLA]
   if (isLoading) {
     return (
       <div className="p-6 space-y-4">
@@ -287,13 +364,34 @@ function ProfessorRoute({ component: Component }: { component: React.ComponentTy
   );
 }
 
+// [ORG-AUTO] quem ja e membro de uma escola nao deve cair no cadastro de escola nova:
+// ativa a escola dele (a pagina recarrega sozinha para o painel) em vez de mostrar o formulario.
+function OnboardingConteudo() {
+  const { aguardando, falhou } = useAtivarEscolaDoMembro();
+  const { user } = useUser();
+  if (falhou) return <ErroCarregarEscola onTentar={() => window.location.reload()} />;
+  if (aguardando) return <PaginaCarregando />;
+  return (
+    <>
+      <Suspense fallback={<PaginaCarregando />}>
+        <OnboardingPage />
+      </Suspense>
+      {/* [ORG-AUTO] quem cai aqui precisa ver em qual conta esta e poder sair */}
+      <p className="pb-6 text-center text-xs text-slate-500">
+        Conectado como {user?.primaryEmailAddress?.emailAddress ?? "—"} ·{" "}
+        <SignOutButton redirectUrl="/sign-in">
+          <button type="button" className="underline hover:text-slate-700">Sair</button>
+        </SignOutButton>
+      </p>
+    </>
+  );
+}
+
 function OnboardingRoute() {
   return (
     <>
       <Show when="signed-in">
-        <Suspense fallback={<PaginaCarregando />}>
-          <OnboardingPage />
-        </Suspense>
+        <OnboardingConteudo />
       </Show>
       <Show when="signed-out">
         <Redirect to="/sign-in" />
@@ -464,8 +562,11 @@ function GlobalTopBar() {
     <Show when="signed-in">
       <div className="h-14 shrink-0 flex items-center justify-between px-5 border-b border-border bg-card">
         <div className="flex items-center gap-2">
-          <img src="/logo.svg" alt="NexGrade" className="w-6 h-6 rounded-md shrink-0" />
-          <span className="text-sm font-semibold text-foreground font-heading hidden sm:inline">NexGrade</span>
+          <img src="/logo.svg" alt="NexGrade" className="w-7 h-7 rounded-lg shrink-0 shadow-sm" />
+          <div className="leading-none hidden sm:block">
+            <span className="font-bold text-[15px] tracking-tight text-foreground font-heading">NexGrade</span>
+            <span className="block text-[10px] text-muted-foreground font-medium tracking-wide -mt-0.5">by Nexus Core Tecnologia</span>
+          </div>{/* [MARCA-UNICA] a marca aparece so aqui; o menu lateral nao repete */}
         </div>
         {/* [FIX] Props afterCreateOrganizationUrl/afterSelectOrganizationUrl/
             afterLeaveOrganizationUrl removidas -- elas navegam atraves do
@@ -488,6 +589,7 @@ function GlobalTopBar() {
             elements: {
               rootBox: "flex items-center",
               organizationSwitcherTrigger: "px-3 py-1.5 rounded-md border border-slate-200 text-sm text-slate-700 hover:bg-slate-50",
+              organizationPreviewMainIdentifier: { color: "#334155", fontWeight: 500 }, // [LOGIN] contraste: o nome da escola ficava quase invisivel
             },
           }}
         />
