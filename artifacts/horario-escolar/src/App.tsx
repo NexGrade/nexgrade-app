@@ -129,7 +129,7 @@ const clerkAppearance = {
     footer: "!shadow-none !border-0 !bg-transparent !rounded-none",
     headerTitle: "text-slate-900 font-bold",
     headerSubtitle: "text-slate-500",
-    socialButtonsBlockButtonText: "text-slate-700",
+    socialButtonsBlockButtonText: { color: "#334155", fontWeight: 500 }, // [LOGIN] contraste: o tema do Clerk deixava o texto quase invisivel
     formFieldLabel: "text-slate-700 font-medium",
     footerActionLink: "text-[#1565C0] hover:text-[#0D47A1] font-medium",
     footerActionText: "text-slate-500",
