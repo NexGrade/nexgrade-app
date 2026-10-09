@@ -125,8 +125,8 @@ const clerkAppearance = {
   },
   elements: {
     rootBox: "w-full flex justify-center",
-    cardBox: "bg-transparent w-full max-w-[440px] overflow-hidden shadow-none",
-    card: "!shadow-none !border-0 !bg-transparent !rounded-none",
+    cardBox: { width: "100%", maxWidth: "440px", overflow: "hidden", boxShadow: "none", border: "none", background: "transparent", borderRadius: 0 }, // [LOGIN] sem cartao proprio: ja fica dentro da moldura da pagina
+    card: { boxShadow: "none", border: "none", background: "transparent", borderRadius: 0 },
     footer: "!shadow-none !border-0 !bg-transparent !rounded-none",
     headerTitle: "text-slate-900 font-bold",
     headerSubtitle: "text-slate-500",
@@ -160,7 +160,7 @@ const BENEFICIOS = [
   { icon: CalendarDays, titulo: "Turnos e calendário letivo", texto: "Matutino, vespertino e noturno, com calendário da escola." },
   { icon: Library, titulo: "Matrizes curriculares oficiais", texto: "Cursos e matrizes já cadastrados para começar mais rápido." },
   { icon: DoorOpen, titulo: "Reservas de salas", texto: "Agenda de reservas com regras de prioridade por professor." },
-  { icon: Download, titulo: "Importação e exportação", texto: "Importe dados existentes e exporte a grade em PDF e planilhas." },
+  { icon: Download, titulo: "Importação e exportação", texto: "Importe dados existentes e exporte a grade em PDF e CSV (Excel)." },
   { icon: History, titulo: "Histórico de alterações", texto: "Acompanhe quem alterou o quê e quando na grade da escola." },
   { icon: Sparkles, titulo: "Assistente de IA", texto: "Tire dúvidas e receba ajuda na montagem da grade." },
   { icon: ShieldCheck, titulo: "Acesso por cargo", texto: "Direção, coordenação, gestor de reservas e professores, cada um com o seu acesso." },
