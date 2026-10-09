@@ -323,7 +323,7 @@ function EscolaGate({ component: Component }: { component: React.ComponentType }
   // [PAPEL-RESERVAS] gestor de reservas: so a agenda de reservas. As regras por
   // professor (prioridade/limite) sao da coordenacao -- /reservas/regras volta tambem.
   if (ehGestor) { // [GESTOR-METADATA]
-    if (rotaAtual !== "/reservas" && rotaAtual !== "/horario") return <Redirect to="/reservas" />; // [CONSULTA-GESTOR] grade so consulta
+    if (rotaAtual !== "/reservas" && rotaAtual !== "/horario" && rotaAtual !== "/calendario") return <Redirect to="/reservas" />; // [CONSULTA-GESTOR] grade e calendario so consulta
   } else if (orgRole && orgRole !== PAPEL_ADMIN) {
     return <Redirect to="/minha-agenda" />;
   }
