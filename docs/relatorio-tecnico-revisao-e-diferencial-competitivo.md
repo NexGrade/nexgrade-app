@@ -82,7 +82,8 @@ O que resta não é mais nem "brecha de segurança" nem "funcionalidade ausente"
 | Motor de geração de horário (RF-SOLV) | ✅ Funcional (heurística gulosa por turma, não um solver de otimização global — ver seção 6) |
 | Detecção de conflitos (RF-ALOC) | ✅ 6 tipos detectados, com sugestão de resolução |
 | Assistente de IA com ações (RF-IA) | ✅ RF-IA-01/03/05 implementados; RF-IA-02 (consulta livre) funcional; RF-IA-04 parcial |
-| Parser de importação (RF-PARSE) | 🟡 Só CSV genérico — sem ponte com RCO/SEED-PR (bloqueado por falta de especificação oficial, ver `docs/analise-formatos-uranin-sere.md`) |
+| Parser de importação (RF-PARSE) | 🟡 Só CSV genérico — não lê arquivos exportados pelo RCO/SEED-PR (bloqueado por falta de especificação oficial, ver `docs/analise-formatos-uranin-sere.md`) |
+| Exportação para o RCO (RF-REL) | ✅ XML no formato Urânia/SERE gerado pela tela Exportar Dados (só PR, por turno); importação do arquivo no RCO testada nas escolas Romário Martins e Mário Braga (09/10/2026). Exige Código INEP, códigos SERE das turmas e códigos do RCO das disciplinas cadastrados. Envio ao RCO é manual (não há API). |
 | Painel Master SaaS (RF-MASTER) | ✅ Implementado: gestão de escolas (ativar/desativar, trocar plano), gestão de planos (CRUD), métricas agregadas da plataforma. RF-MASTER-04 (suporte) e RF-MASTER-05 (changelog) ainda não iniciados. |
 | Auditoria geral (RF-AUD) | 🟡 Professores, disciplinas, turmas, cursos/matriz, importação em lote e todas as ações de IA gravam log; faltam salas/licenças/comunicados/configurações |
 | Simulação de cenários (RF-SIM) | 🟡 Existe "horário experimental" (promover/descartar), mas sem comparação lado a lado |
@@ -108,7 +109,7 @@ Esta seção usa como referência o levantamento de mercado já registrado em `d
 
 - **Maturidade do algoritmo de otimização**: sistemas consolidados no setor têm anos de refinamento em heurísticas de distribuição de aula (geminação, minimização de janela, prioridades por professor) — o Solver do NexGrade hoje é uma heurística gulosa turma-a-turma, funcional mas não testada em escala real com centenas de professores e restrições concorrentes.
 - **Base instalada e confiança de mercado**: anos de uso real em milhares de escolas geram uma reputação que um produto novo ainda precisa construir.
-- **Integração de fato com RCO/SERE**: hoje nenhum concorrente nem o NexGrade têm uma API oficial disponível — mas quem já opera há anos nesse mercado tem o fluxo manual de exportação/importação mais rodado e testado.
+- **Integração de fato com RCO/SERE**: hoje nenhum concorrente nem o NexGrade têm uma API oficial disponível. O NexGrade já exporta o arquivo aceito pelo RCO (testado em duas escolas), mas quem opera há anos nesse mercado tem o fluxo manual de exportação/importação mais rodado em escala.
 
 ### 5.3 Recomendação de discurso comercial
 
