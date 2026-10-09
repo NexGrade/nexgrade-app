@@ -109,3 +109,20 @@ de grade pro usuário. Depois de validar o CP-SAT em produção com a escola rea
 dá pra remover o fallback.
 
 Posso montar essa rota de integração no backend quando você quiser — é só avisar.
+
+## Teste de carga (varias escolas ao mesmo tempo)
+
+`tools/carga-cpsat.cjs` gera escolas **ficticias** (sem dados reais) e dispara as geracoes de grade ao mesmo tempo
+contra o motor, medindo tempo e resultado de cada uma. Por padrao so mostra o plano; so envia com `--executar`.
+
+```powershell
+$env:CPSAT_SERVICE_URL = "https://SEU-SERVICO.run.app"
+$env:CPSAT_TOKEN = "..."                       # o mesmo token do servico (nunca e impresso)
+node .\tools\carga-cpsat.cjs --escolas=3 --tempo=30            # plano, nao envia
+node .\tools\carga-cpsat.cjs --escolas=3 --tempo=30 --executar # 3 geracoes ao mesmo tempo
+```
+
+Opcoes: `--escolas`, `--turmas` (15), `--aulas-por-dia` (5 ou 6), `--tempo` (limite do solver, em segundos),
+`--turmas-por-prof`, `--bloqueios`, `--compartilhar`, `--semente`, `--url`.
+Aumente `--escolas` aos poucos (1, 3, 5, 10) e compare o tempo total e o `status` de cada geracao.
+O motor nao guarda nada entre pedidos: o teste mede capacidade (CPU, fila, limite de tempo), nao isolamento de dados.
