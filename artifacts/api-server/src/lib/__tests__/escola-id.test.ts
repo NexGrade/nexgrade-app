@@ -7,7 +7,9 @@ import { getEscolaId } from "../escola-id";
 // deixar orgId="" cair no fallback errado) reintroduziria os
 // vazamentos multi-tenant corrigidos na revisão de segurança.
 function reqComAuth(auth: { orgId?: string; userId?: string } | undefined) {
-  return { auth } as any;
+  // No @clerk/express 2.x, req.auth e uma FUNCAO registrada pelo clerkMiddleware (getAuth chama req.auth()).
+  // Sem sessao, ela devolve um objeto vazio.
+  return { auth: () => auth ?? {} } as any;
 }
 
 describe("getEscolaId", () => {
