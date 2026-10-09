@@ -118,6 +118,9 @@ contra o motor, medindo tempo e resultado de cada uma. Por padrao so mostra o pl
 ```powershell
 $env:CPSAT_SERVICE_URL = "https://SEU-SERVICO.run.app"
 $env:CPSAT_TOKEN = "..."                       # o mesmo token do servico (nunca e impresso)
+# se a maquina liga sob demanda (funcao acordar-cpsat), tambem defina:
+$env:CPSAT_DESPERTADOR_URL = "https://...cloudfunctions.net/acordar-cpsat"
+$env:CPSAT_DESPERTADOR_TOKEN = "..."           # a chave do despertador (nunca e impressa)
 node .\tools\carga-cpsat.cjs --escolas=3 --tempo=30            # plano, nao envia
 node .\tools\carga-cpsat.cjs --escolas=3 --tempo=30 --executar # 3 geracoes ao mesmo tempo
 ```

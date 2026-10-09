@@ -113,7 +113,29 @@ async function um(i, payload) {
 
 (async () => {
   const t0 = Date.now();
-  try { await fetch(`${URL_BASE}/`); } catch (e) { console.error("Aviso: nao consegui acordar o servico:", e.message); }
+  // A maquina do CP-SAT liga sob demanda (funcao "acordar-cpsat", POST com X-Token), como a API faz.
+  const DESP_URL = (process.env.CPSAT_DESPERTADOR_URL ?? "").trim();
+  const DESP_TOKEN = (process.env.CPSAT_DESPERTADOR_TOKEN ?? "").trim();
+  if (DESP_URL && DESP_TOKEN) {
+    try {
+      const r = await fetch(DESP_URL, { method: "POST", headers: { "X-Token": DESP_TOKEN, "Content-Type": "application/json" }, body: "{}" });
+      const j = await r.json().catch(() => ({}));
+      console.log(`Despertador: HTTP ${r.status} ${j.status ?? ""} ${j.acao ? "(acao: " + j.acao + ")" : ""}`.trim());
+    } catch (e) { console.error("Aviso: falha ao chamar o despertador:", e.message); }
+  } else {
+    console.log("Despertador nao configurado (CPSAT_DESPERTADOR_URL / CPSAT_DESPERTADOR_TOKEN): se a maquina estiver desligada, o teste falha.");
+  }
+  // espera o motor responder em "/" (ate 3 min)
+  let pronto = false;
+  while (Date.now() - t0 < 180_000) {
+    try {
+      const ac = new AbortController(); const tm = setTimeout(() => ac.abort(), 5000);
+      const r = await fetch(`${URL_BASE}/`, { signal: ac.signal }); clearTimeout(tm);
+      if (r.ok) { pronto = true; break; }
+    } catch { /* ainda ligando */ }
+    await new Promise((res) => setTimeout(res, 5000));
+  }
+  if (!pronto) { console.error("O motor nao respondeu em 3 minutos. Teste cancelado (nada foi enviado)."); process.exit(1); }
   console.log(`\nServico respondeu em ${((Date.now() - t0) / 1000).toFixed(1)}s. Disparando ${ESCOLAS} geracao(oes) ao mesmo tempo...`);
   const ini = Date.now();
   const res = await Promise.all(escolas.map((p, i) => um(i, p)));
