@@ -6,12 +6,13 @@ Legenda: ✅ feito e conferido · 🟡 falta testar · ⬜ pendente
 
 ## 1. Código e PR
 
-Última verificação: `pnpm run typecheck` passou nos três projetos com o código do commit `d7d6b19` (inclui as mudanças abaixo e a marca única na barra de cima).
+Última verificação (commit `c19ffe7`): `pnpm run typecheck` passou nos três projetos e `pnpm --filter @workspace/api-server test` passou **15 de 15** (inclui os testes novos de permissão, que cobrem o bloqueio ignorando maiúsculas).
 
 **Conferido**
 - ✅ Menu do ADM completo (navegador).
 - ✅ Menu do Gestor: Horário, Calendário (consulta) e Reservas, sob o grupo "Consulta" (navegador).
 - ✅ Convidado entra direto na escola, sem cair no cadastro de escola nova (testado com o gestor).
+- ✅ Permissões: leituras da coordenação e regras por professor do gestor agora ignoram maiúsculas no endereço (`/Audit`, `/reservas/Regras-Professores`); testes automáticos passando.
 - ✅ Marca (logo e nome) aparece uma vez só, na barra de cima; o menu lateral não repete (conferido no navegador).
 - ✅ Falha de conexão com o banco mostra "Não foi possível carregar a sua escola" com *Tentar novamente*, em vez de mandar para o cadastro.
 - ✅ Grade matutina do Romário conferida contra o PDF do Urânia: 420 aulas de cada lado, mesmas turmas, nenhuma diferença de professor. Ficaram só diferenças de rótulo da HA (`HA*` e `H.A.T`), um professor `JOSELEINE` com `R.9M` que só existe no Urânia e abreviações de disciplina (o NexGrade corta em 8 letras).
