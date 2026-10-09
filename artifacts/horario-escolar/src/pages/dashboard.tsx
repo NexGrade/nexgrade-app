@@ -32,7 +32,7 @@ export default function Dashboard() {
     { title: "Disciplinas", value: stats?.totalDisciplinas ?? 0, icon: BookOpen, color: "text-purple-500", href: "/disciplinas" },
     { title: "Salas", value: stats?.totalSalas ?? 0, icon: Building2, color: "text-cyan-500", href: "/salas" },
     { title: "Aulas Distribuídas", value: stats?.aulasDistribuidas ?? 0, icon: CheckCircle2, color: "text-emerald-500", href: "/horario?tab=grade" },
-    { title: "Turmas sem Horário", value: stats?.turmasSemHorario ?? 0, icon: CalendarDays, color: stats?.turmasSemHorario ? "text-amber-500" : "text-muted-foreground", href: "/turmas" },
+    { title: "Turmas sem Horário", value: stats?.turmasSemHorario ?? 0, icon: CalendarDays, color: stats?.turmasSemHorario ? "text-amber-500" : "text-muted-foreground", href: "/turmas?filtro=sem-horario" },
     { title: "Conflitos Detectados", value: stats?.totalConflitos ?? 0, icon: AlertCircle, color: stats?.totalConflitos ? "text-destructive" : "text-muted-foreground", href: "/horario?tab=conflitos" },
     { title: "Licenças Ativas", value: stats?.licencasAtivas ?? 0, icon: FileText, color: stats?.licencasAtivas ? "text-orange-500" : "text-muted-foreground", href: "/licencas" },
     { title: "Comunicados Não Lidos", value: stats?.comunicadosNaoLidos ?? 0, icon: Bell, color: stats?.comunicadosNaoLidos ? "text-pink-500" : "text-muted-foreground", href: "/comunicados" },
@@ -62,7 +62,7 @@ export default function Dashboard() {
                 <li><Link href="/horario?tab=conflitos" className="underline">{stats?.totalConflitos} conflito(s) detectado(s)</Link></li>
               )}
               {(stats?.turmasSemHorario ?? 0) > 0 && (
-                <li><Link href="/turmas" className="underline">{stats?.turmasSemHorario} turma(s) sem horário</Link></li>
+                <li><Link href="/turmas?filtro=sem-horario" className="underline">{stats?.turmasSemHorario} turma(s) sem horário</Link></li>
               )}
               {(stats?.licencasAtivas ?? 0) > 0 && (
                 <li><Link href="/licencas" className="underline">{stats?.licencasAtivas} licença(s) ativa(s)</Link></li>

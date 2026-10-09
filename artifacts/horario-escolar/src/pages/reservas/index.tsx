@@ -147,15 +147,25 @@ function SummaryCard({
   detail,
   tone,
   icon: Icon,
+  onClick,
+  active,
 }: {
   label: string;
   value: string | number;
   detail: string;
   tone: string;
   icon: typeof CalendarDays;
+  onClick?: () => void; // [CARTAO-CLICAVEL] filtra a agenda da semana
+  active?: boolean;
 }) {
   return (
-    <Card className="relative overflow-hidden border-card-border bg-card shadow-[0_8px_24px_hsl(174_29%_14%/_.04)]">
+    <Card
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } } : undefined}
+      className={`relative overflow-hidden border-card-border bg-card shadow-[0_8px_24px_hsl(174_29%_14%/_.04)] ${onClick ? "cursor-pointer transition-shadow hover:shadow-md" : ""} ${active ? "ring-2 ring-primary" : ""}`}
+    >
       <div className={`absolute inset-y-0 left-0 w-1 ${tone}`} />
       <CardContent className="flex items-start justify-between p-5 pl-6">
         <div>
@@ -314,6 +324,7 @@ export default function ReservasPage() {
   const [selectedDate, setSelectedDate] = useState(today);
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Reserva | null>(null);
+  const [filtroStatus, setFiltroStatus] = useState<"todas" | "confirmada" | "pendente">("todas"); // [CARTAO-CLICAVEL]
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -348,6 +359,10 @@ export default function ReservasPage() {
   const defaultNewDate = weekdayFor(selectedDate) >= 0 ? selectedDate : weekDates[0];
   const isLoading = weekQueries.some((q) => q.isLoading) || salasQuery.isLoading || professoresQuery.isLoading;
   const isError = weekQueries.some((q) => q.isError);
+  const filtrarPor = (f: "todas" | "confirmada" | "pendente") => {
+    setFiltroStatus((atual) => (atual === f ? "todas" : f));
+    window.setTimeout(() => document.getElementById("agenda-semana")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  };
   const refetchSemana = () => { weekQueries.forEach((q) => { void q.refetch(); }); };
 
   const conflicts = useMemo(() => {
@@ -454,7 +469,7 @@ export default function ReservasPage() {
             const schedule = scheduleFor(reserva);
             const roomConflict = conflicts.has(`${reserva.data.slice(0, 10)}-${reserva.salaId}-${reserva.numeroAula}`);
             return (
-              <Card key={reserva.id} data-testid={`card-reservation-${reserva.id}`} className={`overflow-hidden border-border bg-card transition-shadow hover:shadow-[0_10px_28px_hsl(174_29%_14%/_.07)] ${roomConflict ? "border-l-4 border-l-destructive" : "border-l-4 border-l-primary"}`}>
+              <Card key={reserva.id} onClick={() => openEdit(reserva)} data-testid={`card-reservation-${reserva.id}`} className={`cursor-pointer overflow-hidden border-border bg-card transition-shadow hover:shadow-[0_10px_28px_hsl(174_29%_14%/_.07)] ${roomConflict ? "border-l-4 border-l-destructive" : "border-l-4 border-l-primary"}`}>
                 <CardContent className="p-0">
                   <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-center">
                     <div className="flex min-w-[94px] items-center gap-3 lg:flex-col lg:items-start lg:gap-0">
@@ -476,7 +491,7 @@ export default function ReservasPage() {
                       {roomConflict && <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-destructive"><AlertTriangle className="h-3.5 w-3.5" /> Este espaço tem mais de uma solicitação nesta aula. Resolva antes de confirmar.</p>}
                       {reserva.observacoes && <p className="mt-2 text-xs text-muted-foreground">{reserva.observacoes}</p>}
                     </div>
-                    <div className="flex items-center gap-1 border-t border-border pt-3 lg:border-0 lg:pt-0">
+                    <div className="flex items-center gap-1 border-t border-border pt-3 lg:border-0 lg:pt-0" onClick={(e) => e.stopPropagation()}>
                       {reserva.status === "pendente" && <Button data-testid={`button-confirm-reservation-${reserva.id}`} size="sm" onClick={() => changeStatus(reserva.id, "confirmada")} disabled={updateReserva.isPending}><Check className="mr-1.5 h-3.5 w-3.5" /> Confirmar</Button>}
                       {reserva.status !== "cancelada" && <Button data-testid={`button-cancel-reservation-${reserva.id}`} size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive" onClick={() => changeStatus(reserva.id, "cancelada")} disabled={updateReserva.isPending}><X className="h-4 w-4" /></Button>}
                       <Button data-testid={`button-edit-reservation-${reserva.id}`} size="icon" variant="ghost" onClick={() => openEdit(reserva)}><CalendarDays className="h-4 w-4" /></Button>
@@ -528,9 +543,9 @@ export default function ReservasPage() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard label="Reservas da semana" value={isLoading ? "—" : summary.total} detail="solicitações registradas" tone="bg-primary" icon={CalendarDays} />
-        <SummaryCard label="Confirmadas" value={isLoading ? "—" : summary.confirmadas} detail="espaços protegidos" tone="bg-[#5eaa83]" icon={ShieldCheck} />
-        <SummaryCard label="Pendentes" value={isLoading ? "—" : summary.pendentes} detail="aguardando decisão" tone="bg-accent" icon={Clock3} />
+        <SummaryCard label="Reservas da semana" value={isLoading ? "—" : summary.total} detail="solicitações registradas" tone="bg-primary" icon={CalendarDays} onClick={() => filtrarPor("todas")} active={filtroStatus === "todas"} />
+        <SummaryCard label="Confirmadas" value={isLoading ? "—" : summary.confirmadas} detail="espaços protegidos" tone="bg-[#5eaa83]" icon={ShieldCheck} onClick={() => filtrarPor("confirmada")} active={filtroStatus === "confirmada"} />
+        <SummaryCard label="Pendentes" value={isLoading ? "—" : summary.pendentes} detail="aguardando decisão" tone="bg-accent" icon={Clock3} onClick={() => filtrarPor("pendente")} active={filtroStatus === "pendente"} />
         <SummaryCard label="Salas ocupadas" value={isLoading ? "—" : summary.salasOcupadas} detail="com pelo menos uma reserva na semana" tone="bg-[#d07b54]" icon={DoorOpen} />
       </div>
 
@@ -547,9 +562,9 @@ export default function ReservasPage() {
         <ReservationSkeleton />
       ) : (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div id="agenda-semana" className="flex scroll-mt-4 items-center justify-between">
             <div>
-              <h2 className="font-heading text-lg font-bold">Agenda da semana</h2>
+              <h2 className="font-heading text-lg font-bold">Agenda da semana{filtroStatus !== "todas" ? ` · só ${filtroStatus === "confirmada" ? "confirmadas" : "pendentes"}` : ""}</h2>
               <p className="text-xs text-muted-foreground">{reservas.length} registro{reservas.length === 1 ? "" : "s"} · por dia, ordenados por aula</p>
             </div>
             <div className="hidden items-center gap-3 text-[11px] font-medium text-muted-foreground sm:flex">
@@ -558,7 +573,7 @@ export default function ReservasPage() {
             </div>
           </div>
           {weekDates.map((dia, i) => {
-            const doDia = reservasPorDia[i].slice().sort((a, b) => a.numeroAula - b.numeroAula);
+            const doDia = reservasPorDia[i].filter((r) => filtroStatus === "todas" || r.status === filtroStatus).sort((a, b) => a.numeroAula - b.numeroAula);
             return (
               <section key={dia} data-testid={`day-${dia}`} className="space-y-3">
                 <div className="flex items-baseline justify-between border-b border-border pb-1.5">
