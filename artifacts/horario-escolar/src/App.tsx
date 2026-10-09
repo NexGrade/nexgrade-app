@@ -11,6 +11,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Layout } from "@/components/layout";
+import { Sparkles, Clock, Lock, CalendarDays, Library, DoorOpen, Download, History, ShieldCheck } from "lucide-react"; // [LOGIN]
 
 // [FIX] Divisão do pacote JS (code-splitting) -- antes, todas as ~24
 // telas eram importadas de forma estática aqui no topo, o que fazia o
@@ -124,7 +125,7 @@ const clerkAppearance = {
   },
   elements: {
     rootBox: "w-full flex justify-center",
-    cardBox: "bg-white rounded-2xl w-[440px] max-w-full overflow-hidden shadow-xl",
+    cardBox: "bg-transparent w-full max-w-[440px] overflow-hidden shadow-none",
     card: "!shadow-none !border-0 !bg-transparent !rounded-none",
     footer: "!shadow-none !border-0 !bg-transparent !rounded-none",
     headerTitle: "text-slate-900 font-bold",
@@ -151,22 +152,61 @@ const clerkAppearance = {
   },
 };
 
-// [LOGIN] Moldura comum do login/cadastro: marca, orientacao para convidados e rodape de suporte.
+// [LOGIN] Beneficios mostrados ao lado do formulario (so o que o NexGrade tem hoje).
+const BENEFICIOS = [
+  { icon: Sparkles, titulo: "Geração automática da grade", texto: "Monta combinações de horários respeitando as regras da escola." },
+  { icon: Clock, titulo: "Disponibilidade dos professores", texto: "Considera horários disponíveis, bloqueios e limites de cada professor." },
+  { icon: Lock, titulo: "Aulas fixas e em conjunto", texto: "Fixe aulas e organize disciplinas que precisam acontecer juntas." },
+  { icon: CalendarDays, titulo: "Turnos e calendário letivo", texto: "Matutino, vespertino e noturno, com calendário da escola." },
+  { icon: Library, titulo: "Matrizes curriculares oficiais", texto: "Cursos e matrizes já cadastrados para começar mais rápido." },
+  { icon: DoorOpen, titulo: "Reservas de salas", texto: "Agenda de reservas com regras de prioridade por professor." },
+  { icon: Download, titulo: "Importação e exportação", texto: "Importe dados existentes e exporte a grade em PDF e planilhas." },
+  { icon: History, titulo: "Histórico de alterações", texto: "Acompanhe quem alterou o quê e quando na grade da escola." },
+  { icon: Sparkles, titulo: "Assistente de IA", texto: "Tire dúvidas e receba ajuda na montagem da grade." },
+  { icon: ShieldCheck, titulo: "Acesso por cargo", texto: "Direção, coordenação, gestor de reservas e professores, cada um com o seu acesso." },
+];
+
+// [LOGIN] Moldura comum do login/cadastro: formulario a esquerda, beneficios a direita
+// (no celular fica so o formulario), com orientacao para convidados e rodape de suporte.
 function AuthShell({ subtitulo, aviso, children }: { subtitulo: string; aviso: string; children: React.ReactNode }) {
   return (
     <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-slate-50 px-4 py-8">
-      <div className="w-full max-w-sm space-y-4">
-        <div className="text-center mb-6">
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <img src="/logo.svg" alt="NexGrade" className="w-8 h-8 rounded-lg" />
-            <h1 className="text-2xl font-bold text-slate-900 font-heading">NexGrade</h1>
+      <div className="w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-xl lg:grid lg:grid-cols-[minmax(0,460px)_1fr]">
+        <div className="flex flex-col items-center px-4 py-8 sm:px-6">
+          <div className="text-center mb-4">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <img src="/logo.svg" alt="NexGrade" className="w-8 h-8 rounded-lg" />
+              <h1 className="text-2xl font-bold text-slate-900 font-heading">NexGrade</h1>
+            </div>
+            <p className="text-slate-500 text-sm mt-1">{subtitulo}</p>
           </div>
-          <p className="text-slate-500 text-sm mt-1">{subtitulo}</p>
+          {children}
+          <p className="mt-2 max-w-[400px] text-center text-xs text-slate-500 leading-relaxed">{aviso}</p>
         </div>
-        {children}
-        <p className="text-center text-xs text-slate-500 leading-relaxed">{aviso}</p>
+        <aside className="hidden lg:block border-l border-slate-100 bg-slate-50 px-8 py-8">
+          <h2 className="text-lg font-bold text-slate-900 font-heading">O que o NexGrade resolve</h2>
+          <p className="mt-1 text-sm text-slate-500 leading-relaxed">
+            Uma plataforma para montar e acompanhar a grade horária da escola, com regras reais de turmas, turnos e professores.
+          </p>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            {BENEFICIOS.map((b) => (
+              <div key={b.titulo} className="flex gap-2.5 rounded-lg border border-slate-200 bg-white p-3">
+                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-blue-50 text-[#1565C0]">
+                  <b.icon className="h-4 w-4" />
+                </span>
+                <div>
+                  <p className="text-[13px] font-semibold leading-snug text-slate-900">{b.titulo}</p>
+                  <p className="mt-0.5 text-xs leading-snug text-slate-500">{b.texto}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs leading-snug text-emerald-800">
+            Pensado para a realidade de cada escola, do ensino fundamental ao médio técnico.
+          </p>
+        </aside>
       </div>
-      <footer className="mt-8 text-center text-[11px] text-slate-400 leading-relaxed">
+      <footer className="mt-6 text-center text-[11px] text-slate-400 leading-relaxed">
         <p>NexGrade by Nexus Core Tecnologia</p>
         <p>
           Precisa de ajuda?{" "}
