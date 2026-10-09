@@ -65,6 +65,22 @@ const NotFound = lazy(() => import("@/pages/not-found"));
 // Esqueleto mostrado enquanto o arquivo .js de uma tela ainda está
 // carregando -- mesmo visual já usado nos gates de autenticação abaixo,
 // pra não introduzir um estilo de loading diferente.
+// [ERRO-ESCOLA] falha ao consultar a escola (rede, banco fora do ar): nunca tratar como
+// "escola nao cadastrada", senao quem ja tem escola cairia no formulario de cadastro.
+function ErroCarregarEscola({ onTentar }: { onTentar: () => void }) {
+  return (
+    <div className="mx-auto max-w-md p-8 text-center space-y-3">
+      <h2 className="text-lg font-semibold text-slate-900">Não foi possível carregar a sua escola</h2>
+      <p className="text-sm text-slate-500">
+        Houve uma falha de conexão com o servidor. Os seus dados não foram alterados. Tente novamente em instantes.
+      </p>
+      <button type="button" onClick={onTentar} className="rounded-md bg-[#1565C0] px-4 py-2 text-sm font-medium text-white hover:bg-[#0D47A1]">
+        Tentar novamente
+      </button>
+    </div>
+  );
+}
+
 function PaginaCarregando() {
   return (
     <div className="p-6 space-y-4">
@@ -284,9 +300,11 @@ function EscolaGate({ component: Component }: { component: React.ComponentType }
   const [rotaAtual] = useLocation(); // [PAPEL-RESERVAS]
   const { ehGestor, carregando: carregandoPapel } = usePapelEfetivo(); // [GESTOR-METADATA]
   const { aguardando: ativandoEscola } = useAtivarEscolaDoMembro(); // [ORG-AUTO]
-  const { data, isLoading } = useGetEscolaAtual({
+  const { data, isLoading, isError, refetch } = useGetEscolaAtual({
     query: { queryKey: getGetEscolaAtualQueryKey() },
   });
+
+  if (isError) return <ErroCarregarEscola onTentar={() => { void refetch(); }} />; // [ERRO-ESCOLA]
 
   if (isLoading || carregandoPapel || ativandoEscola) {
     return (
@@ -320,9 +338,10 @@ function EscolaGate({ component: Component }: { component: React.ComponentType }
 }
 
 function ProfessorRoute({ component: Component }: { component: React.ComponentType }) {
-  const { data, isLoading } = useGetEscolaAtual({
+  const { data, isLoading, isError, refetch } = useGetEscolaAtual({
     query: { queryKey: getGetEscolaAtualQueryKey() },
   });
+  if (isError) return <ErroCarregarEscola onTentar={() => { void refetch(); }} />; // [ERRO-ESCOLA]
   if (isLoading) {
     return (
       <div className="p-6 space-y-4">
