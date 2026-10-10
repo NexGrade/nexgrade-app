@@ -11,6 +11,7 @@ import { getEscolaId } from "../lib/escola-id";
 import { limitadorIA } from "../middlewares/rateLimit";
 import { GUIA_NEXGRADE, TOPICOS_GUIA, buscarNoGuia } from "../lib/guia-nexgrade"; // [GUIA-IA]
 import { ehHAOutroTurno } from "../lib/ha-contraturno"; // [HA-OUTRO-TURNO]
+import { ehHaFormacao } from "../lib/bloqueio-real"; // [HA-FORMACAO]
 // [IA-AMPLIADA] gerarAlgoritmo (motor simples antigo) nao e mais usado aqui:
 // a geracao de grade saiu do assistente -- ver "gerar_horario_turma" abaixo.
 
@@ -444,7 +445,7 @@ async function consultarGradeProfessor(escolaId: string, professorNome: string) 
           aula: h.horarioSlot,
           turno: h.turno ?? "sem turno",
           inicio: h.turno ? horas.get(`${h.turno}-${h.horarioSlot}`) ?? null : null,
-          rotulo: (h.turno && !turnosComAula.has(h.turno)) || ehHAOutroTurno(h.motivo) ? "HA*" : "HA", // [HA-OUTRO-TURNO]
+          rotulo: ehHaFormacao(h.motivo) ? "FORM" : (h.turno && !turnosComAula.has(h.turno)) || ehHAOutroTurno(h.motivo) ? "HA*" : "HA", // [HA-OUTRO-TURNO] [HA-FORMACAO]
         })),
     },
     outrasIndisponibilidades: outros.map((o) => ({

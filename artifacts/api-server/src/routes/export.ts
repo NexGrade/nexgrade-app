@@ -9,7 +9,7 @@ import { and, eq, isNull, notInArray, sql } from "drizzle-orm";
 import { GRADES_SEED_RCO } from "../lib/grades-seed-rco"; // [RCO-EXPORT-BANCO]
 import { getEscolaId } from "../lib/escola-id";
 import { buscarReservasParaRelatorio, gerarPdfReservasPorProfessor } from "../lib/relatorio-reservas"; // [RELATORIO-RESERVAS]
-import { ehBloqueioReal } from "../lib/bloqueio-real";
+import { ehBloqueioReal, ehHaFormacao } from "../lib/bloqueio-real"; // [HA-FORMACAO]
 import { gerarPdfGradeCompacta, type BlocoGrade } from "../lib/pdf-grade";
 import { gerarPdfCargaProfessores, type RelatorioProfessor } from "../lib/pdf-carga-professor";
 import { gerarPdfCargaHoraria, type TurmaCargaHoraria } from "../lib/pdf-carga-horaria";
@@ -251,7 +251,7 @@ router.get("/ponto", async (req, res) => {
 //               Numero sequencial o RCO recusa (NullPointerException).
 //  - Turma com 2 codigos: cada disciplina vai para a parte cuja grade SEED a contem
 //    (GRADES_SEED_RCO); sem grade conhecida, pela categoria FGB da matriz.
-//  - So a grade oficial; assincronas ficam fora (?assincronas=1 inclui).
+//  - So a grade oficial; assincronas e hibridas (trio) ENTRAM por padrao (?assincronas=0 tira as assincronas).
 //  - Bloqueia (400) em vez de gerar arquivo que o RCO vai recusar.
 const DICIONARIO_CODDISC_PENDENTE: Record<string, number> = {
   "Ensino Religioso": 33,
@@ -271,7 +271,7 @@ router.get("/relatorio-seed", async (req, res) => {
   const escolaId = getEscolaId(req);
   const estado = (req.query.estado as string) ?? "PR";
   const turno = req.query.turno as string | undefined;
-  const comAssincronas = req.query.assincronas === "1";
+  const comAssincronas = req.query.assincronas !== "0"; // [RCO-ASSINC-PADRAO] assincronas (e hibridas) constam no RCO; ?assincronas=0 tira
 
   if (estado !== "PR") {
     res.status(400).json({ error: `Exportação no formato SERE/Urânia só está implementada para o Paraná (PR) no momento.` });
@@ -383,7 +383,7 @@ router.get("/relatorio-seed", async (req, res) => {
   // turno for matutino; nos outros turnos o esquema e unico
   // (nivelEnsino fica nulo em horario_slots).
   const slots = await db.select().from(horarioSlotsTable)
-    .where(and(eq(horarioSlotsTable.escolaId, escolaId), eq(horarioSlotsTable.turno, turno), eq(horarioSlotsTable.letivo, true)));
+    .where(and(eq(horarioSlotsTable.escolaId, escolaId), eq(horarioSlotsTable.turno, turno))); // [RCO-ASSINC-PADRAO] sem filtro de letivo: assincrona na aula 1 do noturno (18:00, nao letiva) tem horario
   function chaveSlot(numeroAula: number, nivelEnsino: string | null): string {
     return turno === "matutino" ? `${numeroAula}|${nivelEnsino ?? "?"}` : `${numeroAula}|todos`;
   }
@@ -719,15 +719,15 @@ router.get("/grade-pdf/professor", async (req, res) => {
       // aula na semana = contraturno -> rotulo "HA*".
       const ehContraturno = !turnosAulaSemana.has(turno);
       const haDoProf: BlocoGrade["slots"] = (nomeExperimental
-        ? haSimulada.filter((m) => m.professorId === prof.id && m.turno === turno)
+        ? haSimulada.filter((m) => m.professorId === prof.id && m.turno === turno).map((m) => ({ ...m, formacao: false }))
         : disponibilidades
             .filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && d.turno === turno)
-            .map((d) => ({ diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, outroTurno: ehHAOutroTurno(d.motivo) })))
+            .map((d) => ({ diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, outroTurno: ehHAOutroTurno(d.motivo), formacao: ehHaFormacao(d.motivo) }))) // [HA-FORMACAO]
         .filter((m) => !aulasDoProf.some((a) => a.diaSemana === m.diaSemana && a.numeroAula === m.horarioSlot))
         .map((m) => ({
           diaSemana: m.diaSemana,
           numeroAula: m.horarioSlot,
-          linha1: ehContraturno || m.outroTurno ? "HA*" : "HA", // [HA-OUTRO-TURNO] HA de aulas de outro turno tambem e HA*
+          linha1: m.formacao ? "FORM" : ehContraturno || m.outroTurno ? "HA*" : "HA", // [HA-OUTRO-TURNO] HA de aulas de outro turno tambem e HA*; [HA-FORMACAO] curso de formadores
           destacado: true,
         }));
 
@@ -741,11 +741,16 @@ router.get("/grade-pdf/professor", async (req, res) => {
         const ponto = s.numeroAula === Math.min(...doDia) ? " ENTRADA" : s.numeroAula === Math.max(...doDia) ? " SAIDA" : "";
         cel.linha2 = `${cel.linha2 ?? ""} (ASS)${ponto}`;
       }
+      const celulasComPS = new Set<string>(); // [FIX-PS-DUPLICADO] professor com 2 disciplinas do trio no mesmo horario: 1 marca so
       for (const s of slotsDoProfNesseTurno) { // [REVEZAMENTO-TRIO]
         if (s.assincrona) continue;
         const r = revezProf.get(`${s.turmaId}|${s.disciplinaId}|${s.professorId}`);
         const cel = r && aulasDoProf.find((x) => x.diaSemana === s.diaSemana && x.numeroAula === s.numeroAula);
-        if (r && cel) cel.linha2 = `${cel.linha2 ?? ""} ${r.presencial ? "(P)" : "(S)"}`;
+        const chaveCel = `${s.diaSemana}-${s.numeroAula}`;
+        if (r && cel && !celulasComPS.has(chaveCel)) {
+          celulasComPS.add(chaveCel);
+          cel.linha2 = `${cel.linha2 ?? ""} ${r.presencial ? "(P)" : "(S)"}`;
+        }
       }
 
       // [NOVO] Dia/horario em que o professor esta bloqueado
