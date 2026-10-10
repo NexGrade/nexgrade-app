@@ -107,7 +107,9 @@ async function um(i, payload) {
     return { i, http: r.status, status: j.status ?? "-", viavel: j.viavel ?? false, aulas: (j.aulas ?? []).length,
       resolucao: j.tempoResolucaoS ?? null, total: (Date.now() - ini) / 1000, erro: r.ok ? "" : String(j.detail ?? texto).slice(0, 80) };
   } catch (e) {
-    return { i, http: 0, status: "-", viavel: false, aulas: 0, resolucao: null, total: (Date.now() - ini) / 1000, erro: e.name === "AbortError" ? "tempo esgotado" : e.message };
+    // o fetch do Node esconde o motivo real em e.cause (ex.: ECONNRESET, UND_ERR_SOCKET, ETIMEDOUT)
+    const causa = e.cause ? ` [${e.cause.code ?? e.cause.name ?? ""} ${String(e.cause.message ?? "").slice(0, 60)}]`.replace(/\s+\]/, "]") : "";
+    return { i, http: 0, status: "-", viavel: false, aulas: 0, resolucao: null, total: (Date.now() - ini) / 1000, erro: e.name === "AbortError" ? "tempo esgotado" : e.message + causa };
   } finally { clearTimeout(timer); }
 }
 
