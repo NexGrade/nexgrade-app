@@ -60,7 +60,28 @@ Legenda: ✅ feito e conferido · 🟡 falta testar · ⬜ pendente
 - ⬜ Divulgar o contato de suporte (hoje no rodapé do login: `contato@nexuscoretecnologia.com.br`).
 - ⬜ Não anunciar a exportação do RCO como "integração automática": a escola envia o arquivo manualmente.
 
-## 6. Depois de liberar
+## 6. Motor CP-SAT (máquina no Google Cloud)
+
+O motor roda na VM `nexgrade-cpsat-teste` (Compute Engine, `n2d-standard-4`: 4 vCPUs AMD Milan, 16 GB, zona `southamerica-east1-a`), em `http://34.95.232.215:8000`. A máquina liga sob demanda pela função `acordar-cpsat` (a API chama com `POST` e o cabeçalho `X-Token`) e se desliga sozinha quando fica ociosa. O firewall `permitir-porta-8000` só aceita os IPs do Render.
+
+Teste de carga com escolas fictícias (`cpsat-service/tools/carga-cpsat.cjs`, 15 turmas, 6 aulas/dia, 09/10/2026, rodado do computador da Simone):
+
+| Escolas ao mesmo tempo | Grades completas | Tempo total máximo |
+|---|---|---|
+| 1 | 1 de 1 | 22 a 33 s |
+| 3 | 3 de 3 | 23 s |
+| 4 | 0 de 4 (`ECONNRESET`) | – |
+| 6 | 3, 0, 4 e 4 de 6 em quatro rodadas (a última com o cliente nativo, igual ao da API) | 32 a 39 s |
+
+- ✅ A máquina acorda em ~35 s e gera a grade completa (450 aulas por escola); até 3 gerações juntas passaram.
+- 🟡 **Com 4 ou mais gerações juntas, parte das conexões é derrubada (`ECONNRESET`)** a partir do computador de teste. Não é o `fetch` do Node (repetido com `http` nativo), não é falta de memória (16 GB) e não é limite fixo de tempo. Causas ainda abertas: configuração do servidor na VM (ver logs) ou a rede/antivírus do computador de teste (a chamada ao despertador também falhou uma vez). Falta repetir o teste a partir de outra rede ou de dentro do Google.
+- ✅ Em produção a API usa `axios` e repete 1 vez (após 5 s) quando recebe `ECONNRESET`; se falhar de novo, responde com erro claro e a escola segue com o gerador local.
+- ⬜ **HTTPS:** o endereço é `http://` (sem criptografia); o token viaja sem proteção. Colocar HTTPS na frente antes de liberar para as escolas.
+- ⬜ IP externo da VM é fixo? Se for temporário, ele muda quando a máquina é recriada; reservar IP estático.
+- ⬜ Apagar o firewall temporário `teste-carga-temporaria` (libera a porta 8000 só para o IP do computador de teste) quando os testes terminarem.
+- ⬜ Uma geração não é cancelada quando a conexão cai: o motor termina o trabalho "sem dono" e ocupa a CPU. Avaliar limite de gerações simultâneas no motor.
+
+## 7. Depois de liberar
 
 - ⬜ Acompanhar os logs da API na primeira semana (erros 500 e 403).
 - ⬜ Conferir se alguma escola caiu no cadastro de escola nova por engano.
