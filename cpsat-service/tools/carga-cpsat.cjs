@@ -19,6 +19,7 @@
  *         --turmas-por-prof=N (2: quantas turmas cada professor atende na mesma disciplina)
  *         --bloqueios=N (2: maximo de bloqueios por professor)  --compartilhar (professores dividem 2 disciplinas)
  *         --intervalo=S (0: segundos entre o inicio de cada escola; 0 = todas no mesmo instante)
+ *         --cliente=http|fetch (http: cliente nativo, como a API; fetch: undici, para comparar)
  *         --url=...  --semente=N (1)  --executar
  */
 const args = Object.fromEntries(process.argv.slice(2).map((a) => {
@@ -86,6 +87,7 @@ function gerarEscola(idx) {
 }
 
 const escolas = Array.from({ length: ESCOLAS }, (_, i) => gerarEscola(i));
+console.log(`Cliente HTTP: ${String(args.cliente ?? "http")}`);
 console.log(`Plano: ${ESCOLAS} escola(s) ficticia(s), ${TURMAS} turmas, ${APD} aulas/dia, limite do solver ${TEMPO}s, semente ${SEMENTE}`);
 escolas.forEach((p, i) => {
   const profs = new Set(p.disciplinasTurma.map((d) => d.professor)).size;
@@ -98,21 +100,45 @@ if (!EXECUTAR) {
 if (!URL_BASE) { console.error("\nDefina CPSAT_SERVICE_URL (ou --url=...)."); process.exit(1); }
 
 const headers = { "Content-Type": "application/json", ...(TOKEN ? { "x-nexgrade-token": TOKEN } : {}) };
+// Cliente HTTP: por padrao o modulo http/https nativo (o mesmo que o axios da API usa por baixo).
+// A API abandonou o fetch/undici por falhar com corpos medios ([FIX-AXIOS]); --cliente=fetch permite comparar.
+const CLIENTE = String(args.cliente ?? "http");
+function postJson(url, hdrs, corpo, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const u = new URL(url);
+    const mod = u.protocol === "https:" ? require("https") : require("http");
+    const req = mod.request(u, { method: "POST", headers: { ...hdrs, "Content-Length": Buffer.byteLength(corpo) }, timeout: timeoutMs, agent: false }, (res) => {
+      const partes = [];
+      res.on("data", (c) => partes.push(c));
+      res.on("end", () => resolve({ status: res.statusCode, texto: Buffer.concat(partes).toString("utf8") }));
+      res.on("error", reject);
+    });
+    req.on("timeout", () => req.destroy(Object.assign(new Error("tempo esgotado"), { name: "AbortError" })));
+    req.on("error", reject);
+    req.end(corpo);
+  });
+}
+async function postFetch(url, hdrs, corpo, timeoutMs) {
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), timeoutMs);
+  try {
+    const r = await fetch(url, { method: "POST", headers: hdrs, body: corpo, signal: ac.signal });
+    return { status: r.status, texto: await r.text() };
+  } finally { clearTimeout(timer); }
+}
 async function um(i, payload) {
   const ini = Date.now();
-  const ac = new AbortController();
-  const timer = setTimeout(() => ac.abort(), (TEMPO + 180) * 1000);
   try {
-    const r = await fetch(`${URL_BASE}/gerar-grade`, { method: "POST", headers, body: JSON.stringify(payload), signal: ac.signal });
-    const texto = await r.text();
+    const enviar = CLIENTE === "fetch" ? postFetch : postJson;
+    const { status, texto } = await enviar(`${URL_BASE}/gerar-grade`, headers, JSON.stringify(payload), (TEMPO + 180) * 1000);
     let j = {}; try { j = JSON.parse(texto); } catch { /* corpo nao-JSON */ }
-    return { i, http: r.status, status: j.status ?? "-", viavel: j.viavel ?? false, aulas: (j.aulas ?? []).length,
-      resolucao: j.tempoResolucaoS ?? null, total: (Date.now() - ini) / 1000, erro: r.ok ? "" : String(j.detail ?? texto).slice(0, 80) };
+    return { i, http: status, status: j.status ?? "-", viavel: j.viavel ?? false, aulas: (j.aulas ?? []).length,
+      resolucao: j.tempoResolucaoS ?? null, total: (Date.now() - ini) / 1000, erro: status >= 200 && status < 300 ? "" : String(j.detail ?? texto).slice(0, 80) };
   } catch (e) {
-    // o fetch do Node esconde o motivo real em e.cause (ex.: ECONNRESET, UND_ERR_SOCKET, ETIMEDOUT)
-    const causa = e.cause ? ` [${e.cause.code ?? e.cause.name ?? ""} ${String(e.cause.message ?? "").slice(0, 60)}]`.replace(/\s+\]/, "]") : "";
+    // o motivo real costuma estar em e.cause (fetch) ou em e.code (http): ECONNRESET, ETIMEDOUT...
+    const causa = e.cause ? ` [${e.cause.code ?? e.cause.name ?? ""} ${String(e.cause.message ?? "").slice(0, 60)}]`.replace(/\s+\]/, "]") : (e.code ? ` [${e.code}]` : "");
     return { i, http: 0, status: "-", viavel: false, aulas: 0, resolucao: null, total: (Date.now() - ini) / 1000, erro: e.name === "AbortError" ? "tempo esgotado" : e.message + causa };
-  } finally { clearTimeout(timer); }
+  }
 }
 
 (async () => {
