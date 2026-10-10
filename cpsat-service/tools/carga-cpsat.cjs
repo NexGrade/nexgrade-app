@@ -18,6 +18,7 @@
  * Opcoes: --escolas=N (1)  --turmas=N (15)  --aulas-por-dia=5|6 (6)  --tempo=S (10, limite do solver)
  *         --turmas-por-prof=N (2: quantas turmas cada professor atende na mesma disciplina)
  *         --bloqueios=N (2: maximo de bloqueios por professor)  --compartilhar (professores dividem 2 disciplinas)
+ *         --intervalo=S (0: segundos entre o inicio de cada escola; 0 = todas no mesmo instante)
  *         --url=...  --semente=N (1)  --executar
  */
 const args = Object.fromEntries(process.argv.slice(2).map((a) => {
@@ -32,6 +33,7 @@ const SEMENTE = Number(args.semente ?? 1);
 const TURMAS_POR_PROF = Number(args["turmas-por-prof"] ?? 2);
 const MAX_BLOQ = Number(args.bloqueios ?? 2);
 const COMPARTILHAR = !!args.compartilhar;
+const INTERVALO = Number(args.intervalo ?? 0);
 const URL_BASE = String(args.url ?? process.env.CPSAT_SERVICE_URL ?? "").replace(/\/+$/, "");
 const TOKEN = (process.env.CPSAT_TOKEN ?? "").trim();
 const EXECUTAR = !!args.executar;
@@ -140,7 +142,11 @@ async function um(i, payload) {
   if (!pronto) { console.error("O motor nao respondeu em 3 minutos. Teste cancelado (nada foi enviado)."); process.exit(1); }
   console.log(`\nServico respondeu em ${((Date.now() - t0) / 1000).toFixed(1)}s. Disparando ${ESCOLAS} geracao(oes) ao mesmo tempo...`);
   const ini = Date.now();
-  const res = await Promise.all(escolas.map((p, i) => um(i, p)));
+  // --intervalo=S espaca o inicio das geracoes (escola i comeca apos i*S segundos); 0 = todas juntas
+  const res = await Promise.all(escolas.map(async (p, i) => {
+    if (INTERVALO > 0 && i > 0) await new Promise((r) => setTimeout(r, i * INTERVALO * 1000));
+    return um(i, p);
+  }));
   const parede = (Date.now() - ini) / 1000;
   console.log("\nescola | HTTP | status      | aulas | solver(s) | total(s) | erro");
   for (const r of res) {
