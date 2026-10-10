@@ -731,15 +731,12 @@ router.get("/grade-pdf/professor", async (req, res) => {
           destacado: true,
         }));
 
-      // [ASSINCRONA-EXIBICAO] aula assincrona: marca (ASS) e, se for a primeira ou a
-      // ultima atividade do professor no dia (aula ou HA), o aviso de ponto (SEED/PR 2026).
+      // [ASSINCRONA-EXIBICAO] aula assincrona: marca so (ASS). (10/10/2026) o aviso de
+      // ENTRADA/SAIDA saiu: nao precisa constar no RCO nem no PDF.
       for (const s of slotsDoProfNesseTurno) {
         if (!s.assincrona) continue;
         const cel = aulasDoProf.find((x) => x.diaSemana === s.diaSemana && x.numeroAula === s.numeroAula);
-        if (!cel) continue;
-        const doDia = [...aulasDoProf, ...haDoProf].filter((x) => x.diaSemana === s.diaSemana).map((x) => x.numeroAula);
-        const ponto = s.numeroAula === Math.min(...doDia) ? " ENTRADA" : s.numeroAula === Math.max(...doDia) ? " SAIDA" : "";
-        cel.linha2 = `${cel.linha2 ?? ""} (ASS)${ponto}`;
+        if (cel) cel.linha2 = `${cel.linha2 ?? ""} (ASS)`;
       }
       const celulasComPS = new Set<string>(); // [FIX-PS-DUPLICADO] professor com 2 disciplinas do trio no mesmo horario: 1 marca so
       for (const s of slotsDoProfNesseTurno) { // [REVEZAMENTO-TRIO]
