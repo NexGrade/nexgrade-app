@@ -78,7 +78,7 @@ Teste de carga com escolas fictícias (`cpsat-service/tools/carga-cpsat.cjs`, 15
 - ✅ Em produção a API usa `axios` e repete 1 vez (após 5 s) quando recebe `ECONNRESET`; se falhar de novo, responde com erro claro e a escola segue com o gerador local.
 - ⬜ **HTTPS:** o endereço é `http://` (sem criptografia); o token viaja sem proteção. Colocar HTTPS na frente antes de liberar para as escolas.
 - ⬜ IP externo da VM é fixo? Se for temporário, ele muda quando a máquina é recriada; reservar IP estático.
-- ⬜ Apagar o firewall temporário `teste-carga-temporaria` (libera a porta 8000 só para o IP do computador de teste) quando os testes terminarem.
+- ✅ Firewall temporário `teste-carga-temporaria` (liberava a porta 8000 só para o IP do computador de teste) apagado em 10/10/2026; ficou apenas `permitir-porta-8000` (Render). Para testar de novo do computador, é preciso recriá-lo com o IP atual `/32`.
 - ⬜ Uma geração não é cancelada quando a conexão cai: o motor termina o trabalho "sem dono" e ocupa a CPU. Avaliar limite de gerações simultâneas no motor.
 
 ## 7. Depois de liberar
