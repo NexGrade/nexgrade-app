@@ -54,7 +54,7 @@ export default function ExportPage() {
   });
   const [seedEstado, setSeedEstado] = useState("PR");
   const [seedTurno, setSeedTurno] = useState("matutino");
-  const [seedAssinc, setSeedAssinc] = useState(false); // [RCO-ASSINCRONAS] incluir aulas assincronas no XML
+  const [seedAssinc, setSeedAssinc] = useState(true); // [RCO-ASSINCRONAS] [RCO-ASSINC-PADRAO] assincronas constam no RCO por padrao
   const [loadingSeed, setLoadingSeed] = useState(false);
   // [NOVO] Erro estruturado do backend (disciplinas sem codigo SAE ou
   // turmas sem nivel de ensino definido) -- mostrado na tela em vez de
@@ -138,11 +138,11 @@ export default function ExportPage() {
     setLoadingSeed(true);
     setSeedErro(null);
     try {
-      const url = buildUrl("/api/export/relatorio-seed", { estado: seedEstado, turno: seedTurno, assincronas: seedAssinc && seedEstado === "PR" ? "1" : undefined });
+      const url = buildUrl("/api/export/relatorio-seed", { estado: seedEstado, turno: seedTurno, assincronas: seedEstado === "PR" ? (seedAssinc ? "1" : "0") : undefined });
       const blob = await customFetch<Blob>(url, { responseType: "blob" });
       const objUrl = URL.createObjectURL(blob);
       const extensao = seedEstado === "PR" ? "xml" : "json";
-      handleDownload(objUrl, `relatorio_seed_${seedEstado}_${seedTurno}_${new Date().getFullYear()}${seedAssinc && seedEstado === "PR" ? "_com-assincronas" : ""}.${extensao}`);
+      handleDownload(objUrl, `relatorio_seed_${seedEstado}_${seedTurno}_${new Date().getFullYear()}${seedEstado === "PR" ? (seedAssinc ? "_com-assincronas" : "_sem-assincronas") : ""}.${extensao}`);
       URL.revokeObjectURL(objUrl);
     } catch (err) {
       if (err instanceof ApiError && err.data && typeof err.data === "object") {
@@ -455,7 +455,7 @@ export default function ExportPage() {
             <div className="flex items-end gap-4">
               <div className="space-y-1.5 w-40">
                 <Label>Estado</Label>
-                <Select value={seedEstado} onValueChange={(v) => { setSeedEstado(v); setSeedAssinc(false); }}>
+                <Select value={seedEstado} onValueChange={(v) => { setSeedEstado(v); setSeedAssinc(true); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {["SP","MG","RJ","BA","PR","RS","PE","CE","GO","AM"].map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
@@ -486,7 +486,7 @@ export default function ExportPage() {
                 <div className="space-y-0.5">
                   <Label htmlFor="seed-assinc" className="cursor-pointer">Incluir aulas assíncronas</Label>
                   <p className="text-xs text-muted-foreground">
-                    Por padrão elas ficam de fora, porque a aula assíncrona não ocupa a turma. Se incluir, ela entra como uma linha a mais no mesmo horário de outra aula da turma, e o RCO pode recusar esse conflito. Marque só se o RCO exigir.
+                    As aulas assíncronas e as híbridas (docência por trio) devem constar no RCO, por isso vêm marcadas. A assíncrona entra como uma linha a mais no horário da turma; desmarque só se o RCO recusar esse conflito.
                   </p>
                 </div>
               </div>

@@ -251,7 +251,7 @@ router.get("/ponto", async (req, res) => {
 //               Numero sequencial o RCO recusa (NullPointerException).
 //  - Turma com 2 codigos: cada disciplina vai para a parte cuja grade SEED a contem
 //    (GRADES_SEED_RCO); sem grade conhecida, pela categoria FGB da matriz.
-//  - So a grade oficial; assincronas ficam fora (?assincronas=1 inclui).
+//  - So a grade oficial; assincronas e hibridas (trio) ENTRAM por padrao (?assincronas=0 tira as assincronas).
 //  - Bloqueia (400) em vez de gerar arquivo que o RCO vai recusar.
 const DICIONARIO_CODDISC_PENDENTE: Record<string, number> = {
   "Ensino Religioso": 33,
@@ -271,7 +271,7 @@ router.get("/relatorio-seed", async (req, res) => {
   const escolaId = getEscolaId(req);
   const estado = (req.query.estado as string) ?? "PR";
   const turno = req.query.turno as string | undefined;
-  const comAssincronas = req.query.assincronas === "1";
+  const comAssincronas = req.query.assincronas !== "0"; // [RCO-ASSINC-PADRAO] assincronas (e hibridas) constam no RCO; ?assincronas=0 tira
 
   if (estado !== "PR") {
     res.status(400).json({ error: `Exportação no formato SERE/Urânia só está implementada para o Paraná (PR) no momento.` });
@@ -383,7 +383,7 @@ router.get("/relatorio-seed", async (req, res) => {
   // turno for matutino; nos outros turnos o esquema e unico
   // (nivelEnsino fica nulo em horario_slots).
   const slots = await db.select().from(horarioSlotsTable)
-    .where(and(eq(horarioSlotsTable.escolaId, escolaId), eq(horarioSlotsTable.turno, turno), eq(horarioSlotsTable.letivo, true)));
+    .where(and(eq(horarioSlotsTable.escolaId, escolaId), eq(horarioSlotsTable.turno, turno))); // [RCO-ASSINC-PADRAO] sem filtro de letivo: assincrona na aula 1 do noturno (18:00, nao letiva) tem horario
   function chaveSlot(numeroAula: number, nivelEnsino: string | null): string {
     return turno === "matutino" ? `${numeroAula}|${nivelEnsino ?? "?"}` : `${numeroAula}|todos`;
   }
@@ -731,21 +731,23 @@ router.get("/grade-pdf/professor", async (req, res) => {
           destacado: true,
         }));
 
-      // [ASSINCRONA-EXIBICAO] aula assincrona: marca (ASS) e, se for a primeira ou a
-      // ultima atividade do professor no dia (aula ou HA), o aviso de ponto (SEED/PR 2026).
+      // [ASSINCRONA-EXIBICAO] aula assincrona: marca so (ASS). (10/10/2026) o aviso de
+      // ENTRADA/SAIDA saiu: nao precisa constar no RCO nem no PDF.
       for (const s of slotsDoProfNesseTurno) {
         if (!s.assincrona) continue;
         const cel = aulasDoProf.find((x) => x.diaSemana === s.diaSemana && x.numeroAula === s.numeroAula);
-        if (!cel) continue;
-        const doDia = [...aulasDoProf, ...haDoProf].filter((x) => x.diaSemana === s.diaSemana).map((x) => x.numeroAula);
-        const ponto = s.numeroAula === Math.min(...doDia) ? " ENTRADA" : s.numeroAula === Math.max(...doDia) ? " SAIDA" : "";
-        cel.linha2 = `${cel.linha2 ?? ""} (ASS)${ponto}`;
+        if (cel) cel.linha2 = `${cel.linha2 ?? ""} (ASS)`;
       }
+      const celulasComPS = new Set<string>(); // [FIX-PS-DUPLICADO] professor com 2 disciplinas do trio no mesmo horario: 1 marca so
       for (const s of slotsDoProfNesseTurno) { // [REVEZAMENTO-TRIO]
         if (s.assincrona) continue;
         const r = revezProf.get(`${s.turmaId}|${s.disciplinaId}|${s.professorId}`);
         const cel = r && aulasDoProf.find((x) => x.diaSemana === s.diaSemana && x.numeroAula === s.numeroAula);
-        if (r && cel) cel.linha2 = `${cel.linha2 ?? ""} ${r.presencial ? "(P)" : "(S)"}`;
+        const chaveCel = `${s.diaSemana}-${s.numeroAula}`;
+        if (r && cel && !celulasComPS.has(chaveCel)) {
+          celulasComPS.add(chaveCel);
+          cel.linha2 = `${cel.linha2 ?? ""} ${r.presencial ? "(P)" : "(S)"}`;
+        }
       }
 
       // [NOVO] Dia/horario em que o professor esta bloqueado
