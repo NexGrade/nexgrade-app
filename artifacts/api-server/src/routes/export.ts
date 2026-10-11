@@ -9,7 +9,7 @@ import { and, eq, isNull, notInArray, sql } from "drizzle-orm";
 import { GRADES_SEED_RCO } from "../lib/grades-seed-rco"; // [RCO-EXPORT-BANCO]
 import { getEscolaId } from "../lib/escola-id";
 import { buscarReservasParaRelatorio, gerarPdfReservasPorProfessor } from "../lib/relatorio-reservas"; // [RELATORIO-RESERVAS]
-import { ehBloqueioReal, ehHaFormacao } from "../lib/bloqueio-real"; // [HA-FORMACAO]
+import { ehBloqueioReal } from "../lib/bloqueio-real";
 import { gerarPdfGradeCompacta, type BlocoGrade } from "../lib/pdf-grade";
 import { gerarPdfCargaProfessores, type RelatorioProfessor } from "../lib/pdf-carga-professor";
 import { gerarPdfCargaHoraria, type TurmaCargaHoraria } from "../lib/pdf-carga-horaria";
@@ -719,15 +719,15 @@ router.get("/grade-pdf/professor", async (req, res) => {
       // aula na semana = contraturno -> rotulo "HA*".
       const ehContraturno = !turnosAulaSemana.has(turno);
       const haDoProf: BlocoGrade["slots"] = (nomeExperimental
-        ? haSimulada.filter((m) => m.professorId === prof.id && m.turno === turno).map((m) => ({ ...m, formacao: false }))
+        ? haSimulada.filter((m) => m.professorId === prof.id && m.turno === turno)
         : disponibilidades
             .filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && d.turno === turno)
-            .map((d) => ({ diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, outroTurno: ehHAOutroTurno(d.motivo), formacao: ehHaFormacao(d.motivo) }))) // [HA-FORMACAO]
+            .map((d) => ({ diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, outroTurno: ehHAOutroTurno(d.motivo) })))
         .filter((m) => !aulasDoProf.some((a) => a.diaSemana === m.diaSemana && a.numeroAula === m.horarioSlot))
         .map((m) => ({
           diaSemana: m.diaSemana,
           numeroAula: m.horarioSlot,
-          linha1: m.formacao ? "FORM" : ehContraturno || m.outroTurno ? "HA*" : "HA", // [HA-OUTRO-TURNO] HA de aulas de outro turno tambem e HA*; [HA-FORMACAO] curso de formadores
+          linha1: ehContraturno || m.outroTurno ? "HA*" : "HA", // [HA-OUTRO-TURNO] HA de aulas de outro turno tambem e HA*
           destacado: true,
         }));
 

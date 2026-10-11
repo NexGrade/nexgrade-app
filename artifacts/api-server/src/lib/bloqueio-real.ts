@@ -42,13 +42,3 @@ export function ehBloqueioParaMotor(d: {
 }): boolean {
   return ehBloqueioReal(d) || ehHaFixa(d);
 }
-/**
- * [HA-FORMACAO] Formacao (curso de formadores): o professor esta em formacao nesse
- * horario. E uma HA fixa (conta como HA, o motor nunca poe aula ali) com o rotulo
- * "FORM" no PDF. Nao vai para o RCO (o XML so le aulas da grade).
- * A marca fica no motivo: "HA fixa (definida manualmente) - FORM ...".
- */
-export const MOTIVO_HA_FORMACAO = "HA fixa (definida manualmente) - FORM (curso de formadores)";
-export function ehHaFormacao(motivo: string | null | undefined): boolean {
-  return /^HA fixa.*\bFORM\b/.test(motivo ?? "");
-}
