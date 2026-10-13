@@ -160,6 +160,8 @@ const clerkAppearance = {
     socialButtonsBlockButton: "border border-slate-200 hover:bg-slate-50",
     formButtonPrimary: "bg-[#1565C0] hover:bg-[#0D47A1] text-white",
     formFieldInput: "border-slate-200 bg-slate-50 text-slate-900",
+    formFieldInputShowPasswordButton: { color: "#64748b", opacity: 1, visibility: "visible" as const }, // [LOGIN] olho para mostrar/ocultar a senha
+    formFieldInputShowPasswordIcon: { color: "#64748b", width: "1.1rem", height: "1.1rem", opacity: 1 },
     footerAction: "bg-slate-50 border-t border-slate-100",
     dividerLine: "bg-slate-200",
     alert: "border border-red-100 bg-red-50",
