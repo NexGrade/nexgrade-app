@@ -1,6 +1,7 @@
 // Matrizes curriculares oficiais da SEED-PR (Instrução Normativa Conjunta
 // relacionada às Resoluções SEED nº 84/2024 e 85/2024 — Matrizes Curriculares
 // 2025, Ensino Regular e PEI). Fonte: documento oficial fornecido pela escola.
+// [MATRIZ-2026] Anos Finais - Tempo Parcial Diurno atualizado para 2026 (25h) em 14/10/2026.
 //
 // Usado para pré-preencher automaticamente uma Matriz Curricular ao criar uma
 // nova série/ano — a coordenação escolhe a modalidade, e todas as disciplinas
@@ -108,6 +109,10 @@ export const MATRIZES_OFICIAIS_SEED_PR: MatrizOficialTemplate[] = [
     id: "fund_finais_tempo_parcial_diurno",
     label: "Ensino Fundamental - Anos Finais - Tempo Parcial Diurno",
     nivel: "fundamental",
+    // [MATRIZ-2026] Atualizado em 14/10/2026 para 25 aulas/semana, igual às grades
+    // reais 2026 do Mário Braga, do Arlinda e do Romário (antes: matriz 2025, 30h,
+    // com Projeto de Vida, Tecnologia e Inovação e Educação Financeira).
+    // Nomes conforme o SAE/RCO (Ed. Digital = SAE 6507; Leitura e Recomposição LP no fundamental = código 6299).
     series: [
       {
         serieAno: "6º Ano",
@@ -116,20 +121,19 @@ export const MATRIZES_OFICIAIS_SEED_PR: MatrizOficialTemplate[] = [
           { nome: "Língua Inglesa", categoria: "BNC", cargaHorariaSemanal: 2 },
           { nome: "Arte", categoria: "BNC", cargaHorariaSemanal: 2 },
           { nome: "Educação Física", categoria: "BNC", cargaHorariaSemanal: 2 },
-          { nome: "Matemática", categoria: "BNC", cargaHorariaSemanal: 5 },
-          { nome: "Ciências", categoria: "BNC", cargaHorariaSemanal: 3 },
-          { nome: "Geografia", categoria: "BNC", cargaHorariaSemanal: 3 },
+          { nome: "Matemática", categoria: "BNC", cargaHorariaSemanal: 4 },
+          { nome: "Ciências", categoria: "BNC", cargaHorariaSemanal: 2 },
+          { nome: "Geografia", categoria: "BNC", cargaHorariaSemanal: 2 },
           { nome: "História", categoria: "BNC", cargaHorariaSemanal: 2 },
-          { nome: "Projeto de Vida", categoria: "PD", cargaHorariaSemanal: 1 },
-          { nome: "Tecnologia e Inovação", categoria: "PD", cargaHorariaSemanal: 2 },
-          { nome: "Educação Financeira", categoria: "PD", cargaHorariaSemanal: 2 },
-          { nome: "Redação e Leitura", categoria: "PD", cargaHorariaSemanal: 2 },
+          { nome: "Ensino Religioso", categoria: "BNC", cargaHorariaSemanal: 1 },
+          { nome: "Leitura e Recomposição da Aprendizagem em Língua Portuguesa", categoria: "PD", cargaHorariaSemanal: 2 },
+          { nome: "Rec. Aprend. Matemática", categoria: "PD", cargaHorariaSemanal: 2 },
         ],
       },
       {
         serieAno: "7º Ano",
         itens: [
-          { nome: "Língua Portuguesa", categoria: "BNC", cargaHorariaSemanal: 4 },
+          { nome: "Língua Portuguesa", categoria: "BNC", cargaHorariaSemanal: 3 },
           { nome: "Língua Inglesa", categoria: "BNC", cargaHorariaSemanal: 2 },
           { nome: "Arte", categoria: "BNC", cargaHorariaSemanal: 2 },
           { nome: "Educação Física", categoria: "BNC", cargaHorariaSemanal: 2 },
@@ -137,44 +141,38 @@ export const MATRIZES_OFICIAIS_SEED_PR: MatrizOficialTemplate[] = [
           { nome: "Ciências", categoria: "BNC", cargaHorariaSemanal: 3 },
           { nome: "Geografia", categoria: "BNC", cargaHorariaSemanal: 3 },
           { nome: "História", categoria: "BNC", cargaHorariaSemanal: 2 },
-          { nome: "Projeto de Vida", categoria: "PD", cargaHorariaSemanal: 1 },
-          { nome: "Tecnologia e Inovação", categoria: "PD", cargaHorariaSemanal: 2 },
-          { nome: "Educação Financeira", categoria: "PD", cargaHorariaSemanal: 2 },
+          { nome: "Ensino Religioso", categoria: "BNC", cargaHorariaSemanal: 1 },
           { nome: "Redação e Leitura", categoria: "PD", cargaHorariaSemanal: 2 },
         ],
       },
       {
         serieAno: "8º Ano",
         itens: [
-          { nome: "Língua Portuguesa", categoria: "BNC", cargaHorariaSemanal: 4 },
+          { nome: "Língua Portuguesa", categoria: "BNC", cargaHorariaSemanal: 3 },
           { nome: "Língua Inglesa", categoria: "BNC", cargaHorariaSemanal: 2 },
-          { nome: "Arte", categoria: "BNC", cargaHorariaSemanal: 1 },
+          { nome: "Arte", categoria: "BNC", cargaHorariaSemanal: 2 },
           { nome: "Educação Física", categoria: "BNC", cargaHorariaSemanal: 2 },
-          { nome: "Matemática", categoria: "BNC", cargaHorariaSemanal: 5 },
-          { nome: "Ciências", categoria: "BNC", cargaHorariaSemanal: 4 },
+          { nome: "Matemática", categoria: "BNC", cargaHorariaSemanal: 4 },
+          { nome: "Ciências", categoria: "BNC", cargaHorariaSemanal: 3 },
           { nome: "Geografia", categoria: "BNC", cargaHorariaSemanal: 2 },
           { nome: "História", categoria: "BNC", cargaHorariaSemanal: 3 },
-          { nome: "Projeto de Vida", categoria: "PD", cargaHorariaSemanal: 1 },
-          { nome: "Tecnologia e Inovação", categoria: "PD", cargaHorariaSemanal: 2 },
-          { nome: "Educação Financeira", categoria: "PD", cargaHorariaSemanal: 2 },
           { nome: "Redação e Leitura", categoria: "PD", cargaHorariaSemanal: 2 },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "PD", cargaHorariaSemanal: 2 },
         ],
       },
       {
         serieAno: "9º Ano",
         itens: [
-          { nome: "Língua Portuguesa", categoria: "BNC", cargaHorariaSemanal: 4 },
+          { nome: "Língua Portuguesa", categoria: "BNC", cargaHorariaSemanal: 3 },
           { nome: "Língua Inglesa", categoria: "BNC", cargaHorariaSemanal: 2 },
-          { nome: "Arte", categoria: "BNC", cargaHorariaSemanal: 1 },
+          { nome: "Arte", categoria: "BNC", cargaHorariaSemanal: 2 },
           { nome: "Educação Física", categoria: "BNC", cargaHorariaSemanal: 2 },
           { nome: "Matemática", categoria: "BNC", cargaHorariaSemanal: 5 },
-          { nome: "Ciências", categoria: "BNC", cargaHorariaSemanal: 4 },
-          { nome: "Geografia", categoria: "BNC", cargaHorariaSemanal: 2 },
-          { nome: "História", categoria: "BNC", cargaHorariaSemanal: 3 },
-          { nome: "Projeto de Vida", categoria: "PD", cargaHorariaSemanal: 1 },
-          { nome: "Oe Matemática", categoria: "PD", cargaHorariaSemanal: 2 },
-          { nome: "Oe Língua Portuguesa", categoria: "PD", cargaHorariaSemanal: 2 },
-          { nome: "Redação e Leitura", categoria: "PD", cargaHorariaSemanal: 2 },
+          { nome: "Ciências", categoria: "BNC", cargaHorariaSemanal: 2 },
+          { nome: "Geografia", categoria: "BNC", cargaHorariaSemanal: 3 },
+          { nome: "História", categoria: "BNC", cargaHorariaSemanal: 2 },
+          { nome: "Leitura e Recomposição da Aprendizagem em Língua Portuguesa", categoria: "PD", cargaHorariaSemanal: 2 },
+          { nome: "Rec. Aprend. Matemática", categoria: "PD", cargaHorariaSemanal: 2 },
         ],
       },
     ],
