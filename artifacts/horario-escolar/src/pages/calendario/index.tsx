@@ -28,6 +28,21 @@ const TIPO_LABELS: Record<string, { label: string; color: string; dot: string }>
   reposicao: { label: "Reposição (dia letivo)", color: "bg-teal-100 text-teal-700", dot: "bg-teal-500" },
 };
 
+// [CALENDARIO-CORES] (15/10/2026) cores suaves: cada trimestre com um tom, dias de feriado e
+// recesso pintados de leve, fim de semana em cinza claro.
+const COR_TRIMESTRE = [
+  { card: "bg-gradient-to-br from-sky-50 to-white border-sky-200", icone: "text-sky-600", numero: "text-sky-700", dia: "bg-sky-50/70", borda: "border-sky-200" },
+  { card: "bg-gradient-to-br from-emerald-50 to-white border-emerald-200", icone: "text-emerald-600", numero: "text-emerald-700", dia: "bg-emerald-50/70", borda: "border-emerald-200" },
+  { card: "bg-gradient-to-br from-violet-50 to-white border-violet-200", icone: "text-violet-600", numero: "text-violet-700", dia: "bg-violet-50/70", borda: "border-violet-200" },
+  { card: "bg-gradient-to-br from-amber-50 to-white border-amber-200", icone: "text-amber-600", numero: "text-amber-700", dia: "bg-amber-50/70", borda: "border-amber-200" },
+];
+const FUNDO_DIA: Record<string, string> = {
+  feriado: "bg-rose-50",
+  recesso: "bg-amber-50",
+  ponto_facultativo: "bg-orange-50",
+  estudo_planejamento: "bg-purple-50",
+};
+
 type CalendarioOficialResumo = { ano: number; fonte: string; diasLetivos: number; eventos: number };
 type TrimestreForm = { trimestre: number; dataInicio: string; dataFim: string; diasLetivos: number };
 type EventoForm = { id?: number; data: string; tipo: string; descricao: string };
@@ -164,6 +179,11 @@ export default function CalendarioEscolarPage() {
         : [1, 2, 3].map((n) => ({ trimestre: n, dataInicio: "", dataFim: "", diasLetivos: 0 })),
     );
   const mesStr = String(mesAtual + 1).padStart(2, "0");
+  // [CALENDARIO-CORES] indice do trimestre de uma data (ou -1 fora do ano letivo)
+  const trimestreDaData = (data: string) => {
+    const t = trimestres.find((x) => data >= x.dataInicio && data <= x.dataFim);
+    return t ? (t.trimestre - 1) % 4 : -1;
+  };
   const novoEvento = (data?: string) => setEditEvento({ data: data ?? `${ano}-${mesStr}-01`, tipo: "feriado", descricao: "" });
   const eventosDoMesLista = useMemo(
     () => (eventos as Evento[]).filter((e) => e.data.slice(5, 7) === mesStr).sort((a, b) => a.data.localeCompare(b.data)),
@@ -251,10 +271,10 @@ export default function CalendarioEscolarPage() {
           Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)
         ) : (
           trimestres.map((t) => (
-            <Card key={t.id} className="border-border/50">
+            <Card key={t.id} className={`border shadow-sm ${COR_TRIMESTRE[(t.trimestre - 1) % 4].card}`}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <GraduationCap className="w-4 h-4 text-[#1565C0]" />
+                  <GraduationCap className={`w-4 h-4 ${COR_TRIMESTRE[(t.trimestre - 1) % 4].icone}`} />
                   {t.trimestre}º Trimestre
                 </CardTitle>
               </CardHeader>
@@ -262,7 +282,7 @@ export default function CalendarioEscolarPage() {
                 <p className="text-sm text-muted-foreground">
                   {formatarData(t.dataInicio)} — {formatarData(t.dataFim)}
                 </p>
-                <p className="text-2xl font-bold mt-2">{t.diasLetivos} <span className="text-sm font-normal text-muted-foreground">dias letivos</span></p>
+                <p className={`text-2xl font-bold mt-2 ${COR_TRIMESTRE[(t.trimestre - 1) % 4].numero}`}>{t.diasLetivos} <span className="text-sm font-normal text-muted-foreground">dias letivos</span></p>
               </CardContent>
             </Card>
           ))
@@ -276,7 +296,7 @@ export default function CalendarioEscolarPage() {
       )}
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardHeader className="flex flex-row items-center justify-between pb-3 mb-3 rounded-t-xl bg-gradient-to-r from-sky-50 via-white to-violet-50 border-b">
           <CardTitle className="text-lg flex items-center gap-2">
             <CalendarDays className="w-5 h-5 text-[#1565C0]" />
             {MESES[mesAtual]} de {ano}
@@ -301,9 +321,9 @@ export default function CalendarioEscolarPage() {
             <Skeleton className="h-96 rounded-lg" />
           ) : (
             <>
-              <div className="grid grid-cols-7 border border-border/60 rounded-t-lg overflow-hidden bg-muted/40">
-                {DIAS_SEMANA.map((d) => (
-                  <div key={d} className="text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-2 border-r border-border/40 last:border-r-0">
+              <div className="grid grid-cols-7 border border-border/60 rounded-t-lg overflow-hidden bg-[#1565C0]/5">
+                {DIAS_SEMANA.map((d, di) => (
+                  <div key={d} className={`text-center text-[11px] font-semibold uppercase tracking-wide py-2 border-r border-border/40 last:border-r-0 ${di === 0 || di === 6 ? "text-slate-400" : "text-[#1565C0]/80"}`}>
                     {d}
                   </div>
                 ))}
@@ -313,16 +333,25 @@ export default function CalendarioEscolarPage() {
                   <div key={si} className="grid grid-cols-7">
                     {semana.map((cel, ci) => {
                       const hoje = cel.dataStr === new Date().toISOString().slice(0, 10);
+                      // [CALENDARIO-CORES] fundo: feriado/recesso > fim de semana > tom do trimestre
+                      const fimDeSemana = ci === 0 || ci === 6;
+                      const tipoForte = cel.eventos.find((e) => FUNDO_DIA[e.tipo] && !e.diaLetivo)?.tipo;
+                      const tri = cel.dataStr ? trimestreDaData(cel.dataStr) : -1;
+                      const fundo = !cel.dia ? "bg-muted/20"
+                        : tipoForte ? FUNDO_DIA[tipoForte]
+                        : fimDeSemana ? "bg-slate-50"
+                        : tri >= 0 ? COR_TRIMESTRE[tri].dia
+                        : "bg-background";
                       return (
                         <div
                           key={ci}
                           onClick={podeEditar && cel.dataStr ? () => novoEvento(cel.dataStr!) : undefined}
                           title={podeEditar && cel.dataStr ? "Clique para adicionar uma data" : undefined}
-                          className={`${podeEditar && cel.dia ? "cursor-pointer hover:bg-muted/40 " : ""}min-h-[84px] p-1.5 border-r border-b border-border/40 last:border-r-0 ${si === semanas.length - 1 ? "last:border-b-0" : ""} ${!cel.dia ? "bg-muted/20" : "bg-background"}`}
+                          className={`${podeEditar && cel.dia ? "cursor-pointer hover:brightness-95 " : ""}min-h-[84px] p-1.5 border-r border-b border-border/40 last:border-r-0 ${si === semanas.length - 1 ? "last:border-b-0" : ""} ${fundo} transition-colors`}
                         >
                           {cel.dia && (
                             <>
-                              <span className={`text-xs font-medium inline-flex items-center justify-center ${hoje ? "w-5 h-5 rounded-full bg-[#1565C0] text-white" : "text-foreground"}`}>
+                              <span className={`text-xs font-medium inline-flex items-center justify-center ${hoje ? "w-5 h-5 rounded-full bg-[#1565C0] text-white shadow" : fimDeSemana ? "text-slate-400" : "text-foreground"}`}>
                                 {cel.dia}
                               </span>
                               <div className="mt-1 space-y-0.5">
@@ -353,8 +382,14 @@ export default function CalendarioEscolarPage() {
                 ))}
               </div>
 
-              {tiposPresentesNoMes.length > 0 && (
+              {(tiposPresentesNoMes.length > 0 || trimestres.length > 0) && (
                 <div className="flex flex-wrap gap-3 mt-4">
+                  {trimestres.map((t) => (/* [CALENDARIO-CORES] */
+                    <div key={"tri" + t.id} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <span className={`w-3 h-3 rounded border ${COR_TRIMESTRE[(t.trimestre - 1) % 4].dia} ${COR_TRIMESTRE[(t.trimestre - 1) % 4].borda}`} />
+                      {t.trimestre}º trimestre
+                    </div>
+                  ))}
                   {tiposPresentesNoMes.map((tipoKey) => {
                     const tipo = TIPO_LABELS[tipoKey] ?? { label: tipoKey, color: "", dot: "bg-gray-400" };
                     return (
