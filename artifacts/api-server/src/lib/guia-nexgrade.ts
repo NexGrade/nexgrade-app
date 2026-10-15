@@ -47,7 +47,11 @@ export const GUIA_NEXGRADE: Record<string, TopicoGuia> = {
 
 ABA CALENDÁRIO LETIVO
 - Mostra feriados, recessos, pontos facultativos, dias de estudo e planejamento, início/fim do ano letivo e dos trimestres oficiais SEED-PR, com o total de dias letivos.
-- Use as setas para trocar de mês. Esta aba é de consulta.
+- Use as setas para trocar de mês.
+- Se o ano ainda não tem calendário, aparece o botão "Usar o calendário oficial SEED-PR": um clique grava os 3 trimestres (201 dias letivos em 2026) e os feriados nacionais. Escola nova já começa com ele.
+- Direção, coordenação e secretaria podem ajustar: "Editar trimestres" (datas e dias letivos), "Adicionar data" ou clicar num dia (recesso, feriado municipal, ponto facultativo, reposição) e o lápis/lixeira de cada data. "Restaurar oficial SEED-PR" volta ao calendário oficial e apaga os ajustes.
+- Sem trimestres cadastrados, a aba Conflitos mostra "turma sem calendário" em todas as turmas.
+- Gestor de reservas e professor só consultam.
 
 ABA ESQUEMA DE AULAS POR TURNO (é aqui que se define o horário de cada aula)
 1. Escolha o turno (matutino, vespertino ou noturno). No matutino, escolha também o nível: Fundamental (6º–9º ano) ou Médio/Técnico (1ª–3ª série), porque podem ter quantidades de aulas diferentes.

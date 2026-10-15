@@ -10,6 +10,7 @@ import { z } from "zod";
 import { db, escolasTable, planosTable, acessosEscolaTable } from "@workspace/db";
 import { eq, or, and, isNotNull } from "drizzle-orm";
 import { semearCatalogoEscola } from "../lib/semear-catalogo";
+import { CALENDARIOS_OFICIAIS, aplicarCalendarioOficial } from "../lib/calendario-oficial"; // [CALENDARIO-OFICIAL]
 import { registrarAuditoria } from "../lib/audit";
 import { limparCacheAcessos, acessosPeloBanco } from "../lib/acesso";
 import { emailVerificado, normalizarEmail } from "../lib/identidade";
@@ -105,6 +106,12 @@ router.post("/escolas", async (req, res) => {
   } catch (err) {
     console.error("[nova-escola] falha ao semear o catalogo", escolaId, err);
     catalogo = "ATENÇÃO: o catálogo oficial não foi carregado; abra Cursos e Disciplinas na escola e use \"Importar catálogo oficial SEED-PR\".";
+  }
+
+  // [CALENDARIO-OFICIAL] calendario letivo oficial SEED-PR do ano (a escola ajusta depois)
+  const anoCal = new Date().getFullYear();
+  if (CALENDARIOS_OFICIAIS[anoCal]) {
+    await aplicarCalendarioOficial(escolaId, anoCal).catch((err) => console.error("[nova-escola] falha no calendario oficial", escolaId, err));
   }
 
   await registrarAuditoria({ req, escolaId, entidade: "escolas", entidadeId: 0, acao: "criacao", dadosAnteriores: null, dadosNovos: escola }).catch(() => undefined);

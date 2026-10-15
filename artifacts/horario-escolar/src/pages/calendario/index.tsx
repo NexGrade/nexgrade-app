@@ -1,5 +1,15 @@
+// [CALENDARIO-EDITAVEL] (15/10/2026) direcao, coordenacao e secretaria cadastram o calendario:
+// "Usar o calendario oficial SEED-PR" (um clique), trimestres editaveis e eventos da escola
+// (recesso, feriado municipal, reposicao). Gestor de reservas e professor so consultam.
 import { useState, useMemo } from "react";
-import { useListCalendarioEscolar, useListTrimestresLetivos } from "@workspace/api-client-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useListCalendarioEscolar, useListTrimestresLetivos, customFetch, getListCalendarioEscolarQueryKey, getListTrimestresLetivosQueryKey } from "@workspace/api-client-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { usePapelEfetivo } from "@/lib/papeis";
+import { Plus, Pencil, Trash2, Landmark, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,7 +25,34 @@ const TIPO_LABELS: Record<string, { label: string; color: string; dot: string }>
   fim_ano_letivo: { label: "Fim do Ano Letivo", color: "bg-green-100 text-green-700", dot: "bg-green-500" },
   inicio_trimestre: { label: "Início de Trimestre", color: "bg-[#1565C0]/10 text-[#1565C0]", dot: "bg-[#1565C0]" },
   fim_trimestre: { label: "Fim de Trimestre", color: "bg-[#1565C0]/10 text-[#1565C0]", dot: "bg-[#1565C0]" },
+  reposicao: { label: "Reposição (dia letivo)", color: "bg-teal-100 text-teal-700", dot: "bg-teal-500" },
 };
+
+type CalendarioOficialResumo = { ano: number; fonte: string; diasLetivos: number; eventos: number };
+type TrimestreForm = { trimestre: number; dataInicio: string; dataFim: string; diasLetivos: number };
+type EventoForm = { id?: number; data: string; tipo: string; descricao: string };
+
+function mensagemErro(err: unknown): string {
+  const e = err as { data?: { error?: string }; message?: string };
+  return e?.data?.error ?? e?.message ?? "Tente novamente.";
+}
+const enviar = (url: string, method: string, body?: unknown) =>
+  customFetch<{ ok?: boolean; mensagem?: string }>(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body),
+    responseType: "json",
+  });
+
+/** dias de segunda a sexta entre duas datas (sugestao; feriados a escola desconta) */
+function diasUteis(inicio: string, fim: string): number {
+  if (!inicio || !fim || fim < inicio) return 0;
+  let n = 0;
+  const d = new Date(inicio + "T12:00:00");
+  const f = new Date(fim + "T12:00:00");
+  while (d <= f) { const w = d.getDay(); if (w !== 0 && w !== 6) n++; d.setDate(d.getDate() + 1); }
+  return n;
+}
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 const DIAS_SEMANA = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
@@ -25,7 +62,7 @@ function formatarData(data: string) {
   return `${dia}/${mes}`;
 }
 
-type Evento = { id: number; data: string; tipo: string; descricao: string };
+type Evento = { id: number; data: string; tipo: string; descricao: string; diaLetivo?: boolean };
 
 function agruparEventos(eventos: Evento[]) {
   const ordenados = [...eventos].sort((a, b) => a.data.localeCompare(b.data));
@@ -74,6 +111,65 @@ export default function CalendarioEscolarPage() {
 
   const totalDiasLetivos = trimestres.reduce((soma, t) => soma + t.diasLetivos, 0);
 
+  // [CALENDARIO-EDITAVEL]
+  const papel = usePapelEfetivo();
+  const podeEditar = !papel.carregando && !papel.ehGestor && !papel.ehProfessor && !papel.semEscola;
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { data: oficiais = [] } = useQuery({
+    queryKey: ["/api/calendario-escolar/oficial"],
+    queryFn: () => customFetch<CalendarioOficialResumo[]>("/api/calendario-escolar/oficial", { responseType: "json" }),
+    enabled: podeEditar,
+  });
+  const oficialDoAno = oficiais.find((o) => o.ano === ano);
+  const [confirmarOficial, setConfirmarOficial] = useState(false);
+  const [editTrimestres, setEditTrimestres] = useState<TrimestreForm[] | null>(null);
+  const [editEvento, setEditEvento] = useState<EventoForm | null>(null);
+  const [apagarEvento, setApagarEvento] = useState<Evento | null>(null);
+
+  const atualizar = () => {
+    queryClient.invalidateQueries({ queryKey: getListCalendarioEscolarQueryKey({ ano }) });
+    queryClient.invalidateQueries({ queryKey: getListTrimestresLetivosQueryKey({ ano }) });
+    queryClient.invalidateQueries({ queryKey: ["/api/calendario-escolar"] });
+  };
+  const aoTerminar = (titulo: string, fechar: () => void) => ({
+    onSuccess: (data: unknown) => {
+      atualizar();
+      fechar();
+      toast({ title: titulo, description: (data as { mensagem?: string })?.mensagem });
+    },
+    onError: (err: unknown) => toast({ title: "Não foi possível salvar", description: mensagemErro(err), variant: "destructive" }),
+  });
+  const aplicarOficial = useMutation({
+    mutationFn: () => enviar("/api/calendario-escolar/aplicar-oficial", "POST", { ano }),
+    ...aoTerminar("Calendário oficial aplicado", () => setConfirmarOficial(false)),
+  });
+  const salvarTrimestres = useMutation({
+    mutationFn: (ts: TrimestreForm[]) => enviar("/api/calendario-escolar/trimestres", "PUT", { ano, trimestres: ts }),
+    ...aoTerminar("Trimestres salvos", () => setEditTrimestres(null)),
+  });
+  const salvarEvento = useMutation({
+    mutationFn: (e: EventoForm) =>
+      enviar(e.id ? `/api/calendario-escolar/${e.id}` : "/api/calendario-escolar", e.id ? "PUT" : "POST", { data: e.data, tipo: e.tipo, descricao: e.descricao }),
+    ...aoTerminar("Data salva no calendário", () => setEditEvento(null)),
+  });
+  const excluirEvento = useMutation({
+    mutationFn: (e: Evento) => enviar(`/api/calendario-escolar/${e.id}`, "DELETE"),
+    ...aoTerminar("Data removida do calendário", () => setApagarEvento(null)),
+  });
+  const abrirTrimestres = () =>
+    setEditTrimestres(
+      trimestres.length > 0
+        ? trimestres.map((t) => ({ trimestre: t.trimestre, dataInicio: t.dataInicio, dataFim: t.dataFim, diasLetivos: t.diasLetivos }))
+        : [1, 2, 3].map((n) => ({ trimestre: n, dataInicio: "", dataFim: "", diasLetivos: 0 })),
+    );
+  const mesStr = String(mesAtual + 1).padStart(2, "0");
+  const novoEvento = (data?: string) => setEditEvento({ data: data ?? `${ano}-${mesStr}-01`, tipo: "feriado", descricao: "" });
+  const eventosDoMesLista = useMemo(
+    () => (eventos as Evento[]).filter((e) => e.data.slice(5, 7) === mesStr).sort((a, b) => a.data.localeCompare(b.data)),
+    [eventos, mesStr],
+  );
+
   const eventosPorDia = useMemo(() => {
     const mapa = new Map<string, Evento[]>();
     for (const e of eventos) {
@@ -103,13 +199,52 @@ export default function CalendarioEscolarPage() {
           <h1 className="text-3xl font-bold tracking-tight">Calendário Escolar</h1>
           <p className="text-muted-foreground mt-1">Feriados, recessos e trimestres letivos oficiais (SEED-PR).</p>
         </div>
-        <Select value={String(ano)} onValueChange={(v) => setAno(Number(v))}>
-          <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="2026">2026</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex flex-wrap items-center gap-2 justify-end">
+          {podeEditar && oficialDoAno && trimestres.length > 0 && (
+            <Button variant="outline" size="sm" onClick={() => setConfirmarOficial(true)}>
+              <Landmark className="w-4 h-4 mr-1.5" /> Restaurar oficial SEED-PR
+            </Button>
+          )}
+          {podeEditar && (
+            <Button variant="outline" size="sm" onClick={abrirTrimestres}>
+              <Pencil className="w-4 h-4 mr-1.5" /> Editar trimestres
+            </Button>
+          )}
+          <Select value={String(ano)} onValueChange={(v) => setAno(Number(v))}>
+            <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2026">2026</SelectItem>
+              <SelectItem value="2027">2027</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
+      {!loadingTrimestres && trimestres.length === 0 && (
+        <Card className="border-dashed border-[#1565C0]/40 bg-[#1565C0]/5">
+          <CardContent className="py-6 flex flex-col md:flex-row md:items-center gap-4 justify-between">
+            <div>
+              <p className="font-semibold">O calendário letivo de {ano} ainda não foi cadastrado.</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Sem ele, a aba Conflitos avisa "turma sem calendário" e a carga horária do ano não é conferida.
+                {oficialDoAno ? ` O calendário oficial já está pronto: ${oficialDoAno.diasLetivos} dias letivos em 3 trimestres, com os feriados nacionais (${oficialDoAno.fonte}).` : ""}
+              </p>
+            </div>
+            {podeEditar && (
+              <div className="flex gap-2 shrink-0">
+                {oficialDoAno && (
+                  <Button onClick={() => aplicarOficial.mutate()} disabled={aplicarOficial.isPending}>
+                    {aplicarOficial.isPending ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Landmark className="w-4 h-4 mr-1.5" />}
+                    Usar o calendário oficial SEED-PR
+                  </Button>
+                )}
+                <Button variant="outline" onClick={abrirTrimestres}>Cadastrar manualmente</Button>
+              </div>
+            )}
+            {!podeEditar && <p className="text-sm text-muted-foreground">Peça à secretaria ou à coordenação para cadastrar.</p>}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {loadingTrimestres ? (
@@ -181,7 +316,9 @@ export default function CalendarioEscolarPage() {
                       return (
                         <div
                           key={ci}
-                          className={`min-h-[84px] p-1.5 border-r border-b border-border/40 last:border-r-0 ${si === semanas.length - 1 ? "last:border-b-0" : ""} ${!cel.dia ? "bg-muted/20" : "bg-background"}`}
+                          onClick={podeEditar && cel.dataStr ? () => novoEvento(cel.dataStr!) : undefined}
+                          title={podeEditar && cel.dataStr ? "Clique para adicionar uma data" : undefined}
+                          className={`${podeEditar && cel.dia ? "cursor-pointer hover:bg-muted/40 " : ""}min-h-[84px] p-1.5 border-r border-b border-border/40 last:border-r-0 ${si === semanas.length - 1 ? "last:border-b-0" : ""} ${!cel.dia ? "bg-muted/20" : "bg-background"}`}
                         >
                           {cel.dia && (
                             <>
@@ -194,6 +331,7 @@ export default function CalendarioEscolarPage() {
                                   return (
                                     <div
                                       key={i}
+                                      onClick={podeEditar ? (clique) => { clique.stopPropagation(); setEditEvento({ id: ev.id, data: ev.data, tipo: ev.tipo, descricao: ev.descricao }); } : undefined}
                                       title={`${tipo.label}: ${ev.descricao}`}
                                       className={`flex items-center gap-1 text-[10px] leading-tight px-1 py-0.5 rounded truncate ${tipo.color}`}
                                     >
@@ -232,10 +370,148 @@ export default function CalendarioEscolarPage() {
               {gruposDoMes.length === 0 && (
                 <p className="text-muted-foreground text-center py-4 text-sm">Nenhum evento cadastrado para {MESES[mesAtual]}.</p>
               )}
+
+              {podeEditar && (
+                <div className="mt-5 border-t pt-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold">Datas de {MESES[mesAtual]}</p>
+                    <Button size="sm" onClick={() => novoEvento()}>
+                      <Plus className="w-4 h-4 mr-1" /> Adicionar data
+                    </Button>
+                  </div>
+                  {eventosDoMesLista.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma data neste mês.</p>}
+                  {eventosDoMesLista.map((ev) => {
+                    const tipo = TIPO_LABELS[ev.tipo] ?? { label: ev.tipo, color: "bg-gray-100 text-gray-700", dot: "bg-gray-400" };
+                    return (
+                      <div key={ev.id} className="flex items-center gap-3 rounded-md border px-3 py-2 text-sm">
+                        <span className="font-mono w-12 shrink-0">{formatarData(ev.data)}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded ${tipo.color}`}>{tipo.label}</span>
+                        <span className="flex-1 truncate">{ev.descricao}</span>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" title="Editar" onClick={() => setEditEvento({ id: ev.id, data: ev.data, tipo: ev.tipo, descricao: ev.descricao })}>
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-red-600" title="Remover" onClick={() => setApagarEvento(ev)}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                  <p className="text-xs text-muted-foreground">Dica: clique num dia do calendário para adicionar uma data nele (recesso, feriado municipal, reposição).</p>
+                </div>
+              )}
             </>
           )}
         </CardContent>
       </Card>
+
+      {/* [CALENDARIO-EDITAVEL] confirmar troca pelo oficial */}
+      <Dialog open={confirmarOficial} onOpenChange={setConfirmarOficial}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Restaurar o calendário oficial SEED-PR {ano}?</DialogTitle>
+            <DialogDescription>
+              Os trimestres e todas as datas de {ano} cadastradas nesta escola serão substituídos pelo calendário oficial
+              {oficialDoAno ? ` (${oficialDoAno.fonte})` : ""}. Recessos, feriados municipais e reposições que a escola adicionou serão apagados.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmarOficial(false)}>Cancelar</Button>
+            <Button onClick={() => aplicarOficial.mutate()} disabled={aplicarOficial.isPending}>
+              {aplicarOficial.isPending && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />} Substituir pelo oficial
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* trimestres */}
+      <Dialog open={editTrimestres !== null} onOpenChange={(v) => !v && setEditTrimestres(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Trimestres letivos de {ano}</DialogTitle>
+            <DialogDescription>
+              Datas de início e fim e o total de dias letivos de cada trimestre, como no calendário aprovado pelo NRE.
+              A sugestão de dias conta de segunda a sexta; desconte os feriados e recessos.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {editTrimestres?.map((t, i) => {
+              const sugestao = diasUteis(t.dataInicio, t.dataFim);
+              const muda = (campo: keyof TrimestreForm, valor: string | number) =>
+                setEditTrimestres((l) => l!.map((x, j) => (j === i ? { ...x, [campo]: valor } : x)));
+              return (
+                <div key={t.trimestre} className="grid grid-cols-[90px_1fr_1fr_120px] gap-2 items-end">
+                  <p className="text-sm font-semibold pb-2">{t.trimestre}º trimestre</p>
+                  <div><Label className="text-xs">Início</Label><Input type="date" value={t.dataInicio} onChange={(e) => muda("dataInicio", e.target.value)} /></div>
+                  <div><Label className="text-xs">Fim</Label><Input type="date" value={t.dataFim} onChange={(e) => muda("dataFim", e.target.value)} /></div>
+                  <div>
+                    <Label className="text-xs">Dias letivos</Label>
+                    <Input type="number" min={1} value={t.diasLetivos || ""} onChange={(e) => muda("diasLetivos", Number(e.target.value))} />
+                    {sugestao > 0 && sugestao !== t.diasLetivos && (
+                      <button type="button" className="text-[11px] text-[#1565C0] underline" onClick={() => muda("diasLetivos", sugestao)}>
+                        seg-sex: {sugestao}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            <p className="text-sm text-muted-foreground">
+              Total: <strong>{editTrimestres?.reduce((s, t) => s + (t.diasLetivos || 0), 0) ?? 0}</strong> dias letivos (o mínimo da LDB é 200).
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditTrimestres(null)}>Cancelar</Button>
+            <Button onClick={() => editTrimestres && salvarTrimestres.mutate(editTrimestres)} disabled={salvarTrimestres.isPending}>
+              {salvarTrimestres.isPending && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />} Salvar trimestres
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* evento */}
+      <Dialog open={editEvento !== null} onOpenChange={(v) => !v && setEditEvento(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editEvento?.id ? "Editar data" : "Adicionar data ao calendário"}</DialogTitle>
+            <DialogDescription>Para um recesso de vários dias, adicione um dia de cada vez com a mesma descrição: o calendário junta os dias seguidos.</DialogDescription>
+          </DialogHeader>
+          {editEvento && (
+            <div className="space-y-3">
+              <div><Label>Data</Label><Input type="date" value={editEvento.data} onChange={(e) => setEditEvento({ ...editEvento, data: e.target.value })} /></div>
+              <div>
+                <Label>Tipo</Label>
+                <Select value={editEvento.tipo} onValueChange={(v) => setEditEvento({ ...editEvento, tipo: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(TIPO_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Descrição</Label><Input value={editEvento.descricao} maxLength={200} placeholder="Ex.: Aniversário do município" onChange={(e) => setEditEvento({ ...editEvento, descricao: e.target.value })} /></div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditEvento(null)}>Cancelar</Button>
+            <Button onClick={() => editEvento && salvarEvento.mutate(editEvento)} disabled={salvarEvento.isPending || !editEvento?.descricao.trim() || !editEvento?.data}>
+              {salvarEvento.isPending && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />} Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* remover evento */}
+      <Dialog open={apagarEvento !== null} onOpenChange={(v) => !v && setApagarEvento(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remover esta data?</DialogTitle>
+            <DialogDescription>{apagarEvento ? `${formatarData(apagarEvento.data)} — ${apagarEvento.descricao}` : ""}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setApagarEvento(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={() => apagarEvento && excluirEvento.mutate(apagarEvento)} disabled={excluirEvento.isPending}>Remover</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
