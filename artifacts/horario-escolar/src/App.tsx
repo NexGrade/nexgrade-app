@@ -445,12 +445,15 @@ function MasterRouteConteudo() {
     return <Redirect to="/dashboard" />;
   }
 
+  // [MASTER-SUPORTE] area da plataforma, separada da escola: sem o menu da escola
   return (
-    <Layout>
-      <Suspense fallback={<PaginaCarregando />}>
-        <MasterPage />
-      </Suspense>
-    </Layout>
+    <div className="h-full overflow-auto bg-slate-50/60 px-4 py-6 md:px-8 md:py-8">
+      <div className="mx-auto max-w-6xl">
+        <Suspense fallback={<PaginaCarregando />}>
+          <MasterPage />
+        </Suspense>
+      </div>
+    </div>
   );
 }
 
@@ -557,6 +560,7 @@ function OrgSwitchWatcher() {
 // a escolha da escola (troca recarrega o app do zero, sem dados da escola anterior).
 function SeletorEscola() {
   const { data: eu } = useEu();
+  const [, navegar] = useLocation(); // [MASTER-SUPORTE] no Painel Master, escolher a escola atual volta para ela
   if (!eu?.pelobanco || eu.escolas.length === 0) return null;
   if (eu.escolas.length === 1) {
     const e = eu.escolas[0];
@@ -568,7 +572,7 @@ function SeletorEscola() {
     );
   }
   return (
-    <Select value={eu.escolaAtual ?? undefined} onValueChange={(id) => { if (id !== eu.escolaAtual) trocarDeEscola(id, basePath); }}>
+    <Select value={eu.escolaAtual ?? undefined} onValueChange={(id) => { if (id !== eu.escolaAtual) trocarDeEscola(id, basePath); else navegar("/"); }}>
       <SelectTrigger className="h-9 w-[min(320px,60vw)] text-sm" aria-label="Escola">
         <SelectValue placeholder="Escolha a escola" />
       </SelectTrigger>
@@ -631,6 +635,9 @@ function SemAcessoEscola() {
 function GlobalTopBar() {
   const { data: eu, isLoading } = useEu(); // [ACESSOS-ESCOLA]
   const pelobanco = !!eu?.pelobanco;
+  const [rota, navegar] = useLocation(); // [MASTER-SUPORTE]
+  const { data: whoami } = useMasterWhoami({ query: { queryKey: getMasterWhoamiQueryKey(), staleTime: 5 * 60_000 } });
+  const noMaster = rota === "/master" || rota.startsWith("/master/");
   return (
     <Show when="signed-in">
       <div className="h-14 shrink-0 flex items-center justify-between px-5 border-b border-border bg-card">
@@ -648,6 +655,20 @@ function GlobalTopBar() {
             navegacao apos trocar de organizacao agora e feita via reload
             completo pelo OrgSwitchWatcher (ver comentario acima). */}
         <div className="flex items-center gap-2">
+        {/* [MASTER-SUPORTE] so para a Nexus Core: ir e voltar do Painel Master */}
+        {whoami?.isMaster && (noMaster ? (
+          <span className="hidden items-center gap-1.5 rounded-md bg-[#0D47A1] px-3 py-1.5 text-sm font-medium text-white md:inline-flex">
+            <ShieldCheck className="h-4 w-4" /> Plataforma NexGrade
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={() => navegar("/master")}
+            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-[#BBDEFB] bg-[#E3F2FD] px-3 text-sm font-medium text-[#0D47A1] hover:bg-[#BBDEFB]"
+          >
+            <ShieldCheck className="h-4 w-4" /><span className="hidden sm:inline">Painel Master</span>
+          </button>
+        ))}
         {pelobanco ? <SeletorEscola /> : isLoading ? null : (
         <OrganizationSwitcher
           hidePersonal

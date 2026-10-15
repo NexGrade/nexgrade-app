@@ -12,6 +12,8 @@ import {
   useCancelarAssinaturaAsaasMaster,
   customFetch, // [NOVA-ESCOLA-MASTER]
 } from "@workspace/api-client-react";
+import { useEu } from "@/lib/papeis"; // [MASTER-SUPORTE]
+import { trocarDeEscola } from "@/lib/escola-ativa"; // [MASTER-SUPORTE]
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -28,6 +30,7 @@ import {
 import {
   Building2, Users, GraduationCap, CalendarDays, Sparkles, ShieldCheck, Plus, Pencil, XCircle,
   Search, MapPin, Mail, Phone, KeyRound, // [MASTER-LAYOUT]
+  LogIn, LifeBuoy, // [MASTER-SUPORTE]
 } from "lucide-react";
 
 // RF-MASTER-01 a RF-MASTER-03: painel administrativo da plataforma —
@@ -44,7 +47,7 @@ export default function MasterPage() {
           <ShieldCheck className="w-6 h-6 text-[#0D47A1]" />
           Painel Master
         </h1>
-        <p className="text-muted-foreground">Administração da plataforma NexGrade — todas as escolas.</p>
+        <p className="text-muted-foreground">Administração da plataforma NexGrade — todas as escolas. Para trabalhar dentro de uma escola, use "Abrir escola" na ficha dela.</p>
       </div>
 
       <MetricasCards />
@@ -145,6 +148,26 @@ function EscolasTable() {
   const [escolaEditandoContato, setEscolaEditandoContato] = useState<string | null>(null);
   const [busca, setBusca] = useState(""); // [MASTER-LAYOUT]
   const [novaAberta, setNovaAberta] = useState(false); // [NOVA-ESCOLA-MASTER]
+  // [MASTER-SUPORTE] escolas em que a Nexus Core ja tem acesso (visivel em Usuarios da escola)
+  const { data: eu } = useEu();
+  const pelobanco = !!eu?.pelobanco;
+  const comAcesso = new Set(eu?.pelobanco ? eu.escolas.map((x) => x.escolaId) : []);
+  const [liberando, setLiberando] = useState<string | null>(null);
+  const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+  async function liberarSuporte(id: string, nome: string) {
+    if (!window.confirm("Liberar o seu acesso de suporte em " + nome + "?\n\nEle fica visível para a escola em Usuários, como \"Nexus Core (suporte)\", com cargo Coordenação. A escola pode remover quando quiser.")) return;
+    setLiberando(id);
+    try {
+      const r = await customFetch<{ mensagem?: string }>("/api/master/escolas/" + encodeURIComponent(id) + "/meu-acesso", { method: "POST", responseType: "json" });
+      toast({ title: "Acesso de suporte liberado", description: r?.mensagem });
+      trocarDeEscola(id, basePath);
+    } catch (err) {
+      const e = err as { data?: { error?: string }; message?: string };
+      toast({ title: "Não foi possível liberar", description: e?.data?.error ?? e?.message ?? "Tente novamente.", variant: "destructive" });
+      setLiberando(null);
+    }
+  }
 
   function salvarContato(id: string, emailContato: string, telefoneContato: string) {
     atualizar.mutate(
@@ -280,6 +303,15 @@ function EscolasTable() {
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5">
+                  {pelobanco && (comAcesso.has(e.id) ? (
+                    <Button size="sm" className="h-8 gap-1.5" onClick={() => trocarDeEscola(e.id, basePath)}>
+                      <LogIn className="h-3.5 w-3.5" /> Abrir escola
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="outline" className="h-8 gap-1.5" disabled={liberando === e.id} onClick={() => liberarSuporte(e.id, e.nomeFantasia)}>
+                      <LifeBuoy className="h-3.5 w-3.5" /> {liberando === e.id ? "Liberando..." : "Liberar meu acesso de suporte"}
+                    </Button>
+                  ))}
                   <Badge className={e.planoAtivo ? "bg-emerald-600 text-white hover:bg-emerald-600" : undefined} variant={e.planoAtivo ? undefined : "secondary"}>
                     {e.planoAtivo ? "Ativa" : "Suspensa"}
                   </Badge>

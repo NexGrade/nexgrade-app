@@ -120,4 +120,44 @@ router.post("/escolas", async (req, res) => {
   });
 });
 
+// [MASTER-SUPORTE] (15/10/2026) POST /api/master/escolas/:id/meu-acesso -- a Nexus Core so
+// entra numa escola com um acesso VISIVEL para a escola (Usuarios: "Nexus Core (suporte)",
+// cargo coordenacao), que a propria escola pode remover. Nunca ha acesso escondido.
+router.post("/escolas/:id/meu-acesso", async (req, res) => {
+  if (!acessosPeloBanco()) {
+    res.status(409).json({ error: "Disponível só com ACESSOS_PELO_BANCO ligado." });
+    return;
+  }
+  const escolaId = String(req.params.id);
+  const escola = await db.select({ id: escolasTable.id, nome: escolasTable.nomeFantasia }).from(escolasTable).where(eq(escolasTable.id, escolaId)).then((r) => r[0]);
+  if (!escola) {
+    res.status(404).json({ error: "Escola não encontrada." });
+    return;
+  }
+  const email = await emailVerificado(req);
+  if (!email) {
+    res.status(400).json({ error: "Sua conta não tem e-mail verificado." });
+    return;
+  }
+  const [existente] = await db
+    .select()
+    .from(acessosEscolaTable)
+    .where(and(eq(acessosEscolaTable.escolaId, escolaId), eq(acessosEscolaTable.email, email)));
+  if (existente?.ativo) {
+    res.json({ ok: true, mensagem: "Você já tem acesso a " + escola.nome + "." });
+    return;
+  }
+  if (existente) {
+    await db.update(acessosEscolaTable).set({ ativo: true, cargo: "coordenacao", criadoPor: "painel-master" }).where(eq(acessosEscolaTable.id, existente.id));
+  } else {
+    await db.insert(acessosEscolaTable).values({ escolaId, email, nome: "Nexus Core (suporte)", cargo: "coordenacao", criadoPor: "painel-master" });
+  }
+  limparCacheAcessos();
+  await registrarAuditoria({
+    req, escolaId, entidade: "acessos_escola", entidadeId: 0, acao: "criacao",
+    dadosAnteriores: existente ?? null, dadosNovos: { email, cargo: "coordenacao", motivo: "suporte Nexus Core" },
+  }).catch(() => undefined);
+  res.status(201).json({ ok: true, mensagem: "Acesso de suporte liberado em " + escola.nome + ". Ele aparece em Usuários da escola como \"Nexus Core (suporte)\"." });
+});
+
 export default router;
