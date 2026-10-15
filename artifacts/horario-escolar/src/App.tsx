@@ -1,5 +1,7 @@
 import { clerkPtBR } from "@/lib/clerk-ptbr"; // [CLERK-PTBR]
-import { PAPEL_ADMIN, usePapelEfetivo, useAtivarEscolaDoMembro } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA]
+import { usePapelEfetivo, useAtivarEscolaDoMembro, useEu } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA] [ACESSOS-ESCOLA]
+import { trocarDeEscola } from "@/lib/escola-ativa"; // [ACESSOS-ESCOLA]
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // [ACESSOS-ESCOLA]
 import { useEffect, useRef, lazy, Suspense } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -240,7 +242,7 @@ function SignInPage() {
   return (
     <AuthShell
       subtitulo="Sistema de Gestão de Horários Escolares"
-      aviso="Foi convidado por uma escola? Abra o link do convite que chegou no seu e-mail para criar o seu acesso."
+      aviso="Use o e-mail que a sua escola cadastrou no NexGrade. Primeiro acesso? Clique em &quot;Cadastre-se&quot; com esse mesmo e-mail."
     >
       <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} appearance={clerkAppearance} />
     </AuthShell>
@@ -251,7 +253,7 @@ function SignUpPage() {
   return (
     <AuthShell
       subtitulo="Crie o seu acesso ao NexGrade"
-      aviso="Se a sua escola já usa o NexGrade, use o e-mail que recebeu o convite. Para cadastrar uma escola nova, siga em frente."
+      aviso="Use o e-mail que a sua escola cadastrou no NexGrade. Escolas novas são cadastradas pela Nexus Core: fale com o suporte."
     >
       <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} appearance={clerkAppearance} />
     </AuthShell>
@@ -262,11 +264,10 @@ function HomeRedirect() {
   // [PORTAL DO PROFESSOR] Membro comum da organizacao (nao admin) vai
   // direto pra agenda restrita dele -- so a coordenacao (admin) ve o
   // painel administrativo completo.
-  const { orgRole } = useAuth();
-  const { ehGestor, carregando } = usePapelEfetivo(); // [GESTOR-METADATA]
+  const { ehGestor, ehProfessor, carregando } = usePapelEfetivo(); // [GESTOR-METADATA] [ACESSOS-ESCOLA]
   if (carregando) return null;
   const destino = ehGestor ? "/reservas" // [PAPEL-RESERVAS]
-    : orgRole && orgRole !== PAPEL_ADMIN ? "/minha-agenda" : "/dashboard";
+    : ehProfessor ? "/minha-agenda" : "/dashboard";
   return (
     <>
       <Show when="signed-in">
@@ -297,15 +298,15 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 // recém-logado — mesmo entrando direto por um link profundo — passe pelo
 // onboarding antes de acessar o restante do produto.
 function EscolaGate({ component: Component }: { component: React.ComponentType }) {
-  const { orgRole } = useAuth(); // [PERMISSAO-PAPEL]
   const [rotaAtual] = useLocation(); // [PAPEL-RESERVAS]
-  const { ehGestor, carregando: carregandoPapel } = usePapelEfetivo(); // [GESTOR-METADATA]
+  const { ehGestor, ehProfessor, semEscola, carregando: carregandoPapel } = usePapelEfetivo(); // [GESTOR-METADATA] [ACESSOS-ESCOLA]
   const { aguardando: ativandoEscola, falhou: falhouAtivar } = useAtivarEscolaDoMembro(); // [ORG-AUTO]
   const { data, isLoading, isError, refetch } = useGetEscolaAtual({
     query: { queryKey: getGetEscolaAtualQueryKey() },
   });
 
   if (falhouAtivar) return <ErroCarregarEscola onTentar={() => window.location.reload()} />; // [ORG-AUTO]
+  if (semEscola) return <SemAcessoEscola />; // [ACESSOS-ESCOLA]
   if (isError) return <ErroCarregarEscola onTentar={() => { void refetch(); }} />; // [ERRO-ESCOLA]
 
   if (isLoading || carregandoPapel || ativandoEscola) {
@@ -326,7 +327,7 @@ function EscolaGate({ component: Component }: { component: React.ComponentType }
   // professor (prioridade/limite) sao da coordenacao -- /reservas/regras volta tambem.
   if (ehGestor) { // [GESTOR-METADATA]
     if (rotaAtual !== "/reservas" && rotaAtual !== "/horario" && rotaAtual !== "/calendario") return <Redirect to="/reservas" />; // [CONSULTA-GESTOR] grade e calendario so consulta
-  } else if (orgRole && orgRole !== PAPEL_ADMIN) {
+  } else if (ehProfessor) { // [ACESSOS-ESCOLA] professor (banco) ou membro comum (Clerk)
     return <Redirect to="/minha-agenda" />;
   }
 
@@ -340,9 +341,11 @@ function EscolaGate({ component: Component }: { component: React.ComponentType }
 }
 
 function ProfessorRoute({ component: Component }: { component: React.ComponentType }) {
+  const { semEscola } = usePapelEfetivo(); // [ACESSOS-ESCOLA]
   const { data, isLoading, isError, refetch } = useGetEscolaAtual({
     query: { queryKey: getGetEscolaAtualQueryKey() },
   });
+  if (semEscola) return <SemAcessoEscola />; // [ACESSOS-ESCOLA]
   if (isError) return <ErroCarregarEscola onTentar={() => { void refetch(); }} />; // [ERRO-ESCOLA]
   if (isLoading) {
     return (
@@ -370,6 +373,11 @@ function ProfessorRoute({ component: Component }: { component: React.ComponentTy
 function OnboardingConteudo() {
   const { aguardando, falhou } = useAtivarEscolaDoMembro();
   const { user } = useUser();
+  const papel = usePapelEfetivo(); // [ACESSOS-ESCOLA]
+  // [ACESSOS-ESCOLA] com a chave ligada nao ha cadastro de escola pela propria escola
+  // (escola nova e cadastrada pela Nexus Core): quem tem escola vai para ela, quem nao tem ve o aviso
+  if (papel.carregando) return <PaginaCarregando />;
+  if (papel.pelobanco) return papel.semEscola ? <SemAcessoEscola /> : <Redirect to="/" />;
   if (falhou) return <ErroCarregarEscola onTentar={() => window.location.reload()} />;
   if (aguardando) return <PaginaCarregando />;
   return (
@@ -524,11 +532,13 @@ function ApiAuthBridge() {
 // escola ja cadastrada.
 function OrgSwitchWatcher() {
   const { orgId, isLoaded } = useAuth();
+  const eu = useEu(); // [ACESSOS-ESCOLA] com a chave ligada a troca de escola e feita pelo SeletorEscola
+  const pelobanco = !!eu.data?.pelobanco;
   const orgIdReferencia = useRef<string | null | undefined>(undefined);
   const referenciaDefinida = useRef(false);
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || pelobanco) return;
     if (!referenciaDefinida.current) {
       referenciaDefinida.current = true;
       orgIdReferencia.current = orgId;
@@ -538,9 +548,68 @@ function OrgSwitchWatcher() {
       orgIdReferencia.current = orgId;
       window.location.href = `${basePath}/dashboard`;
     }
-  }, [orgId, isLoaded]);
+  }, [orgId, isLoaded, pelobanco]);
 
   return null;
+}
+
+// [ACESSOS-ESCOLA] Com a chave ligada: a escola atual e, para quem tem mais de uma,
+// a escolha da escola (troca recarrega o app do zero, sem dados da escola anterior).
+function SeletorEscola() {
+  const { data: eu } = useEu();
+  if (!eu?.pelobanco || eu.escolas.length === 0) return null;
+  if (eu.escolas.length === 1) {
+    const e = eu.escolas[0];
+    return (
+      <div className="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-1.5 text-sm text-slate-700">
+        <span className="font-medium">{e.nome}</span>
+        <span className="hidden text-xs text-slate-500 sm:inline">· {e.rotuloCargo}</span>
+      </div>
+    );
+  }
+  return (
+    <Select value={eu.escolaAtual ?? undefined} onValueChange={(id) => { if (id !== eu.escolaAtual) trocarDeEscola(id, basePath); }}>
+      <SelectTrigger className="h-9 w-[min(320px,60vw)] text-sm" aria-label="Escola">
+        <SelectValue placeholder="Escolha a escola" />
+      </SelectTrigger>
+      <SelectContent>
+        {eu.escolas.map((e) => (
+          <SelectItem key={e.escolaId} value={e.escolaId}>
+            {e.nome} · {e.rotuloCargo}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+// [ACESSOS-ESCOLA] Login certo, mas o e-mail nao esta liberado em nenhuma escola.
+function SemAcessoEscola() {
+  const { user } = useUser();
+  const { data: eu } = useEu();
+  const email = (eu?.pelobanco ? eu.email : null) ?? user?.primaryEmailAddress?.emailAddress ?? "—";
+  return (
+    <div className="flex min-h-full items-center justify-center p-6">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+        <ShieldCheck className="mx-auto h-10 w-10 text-[#1565C0]" />
+        <h1 className="mt-3 text-xl font-bold text-slate-900 font-heading">Seu e-mail ainda não foi liberado</h1>
+        <p className="mt-2 text-sm text-slate-600">
+          Você entrou como <span className="font-medium text-slate-900">{email}</span>, mas este e-mail não está cadastrado em nenhuma escola do NexGrade.
+        </p>
+        <p className="mt-3 text-sm text-slate-600 leading-relaxed">
+          Peça à secretaria ou à coordenação da sua escola para cadastrar este e-mail: professores, no cadastro de Professores; equipe da escola, em Usuários. Se a escola usa outro e-mail seu, saia e entre com ele.
+        </p>
+        <div className="mt-5 flex justify-center gap-2">
+          <button type="button" onClick={() => window.location.reload()} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            Já liberaram, tentar de novo
+          </button>
+          <SignOutButton redirectUrl="/sign-in">
+            <button type="button" className="rounded-md bg-[#1565C0] px-4 py-2 text-sm font-medium text-white hover:bg-[#0D47A1]">Sair</button>
+          </SignOutButton>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // [NOVO] Barra fixa, sempre visivel para qualquer usuario logado --
@@ -560,6 +629,8 @@ function OrgSwitchWatcher() {
 // gerava o bug de isolamento corrigido nesta sessao. Forcar apenas
 // Organizations evita reabrir esse buraco pela interface.
 function GlobalTopBar() {
+  const { data: eu, isLoading } = useEu(); // [ACESSOS-ESCOLA]
+  const pelobanco = !!eu?.pelobanco;
   return (
     <Show when="signed-in">
       <div className="h-14 shrink-0 flex items-center justify-between px-5 border-b border-border bg-card">
@@ -576,6 +647,7 @@ function GlobalTopBar() {
             que nao avisa nem o Wouter nem o React da mudanca de rota. A
             navegacao apos trocar de organizacao agora e feita via reload
             completo pelo OrgSwitchWatcher (ver comentario acima). */}
+        {pelobanco ? <SeletorEscola /> : isLoading ? null : (
         <OrganizationSwitcher
           hidePersonal
           appearance={{
@@ -595,6 +667,7 @@ function GlobalTopBar() {
             },
           }}
         />
+        )}
       </div>
     </Show>
   );

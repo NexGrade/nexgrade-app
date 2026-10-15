@@ -13,7 +13,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Shield, Mail, Search, Trash2, X, Loader2 } from "lucide-react";
+import { Plus, Shield, Mail, Search, Trash2, X, Loader2, Info } from "lucide-react";
+import { usePapelEfetivo } from "@/lib/papeis"; // [ACESSOS-ESCOLA]
 
 type Cargo = "direcao" | "coordenacao" | "secretaria" | "reservas" | "professor"; // [CARGO-SECRETARIA]
 type Acesso = {
@@ -55,6 +56,10 @@ export default function UsuariosPage() {
   const [busca, setBusca] = useState("");
   const [aberto, setAberto] = useState(false);
   const [form, setForm] = useState<{ nome: string; email: string; cargo: Cargo }>({ nome: "", email: "", cargo: "reservas" });
+  // [ACESSOS-ESCOLA] com a chave ligada: equipe no nosso banco, sem convite por e-mail e sem
+  // limite; professor nao entra aqui (o acesso dele vem do e-mail no cadastro de Professores)
+  const { pelobanco } = usePapelEfetivo();
+  const cargosLista = pelobanco ? CARGOS.filter((c) => c.valor !== "professor") : CARGOS;
 
   const { data: acessos, isLoading, isError, error } = useQuery({
     queryKey: CHAVE,
@@ -85,7 +90,7 @@ export default function UsuariosPage() {
 
   const convidar = useMutation({
     mutationFn: () => enviar(URL_BASE + "/convites", "POST", form),
-    ...aoTerminar("Convite enviado"),
+    ...aoTerminar(pelobanco ? "Acesso liberado" : "Convite enviado"),
   });
   const trocarCargo = useMutation({
     mutationFn: (v: { userId: string; cargo: Cargo }) => enviar(URL_BASE + "/membros/" + encodeURIComponent(v.userId), "PATCH", { cargo: v.cargo }),
@@ -97,7 +102,7 @@ export default function UsuariosPage() {
     ...aoTerminar("Pronto"),
   });
 
-  const abrirNovo = () => { setForm({ nome: "", email: "", cargo: "reservas" }); setAberto(true); };
+  const abrirNovo = () => { setForm({ nome: "", email: "", cargo: pelobanco ? "secretaria" : "reservas" }); setAberto(true); };
   const salvarNovo = () => convidar.mutate(undefined, { onSuccess: () => setAberto(false) });
 
   return (
@@ -109,6 +114,13 @@ export default function UsuariosPage() {
         </div>
         <Button onClick={abrirNovo}><Plus className="mr-2 h-4 w-4" /> Novo Usuário</Button>
       </div>
+
+      {pelobanco && (
+        <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+          <Info className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>Aqui fica a equipe da escola (direção, coordenação, secretaria e gestor de reservas). <strong>Professores não precisam ser adicionados:</strong> com o e-mail no cadastro de Professores, eles já entram na Minha Agenda.</span>
+        </div>
+      )}
 
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -124,7 +136,7 @@ export default function UsuariosPage() {
           <CardContent className="flex flex-col items-center gap-2 py-12 text-center">
             <Shield className="h-10 w-10 text-muted-foreground/50" />
             <p className="font-semibold">{busca ? "Ninguém encontrado" : "Nenhum usuário com acesso"}</p>
-            <p className="text-sm text-muted-foreground">Use "Novo Usuário" para convidar alguém por e-mail.</p>
+            <p className="text-sm text-muted-foreground">{pelobanco ? "Use \"Novo Usuário\" para liberar o acesso de alguém da equipe." : "Use \"Novo Usuário\" para convidar alguém por e-mail."}</p>
           </CardContent>
         </Card>
       ) : (
@@ -137,38 +149,38 @@ export default function UsuariosPage() {
                     <span className="font-semibold">{a.nome}</span>
                     {a.ehVoce && <Badge variant="outline">Você</Badge>}
                     <Badge variant="outline" className={COR_CARGO[a.cargo]}>{a.rotuloCargo}</Badge>
-                    {a.tipo === "convite" && <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200">Convite pendente</Badge>}
+                    {a.tipo === "convite" && <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200">{pelobanco ? "Ainda não entrou" : "Convite pendente"}</Badge>}
                   </div>
                   <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
                     <Mail className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{a.email}</span>
                   </div>
                 </div>
-                {a.tipo === "membro" && !a.ehVoce && (
+                {(a.tipo === "membro" || pelobanco) && !a.ehVoce && (
                   <Select
                     value={a.cargo}
                     onValueChange={(v) => {
-                      if (v !== a.cargo && window.confirm("Mudar o cargo de " + a.nome + " para " + (CARGOS.find((c) => c.valor === v)?.rotulo ?? v) + "?")) {
+                      if (v !== a.cargo && window.confirm("Mudar o cargo de " + a.nome + " para " + (cargosLista.find((c) => c.valor === v)?.rotulo ?? v) + "?")) {
                         trocarCargo.mutate({ userId: a.id, cargo: v as Cargo });
                       }
                     }}
                     disabled={trocarCargo.isPending}
                   >
                     <SelectTrigger className="w-[190px]"><SelectValue /></SelectTrigger>
-                    <SelectContent>{CARGOS.map((c) => <SelectItem key={c.valor} value={c.valor}>{c.rotulo}</SelectItem>)}</SelectContent>
+                    <SelectContent>{cargosLista.map((c) => <SelectItem key={c.valor} value={c.valor}>{c.rotulo}</SelectItem>)}</SelectContent>
                   </Select>
                 )}
                 {!a.ehVoce && (
                   <Button
                     variant="ghost"
                     size="icon"
-                    title={a.tipo === "membro" ? "Remover acesso" : "Cancelar convite"}
+                    title={a.tipo === "membro" || pelobanco ? "Remover acesso" : "Cancelar convite"}
                     disabled={remover.isPending}
                     onClick={() => {
-                      const pergunta = a.tipo === "membro" ? "Remover o acesso de " + a.nome + " a esta escola?" : "Cancelar o convite de " + a.email + "?";
+                      const pergunta = a.tipo === "membro" || pelobanco ? "Remover o acesso de " + a.nome + " a esta escola?" : "Cancelar o convite de " + a.email + "?";
                       if (window.confirm(pergunta)) remover.mutate(a);
                     }}
                   >
-                    {a.tipo === "membro" ? <Trash2 className="h-4 w-4 text-destructive" /> : <X className="h-4 w-4" />}
+                    {a.tipo === "membro" || pelobanco ? <Trash2 className="h-4 w-4 text-destructive" /> : <X className="h-4 w-4" />}
                   </Button>
                 )}
               </CardContent>
@@ -181,7 +193,7 @@ export default function UsuariosPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Novo Usuário</DialogTitle>
-            <DialogDescription>A pessoa recebe um convite por e-mail e entra já com o cargo escolhido.</DialogDescription>
+            <DialogDescription>{pelobanco ? "A pessoa entra no NexGrade com este e-mail (ou com a conta Google dele), já com o cargo escolhido. Nenhum e-mail é enviado: avise a pessoa." : "A pessoa recebe um convite por e-mail e entra já com o cargo escolhido."}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
@@ -196,16 +208,16 @@ export default function UsuariosPage() {
               <Label>Cargo</Label>
               <Select value={form.cargo} onValueChange={(v) => setForm({ ...form, cargo: v as Cargo })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{CARGOS.map((c) => <SelectItem key={c.valor} value={c.valor}>{c.rotulo}</SelectItem>)}</SelectContent>
+                <SelectContent>{cargosLista.map((c) => <SelectItem key={c.valor} value={c.valor}>{c.rotulo}</SelectItem>)}</SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">{CARGOS.find((c) => c.valor === form.cargo)?.descricao}</p>
+              <p className="text-xs text-muted-foreground">{cargosLista.find((c) => c.valor === form.cargo)?.descricao}</p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAberto(false)}>Cancelar</Button>
             <Button onClick={salvarNovo} disabled={convidar.isPending || form.nome.trim().length < 2 || !form.email.includes("@")}>
               {convidar.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
-              Enviar convite
+              {pelobanco ? "Liberar acesso" : "Enviar convite"}
             </Button>
           </DialogFooter>
         </DialogContent>

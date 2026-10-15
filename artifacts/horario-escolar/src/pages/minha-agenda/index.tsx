@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { UserButton, useOrganization } from "@clerk/react";
+import { useEu } from "@/lib/papeis"; // [ACESSOS-ESCOLA]
 import {
   useGetMinhaAgendaNotificacoes,
   useMarcarMinhaNotificacaoLida,
@@ -329,6 +330,8 @@ export default function MinhaAgendaPage() {
   const aulas = dadosHorario?.aulas;
   const [turnoAba, setTurnoAba] = useState<string | null>(null); // [AGENDA-ABAS]
   const { organization } = useOrganization(); // [AGENDA-ESCOLA]
+  const { data: eu } = useEu(); // [ACESSOS-ESCOLA] com a chave ligada o nome vem do nosso banco
+  const nomeEscola = (eu?.pelobanco ? eu.nomeEscola : null) ?? organization?.name;
   const [diaSel, setDiaSel] = useState<number | null>(null); // [AGENDA-DIA]
   const horasAtividade = dadosHorario?.horasAtividade ?? [];
   const ehHoraAtividade = (diaIdx: number, numeroAula: number) =>
@@ -403,7 +406,7 @@ export default function MinhaAgendaPage() {
       <header className="border-b p-4 flex items-center justify-between print:hidden">
         <div>
           <h1 className="text-lg font-semibold">Minha Agenda</h1>
-          <p className="text-sm text-muted-foreground">{professor.nome}{organization?.name && <> &middot; <span className="font-medium text-foreground">{organization.name}</span></>}</p>
+          <p className="text-sm text-muted-foreground">{professor.nome}{nomeEscola && <> &middot; <span className="font-medium text-foreground">{nomeEscola}</span></>}</p>
         </div>
         <div className="flex items-center gap-2">
           <NotificationBell
