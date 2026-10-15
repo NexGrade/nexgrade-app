@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   Building2, Users, GraduationCap, CalendarDays, Sparkles, ShieldCheck, Plus, Pencil, XCircle,
+  Search, MapPin, Mail, Phone, KeyRound, // [MASTER-LAYOUT]
 } from "lucide-react";
 
 // RF-MASTER-01 a RF-MASTER-03: painel administrativo da plataforma —
@@ -68,8 +69,8 @@ function MetricasCards() {
 
   if (isLoading || !data) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24" />)}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        {[1, 2, 3, 4, 5, 6].map((i) => <Skeleton key={i} className="h-24" />)}
       </div>
     );
   }
@@ -78,13 +79,14 @@ function MetricasCards() {
     { label: "Escolas", value: data.totalEscolas, sub: `${data.escolasAtivas} ativas · ${data.escolasInativas} inativas`, icon: Building2 },
     { label: "Em período de avaliação", value: data.escolasEmTrial, sub: "escolas em trial", icon: CalendarDays },
     { label: "Professores cadastrados", value: data.totalProfessores, sub: `em ${data.totalTurmas} turmas`, icon: Users },
-    { label: "Aulas na grade", value: data.totalAulasDistribuidas, sub: "distribuídas via Solver", icon: GraduationCap },
-    { label: "Usuários da plataforma", value: data.totalUsuarios, sub: "contas ativas", icon: Users },
+    { label: "Aulas na grade", value: data.totalAulasDistribuidas, sub: "na grade oficial das escolas", icon: GraduationCap },
+    // [MASTER-LAYOUT] e o total de contas de login no Clerk (quem ja criou conta), nao de acessos as escolas
+    { label: "Contas de login", value: data.totalUsuarios, sub: "pessoas que já criaram conta", icon: KeyRound },
     { label: "Mensagens ao Assistente de IA", value: data.mensagensEnviadasParaIA, sub: "desde o início", icon: Sparkles },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
       {cards.map((c) => (
         <Card key={c.label}>
           <CardContent className="pt-6">
@@ -140,6 +142,7 @@ function EscolasTable() {
   const atualizar = useUpdateEscolaMaster();
   const cancelarAssinatura = useCancelarAssinaturaAsaasMaster();
   const [escolaEditandoContato, setEscolaEditandoContato] = useState<string | null>(null);
+  const [busca, setBusca] = useState(""); // [MASTER-LAYOUT]
 
   function salvarContato(id: string, emailContato: string, telefoneContato: string) {
     atualizar.mutate(
@@ -222,107 +225,137 @@ function EscolasTable() {
 
   if (isLoading) return <Skeleton className="h-64 w-full" />;
 
+  // [MASTER-LAYOUT] (15/10/2026) uma ficha por escola em vez da tabela de 10 colunas, que
+  // cortava a ultima coluna e quebrava o nome da escola palavra por palavra. A antiga tambem
+  // tinha os cabecalhos "Assinatura" e "Isenta" trocados em relacao ao conteudo.
+  const termo = busca.trim().toLowerCase();
+  const lista = (escolas ?? []).filter((e) =>
+    !termo || e.nomeFantasia.toLowerCase().includes(termo) || (e.cidade ?? "").toLowerCase().includes(termo),
+  );
+
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Escola</TableHead>
-              <TableHead>Cidade/UF</TableHead>
-              <TableHead>Contato</TableHead>
-              <TableHead>Plano</TableHead>
-              <TableHead className="text-center">Professores</TableHead>
-              <TableHead className="text-center">Turmas</TableHead>
-              <TableHead className="text-center">Status</TableHead>
-              <TableHead className="text-center">Assinatura</TableHead>
-              <TableHead className="text-center">Isenta</TableHead>
-              <TableHead className="text-center">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {escolas?.map((e) => (
-              <TableRow key={e.id}>
-                <TableCell className="font-medium">{e.nomeFantasia}</TableCell>
-                <TableCell className="text-muted-foreground">{e.cidade ?? "—"}/{e.estado}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1.5">
-                    <div className="text-xs">
-                      <div>{(e as any).emailContato ?? <span className="text-muted-foreground">sem e-mail</span>}</div>
-                      <div className="text-muted-foreground">{(e as any).telefoneContato ?? "sem telefone"}</div>
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input className="pl-9" placeholder="Buscar escola ou cidade..." value={busca} onChange={(ev) => setBusca(ev.target.value)} aria-label="Buscar escola" />
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {lista.length} de {escolas?.length ?? 0} escola{(escolas?.length ?? 0) === 1 ? "" : "s"}
+        </p>
+      </div>
+
+      {lista.length === 0 && (
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            {escolas?.length ? "Nenhuma escola encontrada nessa busca." : "Nenhuma escola cadastrada na plataforma ainda."}
+          </CardContent>
+        </Card>
+      )}
+
+      {lista.map((e) => {
+        const ex = e as typeof e & {
+          emailContato?: string | null; telefoneContato?: string | null; isenta?: boolean;
+          asaasStatusAssinatura?: string | null; asaasProximoVencimento?: string | null; asaasSubscriptionId?: string | null;
+        };
+        const badge = badgeAssinatura(ex.asaasStatusAssinatura);
+        const plano = planos?.find((p) => p.id === e.planoId);
+        return (
+          <Card key={e.id} className={e.planoAtivo ? undefined : "opacity-75"}>
+            <CardContent className="p-5 space-y-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="text-base font-semibold leading-snug">{e.nomeFantasia}</h3>
+                  <p className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />{e.cidade ?? "—"}/{e.estado}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <Badge className={e.planoAtivo ? "bg-emerald-600 text-white hover:bg-emerald-600" : undefined} variant={e.planoAtivo ? undefined : "secondary"}>
+                    {e.planoAtivo ? "Ativa" : "Suspensa"}
+                  </Badge>
+                  {ex.isenta && <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-800">Isenta de cobrança</Badge>}
+                  <Badge className={"className" in badge ? badge.className : undefined} variant={"variant" in badge ? badge.variant : undefined}>
+                    {badge.label}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Uso</p>
+                  <div className="flex gap-4 text-sm">
+                    <span className="flex items-center gap-1.5"><Users className="h-4 w-4 text-muted-foreground" /><strong>{e.totalProfessores}</strong> professores</span>
+                    <span className="flex items-center gap-1.5"><GraduationCap className="h-4 w-4 text-muted-foreground" /><strong>{e.totalTurmas}</strong> turmas</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1 min-w-0">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Contato</p>
+                  <div className="flex items-start gap-1.5">
+                    <div className="min-w-0 text-sm">
+                      <p className="flex items-center gap-1.5 truncate"><Mail className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />{ex.emailContato ?? <span className="text-muted-foreground">sem e-mail</span>}</p>
+                      <p className="flex items-center gap-1.5 text-muted-foreground"><Phone className="h-3.5 w-3.5 shrink-0" />{ex.telefoneContato ?? "sem telefone"}</p>
                     </div>
-                    <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => setEscolaEditandoContato(e.id)}>
-                      <Pencil className="w-3 h-3" />
+                    <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => setEscolaEditandoContato(e.id)} aria-label={"Editar contato de " + e.nomeFantasia}>
+                      <Pencil className="h-3.5 w-3.5" />
                     </Button>
                   </div>
-                </TableCell>
-                <TableCell>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor={"plano-" + e.id} className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Plano</Label>
                   <select
-                    className="text-sm border rounded-md px-2 py-1 bg-background"
+                    id={"plano-" + e.id}
+                    className="h-9 w-full rounded-md border bg-background px-2 text-sm"
                     value={e.planoId ?? ""}
                     onChange={(ev) => mudarPlano(e.id, ev.target.value)}
                   >
                     <option value="">Sem plano</option>
                     {planos?.map((p) => (
-                      <option key={p.id} value={p.id}>{p.nome} ({formatPreco(p.precoMensal, p.precoAnual)})</option>
+                      <option key={p.id} value={p.id}>{p.nome}</option>
                     ))}
                   </select>
-                </TableCell>
-                <TableCell className="text-center">{e.totalProfessores}</TableCell>
-                <TableCell className="text-center">{e.totalTurmas}</TableCell>
-                <TableCell className="text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <Switch checked={e.planoAtivo} onCheckedChange={(v) => alternarAtiva(e.id, v)} />
-                    <Badge variant={e.planoAtivo ? "default" : "secondary"}>
-                      {e.planoAtivo ? "Ativa" : "Suspensa"}
-                    </Badge>
-                  </div>
-                </TableCell>
-                <TableCell className="text-center">
-                  <Switch checked={(e as any).isenta ?? false} onCheckedChange={(v) => alternarIsenta(e.id, v)} />
-                </TableCell>
-                <TableCell className="text-center">
-                  {(() => {
-                    const badge = badgeAssinatura((e as any).asaasStatusAssinatura);
-                    return (
-                      <div className="flex flex-col items-center gap-0.5">
-                        <Badge className={"className" in badge ? badge.className : undefined} variant={"variant" in badge ? badge.variant : undefined}>
-                          {badge.label}
-                        </Badge>
-                        <span className="text-[11px] text-muted-foreground">
-                          Vence {formatVencimento((e as any).asaasProximoVencimento)}
-                        </span>
-                      </div>
-                    );
-                  })()}
-                </TableCell>
-                <TableCell className="text-center">
-                  {(e as any).asaasSubscriptionId ? (
+                  <p className="text-xs text-muted-foreground">{plano ? formatPreco(plano.precoMensal, plano.precoAnual) : "—"}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Assinatura</p>
+                  <p className="text-sm">Próximo vencimento: <strong>{formatVencimento(ex.asaasProximoVencimento)}</strong></p>
+                  {ex.asaasSubscriptionId && (
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-destructive hover:text-destructive gap-1"
+                      className="-ml-2 h-8 gap-1 text-destructive hover:text-destructive"
                       disabled={cancelarAssinatura.isPending}
                       onClick={() => cancelarAssinaturaDaEscola(e.id, e.nomeFantasia)}
                     >
-                      <XCircle className="w-3.5 h-3.5" /> Cancelar
+                      <XCircle className="h-3.5 w-3.5" /> Cancelar assinatura
                     </Button>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">—</span>
                   )}
-                </TableCell>
-              </TableRow>
-            ))}
-            {escolas?.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
-                  Nenhuma escola cadastrada na plataforma ainda.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-x-8 gap-y-3 border-t pt-4">
+                <label className="flex items-start gap-3 text-sm">
+                  <Switch checked={e.planoAtivo} onCheckedChange={(v) => alternarAtiva(e.id, v)} aria-label={"Escola ativa: " + e.nomeFantasia} />
+                  <span>
+                    <span className="font-medium">Escola ativa</span>
+                    <span className="block text-xs text-muted-foreground">Desligado = escola suspensa, sem acesso ao sistema.</span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-3 text-sm">
+                  <Switch checked={ex.isenta ?? false} onCheckedChange={(v) => alternarIsenta(e.id, v)} aria-label={"Isenta de cobrança: " + e.nomeFantasia} />
+                  <span>
+                    <span className="font-medium">Isenta de cobrança</span>
+                    <span className="block text-xs text-muted-foreground">Escola piloto, parceria ou cortesia: sem bloqueio por trial ou pagamento.</span>
+                  </span>
+                </label>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
 
       {escolaEditandoContato && (
         <ContatoDialog
@@ -332,7 +365,7 @@ function EscolasTable() {
           onSalvar={salvarContato}
         />
       )}
-    </Card>
+    </div>
   );
 }
 
