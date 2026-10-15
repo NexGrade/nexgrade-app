@@ -91,9 +91,8 @@ export async function semearCatalogoEscola(escolaId: string): Promise<ResultadoS
     if (atual === undefined) doCatalogo.set(k, dado);
     else if (atual !== null && atual.codigoSae !== dado.codigoSae) doCatalogo.set(k, null); // ambiguo
   }
-  // SAE a confirmar no catalogo: Ed. Ambiental 310 x 89 (89 e o Codigo Externo). Nao copiar ate confirmar.
-  // (Ciencias corrigida para 301 em 14/10/2026, IN Conjunta 004/2022 DEDUC/DPGE/SEED.)
-  for (const n of ["Educação Ambiental"]) doCatalogo.set(chaveNome(padronizarNomeDisciplina(n)), null);
+  // (14/10/2026) SAE conferidos nas matrizes oficiais: Ciencias 301 (IN Conjunta 004/2022) e
+  // Educacao Ambiental 310 (Plano de Curso Tec. Meio Ambiente 2023). Sem excecoes.
 
   for (const m of modelos()) {
     await db.transaction(async (tx) => {
