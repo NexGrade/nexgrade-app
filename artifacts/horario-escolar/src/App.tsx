@@ -1,11 +1,11 @@
 import { clerkPtBR } from "@/lib/clerk-ptbr"; // [CLERK-PTBR]
 import { usePapelEfetivo, useAtivarEscolaDoMembro, useEu } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA] [ACESSOS-ESCOLA]
-import { trocarDeEscola } from "@/lib/escola-ativa"; // [ACESSOS-ESCOLA]
+import { trocarDeEscola, gravarEscolaAtiva } from "@/lib/escola-ativa"; // [ACESSOS-ESCOLA] [BOTAO-SAIR]
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // [ACESSOS-ESCOLA]
-import { useEffect, useRef, lazy, Suspense } from "react";
+import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ClerkProvider, SignIn, SignUp, Show, useAuth, useUser, SignOutButton, OrganizationSwitcher } from "@clerk/react";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { ClerkProvider, SignIn, SignUp, Show, useAuth, useUser, useClerk, SignOutButton, OrganizationSwitcher } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
 import { useGetEscolaAtual, getGetEscolaAtualQueryKey, useMasterWhoami, getMasterWhoamiQueryKey, setAuthTokenGetter } from "@workspace/api-client-react";
@@ -13,7 +13,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Layout } from "@/components/layout";
-import { Sparkles, Clock, Lock, CalendarDays, Library, DoorOpen, Download, FileUp, History, ShieldCheck } from "lucide-react"; // [LOGIN]
+import { Sparkles, Clock, Lock, CalendarDays, Library, DoorOpen, Download, FileUp, History, ShieldCheck, LogOut } from "lucide-react"; // [LOGIN] [BOTAO-SAIR]
 
 // [FIX] Divisão do pacote JS (code-splitting) -- antes, todas as ~24
 // telas eram importadas de forma estática aqui no topo, o que fazia o
@@ -647,6 +647,7 @@ function GlobalTopBar() {
             que nao avisa nem o Wouter nem o React da mudanca de rota. A
             navegacao apos trocar de organizacao agora e feita via reload
             completo pelo OrgSwitchWatcher (ver comentario acima). */}
+        <div className="flex items-center gap-2">
         {pelobanco ? <SeletorEscola /> : isLoading ? null : (
         <OrganizationSwitcher
           hidePersonal
@@ -668,8 +669,36 @@ function GlobalTopBar() {
           }}
         />
         )}
+        <BotaoSair />
+        </div>
       </div>
     </Show>
+  );
+}
+
+// [BOTAO-SAIR] (15/10/2026) Sair sempre visivel no topo, para todos os cargos e telas
+// (computador compartilhado na secretaria/sala dos professores). Esquece a escola
+// escolhida e os dados em cache antes de sair, para a proxima pessoa comecar do zero.
+function BotaoSair() {
+  const { signOut } = useClerk();
+  const queryClient = useQueryClient();
+  const [saindo, setSaindo] = useState(false);
+  return (
+    <button
+      type="button"
+      disabled={saindo}
+      onClick={() => {
+        setSaindo(true);
+        gravarEscolaAtiva(null);
+        queryClient.clear();
+        void signOut({ redirectUrl: `${basePath}/sign-in` });
+      }}
+      className="inline-flex h-9 items-center gap-1.5 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+      aria-label="Sair do NexGrade"
+    >
+      <LogOut className="h-4 w-4" />
+      <span className="hidden sm:inline">{saindo ? "Saindo..." : "Sair"}</span>
+    </button>
   );
 }
 
