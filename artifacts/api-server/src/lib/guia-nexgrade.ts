@@ -29,7 +29,7 @@ export const GUIA_NEXGRADE: Record<string, TopicoGuia> = {
 6. Disponibilidade: marque bloqueios e hora-atividade (HA) de cada professor, por turno.
 7. Salas: cadastre os espaços (salas, laboratórios, quadra).
 8. Horário → Modo Experimental: gere a grade com o motor CP-SAT, confira e clique em "Promover para oficial".
-9. Usuários: convide direção, coordenação, gestor de reservas e professores.`,
+9. Usuários: convide direção, coordenação, secretaria, gestor de reservas e professores.`,
   },
 
   visao_geral: {
@@ -285,12 +285,12 @@ Depois de importar professores, marque as disciplinas de cada um em Professores;
 
   usuarios_cargos: {
     titulo: "Usuários e cargos (quem acessa o sistema)",
-    palavras: ["usuário", "acesso", "convidar", "cargo", "permissão", "direção", "coordenação", "gestor de reservas", "login"],
+    palavras: ["usuário", "acesso", "convidar", "cargo", "permissão", "direção", "coordenação", "secretaria", "secretária", "gestor de reservas", "login"],
     texto: `Menu Usuários — quem tem acesso nesta escola e com qual cargo.
 1. Clique em "Novo Usuário".
 2. Informe Nome, E-mail e Cargo e envie. A pessoa recebe um convite por e-mail e entra já com o cargo escolhido. Enquanto não aceitar, aparece "Convite pendente".
 Cargos:
-- Direção e Coordenação: acesso total.
+- Direção, Coordenação e Secretaria: acesso total (a secretaria costuma montar e gerar a grade).
 - Gestor de reservas: só a agenda de reservas (sem regras por professor; vê a grade só para consulta).
 - Professor: só a Minha Agenda.
 - Para mudar o cargo, troque na lista (pede confirmação). O professor também pode ser convidado pela tela Professores ("Convidar para o portal do professor").`,

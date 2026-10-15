@@ -13,11 +13,13 @@ const router = Router();
 export const CARGOS = {
   direcao: { papel: "org:admin", rotulo: "Direção" },
   coordenacao: { papel: "org:admin", rotulo: "Coordenação" },
+  // [CARGO-SECRETARIA] (2026-10-15) secretaria monta e gera a grade: acesso total, igual a coordenacao
+  secretaria: { papel: "org:admin", rotulo: "Secretaria" },
   reservas: { papel: "org:member", rotulo: "Gestor de reservas" }, // [GESTOR-METADATA] cargo vai no publicMetadata
   professor: { papel: "org:member", rotulo: "Professor" },
 } as const;
 type Cargo = keyof typeof CARGOS;
-const CargoEnum = z.enum(["direcao", "coordenacao", "reservas", "professor"]);
+const CargoEnum = z.enum(["direcao", "coordenacao", "secretaria", "reservas", "professor"]);
 
 function cargoDe(papel: string, meta: unknown): Cargo {
   const c = (meta as { cargo?: string } | null | undefined)?.cargo;

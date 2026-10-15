@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Shield, Mail, Search, Trash2, X, Loader2 } from "lucide-react";
 
-type Cargo = "direcao" | "coordenacao" | "reservas" | "professor";
+type Cargo = "direcao" | "coordenacao" | "secretaria" | "reservas" | "professor"; // [CARGO-SECRETARIA]
 type Acesso = {
   tipo: "membro" | "convite";
   id: string;
@@ -30,12 +30,14 @@ type Acesso = {
 const CARGOS: Array<{ valor: Cargo; rotulo: string; descricao: string }> = [
   { valor: "direcao", rotulo: "Direção", descricao: "Acesso total ao sistema" },
   { valor: "coordenacao", rotulo: "Coordenação", descricao: "Acesso total ao sistema" },
+  { valor: "secretaria", rotulo: "Secretaria", descricao: "Acesso total ao sistema (monta e gera a grade, exporta para o RCO)" },
   { valor: "reservas", rotulo: "Gestor de reservas", descricao: "Só a agenda de reservas (sem regras por professor e sem a grade)" },
   { valor: "professor", rotulo: "Professor", descricao: "Só a Minha Agenda" },
 ];
 const COR_CARGO: Record<Cargo, string> = {
   direcao: "bg-blue-100 text-blue-800 border-blue-200",
   coordenacao: "bg-blue-100 text-blue-800 border-blue-200",
+  secretaria: "bg-blue-100 text-blue-800 border-blue-200",
   reservas: "bg-violet-100 text-violet-800 border-violet-200",
   professor: "bg-slate-100 text-slate-700 border-slate-200",
 };
