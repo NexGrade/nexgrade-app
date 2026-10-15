@@ -54,6 +54,9 @@ const PlanoInput = z.object({
   temExport: z.boolean().default(false),
   temImport: z.boolean().default(false),
   ativo: z.boolean().default(true),
+  // [PRECO-POR-TURMA]
+  cobranca: z.enum(["fixa", "por_turma"]).default("fixa"),
+  precoPorTurmaAnual: z.number().int().min(0).nullable().optional(),
 });
 
 // ── ESCOLAS ──────────────────────────────────────────────────────────────────

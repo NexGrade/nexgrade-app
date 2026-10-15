@@ -53,6 +53,22 @@ function featuresDoPlano(p: Plano) {
   ];
 }
 
+// [PRECO-POR-TURMA] (15/10/2026) plano cobrado por turma por ano (anual a vista ou 12x)
+type PlanoComTurma = Plano & { cobranca?: string | null; precoPorTurmaAnual?: number | null };
+const ehPorTurma = (p: Plano) => (p as PlanoComTurma).cobranca === "por_turma" && ((p as PlanoComTurma).precoPorTurmaAnual ?? 0) > 0;
+const brl = (centavos: number) => (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const RECURSOS_ESCOLA = [
+  "Geração automática da grade (motor CP-SAT)",
+  "Disponibilidade, hora-atividade e aulas fixas",
+  "Trio, co-docência e aulas assíncronas",
+  "Arquivo da grade para importar no RCO",
+  "Reservas de salas e espaços",
+  "PDFs da grade por turma e por professor",
+  "Assistente de IA",
+  "Equipe e professores sem limite de usuários",
+  "Suporte direto com a Nexus Core",
+];
+
 export default function PlanosPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -61,6 +77,9 @@ export default function PlanosPage() {
   const { data: planos, isLoading } = useListPlanos();
   const { data: escolaAtual } = useGetEscolaAtual({ query: { queryKey: getGetEscolaAtualQueryKey() } });
   const temContato = Boolean((escolaAtual as any)?.emailContato?.trim() || (escolaAtual as any)?.telefoneContato?.trim());
+  const totalTurmas: number = (escolaAtual as any)?.totalTurmas ?? 0; // [PRECO-POR-TURMA]
+  const planosPorTurma = (planos ?? []).filter(ehPorTurma);
+  const planosFixos = (planos ?? []).filter((p) => !ehPorTurma(p));
 
   // [FIX] Botão "Assinar" dependia de window.open(mailto:) -- além de
   // ser bloqueado como pop-up (já corrigido antes), mesmo depois de
@@ -113,7 +132,9 @@ export default function PlanosPage() {
       <div className="text-center space-y-3">
         <h1 className="text-3xl font-bold tracking-tight font-heading">Planos NexGrade</h1>
         <p className="text-muted-foreground max-w-xl mx-auto">
-          Comece gratuitamente. Escale quando precisar. Sem contratos de longo prazo.
+          {planosPorTurma.length
+            ? "Um plano só, com tudo incluído. O valor depende do número de turmas da escola."
+            : "Comece gratuitamente. Escale quando precisar. Sem contratos de longo prazo."}
         </p>
       </div>
 
@@ -125,7 +146,7 @@ export default function PlanosPage() {
             periodicidade === "mensal" ? "bg-[#1565C0] text-white" : "text-muted-foreground hover:text-foreground",
           )}
         >
-          Mensal
+          {planosPorTurma.length ? "Mensal (12x)" : "Mensal"}
         </button>
         <button
           onClick={() => setPeriodicidade("anual")}
@@ -134,10 +155,12 @@ export default function PlanosPage() {
             periodicidade === "anual" ? "bg-[#1565C0] text-white" : "text-muted-foreground hover:text-foreground",
           )}
         >
-          Anual
+          {planosPorTurma.length ? "Anual (à vista)" : "Anual"}
+          {!planosPorTurma.length && (
           <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full", periodicidade === "anual" ? "bg-white/20" : "bg-emerald-100 text-emerald-700")}>
             2 meses grátis
           </span>
+          )}
         </button>
       </div>
 
@@ -150,8 +173,72 @@ export default function PlanosPage() {
           Não foi possível carregar os planos agora. Tenta recarregar a página.
         </p>
       ) : (
+        <>
+        {/* [PRECO-POR-TURMA] plano por turma: um cartao com o valor calculado para a escola */}
+        {planosPorTurma.map((plano) => {
+          const porTurma = (plano as PlanoComTurma).precoPorTurmaAnual ?? 0;
+          const anual = totalTurmas * porTurma;
+          const mensal = Math.round(anual / 12);
+          return (
+            <Card key={plano.id} className="mx-auto max-w-3xl border-[#42A5F5] ring-2 ring-[#1565C0] ring-offset-2 shadow-lg">
+              <CardContent className="grid gap-8 p-6 md:grid-cols-2 md:p-8">
+                <div className="space-y-5">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[#1565C0]">Plano</p>
+                    <h2 className="text-2xl font-bold font-heading">{plano.nome}</h2>
+                    <p className="text-sm text-muted-foreground">Tudo incluído, cobrado por turma.</p>
+                  </div>
+                  <div>
+                    <span className="text-4xl font-bold">{brl(porTurma)}</span>
+                    <span className="ml-1 text-muted-foreground">por turma / ano</span>
+                  </div>
+                  <div className="rounded-xl border border-[#BBDEFB] bg-[#E3F2FD]/60 p-4">
+                    <p className="text-sm font-medium text-[#0D47A1]">Para a sua escola</p>
+                    {totalTurmas > 0 ? (
+                      <>
+                        <p className="mt-1 text-sm text-slate-700">{totalTurmas} turma{totalTurmas === 1 ? "" : "s"} cadastrada{totalTurmas === 1 ? "" : "s"} × {brl(porTurma)}</p>
+                        <p className="mt-2 text-2xl font-bold text-[#0D47A1]">
+                          {periodicidade === "anual" ? brl(anual) : `12x de ${brl(mensal)}`}
+                        </p>
+                        <p className="text-xs text-slate-600">
+                          {periodicidade === "anual" ? `por ano, à vista (ou 12x de ${brl(mensal)})` : `total de ${brl(anual)} por ano`}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="mt-1 text-sm text-slate-700">Cadastre as turmas da escola para ver o valor.</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Button className="w-full" onClick={() => setPlanoInteresse(`${plano.nome} (${periodicidade === "anual" ? "anual à vista" : "12x mensal"})`)}>
+                      Falar com a gente
+                    </Button>
+                    <button
+                      disabled={assinandoId === plano.id || !temContato || totalTurmas === 0}
+                      onClick={() => assinarPlano(plano)}
+                      className="w-full flex items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:hover:text-muted-foreground disabled:cursor-not-allowed"
+                    >
+                      <Bolt className="w-3 h-3" />
+                      {assinandoId === plano.id ? "Criando assinatura..." : temContato ? "ou assine sozinha agora" : (
+                        <span>ou <Link href="/escola?tab=dados" className="underline underline-offset-2" onClick={(e) => e.stopPropagation()}>complete seu contato</Link> pra assinar sozinha</span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <ul className="space-y-2.5 self-center">
+                  {RECURSOS_ESCOLA.map((r) => (
+                    <li key={r} className="flex items-start gap-2 text-sm">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />{r}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          );
+        })}
+
+        {planosFixos.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-          {planos.map((plano) => {
+          {planosFixos.map((plano) => {
             const Icone = ICONES[plano.nome] ?? Shield;
             const emDestaque = plano.nome === DESTAQUE;
             const gratuito = plano.precoMensal === 0;
@@ -236,6 +323,8 @@ export default function PlanosPage() {
             );
           })}
         </div>
+        )}
+        </>
       )}
 
       <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">

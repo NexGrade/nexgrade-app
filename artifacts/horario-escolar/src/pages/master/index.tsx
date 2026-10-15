@@ -112,6 +112,14 @@ function MetricasCards() {
 // [FIX] "preco" foi renomeado pra "precoMensal" no schema (RF-BILLING),
 // junto com precoAnual novo. Essa função agora mostra os dois quando o
 // anual existir.
+// [PRECO-POR-TURMA] texto do preco do plano, fixo ou por turma
+type PlanoTurma = { precoMensal: number; precoAnual?: number | null; cobranca?: string | null; precoPorTurmaAnual?: number | null };
+const ehPorTurma = (p: PlanoTurma) => p.cobranca === "por_turma" && (p.precoPorTurmaAnual ?? 0) > 0;
+const brl = (centavos: number) => (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+function precoDoPlano(p: PlanoTurma) {
+  return ehPorTurma(p) ? `${brl(p.precoPorTurmaAnual ?? 0)} por turma/ano` : formatPreco(p.precoMensal, p.precoAnual);
+}
+
 function formatPreco(precoMensal: number, precoAnual?: number | null) {
   if (precoMensal === 0) return "Gratuito";
   const mensal = `R$ ${(precoMensal / 100).toFixed(2).replace(".", ",")}/mês`;
@@ -291,6 +299,10 @@ function EscolasTable() {
           asaasStatusAssinatura?: string | null; asaasProximoVencimento?: string | null; asaasSubscriptionId?: string | null;
         };
         const badge = badgeAssinatura(ex.asaasStatusAssinatura);
+        // [ISENTA-ASAAS] isenta so tira o bloqueio no NexGrade; uma assinatura que ainda existe
+        // no Asaas continua cobrando. Cancelada/sem assinatura nao tem vencimento nem botao.
+        const assinaturaViva = !!ex.asaasSubscriptionId && ex.asaasStatusAssinatura !== "cancelada";
+        const alertaIsenta = !!ex.isenta && assinaturaViva;
         const plano = planos?.find((p) => p.id === e.planoId);
         return (
           <Card key={e.id} className={e.planoAtivo ? undefined : "opacity-75"}>
@@ -357,13 +369,21 @@ function EscolasTable() {
                       <option key={p.id} value={p.id}>{p.nome}</option>
                     ))}
                   </select>
-                  <p className="text-xs text-muted-foreground">{plano ? formatPreco(plano.precoMensal, plano.precoAnual) : "—"}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {!plano ? "—" : ehPorTurma(plano as PlanoTurma)
+                      ? `${e.totalTurmas} turmas × ${brl((plano as PlanoTurma).precoPorTurmaAnual ?? 0)} = ${brl(e.totalTurmas * ((plano as PlanoTurma).precoPorTurmaAnual ?? 0))}/ano`
+                      : formatPreco(plano.precoMensal, plano.precoAnual)}
+                  </p>
                 </div>
 
                 <div className="space-y-1">
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Assinatura</p>
-                  <p className="text-sm">Próximo vencimento: <strong>{formatVencimento(ex.asaasProximoVencimento)}</strong></p>
-                  {ex.asaasSubscriptionId && (
+                  {assinaturaViva ? (
+                    <p className="text-sm">Próximo vencimento: <strong>{formatVencimento(ex.asaasProximoVencimento)}</strong></p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">{ex.asaasStatusAssinatura === "cancelada" ? "Assinatura cancelada no Asaas." : "Sem assinatura no Asaas."}</p>
+                  )}
+                  {assinaturaViva && (
                     <Button
                       size="sm"
                       variant="ghost"
@@ -376,6 +396,16 @@ function EscolasTable() {
                   )}
                 </div>
               </div>
+
+              {alertaIsenta && (
+                <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-900">
+                  <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>
+                    Escola isenta, mas ainda existe uma assinatura <strong>ativa no Asaas</strong> ({badge.label.toLowerCase()}), que continua gerando boleto/PIX.
+                    Se ela não deve pagar, use <strong>Cancelar assinatura</strong>.
+                  </span>
+                </div>
+              )}
 
               <div className="flex flex-wrap gap-x-8 gap-y-3 border-t pt-4">
                 <label className="flex items-start gap-3 text-sm">
@@ -624,6 +654,8 @@ function ContatoDialog({
 // convertido pra centavos só na hora de mandar pro backend.
 type PlanoFormState = {
   nome: string;
+  cobranca: "fixa" | "por_turma"; // [PRECO-POR-TURMA]
+  precoPorTurmaReais: string;
   precoMensalReais: string;
   precoAnualReais: string;
   maxProfessores: number;
@@ -635,7 +667,7 @@ type PlanoFormState = {
 };
 
 const FORM_VAZIO: PlanoFormState = {
-  nome: "", precoMensalReais: "0", precoAnualReais: "",
+  nome: "", cobranca: "por_turma", precoPorTurmaReais: "30", precoMensalReais: "0", precoAnualReais: "",
   maxProfessores: 10, maxTurmas: 5,
   temIA: false, temExport: false, temImport: false, ativo: true,
 };
@@ -665,10 +697,28 @@ function PlanoFormDialog({
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{titulo}</DialogTitle>
-          <DialogDescription>Preço em reais.</DialogDescription>
+          <DialogDescription>Preço em reais. "Por turma": o valor da escola é turmas cadastradas × preço por ano (anual à vista ou 12x mensal).</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <Input placeholder="Nome do plano" value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs" htmlFor="pl-cobranca">Cobrança</Label>
+              <select id="pl-cobranca" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={form.cobranca}
+                onChange={(e) => setForm({ ...form, cobranca: e.target.value as PlanoFormState["cobranca"] })}>
+                <option value="por_turma">Por turma (por ano)</option>
+                <option value="fixa">Valor fixo (mensal/anual)</option>
+              </select>
+            </div>
+            {form.cobranca === "por_turma" && (
+              <div className="space-y-1">
+                <Label className="text-xs" htmlFor="pl-turma">Preço por turma por ano (R$)</Label>
+                <Input id="pl-turma" type="text" inputMode="decimal" value={form.precoPorTurmaReais}
+                  onChange={(e) => setForm({ ...form, precoPorTurmaReais: e.target.value })} />
+              </div>
+            )}
+          </div>
+          {form.cobranca === "fixa" && (
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Preço mensal (R$)</Label>
@@ -681,6 +731,7 @@ function PlanoFormDialog({
                 onChange={(e) => setForm({ ...form, precoAnualReais: e.target.value })} />
             </div>
           </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Máx. professores</Label>
@@ -739,8 +790,10 @@ function PlanosTable() {
   function montarPayload(form: PlanoFormState) {
     return {
       nome: form.nome.trim(),
-      precoMensal: reaisParaCentavos(form.precoMensalReais),
-      precoAnual: form.precoAnualReais.trim() ? reaisParaCentavos(form.precoAnualReais) : null,
+      cobranca: form.cobranca, // [PRECO-POR-TURMA]
+      precoPorTurmaAnual: form.cobranca === "por_turma" ? reaisParaCentavos(form.precoPorTurmaReais) : null,
+      precoMensal: form.cobranca === "por_turma" ? 0 : reaisParaCentavos(form.precoMensalReais),
+      precoAnual: form.cobranca === "por_turma" ? null : form.precoAnualReais.trim() ? reaisParaCentavos(form.precoAnualReais) : null,
       maxProfessores: form.maxProfessores,
       maxTurmas: form.maxTurmas,
       temIA: form.temIA,
@@ -812,7 +865,7 @@ function PlanosTable() {
             {planos?.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.nome}</TableCell>
-                <TableCell className="text-xs">{formatPreco(p.precoMensal, p.precoAnual)}</TableCell>
+                <TableCell className="text-xs">{precoDoPlano(p as PlanoTurma)}</TableCell>
                 <TableCell className="text-center">{p.maxProfessores}</TableCell>
                 <TableCell className="text-center">{p.maxTurmas}</TableCell>
                 <TableCell className="text-center">{p.temIA ? "✓" : "—"}</TableCell>
@@ -850,6 +903,8 @@ function PlanosTable() {
           aoSalvar={(form) => salvarEdicao(planoEmEdicao.id, form)}
           valorInicial={{
             nome: planoEmEdicao.nome,
+            cobranca: ehPorTurma(planoEmEdicao as PlanoTurma) ? "por_turma" : "fixa",
+            precoPorTurmaReais: (((planoEmEdicao as PlanoTurma).precoPorTurmaAnual ?? 3000) / 100).toString(),
             precoMensalReais: (planoEmEdicao.precoMensal / 100).toString(),
             precoAnualReais: planoEmEdicao.precoAnual ? (planoEmEdicao.precoAnual / 100).toString() : "",
             maxProfessores: planoEmEdicao.maxProfessores,

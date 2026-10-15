@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { escolasTable, planosTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { escolasTable, planosTable, turmasTable } from "@workspace/db";
+import { eq, and, count } from "drizzle-orm";
+import { valorAssinatura } from "../lib/preco-plano"; // [PRECO-POR-TURMA]
 import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 import { limitadorCadastro } from "../middlewares/rateLimit";
@@ -73,7 +74,10 @@ router.get("/me", async (req, res) => {
     plano = await db.select().from(planosTable).where(eq(planosTable.id, escola.planoId)).then(r => r[0]);
   }
 
-  res.json({ ...escola, plano, cadastrada: true });
+  // [PRECO-POR-TURMA] total de turmas: base do valor do plano por turma
+  const totalTurmas = await db.select({ n: count() }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId)).then((r) => r[0]?.n ?? 0);
+
+  res.json({ ...escola, plano, totalTurmas, cadastrada: true });
 });
 
 // POST /escolas — cria/atualiza escola (onboarding)
@@ -184,11 +188,15 @@ router.post("/assinatura-asaas", limitadorCadastro, async (req, res) => {
     return;
   }
 
-  const valorReais = periodicidade === "anual"
-    ? (plano.precoAnual ?? plano.precoMensal * 12) / 100
-    : plano.precoMensal / 100;
+  // [PRECO-POR-TURMA] plano por turma: turmas cadastradas x preco (anual ou 12x)
+  const totalTurmas = await db.select({ n: count() }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId)).then((r) => r[0]?.n ?? 0);
+  const { valorReais, descricao } = valorAssinatura(plano, totalTurmas, periodicidade);
   if (valorReais <= 0) {
-    res.status(400).json({ error: `O plano "${plano.nome}" não tem preço configurado para cobrança.` });
+    res.status(400).json({
+      error: plano.cobranca === "por_turma"
+        ? "Cadastre as turmas da escola antes de assinar: o valor é calculado por turma."
+        : `O plano "${plano.nome}" não tem preço configurado para cobrança.`,
+    });
     return;
   }
 
@@ -213,7 +221,7 @@ router.post("/assinatura-asaas", limitadorCadastro, async (req, res) => {
       value: valorReais,
       cycle: periodicidade === "anual" ? "YEARLY" : "MONTHLY",
       nextDueDate: proximoVencimento.toISOString().slice(0, 10),
-      description: `NexGrade — Plano ${plano.nome} (${periodicidade === "anual" ? "anual" : "mensal"})`,
+      description: `NexGrade — Plano ${plano.nome} (${descricao})`,
       externalReference: escola.id,
     });
 

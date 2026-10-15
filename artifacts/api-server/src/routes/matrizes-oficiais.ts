@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { ehPlanoPago } from "../lib/preco-plano"; // [PRECO-POR-TURMA]
 import { db } from "@workspace/db";
 import { escolasTable, planosTable, cursosTable } from "@workspace/db";
 import { semearCatalogoEscola } from "../lib/semear-catalogo"; // [CATALOGO]
@@ -35,7 +36,7 @@ async function checarAcessoMatrizes(escolaId: string): Promise<boolean> {
   if (escola.trialEndsAt && new Date(escola.trialEndsAt) > new Date()) return true;
   if (escola.planoId) {
     const plano = await db.select().from(planosTable).where(eq(planosTable.id, escola.planoId)).then((r) => r[0]);
-    if (plano && plano.precoMensal > 0) return true;
+    if (plano && ehPlanoPago(plano)) return true; // [PRECO-POR-TURMA]
   }
   return false;
 }
