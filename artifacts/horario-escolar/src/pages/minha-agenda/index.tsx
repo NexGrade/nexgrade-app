@@ -53,6 +53,58 @@ import { useToast } from "@/hooks/use-toast";
 
 const DIAS = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
 
+// [AGENDA-CALENDARIO] (15/10/2026) datas do calendario da escola na agenda do professor:
+// proximas datas sempre visiveis (dias seguidos juntos, nomes legiveis) e feriado/recesso
+// marcado na grade da semana.
+const ROTULO_TIPO: Record<string, string> = {
+  feriado: "Feriado",
+  recesso: "Recesso",
+  ponto_facultativo: "Ponto facultativo",
+  estudo_planejamento: "Estudo e planejamento",
+  inicio_ano_letivo: "Início do ano letivo",
+  fim_ano_letivo: "Fim do ano letivo",
+  inicio_trimestre: "Início de trimestre",
+  fim_trimestre: "Fim de trimestre",
+  reposicao: "Reposição",
+};
+const COR_TIPO: Record<string, string> = {
+  feriado: "#dc2626",
+  recesso: "#f59e0b",
+  ponto_facultativo: "#ea580c",
+  estudo_planejamento: "#7c3aed",
+  reposicao: "#0d9488",
+};
+/** tipos que, sem marcar "dia letivo", significam dia sem aula */
+const TIPOS_SEM_AULA = new Set(["feriado", "recesso", "ponto_facultativo", "estudo_planejamento"]);
+type EventoCal = { id: number; data: string; tipo: string; descricao: string; diaLetivo?: boolean };
+const isoLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const ddmm = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+/** datas (AAAA-MM-DD) de segunda a sexta da semana atual; no sabado e domingo, da proxima */
+function datasDaSemana(): string[] {
+  const d = new Date();
+  const dow = d.getDay();
+  d.setDate(d.getDate() + (dow === 0 ? 1 : dow === 6 ? 2 : 1 - dow));
+  return Array.from({ length: 5 }, (_, i) => {
+    const x = new Date(d);
+    x.setDate(d.getDate() + i);
+    return isoLocal(x);
+  });
+}
+/** junta dias seguidos com o mesmo tipo e descricao (ex.: recesso de 13 a 22/07) */
+function agruparDatas(eventos: EventoCal[]) {
+  const grupos: Array<{ inicio: string; fim: string; tipo: string; descricao: string; diaLetivo?: boolean }> = [];
+  for (const e of [...eventos].sort((a, b) => a.data.localeCompare(b.data) || a.tipo.localeCompare(b.tipo))) {
+    const g = grupos.find((x) => x.tipo === e.tipo && x.descricao === e.descricao && (() => {
+      const seg = new Date(x.fim + "T12:00:00");
+      seg.setDate(seg.getDate() + 1);
+      return isoLocal(seg) === e.data;
+    })());
+    if (g) g.fim = e.data;
+    else grupos.push({ inicio: e.data, fim: e.data, tipo: e.tipo, descricao: e.descricao, diaLetivo: e.diaLetivo });
+  }
+  return grupos.sort((a, b) => a.inicio.localeCompare(b.inicio));
+}
+
 const ReservaFormSchema = z.object({
   salaId: z.coerce.number().int().positive("Escolha um espaço"),
   data: z.string().min(1, "Escolha a data"),
@@ -313,7 +365,7 @@ const ESTILO_IMPRESSAO = `
 export default function MinhaAgendaPage() {
   const { podeInstalar, instalar } = usePwaInstall();
   const { toast } = useToast();
-  const [mostrarCalendario, setMostrarCalendario] = useState(false);
+  const [mostrarCalendario, setMostrarCalendario] = useState(true); // [AGENDA-CALENDARIO] visivel por padrao
   const queryClient = useQueryClient();
   const { data: professor, isLoading: carregandoProfessor } = useGetMeuProfessor();
   const { data: notificacoes } = useGetMinhaAgendaNotificacoes({
@@ -343,14 +395,18 @@ export default function MinhaAgendaPage() {
     { ano: new Date().getFullYear() },
     { query: { queryKey: ["calendario-escolar", new Date().getFullYear()], enabled: !!professor } },
   );
+  // [AGENDA-CALENDARIO] proximas datas agrupadas (o grupo em andamento continua aparecendo)
   const proximosEventos = useMemo(() => {
     if (!eventosCalendario) return [];
-    const hoje = new Date().toISOString().slice(0, 10);
-    return eventosCalendario
-      .filter((e) => e.data >= hoje)
-      .sort((a, b) => a.data.localeCompare(b.data))
-      .slice(0, 6);
+    const hoje = isoLocal(new Date());
+    return agruparDatas(eventosCalendario as EventoCal[]).filter((g) => g.fim >= hoje).slice(0, 6);
   }, [eventosCalendario]);
+  const semana = useMemo(() => datasDaSemana(), []);
+  /** evento sem aula num dia da semana mostrada (indice 0 = segunda) */
+  const semAulaNoDia = useMemo(() => {
+    const lista = (eventosCalendario ?? []) as EventoCal[];
+    return semana.map((data) => lista.find((e) => e.data === data && TIPOS_SEM_AULA.has(e.tipo) && !e.diaLetivo) ?? null);
+  }, [eventosCalendario, semana]);
 
   const maxAula = useMemo(() => {
     if (!aulas || aulas.length === 0) return 6;
@@ -444,34 +500,32 @@ export default function MinhaAgendaPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CalendarDays className="h-5 w-5" />
-                Calendário escolar -- próximos eventos
+                Próximas datas do calendário da escola
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {proximosEventos.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Nenhum evento próximo cadastrado.</p>
               ) : (
-                proximosEventos.map((evento) => (
-                  <div
-                    key={evento.id}
-                    className="flex items-center justify-between border rounded-md p-3 border-l-4"
-                    style={{ borderLeftColor: evento.diaLetivo ? "#1565C0" : "#f59e0b" }}
-                  >
-                    <div>
-                      <div className="font-medium">{evento.descricao}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(`${evento.data}T00:00:00`).toLocaleDateString("pt-BR", {
-                          weekday: "long",
-                          day: "2-digit",
-                          month: "2-digit",
-                        })}
+                proximosEventos.map((g) => {
+                  const hoje = isoLocal(new Date());
+                  const emAndamento = g.inicio <= hoje && g.fim >= hoje;
+                  const cor = COR_TIPO[g.tipo] ?? "#1565C0";
+                  const periodo = g.inicio === g.fim
+                    ? new Date(`${g.inicio}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit" })
+                    : `de ${ddmm(g.inicio)} a ${ddmm(g.fim)}`;
+                  return (
+                    <div key={g.inicio + g.tipo + g.descricao} className="flex items-center justify-between gap-3 rounded-md border-l-4 bg-muted/30 px-3 py-2" style={{ borderLeftColor: cor }}>
+                      <div className="min-w-0">
+                        <div className="font-medium truncate">{g.descricao}</div>
+                        <div className="text-xs text-muted-foreground">{periodo}{emAndamento && <span className="ml-1 font-semibold text-foreground">· agora</span>}</div>
                       </div>
+                      <Badge variant="secondary" className="shrink-0" style={{ color: cor }}>
+                        {ROTULO_TIPO[g.tipo] ?? g.tipo}
+                      </Badge>
                     </div>
-                    <Badge variant={evento.diaLetivo ? "default" : "secondary"}>
-                      {evento.tipo}
-                    </Badge>
-                  </div>
-                ))
+                  );
+                })
               )}
             </CardContent>
           </Card>
@@ -558,10 +612,16 @@ export default function MinhaAgendaPage() {
                             <tr>
                               <th className="text-left p-2 border-b w-20">Aula</th>
                               {DIAS.map((d, idx) => (
-                                <th key={d} className={`text-left p-2 border-b ${idx === hojeDiaSemana ? "text-primary font-semibold bg-primary/5" : ""}`}>
+                                <th key={d} className={`text-left p-2 border-b align-top ${idx === hojeDiaSemana ? "text-primary font-semibold bg-primary/5" : ""}`}>
                                   {d}
                                   {idx === hojeDiaSemana && (
                                     <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-primary align-middle" />
+                                  )}
+                                  <span className="ml-1 text-[11px] font-normal text-muted-foreground print:hidden">{ddmm(semana[idx])}</span>
+                                  {semAulaNoDia[idx] && (/* [AGENDA-CALENDARIO] */
+                                    <div className="mt-1 text-[10px] font-bold uppercase tracking-wide rounded px-1.5 py-0.5 text-white w-fit max-w-full truncate print:hidden" style={{ backgroundColor: COR_TIPO[semAulaNoDia[idx]!.tipo] ?? "#dc2626" }} title={semAulaNoDia[idx]!.descricao}>
+                                      {ROTULO_TIPO[semAulaNoDia[idx]!.tipo] ?? semAulaNoDia[idx]!.tipo}: sem aula
+                                    </div>
                                   )}
                                 </th>
                               ))}
@@ -578,7 +638,7 @@ export default function MinhaAgendaPage() {
                                   const aula = aulasT.find((a) => a.diaSemana === diaIdx && a.numeroAula === numeroAula);
                                   const hoje = diaIdx === hojeDiaSemana;
                                   return (
-                                    <td key={diaIdx} className={`p-2 border-b h-14 ${hoje ? "bg-primary/5" : ""}`}>
+                                    <td key={diaIdx} className={`p-2 border-b h-14 ${hoje ? "bg-primary/5" : ""} ${semAulaNoDia[diaIdx] ? "opacity-40 print:opacity-100" : ""}`}>
                                       {aula ? (
                                         <div
                                           className="h-full rounded-md p-2 border-l-4 imprimir-cartao-aula"
@@ -635,10 +695,16 @@ export default function MinhaAgendaPage() {
                                 }`}
                               >
                                 {d.slice(0, 3)}{idx === hojeDiaSemana ? " •" : ""}
+                                <span className="block text-[10px] font-normal opacity-80">{ddmm(semana[idx])}{semAulaNoDia[idx] ? " ✕" : ""}</span>
                               </button>
                             ))}
                           </div>
-                          <div className="space-y-2">
+                          {semAulaNoDia[diaAtivo] && (/* [AGENDA-CALENDARIO] */
+                            <div className="mb-3 rounded-md px-3 py-2 text-sm text-white" style={{ backgroundColor: COR_TIPO[semAulaNoDia[diaAtivo]!.tipo] ?? "#dc2626" }}>
+                              <strong>{ROTULO_TIPO[semAulaNoDia[diaAtivo]!.tipo] ?? semAulaNoDia[diaAtivo]!.tipo}</strong>: {semAulaNoDia[diaAtivo]!.descricao}. Sem aula neste dia.
+                            </div>
+                          )}
+                          <div className={`space-y-2 ${semAulaNoDia[diaAtivo] ? "opacity-40" : ""}`}>
                             {Array.from({ length: maxT }, (_, i) => i + 1).map((n) => {
                               const aula = aulasT.find((a) => a.diaSemana === diaAtivo && a.numeroAula === n);
                               const aviso = aula?.assincrona ? avisoPonto(diaAtivo, n) : null;
