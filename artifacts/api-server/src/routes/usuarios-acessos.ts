@@ -7,8 +7,13 @@ import { getAuth, clerkClient } from "@clerk/express";
 import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 import { limparCacheGestor } from "../lib/permissao"; // [GESTOR-METADATA]
+import { acessosPeloBanco } from "../lib/acesso"; // [ACESSOS-ESCOLA]
+import usuariosAcessosBanco from "./usuarios-acessos-banco"; // [ACESSOS-ESCOLA]
 
 const router = Router();
+
+// [ACESSOS-ESCOLA] com ACESSOS_PELO_BANCO=1 a equipe fica no nosso banco (sem o Clerk)
+router.use((req, res, next) => (acessosPeloBanco() ? usuariosAcessosBanco(req, res, next) : next()));
 
 export const CARGOS = {
   direcao: { papel: "org:admin", rotulo: "Direção" },

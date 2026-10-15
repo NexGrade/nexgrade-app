@@ -29,11 +29,19 @@ import reservasRouter from "./reservas";
 import minhaAgendaRouter from "./minha-agenda";
 import codigosRcoRouter from "./codigos-rco"; // [CODIGOS-RCO-TELA]
 import { exigirAdminParaAlterar } from "../lib/permissao"; // [PERMISSAO-PAPEL]
+import { carregarAcesso } from "../lib/acesso"; // [ACESSOS-ESCOLA]
+import euRouter from "./eu"; // [ACESSOS-ESCOLA]
 
 const router: IRouter = Router();
 
+// [ACESSOS-ESCOLA] com ACESSOS_PELO_BANCO=1, descobre escola e cargo no nosso banco
+// (antes do filtro de permissao, que passa a usar o cargo); desligado, nao faz nada
+router.use(carregarAcesso);
+
 // [PERMISSAO-PAPEL] alteracoes so para a coordenacao (org:admin); ver lib/permissao.ts
 router.use(exigirAdminParaAlterar);
+
+router.use("/eu", euRouter); // [ACESSOS-ESCOLA]
 
 router.use("/professores", professoresRouter);
 router.use("/disciplinas", disciplinasRouter);

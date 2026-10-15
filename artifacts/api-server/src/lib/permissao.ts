@@ -16,6 +16,7 @@
  */
 import type { Request, Response, NextFunction } from "express";
 import { getAuth, clerkClient } from "@clerk/express";
+import { acessosPeloBanco, acessoDe, CARGOS_TOTAIS } from "./acesso"; // [ACESSOS-ESCOLA]
 
 const METODOS_LEITURA = new Set(["GET", "HEAD", "OPTIONS"]);
 
@@ -77,7 +78,37 @@ export function ehLeituraSomenteAdmin(caminhoBruto: string): boolean {
   return LEITURAS_SOMENTE_ADMIN.some((p) => caminho === p || caminho.startsWith(p + "/"));
 }
 
+// [ACESSOS-ESCOLA] Com ACESSOS_PELO_BANCO=1 a regra e a mesma, mas pelo CARGO do nosso
+// banco (lib/acesso.ts): direcao/coordenacao/secretaria = acesso total; reservas = so
+// reservas; professor = consultas e a propria agenda. Sem escola liberada, so /eu e /master.
+const LIVRES_SEM_ESCOLA = ["/eu", "/master"];
+function exigirPorCargo(req: Request, res: Response, next: NextFunction) {
+  const caminho = normalizarCaminho(req.path);
+  if (!getAuth(req).userId) return next(); // cada rota aplica a propria regra (401)
+  if (LIVRES_SEM_ESCOLA.some((p) => caminho === p || caminho.startsWith(p + "/"))) return next();
+  const a = acessoDe(req);
+  if (!a?.escolaId || !a.cargo) {
+    res.status(403).json({ error: "Seu e-mail ainda não foi liberado em nenhuma escola. Peça à secretaria da escola.", codigo: "SEM_ESCOLA" });
+    return;
+  }
+  const total = CARGOS_TOTAIS.has(a.cargo);
+  if (METODOS_LEITURA.has(req.method)) {
+    if (!ehLeituraSomenteAdmin(req.path) || total) return next();
+    res.status(403).json({ error: "Apenas a direção, a coordenação ou a secretaria podem consultar estes dados." });
+    return;
+  }
+  if (PREFIXOS_LIBERADOS.some((p) => caminho === p || caminho.startsWith(p + "/"))) return next();
+  if (total) return next();
+  if (a.cargo === "reservas") {
+    if (ehAlteracaoDeReservaPermitida(req.path)) return next();
+    res.status(403).json({ error: "Seu acesso permite apenas administrar reservas." });
+    return;
+  }
+  res.status(403).json({ error: "Apenas a direção, a coordenação ou a secretaria podem alterar estes dados." });
+}
+
 export function exigirAdminParaAlterar(req: Request, res: Response, next: NextFunction) {
+  if (acessosPeloBanco()) return exigirPorCargo(req, res, next); // [ACESSOS-ESCOLA]
   if (METODOS_LEITURA.has(req.method)) {
     if (!ehLeituraSomenteAdmin(req.path)) return next();
     const { userId, orgId, orgRole } = getAuth(req);

@@ -13,6 +13,7 @@ import {
 import { horariosTable, turmasTable, disponibilidadeTable } from "@workspace/db";
 import { getEscolaId } from "../lib/escola-id";
 import { getAuth, clerkClient } from "@clerk/express";
+import { acessosPeloBanco, limparCacheAcessos } from "../lib/acesso"; // [ACESSOS-ESCOLA]
 import { registrarAuditoria } from "../lib/audit";
 import { calcularHoraAtividadePorTurno } from "../lib/hora-atividade";
 
@@ -280,6 +281,16 @@ router.post("/:id/convidar-portal", async (req, res) => {
   // [CONVITE-MENSAGENS] mensagens claras para cada situacao (antes: sempre "tente novamente")
   if (!professor.email || !professor.email.includes("@")) {
     res.status(400).json({ error: "Cadastre um e-mail válido do professor antes de convidar." });
+    return;
+  }
+  // [ACESSOS-ESCOLA] com a chave ligada, o acesso do professor vem do e-mail do cadastro:
+  // nao ha convite do Clerk (nem limite de membros). So orienta a escola.
+  if (acessosPeloBanco()) {
+    limparCacheAcessos();
+    res.status(200).json({
+      ok: true,
+      mensagem: "Acesso liberado: o professor entra em nexgrade.nexuscoretecnologia.com.br com o e-mail " + professor.email + " (ou pelo botão \"Entrar com Google\").",
+    });
     return;
   }
   try {

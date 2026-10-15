@@ -1,7 +1,8 @@
 import { ocupacaoDoDia, ocupacaoDoMes } from "../lib/ocupacao-reservas"; // [OCUPACAO-SALAS] [CALENDARIO-RESERVA]
 import { horarioSlotsTable } from "@workspace/db"; // [AGENDA-TURNOS]
 import { Router } from "express";
-import { getAuth, clerkClient } from "@clerk/express";
+import { getAuth } from "@clerk/express";
+import { emailVerificado } from "../lib/identidade"; // [ACESSOS-ESCOLA]
 import { db } from "@workspace/db";
 import {
   professoresTable,
@@ -13,7 +14,7 @@ import {
   salasTable,
   disponibilidadeTable,
 } from "@workspace/db";
-import { and, eq, gte, ne, or, isNull } from "drizzle-orm";
+import { and, eq, gte, ne, or, isNull, sql } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
 import { ehHAOutroTurno } from "../lib/ha-contraturno"; // [HA-OUTRO-TURNO]
 import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
@@ -37,16 +38,15 @@ async function resolverProfessorLogado(req: import("express").Request) {
   // fluxo de convite). Busca o e-mail direto da conta Clerk logada e
   // compara com professores.email -- fonte de verdade unica, sem
   // necessidade de sincronizacao manual.
-  const clerkUser = await clerkClient.users.getUser(userId);
-  const email = clerkUser.emailAddresses.find(
-    (e) => e.id === clerkUser.primaryEmailAddressId,
-  )?.emailAddress;
+  // [ACESSOS-ESCOLA] e-mail verificado (lib/identidade.ts) e comparacao sem diferenciar
+  // maiusculas/espacos, igual a regra de acesso do professor
+  const email = await emailVerificado(req);
   if (!email) return null;
 
   const professor = await db
     .select()
     .from(professoresTable)
-    .where(and(eq(professoresTable.email, email), eq(professoresTable.escolaId, escolaId)))
+    .where(and(sql`lower(trim(${professoresTable.email})) = ${email}`, eq(professoresTable.escolaId, escolaId)))
     .then((r) => r[0] ?? null);
   return professor;
 }
