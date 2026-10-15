@@ -10,6 +10,7 @@ import { z } from "zod";
 import { isMaster, requireMaster } from "../middlewares/requireMaster";
 import { registrarAuditoria } from "../lib/audit";
 import { cancelarSubscription } from "../lib/asaas";
+import novaEscolaRouter from "./master-nova-escola"; // [NOVA-ESCOLA-MASTER]
 
 // RF-MASTER-01 a RF-MASTER-03: cadastro/ativação de escolas, gestão de
 // planos, métricas de uso da plataforma. Ver requireMaster.ts para como
@@ -25,6 +26,8 @@ router.get("/whoami", (req, res) => {
 });
 
 router.use(requireMaster);
+
+router.use(novaEscolaRouter); // [NOVA-ESCOLA-MASTER] POST /master/escolas
 
 const EscolaUpdateInput = z.object({
   planoId: z.number().int().nullable().optional(),

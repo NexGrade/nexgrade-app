@@ -10,6 +10,7 @@ import {
   // pode sair diferente do que estou assumindo aqui. Ajustar o import
   // (e as duas referências abaixo) se o nome gerado for outro.
   useCancelarAssinaturaAsaasMaster,
+  customFetch, // [NOVA-ESCOLA-MASTER]
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -143,6 +144,7 @@ function EscolasTable() {
   const cancelarAssinatura = useCancelarAssinaturaAsaasMaster();
   const [escolaEditandoContato, setEscolaEditandoContato] = useState<string | null>(null);
   const [busca, setBusca] = useState(""); // [MASTER-LAYOUT]
+  const [novaAberta, setNovaAberta] = useState(false); // [NOVA-ESCOLA-MASTER]
 
   function salvarContato(id: string, emailContato: string, telefoneContato: string) {
     atualizar.mutate(
@@ -240,10 +242,17 @@ function EscolasTable() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input className="pl-9" placeholder="Buscar escola ou cidade..." value={busca} onChange={(ev) => setBusca(ev.target.value)} aria-label="Buscar escola" />
         </div>
-        <p className="text-sm text-muted-foreground">
-          {lista.length} de {escolas?.length ?? 0} escola{(escolas?.length ?? 0) === 1 ? "" : "s"}
-        </p>
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-muted-foreground">
+            {lista.length} de {escolas?.length ?? 0} escola{(escolas?.length ?? 0) === 1 ? "" : "s"}
+          </p>
+          <Button className="gap-1.5" onClick={() => setNovaAberta(true)}>
+            <Plus className="h-4 w-4" /> Nova escola
+          </Button>
+        </div>
       </div>
+
+      <NovaEscolaDialog aberto={novaAberta} onOpenChange={setNovaAberta} />
 
       {lista.length === 0 && (
         <Card>
@@ -366,6 +375,175 @@ function EscolasTable() {
         />
       )}
     </div>
+  );
+}
+
+// [NOVA-ESCOLA-MASTER] (15/10/2026) Cadastro de escola nova pela Nexus Core. A escola nasce
+// com plano Gratuito, 30 dias de avaliacao e o catalogo oficial SEED-PR; o e-mail da direcao
+// ja fica liberado para entrar (e o seu, como coordenacao, se marcado).
+const TURNOS_OPCOES = [
+  { valor: "matutino", rotulo: "Manhã" },
+  { valor: "vespertino", rotulo: "Tarde" },
+  { valor: "noturno", rotulo: "Noite" },
+] as const;
+type NovaEscolaForm = {
+  nomeFantasia: string; cnpj: string; codigoInep: string; cidade: string; estado: string; nre: string;
+  turnosOfertados: string[]; emailContato: string; telefoneContato: string;
+  direcaoNome: string; direcaoEmail: string; incluirMe: boolean; isenta: boolean;
+};
+const NOVA_ESCOLA_VAZIA: NovaEscolaForm = {
+  nomeFantasia: "", cnpj: "", codigoInep: "", cidade: "", estado: "PR", nre: "",
+  turnosOfertados: ["matutino", "vespertino"], emailContato: "", telefoneContato: "",
+  direcaoNome: "", direcaoEmail: "", incluirMe: true, isenta: false,
+};
+
+function NovaEscolaDialog({ aberto, onOpenChange }: { aberto: boolean; onOpenChange: (v: boolean) => void }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [f, setF] = useState<NovaEscolaForm>(NOVA_ESCOLA_VAZIA);
+  const [salvando, setSalvando] = useState(false);
+  const campo = (k: keyof NovaEscolaForm) => (ev: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: ev.target.value });
+  const digitos = (v: string) => v.replace(/\D/g, "");
+  const pronto =
+    f.nomeFantasia.trim().length >= 3 && digitos(f.cnpj).length === 14 && f.cidade.trim().length >= 2 &&
+    (!f.codigoInep || digitos(f.codigoInep).length === 8) && f.turnosOfertados.length > 0 &&
+    f.direcaoNome.trim().length >= 2 && f.direcaoEmail.includes("@");
+
+  async function salvar() {
+    setSalvando(true);
+    try {
+      const r = await customFetch<{ mensagem?: string }>("/api/master/escolas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(f),
+        responseType: "json",
+      });
+      toast({ title: "Escola cadastrada", description: r?.mensagem });
+      queryClient.invalidateQueries({ queryKey: getListEscolasMasterQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetMasterMetricsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: ["eu"] }); // a escola nova aparece no seletor do topo
+      setF(NOVA_ESCOLA_VAZIA);
+      onOpenChange(false);
+    } catch (err) {
+      const e = err as { data?: { error?: string }; message?: string };
+      toast({ title: "Não foi possível cadastrar", description: e?.data?.error ?? e?.message ?? "Tente novamente.", variant: "destructive" });
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <Dialog open={aberto} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Nova escola</DialogTitle>
+          <DialogDescription>
+            A escola começa no plano Gratuito, com 30 dias de avaliação e o catálogo oficial SEED-PR. A direção entra no NexGrade com o e-mail informado abaixo.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-5">
+          <section className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Escola</p>
+            <div className="space-y-1">
+              <Label htmlFor="ne-nome">Nome da escola</Label>
+              <Input id="ne-nome" placeholder="C.E. Prof. Fulano de Tal" value={f.nomeFantasia} onChange={campo("nomeFantasia")} />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label htmlFor="ne-cnpj">CNPJ</Label>
+                <Input id="ne-cnpj" inputMode="numeric" placeholder="00.000.000/0000-00" value={f.cnpj} onChange={campo("cnpj")} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="ne-inep">Código INEP</Label>
+                <Input id="ne-inep" inputMode="numeric" placeholder="8 números" value={f.codigoInep} onChange={campo("codigoInep")} />
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-[1fr_90px_1fr]">
+              <div className="space-y-1">
+                <Label htmlFor="ne-cidade">Cidade</Label>
+                <Input id="ne-cidade" value={f.cidade} onChange={campo("cidade")} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="ne-uf">UF</Label>
+                <Input id="ne-uf" maxLength={2} value={f.estado} onChange={(ev) => setF({ ...f, estado: ev.target.value.toUpperCase() })} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="ne-nre">NRE</Label>
+                <Input id="ne-nre" placeholder="Área Metropolitana Norte" value={f.nre} onChange={campo("nre")} />
+              </div>
+            </div>
+            <fieldset className="space-y-1">
+              <legend className="text-sm font-medium">Turnos ofertados</legend>
+              <div className="flex flex-wrap gap-4 pt-1">
+                {TURNOS_OPCOES.map((t) => (
+                  <label key={t.valor} className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4"
+                      checked={f.turnosOfertados.includes(t.valor)}
+                      onChange={(ev) => setF({
+                        ...f,
+                        turnosOfertados: ev.target.checked
+                          ? TURNOS_OPCOES.map((o) => o.valor).filter((v) => v === t.valor || f.turnosOfertados.includes(v))
+                          : f.turnosOfertados.filter((v) => v !== t.valor),
+                      })}
+                    />
+                    {t.rotulo}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label htmlFor="ne-email">E-mail da escola (cobrança e avisos)</Label>
+                <Input id="ne-email" type="email" placeholder="escola@seed.pr.gov.br" value={f.emailContato} onChange={campo("emailContato")} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="ne-tel">Telefone / WhatsApp</Label>
+                <Input id="ne-tel" placeholder="(41) 3333-3333" value={f.telefoneContato} onChange={campo("telefoneContato")} />
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-3 border-t pt-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Primeiro acesso</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label htmlFor="ne-dnome">Nome da direção</Label>
+                <Input id="ne-dnome" value={f.direcaoNome} onChange={campo("direcaoNome")} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="ne-demail">E-mail da direção</Label>
+                <Input id="ne-demail" type="email" placeholder="nome@escola.pr.gov.br" value={f.direcaoEmail} onChange={campo("direcaoEmail")} />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">A direção poderá liberar o restante da equipe em Usuários; os professores entram pelo e-mail do cadastro de Professores.</p>
+            <label className="flex items-start gap-3 text-sm">
+              <Switch checked={f.incluirMe} onCheckedChange={(v) => setF({ ...f, incluirMe: v })} />
+              <span>
+                <span className="font-medium">Incluir meu acesso (coordenação)</span>
+                <span className="block text-xs text-muted-foreground">Para a Nexus Core montar a escola e dar suporte.</span>
+              </span>
+            </label>
+            <label className="flex items-start gap-3 text-sm">
+              <Switch checked={f.isenta} onCheckedChange={(v) => setF({ ...f, isenta: v })} />
+              <span>
+                <span className="font-medium">Isenta de cobrança</span>
+                <span className="block text-xs text-muted-foreground">Escola piloto, parceria ou cortesia.</span>
+              </span>
+            </label>
+          </section>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={salvar} disabled={!pronto || salvando}>
+            {salvando ? "Cadastrando..." : "Cadastrar escola"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
