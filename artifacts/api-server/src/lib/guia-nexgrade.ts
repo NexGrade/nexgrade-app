@@ -22,14 +22,14 @@ export const GUIA_NEXGRADE: Record<string, TopicoGuia> = {
     palavras: ["começar", "inicio", "escola nova", "ordem", "configurar", "implantação", "primeira vez", "onboarding"],
     texto: `Ordem recomendada (é a mesma ordem do menu "Montagem da escola"):
 1. Escola → aba Dados da Escola: confira nome, CNPJ, INEP, NRE e turnos ofertados.
-2. Calendário e Turnos → aba Esquema de aulas por turno: configure os horários das aulas de cada turno (sem isso a Disponibilidade e a geração não funcionam para aquele turno).
+2. Calendário e Turnos → aba Esquema de aulas por turno: configure os horários das aulas de cada turno (sem isso a Disponibilidade e a geração não funcionam para aquele turno). Na aba Calendário letivo, confira o calendário (escola nova já vem com o oficial SEED-PR; se estiver vazio, clique em "Usar o calendário oficial SEED-PR").
 3. Cursos e Disciplinas → aba Catálogo SEED-PR: importe o catálogo oficial e marque os cursos que a escola oferece. Confira as disciplinas na aba Disciplinas.
 4. Professores: cadastre cada professor com as disciplinas que ele pode lecionar (ou use Importar Dados).
 5. Turmas: crie as turmas escolhendo curso e série/matriz; depois, na edição da turma, escolha o professor de cada disciplina.
 6. Disponibilidade: marque bloqueios e hora-atividade (HA) de cada professor, por turno.
 7. Salas: cadastre os espaços (salas, laboratórios, quadra).
 8. Horário → Modo Experimental: gere a grade com o motor CP-SAT, confira e clique em "Promover para oficial".
-9. Usuários: convide direção, coordenação, secretaria, gestor de reservas e professores.`,
+9. Usuários: libere o acesso da direção, coordenação, secretaria e gestor de reservas. Professores não precisam: entram com o e-mail do cadastro em Professores.`,
   },
 
   visao_geral: {
@@ -47,7 +47,7 @@ export const GUIA_NEXGRADE: Record<string, TopicoGuia> = {
 
 ABA CALENDÁRIO LETIVO
 - Mostra feriados, recessos, pontos facultativos, dias de estudo e planejamento, início/fim do ano letivo e dos trimestres oficiais SEED-PR, com o total de dias letivos.
-- Use as setas para trocar de mês.
+- Use as setas para trocar de mês. Cores: cada trimestre tem um tom (1º azul, 2º verde, 3º lilás), as semanas alternam entre tom claro e um pouco mais forte, feriado fica rosa, recesso âmbar e fim de semana cinza. As datas aparecem também na Minha Agenda dos professores.
 - Se o ano ainda não tem calendário, aparece o botão "Usar o calendário oficial SEED-PR": um clique grava os 3 trimestres (201 dias letivos em 2026) e os feriados nacionais. Escola nova já começa com ele.
 - Direção, coordenação e secretaria podem ajustar: "Editar trimestres" (datas e dias letivos), "Adicionar data" ou clicar num dia (recesso, feriado municipal, ponto facultativo, reposição) e o lápis/lixeira de cada data. "Restaurar oficial SEED-PR" volta ao calendário oficial e apaga os ajustes.
 - Sem trimestres cadastrados, a aba Conflitos mostra "turma sem calendário" em todas as turmas.
@@ -86,10 +86,10 @@ ABA DISCIPLINAS
 
   professores: {
     titulo: "Professores (cadastro, edição, carga horária e portal)",
-    palavras: ["professor", "professora", "docente", "cadastrar professor", "editar professor", "inativo", "carga horária", "convite", "portal"],
+    palavras: ["professor", "professora", "docente", "cadastrar professor", "editar professor", "inativo", "carga horária", "convite", "portal", "acesso do professor"],
     texto: `CADASTRAR
 1. Menu Professores → "Novo Professor".
-2. Preencha Nome Completo e Email (obrigatório — é o e-mail que o professor usa para entrar na Minha Agenda). Telefone é opcional.
+2. Preencha Nome Completo e Email (obrigatório — é o e-mail que o professor usa para entrar na Minha Agenda). Telefone é opcional. O e-mail cadastrado já libera o acesso do professor à Minha Agenda, sem convite: basta ele criar a conta com esse mesmo e-mail no endereço do sistema.
 3. Em Disciplinas, marque todas que ele pode lecionar (isso diz em quais disciplinas ele é habilitado; a ligação com as turmas é feita em Turmas).
 4. Clique em "Salvar Professor(a)".
 Muitos professores de uma vez: use Importar Dados (tipo Professores).
@@ -103,7 +103,7 @@ EDITAR / CONSULTAR (clique no professor na lista)
 
 LISTA
 - Busca por nome, filtro por disciplina e visualização em grade ou lista.
-- O ícone "Convidar para o portal do professor" envia o convite por e-mail para ele acessar a Minha Agenda.
+- O ícone "Convidar para o portal do professor" confirma que o acesso está liberado e mostra o endereço e o e-mail que o professor deve usar (não envia e-mail; avise o professor por WhatsApp ou pessoalmente).
 - Remover professor tira o cadastro (confirmação obrigatória).`,
   },
 
@@ -290,14 +290,25 @@ Depois de importar professores, marque as disciplinas de cada um em Professores;
   usuarios_cargos: {
     titulo: "Usuários e cargos (quem acessa o sistema)",
     palavras: ["usuário", "acesso", "convidar", "cargo", "permissão", "direção", "coordenação", "secretaria", "secretária", "gestor de reservas", "login"],
-    texto: `Menu Usuários — quem tem acesso nesta escola e com qual cargo.
+    texto: `Menu Usuários — quem da equipe tem acesso nesta escola e com qual cargo. Não há limite de pessoas.
 1. Clique em "Novo Usuário".
-2. Informe Nome, E-mail e Cargo e envie. A pessoa recebe um convite por e-mail e entra já com o cargo escolhido. Enquanto não aceitar, aparece "Convite pendente".
+2. Informe Nome, E-mail e Cargo e clique em "Liberar acesso". Não sai e-mail de convite: avise a pessoa para entrar no endereço do sistema e criar a conta com esse mesmo e-mail (ou entrar, se já tiver conta). Até o primeiro acesso aparece "Ainda não entrou".
 Cargos:
 - Direção, Coordenação e Secretaria: acesso total (a secretaria costuma montar e gerar a grade).
-- Gestor de reservas: só a agenda de reservas (sem regras por professor; vê a grade só para consulta).
-- Professor: só a Minha Agenda.
-- Para mudar o cargo, troque na lista (pede confirmação). O professor também pode ser convidado pela tela Professores ("Convidar para o portal do professor").`,
+- Gestor de reservas: só a agenda de reservas (sem regras por professor; vê a grade e o calendário só para consulta).
+- Professor NÃO é cadastrado aqui: o acesso dele vem do e-mail em Professores (cargo Professor, só a Minha Agenda). Quem é da equipe e também professor fica com o cargo da equipe.
+- Para mudar o cargo, troque na lista (pede confirmação). Para tirar o acesso, use a lixeira (vale em até 1 minuto). Ninguém remove o próprio acesso, e a escola sempre fica com pelo menos uma pessoa de acesso total.
+- Acesso "Nexus Core (suporte)": aparece quando o suporte da Nexus Core foi liberado para ajudar a escola; a escola pode remover quando quiser. Tudo o que o suporte fizer fica no Histórico.`,
+  },
+
+  entrar_acesso: {
+    titulo: "Entrar no sistema, trocar de escola e sair",
+    palavras: ["entrar", "login", "senha", "esqueci a senha", "criar conta", "trocar de escola", "outra escola", "seletor", "sair", "não foi liberado", "sem acesso"],
+    texto: `- Entrar: com o e-mail e a senha da conta. Primeira vez: "Criar conta" com o e-mail que a escola cadastrou (o sistema envia um código para confirmar o e-mail). Esqueceu a senha: use o link de recuperar a senha na tela de entrada.
+- O cargo e a escola vêm do cadastro da escola: equipe pela tela Usuários; professores pelo e-mail em Professores.
+- Quem trabalha em mais de uma escola troca no seletor no topo da tela (nome da escola · cargo).
+- "Seu e-mail ainda não foi liberado": o e-mail da conta não está cadastrado em nenhuma escola (ou está diferente). Peça à secretaria para conferir em Usuários ou em Professores; depois de cadastrado, vale em até 1 minuto.
+- Sair: botão "Sair" no topo, em todos os cargos.`,
   },
 
   historico: {
@@ -314,9 +325,10 @@ Cargos:
     texto: `É o que o professor vê ao entrar com o e-mail cadastrado (cargo Professor).
 - Grade de aulas por turno (abas Manhã, Tarde, Noite), com HA/HA* e aulas assíncronas marcadas; no celular mostra um dia por vez.
 - "Baixar PDF" da própria grade; "Instalar app" para usar como aplicativo no celular.
-- Calendário escolar com os próximos eventos.
+- "Próximas datas do calendário da escola" sempre visível no topo (feriados, recessos, início/fim de trimestre; dias seguidos aparecem juntos, ex.: recesso de 13/07 a 22/07). O botão "Ocultar calendário" esconde.
+- Na grade, cada dia mostra a data da semana; dia de feriado ou recesso aparece com a etiqueta "Feriado: sem aula" (ou Recesso) e as aulas do dia ficam apagadas. No celular, o dia mostra ✕ e um aviso.
 - Reservas: "Nova reserva" → escolha o Espaço e a Data, clique numa aula livre, informe o objetivo e reserve. "Minhas reservas" lista as ativas.
-- Se aparecer "Nenhum professor vinculado", o e-mail da conta não bate com o e-mail do cadastro em Professores — a coordenação precisa conferir.`,
+- Se aparecer "Nenhum professor vinculado" ou "Seu e-mail ainda não foi liberado", o e-mail da conta não bate com o e-mail do cadastro em Professores — a secretaria ou a coordenação precisa conferir.`,
   },
 
   assistente: {
@@ -327,7 +339,7 @@ Cargos:
 - Passo a passo de qualquer tela do NexGrade.
 - Pode propor marcar um professor como disponível/indisponível num horário — sempre pede confirmação antes de gravar e não altera hora-atividade.
 - Não gera nem altera a grade; explica o caminho pelo CP-SAT.
-- Disponível para direção e coordenação.`,
+- Disponível para direção, coordenação e secretaria.`,
   },
 };
 
