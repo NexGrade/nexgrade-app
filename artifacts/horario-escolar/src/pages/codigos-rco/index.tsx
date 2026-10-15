@@ -144,7 +144,9 @@ export default function CodigosRcoPage() {
     .filter((t) => !soPendentes || t.pendente || t.repetidoCom.length > 0), [data, turno, soPendentes]);
   const disciplinas = useMemo(() => (data?.disciplinas ?? [])
     .filter((d) => !soPendentes || d.pendente), [data, soPendentes]);
-  const turnos = useMemo(() => [...new Set((data?.turmas ?? []).map((t) => t.turno))], [data]);
+  const ORDEM_TURNO = ["matutino", "vespertino", "noturno"];
+  const turnos = useMemo(() => [...new Set((data?.turmas ?? []).map((t) => t.turno))]
+    .sort((a, b) => (ORDEM_TURNO.indexOf(a) + 99 * +(ORDEM_TURNO.indexOf(a) < 0)) - (ORDEM_TURNO.indexOf(b) + 99 * +(ORDEM_TURNO.indexOf(b) < 0))), [data]);
 
   if (isLoading) {
     return <div className="space-y-4"><Skeleton className="h-10 w-1/3" /><Skeleton className="h-64 w-full" /></div>;

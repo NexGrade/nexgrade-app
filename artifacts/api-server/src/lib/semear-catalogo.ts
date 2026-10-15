@@ -91,8 +91,9 @@ export async function semearCatalogoEscola(escolaId: string): Promise<ResultadoS
     if (atual === undefined) doCatalogo.set(k, dado);
     else if (atual !== null && atual.codigoSae !== dado.codigoSae) doCatalogo.set(k, null); // ambiguo
   }
-  // SAE suspeito no catalogo (14/10/2026): Ciencias = 801 (e o SAE de Quimica); Ed. Ambiental 310 x 89. Nao copiar ate confirmar.
-  for (const n of ["Ciências", "Educação Ambiental"]) doCatalogo.set(chaveNome(padronizarNomeDisciplina(n)), null);
+  // SAE a confirmar no catalogo: Ed. Ambiental 310 x 89 (89 e o Codigo Externo). Nao copiar ate confirmar.
+  // (Ciencias corrigida para 301 em 14/10/2026, IN Conjunta 004/2022 DEDUC/DPGE/SEED.)
+  for (const n of ["Educação Ambiental"]) doCatalogo.set(chaveNome(padronizarNomeDisciplina(n)), null);
 
   for (const m of modelos()) {
     await db.transaction(async (tx) => {
