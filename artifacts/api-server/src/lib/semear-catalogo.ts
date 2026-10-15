@@ -12,7 +12,7 @@ import { padronizarNomeDisciplina } from "./padronizar-nome-disciplina"; // [PAD
  * - disciplina com o mesmo nome (sem diferenciar maiusculas/acentos) e reaproveitada.
  * Cursos criados aqui entram com ofertado = false: a escola liga os que oferta.
  *
- * [SAE-DO-CATALOGO] (14/10/2026) disciplina nova vem com codigo SAE, sigla e sala do
+ * [SAE-DO-CATALOGO] (14/10/2026) disciplina nova vem com codigo SAE, Codigo Externo do RCO, sigla e sala do
  * catalogo mestre (disciplinas_catalogo) quando o nome bate. Antes vinha sem SAE e a
  * escola ficava sem codigo para o RCO.
  */
@@ -83,13 +83,13 @@ export async function semearCatalogoEscola(escolaId: string): Promise<ResultadoS
 
   // [SAE-DO-CATALOGO] nome -> dados do catalogo mestre; nome com SAEs diferentes no catalogo fica de fora
   const catalogo = await db.select().from(disciplinasCatalogoTable);
-  const doCatalogo = new Map<string, { codigoSae: string | null; sigla: string | null; tipoSalaExigido: string | null } | null>();
+  const doCatalogo = new Map<string, { codigoSae: string | null; codigoExternoRco: number | null; sigla: string | null; tipoSalaExigido: string | null } | null>();
   for (const c of catalogo) {
     const k = chaveNome(padronizarNomeDisciplina(c.nome));
     const atual = doCatalogo.get(k);
-    const dado = { codigoSae: c.codigoSae ?? null, sigla: c.sigla ?? null, tipoSalaExigido: c.tipoSalaExigido ?? null };
+    const dado = { codigoSae: c.codigoSae ?? null, codigoExternoRco: (c as any).codigoExternoRco ?? null, sigla: c.sigla ?? null, tipoSalaExigido: c.tipoSalaExigido ?? null };
     if (atual === undefined) doCatalogo.set(k, dado);
-    else if (atual !== null && atual.codigoSae !== dado.codigoSae) doCatalogo.set(k, null); // ambiguo
+    else if (atual !== null && (atual.codigoSae !== dado.codigoSae || atual.codigoExternoRco !== dado.codigoExternoRco)) doCatalogo.set(k, null); // ambiguo
   }
   // (14/10/2026) SAE conferidos nas matrizes oficiais: Ciencias 301 (IN Conjunta 004/2022) e
   // Educacao Ambiental 310 (Plano de Curso Tec. Meio Ambiente 2023). Sem excecoes.
@@ -133,6 +133,7 @@ export async function semearCatalogoEscola(escolaId: string): Promise<ResultadoS
               escolaId, nome: padronizarNomeDisciplina(it.nome), cargaSemanal: Number(it.cargaHorariaSemanal) || 2,
               categoriaCurricularPadrao: it.categoria as any,
               ...(cat?.codigoSae ? { codigoSae: cat.codigoSae } : {}),
+              ...(cat?.codigoExternoRco != null ? { codigoExternoRco: cat.codigoExternoRco } : {}), // [CATALOGO-CODIGO-EXTERNO]
               ...(cat?.sigla ? { sigla: cat.sigla } : {}),
               ...(cat?.tipoSalaExigido ? { tipoSalaExigido: cat.tipoSalaExigido } : {}),
             } as any).returning();

@@ -21,6 +21,9 @@ export const disciplinasCatalogoTable = pgTable("disciplinas_catalogo", {
   id: serial("id").primaryKey(),
   nome: text("nome").notNull(),
   codigoSae: text("codigo_sae"),
+  // [CATALOGO-CODIGO-EXTERNO] (14/10/2026) Codigo Externo do RCO (CODDISC), padrao do SERE.
+  // Copiado para a disciplina da escola junto com o SAE (escola nova ja nasce com o codigo do RCO).
+  codigoExternoRco: integer("codigo_externo_rco"),
   categoriaCurricularPadrao: composicaoCurricularEnum("categoria_curricular_padrao"),
   // Sugestão de carga semanal e sala exigida — a escola pode ajustar
   // depois de adicionar à sua própria lista (disciplinasTable), isto é

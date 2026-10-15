@@ -63,6 +63,7 @@ router.post("/adicionar-selecionadas", async (req, res) => {
       escolaId,
       nome: padronizarNomeDisciplina(item.nome), // [PADRAO-NOME-DISCIPLINA]
       codigoSae: item.codigoSae,
+      codigoExternoRco: (item as any).codigoExternoRco ?? null, // [CATALOGO-CODIGO-EXTERNO]
       categoriaCurricularPadrao: item.categoriaCurricularPadrao,
       cargaSemanal: item.cargaSemanalSugerida,
       tipoSalaExigido: item.tipoSalaExigido,
