@@ -29,12 +29,13 @@ const TIPO_LABELS: Record<string, { label: string; color: string; dot: string }>
 };
 
 // [CALENDARIO-CORES] (15/10/2026) cores suaves: cada trimestre com um tom, dias de feriado e
-// recesso pintados de leve, fim de semana em cinza claro.
+// recesso pintados de leve, fim de semana em cinza claro. [CALENDARIO-ZEBRA] semanas
+// intercaladas: uma semana no tom claro, a seguinte um pouco mais forte.
 const COR_TRIMESTRE = [
-  { card: "bg-gradient-to-br from-sky-50 to-white border-sky-200", icone: "text-sky-600", numero: "text-sky-700", dia: "bg-sky-50/70", borda: "border-sky-200" },
-  { card: "bg-gradient-to-br from-emerald-50 to-white border-emerald-200", icone: "text-emerald-600", numero: "text-emerald-700", dia: "bg-emerald-50/70", borda: "border-emerald-200" },
-  { card: "bg-gradient-to-br from-violet-50 to-white border-violet-200", icone: "text-violet-600", numero: "text-violet-700", dia: "bg-violet-50/70", borda: "border-violet-200" },
-  { card: "bg-gradient-to-br from-amber-50 to-white border-amber-200", icone: "text-amber-600", numero: "text-amber-700", dia: "bg-amber-50/70", borda: "border-amber-200" },
+  { card: "bg-gradient-to-br from-sky-50 to-white border-sky-200", icone: "text-sky-600", numero: "text-sky-700", dia: "bg-sky-50/70", dia2: "bg-sky-100/70", borda: "border-sky-200" },
+  { card: "bg-gradient-to-br from-emerald-50 to-white border-emerald-200", icone: "text-emerald-600", numero: "text-emerald-700", dia: "bg-emerald-50/70", dia2: "bg-emerald-100/70", borda: "border-emerald-200" },
+  { card: "bg-gradient-to-br from-violet-50 to-white border-violet-200", icone: "text-violet-600", numero: "text-violet-700", dia: "bg-violet-50/70", dia2: "bg-violet-100/70", borda: "border-violet-200" },
+  { card: "bg-gradient-to-br from-amber-50 to-white border-amber-200", icone: "text-amber-600", numero: "text-amber-700", dia: "bg-amber-50/70", dia2: "bg-amber-100/70", borda: "border-amber-200" },
 ];
 const FUNDO_DIA: Record<string, string> = {
   feriado: "bg-rose-50",
@@ -339,9 +340,9 @@ export default function CalendarioEscolarPage() {
                       const tri = cel.dataStr ? trimestreDaData(cel.dataStr) : -1;
                       const fundo = !cel.dia ? "bg-muted/20"
                         : tipoForte ? FUNDO_DIA[tipoForte]
-                        : fimDeSemana ? "bg-slate-50"
-                        : tri >= 0 ? COR_TRIMESTRE[tri].dia
-                        : "bg-background";
+                        : fimDeSemana ? (si % 2 ? "bg-slate-100/80" : "bg-slate-50")
+                        : tri >= 0 ? (si % 2 ? COR_TRIMESTRE[tri].dia2 : COR_TRIMESTRE[tri].dia)
+                        : si % 2 ? "bg-muted/30" : "bg-background";
                       return (
                         <div
                           key={ci}
