@@ -11,8 +11,12 @@ import { padronizarNomeDisciplina } from "./padronizar-nome-disciplina"; // [PAD
  * - matriz que ja existe (mesmo curso + serie) NUNCA e alterada;
  * - disciplina com o mesmo nome (sem diferenciar maiusculas/acentos) e reaproveitada.
  * Cursos criados aqui entram com ofertado = false: a escola liga os que oferta.
+ *
+ * [SAE-DO-CATALOGO] (14/10/2026) disciplina nova vem com codigo SAE, sigla e sala do
+ * catalogo mestre (disciplinas_catalogo) quando o nome bate. Antes vinha sem SAE e a
+ * escola ficava sem codigo para o RCO.
  */
-import { db, cursosTable, matrizesCurricularesTable, itensMatrizTable, disciplinasTable } from "@workspace/db";
+import { db, cursosTable, matrizesCurricularesTable, itensMatrizTable, disciplinasTable, disciplinasCatalogoTable } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
 import { MATRIZES_TECNICAS_SEED_PR_2026 } from "./matrizes-tecnicas-seed-pr";
 import { MATRIZES_OFICIAIS_SEED_PR } from "./matrizes-oficiais-seed-pr";
@@ -77,6 +81,19 @@ export async function semearCatalogoEscola(escolaId: string): Promise<ResultadoS
   const discPorNome = new Map<string, number>();
   for (const d of discExistentes) discPorNome.set(chaveNome(padronizarNomeDisciplina(d.nome)), d.id); // [PADRAO-NOME-DISCIPLINA]
 
+  // [SAE-DO-CATALOGO] nome -> dados do catalogo mestre; nome com SAEs diferentes no catalogo fica de fora
+  const catalogo = await db.select().from(disciplinasCatalogoTable);
+  const doCatalogo = new Map<string, { codigoSae: string | null; sigla: string | null; tipoSalaExigido: string | null } | null>();
+  for (const c of catalogo) {
+    const k = chaveNome(padronizarNomeDisciplina(c.nome));
+    const atual = doCatalogo.get(k);
+    const dado = { codigoSae: c.codigoSae ?? null, sigla: c.sigla ?? null, tipoSalaExigido: c.tipoSalaExigido ?? null };
+    if (atual === undefined) doCatalogo.set(k, dado);
+    else if (atual !== null && atual.codigoSae !== dado.codigoSae) doCatalogo.set(k, null); // ambiguo
+  }
+  // SAE suspeito no catalogo (14/10/2026): Ciencias = 801 (e o SAE de Quimica); Ed. Ambiental 310 x 89. Nao copiar ate confirmar.
+  for (const n of ["Ciências", "Educação Ambiental"]) doCatalogo.set(chaveNome(padronizarNomeDisciplina(n)), null);
+
   for (const m of modelos()) {
     await db.transaction(async (tx) => {
       const chave = `${chaveNome(m.nome)}|${m.formaOferta ?? ""}`;
@@ -111,9 +128,13 @@ export async function semearCatalogoEscola(escolaId: string): Promise<ResultadoS
           const k = chaveNome(padronizarNomeDisciplina(it.nome)); // [PADRAO-NOME-DISCIPLINA]
           let discId = discPorNome.get(k);
           if (!discId) {
+            const cat = doCatalogo.get(k) ?? null; // [SAE-DO-CATALOGO]
             const [nova] = await tx.insert(disciplinasTable).values({
               escolaId, nome: padronizarNomeDisciplina(it.nome), cargaSemanal: Number(it.cargaHorariaSemanal) || 2,
               categoriaCurricularPadrao: it.categoria as any,
+              ...(cat?.codigoSae ? { codigoSae: cat.codigoSae } : {}),
+              ...(cat?.sigla ? { sigla: cat.sigla } : {}),
+              ...(cat?.tipoSalaExigido ? { tipoSalaExigido: cat.tipoSalaExigido } : {}),
             } as any).returning();
             discId = nova.id;
             discPorNome.set(k, discId);

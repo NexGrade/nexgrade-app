@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, BookOpen, GraduationCap, Calendar, CalendarDays,
   Building2, FileText, Bell, Shield, History,
   Settings, Download, Sparkles, Upload, CreditCard, Library, ShieldCheck, Clock,
-  SlidersHorizontal, Landmark, DoorOpen,
+  SlidersHorizontal, Landmark, DoorOpen, Hash,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -51,6 +51,7 @@ const navGroups = [
     items: [
       { href: "/importar", label: "Importar Dados", icon: Upload },
       { href: "/export", label: "Exportar Dados", icon: Download },
+      { href: "/codigos-rco", label: "Códigos do RCO", icon: Hash }, // [CODIGOS-RCO-TELA]
     ],
   },
   {

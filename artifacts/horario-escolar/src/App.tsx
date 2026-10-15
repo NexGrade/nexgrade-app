@@ -42,6 +42,7 @@ const DadosEscolaPage = lazy(() => import("@/pages/dados-escola/index"));
 const AssinaturaPage = lazy(() => import("@/pages/assinatura/index"));
 const EscolaPage = lazy(() => import("@/pages/escola/index")); // [FASE-C1]
 const ExportPage = lazy(() => import("@/pages/export/index"));
+const CodigosRcoPage = lazy(() => import("@/pages/codigos-rco/index")); // [CODIGOS-RCO-TELA]
 const AssistentePage = lazy(() => import("@/pages/assistente/index"));
 const ImportarPage = lazy(() => import("@/pages/importar/index"));
 const PlanosPage = lazy(() => import("@/pages/planos/index"));
@@ -473,6 +474,7 @@ function Router() {
         <Route path="/configuracoes"><Redirect to="/escola?tab=configuracoes" /></Route>{/* [FASE-C1] */}
       <Route path="/configuracoes/seed-pr" component={() => <ProtectedRoute component={ConformidadeSeedPrPage} />} />
       <Route path="/export" component={() => <ProtectedRoute component={ExportPage} />} />
+      <Route path="/codigos-rco" component={() => <ProtectedRoute component={CodigosRcoPage} />} />{/* [CODIGOS-RCO-TELA] */}
       <Route path="/assistente" component={() => <ProtectedRoute component={AssistentePage} />} />
       <Route path="/importar" component={() => <ProtectedRoute component={ImportarPage} />} />
       <Route path="/planos" component={() => <ProtectedRoute component={PlanosPage} />} />

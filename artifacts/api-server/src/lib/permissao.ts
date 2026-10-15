@@ -69,6 +69,7 @@ const PREFIXOS_LIBERADOS = ["/minha-agenda", "/master"];
 const LEITURAS_SOMENTE_ADMIN = [
   "/audit", "/usuarios-acessos", "/export/ponto", "/export/relatorio-seed",
   "/export/relatorio-carga-pdf", "/export/carga-horaria-pdf",
+  "/codigos-rco", // [CODIGOS-RCO-TELA]
 ];
 export function ehLeituraSomenteAdmin(caminhoBruto: string): boolean {
   const caminho = normalizarCaminho(caminhoBruto);

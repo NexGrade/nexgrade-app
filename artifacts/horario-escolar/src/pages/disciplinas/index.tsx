@@ -95,6 +95,9 @@ export default function DisciplinasList() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  // [CODIGOS-RCO-TELA] Codigo Externo do RCO (fora do formulario gerado; salvo por /api/codigos-rco)
+  const [codExterno, setCodExterno] = useState("");
+  const [codExternoInicial, setCodExternoInicial] = useState("");
   const [modo, setModo] = useState<ModoVisualizacao>("grade");
 
   const form = useForm<DisciplinaFormValues>({
@@ -112,12 +115,15 @@ export default function DisciplinasList() {
 
   const handleOpenCreate = () => {
     setEditingId(null);
+    setCodExterno(""); setCodExternoInicial(""); // [CODIGOS-RCO-TELA]
     form.reset({ nome: "", sigla: "", cargaSemanal: 2, cor: "#3b82f6", codigoSae: "", tipoSalaExigido: "", categoriaCurricularPadrao: "" });
     setIsDialogOpen(true);
   };
 
   const handleOpenEdit = (disciplina: any) => {
     setEditingId(disciplina.id);
+    const ext = disciplina.codigoExternoRco != null ? String(disciplina.codigoExternoRco) : ""; // [CODIGOS-RCO-TELA]
+    setCodExterno(ext); setCodExternoInicial(ext);
     form.reset({
       nome: disciplina.nome,
       sigla: disciplina.sigla ?? "",
@@ -130,6 +136,19 @@ export default function DisciplinasList() {
     setIsDialogOpen(true);
   };
 
+  // [CODIGOS-RCO-TELA] grava o Codigo Externo do RCO so quando mudou
+  async function salvarCodigoExterno(id: number) {
+    if (codExterno.trim() === codExternoInicial) return;
+    try {
+      await customFetch(`/api/codigos-rco/disciplinas/${id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codigoExternoRco: codExterno.trim() }),
+      });
+    } catch (err: any) {
+      toast({ title: err?.data?.error ?? "Disciplina salva, mas o Código Externo do RCO não foi gravado.", variant: "destructive" });
+    }
+  }
+
   const onSubmit = (data: DisciplinaFormValues) => {
     const payload = {
       ...data,
@@ -140,7 +159,8 @@ export default function DisciplinasList() {
     };
     if (editingId) {
       updateDisciplina.mutate({ id: editingId, data: payload }, {
-        onSuccess: () => {
+        onSuccess: async () => {
+          await salvarCodigoExterno(editingId); // [CODIGOS-RCO-TELA]
           toast({ title: "Disciplina atualizada com sucesso!" });
           queryClient.invalidateQueries({ queryKey: getListDisciplinasQueryKey() });
           setIsDialogOpen(false);
@@ -151,7 +171,8 @@ export default function DisciplinasList() {
       });
     } else {
       createDisciplina.mutate({ data: payload }, {
-        onSuccess: () => {
+        onSuccess: async (nova: any) => {
+          if (nova?.id) await salvarCodigoExterno(nova.id); // [CODIGOS-RCO-TELA]
           toast({ title: "Disciplina criada com sucesso!" });
           queryClient.invalidateQueries({ queryKey: getListDisciplinasQueryKey() });
           setIsDialogOpen(false);
@@ -295,6 +316,14 @@ export default function DisciplinasList() {
                   </FormItem>
                 )}
               />
+
+              {/* [CODIGOS-RCO-TELA] */}
+              <div className="space-y-2">
+                <label htmlFor="cod-externo-rco" className="text-sm font-medium">Código Externo do RCO (opcional)</label>
+                <Input id="cod-externo-rco" inputMode="numeric" placeholder="Ex: 6254"
+                  value={codExterno} onChange={(e) => setCodExterno(e.target.value.replace(/\D/g, ""))} />
+                <p className="text-xs text-muted-foreground">Vale sobre o SAE no arquivo do RCO.</p>
+              </div>
 
               <FormField
                 control={form.control}

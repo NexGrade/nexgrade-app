@@ -27,6 +27,7 @@ import limitesDiariosProfessorRouter from "./limites-diarios-professor";
 import matrizesOficiaisRouter from "./matrizes-oficiais";
 import reservasRouter from "./reservas";
 import minhaAgendaRouter from "./minha-agenda";
+import codigosRcoRouter from "./codigos-rco"; // [CODIGOS-RCO-TELA]
 import { exigirAdminParaAlterar } from "../lib/permissao"; // [PERMISSAO-PAPEL]
 
 const router: IRouter = Router();
@@ -62,6 +63,7 @@ router.use("/limites-diarios-professor", limitesDiariosProfessorRouter);
 router.use("/matrizes-oficiais", matrizesOficiaisRouter);
 router.use("/reservas", reservasRouter);
 router.use("/minha-agenda", minhaAgendaRouter);
+router.use("/codigos-rco", codigosRcoRouter); // [CODIGOS-RCO-TELA]
 
 export default router;
 

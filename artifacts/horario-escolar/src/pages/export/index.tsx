@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox"; // [RCO-ASSINCRONAS]
 import { Download, FileText, Table, BarChart3, FileDown, ClipboardList, TrendingUp, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BotaoRelatorioReservas } from "@/components/relatorio-reservas"; // [RELATORIO-RESERVAS]
+import { Link } from "wouter"; // [CODIGOS-RCO-TELA]
 
 function buildUrl(path: string, params: Record<string, string | undefined>) {
   const url = new URL(path, window.location.origin);
@@ -64,6 +65,7 @@ export default function ExportPage() {
     mensagem: string;
     disciplinas?: { nome: string; aulas: number }[];
     turmas?: string[];
+    corrigirEm?: string; // [CODIGOS-RCO-TELA]
   } | null>(null);
   // [NOVO] "turno" filtra o PDF para só um período por vez -- sem isso,
   // turmas de matutino/vespertino/noturno saem misturadas na mesma
@@ -146,11 +148,12 @@ export default function ExportPage() {
       URL.revokeObjectURL(objUrl);
     } catch (err) {
       if (err instanceof ApiError && err.data && typeof err.data === "object") {
-        const data = err.data as { error?: string; disciplinasSemCodigo?: { nome: string; aulas: number }[]; turmasSemNivel?: string[] };
+        const data = err.data as { error?: string; disciplinasSemCodigo?: { nome: string; aulas: number }[]; turmasSemNivel?: string[]; corrigirEm?: string };
         setSeedErro({
           mensagem: data.error ?? "Não foi possível gerar o relatório.",
           disciplinas: data.disciplinasSemCodigo,
           turmas: data.turmasSemNivel,
+          corrigirEm: data.corrigirEm, // [CODIGOS-RCO-TELA]
         });
       } else {
         toast({ title: "Erro ao gerar relatório", variant: "destructive" });
@@ -505,6 +508,11 @@ export default function ExportPage() {
                   <ul className="mt-2 space-y-0.5 list-disc list-inside text-muted-foreground">
                     {seedErro.turmas.map((t) => <li key={t}>{t}</li>)}
                   </ul>
+                )}
+                {seedErro.corrigirEm && (
+                  <Button asChild size="sm" className="mt-3">
+                    <Link href={seedErro.corrigirEm}>Cadastrar os códigos do RCO</Link>
+                  </Button>
                 )}
               </div>
             )}

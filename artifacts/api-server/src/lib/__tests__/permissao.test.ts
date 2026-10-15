@@ -13,7 +13,7 @@ describe("normalizarCaminho", () => {
 
 describe("ehLeituraSomenteAdmin", () => {
   it("bloqueia as consultas da coordenacao, em qualquer caixa", () => {
-    for (const c of ["/audit", "/Audit", "/AUDIT/", "/usuarios", "/Usuarios/", "/usuarios-acessos", "/USUARIOS-ACESSOS/membros", "/export/ponto", "/Export/Relatorio-Seed"]) {
+    for (const c of ["/audit", "/Audit", "/AUDIT/", "/usuarios", "/Usuarios/", "/usuarios-acessos", "/USUARIOS-ACESSOS/membros", "/export/ponto", "/Export/Relatorio-Seed", "/codigos-rco", "/Codigos-RCO/"]) {
       expect(ehLeituraSomenteAdmin(c), c).toBe(true);
     }
   });

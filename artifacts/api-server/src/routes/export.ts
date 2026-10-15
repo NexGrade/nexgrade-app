@@ -7,6 +7,7 @@ import {
 } from "@workspace/db";
 import { and, eq, isNull, notInArray, sql } from "drizzle-orm";
 import { GRADES_SEED_RCO } from "../lib/grades-seed-rco"; // [RCO-EXPORT-BANCO]
+import { resolverCoddisc } from "../lib/rco-codigos"; // [CODIGOS-RCO-TELA]
 import { getEscolaId } from "../lib/escola-id";
 import { buscarReservasParaRelatorio, gerarPdfReservasPorProfessor } from "../lib/relatorio-reservas"; // [RELATORIO-RESERVAS]
 import { ehBloqueioReal } from "../lib/bloqueio-real";
@@ -253,17 +254,7 @@ router.get("/ponto", async (req, res) => {
 //    (GRADES_SEED_RCO); sem grade conhecida, pela categoria FGB da matriz.
 //  - So a grade oficial; assincronas e hibridas (trio) ENTRAM por padrao (?assincronas=0 tira as assincronas).
 //  - Bloqueia (400) em vez de gerar arquivo que o RCO vai recusar.
-const DICIONARIO_CODDISC_PENDENTE: Record<string, number> = {
-  "Ensino Religioso": 33,
-  "Educação Ambiental": 89,
-};
-
-function resolverCoddisc(l: { disciplinaNome: string; codigoExternoRco: number | null; externoPeloSae: number | null }): number | null {
-  if (l.codigoExternoRco != null) return Number(l.codigoExternoRco);
-  if (l.externoPeloSae != null) return Number(l.externoPeloSae);
-  if (l.disciplinaNome in DICIONARIO_CODDISC_PENDENTE) return DICIONARIO_CODDISC_PENDENTE[l.disciplinaNome];
-  return null;
-}
+// Dicionario e resolverCoddisc: lib/rco-codigos.ts (mesma regra da tela "Codigos do RCO").
 
 const DIA_SEMANA_CODIGO: Record<number, string> = { 0: "SEG", 1: "TER", 2: "QUA", 3: "QUI", 4: "SEX" };
 
@@ -334,6 +325,7 @@ router.get("/relatorio-seed", async (req, res) => {
   if (semCodigo.size > 0) {
     res.status(400).json({
       error: "Algumas disciplinas ainda não têm o Código Externo do RCO cadastrado. Cadastre o código dessas disciplinas antes de exportar.",
+      corrigirEm: "/codigos-rco", // [CODIGOS-RCO-TELA]
       disciplinasSemCodigo: [...semCodigo.entries()].sort((a, b) => b[1] - a[1]).map(([nome, aulas]) => ({ nome, aulas })),
     });
     return;
@@ -373,6 +365,7 @@ router.get("/relatorio-seed", async (req, res) => {
   if (semSere.length > 0) {
     res.status(400).json({
       error: "Algumas turmas ainda não têm o código da turma no SERE cadastrado (o RCO recusa sem ele). Cadastre o código dessas turmas antes de exportar.",
+      corrigirEm: "/codigos-rco", // [CODIGOS-RCO-TELA]
       turmasSemNivel: semSere,
     });
     return;

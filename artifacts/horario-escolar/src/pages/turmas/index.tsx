@@ -444,6 +444,11 @@ function TurmaForm({ editingId, turmaAtual, onFechar, onCriada }: { editingId: n
   const [nivelOverride, setNivel] = useState<string | null>(null);
   const [cursoIdOverride, setCursoId] = useState<string | null>(null);
   const [matrizIdOverride, setMatrizId] = useState<string | null>(null);
+  // [CODIGOS-RCO-TELA] codigos da turma no SERE (arquivo do RCO); salvos pela rota /api/codigos-rco
+  const sereInicial = (turmaAtual as any)?.codigoSere != null ? String((turmaAtual as any).codigoSere) : "";
+  const sereIfInicial = (turmaAtual as any)?.codigoSereIf != null ? String((turmaAtual as any).codigoSereIf) : "";
+  const [codSere, setCodSere] = useState<string | null>(null);
+  const [codSereIf, setCodSereIf] = useState<string | null>(null);
   const matrizJaAplicadaId = turmaAtual?.matrizCurricularId ?? undefined;
   const { data: matrizDaTurma } = useGetMatrizCurricularPorId(
     matrizJaAplicadaId ?? 0,
@@ -515,6 +520,19 @@ function TurmaForm({ editingId, turmaAtual, onFechar, onCriada }: { editingId: n
       const trocouMatriz = !!matrizIdOverride && matrizIdOverride !== (matrizJaAplicadaId ? String(matrizJaAplicadaId) : "");
       if (trocouMatriz && turmaId) {
         await aplicarMatriz.mutateAsync({ id: turmaId, data: { matrizCurricularId: Number(matrizId) } });
+      }
+      // [CODIGOS-RCO-TELA] so manda se mudou
+      const codigos: Record<string, string> = {};
+      if (codSere != null && codSere.trim() !== sereInicial) codigos.codigoSere = codSere.trim();
+      if (codSereIf != null && codSereIf.trim() !== sereIfInicial) codigos.codigoSereIf = codSereIf.trim();
+      if (turmaId && Object.keys(codigos).length > 0) {
+        try {
+          await customFetch(`/api/codigos-rco/turmas/${turmaId}`, {
+            method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(codigos),
+          });
+        } catch (err: any) {
+          toast({ title: err?.data?.error ?? "Turma salva, mas o código do SERE não foi gravado.", variant: "destructive" });
+        }
       }
       queryClient.invalidateQueries({ queryKey: getListTurmasQueryKey() });
       // [NOVA-TURMA-CONTINUA] turma nova: nao fecha -- passa para a edicao e mostra a distribuicao
@@ -633,6 +651,17 @@ function TurmaForm({ editingId, turmaAtual, onFechar, onCriada }: { editingId: n
                 <FormMessage />
               </FormItem>
             )} />
+            {/* [CODIGOS-RCO-TELA] */}
+            <div className="space-y-2">
+              <label htmlFor="cod-sere" className="text-sm font-medium">Código da turma no SERE <span className="font-normal text-muted-foreground">(para o RCO)</span></label>
+              <Input id="cod-sere" inputMode="numeric" placeholder="opcional"
+                value={codSere ?? sereInicial} onChange={(e) => setCodSere(e.target.value.replace(/\D/g, ""))} />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="cod-sere-if" className="text-sm font-medium">Código SERE da parte IF <span className="font-normal text-muted-foreground">(só 3º técnico)</span></label>
+              <Input id="cod-sere-if" inputMode="numeric" placeholder="opcional"
+                value={codSereIf ?? sereIfInicial} onChange={(e) => setCodSereIf(e.target.value.replace(/\D/g, ""))} />
+            </div>
           </div>
 
           {!matrizId && (
