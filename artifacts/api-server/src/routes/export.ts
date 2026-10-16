@@ -17,6 +17,7 @@ import { gerarPdfCargaHoraria, type TurmaCargaHoraria } from "../lib/pdf-carga-h
 import { calcularHAIdeal, type MarcaHACalculada } from "../lib/recalcular-ha";
 import { ehHAOutroTurno } from "../lib/ha-contraturno"; // [HA-OUTRO-TURNO]
 import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
+import { carregarAssSoTurma, carregarPeriodosExtrasFinais, podarLinhasExtras } from "../lib/assincrona-so-turma"; // [ASS-SO-TURMA]
 
 // [RCO-HORARIO-NOTURNO] (15/10/2026) o RCO do noturno usa a grade de horarios fixa da SEED
 // (18:40, 19:30, 20:30, 21:20, 22:10); a escola pode ter o horario real um pouco diferente
@@ -501,9 +502,13 @@ router.get("/grade-pdf/turma", async (req, res) => {
 
   // [REVEZAMENTO-TRIO] trio: marca (P) no professor presencial da semana do PDF
   const revezTurma = await mapaRevezamento(turmas.map((t) => t.id), hojeBrasil(lerOffsetSemana(req)));
+  const ehAssSoTurma = await carregarAssSoTurma(escolaId); // [ASS-SO-TURMA]
+  const extrasFinais = await carregarPeriodosExtrasFinais(escolaId);
   const blocos: BlocoGrade[] = await Promise.all(turmas.map(async (turma) => ({
     rotulo: `Turma: ${turma.nome}`,
-    horariosPorAula: await buscarHorariosPorAula(escolaId, turma.turno, turma.nivelEnsino),
+    // [ASS-SO-TURMA] 7a aula (nao letiva) so aparece na turma que tem aula nela
+    horariosPorAula: podarLinhasExtras(await buscarHorariosPorAula(escolaId, turma.turno, turma.nivelEnsino), extrasFinais(turma.turno, turma.nivelEnsino),
+      slots.filter((s) => s.turmaId === turma.id && (!s.assincrona || ehAssSoTurma(s, turma)))),
     slots: (() => {
       // [FIX] Agrupa por dia+aula antes de montar a celula -- quando ha
       // co-docencia (duas linhas de horario para o mesmo turma+dia+aula,
@@ -512,7 +517,7 @@ router.get("/grade-pdf/turma", async (req, res) => {
       const slotsDaTurma = slots.filter((s) => s.turmaId === turma.id);
       const agrupado = new Map<string, typeof slotsDaTurma>();
       slotsDaTurma.forEach((s) => {
-        if ((s as any).assincrona) return; // [PDF-TURMA-SEM-ASSINC] a assincrona nao e aula da turma
+        if ((s as any).assincrona && !ehAssSoTurma(s, turma)) return; // [PDF-TURMA-SEM-ASSINC] a assincrona nao e aula da turma ([ASS-SO-TURMA] menos a da 7a aula)
         const chave = `${s.diaSemana}-${s.numeroAula}`;
         if (!agrupado.has(chave)) agrupado.set(chave, []);
         agrupado.get(chave)!.push(s);
@@ -650,8 +655,10 @@ router.get("/grade-pdf/professor", async (req, res) => {
     .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
   const blocos: BlocoGrade[] = [];
+  const ehAssSoTurmaProf = await carregarAssSoTurma(escolaId); // [ASS-SO-TURMA] a assincrona da 7a aula nao entra no horario do professor
+  const extrasFinaisProf = await carregarPeriodosExtrasFinais(escolaId);
   for (const prof of professores) {
-    const slotsDoProf = slots.filter((s) => s.professorId === prof.id);
+    const slotsDoProf = slots.filter((s) => s.professorId === prof.id && !ehAssSoTurmaProf(s, turmas.find((t) => t.id === s.turmaId)));
     const turnosComAulaNoEscopo = [...new Set(
       slotsDoProf.map((s) => turmas.find((t) => t.id === s.turmaId)?.turno).filter((t): t is string => !!t)
     )];
@@ -711,6 +718,8 @@ router.get("/grade-pdf/professor", async (req, res) => {
         // valia o 1o nivel da lista -- Fundamental cortava a 6a aula).
         if (Object.keys(candidato).length > Object.keys(horariosPorAula).length) horariosPorAula = candidato;
       }
+      // [ASS-SO-TURMA] tira a 7a aula (nao letiva, do fim do turno): ela e so da turma
+      horariosPorAula = podarLinhasExtras(horariosPorAula, extrasFinaisProf(turno, null), []);
 
       // "HA" literal, igual ao Urânia — sem linha2 pra não formatar como
       // célula combinada. Filtra pelo turno certo (disponibilidade já

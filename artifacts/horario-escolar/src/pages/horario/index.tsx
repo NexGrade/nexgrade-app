@@ -781,7 +781,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
           .filter((d) => (d.horaAtividadeObrigatoria || /\(ocupado:/.test(d.motivo ?? "")) && (d.turno ?? turnoEmUso) === turnoEmUso) // [GRADE-ROTULO-ATIVIDADE] atividade na 6a aula tambem abre a linha
           .map((d) => d.horarioSlot)
       : [];
-    const aulaNums = (horarios ?? []).map((s) => s.numeroAula);
+    const aulaNums = (horarios ?? []).filter((s: any) => !(professorIdSelecionado && turmaId === "all" && s.assincronaSoTurma)).map((s) => s.numeroAula); // [ASS-SO-TURMA] professor: sem a linha da 7a aula
     return Math.max(5, ...aulaNums, ...haNums);
   };
 
@@ -1011,7 +1011,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                               // [FIX-DUPLA-DOCENCIA] mesmo fix do Modo Experimental: pega
                               // TODOS os slots do dia+aula (nao so o primeiro com .find()),
                               // pra dupla docencia mostrar os dois professores juntos.
-                              const slotsAqui = slotsDaTurma.filter((s) => s.diaSemana === colIndex && s.numeroAula === aulaNum && !(s as any).assincrona); // [ASSINC-FORA-DA-TURMA]
+                              const slotsAqui = slotsDaTurma.filter((s) => s.diaSemana === colIndex && s.numeroAula === aulaNum && (!(s as any).assincrona || (s as any).assincronaSoTurma)); // [ASSINC-FORA-DA-TURMA] [ASS-SO-TURMA] a da 7a aula e da turma
                               const slot = slotsAqui[0];
                               if (!slot) {
                                 return (
@@ -1075,7 +1075,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                       // [FIX-DUPLA-DOCENCIA] getSlot() só achava o primeiro professor do
                       // slot -- troca pra getSlots() (plural, já existia pro clique de
                       // edição) pra também mostrar os dois professores juntos na exibição.
-                      const slotsAqui = getSlots(colIndex, aulaNum, slotId).filter((s: any) => isProfessorSelected || !s.assincrona); // [ASSINC-FORA-DA-TURMA]
+                      const slotsAqui = getSlots(colIndex, aulaNum, slotId).filter((s: any) => (isProfessorSelected && !isTurmaSelected) ? !s.assincronaSoTurma : (!s.assincrona || s.assincronaSoTurma)); // [ASSINC-FORA-DA-TURMA] [ASS-SO-TURMA] 7a aula: so na turma
                       const slot = slotsAqui[0];
                       if (!slot) {
                         const temHA = isProfessorSelected && getHA(colIndex, aulaNum);

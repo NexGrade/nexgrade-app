@@ -18,6 +18,7 @@ import { and, eq, gte, ne, or, isNull, sql } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
 import { ehHAOutroTurno } from "../lib/ha-contraturno"; // [HA-OUTRO-TURNO]
 import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
+import { carregarAssSoTurma } from "../lib/assincrona-so-turma"; // [ASS-SO-TURMA]
 import { z } from "zod";
 import { validateReserva, publicReserva } from "./reservas";
 import { regrasReservaProfessorTable } from "@workspace/db";
@@ -67,7 +68,7 @@ router.get("/horario", async (req, res) => {
     return;
   }
   const escolaId = getEscolaId(req);
-  const linhas = await db
+  const linhasTodas = await db
     .select({
       diaSemana: horariosTable.diaSemana,
       numeroAula: horariosTable.numeroAula,
@@ -80,6 +81,7 @@ router.get("/horario", async (req, res) => {
       disciplinaCor: disciplinasTable.cor,
       turmaNome: turmasTable.nome,
       turno: turmasTable.turno, // [AGENDA-TURNOS]
+      nivelEnsino: turmasTable.nivelEnsino, // [ASS-SO-TURMA]
     })
     .from(horariosTable)
     .innerJoin(disciplinasTable, eq(disciplinasTable.id, horariosTable.disciplinaId))
@@ -92,6 +94,9 @@ router.get("/horario", async (req, res) => {
       ),
     )
     .orderBy(horariosTable.diaSemana, horariosTable.numeroAula);
+  // [ASS-SO-TURMA] a assincrona da 7a aula (nao letiva) e so da turma: fora da agenda do professor
+  const ehAssSoTurma = await carregarAssSoTurma(escolaId);
+  const linhas = linhasTodas.filter((l) => !ehAssSoTurma(l, { turno: l.turno, nivelEnsino: l.nivelEnsino }));
 
   // [HA] Hora-Atividade obrigatoria do professor -- slots vazios na
   // grade (sem aula de nenhuma turma) que ainda assim sao
