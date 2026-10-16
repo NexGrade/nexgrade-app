@@ -61,10 +61,22 @@ export function calcularHoraAtividadeInstitucional(aulasNoTurno: number): number
 // [HA-POR-TURNO] (15/10/2026) a tabela oficial e consultada com as aulas de CADA turno
 // (nao com o total da escola). `descontar` = HA manual ja marcada fora do calculo
 // (contraturno): sai do orcamento, tirando sempre do turno com mais HA.
-function calcularHoraAtividadePorTurno(aulasPorTurno: Record<string, number>, descontar = 0): Record<string, number> {
+// [HA-MANUAL-NO-PROPRIO-TURNO] (16/10/2026) a HA manual (ex.: a importada do Urania) desconta
+// do orcamento do PROPRIO turno dela; so a de turno sem aula (contraturno) sai do turno com mais
+// HA. Antes tudo saia do turno com mais HA: a HA da tarde zerava a da manha (caso Andrew).
+function calcularHoraAtividadePorTurno(aulasPorTurno: Record<string, number>, descontar: number | Record<string, number> = 0): Record<string, number> {
   const resultado: Record<string, number> = {};
   for (const [turno, aulas] of Object.entries(aulasPorTurno)) resultado[turno] = calcularHoraAtividadeInstitucional(aulas || 0);
-  for (let i = 0; i < descontar; i++) {
+  let semTurno = 0;
+  if (typeof descontar === "number") semTurno = descontar;
+  else for (const [turno, n] of Object.entries(descontar)) {
+    if (turno in resultado) {
+      const tira = Math.min(n, resultado[turno]!);
+      resultado[turno]! -= tira;
+      semTurno += n - tira;
+    } else semTurno += n;
+  }
+  for (let i = 0; i < semTurno; i++) {
     const maior = Object.keys(resultado).sort((x, y) => resultado[y]! - resultado[x]!)[0];
     if (!maior || resultado[maior]! <= 0) break;
     resultado[maior]! -= 1;
@@ -208,9 +220,10 @@ export async function calcularHAIdeal(
     for (const s of horarioSlots) {
       if (s.letivo !== false || !s.turno) continue;
       const primeiraLetiva = limitesLetivos.get(s.turno)?.primeira;
+      const ultimaLetiva = limitesLetivos.get(s.turno)?.ultima; // [ASS-SO-TURMA] periodo nao letivo DEPOIS da ultima aula (7a da manha) nunca recebe HA
       const ocup = ocupadoPorTurnoOriginal.get(s.turno);
       for (let dia = 0; dia < 5; dia++) {
-        if (primeiraLetiva != null && ocup?.has(`${dia}-${primeiraLetiva}`)) continue;
+        if (primeiraLetiva != null && ocup?.has(`${dia}-${primeiraLetiva}`) && !(ultimaLetiva != null && s.numeroAula > ultimaLetiva)) continue;
         if (!bloqueadoPorTurno.has(s.turno)) bloqueadoPorTurno.set(s.turno, new Set());
         bloqueadoPorTurno.get(s.turno)!.add(`${dia}-${s.numeroAula}`);
       }
@@ -224,9 +237,10 @@ export async function calcularHAIdeal(
     for (const s of horarioSlots) {
       if (s.letivo !== false || !s.turno) continue;
       const primeiraLetiva = limitesLetivos.get(s.turno)?.primeira;
+      const ultimaLetiva = limitesLetivos.get(s.turno)?.ultima; // [ASS-SO-TURMA] periodo nao letivo DEPOIS da ultima aula (7a da manha) nunca recebe HA
       const ocup = ocupadoPorTurnoOriginal.get(s.turno);
       for (let dia = 0; dia < 5; dia++) {
-        if (primeiraLetiva != null && ocup?.has(`${dia}-${primeiraLetiva}`)) continue;
+        if (primeiraLetiva != null && ocup?.has(`${dia}-${primeiraLetiva}`) && !(ultimaLetiva != null && s.numeroAula > ultimaLetiva)) continue;
         if (!bloqueadoPorTurno.has(s.turno)) bloqueadoPorTurno.set(s.turno, new Set());
         bloqueadoPorTurno.get(s.turno)!.add(`${dia}-${s.numeroAula}`);
       }
@@ -265,7 +279,9 @@ export async function calcularHAIdeal(
     // total exigido -- sem subtrair aqui, o orcamento automatico por
     // turno de ensino seria calculado em cima do total CHEIO de novo,
     // dando HA a mais (manual + automatica somando mais que o exigido).
-    const orcamentoPorTurno = calcularHoraAtividadePorTurno(aulasPorTurno, haManualContraturno.length);
+    const manualPorTurno: Record<string, number> = {};
+    for (const m of haManualContraturno) manualPorTurno[m.turno ?? "sem_turno"] = (manualPorTurno[m.turno ?? "sem_turno"] ?? 0) + 1;
+    const orcamentoPorTurno = calcularHoraAtividadePorTurno(aulasPorTurno, manualPorTurno); // [HA-MANUAL-NO-PROPRIO-TURNO]
 
     // [PREENCHIMENTO-GULOSO] Funcao reutilizavel: dado um turno, um
     // orcamento e o conjunto inicial de slots ocupados (aula real),
