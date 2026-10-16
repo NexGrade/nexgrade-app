@@ -1956,7 +1956,6 @@ function AbaExperimental() {
         </div>
         <div className="flex flex-col gap-3 shrink-0 items-stretch w-56">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-blue-700 mb-1.5">Motor CP-SAT (preciso, recomendado)</p>
             <div className="flex flex-col gap-2">
               <Button className="w-full justify-start" onClick={() => setOpenGerarCpsatTurma(true)}>
                 <Sparkles className="w-4 h-4 mr-2" />Turma
