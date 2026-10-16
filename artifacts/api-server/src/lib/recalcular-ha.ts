@@ -45,6 +45,12 @@ export function ehBloqueioPeriodoNaoLetivo(motivo: string | null | undefined): b
   return (motivo ?? "").startsWith(MOTIVO_BLOQUEIO_NAO_LETIVO);
 }
 
+// [HA-NUNCA-NOITE] (16/10/2026, decisao da Simone) HA de aula do diurno nunca vai para a noite:
+// nem contraturno noturno, nem sobra do diurno na noite de quem tambem da aula a noite. A noite so
+// recebe a HA das proprias aulas da noite. O que nao couber fica como falta de HA (aparece em
+// Conflitos) em vez de virar HA a noite. HA_PERMITIR_NOTURNO_DE_OUTRO_TURNO=1 volta ao antigo.
+const HA_PERMITIR_NOTURNO_DE_OUTRO_TURNO = process.env.HA_PERMITIR_NOTURNO_DE_OUTRO_TURNO === "1";
+
 const TABELA_OFICIAL_HA: readonly number[] = [
   0,
   0, 0, 1, 1, 2, 2, 2, 2, 3, 3,
@@ -306,7 +312,7 @@ export async function calcularHAIdeal(
       turno: string,
       orcamentoInicial: number,
       ocupadoInicial: Set<string>,
-      contagemDiaAtual: Map<number, number>,
+      contagemDiaAtual: Map<string, number>, // [HA-LIMITE-POR-TURNO] chave turno|dia
       haPosicoesPorDia: Map<string, Set<number>>,
       maxHaPorDia: number,
       diasPermitidos?: Set<number>, // [FIX-CONTRATURNO-SO-DIA-COM-AULA]
@@ -391,8 +397,14 @@ export async function calcularHAIdeal(
         // UNICA forma de fechar o buraco. A contagem de janelas (criterio
         // primario logo abaixo) ja decide isso sozinha; nao precisa de
         // filtro separado pra adjacencia especificamente com HA.
-        candidatos = candidatos.filter((c) => (contagemDiaAtual.get(c.dia) ?? 0) < MAX_HA_POR_DIA);
-        if (maxSeguidas && maxSeguidas > 0) candidatos = candidatos.filter((c) => sequenciaHA(c.dia, c.aula) <= maxSeguidas); // [HA-MAX-SEGUIDAS]
+        candidatos = candidatos.filter((c) => (contagemDiaAtual.get(`${turno}|${c.dia}`) ?? 0) < MAX_HA_POR_DIA);
+        // [HA-MAX-SEGUIDAS] [HA-SEGUIDAS-PREFERENCIA] (16/10/2026) o limite de HA seguidas e preferencia:
+        // so filtra quando sobra outra opcao no turno. Antes era regra dura e mandava a HA para outro
+        // turno (ate a noite) mesmo com horario livre colado na aula (Thayna, ter 3a-4a-5a da tarde).
+        if (maxSeguidas && maxSeguidas > 0) {
+          const semExceder = candidatos.filter((c) => sequenciaHA(c.dia, c.aula) <= maxSeguidas);
+          if (semExceder.length > 0) candidatos = semExceder;
+        }
         if (candidatos.length === 0) break;
 
         let melhor: {
@@ -408,7 +420,7 @@ export async function calcularHAIdeal(
           const testado = new Set(ocupado);
           testado.add(`${c.dia}-${c.aula}`);
           const janelas = contarJanelas(testado);
-          const diaCount = contagemDiaAtual.get(c.dia) ?? 0;
+          const diaCount = contagemDiaAtual.get(`${turno}|${c.dia}`) ?? 0;
           const colado = ocupado.has(`${c.dia}-${c.aula - 1}`) || ocupado.has(`${c.dia}-${c.aula + 1}`);
           // [CONTRATURNO-ENCOSTADO] no contraturno, a "borda" preferida e a do lado
           // do turno em que o professor da aula naquele dia (ex.: professor da tarde
@@ -437,7 +449,7 @@ export async function calcularHAIdeal(
 
         marcasFinais.push({ professorId: prof.id, turno, diaSemana: melhor.dia, horarioSlot: melhor.aula, ...(outroTurno ? { outroTurno: true } : {}) });
         ocupado.add(`${melhor.dia}-${melhor.aula}`);
-        contagemDiaAtual.set(melhor.dia, (contagemDiaAtual.get(melhor.dia) ?? 0) + 1);
+        contagemDiaAtual.set(`${turno}|${melhor.dia}`, (contagemDiaAtual.get(`${turno}|${melhor.dia}`) ?? 0) + 1);
         const chaveTurnoDia = `${turno}-${melhor.dia}`;
         if (!haPosicoesPorDia.has(chaveTurnoDia)) haPosicoesPorDia.set(chaveTurnoDia, new Set());
         haPosicoesPorDia.get(chaveTurnoDia)!.add(melhor.aula);
@@ -458,7 +470,11 @@ export async function calcularHAIdeal(
     // (cada turno respeitando o limite isoladamente, mas o total
     // combinado estourando). Declarados aqui fora do loop, uma vez
     // por professor.
-    const contagemDiaAtualProfessor = new Map<number, number>();
+    // [HA-LIMITE-POR-TURNO] (16/10/2026) o limite de HA por dia passou a valer por TURNO e dia
+    // (igual a reserva de espaco do CP-SAT, que ja era por turno). Somando os turnos, 3 HA na
+    // tarde de terca impediam fechar a janela da manha de terca (Mateus Z., Fabio) e a HA ia
+    // para a noite.
+    const contagemDiaAtualProfessor = new Map<string, number>();
     const haPosicoesPorDiaProfessor = new Map<string, Set<number>>();
     // [HA-OUTRO-TURNO] sobra guardada por turno de ORIGEM (o turno cujas aulas
     // geraram a HA). HA cumprida num turno diferente do de origem e "HA de outro
@@ -519,6 +535,7 @@ export async function calcularHAIdeal(
       };
       const ordenados = Object.keys(aulasPorTurno).sort((a, b) => espacoLivreEnsino(b) - espacoLivreEnsino(a));
       for (const turno of ordenados) {
+        if (turno === "noturno" && !HA_PERMITIR_NOTURNO_DE_OUTRO_TURNO) continue; // [HA-NUNCA-NOITE]
         const pedir = sobraDeOutros(turno);
         if (pedir <= 0) continue;
         const resto = preencherGuloso(turno, pedir, ocupadoAtual(turno), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_ENSINO, undefined, MAX_HA_SEGUIDAS_ENSINO, true);
@@ -533,7 +550,7 @@ export async function calcularHAIdeal(
     // faz a tarde, o da noite faz a tarde; a noite so entra se nao couber no
     // diurno. Empate: turno com mais horario livre (regra anterior).
     if (totalSobra() > 0) {
-      const turnosContraturno = [...maxAulaPorTurno.keys()].filter((t) => !(t in aulasPorTurno));
+      const turnosContraturno = [...maxAulaPorTurno.keys()].filter((t) => !(t in aulasPorTurno) && (t !== "noturno" || HA_PERMITIR_NOTURNO_DE_OUTRO_TURNO)); // [HA-NUNCA-NOITE]
       const espacoLivre = (turno: string) => {
         const maxAula = maxAulaPorTurno.get(turno) ?? 6;
         const bloqueado = bloqueadoPorTurno.get(turno) ?? new Set();
@@ -591,7 +608,7 @@ export async function calcularHAIdeal(
           const resto = preencherGuloso(turno, proprio, ocupadoAtual(turno), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_EXCECAO, undefined, MAX_HA_SEGUIDAS_ENSINO);
           consumirSobra(proprio - resto, turno, true);
         }
-        const outros = sobraDeOutros(turno);
+        const outros = turno === "noturno" && !HA_PERMITIR_NOTURNO_DE_OUTRO_TURNO ? 0 : sobraDeOutros(turno); // [HA-NUNCA-NOITE]
         if (outros > 0) {
           const resto = preencherGuloso(turno, outros, ocupadoAtual(turno), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_EXCECAO, undefined, MAX_HA_SEGUIDAS_ENSINO, true);
           consumirSobra(outros - resto, turno, false);
