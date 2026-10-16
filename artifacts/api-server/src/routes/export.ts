@@ -4,6 +4,7 @@ import {
   horariosTable, professoresTable, disciplinasTable, turmasTable, disponibilidadeTable,
   horarioSlotsTable, turmaDisciplinasTable, trimestresLetivosTable, matrizesCurricularesTable, itensMatrizTable,
   escolasTable, horariosExperimentaisTable, codigosRcoDisciplinaTable, // [RCO-EXPORT-BANCO]
+  calendarioEscolarTable, // [PONTO-DIARIO]
 } from "@workspace/db";
 import { and, eq, isNull, notInArray, sql } from "drizzle-orm";
 import { GRADES_SEED_RCO } from "../lib/grades-seed-rco"; // [RCO-EXPORT-BANCO]
@@ -18,6 +19,7 @@ import { calcularHAIdeal, type MarcaHACalculada } from "../lib/recalcular-ha";
 import { ehHAOutroTurno } from "../lib/ha-contraturno"; // [HA-OUTRO-TURNO]
 import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
 import { carregarAssSoTurma, carregarPeriodosExtrasFinais, podarLinhasExtras } from "../lib/assincrona-so-turma"; // [ASS-SO-TURMA]
+import { gerarPdfPontoDiario, type PontoDiario, type CelulaPonto, type LinhaPonto } from "../lib/pdf-ponto-diario"; // [PONTO-DIARIO]
 
 // [RCO-HORARIO-NOTURNO] (15/10/2026) o RCO do noturno usa a grade de horarios fixa da SEED
 // (18:40, 19:30, 20:30, 21:20, 22:10); a escola pode ter o horario real um pouco diferente
@@ -253,6 +255,93 @@ router.get("/ponto", async (req, res) => {
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", 'attachment; filename="ponto_professores.csv"');
   res.send('\uFEFF' + csv);
+});
+
+// [PONTO-DIARIO] (15/10/2026) Ponto de UM dia (?data=AAAA-MM-DD&turno=matutino|vespertino|noturno|todos):
+// uma linha por professor com aula, H.A. ou atividade nesse dia/turno; uma coluna por aula
+// letiva do turno. ?formato=pdf (padrao) ou json (a tela monta o Excel com essas linhas).
+const ROTULO_TURNO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
+const NOME_DIA = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+async function montarPontoDiario(escolaId: string, dataISO: string, turnoFiltro: string): Promise<PontoDiario | { erro: string }> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dataISO)) return { erro: "Data inválida." };
+  const d = new Date(`${dataISO}T12:00:00Z`);
+  const dow = d.getUTCDay();
+  const [ano, mes, dia] = dataISO.split("-");
+  const dataBR = `${dia}/${mes}/${ano}`;
+  if (dow === 0 || dow === 6) return { erro: `${dataBR} é ${NOME_DIA[dow]!.toLowerCase()}: não há grade nesse dia.` };
+  const diaSemana = dow - 1;
+  const turnos = turnoFiltro && turnoFiltro !== "todos" ? [turnoFiltro] : ["matutino", "vespertino", "noturno"];
+
+  const [nomeEscola, turmas, professores, disciplinas, horarios, slotsEsquema, eventos] = await Promise.all([
+    buscarNomeEscola(escolaId),
+    db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
+    db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
+    db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
+    db.select().from(horariosTable).where(and(eq(horariosTable.escolaId, escolaId), eq(horariosTable.diaSemana, diaSemana), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`)),
+    db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId)),
+    db.select().from(calendarioEscolarTable).where(and(eq(calendarioEscolarTable.escolaId, escolaId), eq(calendarioEscolarTable.data, dataISO))),
+  ]);
+  const profIds = professores.map((p) => p.id);
+  const disps = profIds.length
+    ? (await db.select().from(disponibilidadeTable).where(eq(disponibilidadeTable.diaSemana, diaSemana))).filter((x) => profIds.includes(x.professorId))
+    : [];
+  const ehAssSoTurma = await carregarAssSoTurma(escolaId);
+  const turmaMap = new Map(turmas.map((t) => [t.id, t]));
+  const discMap = new Map(disciplinas.map((x) => [x.id, x]));
+  const semAula = eventos.find((e) => !e.diaLetivo && ["feriado", "recesso", "ponto_facultativo", "estudo_planejamento"].includes(e.tipo));
+  const aviso = semAula ? `Atenção: ${semAula.descricao} (${semAula.tipo.replace("_", " ")}) — dia sem aula no calendário da escola.` : null;
+
+  const resultado: PontoDiario = { escola: nomeEscola, data: dataISO, dataBR, diaSemana: NOME_DIA[dow]!, aviso, turnos: [] };
+  for (const turno of turnos) {
+    const doTurno = slotsEsquema.filter((s) => s.turno === turno);
+    const aulasDoTurno = horarios.filter((h) => turmaMap.get(h.turmaId)?.turno === turno && !ehAssSoTurma(h, turmaMap.get(h.turmaId)));
+    const dispsTurno = disps.filter((x) => x.turno === turno);
+    // colunas: aulas letivas + nao letivas que alguem usa nesse dia
+    const usadas = new Set<number>([...aulasDoTurno.map((h) => h.numeroAula), ...dispsTurno.filter((x) => x.horaAtividadeObrigatoria || !!rotuloDoBloqueio(x.motivo)).map((x) => x.horarioSlot)]);
+    const horaPorAula = new Map<number, string>();
+    for (const s of doTurno) {
+      if (!s.letivo && !usadas.has(s.numeroAula)) continue;
+      const h = String(s.horaInicio).slice(0, 5);
+      if (!horaPorAula.has(s.numeroAula) || h < horaPorAula.get(s.numeroAula)!) horaPorAula.set(s.numeroAula, h);
+    }
+    const colunas = [...horaPorAula.entries()].sort((a, b) => a[0] - b[0]).map(([numeroAula, hora]) => ({ numeroAula, hora }));
+    const linhas: LinhaPonto[] = [];
+    for (const prof of [...professores].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))) {
+      const aulas = aulasDoTurno.filter((h) => h.professorId === prof.id);
+      const dp = dispsTurno.filter((x) => x.professorId === prof.id);
+      const celulas: CelulaPonto[] = colunas.map(({ numeroAula }) => {
+        const aqui = aulas.filter((h) => h.numeroAula === numeroAula);
+        if (aqui.length) {
+          const texto = [...new Set(aqui.map((h) => `${turmaMap.get(h.turmaId)?.nome ?? "?"}/${siglaOuFallback(discMap.get(h.disciplinaId))}${h.assincrona ? " (ASS)" : ""}`))].join(" + ");
+          return { texto, tipo: "aula" };
+        }
+        const marca = dp.find((x) => x.horarioSlot === numeroAula);
+        if (marca?.horaAtividadeObrigatoria) return { texto: ehHAOutroTurno(marca.motivo) ? "H.A.*" : "H.A.", tipo: "ha" };
+        const rot = marca ? rotuloDoBloqueio(marca.motivo) : undefined;
+        if (marca && rot) return { texto: rot, tipo: "atividade" };
+        if (marca && ehBloqueioReal(marca)) return { texto: "", tipo: "indisponivel" };
+        return { texto: "", tipo: "livre" };
+      });
+      const temAlgo = celulas.some((c) => c.tipo === "aula" || c.tipo === "ha" || c.tipo === "atividade");
+      if (!temAlgo) continue;
+      linhas.push({ professor: prof.nome, celulas, aulas: celulas.filter((c) => c.tipo === "aula").length, ha: celulas.filter((c) => c.tipo === "ha").length });
+    }
+    resultado.turnos.push({ turno, rotulo: ROTULO_TURNO[turno] ?? turno, colunas, linhas });
+  }
+  return resultado;
+}
+
+router.get("/ponto-diario", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const dataISO = typeof req.query.data === "string" ? req.query.data : "";
+  const turno = typeof req.query.turno === "string" ? req.query.turno : "todos";
+  const r = await montarPontoDiario(escolaId, dataISO, turno);
+  if ("erro" in r) { res.status(400).json({ error: r.erro }); return; }
+  if (req.query.formato === "json") { res.json(r); return; }
+  const bytes = await gerarPdfPontoDiario(r);
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="ponto_diario_${dataISO}_${turno}.pdf"`);
+  res.send(Buffer.from(bytes));
 });
 
 // [RCO-EXPORT-BANCO] (06/10/2026) Arquivo IMPORT_URANIA para o RCO com os codigos do BANCO

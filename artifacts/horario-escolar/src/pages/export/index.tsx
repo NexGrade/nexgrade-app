@@ -9,6 +9,7 @@ import { Download, FileText, Table, BarChart3, FileDown, ClipboardList, Trending
 import { useToast } from "@/hooks/use-toast";
 import { BotaoRelatorioReservas } from "@/components/relatorio-reservas"; // [RELATORIO-RESERVAS]
 import { Link } from "wouter"; // [CODIGOS-RCO-TELA]
+import { CardPontoDiario } from "@/components/ponto-diario"; // [PONTO-DIARIO]
 
 function buildUrl(path: string, params: Record<string, string | undefined>) {
   const url = new URL(path, window.location.origin);
@@ -268,6 +269,9 @@ export default function ExportPage() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* [PONTO-DIARIO] Ponto de um dia */}
+        <CardPontoDiario />
 
         {/* Grade em PDF */}
         <Card>
