@@ -38,23 +38,30 @@ function formatarTempo(ms: number): string {
 /** Linha das janelas de professor (ou de turma, quando o motor ainda nao mede as de professor) a cada grade melhor. */
 function LinhaJanelas({ pontos }: { pontos: Array<{ t: number; v: number }> }) {
   if (pontos.length < 2) return null;
-  const L = 240, A = 44, M = 4;
-  const tMax = Math.max(...pontos.map((p) => p.t)) || 1;
+  const L = 400, A = 80, M = 6;
+  const tMin = Math.min(...pontos.map((p) => p.t));
+  const tMax = Math.max(...pontos.map((p) => p.t));
   const vMax = Math.max(...pontos.map((p) => p.v), 1);
-  const x = (t: number) => M + (t / tMax) * (L - 2 * M);
+  const x = (t: number) => M + (tMax > tMin ? (t - tMin) / (tMax - tMin) : 1) * (L - 2 * M);
   const y = (v: number) => M + (1 - v / vMax) * (A - 2 * M);
   const d = pontos.map((p, i) => `${i ? "L" : "M"}${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join(" ");
   const ultimo = pontos[pontos.length - 1]!;
   return (
-    <svg viewBox={`0 0 ${L} ${A}`} className="mt-1 h-11 w-full max-w-[240px] text-primary" role="img" aria-label={`Janelas: de ${pontos[0]!.v} para ${ultimo.v}`}>
+    <>
+    <svg viewBox={`0 0 ${L} ${A}`} className="mt-2 h-20 w-full text-primary" role="img" aria-label={`Janelas: de ${pontos[0]!.v} para ${ultimo.v}`}>
       <line x1={M} x2={L - M} y1={A - M} y2={A - M} className="stroke-border" strokeWidth={1} />
       <path d={d} fill="none" stroke="currentColor" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
       {pontos.map((p, i) => (
-        <circle key={i} cx={x(p.t)} cy={y(p.v)} r={i === pontos.length - 1 ? 4 : 2.5} className="fill-current stroke-background" strokeWidth={1.5}>
+        <circle key={i} cx={x(p.t)} cy={y(p.v)} r={i === pontos.length - 1 ? 4 : 6} className={i === pontos.length - 1 ? "fill-current stroke-background" : "fill-transparent"} strokeWidth={i === pontos.length - 1 ? 1.5 : 0}>
           <title>{`${p.v} janela(s) aos ${Math.round(p.t)}s`}</title>
         </circle>
       ))}
     </svg>
+    <div className="flex justify-between text-[11px] tabular-nums text-muted-foreground">
+      <span>{pontos[0]!.v} janela(s) no início</span>
+      <span>agora: {ultimo.v}</span>
+    </div>
+    </>
   );
 }
 

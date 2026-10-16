@@ -2336,8 +2336,9 @@ function AbaExperimental() {
       </Dialog>
 
       <Dialog open={openGerarCpsatTurma} onOpenChange={setOpenGerarCpsatTurma}>
-        <DialogContent>
+        <DialogContent className={gerandoCpsatTurma ? "max-h-[92vh] overflow-y-auto sm:max-w-5xl" : "max-h-[92vh] overflow-y-auto"}>{/* [PROGRESSO-LADO-A-LADO] gerando: janela larga, andamento ao lado do formulario */}
           <DialogHeader><DialogTitle>Gerar com CP-SAT — Turma (Beta)</DialogTitle></DialogHeader>
+          <div className={gerandoCpsatTurma ? "grid gap-6 md:grid-cols-2 md:items-start" : ""}>
           <div className="space-y-4 py-2">
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md p-2.5">
               <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
@@ -2375,6 +2376,7 @@ function AbaExperimental() {
             </div>
           </div>
           {gerandoCpsatTurma && <ProgressoGeracao dados={progressoCpsat} acoes={acoesGeracao} />}
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenGerarCpsatTurma(false)}>Cancelar</Button>
             <Button onClick={handleGerarCpsatTurma} disabled={gerandoCpsatTurma}>{gerandoCpsatTurma ? "Gerando (pode levar até 2 min)..." : "Gerar com CP-SAT"}</Button>
@@ -2383,8 +2385,9 @@ function AbaExperimental() {
       </Dialog>
 
       <Dialog open={openGerarCpsatTurnoParcial} onOpenChange={setOpenGerarCpsatTurnoParcial}>
-        <DialogContent>
+        <DialogContent className={gerandoCpsatTurnoParcial ? "max-h-[92vh] overflow-y-auto sm:max-w-5xl" : "max-h-[92vh] overflow-y-auto"}>{/* [PROGRESSO-LADO-A-LADO] gerando: janela larga, andamento ao lado do formulario */}
           <DialogHeader><DialogTitle>Gerar com CP-SAT -- Turno Parcial (Beta)</DialogTitle></DialogHeader>
+          <div className={gerandoCpsatTurnoParcial ? "grid gap-6 md:grid-cols-2 md:items-start" : ""}>
           <div className="space-y-4 py-2">
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md p-2.5">
               <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
@@ -2438,6 +2441,7 @@ function AbaExperimental() {
             </div>
           </div>
           {gerandoCpsatTurnoParcial && <ProgressoGeracao dados={progressoCpsat} acoes={acoesGeracao} />}
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenGerarCpsatTurnoParcial(false)}>Cancelar</Button>
             <Button onClick={handleGerarCpsatTurnoParcial} disabled={gerandoCpsatTurnoParcial}>{gerandoCpsatTurnoParcial ? "Gerando (pode levar ate 2 min)..." : "Gerar com CP-SAT"}</Button>
@@ -2446,8 +2450,9 @@ function AbaExperimental() {
       </Dialog>
 
       <Dialog open={openGerarCpsat} onOpenChange={setOpenGerarCpsat}>
-        <DialogContent>
+        <DialogContent className={gerandoCpsat ? "max-h-[92vh] overflow-y-auto sm:max-w-5xl" : "max-h-[92vh] overflow-y-auto"}>{/* [PROGRESSO-LADO-A-LADO] gerando: janela larga, andamento ao lado do formulario */}
           <DialogHeader><DialogTitle>Gerar com CP-SAT — Turno inteiro (Beta)</DialogTitle></DialogHeader>
+          <div className={gerandoCpsat ? "grid gap-6 md:grid-cols-2 md:items-start" : ""}>
           <div className="space-y-4 py-2">
             <PainelCapacidade />
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md p-2.5">
@@ -2476,6 +2481,7 @@ function AbaExperimental() {
             </div>
           </div>
           {gerandoCpsat && <ProgressoGeracao dados={progressoCpsat} acoes={acoesGeracao} />}
+          </div>
           <DialogFooter className="flex-wrap gap-2 sm:space-x-0">
             <Button
               variant="outline"
