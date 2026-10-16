@@ -1,0 +1,17 @@
+{
+	email simone@nexuscoretecnologia.com.br
+}
+
+cpsat.nexuscoretecnologia.com.br {
+	# So o Render (IPs de saida do servico nexgrade-app) e a propria VM
+	# chegam ao CP-SAT. Qualquer outro IP tem a conexao cortada (abort),
+	# sem chegar ao uvicorn -- assim robos nao escrevem no uvicorn.log e
+	# nao impedem o auto-desligar.
+	@permitido remote_ip 74.220.50.0/24 74.220.58.0/24 34.95.232.215/32
+	handle @permitido {
+		reverse_proxy 127.0.0.1:8000
+	}
+	handle {
+		abort
+	}
+}
