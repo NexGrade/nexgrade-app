@@ -14,6 +14,19 @@ type EscolaId = ReturnType<typeof getEscolaId>;
 // abaixo e tambem aparece como "HA*", mesmo num turno em que o professor da aula.
 export const MOTIVO_HA_AUTO = "Hora-atividade institucional (recalculada automaticamente)";
 export const MOTIVO_HA_AUTO_OUTRO_TURNO = `${MOTIVO_HA_AUTO} -- HA de outro turno (HA*)`;
+
+/**
+ * [HA-URANIA-MOVEL] (16/10/2026) HA que o sistema pode reposicionar: a automatica e a importada
+ * do Urania ("Importado do Urania (H.A.)"), que so valia para a grade do Urania. Quando as aulas
+ * mudam, ela segue a regra do NexGrade (juntar HA, sem janela). Continua fixa (manual): HA fixa,
+ * abono do estagio probatorio (PROB) e qualquer outra marcada a mao.
+ */
+export function ehHAMovel(motivo: string | null | undefined): boolean {
+  const m = motivo ?? "";
+  if (m.startsWith(MOTIVO_HA_AUTO)) return true;
+  if (/probat/i.test(m) || m.startsWith("HA fixa")) return false;
+  return /^Importado do Ur[aâ]nia \(H\.A\.\)\s*$/i.test(m);
+}
 export function ehHAOutroTurno(motivo: string | null | undefined): boolean {
   return (motivo ?? "").includes("HA de outro turno");
 }

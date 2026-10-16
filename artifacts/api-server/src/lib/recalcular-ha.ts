@@ -35,7 +35,7 @@ import {
 import { eq, inArray, sql } from "drizzle-orm";
 import { PARES_TURNO } from "./intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 
-import { MOTIVO_HA_AUTO, MOTIVO_HA_AUTO_OUTRO_TURNO } from "./ha-contraturno"; // [HA-OUTRO-TURNO]
+import { MOTIVO_HA_AUTO, MOTIVO_HA_AUTO_OUTRO_TURNO, ehHAMovel } from "./ha-contraturno"; // [HA-OUTRO-TURNO] [HA-URANIA-MOVEL]
 import { montarMapaPrincipal, principalDe } from "./professor-principal"; // [MESMA-PESSOA-HA]
 
 // [HA-NA-ENTRADA-NOTURNO] motivo do bloqueio gravado em 2026-09-23 na aula 1 do
@@ -289,7 +289,7 @@ export async function calcularHAIdeal(
     // tomada por fora do sistema (autorizacao da coordenacao), sempre
     // respeitada e nunca recalculada por aqui. Conta pro total exigido.
     const haManualContraturno = disponibilidades.filter(
-      (d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && !(d.motivo ?? "").startsWith(MOTIVO_HA_AUTO) && !ocupadoPorTurnoOriginal.get(d.turno ?? "")?.has(`${d.diaSemana}-${d.horarioSlot}`), // [FIX-HA-AUTO-NAO-E-MANUAL] [HA-MANUAL-QUALQUER-TURNO] [HA-MANUAL-CEDE-A-AULA] HA nao automatica e preservada em qualquer turno, exceto se uma aula passou a ocupar o horario
+      (d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && !ehHAMovel(d.motivo) && !ocupadoPorTurnoOriginal.get(d.turno ?? "")?.has(`${d.diaSemana}-${d.horarioSlot}`), // [FIX-HA-AUTO-NAO-E-MANUAL] [HA-MANUAL-QUALQUER-TURNO] [HA-MANUAL-CEDE-A-AULA] HA nao automatica e preservada em qualquer turno, exceto se uma aula passou a ocupar o horario
     );
     for (const m of haManualContraturno) {
       marcasFinais.push({ professorId: prof.id, turno: m.turno ?? "sem_turno", diaSemana: m.diaSemana, horarioSlot: m.horarioSlot });
