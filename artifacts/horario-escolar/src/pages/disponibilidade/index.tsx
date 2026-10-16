@@ -113,7 +113,7 @@ export default function DisponibilidadePage() {
     { query: { queryKey: getListHorarioSlotsQueryKey({ turno, nivelEnsino: turno === "matutino" ? "medio_tecnico" : undefined }) } },
   );
 
-  const slotsOrdenados = useMemo(
+  const slotsTodosOrdenados = useMemo(
     () => [...slots].sort((a, b) => a.numeroAula - b.numeroAula),
     [slots],
   );
@@ -137,6 +137,13 @@ export default function DisponibilidadePage() {
     () => horariosProf.filter((h: any) => h.turma?.turno === turno),
     [horariosProf, turno],
   );
+  // [ASS-SO-TURMA] periodo nao letivo depois da ultima aula do turno (ex.: 7a aula da manha,
+  // so para a assincrona da 3STM): a linha so aparece para o professor que tem aula nela.
+  const slotsOrdenados = useMemo(() => {
+    const ultimaLetiva = Math.max(0, ...slotsTodosOrdenados.filter((s: any) => s.letivo !== false).map((s) => s.numeroAula));
+    return slotsTodosOrdenados.filter((s: any) =>
+      s.letivo !== false || s.numeroAula <= ultimaLetiva || horariosDoTurno.some((h: any) => h.numeroAula === s.numeroAula));
+  }, [slotsTodosOrdenados, horariosDoTurno]);
 
   // [AULA-FIXA-DISP] Fixar aula direto na disponibilidade: grava no mesmo
   // cadastro de Aulas Fixas da aba Esquema (o CP-SAT respeita as duas origens).
