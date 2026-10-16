@@ -22,11 +22,15 @@ interface RespostaCapacidade {
   problemas: ProblemaCapacidade[];
 }
 
-export function PainelCapacidade() {
+const NOME_TURNO: Record<string, string> = { matutino: "manhã", vespertino: "tarde", noturno: "noite" };
+
+// [CAPACIDADE-POR-TURNO] com `turno`, mostra so os professores e a conta desse turno
+export function PainelCapacidade({ turno }: { turno?: string } = {}) {
   const [verAvisos, setVerAvisos] = useState(false);
+  const url = turno ? `/api/horarios/capacidade?turno=${encodeURIComponent(turno)}` : "/api/horarios/capacidade";
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["/api/horarios/capacidade"],
-    queryFn: () => customFetch<RespostaCapacidade>("/api/horarios/capacidade", { responseType: "json" }),
+    queryKey: ["/api/horarios/capacidade", turno ?? "todos"],
+    queryFn: () => customFetch<RespostaCapacidade>(url, { responseType: "json" }),
     staleTime: 0,
   });
 
@@ -49,7 +53,9 @@ export function PainelCapacidade() {
       {erros.length === 0 ? (
         <div className="flex items-start gap-2 rounded-md border border-green-200 bg-green-50 p-2.5 text-xs text-green-800">
           <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-green-600" />
-          Capacidade OK: todos os professores têm horários livres suficientes para as aulas e a hora-atividade.
+          {turno
+            ? `Capacidade OK na ${NOME_TURNO[turno] ?? turno}: todos os professores deste turno têm horários livres para as aulas.`
+            : "Capacidade OK: todos os professores têm horários livres suficientes para as aulas e a hora-atividade."}
         </div>
       ) : (
         <div className="space-y-1.5 rounded-md border border-red-200 bg-red-50 p-2.5 text-xs text-red-800">
@@ -77,7 +83,9 @@ export function PainelCapacidade() {
             className="flex w-full items-center gap-1.5 text-left font-semibold"
           >
             {verAvisos ? <ChevronDown className="h-3.5 w-3.5 shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
-            {avisos.length} professor(es) vão precisar de hora-atividade em contraturno
+            {turno
+              ? `${avisos.length} professor(es) da ${NOME_TURNO[turno] ?? turno} sem espaço para toda a hora-atividade neste turno`
+              : `${avisos.length} professor(es) vão precisar de hora-atividade em contraturno`}
           </button>
           {verAvisos && (
             <ul className="mt-1.5 list-disc space-y-0.5 pl-5">

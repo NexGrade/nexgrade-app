@@ -2342,7 +2342,7 @@ function AbaExperimental() {
           <div className="space-y-4 py-2">
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md p-2.5">
               <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
-              Usa o motor CP-SAT (OR-Tools) em vez do gerador heurístico -- mais preciso pra eliminar janelas na grade dos professores. Grava sempre como experimento; nada muda na grade oficial até você promover.
+              A nova grade é salva como experimento, para você revisar e comparar. A grade oficial só muda quando você clicar em Promover.
             </div>
             <div className="space-y-1.5">
               <Label>Nome do experimento *</Label>
@@ -2391,7 +2391,7 @@ function AbaExperimental() {
           <div className="space-y-4 py-2">
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md p-2.5">
               <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
-              Escolha um turno e depois marque so as turmas que devem entrar neste calculo. Util pra dividir turnos grandes em pedacos menores (evita estourar memoria no CP-SAT). As turmas de fora do lote nao sao alteradas, e o motor ja evita colidir com os professores delas.
+              Escolha um turno e marque só as turmas que entram nesta geração. As turmas que ficarem de fora não mudam, e os horários dos professores delas são respeitados. A nova grade é salva como experimento.
             </div>
             <div className="space-y-1.5">
               <Label>Nome do experimento *</Label>
@@ -2454,10 +2454,10 @@ function AbaExperimental() {
           <DialogHeader><DialogTitle>Gerar com CP-SAT — Turno inteiro (Beta)</DialogTitle></DialogHeader>
           <div className={gerandoCpsat ? "grid gap-6 md:grid-cols-2 md:items-start" : ""}>
           <div className="space-y-4 py-2">
-            <PainelCapacidade />
+            <PainelCapacidade turno={cpsatForm.turno} /> {/* [CAPACIDADE-POR-TURNO] */}
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md p-2.5">
               <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
-              Usa o motor CP-SAT (OR-Tools) em vez do gerador heuristico -- mais preciso pra eliminar janelas na grade dos professores. Grava sempre como experimento; nada muda na grade oficial ate voce promover.
+              A nova grade é salva como experimento, para você revisar e comparar. A grade oficial só muda quando você clicar em Promover.
             </div>
             <div className="space-y-1.5">
               <Label>Nome do experimento *</Label>
@@ -2477,7 +2477,7 @@ function AbaExperimental() {
             <div className="space-y-1.5">
               <Label>Tempo limite (segundos)</Label>
               <Input type="number" min={30} max={600} value={cpsatForm.tempoLimiteS} onChange={(e) => setCpsatForm((f) => ({ ...f, tempoLimiteS: Number(e.target.value) || 120 }))} />
-              <p className="text-xs text-muted-foreground">Padrao 120s. Turnos com muitas turmas (ex.: matutino do Mario Braga, 24 turmas) podem precisar de mais tempo -- tente 300-600s se o solver nao terminar a tempo.</p>
+              <p className="text-xs text-muted-foreground">Padrão: 120 segundos. Turnos com muitas turmas podem precisar de mais tempo; se a geração não terminar, use de 300 a 600 segundos.</p>
             </div>
           </div>
           {gerandoCpsat && <ProgressoGeracao dados={progressoCpsat} acoes={acoesGeracao} />}

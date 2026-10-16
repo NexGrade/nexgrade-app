@@ -833,7 +833,8 @@ const ExpInput = z.object({
 router.get("/capacidade", async (req, res) => {
   const escolaId = getEscolaId(req);
   try {
-    const problemas = await validarCapacidadeProfessores(escolaId);
+    const turnoQuery = typeof req.query.turno === "string" && ["matutino", "vespertino", "noturno"].includes(req.query.turno) ? req.query.turno : undefined; // [CAPACIDADE-POR-TURNO]
+    const problemas = await validarCapacidadeProfessores(escolaId, turnoQuery);
     res.json({
       erros: problemas.filter((p) => p.nivel === "erro").length,
       avisos: problemas.filter((p) => p.nivel === "aviso").length,

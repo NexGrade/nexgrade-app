@@ -118,7 +118,9 @@ export async function calcularCotaHaPorTurno(escolaId: string, turno: string): P
   return r;
 }
 
-export async function validarCapacidadeProfessores(escolaId: string): Promise<ProblemaCapacidade[]> {
+// [CAPACIDADE-POR-TURNO] (16/10/2026) com `turnoFiltro`, so os professores com aula nesse turno, e a conta
+// (aulas + HA desse turno x horarios livres desse turno) so desse turno -- e o que a tela de gerar mostra.
+export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro?: string): Promise<ProblemaCapacidade[]> {
   const { cargas, slots, disp, principal } = await calcularCargaPorProfessor(escolaId);
   const porTurnoHA = aulasParaHA(cargas, principal); // [MESMA-PESSOA-HA]
   const aulas = new Map(cargas.map((c) => [c.professorId, c.aulasPorTurno]));
@@ -177,6 +179,22 @@ export async function validarCapacidadeProfessores(escolaId: string): Promise<Pr
     const livresEnsino = turnosEnsino.reduce((s, t) => s + (livres[t] ?? 0) + (livresSoHA[t] ?? 0), 0); // [CAPACIDADE-NAO-LETIVO]
     const livresTotal = turnos.reduce((s, t) => s + (livres[t] ?? 0) + (livresSoHA[t] ?? 0), 0);
     const base = { professorId: pid, professor: p.nome, aulasPorTurno: porTurno, aulasTotal, haExigida: ha, livresPorTurno: livres };
+    if (turnoFiltro) { // [CAPACIDADE-POR-TURNO]
+      const aulasT = porTurno[turnoFiltro] ?? 0;
+      if (aulasT === 0) continue;
+      const haT = ehSecundario(principal, pid) ? 0 : (calcularHoraAtividadePorTurno(porTurnoHA.get(pid) ?? porTurno)[turnoFiltro] ?? 0);
+      const livresT = livres[turnoFiltro] ?? 0;
+      const livresComHA = livresT + (livresSoHA[turnoFiltro] ?? 0);
+      const nomeT = ({ matutino: "manhã", vespertino: "tarde", noturno: "noite" } as Record<string, string>)[turnoFiltro] ?? turnoFiltro;
+      const baseT = { ...base, aulasTotal: aulasT, haExigida: haT };
+      if (aulasT > livresT) {
+        problemas.push({ ...baseT, nivel: "erro", mensagem: `${aulasT} aula(s) na ${nomeT}, mas só ${livresT} horário(s) livre(s) nesse turno: a grade não fecha. Libere ${aulasT - livresT} horário(s) ou reduza a carga.` });
+      } else if (aulasT + haT > livresComHA) {
+        const sobra = aulasT + haT - livresComHA;
+        problemas.push({ ...baseT, nivel: "aviso", mensagem: `${aulasT} aula(s) + ${haT} HA na ${nomeT}, mas só ${livresComHA} horário(s) livre(s): ${sobra} HA não cabe(m) neste turno${turnoFiltro === "noturno" ? " e vai(ão) para a tarde" : ""}.` });
+      }
+      continue;
+    }
     for (const t of turnosEnsino) {
       const l = livres[t] ?? 0;
       if (porTurno[t]! > l) problemas.push({ ...base, nivel: "erro", mensagem: `${porTurno[t]} aula(s) no ${t}, mas so ${l} horario(s) livre(s) nesse turno: a grade nao fecha. Libere ${porTurno[t]! - l} horario(s) ou reduza a carga.` });
