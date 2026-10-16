@@ -63,19 +63,19 @@ export async function gerarPdfPontoDiario(p: PontoDiario): Promise<Uint8Array> {
   for (const turno of p.turnos) {
     if (!turno.linhas.length) continue;
     const larguraUtil = LARGURA - 2 * MARGEM;
-    const wProf = 128, wEnt = 58, wSai = 58, wSit = 100, wAss = 92;
+    const wProf = 140, wSit = 210;
     const n = Math.max(1, turno.colunas.length);
-    const wAula = (larguraUtil - wProf - wEnt - wSai - wSit - wAss) / n;
+    const wAula = (larguraUtil - wProf - wSit) / n;
     const hCab = 26, hLinha = 23;
     const xs: number[] = [MARGEM, MARGEM + wProf];
     for (let i = 0; i < n; i++) xs.push(xs[xs.length - 1]! + wAula);
-    { const x0 = xs[xs.length - 1]!; xs.push(x0 + wEnt, x0 + wEnt + wSai, x0 + wEnt + wSai + wSit, MARGEM + larguraUtil); }
-    const xSit = xs[xs.length - 3]!;
+    xs.push(MARGEM + larguraUtil);
+    const xSit = xs[xs.length - 2]!;
 
     let { page, y } = novaPagina(turno);
     const cabecalho = () => {
       page.drawRectangle({ x: MARGEM, y: y - hCab, width: larguraUtil, height: hCab, color: AZUL_CLARO, borderColor: CINZA_BORDA, borderWidth: 0.6 });
-      const titulos: Array<[string, string?]> = [["Professor"], ...turno.colunas.map((c) => [`${c.numeroAula}ª aula`, c.hora] as [string, string]), ["Hora entrada"], ["Hora saída"], ["Situação"], ["Assinatura"]];
+      const titulos: Array<[string, string?]> = [["Professor"], ...turno.colunas.map((c) => [`${c.numeroAula}ª aula`, c.hora] as [string, string]), ["Situação"]];
       titulos.forEach(([t1, t2], i) => {
         const x0 = xs[i]!, w = xs[i + 1]! - x0;
         if (i > 0) page.drawLine({ start: { x: x0, y }, end: { x: x0, y: y - hCab }, thickness: 0.6, color: CINZA_BORDA });
@@ -113,13 +113,14 @@ export async function gerarPdfPontoDiario(p: PontoDiario): Promise<Uint8Array> {
       });
       // situacao: quadradinhos para marcar a mao
       {
-        const rotulos = ["P", "F", "AT", "ATR"];
-        const larg = rotulos.reduce((s2, r) => s2 + 7 + 2 + font.widthOfTextAtSize(r, 6.5) + 5, -5);
+        const rotulos = ["Presente", "Falta", "Atestado", "Atraso"];
+        const passo = (r: string) => 8 + 3 + font.widthOfTextAtSize(r, 7.5) + 10;
+        const larg = rotulos.reduce((s2, r) => s2 + passo(r), -10);
         let x = xSit + (wSit - larg) / 2;
         for (const r of rotulos) {
-          page.drawRectangle({ x, y: yb + 8, width: 7, height: 7, borderColor: CINZA_TEXTO, borderWidth: 0.7 });
-          page.drawText(r, { x: x + 9, y: yb + 8.6, size: 6.5, font, color: CINZA_TEXTO });
-          x += 7 + 2 + font.widthOfTextAtSize(r, 6.5) + 5;
+          page.drawRectangle({ x, y: yb + 7.5, width: 8, height: 8, borderColor: CINZA_TEXTO, borderWidth: 0.7 });
+          page.drawText(r, { x: x + 11, y: yb + 8.5, size: 7.5, font, color: PRETO });
+          x += passo(r);
         }
       }
       // grade da linha
@@ -130,7 +131,7 @@ export async function gerarPdfPontoDiario(p: PontoDiario): Promise<Uint8Array> {
 
     if (y > 44) {
       const tot = turno.linhas.length;
-      page.drawText(`${tot} professor(es) · H.A. = hora-atividade · atividade fora de sala com o código da escola · traço = sem expediente · P = presente, F = falta, AT = atestado, ATR = atraso`, { x: MARGEM, y: y - 12, size: 7, font, color: CINZA_TEXTO });
+      page.drawText(`${tot} professor(es) · H.A. = hora-atividade · atividade fora de sala com o código da escola · traço = sem expediente nesse horário`, { x: MARGEM, y: y - 12, size: 7, font, color: CINZA_TEXTO });
     }
   }
 
