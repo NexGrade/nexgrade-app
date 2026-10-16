@@ -917,7 +917,11 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
   for (const tid of turmaIds) {
     periodosPorTurma.set(tid, await periodosValidosDaTurma(tid, escolaId));
   }
+  const ehAssSoTurmaProm = await carregarAssSoTurma(escolaId); // [ASS-SO-TURMA] 7a aula nao letiva da assincrona
+  const turmasProm = await db.select().from(turmasTable).where(inArray(turmasTable.id, turmaIds));
+  const turmaPromMap = new Map(turmasProm.map((t) => [t.id, t]));
   const violacoes = expSlots.filter(s => {
+    if (ehAssSoTurmaProm(s, turmaPromMap.get(s.turmaId))) return false;
     const validos = periodosPorTurma.get(s.turmaId);
     return validos && validos.size > 0 && !validos.has(s.numeroAula);
   });
@@ -1573,6 +1577,20 @@ async function runCpsatGeneracaoUnica(
     turma: string; codigoSae: string; nome: string; aulasSemana: number; professor: string;
     maxAulasDia: number; ultimaAulaTurma: number; grupoDupla: string | null; assincrona: boolean;
   };
+  // [ASS-SO-TURMA] [ACOMPANHANTE] aulas oficiais que NAO vao ao motor e sao copiadas como
+  // estao para o experimento: (1) assincrona na 7a aula (periodo nao letivo do fim do turno),
+  // que e so da turma; (2) aula fixa de um professor que acompanha o titular numa disciplina
+  // que nao e dele (ex.: Joseleine na Matematica da 9MD com o Rafael C.).
+  const ehAssSoTurmaGer = await carregarAssSoTurma(escolaId);
+  const oficiaisDasTurmas = await db.select().from(horariosTable)
+    .where(and(inArray(horariosTable.turmaId, turmaIds), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`));
+  const passthroughSoTurma = oficiaisDasTurmas.filter((h) => ehAssSoTurmaGer(h, turmaMap.get(h.turmaId)));
+  const soTurmaPorVinculo = new Map<string, number>();
+  for (const h of passthroughSoTurma) {
+    const k = `${h.turmaId}|${h.disciplinaId}|${h.professorId}`;
+    soTurmaPorVinculo.set(k, (soTurmaPorVinculo.get(k) ?? 0) + 1);
+  }
+
   const disciplinasTurma = turmaDiscsTodos
     .flatMap((td): LinhaMotor[] => {
       const turma = turmaMap.get(td.turmaId)!;
@@ -1589,9 +1607,16 @@ async function runCpsatGeneracaoUnica(
       // senao a segunda linha sobrescreve a primeira no Map
       const codigoSaeChave = ehDupla ? `${codigoSae}#${td.id}` : codigoSae;
       const trio = td.grupoTrio?.trim();
-      const grupo = trio ? `trio::${td.turmaId}::${trio}` : (ehDupla ? chaveTurmaDisc : null);
+      // [CODOCENCIA-CPSAT] professor de apoio (turma_disciplinas.professor_apoio_id) entra como
+      // segunda linha do mesmo grupo: o motor coloca titular e apoio sempre no mesmo horario.
+      const profApoio = td.professorApoioId != null && td.professorApoioId !== prof.id ? professorMap.get(td.professorApoioId) : undefined;
+      const grupo = trio ? `trio::${td.turmaId}::${trio}` : (ehDupla ? chaveTurmaDisc : profApoio ? `apoio::${td.id}` : null);
       const aulasTotal = td.cargaHorariaSemanalOverride ?? itensMatrizMap.get(`${turma.matrizCurricularId}-${td.disciplinaId}`)?.cargaHorariaSemanal ?? disc?.cargaSemanal ?? 0;
-      const aulasAssinc = Math.max(0, Math.min(td.aulasAssincronas ?? 0, aulasTotal));
+      const aulasAssincCadastro = Math.max(0, Math.min(td.aulasAssincronas ?? 0, aulasTotal));
+      // [ASS-SO-TURMA] a assincrona que esta na 7a aula nao vai ao motor (e copiada como esta)
+      const soTurma = soTurmaPorVinculo.get(`${td.turmaId}|${td.disciplinaId}|${prof.id}`) ?? 0;
+      const aulasAssinc = Math.max(0, aulasAssincCadastro - soTurma);
+      const aulasTotalMotor = aulasTotal - Math.min(soTurma, aulasAssincCadastro);
       const base = {
         turma: turma.nome,
         nome: disc?.nome ?? `Disciplina #${td.disciplinaId}`,
@@ -1600,7 +1625,12 @@ async function runCpsatGeneracaoUnica(
         ultimaAulaTurma: maxAulaPorNivelEnsino.get(turma.nivelEnsino ?? "__sem_nivel__") ?? maxAulaGlobalFallback,
       };
       chaveParaIds.set(`${turma.nome}||${codigoSaeChave}`, { turmaId: td.turmaId, disciplinaId: td.disciplinaId });
-      const linhas: LinhaMotor[] = [{ ...base, codigoSae: codigoSaeChave, aulasSemana: aulasTotal - aulasAssinc, grupoDupla: grupo, assincrona: false }];
+      const linhas: LinhaMotor[] = [{ ...base, codigoSae: codigoSaeChave, aulasSemana: aulasTotalMotor - aulasAssinc, grupoDupla: grupo, assincrona: false }];
+      if (profApoio) { // [CODOCENCIA-CPSAT]
+        const codigoApoio = `${codigoSaeChave}#AP`;
+        chaveParaIds.set(`${turma.nome}||${codigoApoio}`, { turmaId: td.turmaId, disciplinaId: td.disciplinaId });
+        linhas.push({ ...base, professor: profApoio.nome, codigoSae: codigoApoio, aulasSemana: aulasTotalMotor - aulasAssinc, grupoDupla: grupo, assincrona: false });
+      }
       if (aulasAssinc > 0) {
         const codigoAss = `${codigoSaeChave}#ASS`;
         chaveParaIds.set(`${turma.nome}||${codigoAss}`, { turmaId: td.turmaId, disciplinaId: td.disciplinaId, assincrona: true });
@@ -1780,9 +1810,18 @@ async function runCpsatGeneracaoUnica(
   // [AULA-FIXA-CADASTRO] tambem o cadastro de Aulas Fixas (aba Esquema), do ano letivo atual
   const cadastroFixas = await db.select().from(aulasFixasTable)
     .where(and(eq(aulasFixasTable.escolaId, escolaId), inArray(aulasFixasTable.turmaId, turmaIds), eq(aulasFixasTable.anoLetivo, new Date().getFullYear())));
+  const chavesSoTurma = new Set(passthroughSoTurma.map((h) => h.id)); // [ASS-SO-TURMA]
+  const passthroughAcompanhante: typeof oficiaisDasTurmas = []; // [ACOMPANHANTE]
+  const bloqueiosAcompanhante: Array<{ professor: string; dia: number; aula: number }> = [];
+  const titularPorTurmaDisc = new Map<string, string>(); // "turmaId|disciplinaId" -> nome do titular (linha presencial)
+  for (const d of disciplinasTurma) {
+    if (d.assincrona || d.codigoSae.endsWith("#AP")) continue;
+    const idsD = chaveParaIds.get(`${d.turma}||${d.codigoSae}`);
+    if (idsD && !titularPorTurmaDisc.has(`${idsD.turmaId}|${idsD.disciplinaId}`)) titularPorTurmaDisc.set(`${idsD.turmaId}|${idsD.disciplinaId}`, d.professor);
+  }
   const todasFixas = [
-    ...oficiaisFixas.map((h) => ({ turmaId: h.turmaId, disciplinaId: h.disciplinaId, professorId: h.professorId, diaSemana: h.diaSemana, numeroAula: h.numeroAula, assincrona: h.assincrona })),
-    ...cadastroFixas.map((af) => ({ turmaId: af.turmaId, disciplinaId: af.disciplinaId, professorId: af.professorId ?? 0, diaSemana: af.diaSemana, numeroAula: af.numeroAula, assincrona: false })),
+    ...oficiaisFixas.filter((h) => !chavesSoTurma.has(h.id)).map((h) => ({ id: h.id as number | undefined, turmaId: h.turmaId, disciplinaId: h.disciplinaId, professorId: h.professorId, diaSemana: h.diaSemana, numeroAula: h.numeroAula, assincrona: h.assincrona })),
+    ...cadastroFixas.map((af) => ({ id: undefined as number | undefined, turmaId: af.turmaId, disciplinaId: af.disciplinaId, professorId: af.professorId ?? 0, diaSemana: af.diaSemana, numeroAula: af.numeroAula, assincrona: false })),
   ];
   const recursosFixos: Array<{ turma: string; codigoSae: string; professor: string; dia: number; aula: number }> = [];
   const chavesFixas = new Set<string>();
@@ -1792,7 +1831,27 @@ async function runCpsatGeneracaoUnica(
     const turmaH = turmaMap.get(h.turmaId);
     const profNome = professorMap.get(h.professorId)?.nome;
     const onde = `${turmaH?.nome ?? `turma #${h.turmaId}`} ${DIAS_FIXA[h.diaSemana] ?? h.diaSemana} ${h.numeroAula}a aula (${profNome ?? `professor #${h.professorId}`})`;
-    const codigo = turmaH && profNome ? codigoParaFixa.get(`${h.turmaId}|${h.disciplinaId}|${profNome}|${h.assincrona ? 1 : 0}`) : undefined;
+    let codigo = turmaH && profNome ? codigoParaFixa.get(`${h.turmaId}|${h.disciplinaId}|${profNome}|${h.assincrona ? 1 : 0}`) : undefined;
+    // [ACOMPANHANTE] professor que acompanha o titular numa aula que nao e dele: a aula dele
+    // fica como esta (copiada para o experimento) e a do titular e travada no mesmo horario.
+    const titularNome = titularPorTurmaDisc.get(`${h.turmaId}|${h.disciplinaId}`);
+    if (turmaH && profNome && !codigo && h.id != null && !h.assincrona && titularNome && titularNome !== profNome) {
+      const codTit = codigoParaFixa.get(`${h.turmaId}|${h.disciplinaId}|${titularNome}|0`);
+      if (codTit) {
+        if (bloqueioSetFixa.has(`${titularNome}|${h.diaSemana}|${h.numeroAula}`)) {
+          fixasImpossiveis.push(`${onde}: o titular (${titularNome}) esta bloqueado neste horario`);
+          continue;
+        }
+        const original = oficiaisFixas.find((x) => x.id === h.id);
+        if (original) passthroughAcompanhante.push(original);
+        bloqueiosAcompanhante.push({ professor: profNome, dia: h.diaSemana, aula: h.numeroAula });
+        const codigoMotorTit = baseDeEspelho.get(`${turmaH.nome}||${codTit}`) ?? codTit;
+        if (!recursosFixos.some((r) => r.turma === turmaH.nome && r.codigoSae === codigoMotorTit && r.dia === h.diaSemana && r.aula === h.numeroAula)) {
+          recursosFixos.push({ turma: turmaH.nome, codigoSae: codigoMotorTit, professor: titularNome, dia: h.diaSemana, aula: h.numeroAula });
+        }
+        continue;
+      }
+    }
     if (!turmaH || !profNome || !codigo) {
       fixasImpossiveis.push(`${onde}: a disciplina ou o professor desta aula mudou -- solte ou refaca a aula fixa`);
       continue;
@@ -1821,6 +1880,7 @@ async function runCpsatGeneracaoUnica(
     console.error("[HA-NO-CPSAT] cota de HA indisponivel, gerando sem ela:", err);
     return {} as Record<string, number>;
   });
+  if (bloqueiosAcompanhante.length) payload.bloqueiosProfessor = [...payload.bloqueiosProfessor, ...bloqueiosAcompanhante]; // [ACOMPANHANTE]
   const payloadComHa = { ...payload, haPorProfessor, recursos: recursosFixos }; // [AULA-FIXA]
   console.log("[DEBUG-CPSAT-PAYLOAD]", JSON.stringify(payload));
 
@@ -1850,7 +1910,9 @@ async function runCpsatGeneracaoUnica(
     }
     const oficiais = await db.select().from(horariosTable).where(inArray(horariosTable.turmaId, turmaIds));
     const semMapa: string[] = [];
+    const idsPassthrough = new Set([...passthroughSoTurma, ...passthroughAcompanhante].map((x) => x.id)); // [ASS-SO-TURMA] [ACOMPANHANTE]
     for (const h of oficiais) {
+      if (idsPassthrough.has(h.id)) continue;
       const turmaH = turmaMap.get(h.turmaId);
       const profNome = h.professorId != null ? professorMap.get(h.professorId)?.nome : undefined;
       const info = turmaH && profNome ? codigoPorChave.get(`${h.turmaId}|${h.disciplinaId}|${profNome}|${h.assincrona ? 1 : 0}`) : undefined; // [ASSINCRONA-TRIO]
@@ -2013,6 +2075,14 @@ async function runCpsatGeneracaoUnica(
         fixa: chavesFixas.has(`${idsE.turmaId}|${idsE.disciplinaId}|${professorId}|${aula.dia}|${aula.aula}`),
       });
     }
+  }
+
+  // [ASS-SO-TURMA] [ACOMPANHANTE] aulas que nao foram ao motor: copiadas como estao
+  for (const h of [...passthroughSoTurma, ...passthroughAcompanhante]) {
+    linhasParaGravar.push({
+      escolaId, nome: nomeExperimental, turmaId: h.turmaId, disciplinaId: h.disciplinaId, professorId: h.professorId,
+      diaSemana: h.diaSemana, numeroAula: h.numeroAula, assincrona: h.assincrona, fixa: h.fixa,
+    });
   }
 
   if (linhasParaGravar.length === 0) {
