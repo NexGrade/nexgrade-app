@@ -2336,14 +2336,10 @@ function AbaExperimental() {
       </Dialog>
 
       <Dialog open={openGerarCpsatTurma} onOpenChange={setOpenGerarCpsatTurma}>
-        <DialogContent className={gerandoCpsatTurma ? "max-h-[92vh] overflow-y-auto sm:max-w-5xl" : "max-h-[92vh] overflow-y-auto"}>{/* [PROGRESSO-LADO-A-LADO] gerando: janela larga, andamento ao lado do formulario */}
+        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-5xl">{/* [PROGRESSO-LADO-A-LADO] janela larga: formulario a esquerda, avisos e andamento a direita */}
           <DialogHeader><DialogTitle>Gerar com CP-SAT — Turma (Beta)</DialogTitle></DialogHeader>
-          <div className={gerandoCpsatTurma ? "grid gap-6 md:grid-cols-2 md:items-start" : ""}>
+          <div className="grid gap-6 md:grid-cols-2 md:items-start">
           <div className="space-y-4 py-2">
-            <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md p-2.5">
-              <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
-              A nova grade é salva como experimento, para você revisar e comparar. A grade oficial só muda quando você clicar em Promover.
-            </div>
             <div className="space-y-1.5">
               <Label>Nome do experimento *</Label>
               <Input value={cpsatTurmaForm.nomeExperimental} onChange={(e) => setCpsatTurmaForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex: CPSAT-Turma-2026-07-27" />
@@ -2375,7 +2371,13 @@ function AbaExperimental() {
 
             </div>
           </div>
-          {gerandoCpsatTurma && <ProgressoGeracao dados={progressoCpsat} acoes={acoesGeracao} />}
+          <div className="space-y-4 py-2">
+            <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md p-2.5">
+              <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
+              A nova grade é salva como experimento, para você revisar e comparar. A grade oficial só muda quando você clicar em Promover.
+            </div>
+            {gerandoCpsatTurma && <ProgressoGeracao dados={progressoCpsat} acoes={acoesGeracao} />}
+          </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenGerarCpsatTurma(false)}>Cancelar</Button>
@@ -2385,14 +2387,10 @@ function AbaExperimental() {
       </Dialog>
 
       <Dialog open={openGerarCpsatTurnoParcial} onOpenChange={setOpenGerarCpsatTurnoParcial}>
-        <DialogContent className={gerandoCpsatTurnoParcial ? "max-h-[92vh] overflow-y-auto sm:max-w-5xl" : "max-h-[92vh] overflow-y-auto"}>{/* [PROGRESSO-LADO-A-LADO] gerando: janela larga, andamento ao lado do formulario */}
+        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-5xl">{/* [PROGRESSO-LADO-A-LADO] janela larga: formulario a esquerda, avisos e andamento a direita */}
           <DialogHeader><DialogTitle>Gerar com CP-SAT -- Turno Parcial (Beta)</DialogTitle></DialogHeader>
-          <div className={gerandoCpsatTurnoParcial ? "grid gap-6 md:grid-cols-2 md:items-start" : ""}>
+          <div className="grid gap-6 md:grid-cols-2 md:items-start">
           <div className="space-y-4 py-2">
-            <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md p-2.5">
-              <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
-              Escolha um turno e marque só as turmas que entram nesta geração. As turmas que ficarem de fora não mudam, e os horários dos professores delas são respeitados. A nova grade é salva como experimento.
-            </div>
             <div className="space-y-1.5">
               <Label>Nome do experimento *</Label>
               <Input value={cpsatTurnoParcialForm.nomeExperimental} onChange={(e) => setCpsatTurnoParcialForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex: CPSAT-Parcial-2026-08-13" />
@@ -2440,7 +2438,13 @@ function AbaExperimental() {
               )}
             </div>
           </div>
-          {gerandoCpsatTurnoParcial && <ProgressoGeracao dados={progressoCpsat} acoes={acoesGeracao} />}
+          <div className="space-y-4 py-2">
+            <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md p-2.5">
+              <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
+              Escolha um turno e marque só as turmas que entram nesta geração. As turmas que ficarem de fora não mudam, e os horários dos professores delas são respeitados. A nova grade é salva como experimento.
+            </div>
+            {gerandoCpsatTurnoParcial && <ProgressoGeracao dados={progressoCpsat} acoes={acoesGeracao} />}
+          </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenGerarCpsatTurnoParcial(false)}>Cancelar</Button>
@@ -2450,11 +2454,10 @@ function AbaExperimental() {
       </Dialog>
 
       <Dialog open={openGerarCpsat} onOpenChange={setOpenGerarCpsat}>
-        <DialogContent className={gerandoCpsat ? "max-h-[92vh] overflow-y-auto sm:max-w-5xl" : "max-h-[92vh] overflow-y-auto"}>{/* [PROGRESSO-LADO-A-LADO] gerando: janela larga, andamento ao lado do formulario */}
+        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-5xl">{/* [PROGRESSO-LADO-A-LADO] janela larga: formulario a esquerda, avisos e andamento a direita */}
           <DialogHeader><DialogTitle>Gerar com CP-SAT — Turno inteiro (Beta)</DialogTitle></DialogHeader>
-          <div className={gerandoCpsat ? "grid gap-6 md:grid-cols-2 md:items-start" : ""}>
+          <div className="grid gap-6 md:grid-cols-2 md:items-start">
           <div className="space-y-4 py-2">
-            <PainelCapacidade turno={cpsatForm.turno} /> {/* [CAPACIDADE-POR-TURNO] */}
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md p-2.5">
               <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
               A nova grade é salva como experimento, para você revisar e comparar. A grade oficial só muda quando você clicar em Promover.
@@ -2480,7 +2483,10 @@ function AbaExperimental() {
               <p className="text-xs text-muted-foreground">Padrão: 120 segundos. Turnos com muitas turmas podem precisar de mais tempo; se a geração não terminar, use de 300 a 600 segundos.</p>
             </div>
           </div>
-          {gerandoCpsat && <ProgressoGeracao dados={progressoCpsat} acoes={acoesGeracao} />}
+          <div className="space-y-4 py-2">
+            {gerandoCpsat && <ProgressoGeracao dados={progressoCpsat} acoes={acoesGeracao} />}
+            <PainelCapacidade turno={cpsatForm.turno} /> {/* [CAPACIDADE-POR-TURNO] */}
+          </div>
           </div>
           <DialogFooter className="flex-wrap gap-2 sm:space-x-0">
             <Button
