@@ -5,7 +5,7 @@
 // trecho do assunto perguntado, entao o guia pode ser detalhado sem deixar
 // cada conversa mais lenta ou mais cara.
 //
-// MANUTENCAO: escrito a partir das telas reais em 04/10/2026. Ao mudar um
+// MANUTENCAO: escrito a partir das telas reais em 04/10/2026 (geracao, grade e conflitos revistos em 16/10/2026). Ao mudar um
 // nome de menu, botao ou fluxo no front (artifacts/horario-escolar), atualize
 // o topico correspondente aqui -- o assistente repete o que estiver escrito.
 
@@ -28,7 +28,7 @@ export const GUIA_NEXGRADE: Record<string, TopicoGuia> = {
 5. Turmas: crie as turmas escolhendo curso e série/matriz; depois, na edição da turma, escolha o professor de cada disciplina.
 6. Disponibilidade: marque bloqueios e hora-atividade (HA) de cada professor, por turno.
 7. Salas: cadastre os espaços (salas, laboratórios, quadra).
-8. Horário → Modo Experimental: gere a grade com o motor CP-SAT, confira e clique em "Promover para oficial".
+8. Horário → Modo Experimental: gere a grade (botão Turno inteiro), compare com "Simular promoção" e clique em "Promover para oficial".
 9. Usuários: libere o acesso da direção, coordenação, secretaria e gestor de reservas. Professores não precisam: entram com o e-mail do cadastro em Professores.`,
   },
 
@@ -122,7 +122,7 @@ DEFINIR OS PROFESSORES (abrir a turma para editar)
 - Assíncronas/sem.: quantas aulas semanais da disciplina são assíncronas (a aula assíncrona ocupa o professor, não a turma).
 
 HORÁRIO DA TURMA
-- Na lista, o botão "Horário" abre a grade da turma, com "Professores por Disciplina", aplicação de matriz e o botão "Gerar via CP-SAT" (gera uma prévia no Modo Experimental; a grade oficial só muda depois de promover).
+- Na lista, o botão "Horário" abre a grade da turma, com "Professores por Disciplina", aplicação de matriz e o botão "Gerar grade" (gera uma prévia no Modo Experimental; a grade oficial só muda depois de promover).
 - Remover turma apaga também todo o horário dela.`,
   },
 
@@ -138,7 +138,10 @@ HORÁRIO DA TURMA
 - HA* = hora-atividade em contraturno (num turno em que o professor não tem aula) ou referente a aulas de outro turno (ex.: HA das aulas da tarde cumprida de manhã). Aparece assim na Grade, na Minha Agenda, no perfil e nos PDFs.
 - Quantidade de HA: a tabela oficial da SEED-PR é consultada com as aulas de CADA turno, e não com o total da escola. Ex.: 14 aulas de manhã (4 HA) + 8 à tarde (2 HA) = 6 HA.
 
-FIXAR UMA AULA (o CP-SAT mantém a aula naquele horário)
+PELA GRADE DO PROFESSOR (atalho para trocas do dia a dia)
+Em Horário → Grade, filtre um professor e clique num horário vazio ou numa HA: abre um menu com Marcar HA, Tirar HA, Bloquear horário e Liberar horário. Grava na mesma Disponibilidade. HA fixa e abono do probatório (com cadeado 🔒) só mudam aqui na tela Disponibilidade.
+
+FIXAR UMA AULA (a geração mantém a aula naquele horário)
 1. Ligue "Modo fixar aula".
 2. Clique na célula, escolha a turma e a disciplina e confirme.
 3. Para soltar, clique de novo na célula com o modo ligado (ou use o botão de soltar na lista de aulas fixas).
@@ -168,46 +171,64 @@ Os espaços cadastrados aqui são os que aparecem em Reservas.`,
   },
 
   gerar_grade: {
-    titulo: "Gerar a grade horária (CP-SAT, Modo Experimental e promover para oficial)",
-    palavras: ["gerar", "gerar horário", "gerar grade", "cp-sat", "experimental", "promover", "oficial", "prévia", "melhorar grade", "janelas", "refazer horário"],
-    texto: `A grade é gerada no menu Horário → aba Modo Experimental. Nada muda na grade oficial até você clicar em "Promover para oficial".
+    titulo: "Gerar a grade horária (Turma, Turno parcial, Turno inteiro, Modo Experimental e promover)",
+    palavras: ["gerar", "gerar horário", "gerar grade", "cp-sat", "experimental", "promover", "oficial", "prévia", "melhorar grade", "janelas", "refazer horário", "turno parcial", "turma", "turno inteiro", "parar", "cancelar", "andamento", "simular promoção"],
+    texto: `A grade é gerada no menu Horário → aba Modo Experimental. Toda geração vira um EXPERIMENTO: nada muda na grade oficial até você clicar em "Promover para oficial".
 
-GERAR COM O MOTOR CP-SAT (preciso, recomendado)
-1. Em "Motor CP-SAT", escolha o alcance:
-   - Turma: uma turma só.
-   - Turno Parcial: escolha o turno e marque só algumas turmas (útil para dividir turnos grandes; as turmas de fora não mudam).
-   - Turno inteiro: todas as turmas do turno.
-2. Dê um nome ao experimento (ex.: CPSAT-Turno-2026-10-04). No turno inteiro dá para ajustar o "Tempo limite (segundos)" — padrão 120s; turnos grandes podem precisar de 300–600s.
-3. Aguarde. Se a página recarregar no meio, a geração continua de onde parou.
-4. Confira o resultado: turmas com aviso (disciplina não alocada por completo) aparecem listadas.
-- "Melhorar grade oficial": parte da grade oficial do turno e tenta reduzir janelas trocando aulas de lugar — nunca fica pior que a oficial. O resultado também vira um experimento.
+QUAL BOTÃO USAR (Turma, Turno parcial ou Turno inteiro)
+O NexGrade recalcula só as turmas escolhidas. As aulas das outras turmas ficam paradas e contam como horário ocupado para os professores delas (ninguém fica em dois lugares). Ao promover, só as turmas do experimento são trocadas.
+- Turma: corrige 1 ou poucas turmas sem mexer nas outras. Use quando abriu uma turma nova, mudou o professor ou a carga de uma disciplina, ou uma turma ficou com aula vaga ou conflito.
+- Turno parcial: refaz um grupo de turmas do mesmo turno. Use quando a mudança atinge várias turmas (ex.: todos os 6º anos, porque o professor que circula entre eles mudou; só o Fundamental da manhã) ou para dividir um turno muito grande que demora a gerar.
+- Turno inteiro: reorganiza o turno todo. Use no início do ano ou numa reorganização grande. É o que dá menos janelas, mas é o que mais muda a vida de alunos e professores.
+- Regra prática: quanto menor a parte gerada, menos coisa muda e menos o sistema consegue melhorar. No meio do ano (grade já no RCO e passada às famílias), prefira Turma ou Turno parcial; o Turno inteiro fica para o planejamento do ano.
+
+PASSO A PASSO
+1. Clique em Turma, Turno parcial ou Turno inteiro.
+2. À esquerda: nome do experimento (já vem preenchido, ex.: Grade-vespertino-2026-10-16-14h10), o turno ou as turmas e, no turno inteiro, o "Tempo limite (segundos)" (padrão 120; turnos grandes podem precisar de 300 a 600).
+3. À direita, no turno inteiro: o aviso de hora-atividade DO TURNO ESCOLHIDO. Em cinza ("parte da HA em outro turno (HA*) -- sem problema"): a HA que não cabe no turno vai para o outro turno. Em vermelho ("com HA faltando"): o professor não tem horário disponível em nenhum turno; resolve liberando horários na Disponibilidade.
+4. Clique em "Gerar grade". O andamento aparece à direita: lendo dados, ligando o servidor de cálculo (se estava desligado, leva 1 a 2 minutos), calculando (com as janelas da melhor grade encontrada caindo ao vivo) e salvando.
+5. Durante o cálculo:
+   - "Parar e usar a melhor até agora": interrompe e salva a melhor grade encontrada até ali (fica disponível depois da primeira grade encontrada).
+   - "Cancelar sem salvar": interrompe e não salva nada.
+6. Se a página recarregar no meio, a geração continua de onde parou.
+- "Melhorar grade oficial" (turno inteiro): parte da grade oficial e tenta reduzir janelas trocando aulas de lugar. O resultado também vira um experimento.
 
 CONFERIR E PROMOVER
 - Em cada experimento: veja a grade por turma, baixe "PDF por turma" ou "PDF por professor".
-- "Promover para oficial" substitui o horário atual das turmas envolvidas (pede confirmação).
-- Remova experimentos que não for usar.
+- "Simular promoção": compara as janelas dos professores (aula + HA + atividade do Urânia) do experimento com a oficial, sem gravar nada, e diz se vale promover. Use sempre antes de promover.
+- "Promover para oficial" substitui o horário das turmas do experimento (pede confirmação) e recalcula a HA desses professores. HA marcada à mão (HA manual, HA fixa, probatório) é mantida.
+- Apague os experimentos que não for usar.
+
+REGRAS DA HORA-ATIVIDADE AO PROMOVER
+- Quantidade pela tabela SEED-PR com as aulas de cada turno.
+- No máximo 3 HA por dia em cada turno (4 só como exceção, quando não há outra saída); até 2 seguidas, a não ser que seja a única opção do turno.
+- HA de aula do diurno nunca vai para a noite. O que não couber aparece em Conflitos como HA insuficiente.
 
 OUTROS CAMINHOS
-- Turmas → botão Horário da turma → "Gerar via CP-SAT" (mesmo motor, uma turma, vai para o Modo Experimental).
+- Turmas → botão Horário da turma → "Gerar grade" (uma turma, vai para o Modo Experimental).
 - Professores → (professor) → "Regenerar Horário (prévia)" (só as turmas daquele professor).
-- Gerador simples / motor heurístico: só para emergência, se o CP-SAT estiver fora do ar. Ele NÃO respeita aulas fixas, HA fixa, trio, aulas assíncronas nem a reserva de HA, e o "Gerar Grade (simples)" da aba Grade substitui a grade OFICIAL da turma direto.
+- "Mostrar gerador simples (emergência)": só se a geração normal estiver fora do ar. Ele NÃO respeita aulas fixas, HA fixa, trio, aulas assíncronas nem a reserva de HA, e o "Gerar Grade (simples)" da aba Grade substitui a grade OFICIAL da turma direto.
 
 O Assistente de IA não gera grade — ele só explica o caminho.`,
   },
 
   grade_conflitos: {
-    titulo: "Grade oficial e Conflitos (ver, filtrar, aula manual)",
-    palavras: ["grade", "ver horário", "filtrar", "aula manual", "adicionar aula", "excluir aula", "conflito", "conflitos", "vago"],
+    titulo: "Grade oficial e Conflitos (ver, filtrar, aula manual, HA e bloqueios pela grade)",
+    palavras: ["grade", "ver horário", "filtrar", "aula manual", "adicionar aula", "excluir aula", "conflito", "conflitos", "vago", "livre", "indisponível", "turnos lado a lado", "trocar ha", "bloquear"],
     texto: `Menu Horário → aba Grade.
 - Filtre por Turno, por Turma ou por Professor (botão "Limpar" volta ao início). Selecione uma turma, um professor ou um turno para ver a grade.
+- Professor com aula ou HA em mais de um turno, com o filtro em "Todos os turnos": aparece um quadro por turno, lado a lado, com o horário de cada aula e o total de aulas e HA do turno. Para ver só um, escolha o turno no filtro.
+- Na grade do professor: Livre (contorno verde) = horário disponível sem aula nem HA; Indisp. (cinza) = bloqueio do professor; "indisp." embaixo do dia = turno inteiro bloqueado naquele dia; HA/HA* em amarelo; atividades do Urânia (FORM, COORD...) em cinza com o nome.
+- Trocar HA ou bloqueio pela grade do professor: clique num Livre, Indisp. ou HA e escolha Marcar HA, Tirar HA, Bloquear horário ou Liberar horário. Para mudar uma HA de lugar: "Tirar HA" na antiga e "Marcar HA" na nova. Grava na Disponibilidade (HA marcada aqui é HA manual: a promoção de grade não mexe nela). HA fixa e probatório (🔒) só na tela Disponibilidade.
 - Clique numa aula para ver os detalhes, editar ou excluir (a exclusão pede confirmação e não pode ser desfeita).
 - "Adicionar aula manual": escolha Turma, Disciplina, Dia da semana, Número da aula e Professor (titular). Para co-docência, ligue "Aula com dois professores" e escolha o Professor de apoio. Grava direto na grade oficial; se já houver aula naquele horário para a turma, a inclusão é bloqueada.
 - Com uma turma selecionada, também dá para clicar numa célula vazia para adicionar aula ali.
 - Gestor de reservas vê a grade em modo consulta (sem alterar).
 
 Aba Conflitos:
-- Mostra Total de conflitos, Críticos e Alta prioridade, com gravidade (Crítico, Alto, Médio, Baixo) e "Sugestões de resolução".
-- "Reanalisar" recalcula; "Ver disponibilidade" leva ao professor envolvido.
+- Quadros Total, Críticos, Alta prioridade, Média e Baixa: clique num quadro para ver só aqueles conflitos; clique de novo (ou em Total) para ver todos.
+- Botões por tipo (ex.: "HA Insuficiente (3)", "Janelas Excessivas (1)"): mostram só aquele tipo; dá para combinar com a gravidade.
+- Cada conflito tem "Ver sugestões" e "Ver disponibilidade" (leva ao professor). "Reanalisar" recalcula.
 - Para conflito de professor indisponível, o caminho mais seguro é Professores → (professor) → "Corrigir Conflitos (recomendado)".`,
   },
 
@@ -340,7 +361,7 @@ Cargos:
 - Grade de um professor (com HA/HA*) ou de uma turma; quem está livre num dia/aula/turno; reservas e limite semanal; janelas de professores, turmas sem horário e distribuição semanal.
 - Passo a passo de qualquer tela do NexGrade.
 - Pode propor marcar um professor como disponível/indisponível num horário — sempre pede confirmação antes de gravar e não altera hora-atividade.
-- Não gera nem altera a grade; explica o caminho pelo CP-SAT.
+- Não gera nem altera a grade; explica o caminho pela geração de grade (Modo Experimental).
 - Disponível para direção, coordenação e secretaria.`,
   },
 };
