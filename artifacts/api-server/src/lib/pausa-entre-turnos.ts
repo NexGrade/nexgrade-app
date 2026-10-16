@@ -1,18 +1,20 @@
-// [PAUSA-ENTRE-TURNOS] (16/10/2026) Entre o fim de um turno e o comeco do outro, no mesmo dia, o
-// professor precisa de pelo menos 1 hora livre (sem aula e sem HA). Usa os horarios reais do
-// esquema de cada turno (horario_slots). Ex.: Romario, 6a da manha 11:55-12:45 e 1a da tarde
-// 13:00 = 15 min -> nao pode ter as duas no mesmo dia.
-// - Conflitos: lista cada caso (aula x aula = alto; envolvendo HA = medio).
+// [PAUSA-ENTRE-TURNOS] (16/10/2026) Boa pratica da escola: o professor nao da a ULTIMA aula de um
+// turno e a PRIMEIRA do turno seguinte no mesmo dia sem pelo menos 1 hora entre elas. Usa os
+// horarios reais do esquema de cada turno (horario_slots). Ex.: Romario, 6a da manha 11:55-12:45 e
+// 1a da tarde 13:00 = 15 min -> evitar as duas aulas no mesmo dia.
+// [PAUSA-SO-AULA] (16/10/2026) vale SO para aula x aula. HA pode ficar logo depois (ou antes) de
+// uma aula do outro turno: nao entra nos conflitos, no motor nem no recalculo de HA.
+// - Conflitos: lista cada caso aula x aula (gravidade alta).
 // - Motor: os horarios que quebrariam a pausa vao como "evitar" (penalidade, nao proibicao),
 //   para nao deixar a geracao sem solucao enquanto a grade atual ainda tiver esses casos.
-// HA_PAUSA_ENTRE_TURNOS_MIN muda os 60 minutos (0 desliga), igual ao recalculo de HA.
-import { db, horariosTable, turmasTable, horarioSlotsTable, disponibilidadeTable, professoresTable } from "@workspace/db";
-import { and, eq, inArray, ne, sql } from "drizzle-orm";
+// HA_PAUSA_ENTRE_TURNOS_MIN muda os 60 minutos (0 desliga).
+import { db, horariosTable, turmasTable, horarioSlotsTable } from "@workspace/db";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { carregarAssSoTurma } from "./assincrona-so-turma";
 
 export const PAUSA_MIN_TURNOS = (): number => Number(process.env.HA_PAUSA_ENTRE_TURNOS_MIN ?? "60");
 
-type Item = { professorId: number; turno: string; dia: number; aula: number; tipo: "aula" | "HA"; turmaId: number | null };
+type Item = { professorId: number; turno: string; dia: number; aula: number; tipo: "aula"; turmaId: number | null };
 
 async function faixasDaEscola(escolaId: string): Promise<Map<string, [number, number]>> {
   const slots = await db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId));
@@ -46,18 +48,13 @@ async function itensDaEscola(escolaId: string, professorIds?: number[]): Promise
     if (!t || ehAssSoTurma(h, t)) continue; // a 7a aula (so da turma) nao ocupa o professor
     itens.push({ professorId: h.professorId, turno: t.turno, dia: h.diaSemana, aula: h.numeroAula, tipo: "aula", turmaId: h.turmaId });
   }
-  const profs = professorIds ?? (await db.select({ id: professoresTable.id }).from(professoresTable).where(eq(professoresTable.escolaId, escolaId))).map((p) => p.id);
-  if (profs.length) {
-    const has = await db.select().from(disponibilidadeTable)
-      .where(and(inArray(disponibilidadeTable.professorId, profs), eq(disponibilidadeTable.horaAtividadeObrigatoria, true)));
-    for (const d of has) if (d.turno) itens.push({ professorId: d.professorId, turno: d.turno, dia: d.diaSemana, aula: d.horarioSlot, tipo: "HA", turmaId: null });
-  }
+  // [PAUSA-SO-AULA] HA nao entra: pode ficar colada numa aula do outro turno.
   return itens;
 }
 
 export type CasoPausa = { professorId: number; dia: number; a: Item; b: Item; pausaMin: number };
 
-/** Casos da grade oficial com menos de 1 hora entre dois turnos no mesmo dia. */
+/** Casos aula x aula da grade oficial com menos de 1 hora entre dois turnos no mesmo dia. */
 export async function casosPausaEntreTurnos(escolaId: string): Promise<CasoPausa[]> {
   const min = PAUSA_MIN_TURNOS();
   if (min <= 0) return [];
@@ -74,7 +71,6 @@ export async function casosPausaEntreTurnos(escolaId: string): Promise<CasoPausa
   for (const l of porProfDia.values()) {
     for (const x of l) for (const y of l) {
       if (x.turno >= y.turno) continue;
-      if (x.tipo === "HA" && y.tipo === "HA") continue;
       const fa = faixa.get(`${x.turno}|${x.aula}`);
       const fb = faixa.get(`${y.turno}|${y.aula}`);
       if (!fa || !fb) continue;
@@ -91,7 +87,7 @@ export async function casosPausaEntreTurnos(escolaId: string): Promise<CasoPausa
 
 /**
  * Para o motor: horarios do turno que vai ser gerado que ficariam a menos de 1 hora de alguma
- * aula/HA oficial do mesmo professor em OUTRO turno no mesmo dia. Vao como "evitar" (penalidade).
+ * aula oficial do mesmo professor em OUTRO turno no mesmo dia. Vao como "evitar" (penalidade).
  */
 export async function evitarPorPausaEntreTurnos(
   escolaId: string,

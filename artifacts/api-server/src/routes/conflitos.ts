@@ -550,7 +550,8 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     }
   }
 
-  // [PAUSA-ENTRE-TURNOS] menos de 1 hora entre o fim de um turno e o comeco do outro no mesmo dia
+  // [PAUSA-ENTRE-TURNOS] aula na ultima de um turno e na 1a do seguinte no mesmo dia, com menos
+  // de 1 hora entre elas. [PAUSA-SO-AULA] HA nao entra (pode ficar colada na aula).
   {
     const DIA_P = ["segunda", "terça", "quarta", "quinta", "sexta"];
     const TURNO_P: Record<string, string> = { matutino: "manhã", vespertino: "tarde", noturno: "noite" };
@@ -558,12 +559,11 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
       `${i.tipo === "HA" ? "HA" : `aula (${turmas.find((t) => t.id === i.turmaId)?.nome ?? "?"})`} na ${i.aula}ª da ${TURNO_P[i.turno] ?? i.turno}`;
     for (const c of await casosPausaEntreTurnos(escolaId)) {
       const prof = professores.find((p) => p.id === c.professorId);
-      const comHA = c.a.tipo === "HA" || c.b.tipo === "HA";
       conflitos.push({
         tipo: "pausa_entre_turnos",
         descricao: `Prof. ${prof?.nome ?? c.professorId} na ${DIA_P[c.dia] ?? c.dia}: ${desc(c.a)} e ${desc(c.b)} -- só ${c.pausaMin < 0 ? 0 : c.pausaMin} min entre os turnos (mínimo 1 hora)`,
-        gravidade: comHA ? "medio" : "alto",
-        turmaId: (c.a.tipo === "aula" ? c.a.turmaId : c.b.turmaId) ?? null,
+        gravidade: "alto",
+        turmaId: c.a.turmaId ?? null,
         professorId: c.professorId,
         diaSemana: c.dia,
         numeroAula: c.a.aula,
@@ -576,15 +576,11 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
 
 function gerarSugestoes(conflito: Conflito): string[] {
   switch (conflito.tipo) {
-    case "pausa_entre_turnos": // [PAUSA-ENTRE-TURNOS]
-      return conflito.gravidade === "medio"
-        ? [
-            "Mover a HA para outro horário na Disponibilidade (o recálculo de HA já respeita a pausa de 1 hora)",
-          ]
-        : [
-            "Trocar a última aula da manhã ou a 1ª da tarde desse professor com outro professor da turma",
-            "Ou usar 'Melhorar grade oficial' no turno: o motor evita esses horários",
-          ];
+    case "pausa_entre_turnos": // [PAUSA-ENTRE-TURNOS] [PAUSA-SO-AULA]
+      return [
+        "Trocar a última aula da manhã ou a 1ª da tarde desse professor com outro professor da turma",
+        "Ou usar 'Melhorar grade oficial' no turno: o motor evita esses horários",
+      ];
     case "intervalo_entre_turnos": // [INTERVALO-ENTRE-TURNOS]
       return conflito.gravidade === "medio"
         ? [
