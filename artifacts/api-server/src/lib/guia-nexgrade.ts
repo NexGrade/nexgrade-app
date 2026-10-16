@@ -136,6 +136,7 @@ HORÁRIO DA TURMA
 - Se o horário já tem aula real e você bloqueia, o sistema avisa que isso vai gerar conflito "professor indisponível".
 - Se aparecer "Nenhum esquema de horário configurado para o turno", configure antes em Calendário e Turnos → Esquema de aulas por turno.
 - HA* = hora-atividade em contraturno (num turno em que o professor não tem aula) ou referente a aulas de outro turno (ex.: HA das aulas da tarde cumprida de manhã). Aparece assim na Grade, na Minha Agenda, no perfil e nos PDFs.
+- Quantidade de HA: a tabela oficial da SEED-PR é consultada com as aulas de CADA turno, e não com o total da escola. Ex.: 14 aulas de manhã (4 HA) + 8 à tarde (2 HA) = 6 HA.
 
 FIXAR UMA AULA (o CP-SAT mantém a aula naquele horário)
 1. Ligue "Modo fixar aula".

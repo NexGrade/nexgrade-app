@@ -20,8 +20,7 @@
  * Regra de turno (Art. 11, §4º): quando o professor tem até 19 aulas
  * num turno (ver `seed_pr.hora_atividade_mesmo_turno_ate`), a HA dele
  * nesse turno deve ficar concentrada no MESMO turno das aulas — por
- * isso o resultado final ainda é por turno, mesmo calculando o total
- * geral primeiro (ver `calcularHoraAtividadePorTurno`).
+ * isso o resultado final é por turno (ver `calcularHoraAtividadePorTurno`).
  */
 const TABELA_OFICIAL_HA: readonly number[] = [
   0, // 0 aulas
@@ -44,44 +43,19 @@ export function calcularHoraAtividadeInstitucional(aulasNoTurno: number): number
 }
 
 /**
- * Calcula o total geral de HA institucional (via tabela oficial,
- * consultada uma única vez pro total) e distribui esse total entre os
- * turnos, proporcionalmente às aulas de cada um, pelo método dos
- * maiores restos -- garante que a soma das partes seja exatamente
- * igual ao total geral, sem inflar por arredondamento duplicado.
+ * [HA-POR-TURNO] (15/10/2026, regra confirmada pela Simone) A tabela oficial e consultada
+ * com as aulas de CADA TURNO, nao com o total da escola. Ex.: 14 aulas de manha + 8 a tarde
+ * = 4 + 2 = 6 HA (antes: 22 aulas = 7 HA rateadas entre os turnos).
  */
 export function calcularHoraAtividadePorTurno(
   aulasPorTurno: Record<string, number>
 ): Record<string, number> {
-  const turnos = Object.keys(aulasPorTurno);
-  const totalAulas = turnos.reduce((soma, t) => soma + (aulasPorTurno[t] || 0), 0);
-
-  if (totalAulas <= 0) {
-    const zeros: Record<string, number> = {};
-    turnos.forEach((t) => (zeros[t] = 0));
-    return zeros;
-  }
-
-  const exigidoTotal = calcularHoraAtividadeInstitucional(totalAulas);
-
-  const partes = turnos.map((turno) => {
-    const aulas = aulasPorTurno[turno] || 0;
-    const proporcional = (aulas / totalAulas) * exigidoTotal;
-    return { turno, base: Math.floor(proporcional), resto: proporcional - Math.floor(proporcional) };
-  });
-
-  let alocado = partes.reduce((soma, p) => soma + p.base, 0);
-  let faltam = exigidoTotal - alocado;
-
-  // Distribui o que sobrou (pra fechar o total exato) pros turnos com
-  // maior resto fracionário -- método padrão de rateio (Hare-Niemeyer).
-  const ordenadoPorResto = [...partes].sort((a, b) => b.resto - a.resto);
-  for (let i = 0; i < ordenadoPorResto.length && faltam > 0; i++) {
-    ordenadoPorResto[i]!.base += 1;
-    faltam--;
-  }
-
   const resultado: Record<string, number> = {};
-  partes.forEach((p) => (resultado[p.turno] = p.base));
+  for (const [turno, aulas] of Object.entries(aulasPorTurno)) resultado[turno] = calcularHoraAtividadeInstitucional(aulas || 0);
   return resultado;
+}
+
+/** Total de HA do professor = soma da tabela consultada turno a turno. */
+export function calcularHoraAtividadeTotal(aulasPorTurno: Record<string, number>): number {
+  return Object.values(calcularHoraAtividadePorTurno(aulasPorTurno)).reduce((s, n) => s + n, 0);
 }

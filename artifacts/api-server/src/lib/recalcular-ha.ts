@@ -58,30 +58,22 @@ export function calcularHoraAtividadeInstitucional(aulasNoTurno: number): number
   return Math.ceil(aulasNoTurno / 3);
 }
 
-function calcularHoraAtividadePorTurno(aulasPorTurno: Record<string, number>, exigidoOverride?: number): Record<string, number> {
-  const turnos = Object.keys(aulasPorTurno);
-  const totalAulas = turnos.reduce((soma, t) => soma + (aulasPorTurno[t] || 0), 0);
-  if (totalAulas <= 0) {
-    const zeros: Record<string, number> = {};
-    turnos.forEach((t) => (zeros[t] = 0));
-    return zeros;
-  }
-  const exigidoTotal = exigidoOverride ?? calcularHoraAtividadeInstitucional(totalAulas);
-  const partes = turnos.map((turno) => {
-    const aulas = aulasPorTurno[turno] || 0;
-    const proporcional = (aulas / totalAulas) * exigidoTotal;
-    return { turno, base: Math.floor(proporcional), resto: proporcional - Math.floor(proporcional) };
-  });
-  let alocado = partes.reduce((soma, p) => soma + p.base, 0);
-  let faltam = exigidoTotal - alocado;
-  const ordenadoPorResto = [...partes].sort((a, b) => b.resto - a.resto);
-  for (let i = 0; i < ordenadoPorResto.length && faltam > 0; i++) {
-    ordenadoPorResto[i]!.base += 1;
-    faltam--;
-  }
+// [HA-POR-TURNO] (15/10/2026) a tabela oficial e consultada com as aulas de CADA turno
+// (nao com o total da escola). `descontar` = HA manual ja marcada fora do calculo
+// (contraturno): sai do orcamento, tirando sempre do turno com mais HA.
+function calcularHoraAtividadePorTurno(aulasPorTurno: Record<string, number>, descontar = 0): Record<string, number> {
   const resultado: Record<string, number> = {};
-  partes.forEach((p) => (resultado[p.turno] = p.base));
+  for (const [turno, aulas] of Object.entries(aulasPorTurno)) resultado[turno] = calcularHoraAtividadeInstitucional(aulas || 0);
+  for (let i = 0; i < descontar; i++) {
+    const maior = Object.keys(resultado).sort((x, y) => resultado[y]! - resultado[x]!)[0];
+    if (!maior || resultado[maior]! <= 0) break;
+    resultado[maior]! -= 1;
+  }
   return resultado;
+}
+
+export function calcularHoraAtividadeTotalPorTurno(aulasPorTurno: Record<string, number>): number {
+  return Object.values(calcularHoraAtividadePorTurno(aulasPorTurno)).reduce((s, n) => s + n, 0);
 }
 
 export interface ResultadoRecalculoHA {
@@ -268,13 +260,12 @@ export async function calcularHAIdeal(
 
     const totalAulas = Object.values(aulasPorTurno).reduce((s, n) => s + n, 0);
     const diasComAula = new Set(aulasDoProf.map((h) => h.diaSemana)); // [FIX-CONTRATURNO-SO-DIA-COM-AULA]
-    const exigidoTotal = calcularHoraAtividadeInstitucional(totalAulas);
+    const exigidoTotal = calcularHoraAtividadeTotalPorTurno(aulasPorTurno); // [HA-POR-TURNO]
     // [FIX] a HA manual de contraturno ja preservada acima conta pro
     // total exigido -- sem subtrair aqui, o orcamento automatico por
     // turno de ensino seria calculado em cima do total CHEIO de novo,
     // dando HA a mais (manual + automatica somando mais que o exigido).
-    const exigidoParaDistribuir = Math.max(0, exigidoTotal - haManualContraturno.length);
-    const orcamentoPorTurno = calcularHoraAtividadePorTurno(aulasPorTurno, exigidoParaDistribuir);
+    const orcamentoPorTurno = calcularHoraAtividadePorTurno(aulasPorTurno, haManualContraturno.length);
 
     // [PREENCHIMENTO-GULOSO] Funcao reutilizavel: dado um turno, um
     // orcamento e o conjunto inicial de slots ocupados (aula real),

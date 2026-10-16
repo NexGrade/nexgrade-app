@@ -10,7 +10,7 @@
 import { db, turmasTable, turmaDisciplinasTable, disciplinasTable, professoresTable, disponibilidadeTable, horarioSlotsTable, professorDisciplinasTable, itensMatrizTable } from "@workspace/db";
 import { and, eq, inArray } from "drizzle-orm";
 import { ehBloqueioReal, ehHaFixa } from "./bloqueio-real"; // [HA-FIXA]
-import { calcularHoraAtividadeInstitucional, ehBloqueioPeriodoNaoLetivo } from "./recalcular-ha";
+import { calcularHoraAtividadeTotalPorTurno, ehBloqueioPeriodoNaoLetivo } from "./recalcular-ha";
 import { calcularHoraAtividadePorTurno } from "./hora-atividade";
 import { montarMapaPrincipal, ehSecundario, principalDe } from "./professor-principal"; // [MESMA-PESSOA-HA]
 
@@ -172,7 +172,7 @@ export async function validarCapacidadeProfessores(escolaId: string): Promise<Pr
     }
     const aulasTotal = Object.values(porTurno).reduce((s, n) => s + n, 0);
     // [MESMA-PESSOA-HA] secundario nao tem HA; principal usa o total da pessoa
-    const ha = ehSecundario(principal, pid) ? 0 : calcularHoraAtividadeInstitucional(Object.values(porTurnoHA.get(pid) ?? porTurno).reduce((s, n) => s + n, 0));
+    const ha = ehSecundario(principal, pid) ? 0 : calcularHoraAtividadeTotalPorTurno(porTurnoHA.get(pid) ?? porTurno); // [HA-POR-TURNO]
     const turnosEnsino = Object.keys(porTurno);
     const livresEnsino = turnosEnsino.reduce((s, t) => s + (livres[t] ?? 0) + (livresSoHA[t] ?? 0), 0); // [CAPACIDADE-NAO-LETIVO]
     const livresTotal = turnos.reduce((s, t) => s + (livres[t] ?? 0) + (livresSoHA[t] ?? 0), 0);
