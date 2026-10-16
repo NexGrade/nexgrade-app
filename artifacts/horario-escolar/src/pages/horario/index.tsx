@@ -26,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { SeletorBusca } from "@/components/seletor-busca";
 import { PainelCapacidade } from "@/components/painel-capacidade";
+import { ProgressoGeracao, type EtapaGeracao, type ProgressoGeracaoDados } from "@/components/progresso-geracao"; // [PROGRESSO-GERACAO]
 import {
   Check, ArrowRight, ArrowLeft, Lock, ChevronDown, ChevronRight, Plus,
   Calendar, ListChecks, AlertTriangle, FlaskConical,
@@ -52,6 +53,8 @@ type StatusCpsatResult = {
   error?: string;
   mensagem?: string;
   detalhe?: string;
+  etapas?: EtapaGeracao[]; // [PROGRESSO-GERACAO]
+  agoraMs?: number;
 };
 
 // Chave no sessionStorage para o job CP-SAT pendente (turno inteiro).
@@ -73,7 +76,7 @@ const CPSAT_TURNO_PARCIAL_JOB_PENDENTE_KEY = "nexgrade:cpsat-turno-parcial-job-p
 // depende de estado do componente) para poder ser chamada tanto pelo
 // fluxo normal (handleGerarCpsat) quanto pela retomada automatica no
 // useEffect de montagem.
-async function pollarStatusCpsat(jobId: string): Promise<StatusCpsatResult> {
+async function pollarStatusCpsat(jobId: string, onProgresso?: (p: ProgressoGeracaoDados) => void): Promise<StatusCpsatResult> {
   const INTERVALO_POLLING_MS = 4000;
   // [FIX-REDE] Tolera falhas de rede transitorias (fetch failed)
   // durante o polling -- comum em redes de escola com quedas
@@ -93,6 +96,7 @@ async function pollarStatusCpsat(jobId: string): Promise<StatusCpsatResult> {
         responseType: "json",
       });
       falhasPollingConsecutivas = 0;
+      if (onProgresso && statusResult.etapas) onProgresso({ etapas: statusResult.etapas, agoraMs: statusResult.agoraMs ?? Date.now(), recebidoEm: Date.now() }); // [PROGRESSO-GERACAO]
     } catch (pollErr) {
       const mensagemPollErr = pollErr instanceof Error ? pollErr.message : String(pollErr);
       if (mensagemPollErr.includes("encontrado")) {
@@ -1368,6 +1372,7 @@ function AbaExperimental() {
   // preciso pra reduzir janelas. Sempre grava como experimento.
   const [openGerarCpsat, setOpenGerarCpsat] = useState(false);
   const [gerandoCpsat, setGerandoCpsat] = useState(false);
+  const [progressoCpsat, setProgressoCpsat] = useState<ProgressoGeracaoDados | null>(null); // [PROGRESSO-GERACAO] um job CP-SAT por vez
   const [jobIdAtual, setJobIdAtual] = useState<string | null>(null);
   const [cpsatForm, setCpsatForm] = useState({
     turno: "matutino",
@@ -1455,8 +1460,9 @@ function AbaExperimental() {
   // muda o que acontece com o resultado (estado/toast especificos de
   // turma unica).
   const finalizarJobCpsatTurma = async (jobId: string, nomeExperimental: string, turmaIds: number[]) => {
+    setProgressoCpsat(null); // [PROGRESSO-GERACAO]
     try {
-      const statusResult = await pollarStatusCpsat(jobId);
+      const statusResult = await pollarStatusCpsat(jobId, setProgressoCpsat);
       if (statusResult.jobStatus === "error") {
         throw new Error(statusResult.mensagem || statusResult.detalhe || statusResult.error || "Erro ao gerar a grade com o motor CP-SAT.");
       }
@@ -1566,8 +1572,9 @@ function AbaExperimental() {
   // Parcial -- reaproveita pollarStatusCpsat integralmente, so muda o
   // estado/toast especificos e a chave de sessionStorage.
   const finalizarJobCpsatTurnoParcial = async (jobId: string, nomeExperimental: string, turmaIds: number[]) => {
+    setProgressoCpsat(null); // [PROGRESSO-GERACAO]
     try {
-      const statusResult = await pollarStatusCpsat(jobId);
+      const statusResult = await pollarStatusCpsat(jobId, setProgressoCpsat);
       if (statusResult.jobStatus === "error") {
         throw new Error(statusResult.mensagem || statusResult.detalhe || statusResult.error || "Erro ao gerar a grade com o motor CP-SAT.");
       }
@@ -1659,8 +1666,9 @@ function AbaExperimental() {
   // quanto pela retomada automatica no useEffect abaixo, para que os
   // dois caminhos tenham exatamente o mesmo comportamento final.
   const finalizarJobCpsat = async (jobId: string, nomeExperimental: string) => {
+    setProgressoCpsat(null); // [PROGRESSO-GERACAO]
     try {
-      const statusResult = await pollarStatusCpsat(jobId);
+      const statusResult = await pollarStatusCpsat(jobId, setProgressoCpsat);
       if (statusResult.jobStatus === "error") {
         throw new Error(statusResult.mensagem || statusResult.detalhe || statusResult.error || "Erro ao gerar a grade com o motor CP-SAT.");
       }
@@ -2324,6 +2332,7 @@ function AbaExperimental() {
 
             </div>
           </div>
+          {gerandoCpsatTurma && <ProgressoGeracao dados={progressoCpsat} />}
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenGerarCpsatTurma(false)}>Cancelar</Button>
             <Button onClick={handleGerarCpsatTurma} disabled={gerandoCpsatTurma}>{gerandoCpsatTurma ? "Gerando (pode levar até 2 min)..." : "Gerar com CP-SAT"}</Button>
@@ -2386,6 +2395,7 @@ function AbaExperimental() {
               )}
             </div>
           </div>
+          {gerandoCpsatTurnoParcial && <ProgressoGeracao dados={progressoCpsat} />}
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenGerarCpsatTurnoParcial(false)}>Cancelar</Button>
             <Button onClick={handleGerarCpsatTurnoParcial} disabled={gerandoCpsatTurnoParcial}>{gerandoCpsatTurnoParcial ? "Gerando (pode levar ate 2 min)..." : "Gerar com CP-SAT"}</Button>
@@ -2423,6 +2433,7 @@ function AbaExperimental() {
               <p className="text-xs text-muted-foreground">Padrao 120s. Turnos com muitas turmas (ex.: matutino do Mario Braga, 24 turmas) podem precisar de mais tempo -- tente 300-600s se o solver nao terminar a tempo.</p>
             </div>
           </div>
+          {gerandoCpsat && <ProgressoGeracao dados={progressoCpsat} />}
           <DialogFooter className="flex-wrap gap-2 sm:space-x-0">
             <Button
               variant="outline"

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import axios from "axios";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { db } from "@workspace/db";
 import {
   horariosTable,
@@ -1341,6 +1342,35 @@ async function aguardarCpsatServiceAcordado(maxEsperaMs = 90_000): Promise<void>
   }
 }
 
+// [PROGRESSO-GERACAO] (16/10/2026) etapas da geracao, para a tela mostrar o andamento em vez de
+// so "rodando". Cada job assincrono tem sua lista; as funcoes de geracao marcam as etapas pelo
+// AsyncLocalStorage (sem passar callback por todas as chamadas). Fora de um job, nao faz nada.
+interface EtapaGeracao { id: string; rotulo: string; inicioMs: number; fimMs?: number; detalhe?: string }
+interface ProgressoGeracao { etapas: EtapaGeracao[]; fase?: string }
+const progressoGeracao = new AsyncLocalStorage<ProgressoGeracao>();
+function marcarEtapa(id: string, rotulo: string, detalhe?: string): void {
+  const p = progressoGeracao.getStore();
+  if (!p) return;
+  const agora = Date.now();
+  const aberta = p.etapas[p.etapas.length - 1];
+  if (aberta && aberta.fimMs == null) aberta.fimMs = agora;
+  p.etapas.push({ id, rotulo: p.fase ? `${p.fase}: ${rotulo}` : rotulo, inicioMs: agora, ...(detalhe ? { detalhe } : {}) });
+}
+function detalharEtapa(detalhe: string): void {
+  const p = progressoGeracao.getStore();
+  const aberta = p?.etapas[p.etapas.length - 1];
+  if (aberta) aberta.detalhe = detalhe;
+}
+function definirFaseGeracao(fase: string | undefined): void {
+  const p = progressoGeracao.getStore();
+  if (p) p.fase = fase;
+}
+function concluirEtapas(etapas: EtapaGeracao[]): EtapaGeracao[] {
+  const aberta = etapas[etapas.length - 1];
+  if (aberta && aberta.fimMs == null) aberta.fimMs = Date.now();
+  return etapas;
+}
+
 const GerarCpsatBody = z.object({
   turno: z.enum(["matutino", "vespertino", "noturno"]).optional(),
   turmaId: z.number().int().positive().optional(),
@@ -1407,14 +1437,18 @@ async function runCpsatGeneration(
       // dobro do esperado. Divide pela metade aqui para que o tempo
       // configurado corresponda ao tempo total de espera de verdade.
       const tempoLimitePorEtapa = tempoLimiteS != null ? Math.max(30, Math.floor(tempoLimiteS / 2)) : undefined;
+      marcarEtapa("fallback", "A geração conjunta não fechou; tentando em duas partes (Fundamental, depois Médio/Técnico)"); // [PROGRESSO-GERACAO]
+      definirFaseGeracao("Fundamental");
       const resultadoFundamental = await runCpsatGeneracaoUnica(escolaId, undefined, undefined, idsFundamental, nomeExperimental, tempoLimitePorEtapa, signal);
       if (resultadoFundamental.httpStatus < 200 || resultadoFundamental.httpStatus >= 300) {
         return { httpStatus: resultadoFundamental.httpStatus, body: { etapa: "fundamental", ...resultadoFundamental.body } };
       }
+      definirFaseGeracao("Médio/Técnico"); // [PROGRESSO-GERACAO]
       const resultadoMedio = await runCpsatGeneracaoUnica(escolaId, undefined, undefined, idsMedioTecnico, nomeExperimental, tempoLimitePorEtapa, signal);
       if (resultadoMedio.httpStatus < 200 || resultadoMedio.httpStatus >= 300) {
         return { httpStatus: resultadoMedio.httpStatus, body: { etapa: "medio_tecnico", fundamentalJaGerado: true, ...resultadoMedio.body } };
       }
+      definirFaseGeracao(undefined); // [PROGRESSO-GERACAO]
       const bodyFund = resultadoFundamental.body as Record<string, any>;
       const bodyMedio = resultadoMedio.body as Record<string, any>;
       const otimo = Boolean(bodyFund.otimo) && Boolean(bodyMedio.otimo);
@@ -1452,6 +1486,7 @@ async function runCpsatGeneracaoUnica(
   usarCoordenacao?: boolean,
   modoMelhoria?: boolean, // [MELHORAR-GRADE]
 ): Promise<{ httpStatus: number; body: Record<string, unknown> }> {
+  marcarEtapa("dados", "Lendo turmas, professores e disponibilidades"); // [PROGRESSO-GERACAO]
   let turno: "matutino" | "vespertino" | "noturno";
   let turmasDoTurno: (typeof turmasTable.$inferSelect)[];
 
@@ -1940,6 +1975,8 @@ async function runCpsatGeneracaoUnica(
     }
   }
 
+  detalharEtapa(`${turmasDoTurno.length} turma(s), ${disciplinasTurma.reduce((s, d) => s + d.aulasSemana, 0)} aula(s), ${new Set(disciplinasTurma.map((d) => d.professor)).size} professor(es)`); // [PROGRESSO-GERACAO]
+  marcarEtapa("servidor", "Ligando o servidor de cálculo", "Se ele estava desligado, leva 1 a 2 minutos"); // [PROGRESSO-GERACAO]
   await acordarMaquinaCpsat(); // [CPSAT-DESPERTADOR]
   // [CPSAT-DESPERTADOR] com a maquina sob demanda, o boot + uvicorn leva ~1-2 min.
   await aguardarCpsatServiceAcordado(CPSAT_DESPERTADOR_URL ? 240_000 : 90_000);
@@ -1947,6 +1984,8 @@ async function runCpsatGeneracaoUnica(
   const MAX_TENTATIVAS_CPSAT = 2;
   let ultimoErroCpsat: unknown = null;
   for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_CPSAT; tentativa++) {
+    marcarEtapa("calculo", modoMelhoria ? "Melhorando a grade (trocando aulas de lugar)" : tentativa === 1 ? "Calculando a grade" : "Calculando a grade (2ª tentativa, a conexão caiu)", // [PROGRESSO-GERACAO]
+      usarCoordenacao ? `Professores que dão aula no Fundamental e no Médio são acertados primeiro, até ${tempoCoordenacaoS + tempoFaseS * 2 + tempoFase3S}s` : `Tempo limite: ${tempoLimiteS ?? 120}s`);
     try {
       const timeoutMs = usarCoordenacao
         ? (tempoCoordenacaoS + tempoFaseS * 2 + tempoFase3S + 60) * 1000
@@ -2038,6 +2077,7 @@ async function runCpsatGeneracaoUnica(
     };
   }
 
+  marcarEtapa("gravar", "Salvando o experimento", `${resultado.otimo ? "Solução ótima" : resultado.status === "FEASIBLE" ? "Boa solução (sem prova de ótimo)" : resultado.status} em ${Math.round(resultado.tempoResolucaoS)}s`); // [PROGRESSO-GERACAO]
   await db.delete(horariosExperimentaisTable).where(and(
     eq(horariosExperimentaisTable.escolaId, escolaId),
     eq(horariosExperimentaisTable.nome, nomeExperimental),
@@ -2142,6 +2182,7 @@ interface CpsatJob {
   startedAt: number;
   finishedAt?: number;
   abortController?: AbortController;
+  etapas?: EtapaGeracao[]; // [PROGRESSO-GERACAO]
 }
 const cpsatJobs = new Map<string, CpsatJob>();
 
@@ -2178,9 +2219,10 @@ router.post("/gerar-cpsat-async", async (req, res) => {
   limparJobsCpsatAntigos();
   const jobId = randomUUID();
   const abortController = new AbortController();
-  cpsatJobs.set(jobId, { status: "running", escolaId, startedAt: Date.now(), abortController });
+  const progresso: ProgressoGeracao = { etapas: [] }; // [PROGRESSO-GERACAO]
+  cpsatJobs.set(jobId, { status: "running", escolaId, startedAt: Date.now(), abortController, etapas: progresso.etapas });
 
-  void runCpsatGeneration(escolaId, turno, turmaId, turmaIds, nomeExperimental, tempoLimiteS, abortController.signal)
+  void progressoGeracao.run(progresso, () => runCpsatGeneration(escolaId, turno, turmaId, turmaIds, nomeExperimental, tempoLimiteS, abortController.signal))
     .then(async (resultado) => {
       const jobAtual = cpsatJobs.get(jobId);
       if (jobAtual?.status === "cancelado") return;
@@ -2191,6 +2233,7 @@ router.post("/gerar-cpsat-async", async (req, res) => {
         body: { ...resultado.body, capacidade: await resumoCapacidade(escolaId) }, // [CAPACIDADE-PROFESSOR]
         startedAt: jobAtual?.startedAt ?? Date.now(),
         finishedAt: Date.now(),
+        etapas: concluirEtapas(jobAtual?.etapas ?? []), // [PROGRESSO-GERACAO]
       });
     })
     .catch((err) => {
@@ -2203,6 +2246,7 @@ router.post("/gerar-cpsat-async", async (req, res) => {
         body: { error: "Erro inesperado ao gerar a grade.", detalhe: err instanceof Error ? err.message : String(err) },
         startedAt: jobAtual?.startedAt ?? Date.now(),
         finishedAt: Date.now(),
+        etapas: concluirEtapas(jobAtual?.etapas ?? []), // [PROGRESSO-GERACAO]
       });
     });
 
@@ -2233,9 +2277,10 @@ router.post("/melhorar-grade-async", async (req, res) => {
   limparJobsCpsatAntigos();
   const jobId = randomUUID();
   const abortController = new AbortController();
-  cpsatJobs.set(jobId, { status: "running", escolaId, startedAt: Date.now(), abortController });
+  const progresso: ProgressoGeracao = { etapas: [] }; // [PROGRESSO-GERACAO]
+  cpsatJobs.set(jobId, { status: "running", escolaId, startedAt: Date.now(), abortController, etapas: progresso.etapas });
 
-  void runCpsatGeneracaoUnica(escolaId, turno, undefined, undefined, nomeExperimental, tempoLimiteS ?? 120, abortController.signal, false, true)
+  void progressoGeracao.run(progresso, () => runCpsatGeneracaoUnica(escolaId, turno, undefined, undefined, nomeExperimental, tempoLimiteS ?? 120, abortController.signal, false, true))
     .then((resultado) => {
       const jobAtual = cpsatJobs.get(jobId);
       if (jobAtual?.status === "cancelado") return;
@@ -2246,6 +2291,7 @@ router.post("/melhorar-grade-async", async (req, res) => {
         body: resultado.body,
         startedAt: jobAtual?.startedAt ?? Date.now(),
         finishedAt: Date.now(),
+        etapas: concluirEtapas(jobAtual?.etapas ?? []), // [PROGRESSO-GERACAO]
       });
     })
     .catch((err) => {
@@ -2258,6 +2304,7 @@ router.post("/melhorar-grade-async", async (req, res) => {
         body: { error: "Erro inesperado ao melhorar a grade.", detalhe: err instanceof Error ? err.message : String(err) },
         startedAt: jobAtual?.startedAt ?? Date.now(),
         finishedAt: Date.now(),
+        etapas: concluirEtapas(jobAtual?.etapas ?? []), // [PROGRESSO-GERACAO]
       });
     });
 
@@ -2275,10 +2322,10 @@ router.get("/gerar-cpsat-status/:jobId", (req, res) => {
     return;
   }
   if (job.status === "running") {
-    res.json({ jobStatus: "running" });
+    res.json({ jobStatus: "running", etapas: job.etapas ?? [], agoraMs: Date.now() }); // [PROGRESSO-GERACAO]
     return;
   }
-  res.status(200).json({ jobStatus: job.status, httpStatusOriginal: job.httpStatus, ...job.body });
+  res.status(200).json({ jobStatus: job.status, httpStatusOriginal: job.httpStatus, ...job.body, etapas: job.etapas ?? [], agoraMs: Date.now() });
 });
 
 router.post("/gerar-cpsat-cancelar/:jobId", (req, res) => {
