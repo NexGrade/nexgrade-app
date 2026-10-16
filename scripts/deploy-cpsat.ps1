@@ -7,7 +7,7 @@ $ErrorActionPreference = "Stop"
 # Regra: NUNCA editar direto no GCP. Mudou no repo -> commit -> este script.
 $vm = "nexgrade-cpsat-teste"
 $zona = "southamerica-east1-a"
-$local = "C:\nexgrade-app-atualizado\cpsat-service\app"
+$local = Join-Path $PSScriptRoot "..\cpsat-service\app"  # pasta do proprio repositorio (onde o script esta)
 $remoto = "/home/simone/cpsat-service/app"
 $arquivos = @("main.py", "solver.py", "pipeline_coordenada.py", "reduzir_janelas.py", "__init__.py")
 

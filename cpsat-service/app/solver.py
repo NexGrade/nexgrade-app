@@ -378,8 +378,12 @@ def resolver(
     # 2). Default 1 mantem o comportamento anterior; ajuste
     # CPSAT_NUM_WORKERS no ambiente do Render se subir de tier de novo.
     solver.parameters.num_search_workers = int(os.getenv("CPSAT_NUM_WORKERS", "1"))
-    solver.parameters.interleave_search = True
-    solver.parameters.interleave_batch_size = 4
+    # [FIX-FIXED-SEARCH] (15/10/2026) interleave_search derrubava o servico (OR-Tools 9.9:
+    # "Check failed: heuristics.fixed_search != nullptr", SIGABRT) com alguns modelos.
+    # Desligado por padrao; CPSAT_INTERLEAVE=1 religa.
+    if os.getenv("CPSAT_INTERLEAVE", "0") == "1":
+        solver.parameters.interleave_search = True
+        solver.parameters.interleave_batch_size = 4
     if apenas_turma:
         solver.parameters.symmetry_level = 0
 
