@@ -28,6 +28,7 @@ import { randomUUID } from "node:crypto";
 import { recalcularHoraAtividade } from "../lib/recalcular-ha";
 import { simularPromocao } from "../lib/simular-promocao"; // [SIMULAR-PROMOCAO]
 import { carregarAssSoTurma } from "../lib/assincrona-so-turma"; // [ASS-SO-TURMA]
+import { evitarPorPausaEntreTurnos } from "../lib/pausa-entre-turnos"; // [PAUSA-ENTRE-TURNOS]
 import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
 import { ehBloqueioParaMotor } from "../lib/bloqueio-real"; // [HA-FIXA]
 import { bloqueiosIntervaloEntreTurnos } from "../lib/intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
@@ -1881,7 +1882,11 @@ async function runCpsatGeneracaoUnica(
     return {} as Record<string, number>;
   });
   if (bloqueiosAcompanhante.length) payload.bloqueiosProfessor = [...payload.bloqueiosProfessor, ...bloqueiosAcompanhante]; // [ACOMPANHANTE]
-  const payloadComHa = { ...payload, haPorProfessor, recursos: recursosFixos }; // [AULA-FIXA]
+  // [PAUSA-ENTRE-TURNOS] horarios a menos de 1 hora de aula/HA do professor em outro turno: o motor evita
+  const evitarProfessor = await evitarPorPausaEntreTurnos(escolaId, turno, [...professorIdsUsados], (id) => professorMap.get(id)?.nome ?? `Professor #${id}`)
+    .catch((err) => { console.error("[PAUSA-ENTRE-TURNOS] falhou, gerando sem:", err); return []; });
+  console.log(`[PAUSA-ENTRE-TURNOS] turno=${turno} evitar=${evitarProfessor.length}`);
+  const payloadComHa = { ...payload, haPorProfessor, recursos: recursosFixos, evitarProfessor }; // [AULA-FIXA] [PAUSA-ENTRE-TURNOS]
   console.log("[DEBUG-CPSAT-PAYLOAD]", JSON.stringify(payload));
 
   let resultado:

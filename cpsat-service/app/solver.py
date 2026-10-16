@@ -7,6 +7,7 @@ completa (turma, disciplina, professor, dia, aula) em vez de só o status do sol
 """
 
 import os
+import threading  # [PAUSA-ENTRE-TURNOS]
 from ortools.sat.python import cp_model
 from dataclasses import dataclass
 from typing import Optional
@@ -14,6 +15,14 @@ import time
 
 TETO_AULAS_TURNO = {"noturno": 19, "matutino": 24, "vespertino": 24}
 DIAS = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"]
+
+# [PAUSA-ENTRE-TURNOS] (16/10/2026) horarios que o professor deve EVITAR (penalidade, nao proibicao):
+# ficariam a menos de 1 hora de uma aula/HA dele em outro turno. Definido por requisicao em main.py.
+_CTX = threading.local()
+
+
+def definir_evitar(lista):
+    _CTX.evitar = {(e["professor"], int(e["dia"]), int(e["aula"])) for e in (lista or [])}
 
 
 @dataclass
@@ -365,7 +374,17 @@ def resolver(
             if ultima_as > 1:
                 penalidades_assincrona.append(aula_var[(i_as, dia, ultima_as)])
     peso_assincrona = int(os.getenv("CPSAT_PESO_ASSINCRONA_PONTA", "2"))
-    model.Minimize(sum(penalidades_turma) + peso_professor * sum(penalidades_professor) + peso_ha * sum(deficits_ha) + peso_assincrona * sum(penalidades_assincrona))
+    # [PAUSA-ENTRE-TURNOS] aula em horario a evitar custa como algumas janelas
+    evitar = getattr(_CTX, "evitar", None) or set()
+    penalidades_pausa = [
+        aula_var[(i, dia, aula)]
+        for i, dt in enumerate(disciplinas_turma)
+        for dia in range(len(DIAS))
+        for aula in range(1, aulas_por_dia + 1)
+        if (dt.professor, dia, aula) in evitar
+    ]
+    peso_pausa = int(os.getenv("CPSAT_PESO_PAUSA_TURNOS", "5"))
+    model.Minimize(sum(penalidades_turma) + peso_professor * sum(penalidades_professor) + peso_ha * sum(deficits_ha) + peso_assincrona * sum(penalidades_assincrona) + peso_pausa * sum(penalidades_pausa))
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = tempo_limite_s

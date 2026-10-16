@@ -3,7 +3,7 @@ import hmac  # [CPSAT-TOKEN]
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse  # [CPSAT-TOKEN]
 from google import genai
-from .solver import gerar_grade
+from .solver import gerar_grade, definir_evitar  # [PAUSA-ENTRE-TURNOS]
 from .pipeline_coordenada import gerar_grade_coordenada
 app = FastAPI(title="Nexgrade CP-SAT Solver API")
 
@@ -83,6 +83,7 @@ def read_root():
 @app.post("/gerar-grade")
 def gerar_grade_endpoint(payload: dict):
     try:
+        definir_evitar(payload.get("evitarProfessor"))  # [PAUSA-ENTRE-TURNOS]
         disciplinas_raw = payload.get("disciplinasTurma", [])
         bloqueios_raw = payload.get("bloqueiosProfessor", [])
         turno = payload.get("turno", "matutino")
@@ -113,6 +114,7 @@ def gerar_grade_endpoint(payload: dict):
 @app.post("/gerar-grade-coordenada")
 def gerar_grade_coordenada_endpoint(payload: dict):
     try:
+        definir_evitar(payload.get("evitarProfessor"))  # [PAUSA-ENTRE-TURNOS]
         disciplinas_raw = payload.get("disciplinasTurma", [])
         bloqueios_raw = payload.get("bloqueiosProfessor", [])
         turno = payload.get("turno", "matutino")
@@ -154,6 +156,7 @@ def gerar_grade_coordenada_endpoint(payload: dict):
 @app.post("/melhorar-grade")
 def melhorar_grade_endpoint(payload: dict):
     try:
+        definir_evitar(payload.get("evitarProfessor"))  # [PAUSA-ENTRE-TURNOS]
         from .reduzir_janelas import contar_janelas_professor
         aulas_iniciais = payload.get("aulasIniciais", [])
         if not aulas_iniciais:
