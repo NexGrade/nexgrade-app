@@ -53,6 +53,20 @@ export type ProfessorCargaHaInstitucionalPorTurno = {[key: string]: number};
  */
 export type ProfessorCargaHaAlocadaPorTurno = {[key: string]: number};
 
+export type ProfessorCargaCadastrosLigadosItem = {
+  id: number;
+  nome: string;
+  aulas: number;
+};
+
+/**
+ * [MESMA-PESSOA-HA] Quando este e um cadastro secundario: o cadastro principal, que recebe a HA.
+ */
+export type ProfessorCargaCadastroPrincipal = {
+  id: number;
+  nome: string;
+};
+
 export interface ProfessorCarga {
   professorId: number;
   totalAulas: number;
@@ -65,6 +79,10 @@ export interface ProfessorCarga {
   haInstitucionalTotal?: number;
   /** Quantas HA obrigatorias ja estao de fato marcadas em disponibilidade_professores, por turno. */
   haAlocadaPorTurno?: ProfessorCargaHaAlocadaPorTurno;
+  /** [MESMA-PESSOA-HA] Cadastros secundarios ligados a este (ex.: "Jessica (IFA)"), com as aulas de cada um. Essas aulas somam para a HA do principal. */
+  cadastrosLigados?: ProfessorCargaCadastrosLigadosItem[];
+  /** [MESMA-PESSOA-HA] Quando este e um cadastro secundario: o cadastro principal, que recebe a HA. */
+  cadastroPrincipal?: ProfessorCargaCadastroPrincipal;
 }
 
 /**

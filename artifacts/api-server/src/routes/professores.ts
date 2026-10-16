@@ -208,21 +208,34 @@ router.get("/:id/carga", async (req, res) => {
   // [MESMA-PESSOA-HA] cadastro secundario (ex.: "Jessica (IFA)") nao tem HA propria;
   // o principal soma as aulas dos cadastros ligados a ele para a HA necessaria.
   let porTurnoHA: Record<string, number> = porTurno;
+  // [MESMA-PESSOA-HA] para a tela: no principal, os secundarios com as aulas de cada um;
+  // no secundario, o principal (onde fica a HA).
+  let cadastrosLigados: { id: number; nome: string; aulas: number }[] = [];
+  let cadastroPrincipal: { id: number; nome: string } | undefined;
   if (professor.professorPrincipalId != null) {
     porTurnoHA = {};
+    const principal = await db
+      .select({ id: professoresTable.id, nome: professoresTable.nome })
+      .from(professoresTable)
+      .where(and(eq(professoresTable.id, professor.professorPrincipalId), eq(professoresTable.escolaId, escolaId)))
+      .then((r) => r[0]);
+    if (principal) cadastroPrincipal = principal;
   } else {
     const secundarios = await db
-      .select({ id: professoresTable.id })
+      .select({ id: professoresTable.id, nome: professoresTable.nome })
       .from(professoresTable)
       .where(and(eq(professoresTable.professorPrincipalId, parsed.data.id), eq(professoresTable.escolaId, escolaId)));
     if (secundarios.length > 0) {
       const slotsSec = await db
-        .select({ turno: turmasTable.turno })
+        .select({ turno: turmasTable.turno, professorId: horariosTable.professorId })
         .from(horariosTable)
         .innerJoin(turmasTable, eq(horariosTable.turmaId, turmasTable.id))
         .where(and(inArray(horariosTable.professorId, secundarios.map((x) => x.id)), eq(horariosTable.escolaId, escolaId)));
       porTurnoHA = { ...porTurno };
       slotsSec.forEach((s) => (porTurnoHA[s.turno] = (porTurnoHA[s.turno] ?? 0) + 1));
+      cadastrosLigados = secundarios
+        .map((sec) => ({ id: sec.id, nome: sec.nome, aulas: slotsSec.filter((s) => s.professorId === sec.id).length }))
+        .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
     }
   }
 
@@ -253,6 +266,8 @@ router.get("/:id/carga", async (req, res) => {
     haInstitucionalPorTurno,
     haInstitucionalTotal,
     haAlocadaPorTurno,
+    cadastrosLigados,
+    ...(cadastroPrincipal ? { cadastroPrincipal } : {}),
   });
 });
 

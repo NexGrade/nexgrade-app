@@ -5,6 +5,8 @@
  * GradeEscolar â€” Sistema Completo de GestÃ£o de HorÃ¡rios Escolares
  * OpenAPI spec version: 0.2.0
  */
+import type { ProfessorCargaCadastroPrincipal } from './professorCargaCadastroPrincipal';
+import type { ProfessorCargaCadastrosLigadosItem } from './professorCargaCadastrosLigadosItem';
 import type { ProfessorCargaHaAlocadaPorTurno } from './professorCargaHaAlocadaPorTurno';
 import type { ProfessorCargaHaInstitucionalPorTurno } from './professorCargaHaInstitucionalPorTurno';
 import type { ProfessorCargaPorDia } from './professorCargaPorDia';
@@ -22,4 +24,8 @@ export interface ProfessorCarga {
   haInstitucionalTotal?: number;
   /** Quantas HA obrigatorias ja estao de fato marcadas em disponibilidade_professores, por turno. */
   haAlocadaPorTurno?: ProfessorCargaHaAlocadaPorTurno;
+  /** [MESMA-PESSOA-HA] Cadastros secundarios ligados a este (ex.: "Jessica (IFA)"), com as aulas de cada um. Essas aulas somam para a HA do principal. */
+  cadastrosLigados?: ProfessorCargaCadastrosLigadosItem[];
+  /** [MESMA-PESSOA-HA] Quando este e um cadastro secundario: o cadastro principal, que recebe a HA. */
+  cadastroPrincipal?: ProfessorCargaCadastroPrincipal;
 }

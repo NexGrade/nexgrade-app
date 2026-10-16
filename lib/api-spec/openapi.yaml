@@ -2090,6 +2090,23 @@ components:
           type: object
           additionalProperties: { type: integer }
           description: "Quantas HA obrigatorias ja estao de fato marcadas em disponibilidade_professores, por turno."
+        cadastrosLigados:
+          type: array
+          description: "[MESMA-PESSOA-HA] Cadastros secundarios ligados a este (ex.: \"Jessica (IFA)\"), com as aulas de cada um. Essas aulas somam para a HA do principal."
+          items:
+            type: object
+            required: [id, nome, aulas]
+            properties:
+              id: { type: integer }
+              nome: { type: string }
+              aulas: { type: integer }
+        cadastroPrincipal:
+          type: object
+          description: "[MESMA-PESSOA-HA] Quando este e um cadastro secundario: o cadastro principal, que recebe a HA."
+          required: [id, nome]
+          properties:
+            id: { type: integer }
+            nome: { type: string }
 
     Disciplina:
       type: object

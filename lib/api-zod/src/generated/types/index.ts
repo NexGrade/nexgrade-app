@@ -123,6 +123,8 @@ export * from './plano';
 export * from './planoInput';
 export * from './professor';
 export * from './professorCarga';
+export * from './professorCargaCadastroPrincipal';
+export * from './professorCargaCadastrosLigadosItem';
 export * from './professorCargaHaAlocadaPorTurno';
 export * from './professorCargaHaInstitucionalPorTurno';
 export * from './professorCargaPorDia';

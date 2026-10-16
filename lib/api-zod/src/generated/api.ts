@@ -112,7 +112,16 @@ export const GetProfessorCargaResponse = zod.object({
   "porTurno": zod.record(zod.string(), zod.number()).optional().describe('Total de aulas semanais do professor, agrupado por turno (matutino\/vespertino\/noturno).'),
   "haInstitucionalPorTurno": zod.record(zod.string(), zod.number()).optional().describe('HA institucional necessaria por turno, conforme regra SEED 15\/5 (RNF-SEED-01).'),
   "haInstitucionalTotal": zod.number().optional().describe('Soma da HA institucional necessaria em todos os turnos.'),
-  "haAlocadaPorTurno": zod.record(zod.string(), zod.number()).optional().describe('Quantas HA obrigatorias ja estao de fato marcadas em disponibilidade_professores, por turno.')
+  "haAlocadaPorTurno": zod.record(zod.string(), zod.number()).optional().describe('Quantas HA obrigatorias ja estao de fato marcadas em disponibilidade_professores, por turno.'),
+  "cadastrosLigados": zod.array(zod.object({
+  "id": zod.number(),
+  "nome": zod.string(),
+  "aulas": zod.number()
+})).optional().describe('[MESMA-PESSOA-HA] Cadastros secundarios ligados a este (ex.: \"Jessica (IFA)\"), com as aulas de cada um. Essas aulas somam para a HA do principal.'),
+  "cadastroPrincipal": zod.object({
+  "id": zod.number(),
+  "nome": zod.string()
+}).optional().describe('[MESMA-PESSOA-HA] Quando este e um cadastro secundario: o cadastro principal, que recebe a HA.')
 })
 
 

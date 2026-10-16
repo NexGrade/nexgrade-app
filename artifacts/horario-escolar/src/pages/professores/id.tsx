@@ -388,6 +388,30 @@ export default function ProfessorEditar() {
                     <span className="text-2xl font-bold">{cargaData.totalAulas} aulas</span>
                   </div>
 
+                  {/* [MESMA-PESSOA-HA] aulas dos cadastros ligados (ex.: "Jessica (IFA)") somam para a HA */}
+                  {(cargaData.cadastrosLigados?.length ?? 0) > 0 && (
+                    <div className="-mt-4 space-y-1 text-xs text-muted-foreground">
+                      {cargaData.cadastrosLigados!.map((c) => (
+                        <div key={c.id} className="flex items-center justify-between">
+                          <span>+ em {c.nome}</span>
+                          <span className="font-medium">{c.aulas} aula(s)</span>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between text-sm font-medium text-foreground">
+                        <span>Total para a HA</span>
+                        <span>
+                          {cargaData.totalAulas + cargaData.cadastrosLigados!.reduce((soma, c) => soma + c.aulas, 0)} aulas
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  {cargaData.cadastroPrincipal && (
+                    <p className="-mt-4 text-xs text-muted-foreground">
+                      Cadastro secundário de <span className="font-medium text-foreground">{cargaData.cadastroPrincipal.nome}</span>:
+                      estas aulas somam para a HA do cadastro principal, que é onde a HA fica.
+                    </p>
+                  )}
+
                   <div className="space-y-2 pt-2 border-t">
                     <h4 className="text-sm font-medium text-muted-foreground pb-1">Por Turno</h4>
                     <div className="space-y-1.5">
