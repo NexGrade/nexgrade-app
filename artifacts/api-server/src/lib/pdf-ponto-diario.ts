@@ -63,18 +63,19 @@ export async function gerarPdfPontoDiario(p: PontoDiario): Promise<Uint8Array> {
   for (const turno of p.turnos) {
     if (!turno.linhas.length) continue;
     const larguraUtil = LARGURA - 2 * MARGEM;
-    const wProf = 150, wEnt = 52, wSai = 52, wObs = 120;
+    const wProf = 128, wEnt = 58, wSai = 58, wSit = 100, wAss = 92;
     const n = Math.max(1, turno.colunas.length);
-    const wAula = (larguraUtil - wProf - wEnt - wSai - wObs) / n;
+    const wAula = (larguraUtil - wProf - wEnt - wSai - wSit - wAss) / n;
     const hCab = 26, hLinha = 23;
     const xs: number[] = [MARGEM, MARGEM + wProf];
     for (let i = 0; i < n; i++) xs.push(xs[xs.length - 1]! + wAula);
-    xs.push(xs[xs.length - 1]! + wEnt, xs[xs.length - 1]! + wEnt + wSai, MARGEM + larguraUtil);
+    { const x0 = xs[xs.length - 1]!; xs.push(x0 + wEnt, x0 + wEnt + wSai, x0 + wEnt + wSai + wSit, MARGEM + larguraUtil); }
+    const xSit = xs[xs.length - 3]!;
 
     let { page, y } = novaPagina(turno);
     const cabecalho = () => {
       page.drawRectangle({ x: MARGEM, y: y - hCab, width: larguraUtil, height: hCab, color: AZUL_CLARO, borderColor: CINZA_BORDA, borderWidth: 0.6 });
-      const titulos: Array<[string, string?]> = [["Professor"], ...turno.colunas.map((c) => [`${c.numeroAula}ª aula`, c.hora] as [string, string]), ["Entrada"], ["Saída"], ["Observação / assinatura"]];
+      const titulos: Array<[string, string?]> = [["Professor"], ...turno.colunas.map((c) => [`${c.numeroAula}ª aula`, c.hora] as [string, string]), ["Hora entrada"], ["Hora saída"], ["Situação"], ["Assinatura"]];
       titulos.forEach(([t1, t2], i) => {
         const x0 = xs[i]!, w = xs[i + 1]! - x0;
         if (i > 0) page.drawLine({ start: { x: x0, y }, end: { x: x0, y: y - hCab }, thickness: 0.6, color: CINZA_BORDA });
@@ -105,9 +106,22 @@ export async function gerarPdfPontoDiario(p: PontoDiario): Promise<Uint8Array> {
         }
         if (!c.texto) return;
         const f = c.tipo === "aula" ? font : bold;
-        const t = caber(c.texto, f, 7.5, w - 4);
-        page.drawText(t, { x: x0 + (w - f.widthOfTextAtSize(t, 7.5)) / 2, y: yb + 8.5, size: 7.5, font: f, color: c.tipo === "aula" ? PRETO : CINZA_TEXTO });
+        let tam = 7.5;
+        while (tam > 5.5 && f.widthOfTextAtSize(sanitizarTextoPdf(c.texto), tam) > w - 4) tam -= 0.25;
+        const t = caber(c.texto, f, tam, w - 4);
+        page.drawText(t, { x: x0 + (w - f.widthOfTextAtSize(t, tam)) / 2, y: yb + 8.5, size: tam, font: f, color: c.tipo === "aula" ? PRETO : CINZA_TEXTO });
       });
+      // situacao: quadradinhos para marcar a mao
+      {
+        const rotulos = ["P", "F", "AT", "ATR"];
+        const larg = rotulos.reduce((s2, r) => s2 + 7 + 2 + font.widthOfTextAtSize(r, 6.5) + 5, -5);
+        let x = xSit + (wSit - larg) / 2;
+        for (const r of rotulos) {
+          page.drawRectangle({ x, y: yb + 8, width: 7, height: 7, borderColor: CINZA_TEXTO, borderWidth: 0.7 });
+          page.drawText(r, { x: x + 9, y: yb + 8.6, size: 6.5, font, color: CINZA_TEXTO });
+          x += 7 + 2 + font.widthOfTextAtSize(r, 6.5) + 5;
+        }
+      }
       // grade da linha
       page.drawRectangle({ x: MARGEM, y: yb, width: larguraUtil, height: hLinha, borderColor: CINZA_BORDA, borderWidth: 0.6 });
       for (let i = 1; i < xs.length - 1; i++) page.drawLine({ start: { x: xs[i]!, y }, end: { x: xs[i]!, y: yb }, thickness: 0.6, color: CINZA_BORDA });
@@ -116,7 +130,7 @@ export async function gerarPdfPontoDiario(p: PontoDiario): Promise<Uint8Array> {
 
     if (y > 44) {
       const tot = turno.linhas.length;
-      page.drawText(`${tot} professor(es) · H.A. = hora-atividade · atividade fora de sala com o código da escola · traço = sem expediente nesse horário`, { x: MARGEM, y: y - 12, size: 7, font, color: CINZA_TEXTO });
+      page.drawText(`${tot} professor(es) · H.A. = hora-atividade · atividade fora de sala com o código da escola · traço = sem expediente · P = presente, F = falta, AT = atestado, ATR = atraso`, { x: MARGEM, y: y - 12, size: 7, font, color: CINZA_TEXTO });
     }
   }
 

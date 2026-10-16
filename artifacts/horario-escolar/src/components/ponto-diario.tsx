@@ -63,8 +63,8 @@ export function CardPontoDiario() {
       const p = await customFetch<Ponto>(url("json"));
       const wb = XLSX.utils.book_new();
       for (const t of p.turnos) {
-        const cab = ["Professor", ...t.colunas.map((c) => `${c.numeroAula}ª aula (${c.hora})`), "Entrada", "Saída", "Observação / assinatura"];
-        const linhas = t.linhas.map((l) => [l.professor, ...l.celulas.map((c) => (c.tipo === "indisponivel" ? "-----" : c.texto)), "", "", ""]);
+        const cab = ["Professor", ...t.colunas.map((c) => `${c.numeroAula}ª aula (${c.hora})`), "Hora entrada", "Hora saída", "Situação (P / F / AT / ATR)", "Assinatura"];
+        const linhas = t.linhas.map((l) => [l.professor, ...l.celulas.map((c) => (c.tipo === "indisponivel" ? "-----" : c.texto)), "", "", "", ""]);
         const aoa: (string | number)[][] = [
           [p.escola],
           [`Ponto diário · ${t.rotulo} · ${p.diaSemana}, ${p.dataBR}`],
@@ -74,7 +74,7 @@ export function CardPontoDiario() {
           ...(linhas.length ? linhas : [["Nenhum professor com aula ou hora-atividade neste turno."]]),
         ];
         const ws = XLSX.utils.aoa_to_sheet(aoa);
-        ws["!cols"] = [{ wch: 28 }, ...t.colunas.map(() => ({ wch: 18 })), { wch: 10 }, { wch: 10 }, { wch: 30 }];
+        ws["!cols"] = [{ wch: 28 }, ...t.colunas.map(() => ({ wch: 18 })), { wch: 12 }, { wch: 12 }, { wch: 26 }, { wch: 30 }];
         XLSX.utils.book_append_sheet(wb, ws, t.rotulo);
       }
       XLSX.writeFile(wb, `ponto_diario_${data}_${turno}.xlsx`);
@@ -87,7 +87,7 @@ export function CardPontoDiario() {
         <CardTitle className="flex items-center gap-2 text-base">
           <CalendarCheck className="w-4 h-4" /> Ponto Diário
         </CardTitle>
-        <CardDescription>Folha de ponto de um dia: aulas, hora-atividade e atividades de cada professor, com campos de entrada, saída e observação.</CardDescription>
+        <CardDescription>Folha de ponto de um dia: aulas, hora-atividade e atividades de cada professor, com hora de entrada e saída, situação (presente, falta, atestado, atraso) e assinatura.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
