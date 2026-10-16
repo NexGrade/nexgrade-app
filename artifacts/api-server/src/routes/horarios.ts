@@ -2093,9 +2093,9 @@ async function runCpsatGeneracaoUnica(
     return {
       httpStatus: 502,
       body: {
-        error: "Nao foi possivel gerar a grade com o motor CP-SAT.",
+        error: "Não foi possível gerar a grade.",
         detalhe: ultimoErroCpsat instanceof Error ? ultimoErroCpsat.message : String(ultimoErroCpsat),
-        dica: "Verifique se o servico nexgrade-cpsat esta no ar (pode estar hibernado, ou ter reiniciado por falta de memoria se estiver no free tier do Render -- nesse caso, tente gerar um subconjunto menor de turmas).",
+        dica: "O servidor de cálculo pode estar ligando. Tente de novo em 1 ou 2 minutos; se continuar, gere um grupo menor de turmas (Turno parcial).",
       },
     };
   }
@@ -2111,7 +2111,7 @@ async function runCpsatGeneracaoUnica(
   if (resultado === undefined) {
     return {
       httpStatus: 500,
-      body: { error: "Erro interno: o motor CP-SAT nao retornou resultado nem erro (estado inesperado)." },
+      body: { error: "Erro interno: o cálculo da grade não devolveu resultado nem erro." },
     };
   }
 
@@ -2183,7 +2183,7 @@ async function runCpsatGeneracaoUnica(
     return {
       httpStatus: 500,
       body: {
-        error: "O CP-SAT devolveu uma grade, mas nenhuma aula pode ser mapeada de volta para os IDs do banco.",
+        error: "A grade foi calculada, mas nenhuma aula pôde ser associada às turmas e disciplinas cadastradas.",
         naoMapeadas,
       },
     };

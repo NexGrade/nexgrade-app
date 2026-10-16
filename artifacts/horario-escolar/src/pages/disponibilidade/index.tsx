@@ -279,7 +279,7 @@ export default function DisponibilidadePage() {
     criarAulaFixa.mutate(
       { data: { turmaId: Number(tStr), disciplinaId: Number(dStr), professorId: professorIdNum, diaSemana: celulaFixar.dia, numeroAula: celulaFixar.numeroAula, anoLetivo: anoLetivoAtual } },
       {
-        onSuccess: () => { toast({ title: "Aula fixada", description: "O CP-SAT vai manter esta aula neste horário." }); recarregarAulasFixas(); setCelulaFixar(null); },
+        onSuccess: () => { toast({ title: "Aula fixada", description: "A geração da grade vai manter esta aula neste horário." }); recarregarAulasFixas(); setCelulaFixar(null); },
         onError: (err) => toast({ title: "Não foi possível fixar a aula", description: err instanceof Error ? err.message : undefined, variant: "destructive" }),
       },
     );
@@ -442,7 +442,7 @@ export default function DisponibilidadePage() {
       if (af) {
         return (
           <div className="space-y-3 text-sm">
-            <p>Aula fixada aqui: <strong>{rotuloTurmaDisc.get(`${af.turmaId}-${af.disciplinaId}`) ?? "turma/disciplina"}</strong>. O CP-SAT mantém esta aula neste horário.</p>
+            <p>Aula fixada aqui: <strong>{rotuloTurmaDisc.get(`${af.turmaId}-${af.disciplinaId}`) ?? "turma/disciplina"}</strong>. A geração da grade mantém esta aula neste horário.</p>
             <DialogFooter>
               <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => soltarAulaFixa(af.id)} disabled={apagarAulaFixa.isPending}>
                 {apagarAulaFixa.isPending ? "Soltando..." : "Soltar aula"}
@@ -453,7 +453,7 @@ export default function DisponibilidadePage() {
       }
       return (
         <div className="space-y-3 text-sm">
-          <p className="text-muted-foreground">Escolha a turma e a disciplina. Na próxima geração ou melhoria com o CP-SAT, esta aula fica obrigatoriamente neste horário.</p>
+          <p className="text-muted-foreground">Escolha a turma e a disciplina. Na próxima geração ou melhoria da grade, esta aula fica obrigatoriamente neste horário.</p>
           <select className="w-full border rounded-md h-9 px-2 bg-background" value={opcaoFixar} onChange={(e) => setOpcaoFixar(e.target.value)}>
             <option value="">Turma e disciplina...</option>
             {opcoesTurmaDisc.map((o) => (<option key={`${o.turmaId}-${o.disciplinaId}`} value={`${o.turmaId}-${o.disciplinaId}`}>{o.rotulo}</option>))}

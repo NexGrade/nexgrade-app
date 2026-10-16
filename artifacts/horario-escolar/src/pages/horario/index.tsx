@@ -186,7 +186,7 @@ function nomeCpsatAuto(turno: string): string {
   const agora = new Date();
   const data = agora.toISOString().split("T")[0];
   const hora = String(agora.getHours()).padStart(2, "0") + "h" + String(agora.getMinutes()).padStart(2, "0");
-  return `CPSAT-${turno}-${data}-${hora}`;
+  return `Grade-${turno}-${data}-${hora}`; // [SEM-NOME-MOTOR] nomes visiveis sem citar o motor
 }
 
 function paraMinutos(hora: string): number {
@@ -1413,7 +1413,7 @@ function AbaExperimental() {
   const [gerandoCpsatTurma, setGerandoCpsatTurma] = useState(false);
   const [cpsatTurmaForm, setCpsatTurmaForm] = useState({
     turmaIds: [] as string[],
-    nomeExperimental: `CPSAT-${new Date().toISOString().split("T")[0]}`,
+    nomeExperimental: `Grade-${new Date().toISOString().split("T")[0]}`,
   });
 
   // [NOVO] Turno Parcial (Beta): mesmo motor de turma(s), mas com um
@@ -1425,7 +1425,7 @@ function AbaExperimental() {
   const [cpsatTurnoParcialForm, setCpsatTurnoParcialForm] = useState({
     turno: "matutino" as "matutino" | "vespertino" | "noturno",
     turmaIds: [] as string[],
-    nomeExperimental: `CPSAT-${new Date().toISOString().split("T")[0]}`,
+    nomeExperimental: `Grade-${new Date().toISOString().split("T")[0]}`,
   });
   // [FIX-MULTI-TURMA] turmaIds agora e uma lista (uma ou mais turmas),
   // nao mais uma unica turma -- ver runCpsatGeneration no backend, que
@@ -1492,16 +1492,16 @@ function AbaExperimental() {
     try {
       const statusResult = await pollarStatusCpsat(jobId, setProgressoCpsat);
       if (statusResult.jobStatus === "error") {
-        throw new Error(statusResult.mensagem || statusResult.detalhe || statusResult.error || "Erro ao gerar a grade com o motor CP-SAT.");
+        throw new Error(statusResult.mensagem || statusResult.detalhe || statusResult.error || "Erro ao gerar a grade.");
       }
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
       toast({
-        title: `Grade CP-SAT gerada! ${statusResult.totalSlots} aulas criadas.`,
+        title: `Grade gerada: ${statusResult.totalSlots} aulas criadas.`,
         description: statusResult.paradoPeloUsuario // [PARAR-MOTOR]
           ? `Você parou o cálculo aos ${Math.round(statusResult.tempoResolucaoS ?? 0)}s: esta é a melhor grade encontrada até ali. Confira antes de promover.`
           : statusResult.status === "OPTIMAL"
-          ? `Solucao otima em ${statusResult.tempoResolucaoS}s (sem janelas evitaveis).`
-          : `Status: ${statusResult.status}. Confira antes de promover.`,
+          ? `Solução ótima em ${Math.round(statusResult.tempoResolucaoS ?? 0)}s.`
+          : `Boa solução em ${Math.round(statusResult.tempoResolucaoS ?? 0)}s (sem prova de que é a melhor possível). Confira antes de promover.`,
       });
       setOpenGerarCpsatTurma(false);
       setNomeExpandido(nomeExperimental);
@@ -1516,7 +1516,7 @@ function AbaExperimental() {
       if (mensagemErro === "JOB_CANCELADO") {
         toast({ title: "Geração cancelada", description: "Nada foi salvo." }); // [PARAR-MOTOR]
       } else if (mensagemErro !== "JOB_NAO_ENCONTRADO") {
-        toast({ title: "Erro ao gerar com CP-SAT", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+        toast({ title: "Erro ao gerar a grade", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
       }
     } finally {
       setGerandoCpsatTurma(false);
@@ -1567,7 +1567,7 @@ function AbaExperimental() {
     } catch (err) {
       // So cai aqui se o POST inicial falhar (antes de existir um
       // jobId) -- finalizarJobCpsatTurma cuida do resto.
-      toast({ title: "Erro ao gerar com CP-SAT", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+      toast({ title: "Erro ao gerar a grade", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
       setGerandoCpsatTurma(false);
     }
   };
@@ -1593,7 +1593,7 @@ function AbaExperimental() {
       turmaIds: turmaIdsPendente.map(String),
     }));
     toast({
-      title: "Retomando geracao com CP-SAT...",
+      title: "Retomando a geração da grade…",
       description: "A pagina foi recarregada antes do resultado chegar -- continuando de onde parou.",
     });
     void finalizarJobCpsatTurma(pendente.jobId, pendente.nomeExperimental, turmaIdsPendente);
@@ -1609,16 +1609,16 @@ function AbaExperimental() {
     try {
       const statusResult = await pollarStatusCpsat(jobId, setProgressoCpsat);
       if (statusResult.jobStatus === "error") {
-        throw new Error(statusResult.mensagem || statusResult.detalhe || statusResult.error || "Erro ao gerar a grade com o motor CP-SAT.");
+        throw new Error(statusResult.mensagem || statusResult.detalhe || statusResult.error || "Erro ao gerar a grade.");
       }
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
       toast({
-        title: `Grade CP-SAT gerada! ${statusResult.totalSlots} aulas criadas.`,
+        title: `Grade gerada: ${statusResult.totalSlots} aulas criadas.`,
         description: statusResult.paradoPeloUsuario // [PARAR-MOTOR]
           ? `Você parou o cálculo aos ${Math.round(statusResult.tempoResolucaoS ?? 0)}s: esta é a melhor grade encontrada até ali. Confira antes de promover.`
           : statusResult.status === "OPTIMAL"
-          ? `Solucao otima em ${statusResult.tempoResolucaoS}s (sem janelas evitaveis).`
-          : `Status: ${statusResult.status}. Confira antes de promover.`,
+          ? `Solução ótima em ${Math.round(statusResult.tempoResolucaoS ?? 0)}s.`
+          : `Boa solução em ${Math.round(statusResult.tempoResolucaoS ?? 0)}s (sem prova de que é a melhor possível). Confira antes de promover.`,
       });
       setOpenGerarCpsatTurnoParcial(false);
       setNomeExpandido(nomeExperimental);
@@ -1628,7 +1628,7 @@ function AbaExperimental() {
       if (mensagemErro === "JOB_CANCELADO") {
         toast({ title: "Geração cancelada", description: "Nada foi salvo." }); // [PARAR-MOTOR]
       } else if (mensagemErro !== "JOB_NAO_ENCONTRADO") {
-        toast({ title: "Erro ao gerar com CP-SAT", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+        toast({ title: "Erro ao gerar a grade", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
       }
     } finally {
       setGerandoCpsatTurnoParcial(false);
@@ -1667,7 +1667,7 @@ function AbaExperimental() {
       await finalizarJobCpsatTurnoParcial(inicio.jobId, cpsatTurnoParcialForm.nomeExperimental, turmaIdsNum);
     } catch (err) {
       setGerandoCpsatTurnoParcial(false);
-      toast({ title: "Erro ao gerar com CP-SAT", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+      toast({ title: "Erro ao gerar a grade", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
     }
   };
 
@@ -1691,7 +1691,7 @@ function AbaExperimental() {
       turmaIds: turmaIdsPendente.map(String),
     }));
     toast({
-      title: "Retomando geracao com CP-SAT...",
+      title: "Retomando a geração da grade…",
       description: "A pagina foi recarregada antes do resultado chegar -- continuando de onde parou.",
     });
     void finalizarJobCpsatTurnoParcial(pendente.jobId, pendente.nomeExperimental, turmaIdsPendente);
@@ -1708,16 +1708,16 @@ function AbaExperimental() {
     try {
       const statusResult = await pollarStatusCpsat(jobId, setProgressoCpsat);
       if (statusResult.jobStatus === "error") {
-        throw new Error(statusResult.mensagem || statusResult.detalhe || statusResult.error || "Erro ao gerar a grade com o motor CP-SAT.");
+        throw new Error(statusResult.mensagem || statusResult.detalhe || statusResult.error || "Erro ao gerar a grade.");
       }
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
       toast({
-        title: `Grade CP-SAT gerada! ${statusResult.totalTurmas} turma(s), ${statusResult.totalSlots} aulas criadas.`,
+        title: `Grade gerada: ${statusResult.totalTurmas} turma(s), ${statusResult.totalSlots} aulas criadas.`,
         description: statusResult.paradoPeloUsuario // [PARAR-MOTOR]
           ? `Você parou o cálculo aos ${Math.round(statusResult.tempoResolucaoS ?? 0)}s: esta é a melhor grade encontrada até ali. Confira antes de promover.`
           : statusResult.status === "OPTIMAL"
-          ? `Solucao otima em ${statusResult.tempoResolucaoS}s (sem janelas evitaveis).`
-          : `Status: ${statusResult.status}. Confira antes de promover.`,
+          ? `Solução ótima em ${Math.round(statusResult.tempoResolucaoS ?? 0)}s.`
+          : `Boa solução em ${Math.round(statusResult.tempoResolucaoS ?? 0)}s (sem prova de que é a melhor possível). Confira antes de promover.`,
       });
       setOpenGerarCpsat(false);
       setNomeExpandido(nomeExperimental);
@@ -1731,7 +1731,7 @@ function AbaExperimental() {
       if (mensagemErro === "JOB_CANCELADO") {
         toast({ title: "Geração cancelada", description: "Nada foi salvo." }); // [PARAR-MOTOR]
       } else if (mensagemErro !== "JOB_NAO_ENCONTRADO") {
-        toast({ title: "Erro ao gerar com CP-SAT", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+        toast({ title: "Erro ao gerar a grade", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
       }
     } finally {
       setGerandoCpsat(false);
@@ -1785,7 +1785,7 @@ function AbaExperimental() {
       // So cai aqui se a chamada POST inicial falhar (antes de existir
       // um jobId) -- finalizarJobCpsat cuida do proprio try/catch/finally
       // para tudo que acontece depois disso.
-      toast({ title: "Erro ao gerar com CP-SAT", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+      toast({ title: "Erro ao gerar a grade", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
       setGerandoCpsat(false);
     }
   };
@@ -1798,7 +1798,7 @@ function AbaExperimental() {
   // por trocas (sem gerar do zero). Mesmo acompanhamento de job da geracao
   // CP-SAT; o resultado vira experimento com prefixo MELHORIA-.
   const handleMelhorarGradeOficial = async () => {
-    const nome = (cpsatForm.nomeExperimental.trim() || `CPSAT-${cpsatForm.turno}`).replace(/^CPSAT-/, "MELHORIA-");
+    const nome = (cpsatForm.nomeExperimental.trim() || `CPSAT-${cpsatForm.turno}`).replace(/^(CPSAT|Grade)-/, "MELHORIA-");
     if (!confirm(`Melhorar a grade OFICIAL do ${cpsatForm.turno} por trocas de aulas?\n\nO resultado vira o experimento "${nome}". A grade oficial nao muda ate voce promover.`)) return;
     setMelhorandoCpsat(true);
     setGerandoCpsat(true);
@@ -1844,7 +1844,7 @@ function AbaExperimental() {
     setOpenGerarCpsat(true);
     setCpsatForm((f) => ({ ...f, nomeExperimental: pendente!.nomeExperimental || f.nomeExperimental }));
     toast({
-      title: "Retomando geracao com CP-SAT...",
+      title: "Retomando a geração da grade…",
       description: "A pagina foi recarregada antes do resultado chegar -- continuando de onde parou.",
     });
     void finalizarJobCpsat(pendente.jobId, pendente.nomeExperimental);
@@ -1952,7 +1952,11 @@ function AbaExperimental() {
       <div className="flex items-center justify-between">
         <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 text-sm text-purple-800 flex-1 mr-4">
           <p className="font-medium mb-1">Como funciona o Modo Experimental?</p>
-          <p>Gere versões alternativas de horário sem substituir a grade oficial. Compare, ajuste e quando estiver satisfeito, clique em <strong>Promover para oficial</strong> para aplicar.</p>
+          <ul className="list-disc space-y-0.5 pl-5">{/* [MODO-EXPERIMENTAL-TOPICOS] */}
+            <li>Gere versões alternativas do horário sem mexer na grade oficial.</li>
+            <li>Compare com a oficial em <strong>Simular promoção</strong> e ajuste o que precisar.</li>
+            <li>Quando estiver satisfeito, clique em <strong>Promover para oficial</strong> para aplicar.</li>
+          </ul>
         </div>
         <div className="flex flex-col gap-3 shrink-0 items-stretch w-56">
           <div>
@@ -1971,7 +1975,7 @@ function AbaExperimental() {
           {geradorSimplesVisivel ? (
           <div className="pt-2 border-t">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Motor heurístico (rápido, menos preciso)</p>
-            <p className="text-[10px] text-rose-600 mb-1.5">Emergência: não respeita aulas fixas, HA fixa, trio, aulas assíncronas nem a reserva de HA. Use só se o CP-SAT estiver fora do ar.</p>
+            <p className="text-[10px] text-rose-600 mb-1.5">Emergência: não respeita aulas fixas, HA fixa, trio, aulas assíncronas nem a reserva de HA. Use só se a geração normal estiver fora do ar.</p>
             <div className="flex flex-col gap-2">
               <Button variant="outline" className="w-full justify-start" onClick={() => setOpenGerar(true)}>
                 <Plus className="w-4 h-4 mr-2" />Turma
@@ -2336,12 +2340,12 @@ function AbaExperimental() {
 
       <Dialog open={openGerarCpsatTurma} onOpenChange={setOpenGerarCpsatTurma}>
         <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-5xl">{/* [PROGRESSO-LADO-A-LADO] janela larga: formulario a esquerda, avisos e andamento a direita */}
-          <DialogHeader><DialogTitle>Gerar com CP-SAT — Turma (Beta)</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Gerar grade — Turma (Beta)</DialogTitle></DialogHeader>
           <div className="grid gap-6 md:grid-cols-2 md:items-start">
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label>Nome do experimento *</Label>
-              <Input value={cpsatTurmaForm.nomeExperimental} onChange={(e) => setCpsatTurmaForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex: CPSAT-Turma-2026-07-27" />
+              <Input value={cpsatTurmaForm.nomeExperimental} onChange={(e) => setCpsatTurmaForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex.: Grade-Turma-2026-07-27" />
             </div>
             <div className="space-y-1.5">
               <Label>Turma *</Label>
@@ -2380,19 +2384,19 @@ function AbaExperimental() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenGerarCpsatTurma(false)}>Cancelar</Button>
-            <Button onClick={handleGerarCpsatTurma} disabled={gerandoCpsatTurma}>{gerandoCpsatTurma ? "Gerando (pode levar até 2 min)..." : "Gerar com CP-SAT"}</Button>
+            <Button onClick={handleGerarCpsatTurma} disabled={gerandoCpsatTurma}>{gerandoCpsatTurma ? "Gerando…" : "Gerar grade"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={openGerarCpsatTurnoParcial} onOpenChange={setOpenGerarCpsatTurnoParcial}>
         <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-5xl">{/* [PROGRESSO-LADO-A-LADO] janela larga: formulario a esquerda, avisos e andamento a direita */}
-          <DialogHeader><DialogTitle>Gerar com CP-SAT -- Turno Parcial (Beta)</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Gerar grade — Turno parcial (Beta)</DialogTitle></DialogHeader>
           <div className="grid gap-6 md:grid-cols-2 md:items-start">
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label>Nome do experimento *</Label>
-              <Input value={cpsatTurnoParcialForm.nomeExperimental} onChange={(e) => setCpsatTurnoParcialForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex: CPSAT-Parcial-2026-08-13" />
+              <Input value={cpsatTurnoParcialForm.nomeExperimental} onChange={(e) => setCpsatTurnoParcialForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex.: Grade-Parcial-2026-08-13" />
             </div>
             <div className="space-y-1.5">
               <Label>Turno *</Label>
@@ -2447,14 +2451,14 @@ function AbaExperimental() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenGerarCpsatTurnoParcial(false)}>Cancelar</Button>
-            <Button onClick={handleGerarCpsatTurnoParcial} disabled={gerandoCpsatTurnoParcial}>{gerandoCpsatTurnoParcial ? "Gerando (pode levar ate 2 min)..." : "Gerar com CP-SAT"}</Button>
+            <Button onClick={handleGerarCpsatTurnoParcial} disabled={gerandoCpsatTurnoParcial}>{gerandoCpsatTurnoParcial ? "Gerando…" : "Gerar grade"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={openGerarCpsat} onOpenChange={setOpenGerarCpsat}>
         <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-5xl">{/* [PROGRESSO-LADO-A-LADO] janela larga: formulario a esquerda, avisos e andamento a direita */}
-          <DialogHeader><DialogTitle>Gerar com CP-SAT — Turno inteiro (Beta)</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Gerar grade — Turno inteiro (Beta)</DialogTitle></DialogHeader>
           <div className="grid gap-6 md:grid-cols-2 md:items-start">
           <div className="space-y-4 py-2">
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md p-2.5">
@@ -2463,7 +2467,7 @@ function AbaExperimental() {
             </div>
             <div className="space-y-1.5">
               <Label>Nome do experimento *</Label>
-              <Input value={cpsatForm.nomeExperimental} onChange={(e) => setCpsatForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex: CPSAT-Teste-2026-07-24" />
+              <Input value={cpsatForm.nomeExperimental} onChange={(e) => setCpsatForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex.: Grade-Teste-2026-07-24" />
             </div>
             <div className="space-y-1.5">
               <Label>Turno</Label>
@@ -2506,10 +2510,10 @@ function AbaExperimental() {
                 setOpenGerarCpsat(false);
               }}
             >
-              {gerandoCpsat ? "Cancelar geracao" : "Cancelar"}
+              {gerandoCpsat ? "Cancelar geração" : "Cancelar"}
             </Button>
             <Button variant="outline" onClick={handleMelhorarGradeOficial} disabled={gerandoCpsat} title="Parte da grade oficial deste turno e tenta reduzir janelas trocando aulas de lugar. Nunca fica pior que a oficial.">{melhorandoCpsat ? "Melhorando..." : "Melhorar grade oficial"}</Button>
-            <Button onClick={handleGerarCpsat} disabled={gerandoCpsat}>{gerandoCpsat && !melhorandoCpsat ? "Gerando..." : "Gerar com CP-SAT"}</Button>
+            <Button onClick={handleGerarCpsat} disabled={gerandoCpsat}>{gerandoCpsat && !melhorandoCpsat ? "Gerando…" : "Gerar grade"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

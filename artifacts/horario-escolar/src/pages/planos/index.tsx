@@ -58,7 +58,7 @@ type PlanoComTurma = Plano & { cobranca?: string | null; precoPorTurmaAnual?: nu
 const ehPorTurma = (p: Plano) => (p as PlanoComTurma).cobranca === "por_turma" && ((p as PlanoComTurma).precoPorTurmaAnual ?? 0) > 0;
 const brl = (centavos: number) => (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const RECURSOS_ESCOLA = [
-  "Geração automática da grade (motor CP-SAT)",
+  "Geração automática da grade",
   "Disponibilidade, hora-atividade e aulas fixas",
   "Trio, co-docência e aulas assíncronas",
   "Arquivo da grade para importar no RCO",

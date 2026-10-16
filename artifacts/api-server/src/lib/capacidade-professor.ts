@@ -194,7 +194,11 @@ export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro
         // Diurno nunca vai para a noite (HA-NUNCA-NOITE); a noite pode ir para o diurno.
         const sobra = aulasT + haT - livresComHA;
         const haPorTurno = ehSecundario(principal, pid) ? {} : calcularHoraAtividadePorTurno(porTurnoHA.get(pid) ?? porTurno);
-        const destinos = turnos.filter((t) => t !== turnoFiltro && (turnoFiltro === "noturno" || t !== "noturno"));
+        // ordem igual a do recalculo: primeiro outro turno em que ele da aula, depois o turno vizinho
+        const VIZINHO: Record<string, string[]> = { matutino: ["vespertino"], vespertino: ["matutino"], noturno: ["vespertino", "matutino"] };
+        const destinos = turnos
+          .filter((t) => t !== turnoFiltro && (turnoFiltro === "noturno" || t !== "noturno"))
+          .sort((a, b) => ((porTurno[b] ?? 0) > 0 ? 1 : 0) - ((porTurno[a] ?? 0) > 0 ? 1 : 0) || (VIZINHO[turnoFiltro]?.indexOf(a) ?? 9) - (VIZINHO[turnoFiltro]?.indexOf(b) ?? 9));
         let cabeFora = 0;
         const destinosUsados: string[] = [];
         for (const t of destinos) {
@@ -203,10 +207,13 @@ export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro
         }
         const falta = sobra - cabeFora;
         const destinoTxt = destinosUsados.length ? destinosUsados.join(" e ") : "outro turno";
+        const pl = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
+        const vai = (n: number) => (n === 1 ? "vai" : "vão");
+        const conta = `${pl(aulasT, "aula", "aulas")} + ${haT} HA na ${nomeT} e ${pl(livresComHA, "horário livre", "horários livres")}`;
         if (falta <= 0) {
-          problemas.push({ ...baseT, nivel: "aviso", mensagem: `${aulasT} aula(s) + ${haT} HA na ${nomeT} e ${livresComHA} horário(s) livre(s): ${sobra} HA vai(ão) para a ${destinoTxt} (HA*).` });
+          problemas.push({ ...baseT, nivel: "aviso", mensagem: `${conta}: ${sobra} HA ${vai(sobra)} para a ${destinoTxt} (HA*).` });
         } else {
-          problemas.push({ ...baseT, nivel: "erro", mensagem: `Falta HA: ${aulasT} aula(s) + ${haT} HA na ${nomeT} e só ${livresComHA} horário(s) livre(s)${cabeFora > 0 ? `; ${cabeFora} vai(ão) para a ${destinoTxt} (HA*)` : ""} e ${falta} fica(m) sem horário disponível em nenhum turno.` });
+          problemas.push({ ...baseT, nivel: "erro", mensagem: `Falta HA: ${conta}${cabeFora > 0 ? `; ${cabeFora} HA ${vai(cabeFora)} para a ${destinoTxt} (HA*)` : ""}; ${falta} HA ${falta === 1 ? "fica" : "ficam"} sem horário disponível em nenhum turno.` });
         }
       }
       continue;

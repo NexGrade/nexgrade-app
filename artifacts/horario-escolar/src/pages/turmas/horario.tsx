@@ -69,7 +69,7 @@ export default function TurmaHorario() {
     setGerandoCpsat(true);
     try {
       const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
-      const nomeExperimental = `CPSAT-${turma?.nome ?? turmaId}-${new Date().toISOString().slice(0, 16)}`;
+      const nomeExperimental = `Grade-${turma?.nome ?? turmaId}-${new Date().toISOString().slice(0, 16)}`;
       const data = await customFetch<{
         nomeExperimental: string;
         totalTurmas?: number;
@@ -82,12 +82,12 @@ export default function TurmaHorario() {
         responseType: "json",
       });
       toast({
-        title: `Prévia gerada via CP-SAT: "${data.nomeExperimental}"`,
+        title: `Prévia gerada: "${data.nomeExperimental}"`,
         description: "Nada mudou na grade oficial ainda — revise em Horário → Modo Experimental e promova só se estiver bom.",
       });
       setOpenOpcoes(false);
     } catch (err) {
-      toast({ title: "Não foi possível gerar via CP-SAT", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+      toast({ title: "Não foi possível gerar a grade", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
     } finally {
       setGerandoCpsat(false);
     }
@@ -138,10 +138,10 @@ export default function TurmaHorario() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Settings2 className="h-4 w-4" />
-                Gerar via CP-SAT
+                Gerar grade
               </DialogTitle>
               <DialogDescription>
-                O motor CP-SAT monta uma grade otimizada (minimiza janelas de professor) pra essa turma. O resultado
+                O NexGrade monta uma grade para esta turma, com o menor número de janelas para os professores. O resultado
                 vai pro <strong>Modo Experimental</strong> — a grade oficial só muda se você revisar e promover
                 de lá. Nada é sobrescrito agora.
               </DialogDescription>
@@ -158,7 +158,7 @@ export default function TurmaHorario() {
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpenOpcoes(false)}>Cancelar</Button>
               <Button onClick={handleGerarHorario} disabled={gerandoCpsat}>
-                {gerandoCpsat ? "Gerando..." : "Gerar via CP-SAT"}
+                {gerandoCpsat ? "Gerando…" : "Gerar grade"}
               </Button>
             </DialogFooter>
           </DialogContent>
