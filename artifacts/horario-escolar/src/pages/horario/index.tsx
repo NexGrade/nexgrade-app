@@ -731,7 +731,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
       // [FIX] fetch() sem token Bearer -- voltava 401, e o "HA"
       // (Hora-Atividade) simplesmente nunca aparecia destacado na
       // grade por professor. customFetch já anexa o token.
-      customFetch<Array<{ diaSemana: number; horarioSlot: number; turno: string | null; horaAtividadeObrigatoria: boolean; contraturno?: boolean; outroTurno?: boolean; motivo?: string | null }>>(
+      customFetch<Array<{ diaSemana: number; horarioSlot: number; turno: string | null; horaAtividadeObrigatoria: boolean; disponivel?: boolean | null; contraturno?: boolean; outroTurno?: boolean; motivo?: string | null }>>(
         `/api/disponibilidade?professorId=${professorIdSelecionado}`,
         { responseType: "json" },
       ),
@@ -810,6 +810,19 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
   };
   const dispNoTurno = (t: string, dia: number, aula: number) =>
     (disponibilidadeProf ?? []).filter((d) => d.diaSemana === dia && d.horarioSlot === aula && d.turno === t);
+  // [GRADE-LIVRE-BLOQUEADO] horario indisponivel de verdade (traco do Urania, bloqueio manual);
+  // o bloqueio automatico do periodo nao letivo (18:00) aparece como "não letivo"
+  const estadoVazio = (disp: Array<{ horaAtividadeObrigatoria: boolean; disponivel?: boolean | null; motivo?: string | null }>): "bloqueado" | "naoLetivo" | "livre" => {
+    const b = disp.find((d) => !d.horaAtividadeObrigatoria && d.disponivel === false);
+    if (!b) return "livre";
+    return (b.motivo ?? "").startsWith("Bloqueio automatico: aula 1 do noturno") ? "naoLetivo" : "bloqueado";
+  };
+  const diaTodoBloqueado = (t: string, dia: number) =>
+    linhasDoTurno(t).every((a) => {
+      const disp = dispNoTurno(t, dia, a);
+      return !disp.some((d) => d.horaAtividadeObrigatoria) && estadoVazio(disp) !== "livre" &&
+        !(horariosBrutos ?? []).some((x: any) => x.turma?.turno === t && x.diaSemana === dia && x.numeroAula === a);
+    });
   const linhasDoTurno = (t: string): number[] => {
     const aulas = (horariosBrutos ?? []).filter((x: any) => x.turma?.turno === t && !x.assincronaSoTurma).map((x) => x.numeroAula);
     const has = (disponibilidadeProf ?? []).filter((d) => d.turno === t && (d.horaAtividadeObrigatoria || /\(ocupado:/.test(d.motivo ?? ""))).map((d) => d.horarioSlot);
@@ -1094,8 +1107,11 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                     <div className="min-w-[460px]">
                       <div className="grid grid-cols-[64px_repeat(5,minmax(0,1fr))] border-b border-border bg-muted/20">
                         <div className="p-2 text-xs font-medium text-muted-foreground text-center border-r border-border">Aula</div>
-                        {diasSemana.map((dia) => (
-                          <div key={dia} className="p-2 text-xs font-semibold text-center border-r border-border last:border-0">{dia}</div>
+                        {diasSemana.map((dia, iDia) => (
+                          <div key={dia} className="p-2 text-xs font-semibold text-center border-r border-border last:border-0">
+                            {dia}
+                            {diaTodoBloqueado(t, iDia) && <div className="text-[10px] font-normal text-muted-foreground">indisponível</div>}
+                          </div>
                         ))}
                       </div>
                       {linhasDoTurno(t).map((aulaNum) => (
@@ -1121,8 +1137,16 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                                     <div className="w-full rounded p-1 border-l-4 bg-slate-100 border-slate-400 flex items-center justify-center">
                                       <span className="text-[11px] font-semibold text-slate-600" title="Atividade fora da sala (não é janela)">{atividade}</span>
                                     </div>
+                                  ) : estadoVazio(disp) === "bloqueado" ? (
+                                    <div
+                                      className="w-full rounded flex items-center justify-center text-[10px] text-slate-500 dark:text-slate-400"
+                                      style={{ backgroundImage: "repeating-linear-gradient(135deg, rgb(148 163 184 / 0.18) 0 6px, transparent 6px 12px)" }}
+                                      title="Indisponível (bloqueio do professor)"
+                                    >Indisponível</div>
+                                  ) : estadoVazio(disp) === "naoLetivo" ? (
+                                    <span className="m-auto text-[10px] text-muted-foreground/50" title="Período não letivo (entrada)">não letivo</span>
                                   ) : (
-                                    <span className="m-auto text-[10px] text-muted-foreground/30">–</span>
+                                    <div className="w-full rounded border border-dashed border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/20 flex items-center justify-center text-[10px] font-medium text-emerald-700 dark:text-emerald-400" title="Horário livre (disponível, sem aula nem HA)">Livre</div>
                                   )}
                                 </div>
                               );
@@ -1187,6 +1211,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                       if (!slot) {
                         const temHA = isProfessorSelected && getHA(colIndex, aulaNum);
                         const atividade = isProfessorSelected && !temHA ? getAtividade(colIndex, aulaNum) : undefined; // [GRADE-ROTULO-ATIVIDADE]
+                        const estadoProf = isProfessorSelected && !temHA && !atividade && turnoEmUso ? estadoVazio(dispNoTurno(turnoEmUso, colIndex, aulaNum)) : "livre"; // [GRADE-LIVRE-BLOQUEADO]
                         return (
                           <button
                             key={`${aulaNum}-${colIndex}`}
@@ -1202,6 +1227,16 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                               <div className="h-full w-full rounded-md p-2 border-l-4 bg-slate-100 border-slate-400 flex items-center justify-center">
                                 <span className="text-xs font-semibold text-slate-600" title="Atividade fora da sala (bloqueio sincronizado do Urania) -- nao e janela">{atividade}</span>
                               </div>
+                            ) : estadoProf === "bloqueado" ? (
+                              <div
+                                className="h-full w-full rounded-md flex items-center justify-center text-xs text-slate-500 dark:text-slate-400"
+                                style={{ backgroundImage: "repeating-linear-gradient(135deg, rgb(148 163 184 / 0.18) 0 8px, transparent 8px 16px)" }}
+                                title="Indisponível (bloqueio do professor)"
+                              >Indisponível</div>
+                            ) : estadoProf === "naoLetivo" ? (
+                              <span className="text-xs text-muted-foreground/50">não letivo</span>
+                            ) : isProfessorSelected ? (
+                              <div className="h-full w-full rounded-md border border-dashed border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/20 flex items-center justify-center text-xs font-medium text-emerald-700 dark:text-emerald-400" title="Horário livre (disponível, sem aula nem HA)">Livre</div>
                             ) : (
                               <span className="text-xs text-muted-foreground/30 group-hover:text-primary group-hover:font-medium flex items-center gap-1">
                                 <Plus className="h-3 w-3 opacity-0 group-hover:opacity-100" />
