@@ -1442,15 +1442,50 @@ const TIPO_LABELS: Record<string, string> = {
   professor_nao_habilitado: "Professor Não Habilitado",
   janelas_excessivas: "Janelas Excessivas",
   turma_sem_horario: "Turma Sem Horário",
+  aulas_geminadas_excedidas: "Aulas Seguidas Demais",
+  hora_atividade_insuficiente: "HA Insuficiente",
+  hora_atividade_turno_incorreto: "HA no Turno Errado",
+  intervalo_entre_turnos: "Intervalo Entre Turnos",
+  pausa_entre_turnos: "Pausa Entre Turnos",
+  periodo_invalido: "Período Inválido",
+  professor_indisponivel: "Professor Indisponível",
+  sala_incompativel: "Sala Incompatível",
+  sala_restrita_duplicada: "Sala Ocupada Duas Vezes",
+  teto_aulas_turno_excedido: "Aulas Demais no Turno",
+  turma_sem_calendario: "Turma Sem Calendário",
 };
 
 function AbaConflitos() {
   const { data: conflitosComSugestoes = [], isLoading, refetch, isFetching } = useGetConflitosComSugestoes();
   const [expanded, setExpanded] = useState<number | null>(null);
+  // [CONFLITOS-FILTRO] (16/10/2026) clicar num quadro ou num tipo mostra so aqueles conflitos
+  const [filtroGravidade, setFiltroGravidade] = useState<string>("todos");
+  const [filtroTipo, setFiltroTipo] = useState<string>("todos");
 
   const total = conflitosComSugestoes.length;
   const criticos = conflitosComSugestoes.filter((c) => c.conflito.gravidade === "critico").length;
   const altos = conflitosComSugestoes.filter((c) => c.conflito.gravidade === "alto").length;
+  const medios = conflitosComSugestoes.filter((c) => c.conflito.gravidade === "medio").length;
+  const baixos = conflitosComSugestoes.filter((c) => c.conflito.gravidade === "baixo").length;
+  const porGravidade = conflitosComSugestoes.filter((c) => filtroGravidade === "todos" || c.conflito.gravidade === filtroGravidade);
+  const tiposPresentes = [...new Map(porGravidade.map((c) => [c.conflito.tipo, porGravidade.filter((x) => x.conflito.tipo === c.conflito.tipo).length])).entries()].sort((a, b) => b[1] - a[1]);
+  const visiveis = porGravidade.filter((c) => filtroTipo === "todos" || c.conflito.tipo === filtroTipo);
+  const escolherGravidade = (g: string) => { setFiltroGravidade((atual) => (atual === g ? "todos" : g)); setFiltroTipo("todos"); setExpanded(null); };
+  const quadro = (chave: string, rotulo: string, valor: number, corValor: string, corAtiva: string) => {
+    const ativo = filtroGravidade === chave;
+    return (
+      <button
+        type="button"
+        onClick={() => escolherGravidade(chave)}
+        aria-pressed={ativo}
+        className={`text-left rounded-xl border bg-card p-4 shadow-sm transition-colors hover:bg-muted/40 ${ativo ? `ring-2 ${corAtiva}` : "border-border/50"}`}
+      >
+        <p className="text-xs text-muted-foreground mb-1">{rotulo}</p>
+        <p className={`text-3xl font-bold ${valor > 0 ? corValor : "text-foreground"}`}>{valor}</p>
+        <p className="mt-1 text-[11px] text-muted-foreground">{ativo ? (chave === "todos" ? "mostrando todos" : "mostrando só estes · clique para ver todos") : "clique para ver"}</p>
+      </button>
+    );
+  };
 
   return (
     <div className="space-y-4 pt-2">
@@ -1462,25 +1497,28 @@ function AbaConflitos() {
       </div>
 
       {!isLoading && (
-        <div className="grid grid-cols-3 gap-4">
-          <Card className={`border-border/50 ${criticos > 0 ? "border-red-200 bg-red-50/30" : ""}`}>
-            <CardContent className="pt-4 pb-4">
-              <p className="text-xs text-muted-foreground mb-1">Total de conflitos</p>
-              <p className={`text-3xl font-bold ${total > 0 ? "text-destructive" : "text-foreground"}`}>{total}</p>
-            </CardContent>
-          </Card>
-          <Card className={`border-border/50 ${criticos > 0 ? "border-red-200 bg-red-50/30" : ""}`}>
-            <CardContent className="pt-4 pb-4">
-              <p className="text-xs text-muted-foreground mb-1">Críticos</p>
-              <p className={`text-3xl font-bold ${criticos > 0 ? "text-red-600" : "text-foreground"}`}>{criticos}</p>
-            </CardContent>
-          </Card>
-          <Card className={`border-border/50 ${altos > 0 ? "border-orange-200 bg-orange-50/30" : ""}`}>
-            <CardContent className="pt-4 pb-4">
-              <p className="text-xs text-muted-foreground mb-1">Alta prioridade</p>
-              <p className={`text-3xl font-bold ${altos > 0 ? "text-orange-600" : "text-foreground"}`}>{altos}</p>
-            </CardContent>
-          </Card>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+            {quadro("todos", "Total de conflitos", total, "text-destructive", "ring-slate-300")}
+            {quadro("critico", "Críticos", criticos, "text-red-600", "ring-red-300")}
+            {quadro("alto", "Alta prioridade", altos, "text-orange-600", "ring-orange-300")}
+            {quadro("medio", "Média", medios, "text-amber-600", "ring-amber-300")}
+            {quadro("baixo", "Baixa", baixos, "text-[#1565C0]", "ring-[#1565C0]/40")}
+          </div>
+          {tiposPresentes.length > 1 && (
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrar por tipo">
+              <button type="button" onClick={() => { setFiltroTipo("todos"); setExpanded(null); }}
+                className={`rounded-full border px-3 py-1 text-xs ${filtroTipo === "todos" ? "bg-foreground text-background border-foreground" : "bg-card hover:bg-muted/50"}`}>
+                Todos os tipos ({porGravidade.length})
+              </button>
+              {tiposPresentes.map(([tipo, n]) => (
+                <button key={tipo} type="button" onClick={() => { setFiltroTipo((atual) => (atual === tipo ? "todos" : tipo)); setExpanded(null); }}
+                  className={`rounded-full border px-3 py-1 text-xs ${filtroTipo === tipo ? "bg-foreground text-background border-foreground" : "bg-card hover:bg-muted/50"}`}>
+                  {TIPO_LABELS[tipo] ?? tipo} ({n})
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -1496,7 +1534,10 @@ function AbaConflitos() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {conflitosComSugestoes.map((item, idx) => {
+          {visiveis.length === 0 && (
+            <Card className="p-8 text-center text-sm text-muted-foreground">Nenhum conflito nesse filtro.</Card>
+          )}
+          {visiveis.map((item, idx) => {
             const g = GRAVIDADE_CONFIG[item.conflito.gravidade as keyof typeof GRAVIDADE_CONFIG] ?? GRAVIDADE_CONFIG.baixo;
             const isOpen = expanded === idx;
             return (
