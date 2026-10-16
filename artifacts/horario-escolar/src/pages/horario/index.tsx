@@ -27,6 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { SeletorBusca } from "@/components/seletor-busca";
 import { PainelCapacidade } from "@/components/painel-capacidade";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"; // [EDITAR-CELULA-GRADE]
 import { ProgressoGeracao, type EtapaGeracao, type ProgressoGeracaoDados, type ProgressoMotor } from "@/components/progresso-geracao"; // [PROGRESSO-GERACAO]
 import {
   Check, ArrowRight, ArrowLeft, Lock, ChevronDown, ChevronRight, Plus,
@@ -660,6 +661,39 @@ function DialogDetalheAula({
   );
 }
 
+// [EDITAR-CELULA-GRADE] (16/10/2026) menu de um horario vazio/HA na grade do professor: marcar HA,
+// tirar HA, bloquear, liberar. HA fixa e abono do probatorio nao entram (so na tela Disponibilidade).
+type EstadoCelulaEditavel = "livre" | "bloqueado" | "ha";
+function ehHATravada(motivo: string | null | undefined): boolean {
+  const m = motivo ?? "";
+  return m.startsWith("HA fixa") || /probat/i.test(m);
+}
+function MenuCelula({ estado, rotulo, className, children, onEscolher }: {
+  estado: EstadoCelulaEditavel;
+  rotulo: string;
+  className: string;
+  children: React.ReactNode;
+  onEscolher: (novo: EstadoCelulaEditavel) => void;
+}) {
+  const opcoes: Array<{ novo: EstadoCelulaEditavel; texto: string }> =
+    estado === "livre" ? [{ novo: "ha", texto: "Marcar HA" }, { novo: "bloqueado", texto: "Bloquear horário" }]
+    : estado === "bloqueado" ? [{ novo: "livre", texto: "Liberar horário" }, { novo: "ha", texto: "Marcar HA" }]
+    : [{ novo: "livre", texto: "Tirar HA (fica livre)" }, { novo: "bloqueado", texto: "Tirar HA e bloquear" }];
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button type="button" className={className} title={`${rotulo} — clique para alterar`}>{children}</button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="center" className="min-w-[180px]">
+        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">{rotulo}</DropdownMenuLabel>
+        {opcoes.map((o) => (
+          <DropdownMenuItem key={o.novo} className="text-sm" onSelect={() => onEscolher(o.novo)}>{o.texto}</DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { // [CONSULTA-GESTOR]
   const [turmaId, setTurmaId] = useState<string>(() => new URLSearchParams(window.location.search).get("turma") ?? "all"); // [FASE-A] ?turma=
   const [professorId, setProfessorId] = useState<string>("all");
@@ -822,18 +856,22 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
   // Mesmo gravador da tela Disponibilidade (POST /api/disponibilidade/lote). Gestor de reservas so consulta.
   const salvarDispLote = useSetDisponibilidadeLote();
   const [alternandoBloqueio, setAlternandoBloqueio] = useState<string | null>(null);
-  const alternarBloqueio = async (t: string, dia: number, aula: number, bloquear: boolean) => {
+  const alterarCelula = async (t: string, dia: number, aula: number, novo: EstadoCelulaEditavel) => { // [EDITAR-CELULA-GRADE]
     if (somenteConsulta || !professorIdSelecionado || alternandoBloqueio) return;
     const chave = `${t}|${dia}|${aula}`;
     setAlternandoBloqueio(chave);
     try {
       await salvarDispLote.mutateAsync({ data: { professorId: professorIdSelecionado, itens: [{
-        diaSemana: dia, horarioSlot: aula, turno: t as any, horaAtividadeObrigatoria: false,
-        disponivel: !bloquear, motivo: bloquear ? "Bloqueio (definido na grade)" : "",
+        diaSemana: dia, horarioSlot: aula, turno: t as any,
+        horaAtividadeObrigatoria: novo === "ha",
+        disponivel: novo !== "bloqueado",
+        motivo: novo === "bloqueado" ? "Bloqueio (definido na grade)" : novo === "ha" ? "HA manual (definida na tela)" : "",
       }] } });
       await queryClient.invalidateQueries({ queryKey: ["/api/disponibilidade", professorIdSelecionado] });
       queryClient.invalidateQueries({ queryKey: ["/api/horarios/capacidade"] });
-      toast({ title: bloquear ? "Horário bloqueado" : "Horário liberado", description: `${diasSemana[dia]}, ${aula}ª aula da ${(TURNO_ROTULO_AVISO[t] ?? t).toLowerCase()}. Clique de novo para desfazer.` });
+      queryClient.invalidateQueries({ queryKey: ["/api/horarios/conflitos"] });
+      const titulo = novo === "ha" ? "HA marcada" : novo === "bloqueado" ? "Horário bloqueado" : "Horário livre";
+      toast({ title: titulo, description: `${diasSemana[dia]}, ${aula}ª aula da ${(TURNO_ROTULO_AVISO[t] ?? t).toLowerCase()}.` });
     } catch (err) {
       toast({ title: "Não consegui alterar a disponibilidade", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
     } finally {
@@ -1153,31 +1191,40 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                               return (
                                 <div key={`${t}-${aulaNum}-${colIndex}`} className="p-1 border-r border-border last:border-0 min-h-[52px] flex items-stretch">
                                   {ha ? (
+                                    !somenteConsulta && !ehHATravada(ha.motivo) ? (
+                                      <MenuCelula estado="ha" rotulo={`${diasSemana[colIndex]}, ${aulaNum}ª aula · ${ha.contraturno || ha.outroTurno ? "HA de outro turno" : "Hora-atividade"}`} onEscolher={(n) => alterarCelula(t, colIndex, aulaNum, n)}
+                                        className="w-full rounded p-1 border-l-4 bg-amber-50 border-amber-400 flex items-center justify-center hover:bg-amber-100 cursor-pointer">
+                                        <span className="text-[11px] font-semibold text-amber-700">{alternandoBloqueio === `${t}|${colIndex}|${aulaNum}` ? "…" : ha.contraturno || ha.outroTurno ? "HA*" : "HA"}</span>
+                                      </MenuCelula>
+                                    ) : (
                                     <div className="w-full rounded p-1 border-l-4 bg-amber-50 border-amber-400 flex items-center justify-center">
-                                      <span className="text-[11px] font-semibold text-amber-700" title={ha.contraturno || ha.outroTurno ? "Hora-atividade de outro turno" : "Hora-atividade"}>{ha.contraturno || ha.outroTurno ? "HA*" : "HA"}</span>
+                                      <span className="text-[11px] font-semibold text-amber-700" title={ehHATravada(ha.motivo) ? "HA fixa — altere na tela Disponibilidade" : ha.contraturno || ha.outroTurno ? "Hora-atividade de outro turno" : "Hora-atividade"}>{ha.contraturno || ha.outroTurno ? "HA*" : "HA"}{ehHATravada(ha.motivo) ? " 🔒" : ""}</span>
                                     </div>
+                                    )
                                   ) : atividade ? (
                                     <div className="w-full rounded p-1 border-l-4 bg-slate-100 border-slate-400 flex items-center justify-center">
                                       <span className="text-[11px] font-semibold text-slate-600" title="Atividade fora da sala (não é janela)">{atividade}</span>
                                     </div>
                                   ) : estadoVazio(disp) === "bloqueado" ? (
-                                    <button
-                                      type="button"
-                                      disabled={somenteConsulta || alternandoBloqueio !== null}
-                                      onClick={() => alternarBloqueio(t, colIndex, aulaNum, false)}
-                                      className="w-full rounded bg-muted/60 flex items-center justify-center text-[10px] text-muted-foreground enabled:hover:bg-muted enabled:cursor-pointer"
-                                      title={somenteConsulta ? "Indisponível" : "Indisponível — clique para liberar"}
-                                    >{alternandoBloqueio === `${t}|${colIndex}|${aulaNum}` ? "…" : "Indisp."}</button>
+                                    somenteConsulta ? (
+                                      <div className="w-full rounded bg-muted/60 flex items-center justify-center text-[10px] text-muted-foreground">Indisp.</div>
+                                    ) : (
+                                      <MenuCelula estado="bloqueado" rotulo={`${diasSemana[colIndex]}, ${aulaNum}ª aula · Indisponível`} onEscolher={(n) => alterarCelula(t, colIndex, aulaNum, n)}
+                                        className="w-full rounded bg-muted/60 flex items-center justify-center text-[10px] text-muted-foreground hover:bg-muted cursor-pointer">
+                                        {alternandoBloqueio === `${t}|${colIndex}|${aulaNum}` ? "…" : "Indisp."}
+                                      </MenuCelula>
+                                    )
                                   ) : estadoVazio(disp) === "naoLetivo" ? (
                                     <span className="m-auto text-[10px] text-muted-foreground/50" title="Período não letivo (entrada)">não letivo</span>
                                   ) : (
-                                    <button
-                                      type="button"
-                                      disabled={somenteConsulta || alternandoBloqueio !== null}
-                                      onClick={() => alternarBloqueio(t, colIndex, aulaNum, true)}
-                                      className="w-full rounded border border-dashed border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/20 flex items-center justify-center text-[10px] font-medium text-emerald-700 dark:text-emerald-400 enabled:hover:bg-emerald-100 enabled:cursor-pointer"
-                                      title={somenteConsulta ? "Horário livre" : "Horário livre — clique para bloquear"}
-                                    >{alternandoBloqueio === `${t}|${colIndex}|${aulaNum}` ? "…" : "Livre"}</button>
+                                    somenteConsulta ? (
+                                      <div className="w-full rounded border border-dashed border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/20 flex items-center justify-center text-[10px] font-medium text-emerald-700 dark:text-emerald-400">Livre</div>
+                                    ) : (
+                                      <MenuCelula estado="livre" rotulo={`${diasSemana[colIndex]}, ${aulaNum}ª aula · Livre`} onEscolher={(n) => alterarCelula(t, colIndex, aulaNum, n)}
+                                        className="w-full rounded border border-dashed border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/20 flex items-center justify-center text-[10px] font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 cursor-pointer">
+                                        {alternandoBloqueio === `${t}|${colIndex}|${aulaNum}` ? "…" : "Livre"}
+                                      </MenuCelula>
+                                    )
                                   )}
                                 </div>
                               );
@@ -1243,14 +1290,33 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                         const temHA = isProfessorSelected && getHA(colIndex, aulaNum);
                         const atividade = isProfessorSelected && !temHA ? getAtividade(colIndex, aulaNum) : undefined; // [GRADE-ROTULO-ATIVIDADE]
                         const estadoProf = isProfessorSelected && !temHA && !atividade && turnoEmUso ? estadoVazio(dispNoTurno(turnoEmUso, colIndex, aulaNum)) : "livre"; // [GRADE-LIVRE-BLOQUEADO]
+                        // [EDITAR-CELULA-GRADE] grade do professor: menu para marcar/tirar HA, bloquear, liberar
+                        const haLinha = temHA && turnoEmUso ? dispNoTurno(turnoEmUso, colIndex, aulaNum).find((d) => d.horaAtividadeObrigatoria) : undefined;
+                        const estadoMenu: EstadoCelulaEditavel | null = !isProfessorSelected || isTurmaSelected || !turnoEmUso || somenteConsulta || atividade
+                          ? null
+                          : temHA ? (haLinha && !ehHATravada(haLinha.motivo) ? "ha" : null)
+                          : estadoProf === "livre" || estadoProf === "bloqueado" ? estadoProf : null;
+                        if (estadoMenu && turnoEmUso) {
+                          const ehHaStar = getHAContraturno(colIndex, aulaNum);
+                          return (
+                            <div key={`${aulaNum}-${colIndex}`} className="p-2 border-r border-border last:border-0 min-h-[100px] flex">
+                              <MenuCelula estado={estadoMenu} rotulo={`${diasSemana[colIndex]}, ${aulaNum}ª aula · ${estadoMenu === "ha" ? (ehHaStar ? "HA de outro turno" : "Hora-atividade") : estadoMenu === "bloqueado" ? "Indisponível" : "Livre"}`}
+                                onEscolher={(n) => alterarCelula(turnoEmUso, colIndex, aulaNum, n)}
+                                className={estadoMenu === "ha" ? "h-full w-full rounded-md p-2 border-l-4 bg-amber-50 border-amber-400 flex items-center justify-center hover:bg-amber-100"
+                                  : estadoMenu === "bloqueado" ? "h-full w-full rounded-md bg-muted/60 flex items-center justify-center text-xs text-muted-foreground hover:bg-muted"
+                                  : "h-full w-full rounded-md border border-dashed border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/20 flex items-center justify-center text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100"}>
+                                {alternandoBloqueio === `${turnoEmUso}|${colIndex}|${aulaNum}` ? "…"
+                                  : estadoMenu === "ha" ? <span className="text-xs font-semibold text-amber-700">{ehHaStar ? "HA*" : "HA"}</span>
+                                  : estadoMenu === "bloqueado" ? "Indisponível" : "Livre"}
+                              </MenuCelula>
+                            </div>
+                          );
+                        }
                         return (
                           <button
                             key={`${aulaNum}-${colIndex}`}
                             type="button"
-                            onClick={() => { // [BLOQUEAR-NA-GRADE] grade do professor: Livre bloqueia, Indisponivel libera
-                              if (isProfessorSelected && !isTurmaSelected && turnoEmUso && !temHA && !atividade && (estadoProf === "livre" || estadoProf === "bloqueado")) { void alternarBloqueio(turnoEmUso, colIndex, aulaNum, estadoProf === "livre"); return; }
-                              abrirAdicionarNaCelula(colIndex, aulaNum);
-                            }}
+                            onClick={() => abrirAdicionarNaCelula(colIndex, aulaNum)}
                             className={`p-2 border-r border-border last:border-0 min-h-[100px] flex items-center justify-center w-full group transition-colors ${temHA ? "bg-background" : "bg-background hover:bg-muted/40"}`}
                           >
                             {temHA ? (
