@@ -61,7 +61,7 @@ export function PainelCapacidade({ turno }: { turno?: string } = {}) {
         <div className="space-y-1.5 rounded-md border border-red-200 bg-red-50 p-2.5 text-xs text-red-800">
           <div className="flex items-center gap-1.5 font-semibold">
             <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-red-600" />
-            {erros.length} professor(es) sem horário suficiente
+            {turno ? `${erros.length} professor(es) com HA faltando` : `${erros.length} professor(es) sem horário suficiente`}
           </div>
           <ul className="list-disc space-y-0.5 pl-5">
             {erros.map((p, i) => (
@@ -76,7 +76,7 @@ export function PainelCapacidade({ turno }: { turno?: string } = {}) {
         </div>
       )}
       {avisos.length > 0 && (
-        <div className="rounded-md border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800">
+        <div className={turno ? "rounded-md border bg-muted/40 p-2.5 text-xs text-muted-foreground" : "rounded-md border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800"}>{/* [CAPACIDADE-HA-OUTRO-TURNO] por turno: HA* nao e problema, tom neutro */}
           <button
             type="button"
             onClick={() => setVerAvisos((v) => !v)}
@@ -84,7 +84,7 @@ export function PainelCapacidade({ turno }: { turno?: string } = {}) {
           >
             {verAvisos ? <ChevronDown className="h-3.5 w-3.5 shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
             {turno
-              ? `${avisos.length} professor(es) da ${NOME_TURNO[turno] ?? turno} sem espaço para toda a hora-atividade neste turno`
+              ? `${avisos.length} professor(es) com parte da HA em outro turno (HA*) -- sem problema`
               : `${avisos.length} professor(es) vão precisar de hora-atividade em contraturno`}
           </button>
           {verAvisos && (

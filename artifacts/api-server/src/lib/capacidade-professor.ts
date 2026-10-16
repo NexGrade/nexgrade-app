@@ -190,8 +190,24 @@ export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro
       if (aulasT > livresT) {
         problemas.push({ ...baseT, nivel: "erro", mensagem: `${aulasT} aula(s) na ${nomeT}, mas só ${livresT} horário(s) livre(s) nesse turno: a grade não fecha. Libere ${aulasT - livresT} horário(s) ou reduza a carga.` });
       } else if (aulasT + haT > livresComHA) {
+        // [CAPACIDADE-HA-OUTRO-TURNO] o que nao cabe vai para outro turno como HA* -- se houver espaco la.
+        // Diurno nunca vai para a noite (HA-NUNCA-NOITE); a noite pode ir para o diurno.
         const sobra = aulasT + haT - livresComHA;
-        problemas.push({ ...baseT, nivel: "aviso", mensagem: `${aulasT} aula(s) + ${haT} HA na ${nomeT}, mas só ${livresComHA} horário(s) livre(s): ${sobra} HA não cabe(m) neste turno${turnoFiltro === "noturno" ? " e vai(ão) para a tarde" : ""}.` });
+        const haPorTurno = ehSecundario(principal, pid) ? {} : calcularHoraAtividadePorTurno(porTurnoHA.get(pid) ?? porTurno);
+        const destinos = turnos.filter((t) => t !== turnoFiltro && (turnoFiltro === "noturno" || t !== "noturno"));
+        let cabeFora = 0;
+        const destinosUsados: string[] = [];
+        for (const t of destinos) {
+          const espaco = (livres[t] ?? 0) + (livresSoHA[t] ?? 0) - (porTurno[t] ?? 0) - (haPorTurno[t] ?? 0);
+          if (espaco > 0 && cabeFora < sobra) { cabeFora += Math.min(espaco, sobra - cabeFora); destinosUsados.push(({ matutino: "manhã", vespertino: "tarde", noturno: "noite" } as Record<string, string>)[t] ?? t); }
+        }
+        const falta = sobra - cabeFora;
+        const destinoTxt = destinosUsados.length ? destinosUsados.join(" e ") : "outro turno";
+        if (falta <= 0) {
+          problemas.push({ ...baseT, nivel: "aviso", mensagem: `${aulasT} aula(s) + ${haT} HA na ${nomeT} e ${livresComHA} horário(s) livre(s): ${sobra} HA vai(ão) para a ${destinoTxt} (HA*).` });
+        } else {
+          problemas.push({ ...baseT, nivel: "erro", mensagem: `Falta HA: ${aulasT} aula(s) + ${haT} HA na ${nomeT} e só ${livresComHA} horário(s) livre(s)${cabeFora > 0 ? `; ${cabeFora} vai(ão) para a ${destinoTxt} (HA*)` : ""} e ${falta} fica(m) sem horário disponível em nenhum turno.` });
+        }
       }
       continue;
     }
