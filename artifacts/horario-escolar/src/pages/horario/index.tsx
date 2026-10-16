@@ -1104,18 +1104,18 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                     <span className="text-xs text-muted-foreground">{aulasDoTurno.length} aula(s) · {haDoTurno} HA</span>
                   </div>
                   <div className="overflow-x-auto">
-                    <div className="min-w-[460px]">
-                      <div className="grid grid-cols-[64px_repeat(5,minmax(0,1fr))] border-b border-border bg-muted/20">
+                    <div className="min-w-[340px]">{/* [GRADE-TURNOS-COMPACTA] 3 turnos cabem lado a lado sem rolagem */}
+                      <div className="grid grid-cols-[46px_repeat(5,minmax(0,1fr))] border-b border-border bg-muted/20">
                         <div className="p-2 text-xs font-medium text-muted-foreground text-center border-r border-border">Aula</div>
                         {diasSemana.map((dia, iDia) => (
                           <div key={dia} className="p-2 text-xs font-semibold text-center border-r border-border last:border-0">
-                            {dia}
-                            {diaTodoBloqueado(t, iDia) && <div className="text-[10px] font-normal text-muted-foreground">indisponível</div>}
+                            <span title={dia}>{dia.slice(0, 3)}</span>
+                            {diaTodoBloqueado(t, iDia) && <div className="text-[9px] font-normal leading-tight text-muted-foreground">indisp.</div>}
                           </div>
                         ))}
                       </div>
                       {linhasDoTurno(t).map((aulaNum) => (
-                        <div key={aulaNum} className="grid grid-cols-[64px_repeat(5,minmax(0,1fr))] border-b border-border last:border-0">
+                        <div key={aulaNum} className="grid grid-cols-[46px_repeat(5,minmax(0,1fr))] border-b border-border last:border-0">
                           <div className="p-1.5 flex flex-col items-center justify-center text-xs font-medium text-muted-foreground border-r border-border bg-muted/10">
                             <span>{aulaNum}ª</span>
                             {horaDaAula(t, aulaNum) && <span className="text-[10px] font-normal tabular-nums">{horaDaAula(t, aulaNum)}</span>}
@@ -1142,7 +1142,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                                       className="w-full rounded flex items-center justify-center text-[10px] text-slate-500 dark:text-slate-400"
                                       style={{ backgroundImage: "repeating-linear-gradient(135deg, rgb(148 163 184 / 0.18) 0 6px, transparent 6px 12px)" }}
                                       title="Indisponível (bloqueio do professor)"
-                                    >Indisponível</div>
+                                    >Indisp.</div>
                                   ) : estadoVazio(disp) === "naoLetivo" ? (
                                     <span className="m-auto text-[10px] text-muted-foreground/50" title="Período não letivo (entrada)">não letivo</span>
                                   ) : (
