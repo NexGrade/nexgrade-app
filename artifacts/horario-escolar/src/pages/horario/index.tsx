@@ -796,6 +796,27 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
   const isTurmaSelected = turmaId !== "all";
   const isProfessorSelected = professorId !== "all";
 
+  // [GRADE-TURNOS-LADO-A-LADO] (16/10/2026) professor com aula/HA em mais de um turno e filtro
+  // "Todos os turnos": uma grade por turno, lado a lado (antes as duas saiam sobrepostas, porque o
+  // numero da aula se repete entre turnos).
+  const { data: todosSlotsEscola } = useListHorarioSlots({} as any, { query: { queryKey: getListHorarioSlotsQueryKey({} as any) } });
+  const ORDEM_TURNOS = ["matutino", "vespertino", "noturno"];
+  const turnosDoProfessor = ORDEM_TURNOS.filter((t) =>
+    turnosNosResultados.includes(t as any) || (disponibilidadeProf ?? []).some((d) => d.horaAtividadeObrigatoria && d.turno === t));
+  const mostrarTurnosLadoALado = isProfessorSelected && !isTurmaSelected && turno === "all" && turnosDoProfessor.length > 1;
+  const horaDaAula = (t: string, aula: number): string | undefined => {
+    const horas = [...new Set((todosSlotsEscola ?? []).filter((x: any) => x.turno === t && x.numeroAula === aula).map((x: any) => String(x.horaInicio ?? "").slice(0, 5)).filter(Boolean))];
+    return horas.length === 1 ? horas[0] : undefined; // manha com esquema por nivel: horarios diferentes, nao mostra
+  };
+  const dispNoTurno = (t: string, dia: number, aula: number) =>
+    (disponibilidadeProf ?? []).filter((d) => d.diaSemana === dia && d.horarioSlot === aula && d.turno === t);
+  const linhasDoTurno = (t: string): number[] => {
+    const aulas = (horariosBrutos ?? []).filter((x: any) => x.turma?.turno === t && !x.assincronaSoTurma).map((x) => x.numeroAula);
+    const has = (disponibilidadeProf ?? []).filter((d) => d.turno === t && (d.horaAtividadeObrigatoria || /\(ocupado:/.test(d.motivo ?? ""))).map((d) => d.horarioSlot);
+    const max = Math.max(5, ...aulas, ...has);
+    return Array.from({ length: max }, (_, i) => i + 1);
+  };
+
   const handleGerarGrade = async () => {
     if (!isTurmaSelected) return;
     const nomeTurma = turmas?.find((t) => String(t.id) === turmaId)?.nome ?? turmaId;
@@ -958,7 +979,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
           Selecione uma turma específica pra habilitar o botão "Gerar Grade" (a geração é sempre por turma) e pra poder adicionar aula manual clicando direto numa célula vazia da grade.
         </p>
       )}
-      {precisaEscolherTurno && (
+      {precisaEscolherTurno && !mostrarTurnosLadoALado && (
         <p className="text-xs text-amber-600 -mt-2 font-medium">
           Este professor dá aula em mais de um turno ({turnosNosResultados.map((t) => TURNO_ROTULO_AVISO[t as string] ?? t).join(", ")}) — selecione um Turno específico acima pra ver a grade sem misturar os horários (o número da aula se repete entre turnos, ex.: aula 1 é 07:30 na manhã e 13:05 na tarde).
         </p>
@@ -1055,6 +1076,85 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
             })}
           </div>
         )
+      ) : mostrarTurnosLadoALado ? (
+        // [GRADE-TURNOS-LADO-A-LADO]
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">Este professor tem aula ou HA em {turnosDoProfessor.length} turnos: cada turno aparece na sua própria grade. Para ver só um, escolha o turno no filtro.</p>
+          <div className={`grid gap-4 ${turnosDoProfessor.length >= 3 ? "xl:grid-cols-2 2xl:grid-cols-3" : "xl:grid-cols-2"}`}>
+            {turnosDoProfessor.map((t) => {
+              const aulasDoTurno = (horariosBrutos ?? []).filter((x: any) => x.turma?.turno === t && !x.assincronaSoTurma);
+              const haDoTurno = (disponibilidadeProf ?? []).filter((d) => d.turno === t && d.horaAtividadeObrigatoria).length;
+              return (
+                <Card key={t} className="overflow-hidden">
+                  <div className="py-2.5 px-4 bg-muted/40 border-b border-border flex items-center justify-between">
+                    <span className="text-sm font-semibold">{TURNO_ROTULO_AVISO[t] ?? t}</span>
+                    <span className="text-xs text-muted-foreground">{aulasDoTurno.length} aula(s) · {haDoTurno} HA</span>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <div className="min-w-[460px]">
+                      <div className="grid grid-cols-[64px_repeat(5,minmax(0,1fr))] border-b border-border bg-muted/20">
+                        <div className="p-2 text-xs font-medium text-muted-foreground text-center border-r border-border">Aula</div>
+                        {diasSemana.map((dia) => (
+                          <div key={dia} className="p-2 text-xs font-semibold text-center border-r border-border last:border-0">{dia}</div>
+                        ))}
+                      </div>
+                      {linhasDoTurno(t).map((aulaNum) => (
+                        <div key={aulaNum} className="grid grid-cols-[64px_repeat(5,minmax(0,1fr))] border-b border-border last:border-0">
+                          <div className="p-1.5 flex flex-col items-center justify-center text-xs font-medium text-muted-foreground border-r border-border bg-muted/10">
+                            <span>{aulaNum}ª</span>
+                            {horaDaAula(t, aulaNum) && <span className="text-[10px] font-normal tabular-nums">{horaDaAula(t, aulaNum)}</span>}
+                          </div>
+                          {Array.from({ length: 5 }).map((_, colIndex) => {
+                            const slotsAqui = aulasDoTurno.filter((x) => x.diaSemana === colIndex && x.numeroAula === aulaNum);
+                            const slot = slotsAqui[0];
+                            if (!slot) {
+                              const disp = dispNoTurno(t, colIndex, aulaNum);
+                              const ha = disp.find((d) => d.horaAtividadeObrigatoria);
+                              const atividade = !ha ? /\(ocupado:\s*([^)]+?)\s*\)/.exec(disp.find((d) => !d.horaAtividadeObrigatoria)?.motivo ?? "")?.[1] : undefined;
+                              return (
+                                <div key={`${t}-${aulaNum}-${colIndex}`} className="p-1 border-r border-border last:border-0 min-h-[52px] flex items-stretch">
+                                  {ha ? (
+                                    <div className="w-full rounded p-1 border-l-4 bg-amber-50 border-amber-400 flex items-center justify-center">
+                                      <span className="text-[11px] font-semibold text-amber-700" title={ha.contraturno || ha.outroTurno ? "Hora-atividade de outro turno" : "Hora-atividade"}>{ha.contraturno || ha.outroTurno ? "HA*" : "HA"}</span>
+                                    </div>
+                                  ) : atividade ? (
+                                    <div className="w-full rounded p-1 border-l-4 bg-slate-100 border-slate-400 flex items-center justify-center">
+                                      <span className="text-[11px] font-semibold text-slate-600" title="Atividade fora da sala (não é janela)">{atividade}</span>
+                                    </div>
+                                  ) : (
+                                    <span className="m-auto text-[10px] text-muted-foreground/30">–</span>
+                                  )}
+                                </div>
+                              );
+                            }
+                            return (
+                              <div
+                                key={slot.id}
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => abrirDetalheNaCelula(colIndex, aulaNum, slot.turmaId)}
+                                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") abrirDetalheNaCelula(colIndex, aulaNum, slot.turmaId); }}
+                                className="p-1 border-r border-border last:border-0 cursor-pointer"
+                              >
+                                <div
+                                  className="h-full rounded p-1.5 border-l-4 text-[11px] leading-tight hover:shadow-sm"
+                                  style={{ backgroundColor: `${slot.disciplina?.cor}15`, borderLeftColor: slot.disciplina?.cor || "var(--primary)" }}
+                                >
+                                  <div className="font-semibold truncate" style={{ color: slot.disciplina?.cor ? `${slot.disciplina.cor}dd` : "inherit" }}>{slot.disciplina?.nome}</div>
+                                  <div className="text-foreground/80 truncate">{slot.turma?.nome}</div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
       ) : !isTurmaSelected && !isProfessorSelected ? (
         <Card className="p-12 text-center text-muted-foreground">
           <p>Selecione uma turma, um professor, ou um Turno específico para visualizar a grade.</p>
