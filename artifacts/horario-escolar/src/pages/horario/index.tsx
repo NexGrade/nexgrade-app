@@ -9,6 +9,7 @@ import {
   useGetTurma, useUpdateTurma, getGetTurmaQueryKey,
   useListLimitesDiariosProfessor, useSetLimiteDiarioProfessor, getListLimitesDiariosProfessorQueryKey,
   useListHorarios,
+  useSetDisponibilidadeLote, // [BLOQUEAR-NA-GRADE]
   useGetConflitosComSugestoes,
   useListHorariosExperimentais, useDeleteHorarioExperimental, usePromoverHorarioExperimental, useGerarHorario,
   customFetch,
@@ -817,6 +818,28 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
     if (!b) return "livre";
     return (b.motivo ?? "").startsWith("Bloqueio automatico: aula 1 do noturno") ? "naoLetivo" : "bloqueado";
   };
+  // [BLOQUEAR-NA-GRADE] (16/10/2026) clicar num horario Livre bloqueia; num Indisponivel libera.
+  // Mesmo gravador da tela Disponibilidade (POST /api/disponibilidade/lote). Gestor de reservas so consulta.
+  const salvarDispLote = useSetDisponibilidadeLote();
+  const [alternandoBloqueio, setAlternandoBloqueio] = useState<string | null>(null);
+  const alternarBloqueio = async (t: string, dia: number, aula: number, bloquear: boolean) => {
+    if (somenteConsulta || !professorIdSelecionado || alternandoBloqueio) return;
+    const chave = `${t}|${dia}|${aula}`;
+    setAlternandoBloqueio(chave);
+    try {
+      await salvarDispLote.mutateAsync({ data: { professorId: professorIdSelecionado, itens: [{
+        diaSemana: dia, horarioSlot: aula, turno: t as any, horaAtividadeObrigatoria: false,
+        disponivel: !bloquear, motivo: bloquear ? "Bloqueio (definido na grade)" : "",
+      }] } });
+      await queryClient.invalidateQueries({ queryKey: ["/api/disponibilidade", professorIdSelecionado] });
+      queryClient.invalidateQueries({ queryKey: ["/api/horarios/capacidade"] });
+      toast({ title: bloquear ? "Horário bloqueado" : "Horário liberado", description: `${diasSemana[dia]}, ${aula}ª aula da ${(TURNO_ROTULO_AVISO[t] ?? t).toLowerCase()}. Clique de novo para desfazer.` });
+    } catch (err) {
+      toast({ title: "Não consegui alterar a disponibilidade", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+    } finally {
+      setAlternandoBloqueio(null);
+    }
+  };
   const diaTodoBloqueado = (t: string, dia: number) =>
     linhasDoTurno(t).every((a) => {
       const disp = dispNoTurno(t, dia, a);
@@ -1138,15 +1161,23 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                                       <span className="text-[11px] font-semibold text-slate-600" title="Atividade fora da sala (não é janela)">{atividade}</span>
                                     </div>
                                   ) : estadoVazio(disp) === "bloqueado" ? (
-                                    <div
-                                      className="w-full rounded flex items-center justify-center text-[10px] text-slate-500 dark:text-slate-400"
-                                      style={{ backgroundImage: "repeating-linear-gradient(135deg, rgb(148 163 184 / 0.18) 0 6px, transparent 6px 12px)" }}
-                                      title="Indisponível (bloqueio do professor)"
-                                    >Indisp.</div>
+                                    <button
+                                      type="button"
+                                      disabled={somenteConsulta || alternandoBloqueio !== null}
+                                      onClick={() => alternarBloqueio(t, colIndex, aulaNum, false)}
+                                      className="w-full rounded bg-muted/60 flex items-center justify-center text-[10px] text-muted-foreground enabled:hover:bg-muted enabled:cursor-pointer"
+                                      title={somenteConsulta ? "Indisponível" : "Indisponível — clique para liberar"}
+                                    >{alternandoBloqueio === `${t}|${colIndex}|${aulaNum}` ? "…" : "Indisp."}</button>
                                   ) : estadoVazio(disp) === "naoLetivo" ? (
                                     <span className="m-auto text-[10px] text-muted-foreground/50" title="Período não letivo (entrada)">não letivo</span>
                                   ) : (
-                                    <div className="w-full rounded border border-dashed border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/20 flex items-center justify-center text-[10px] font-medium text-emerald-700 dark:text-emerald-400" title="Horário livre (disponível, sem aula nem HA)">Livre</div>
+                                    <button
+                                      type="button"
+                                      disabled={somenteConsulta || alternandoBloqueio !== null}
+                                      onClick={() => alternarBloqueio(t, colIndex, aulaNum, true)}
+                                      className="w-full rounded border border-dashed border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/20 flex items-center justify-center text-[10px] font-medium text-emerald-700 dark:text-emerald-400 enabled:hover:bg-emerald-100 enabled:cursor-pointer"
+                                      title={somenteConsulta ? "Horário livre" : "Horário livre — clique para bloquear"}
+                                    >{alternandoBloqueio === `${t}|${colIndex}|${aulaNum}` ? "…" : "Livre"}</button>
                                   )}
                                 </div>
                               );
@@ -1216,7 +1247,10 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                           <button
                             key={`${aulaNum}-${colIndex}`}
                             type="button"
-                            onClick={() => abrirAdicionarNaCelula(colIndex, aulaNum)}
+                            onClick={() => { // [BLOQUEAR-NA-GRADE] grade do professor: Livre bloqueia, Indisponivel libera
+                              if (isProfessorSelected && !isTurmaSelected && turnoEmUso && !temHA && !atividade && (estadoProf === "livre" || estadoProf === "bloqueado")) { void alternarBloqueio(turnoEmUso, colIndex, aulaNum, estadoProf === "livre"); return; }
+                              abrirAdicionarNaCelula(colIndex, aulaNum);
+                            }}
                             className={`p-2 border-r border-border last:border-0 min-h-[100px] flex items-center justify-center w-full group transition-colors ${temHA ? "bg-background" : "bg-background hover:bg-muted/40"}`}
                           >
                             {temHA ? (
@@ -1229,14 +1263,13 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                               </div>
                             ) : estadoProf === "bloqueado" ? (
                               <div
-                                className="h-full w-full rounded-md flex items-center justify-center text-xs text-slate-500 dark:text-slate-400"
-                                style={{ backgroundImage: "repeating-linear-gradient(135deg, rgb(148 163 184 / 0.18) 0 8px, transparent 8px 16px)" }}
-                                title="Indisponível (bloqueio do professor)"
+                                className="h-full w-full rounded-md bg-muted/60 flex items-center justify-center text-xs text-muted-foreground"
+                                title={somenteConsulta ? "Indisponível" : "Indisponível — clique para liberar"}
                               >Indisponível</div>
                             ) : estadoProf === "naoLetivo" ? (
                               <span className="text-xs text-muted-foreground/50">não letivo</span>
                             ) : isProfessorSelected ? (
-                              <div className="h-full w-full rounded-md border border-dashed border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/20 flex items-center justify-center text-xs font-medium text-emerald-700 dark:text-emerald-400" title="Horário livre (disponível, sem aula nem HA)">Livre</div>
+                              <div className="h-full w-full rounded-md border border-dashed border-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/20 flex items-center justify-center text-xs font-medium text-emerald-700 dark:text-emerald-400" title={somenteConsulta ? "Horário livre" : "Horário livre — clique para bloquear"}>Livre</div>
                             ) : (
                               <span className="text-xs text-muted-foreground/30 group-hover:text-primary group-hover:font-medium flex items-center gap-1">
                                 <Plus className="h-3 w-3 opacity-0 group-hover:opacity-100" />
