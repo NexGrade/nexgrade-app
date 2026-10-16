@@ -1285,7 +1285,7 @@ router.post("/corrigir-professor", async (req, res) => {
 
 // ── GERAÇÃO COM CP-SAT (OR-Tools) ───────────────────────────────────
 
-const CPSAT_SERVICE_URL = process.env.CPSAT_SERVICE_URL || "https://nexgrade-cpsat.onrender.com";
+const CPSAT_SERVICE_URL = process.env.CPSAT_SERVICE_URL || "https://cpsat.nexuscoretecnologia.com.br";
 // [CPSAT-TOKEN] chave secreta compartilhada com o CP-SAT (variavel de ambiente no Render).
 // Enviada no cabecalho X-NexGrade-Token; o CP-SAT recusa (401) quem nao envia.
 const CPSAT_TOKEN = (process.env.CPSAT_TOKEN ?? "").trim();
