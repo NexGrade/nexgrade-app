@@ -12,6 +12,7 @@ from ortools.sat.python import cp_model
 from dataclasses import dataclass
 from typing import Optional
 import time
+from . import progresso  # [PROGRESSO-MOTOR]
 
 TETO_AULAS_TURNO = {"noturno": 19, "matutino": 24, "vespertino": 24}
 DIAS = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"]
@@ -23,6 +24,28 @@ _CTX = threading.local()
 
 def definir_evitar(lista):
     _CTX.evitar = {(e["professor"], int(e["dia"]), int(e["aula"])) for e in (lista or [])}
+
+
+class _ObservadorProgresso(cp_model.CpSolverSolutionCallback):
+    """[PROGRESSO-MOTOR] registra cada grade melhor que o solver encontra (janelas e HA sem espaco)."""
+
+    def __init__(self, pid, janelas_turma, janelas_professor, deficits_ha):
+        super().__init__()
+        self._pid = pid
+        self._jt = janelas_turma
+        self._jp = janelas_professor
+        self._ha = deficits_ha
+
+    def _valor(self, lista):
+        return int(sum(self.Value(v) for v in lista)) if lista else None
+
+    def on_solution_callback(self):
+        try:
+            progresso.registrar_solucao(self._pid, self._valor(self._jp), self._valor(self._jt), self._valor(self._ha))
+            if progresso.pedido_parar(self._pid):  # [PARAR-MOTOR]
+                self.StopSearch()
+        except Exception:
+            pass  # progresso nunca derruba a geracao
 
 
 @dataclass
@@ -432,7 +455,27 @@ def resolver(
         solver.parameters.stop_after_first_solution = True
 
 
-    status = solver.Solve(model)
+    pid = progresso.id_atual()  # [PROGRESSO-MOTOR]
+    if pid:
+        # [PARAR-MOTOR] vigia o pedido de parada a cada meio segundo (a callback so roda quando sai
+        # grade nova; o vigia para tambem quando o solver esta "parado" procurando)
+        fim_vigia = threading.Event()
+        def _vigiar():
+            while not fim_vigia.wait(0.5):
+                if progresso.pedido_parar(pid):
+                    try:
+                        solver.StopSearch()
+                    except Exception:
+                        pass
+                    return
+        vigia = threading.Thread(target=_vigiar, daemon=True)
+        vigia.start()
+        try:
+            status = solver.Solve(model, _ObservadorProgresso(pid, penalidades_turma, penalidades_professor, deficits_ha))
+        finally:
+            fim_vigia.set()
+    else:
+        status = solver.Solve(model)
 
     return solver, status, aula_var
 
@@ -502,6 +545,7 @@ def gerar_grade(
     # professor).
     apenas_turma_auto = len(turmas_nomes) > 16
     if apenas_turma_auto:
+        progresso.definir_fase("Encaixando as aulas sem buraco nas turmas")  # [PROGRESSO-MOTOR]
         solver_f1, status_f1, aula_var_f1 = resolver(
             disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
             tempo_limite_s, apenas_turma=True, fixar=fixar,
@@ -520,8 +564,9 @@ def gerar_grade(
         tempo_restante = min(TETO_FASE_2_S, max(0, tempo_limite_s - duracao_f1 - 5))
         if hints_ini:
             tempo_restante = max(0, tempo_limite_s - duracao_f1 - 5)  # [WARM-START] usa todo o tempo pedido
-        if status_f1 in (cp_model.OPTIMAL, cp_model.FEASIBLE) and tempo_restante > 5:
+        if status_f1 in (cp_model.OPTIMAL, cp_model.FEASIBLE) and tempo_restante > 5 and not progresso.pedido_parar():  # [PARAR-MOTOR]
             hints_f1 = {k: solver_f1.Value(v) for k, v in aula_var_f1.items()}
+            progresso.definir_fase("Reduzindo janelas dos professores")  # [PROGRESSO-MOTOR]
             solver_f2, status_f2, aula_var_f2 = resolver(
                 disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
                 int(tempo_restante), apenas_turma=False, hints=hints_ini or hints_f1, fixar=fixar, ha_por_professor=ha_por_professor,  # [WARM-START] [HA-NO-CPSAT]
@@ -544,14 +589,16 @@ def gerar_grade(
         # encontra alguma solução, só não garante zero janela.
         TETO_TENTATIVA_RIGIDA_S = int(os.getenv("CPSAT_TETO_TENTATIVA_RIGIDA_S", "30"))
         tempo_rigida = min(TETO_TENTATIVA_RIGIDA_S, max(5, tempo_limite_s // 3))
+        progresso.definir_fase("Procurando grade sem nenhum buraco nas turmas")  # [PROGRESSO-MOTOR]
         solver_rigido, status_rigido, aula_var_rigido = resolver(
             disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
             tempo_rigida, apenas_turma=False, forcar_zero_janela=True, fixar=fixar, hints=hints_ini, ha_por_professor=ha_por_professor,  # [WARM-START] [HA-NO-CPSAT]
         )
-        if status_rigido in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+        if status_rigido in (cp_model.OPTIMAL, cp_model.FEASIBLE) or progresso.pedido_parar():  # [PARAR-MOTOR]
             solver, status, aula_var = solver_rigido, status_rigido, aula_var_rigido
         else:
             tempo_suave = max(5, tempo_limite_s - tempo_rigida)
+            progresso.definir_fase("Reduzindo janelas de turmas e professores")  # [PROGRESSO-MOTOR]
             solver, status, aula_var = resolver(
                 disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
                 tempo_suave, apenas_turma=False, fixar=fixar, hints=hints_ini, ha_por_professor=ha_por_professor,  # [WARM-START] [HA-NO-CPSAT]
@@ -594,9 +641,13 @@ def gerar_grade(
             fixadas_fase3 = {
                 (item["turma"], item["codigoSae"], item["professor"]) for item in fixar_raw
             }
+        progresso.definir_fase("Ajuste fino: trocando aulas de lugar")  # [PROGRESSO-MOTOR]
+        pid_fase3 = progresso.id_atual()
         aulas_otimizadas, janelas_antes, janelas_depois = reduzir_janelas(
             aulas, disciplinas_turma_raw, bloqueios_raw, aulas_por_dia,
             fixadas=fixadas_fase3,
+            ao_melhorar=(lambda j: progresso.registrar_solucao(pid_fase3, j)) if pid_fase3 else None,  # [PROGRESSO-MOTOR]
+            deve_parar=(lambda: progresso.pedido_parar(pid_fase3)) if pid_fase3 else None,  # [PARAR-MOTOR]
         )
         resultado["aulas"] = aulas_otimizadas
         resultado["janelasProfessorAntes"] = janelas_antes
@@ -606,9 +657,10 @@ def gerar_grade(
             "Não existe grade que satisfaça todas as restrições com esses dados "
             "(disponibilidade dos professores + teto de aulas por turno)."
             if status == cp_model.INFEASIBLE
-            else f"Solver não terminou dentro do tempo limite de {tempo_limite_s}s."
+            else ("Cálculo interrompido antes de encontrar uma grade válida." if progresso.pedido_parar() else f"Solver não terminou dentro do tempo limite de {tempo_limite_s}s.")  # [PARAR-MOTOR]
         )
 
+    resultado["paradoPeloUsuario"] = progresso.pedido_parar()  # [PARAR-MOTOR]
     return resultado
 
 

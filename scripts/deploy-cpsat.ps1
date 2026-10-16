@@ -9,7 +9,7 @@ $vm = "nexgrade-cpsat-teste"
 $zona = "southamerica-east1-a"
 $local = Join-Path $PSScriptRoot "..\cpsat-service\app"  # pasta do proprio repositorio (onde o script esta)
 $remoto = "/home/simone/cpsat-service/app"
-$arquivos = @("main.py", "solver.py", "pipeline_coordenada.py", "reduzir_janelas.py", "__init__.py")
+$arquivos = @("main.py", "solver.py", "pipeline_coordenada.py", "reduzir_janelas.py", "__init__.py", "progresso.py")  # [PROGRESSO-MOTOR] progresso.py novo em 16/10
 
 function Get-HashLF([string]$caminho) {
   $t = [IO.File]::ReadAllText($caminho).Replace("`r`n", "`n")
@@ -18,21 +18,22 @@ function Get-HashLF([string]$caminho) {
 }
 
 $listaRemota = ($arquivos | ForEach-Object { "$remoto/$_" }) -join " "
-$cmdHash = "sudo sha256sum " + $listaRemota
+$cmdHash = "sudo sha256sum " + $listaRemota + " 2>/dev/null; true"  # arquivo novo (ainda nao existe no GCP) nao derruba a comparacao
 $saidaRemota = gcloud compute ssh $vm --zone=$zona "--command=$cmdHash"
 $hashRemoto = @{}
 foreach ($linha in $saidaRemota) {
   if ($linha -match '^([0-9a-f]{64})\s+.*/([^/]+)$') { $hashRemoto[$Matches[2]] = $Matches[1] }
 }
 
-if ($hashRemoto.Count -ne $arquivos.Count) { "ERRO: nao consegui ler os hashes de todos os arquivos no GCP. Nada feito."; exit 1 }
+if ($hashRemoto.Count -eq 0) { "ERRO: nao consegui ler os hashes dos arquivos no GCP. Nada feito."; exit 1 }
 
 $mudados = @()
 "=== comparacao repo x GCP ==="
 foreach ($a in $arquivos) {
   $hl = Get-HashLF (Join-Path $local $a)
   $hr = $hashRemoto[$a]
-  if ($hl -eq $hr) { "  igual     $a" } else { "  DIFERENTE $a"; $mudados += $a }
+  if (-not $hr) { "  NOVO      $a"; $mudados += $a }
+  elseif ($hl -eq $hr) { "  igual     $a" } else { "  DIFERENTE $a"; $mudados += $a }
 }
 if ($mudados.Count -eq 0) { "Nada a publicar: GCP ja esta igual ao repositorio."; exit 0 }
 if (-not $Executar) { "DRY-RUN: $($mudados.Count) arquivo(s) seriam publicados. Rode com -Executar para publicar."; exit 0 }
@@ -69,7 +70,7 @@ $cmd = @(
   'sleep 6',
   'echo SERVICO: $(systemctl is-active cpsat)',
   'echo SAUDE: $(curl -s -m 5 http://localhost:8000/)',
-  'echo ROTAS: $(curl -s -m 5 http://localhost:8000/openapi.json | grep -o -e /gerar-grade-coordenada -e /gerar-grade -e /melhorar-grade | sort -u | xargs)'
+  'echo ROTAS: $(curl -s -m 5 http://localhost:8000/openapi.json | grep -o -e /gerar-grade-coordenada -e /gerar-grade -e /melhorar-grade -e /progresso | sort -u | xargs)'
 ) -join ' && '
 gcloud compute ssh $vm --zone=$zona "--command=$cmd"
 if ($LASTEXITCODE -ne 0) { "ERRO: a etapa remota falhou (codigo $LASTEXITCODE). Veja as mensagens acima; o backup .tgz permite restaurar."; exit 1 }

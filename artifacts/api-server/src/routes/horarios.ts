@@ -1346,7 +1346,9 @@ async function aguardarCpsatServiceAcordado(maxEsperaMs = 90_000): Promise<void>
 // so "rodando". Cada job assincrono tem sua lista; as funcoes de geracao marcam as etapas pelo
 // AsyncLocalStorage (sem passar callback por todas as chamadas). Fora de um job, nao faz nada.
 interface EtapaGeracao { id: string; rotulo: string; inicioMs: number; fimMs?: number; detalhe?: string }
-interface ProgressoGeracao { etapas: EtapaGeracao[]; fase?: string }
+// [PROGRESSO-MOTOR] andamento vindo do proprio motor (GET /progresso/:id na VM): fase e cada grade melhor
+interface ProgressoMotor { fase: string; decorridoS: number; parar?: boolean; solucoes: Array<{ t: number; fase: string; janelasProfessor?: number; janelasTurma?: number; haFaltando?: number }> }
+interface ProgressoGeracao { etapas: EtapaGeracao[]; fase?: string; jobId?: string; motor?: ProgressoMotor; pararPedido?: boolean }
 const progressoGeracao = new AsyncLocalStorage<ProgressoGeracao>();
 function marcarEtapa(id: string, rotulo: string, detalhe?: string): void {
   const p = progressoGeracao.getStore();
@@ -1365,6 +1367,43 @@ function definirFaseGeracao(fase: string | undefined): void {
   const p = progressoGeracao.getStore();
   if (p) p.fase = fase;
 }
+// [PROGRESSO-MOTOR] enquanto o motor calcula, busca o andamento dele a cada 3s. Falha aqui nunca
+// atrapalha a geracao (o motor antigo, sem a rota, so responde 404 e a tela mostra so as etapas).
+function acompanharMotor(url: string, headers: Record<string, string>): () => void {
+  const p = progressoGeracao.getStore();
+  if (!p?.jobId) return () => {};
+  const jobId = p.jobId;
+  let ativo = true;
+  const timer = setInterval(async () => {
+    if (!ativo) return;
+    try {
+      const r = await axios.get(`${url}/progresso/${jobId}`, { headers, timeout: 2500, validateStatus: () => true });
+      if (ativo && r.status === 200 && r.data && Array.isArray(r.data.solucoes)) p.motor = r.data as ProgressoMotor;
+      // [PARAR-MOTOR] pedido de parada feito antes de o motor registrar este calculo: repete o aviso
+      if (ativo && p.pararPedido && r.status === 200 && r.data && !r.data.parar) void pedirParadaMotor(jobId);
+    } catch {
+      // sem andamento desta vez; tenta de novo no proximo ciclo
+    }
+  }, 3000);
+  return () => { ativo = false; clearInterval(timer); };
+}
+
+// [PARAR-MOTOR] avisa o motor na VM para parar o calculo deste job (devolve a melhor grade ate agora).
+// Nunca lanca erro: motor antigo (sem a rota) ou VM fora do ar so deixam o calculo seguir.
+async function pedirParadaMotor(jobId: string): Promise<boolean> {
+  try {
+    const r = await axios.post(`${CPSAT_SERVICE_URL}/progresso/${jobId}/parar`, {}, {
+      headers: CPSAT_TOKEN ? { "X-NexGrade-Token": CPSAT_TOKEN } : {}, timeout: 5000, validateStatus: () => true,
+    });
+    return r.status === 200;
+  } catch {
+    return false;
+  }
+}
+function pararFoiPedido(): boolean {
+  return !!progressoGeracao.getStore()?.pararPedido;
+}
+
 function concluirEtapas(etapas: EtapaGeracao[]): EtapaGeracao[] {
   const aberta = etapas[etapas.length - 1];
   if (aberta && aberta.fimMs == null) aberta.fimMs = Date.now();
@@ -1423,6 +1462,7 @@ async function runCpsatGeneration(
       if (resultadoCoordenado.httpStatus >= 200 && resultadoCoordenado.httpStatus < 300) {
         return { httpStatus: resultadoCoordenado.httpStatus, body: { ...resultadoCoordenado.body, coordenado: true } };
       }
+      if (pararFoiPedido()) return resultadoCoordenado; // [PARAR-MOTOR] parou antes de ter grade: nao tenta o plano B
       // [DIAGNOSTICO-COORDENACAO] Loga o motivo exato que o motor CP-SAT deu
       // pra nao achar solucao coordenada -- antes esse texto (raw.mensagem)
       // era descartado silenciosamente ao cair no fallback, sem aparecer em
@@ -1442,6 +1482,9 @@ async function runCpsatGeneration(
       const resultadoFundamental = await runCpsatGeneracaoUnica(escolaId, undefined, undefined, idsFundamental, nomeExperimental, tempoLimitePorEtapa, signal);
       if (resultadoFundamental.httpStatus < 200 || resultadoFundamental.httpStatus >= 300) {
         return { httpStatus: resultadoFundamental.httpStatus, body: { etapa: "fundamental", ...resultadoFundamental.body } };
+      }
+      if (pararFoiPedido()) { // [PARAR-MOTOR] parou no Fundamental: fica com ele, Medio/Tecnico nao e calculado
+        return { httpStatus: 200, body: { ...resultadoFundamental.body, etapa: "fundamental", paradoPeloUsuario: true, mensagem: `Você parou o cálculo: só o Fundamental foi gerado no experimento "${nomeExperimental}". O Médio/Técnico não foi calculado.` } };
       }
       definirFaseGeracao("Médio/Técnico"); // [PROGRESSO-GERACAO]
       const resultadoMedio = await runCpsatGeneracaoUnica(escolaId, undefined, undefined, idsMedioTecnico, nomeExperimental, tempoLimitePorEtapa, signal);
@@ -1986,6 +2029,7 @@ async function runCpsatGeneracaoUnica(
   for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_CPSAT; tentativa++) {
     marcarEtapa("calculo", modoMelhoria ? "Melhorando a grade (trocando aulas de lugar)" : tentativa === 1 ? "Calculando a grade" : "Calculando a grade (2ª tentativa, a conexão caiu)", // [PROGRESSO-GERACAO]
       usarCoordenacao ? `Professores que dão aula no Fundamental e no Médio são acertados primeiro, até ${tempoCoordenacaoS + tempoFaseS * 2 + tempoFase3S}s` : `Tempo limite: ${tempoLimiteS ?? 120}s`);
+    const pararAcompanhamento = acompanharMotor(CPSAT_SERVICE_URL, CPSAT_TOKEN ? { "X-NexGrade-Token": CPSAT_TOKEN } : {}); // [PROGRESSO-MOTOR]
     try {
       const timeoutMs = usarCoordenacao
         ? (tempoCoordenacaoS + tempoFaseS * 2 + tempoFase3S + 60) * 1000
@@ -1994,7 +2038,9 @@ async function runCpsatGeneracaoUnica(
       // que o undici trava/falha silenciosamente com corpos de requisicao
       // medios/grandes (60KB+) na rede interna do Render, mesmo dentro do
       // timeout configurado. axios usa http/https nativos do Node.
-      const axiosResponse = await axios.post(`${CPSAT_SERVICE_URL}/${modoMelhoria ? "melhorar-grade" : usarCoordenacao ? "gerar-grade-coordenada" : "gerar-grade"}`, modoMelhoria ? { ...payloadComHa, aulasIniciais } : payloadComHa, { // [MELHORAR-GRADE] [HA-NO-CPSAT]
+      const progressoId = progressoGeracao.getStore()?.jobId; // [PROGRESSO-MOTOR]
+      const corpoMotor = { ...(modoMelhoria ? { ...payloadComHa, aulasIniciais } : payloadComHa), ...(progressoId ? { progressoId } : {}) };
+      const axiosResponse = await axios.post(`${CPSAT_SERVICE_URL}/${modoMelhoria ? "melhorar-grade" : usarCoordenacao ? "gerar-grade-coordenada" : "gerar-grade"}`, corpoMotor, { // [MELHORAR-GRADE] [HA-NO-CPSAT]
         headers: { "Content-Type": "application/json", ...(CPSAT_TOKEN ? { "X-NexGrade-Token": CPSAT_TOKEN } : {}) }, // [CPSAT-TOKEN]
         timeout: timeoutMs,
         validateStatus: () => true,
@@ -2024,8 +2070,10 @@ async function runCpsatGeneracaoUnica(
         resultado = axiosResponse.data as typeof resultado;
       }
       ultimoErroCpsat = null;
+      pararAcompanhamento(); // [PROGRESSO-MOTOR]
       break;
     } catch (err) {
+      pararAcompanhamento(); // [PROGRESSO-MOTOR]
       ultimoErroCpsat = err;
       const mensagemErroCpsat = err instanceof Error ? err.message : String(err);
       const pareceFalhaConexao =
@@ -2036,7 +2084,7 @@ async function runCpsatGeneracaoUnica(
         mensagemErroCpsat.includes("ECONNRESET") ||
         mensagemErroCpsat.includes("timeout of");
       if (signal?.aborted) break;
-      if (!pareceFalhaConexao || tentativa === MAX_TENTATIVAS_CPSAT) break;
+      if (!pareceFalhaConexao || tentativa === MAX_TENTATIVAS_CPSAT || pararFoiPedido()) break; // [PARAR-MOTOR]
       await new Promise((resolve) => setTimeout(resolve, 5000));
     }
   }
@@ -2150,6 +2198,7 @@ async function runCpsatGeneracaoUnica(
       status: resultado.status,
       otimo: resultado.otimo,
       tempoResolucaoS: resultado.tempoResolucaoS,
+      ...((resultado as { paradoPeloUsuario?: boolean }).paradoPeloUsuario ? { paradoPeloUsuario: true } : {}), // [PARAR-MOTOR]
       ...(modoMelhoria ? { modo: "melhoria", janelasProfessorAntes: (resultado as { janelasProfessorAntes?: number }).janelasProfessorAntes, janelasProfessorDepois: (resultado as { janelasProfessorDepois?: number }).janelasProfessorDepois } : {}), // [MELHORAR-GRADE]
       totalTurmas: turmasDoTurno.length,
       totalSlots: gravados.length,
@@ -2183,6 +2232,7 @@ interface CpsatJob {
   finishedAt?: number;
   abortController?: AbortController;
   etapas?: EtapaGeracao[]; // [PROGRESSO-GERACAO]
+  progresso?: ProgressoGeracao; // [PROGRESSO-MOTOR] (para ler o andamento do motor)
 }
 const cpsatJobs = new Map<string, CpsatJob>();
 
@@ -2219,8 +2269,8 @@ router.post("/gerar-cpsat-async", async (req, res) => {
   limparJobsCpsatAntigos();
   const jobId = randomUUID();
   const abortController = new AbortController();
-  const progresso: ProgressoGeracao = { etapas: [] }; // [PROGRESSO-GERACAO]
-  cpsatJobs.set(jobId, { status: "running", escolaId, startedAt: Date.now(), abortController, etapas: progresso.etapas });
+  const progresso: ProgressoGeracao = { etapas: [], jobId }; // [PROGRESSO-GERACAO] [PROGRESSO-MOTOR]
+  cpsatJobs.set(jobId, { status: "running", escolaId, startedAt: Date.now(), abortController, etapas: progresso.etapas, progresso });
 
   void progressoGeracao.run(progresso, () => runCpsatGeneration(escolaId, turno, turmaId, turmaIds, nomeExperimental, tempoLimiteS, abortController.signal))
     .then(async (resultado) => {
@@ -2234,6 +2284,7 @@ router.post("/gerar-cpsat-async", async (req, res) => {
         startedAt: jobAtual?.startedAt ?? Date.now(),
         finishedAt: Date.now(),
         etapas: concluirEtapas(jobAtual?.etapas ?? []), // [PROGRESSO-GERACAO]
+        progresso: jobAtual?.progresso, // [PROGRESSO-MOTOR]
       });
     })
     .catch((err) => {
@@ -2247,6 +2298,7 @@ router.post("/gerar-cpsat-async", async (req, res) => {
         startedAt: jobAtual?.startedAt ?? Date.now(),
         finishedAt: Date.now(),
         etapas: concluirEtapas(jobAtual?.etapas ?? []), // [PROGRESSO-GERACAO]
+        progresso: jobAtual?.progresso, // [PROGRESSO-MOTOR]
       });
     });
 
@@ -2277,8 +2329,8 @@ router.post("/melhorar-grade-async", async (req, res) => {
   limparJobsCpsatAntigos();
   const jobId = randomUUID();
   const abortController = new AbortController();
-  const progresso: ProgressoGeracao = { etapas: [] }; // [PROGRESSO-GERACAO]
-  cpsatJobs.set(jobId, { status: "running", escolaId, startedAt: Date.now(), abortController, etapas: progresso.etapas });
+  const progresso: ProgressoGeracao = { etapas: [], jobId }; // [PROGRESSO-GERACAO] [PROGRESSO-MOTOR]
+  cpsatJobs.set(jobId, { status: "running", escolaId, startedAt: Date.now(), abortController, etapas: progresso.etapas, progresso });
 
   void progressoGeracao.run(progresso, () => runCpsatGeneracaoUnica(escolaId, turno, undefined, undefined, nomeExperimental, tempoLimiteS ?? 120, abortController.signal, false, true))
     .then((resultado) => {
@@ -2292,6 +2344,7 @@ router.post("/melhorar-grade-async", async (req, res) => {
         startedAt: jobAtual?.startedAt ?? Date.now(),
         finishedAt: Date.now(),
         etapas: concluirEtapas(jobAtual?.etapas ?? []), // [PROGRESSO-GERACAO]
+        progresso: jobAtual?.progresso, // [PROGRESSO-MOTOR]
       });
     })
     .catch((err) => {
@@ -2305,6 +2358,7 @@ router.post("/melhorar-grade-async", async (req, res) => {
         startedAt: jobAtual?.startedAt ?? Date.now(),
         finishedAt: Date.now(),
         etapas: concluirEtapas(jobAtual?.etapas ?? []), // [PROGRESSO-GERACAO]
+        progresso: jobAtual?.progresso, // [PROGRESSO-MOTOR]
       });
     });
 
@@ -2322,10 +2376,10 @@ router.get("/gerar-cpsat-status/:jobId", (req, res) => {
     return;
   }
   if (job.status === "running") {
-    res.json({ jobStatus: "running", etapas: job.etapas ?? [], agoraMs: Date.now() }); // [PROGRESSO-GERACAO]
+    res.json({ jobStatus: "running", etapas: job.etapas ?? [], motor: job.progresso?.motor ?? null, agoraMs: Date.now() }); // [PROGRESSO-GERACAO] [PROGRESSO-MOTOR]
     return;
   }
-  res.status(200).json({ jobStatus: job.status, httpStatusOriginal: job.httpStatus, ...job.body, etapas: job.etapas ?? [], agoraMs: Date.now() });
+  res.status(200).json({ jobStatus: job.status, httpStatusOriginal: job.httpStatus, ...job.body, etapas: job.etapas ?? [], motor: job.progresso?.motor ?? null, agoraMs: Date.now() }); // [PROGRESSO-MOTOR]
 });
 
 router.post("/gerar-cpsat-cancelar/:jobId", (req, res) => {
@@ -2340,8 +2394,28 @@ router.post("/gerar-cpsat-cancelar/:jobId", (req, res) => {
     return;
   }
   job.abortController?.abort();
+  if (job.progresso) job.progresso.pararPedido = true; // [PARAR-MOTOR] nao tenta plano B nem 2a tentativa
+  void pedirParadaMotor(req.params.jobId); // [PARAR-MOTOR] o motor na VM tambem para (antes seguia ate o tempo limite)
   cpsatJobs.set(req.params.jobId, { ...job, status: "cancelado", finishedAt: Date.now() });
   res.status(200).json({ jobStatus: "cancelado" });
+});
+
+// [PARAR-MOTOR] (16/10/2026) "Parar e usar a melhor grade ate agora": o motor interrompe o calculo e
+// devolve a melhor grade que ja encontrou; o NexGrade salva normalmente como experimento.
+router.post("/gerar-cpsat-parar/:jobId", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const job = cpsatJobs.get(req.params.jobId);
+  if (!job || job.escolaId !== escolaId) {
+    res.status(404).json({ error: "Job nao encontrado (pode ter expirado ou pertencer a outra escola)." });
+    return;
+  }
+  if (job.status !== "running") {
+    res.status(200).json({ jobStatus: job.status, mensagem: "O calculo ja tinha terminado." });
+    return;
+  }
+  if (job.progresso) job.progresso.pararPedido = true;
+  const avisado = await pedirParadaMotor(req.params.jobId);
+  res.status(200).json({ jobStatus: "running", parando: true, motorAvisado: avisado });
 });
 
 export default router;

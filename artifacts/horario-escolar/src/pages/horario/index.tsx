@@ -26,7 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { SeletorBusca } from "@/components/seletor-busca";
 import { PainelCapacidade } from "@/components/painel-capacidade";
-import { ProgressoGeracao, type EtapaGeracao, type ProgressoGeracaoDados } from "@/components/progresso-geracao"; // [PROGRESSO-GERACAO]
+import { ProgressoGeracao, type EtapaGeracao, type ProgressoGeracaoDados, type ProgressoMotor } from "@/components/progresso-geracao"; // [PROGRESSO-GERACAO]
 import {
   Check, ArrowRight, ArrowLeft, Lock, ChevronDown, ChevronRight, Plus,
   Calendar, ListChecks, AlertTriangle, FlaskConical,
@@ -44,7 +44,8 @@ const ABAS = [
 type AbaKey = typeof ABAS[number]["key"];
 
 type StatusCpsatResult = {
-  jobStatus: "running" | "done" | "error";
+  jobStatus: "running" | "done" | "error" | "cancelado";
+  paradoPeloUsuario?: boolean; // [PARAR-MOTOR]
   httpStatusOriginal?: number;
   totalTurmas?: number;
   totalSlots?: number;
@@ -55,6 +56,7 @@ type StatusCpsatResult = {
   detalhe?: string;
   etapas?: EtapaGeracao[]; // [PROGRESSO-GERACAO]
   agoraMs?: number;
+  motor?: ProgressoMotor | null; // [PROGRESSO-MOTOR]
 };
 
 // Chave no sessionStorage para o job CP-SAT pendente (turno inteiro).
@@ -96,7 +98,7 @@ async function pollarStatusCpsat(jobId: string, onProgresso?: (p: ProgressoGerac
         responseType: "json",
       });
       falhasPollingConsecutivas = 0;
-      if (onProgresso && statusResult.etapas) onProgresso({ etapas: statusResult.etapas, agoraMs: statusResult.agoraMs ?? Date.now(), recebidoEm: Date.now() }); // [PROGRESSO-GERACAO]
+      if (onProgresso && statusResult.etapas) onProgresso({ etapas: statusResult.etapas, motor: statusResult.motor, agoraMs: statusResult.agoraMs ?? Date.now(), recebidoEm: Date.now() }); // [PROGRESSO-GERACAO]
     } catch (pollErr) {
       const mensagemPollErr = pollErr instanceof Error ? pollErr.message : String(pollErr);
       if (mensagemPollErr.includes("encontrado")) {
@@ -114,6 +116,7 @@ async function pollarStatusCpsat(jobId: string, onProgresso?: (p: ProgressoGerac
     }
     if (statusResult.jobStatus !== "running") break;
   }
+  if ((statusResult.jobStatus as string) === "cancelado") throw new Error("JOB_CANCELADO"); // [PARAR-MOTOR]
   return statusResult;
 }
 // [HEURISTICO-ESCONDIDO] O gerador simples (heuristico) fica escondido por
@@ -1373,6 +1376,30 @@ function AbaExperimental() {
   const [openGerarCpsat, setOpenGerarCpsat] = useState(false);
   const [gerandoCpsat, setGerandoCpsat] = useState(false);
   const [progressoCpsat, setProgressoCpsat] = useState<ProgressoGeracaoDados | null>(null); // [PROGRESSO-GERACAO] um job CP-SAT por vez
+  // [PARAR-MOTOR] job em andamento (qualquer das tres geracoes) e pedido de parada em curso
+  const [jobIdProgresso, setJobIdProgresso] = useState<string | null>(null);
+  const [parandoCpsat, setParandoCpsat] = useState(false);
+  const acoesGeracao = {
+    parando: parandoCpsat,
+    onParar: async () => {
+      if (!jobIdProgresso) return;
+      setParandoCpsat(true);
+      try {
+        await customFetch(`/api/horarios/gerar-cpsat-parar/${jobIdProgresso}`, { method: "POST", responseType: "json" });
+      } catch (err) {
+        setParandoCpsat(false);
+        toast({ title: "Não consegui pedir para parar", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+      }
+    },
+    onCancelar: async () => {
+      if (!jobIdProgresso) return;
+      try {
+        await customFetch(`/api/horarios/gerar-cpsat-cancelar/${jobIdProgresso}`, { method: "POST", responseType: "json" });
+      } catch {
+        // o polling segue e mostra o que acontecer
+      }
+    },
+  };
   const [jobIdAtual, setJobIdAtual] = useState<string | null>(null);
   const [cpsatForm, setCpsatForm] = useState({
     turno: "matutino",
@@ -1461,6 +1488,7 @@ function AbaExperimental() {
   // turma unica).
   const finalizarJobCpsatTurma = async (jobId: string, nomeExperimental: string, turmaIds: number[]) => {
     setProgressoCpsat(null); // [PROGRESSO-GERACAO]
+    setJobIdProgresso(jobId); setParandoCpsat(false); // [PARAR-MOTOR]
     try {
       const statusResult = await pollarStatusCpsat(jobId, setProgressoCpsat);
       if (statusResult.jobStatus === "error") {
@@ -1469,7 +1497,9 @@ function AbaExperimental() {
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
       toast({
         title: `Grade CP-SAT gerada! ${statusResult.totalSlots} aulas criadas.`,
-        description: statusResult.status === "OPTIMAL"
+        description: statusResult.paradoPeloUsuario // [PARAR-MOTOR]
+          ? `Você parou o cálculo aos ${Math.round(statusResult.tempoResolucaoS ?? 0)}s: esta é a melhor grade encontrada até ali. Confira antes de promover.`
+          : statusResult.status === "OPTIMAL"
           ? `Solucao otima em ${statusResult.tempoResolucaoS}s (sem janelas evitaveis).`
           : `Status: ${statusResult.status}. Confira antes de promover.`,
       });
@@ -1483,7 +1513,9 @@ function AbaExperimental() {
       const mensagemErro = err instanceof Error ? err.message : String(err);
       // JOB_NAO_ENCONTRADO so acontece na retomada automatica (job
       // expirou ou pertence a outra escola) -- encerra em silencio.
-      if (mensagemErro !== "JOB_NAO_ENCONTRADO") {
+      if (mensagemErro === "JOB_CANCELADO") {
+        toast({ title: "Geração cancelada", description: "Nada foi salvo." }); // [PARAR-MOTOR]
+      } else if (mensagemErro !== "JOB_NAO_ENCONTRADO") {
         toast({ title: "Erro ao gerar com CP-SAT", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
       }
     } finally {
@@ -1573,6 +1605,7 @@ function AbaExperimental() {
   // estado/toast especificos e a chave de sessionStorage.
   const finalizarJobCpsatTurnoParcial = async (jobId: string, nomeExperimental: string, turmaIds: number[]) => {
     setProgressoCpsat(null); // [PROGRESSO-GERACAO]
+    setJobIdProgresso(jobId); setParandoCpsat(false); // [PARAR-MOTOR]
     try {
       const statusResult = await pollarStatusCpsat(jobId, setProgressoCpsat);
       if (statusResult.jobStatus === "error") {
@@ -1581,7 +1614,9 @@ function AbaExperimental() {
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
       toast({
         title: `Grade CP-SAT gerada! ${statusResult.totalSlots} aulas criadas.`,
-        description: statusResult.status === "OPTIMAL"
+        description: statusResult.paradoPeloUsuario // [PARAR-MOTOR]
+          ? `Você parou o cálculo aos ${Math.round(statusResult.tempoResolucaoS ?? 0)}s: esta é a melhor grade encontrada até ali. Confira antes de promover.`
+          : statusResult.status === "OPTIMAL"
           ? `Solucao otima em ${statusResult.tempoResolucaoS}s (sem janelas evitaveis).`
           : `Status: ${statusResult.status}. Confira antes de promover.`,
       });
@@ -1590,7 +1625,9 @@ function AbaExperimental() {
       setTurmaExpandidaId(turmaIds.length === 1 ? turmaIds[0] : null);
     } catch (err) {
       const mensagemErro = err instanceof Error ? err.message : String(err);
-      if (mensagemErro !== "JOB_NAO_ENCONTRADO") {
+      if (mensagemErro === "JOB_CANCELADO") {
+        toast({ title: "Geração cancelada", description: "Nada foi salvo." }); // [PARAR-MOTOR]
+      } else if (mensagemErro !== "JOB_NAO_ENCONTRADO") {
         toast({ title: "Erro ao gerar com CP-SAT", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
       }
     } finally {
@@ -1667,6 +1704,7 @@ function AbaExperimental() {
   // dois caminhos tenham exatamente o mesmo comportamento final.
   const finalizarJobCpsat = async (jobId: string, nomeExperimental: string) => {
     setProgressoCpsat(null); // [PROGRESSO-GERACAO]
+    setJobIdProgresso(jobId); setParandoCpsat(false); // [PARAR-MOTOR]
     try {
       const statusResult = await pollarStatusCpsat(jobId, setProgressoCpsat);
       if (statusResult.jobStatus === "error") {
@@ -1675,7 +1713,9 @@ function AbaExperimental() {
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
       toast({
         title: `Grade CP-SAT gerada! ${statusResult.totalTurmas} turma(s), ${statusResult.totalSlots} aulas criadas.`,
-        description: statusResult.status === "OPTIMAL"
+        description: statusResult.paradoPeloUsuario // [PARAR-MOTOR]
+          ? `Você parou o cálculo aos ${Math.round(statusResult.tempoResolucaoS ?? 0)}s: esta é a melhor grade encontrada até ali. Confira antes de promover.`
+          : statusResult.status === "OPTIMAL"
           ? `Solucao otima em ${statusResult.tempoResolucaoS}s (sem janelas evitaveis).`
           : `Status: ${statusResult.status}. Confira antes de promover.`,
       });
@@ -1688,7 +1728,9 @@ function AbaExperimental() {
       // expirou ha mais de 1h ou pertence a outra escola) -- nao vale
       // a pena assustar o usuario com um toast vermelho por isso,
       // simplesmente encerra em silencio.
-      if (mensagemErro !== "JOB_NAO_ENCONTRADO") {
+      if (mensagemErro === "JOB_CANCELADO") {
+        toast({ title: "Geração cancelada", description: "Nada foi salvo." }); // [PARAR-MOTOR]
+      } else if (mensagemErro !== "JOB_NAO_ENCONTRADO") {
         toast({ title: "Erro ao gerar com CP-SAT", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
       }
     } finally {
@@ -2332,7 +2374,7 @@ function AbaExperimental() {
 
             </div>
           </div>
-          {gerandoCpsatTurma && <ProgressoGeracao dados={progressoCpsat} />}
+          {gerandoCpsatTurma && <ProgressoGeracao dados={progressoCpsat} acoes={acoesGeracao} />}
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenGerarCpsatTurma(false)}>Cancelar</Button>
             <Button onClick={handleGerarCpsatTurma} disabled={gerandoCpsatTurma}>{gerandoCpsatTurma ? "Gerando (pode levar até 2 min)..." : "Gerar com CP-SAT"}</Button>
@@ -2395,7 +2437,7 @@ function AbaExperimental() {
               )}
             </div>
           </div>
-          {gerandoCpsatTurnoParcial && <ProgressoGeracao dados={progressoCpsat} />}
+          {gerandoCpsatTurnoParcial && <ProgressoGeracao dados={progressoCpsat} acoes={acoesGeracao} />}
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpenGerarCpsatTurnoParcial(false)}>Cancelar</Button>
             <Button onClick={handleGerarCpsatTurnoParcial} disabled={gerandoCpsatTurnoParcial}>{gerandoCpsatTurnoParcial ? "Gerando (pode levar ate 2 min)..." : "Gerar com CP-SAT"}</Button>
@@ -2433,7 +2475,7 @@ function AbaExperimental() {
               <p className="text-xs text-muted-foreground">Padrao 120s. Turnos com muitas turmas (ex.: matutino do Mario Braga, 24 turmas) podem precisar de mais tempo -- tente 300-600s se o solver nao terminar a tempo.</p>
             </div>
           </div>
-          {gerandoCpsat && <ProgressoGeracao dados={progressoCpsat} />}
+          {gerandoCpsat && <ProgressoGeracao dados={progressoCpsat} acoes={acoesGeracao} />}
           <DialogFooter className="flex-wrap gap-2 sm:space-x-0">
             <Button
               variant="outline"

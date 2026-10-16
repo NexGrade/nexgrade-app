@@ -335,6 +335,8 @@ def reduzir_janelas(
     seed=None,
     verbose=False,
     fixadas=None,
+    ao_melhorar=None,  # [PROGRESSO-MOTOR] chamado com o novo total de janelas a cada melhora
+    deve_parar=None,  # [PARAR-MOTOR] devolve True quando o usuario pediu para parar
 ):
     """
     Recebe a grade ja viavel (resultado["aulas"] de gerar_grade()) e as
@@ -356,6 +358,8 @@ def reduzir_janelas(
     janelas_atual = contar_janelas_professor(atual)
     janelas_antes = janelas_atual
     janelas_melhor = janelas_atual
+    if ao_melhorar:
+        ao_melhorar(janelas_atual)
 
     if verbose:
         print(f"[inicio] janelas de professor = {janelas_atual}")
@@ -367,6 +371,8 @@ def reduzir_janelas(
         if time.time() - inicio > tempo_limite_s:
             if verbose:
                 print(f"[parada] tempo limite atingido na iteracao {i}")
+            break
+        if deve_parar and deve_parar():
             break
         if janelas_melhor == 0:
             if verbose:
@@ -391,6 +397,8 @@ def reduzir_janelas(
             if janelas_atual < janelas_melhor:
                 melhor = [dict(a) for a in atual]
                 janelas_melhor = janelas_atual
+                if ao_melhorar:
+                    ao_melhorar(janelas_melhor)
                 if verbose:
                     print(f"[iter {i}] nova melhor: {janelas_melhor} janelas")
 

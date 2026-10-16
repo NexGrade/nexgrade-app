@@ -20,6 +20,7 @@ from collections import defaultdict
 from ortools.sat.python import cp_model
 
 from .solver import gerar_grade, resolver, DisciplinaTurma
+from . import progresso  # [PARAR-MOTOR]
 
 
 def _contar_janelas(aulas, chave_grupo):
@@ -214,6 +215,8 @@ def gerar_grade_coordenada(
         tentativas_viaveis += 1
         if melhor is None or resultado["janelasProfessor"] < melhor["janelasProfessor"]:
             melhor = resultado
+        if progresso.pedido_parar():  # [PARAR-MOTOR] usuario pediu: fica com a melhor tentativa ate aqui
+            break
 
     tempo_total = round(time.time() - t0, 2)
 

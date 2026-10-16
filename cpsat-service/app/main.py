@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse  # [CPSAT-TOKEN]
 from google import genai
 from .solver import gerar_grade, definir_evitar  # [PAUSA-ENTRE-TURNOS]
 from .pipeline_coordenada import gerar_grade_coordenada
+from . import progresso  # [PROGRESSO-MOTOR]
 app = FastAPI(title="Nexgrade CP-SAT Solver API")
 
 # [CPSAT-TOKEN] (2026-10-01) Chave secreta compartilhada com a API do NexGrade.
@@ -80,10 +81,29 @@ def explicar_inviabilidade_com_gemini(dados_requisicao: dict, log_solver: str = 
 @app.api_route("/", methods=["GET", "HEAD"])
 def read_root():
     return {"status": "online", "service": "Nexgrade CP-SAT Solver"}
+# [PROGRESSO-MOTOR] andamento de uma geracao em curso (ver app/progresso.py). Rota sincrona: o
+# FastAPI a atende em outra thread enquanto o solver roda.
+@app.get("/progresso/{progresso_id}")
+def progresso_endpoint(progresso_id: str):
+    dados = progresso.obter(progresso_id)
+    if dados is None:
+        raise HTTPException(status_code=404, detail="Progresso nao encontrado.")
+    return dados
+
+
+# [PARAR-MOTOR] pede para a geracao em curso parar e devolver a melhor grade encontrada ate agora
+@app.post("/progresso/{progresso_id}/parar")
+def parar_endpoint(progresso_id: str):
+    if not progresso.pedir_parada(progresso_id):
+        raise HTTPException(status_code=404, detail="Progresso nao encontrado.")
+    return {"parando": True}
+
+
 @app.post("/gerar-grade")
 def gerar_grade_endpoint(payload: dict):
     try:
         definir_evitar(payload.get("evitarProfessor"))  # [PAUSA-ENTRE-TURNOS]
+        progresso.iniciar(payload.get("progressoId"))  # [PROGRESSO-MOTOR]
         disciplinas_raw = payload.get("disciplinasTurma", [])
         bloqueios_raw = payload.get("bloqueiosProfessor", [])
         turno = payload.get("turno", "matutino")
@@ -115,6 +135,7 @@ def gerar_grade_endpoint(payload: dict):
 def gerar_grade_coordenada_endpoint(payload: dict):
     try:
         definir_evitar(payload.get("evitarProfessor"))  # [PAUSA-ENTRE-TURNOS]
+        progresso.iniciar(payload.get("progressoId"))  # [PROGRESSO-MOTOR]
         disciplinas_raw = payload.get("disciplinasTurma", [])
         bloqueios_raw = payload.get("bloqueiosProfessor", [])
         turno = payload.get("turno", "matutino")
@@ -157,6 +178,7 @@ def gerar_grade_coordenada_endpoint(payload: dict):
 def melhorar_grade_endpoint(payload: dict):
     try:
         definir_evitar(payload.get("evitarProfessor"))  # [PAUSA-ENTRE-TURNOS]
+        progresso.iniciar(payload.get("progressoId"))  # [PROGRESSO-MOTOR]
         from .reduzir_janelas import contar_janelas_professor
         aulas_iniciais = payload.get("aulasIniciais", [])
         if not aulas_iniciais:
