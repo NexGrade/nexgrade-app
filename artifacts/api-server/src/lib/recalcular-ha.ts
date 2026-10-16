@@ -142,6 +142,30 @@ export async function calcularHAIdeal(
 
   const turmaMap = new Map(turmas.map((t) => [t.id, t]));
 
+  // [PAUSA-ENTRE-TURNOS] (16/10/2026) entre o fim de um turno e o comeco do outro, no mesmo dia,
+  // o professor precisa de pelo menos PAUSA_MIN minutos livres (sem aula e sem HA). Horario real
+  // de cada aula vem do esquema (horario_slots); 0 desliga.
+  const PAUSA_MIN = Number(process.env.HA_PAUSA_ENTRE_TURNOS_MIN ?? "60");
+  const faixaAula = new Map<string, [number, number]>(); // "turno|aula" -> [inicio, fim] em minutos
+  for (const s of horarioSlots) {
+    if (!s.turno) continue;
+    const [h, m] = String(s.horaInicio).slice(0, 5).split(":").map(Number);
+    const ini = (h ?? 0) * 60 + (m ?? 0);
+    const fim = ini + (s.duracaoMinutos ?? 50);
+    const k = `${s.turno}|${s.numeroAula}`;
+    const atual = faixaAula.get(k);
+    faixaAula.set(k, atual ? [Math.min(atual[0], ini), Math.max(atual[1], fim)] : [ini, fim]);
+  }
+  /** true se (turnoA, aulaA) e (turnoB, aulaB), no mesmo dia, ficam a menos de PAUSA_MIN um do outro */
+  function semPausa(turnoA: string, aulaA: number, turnoB: string, aulaB: number): boolean {
+    if (PAUSA_MIN <= 0 || turnoA === turnoB) return false;
+    const a = faixaAula.get(`${turnoA}|${aulaA}`);
+    const b = faixaAula.get(`${turnoB}|${aulaB}`);
+    if (!a || !b) return false;
+    const distancia = a[1] <= b[0] ? b[0] - a[1] : b[1] <= a[0] ? a[0] - b[1] : -1;
+    return distancia < PAUSA_MIN;
+  }
+
   const maxAulaPorTurno = new Map<string, number>();
   for (const s of horarioSlots) {
     const atual = maxAulaPorTurno.get(s.turno) ?? 0;
@@ -279,6 +303,7 @@ export async function calcularHAIdeal(
     // total exigido -- sem subtrair aqui, o orcamento automatico por
     // turno de ensino seria calculado em cima do total CHEIO de novo,
     // dando HA a mais (manual + automatica somando mais que o exigido).
+    const manualPorDiaTurno = haManualContraturno.filter((m) => !!m.turno).map((m) => ({ turno: m.turno!, dia: m.diaSemana, aula: m.horarioSlot })); // [PAUSA-ENTRE-TURNOS]
     const manualPorTurno: Record<string, number> = {};
     for (const m of haManualContraturno) manualPorTurno[m.turno ?? "sem_turno"] = (manualPorTurno[m.turno ?? "sem_turno"] ?? 0) + 1;
     const orcamentoPorTurno = calcularHoraAtividadePorTurno(aulasPorTurno, manualPorTurno); // [HA-MANUAL-NO-PROPRIO-TURNO]
@@ -320,7 +345,19 @@ export async function calcularHAIdeal(
       function livre(dia: number, aula: number): boolean {
         if (aula < 1 || aula > maxAula) return false;
         const chave = `${dia}-${aula}`;
-        return !ocupado.has(chave) && !bloqueado.has(chave);
+        if (ocupado.has(chave) || bloqueado.has(chave)) return false;
+        // [PAUSA-ENTRE-TURNOS] nada (aula ou HA) do professor em OUTRO turno a menos de 1 hora
+        for (const [t2, ocup2] of ocupadoPorTurnoOriginal) {
+          if (t2 === turno) continue;
+          for (const k of ocup2) { const [d2, a2] = k.split("-").map(Number); if (d2 === dia && semPausa(turno, aula, t2, a2!)) return false; }
+        }
+        for (const [k, pos] of haPosicoesPorDia) {
+          const [t2, d2] = k.split("-");
+          if (t2 === turno || Number(d2) !== dia) continue;
+          for (const a2 of pos) if (semPausa(turno, aula, t2!, a2)) return false;
+        }
+        for (const m of manualPorDiaTurno) if (m.turno !== turno && m.dia === dia && semPausa(turno, aula, m.turno, m.aula)) return false;
+        return true;
       }
       // [FIX-ADJACENCIA-POR-TURNO] antes a chave era so "dia", entao HA do
       // vespertino na aula=1 dele bloqueava candidato do matutino na aula=2
