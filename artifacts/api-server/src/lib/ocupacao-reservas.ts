@@ -6,13 +6,13 @@ import { and, eq, gte, lte, ne } from "drizzle-orm";
 export type OcupacaoDia = {
   data: string;
   maxAula: number;
-  ocupacao: Array<{ salaId: number; numeroAula: number; status: string }>;
+  ocupacao: Array<{ salaId: number; numeroAula: number; status: string; turno: string | null }>; // [RESERVA-TURNO]
 };
 
 export async function ocupacaoDoDia(escolaId: string, data: string): Promise<OcupacaoDia> {
   const [linhas, slots] = await Promise.all([
     db
-      .select({ salaId: reservasTable.salaId, numeroAula: reservasTable.numeroAula, status: reservasTable.status })
+      .select({ salaId: reservasTable.salaId, numeroAula: reservasTable.numeroAula, status: reservasTable.status, turno: reservasTable.turno })
       .from(reservasTable)
       .where(and(eq(reservasTable.escolaId, escolaId), eq(reservasTable.data, data), ne(reservasTable.status, "cancelada"))),
     db

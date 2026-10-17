@@ -3,10 +3,7 @@ import { ptBR as ptBRCalendario } from "react-day-picker/locale"; // [CALENDARIO
 import { format as formatarDataCal } from "date-fns"; // [CALENDARIO-RESERVA]
 import { useQuery as useQueryOcupacao } from "@tanstack/react-query"; // [OCUPACAO-SALAS]
 import { customFetch as customFetchOcupacao } from "@workspace/api-client-react"; // [OCUPACAO-SALAS]
-import { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { UserButton, useOrganization } from "@clerk/react";
 import { useEu } from "@/lib/papeis"; // [ACESSOS-ESCOLA]
@@ -22,7 +19,6 @@ import {
   useGetMeuProfessor,
   useGetMinhaAgendaHorario,
   useGetMinhaAgendaReservas,
-  useCreateMinhaReserva,
   useListSalas,
   useListCalendarioEscolar,
   getGetMinhaAgendaReservasQueryKey,
@@ -38,14 +34,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -106,15 +94,6 @@ function agruparDatas(eventos: EventoCal[]) {
   return grupos.sort((a, b) => a.inicio.localeCompare(b.inicio));
 }
 
-const ReservaFormSchema = z.object({
-  salaId: z.coerce.number().int().positive("Escolha um espaço"),
-  data: z.string().min(1, "Escolha a data"),
-  numeroAula: z.coerce.number().int().min(1),
-  titulo: z.string().min(1, "Descreva o objetivo"),
-  observacoes: z.string().optional(),
-});
-type ReservaFormValues = z.infer<typeof ReservaFormSchema>;
-
 function diaSemanaDaData(dataISO: string): number {
   // dataISO no formato YYYY-MM-DD. getUTCDay(): 0=domingo..6=sabado.
   // Convertido para 0=segunda..4=sexta (mesma convencao do backend).
@@ -135,155 +114,281 @@ function baixarArquivo(conteudo: string, nomeArquivo: string, tipo: string) {
   URL.revokeObjectURL(url);
 }
 
-function NovaReservaDialog({ professorId }: { professorId: number }) {
+// [RESERVA-LOTE] (17/10/2026) Nova reserva: dia, periodo (turno) e as aulas daquele turno com o
+// horario; pode escolher varias aulas e varios espacos (cada espaco com as suas aulas) num pedido so.
+// So aparecem para escolher as aulas do proprio professor (a reserva e para a aula dele).
+const NOME_PERIODO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
+const ORDEM_PERIODO = ["matutino", "vespertino", "noturno"];
+type ItemReserva = { salaId: number; numerosAula: number[] };
+type OcupacaoDiaResp = { data: string; maxAula: number; ocupacao: Array<{ salaId: number; numeroAula: number; status: string; turno: string | null }> };
+
+// fora do componente: definido dentro dele, o campo de texto perdia o foco a cada letra
+function Passo({ n, titulo: t, children }: { n: number; titulo: string; children: React.ReactNode }) {
+  return (
+    <section className="space-y-2">
+      <h3 className="flex items-center gap-2 text-sm font-semibold">
+        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#1565C0] text-[11px] text-white">{n}</span>
+        {t}
+      </h3>
+      {children}
+    </section>
+  );
+}
+
+function NovaReservaDialog({ professorId: _professorId }: { professorId: number }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const { data: salas } = useListSalas();
+  const { data: dadosHorarioApi } = useGetMinhaAgendaHorario({ query: { queryKey: getGetMinhaAgendaHorarioQueryKey() } });
+  // a API devolve tambem turno e horarios (fora do tipo gerado)
+  const dadosHorario = dadosHorarioApi as unknown as {
+    aulas: Array<{ diaSemana: number; numeroAula: number; turno: string; turmaNome: string; disciplinaNome: string }>;
+    horarios: Array<{ turno: string; numeroAula: number; horaInicio: string }>;
+  } | undefined;
 
-  const form = useForm<ReservaFormValues>({
-    resolver: zodResolver(ReservaFormSchema),
-    defaultValues: { salaId: 0, data: "", numeroAula: 1, titulo: "", observacoes: "" },
+  const [data, setData] = useState("");
+  const [turno, setTurno] = useState<string | null>(null);
+  const [aulasSel, setAulasSel] = useState<number[]>([]);
+  const [salaAtual, setSalaAtual] = useState(0);
+  const [itens, setItens] = useState<ItemReserva[]>([]);
+  const [titulo, setTitulo] = useState("");
+  const [tituloEditado, setTituloEditado] = useState(false); // [RESERVA-LOTE] enquanto nao editar, preenche com turma e disciplina
+  const [observacoes, setObservacoes] = useState("");
+  const [enviando, setEnviando] = useState(false);
+
+  const limpar = () => { setData(""); setTurno(null); setAulasSel([]); setSalaAtual(0); setItens([]); setTitulo(""); setTituloEditado(false); setObservacoes(""); };
+  const diaSemana = /^\d{4}-\d{2}-\d{2}$/.test(data) ? diaSemanaDaData(data) : -1;
+
+  // aulas do professor no dia escolhido, por turno
+  const minhasAulasDoDia = useMemo(
+    () => (dadosHorario?.aulas ?? []).filter((a) => a.diaSemana === diaSemana),
+    [dadosHorario, diaSemana],
+  );
+  const turnosDoDia = ORDEM_PERIODO.filter((t) => minhasAulasDoDia.some((a) => a.turno === t));
+  const horariosDoTurno = useMemo(() => {
+    if (!turno) return [];
+    const nums = new Set<number>([
+      ...(dadosHorario?.horarios ?? []).filter((h) => h.turno === turno).map((h) => h.numeroAula),
+      ...minhasAulasDoDia.filter((a) => a.turno === turno).map((a) => a.numeroAula),
+    ]);
+    return [...nums].sort((x, y) => x - y).map((n) => ({
+      numeroAula: n,
+      hora: (dadosHorario?.horarios ?? []).find((h) => h.turno === turno && h.numeroAula === n)?.horaInicio?.slice(0, 5) ?? "",
+      aula: minhasAulasDoDia.find((a) => a.turno === turno && a.numeroAula === n) ?? null,
+    }));
+  }, [turno, dadosHorario, minhasAulasDoDia]);
+
+  const { data: ocupacao } = useQueryOcupacao({
+    queryKey: ["ocupacao-salas", data],
+    queryFn: () => customFetchOcupacao<OcupacaoDiaResp>("/api/minha-agenda/ocupacao?data=" + encodeURIComponent(data), { responseType: "json" }),
+    enabled: diaSemana >= 0 && diaSemana <= 4,
   });
-  const salaSel = form.watch("salaId"); // [OCUPACAO-SALAS]
-  const dataSel = form.watch("data");
+  const statusSala = (salaId: number, numeroAula: number) =>
+    ocupacao?.ocupacao.find((o) => o.salaId === salaId && o.numeroAula === numeroAula && (!o.turno || o.turno === turno))?.status ?? null;
 
-  const criar = useCreateMinhaReserva({
-    mutation: {
-      onSuccess: (result) => {
-        queryClient.invalidateQueries({ queryKey: getGetMinhaAgendaReservasQueryKey() });
-        const pendente = result.status === "pendente";
-        toast({
-          title: pendente ? "Solicitação enviada" : "Reserva confirmada",
-          description: pendente
-            ? "Sua reserva entrou na fila de aprovação da coordenação."
-            : "Sua reserva foi confirmada automaticamente.",
-        });
-        setOpen(false);
-        form.reset();
-      },
-      onError: (err: any) => {
-        toast({
-          title: "Não foi possível reservar",
-          description: err?.response?.data?.error ?? "Verifique conflito de horário.",
-          variant: "destructive",
-        });
-      },
-    },
-  });
+  const aulasNaLista = new Set(itens.flatMap((i) => i.numerosAula));
+  const ocupadasNaSala = salaAtual ? aulasSel.filter((n) => statusSala(salaAtual, n) === "confirmada") : [];
+  const podeAdicionar = salaAtual > 0 && aulasSel.length > 0 && ocupadasNaSala.length === 0;
+  const nomeSala = (id: number) => salas?.find((s) => s.id === id)?.nome ?? "Espaço";
+  const rotuloAula = (n: number) => {
+    const h = horariosDoTurno.find((x) => x.numeroAula === n);
+    return `${n}ª${h?.hora ? ` (${h.hora})` : ""}`;
+  };
 
-  function onSubmit(values: ReservaFormValues) {
-    criar.mutate({
-      data: {
-        salaId: values.salaId,
-        data: values.data,
-        diaSemana: diaSemanaDaData(values.data),
-        numeroAula: values.numeroAula,
-        titulo: values.titulo,
-        observacoes: values.observacoes,
-      },
+  function adicionar() {
+    if (!podeAdicionar) return;
+    setItens((l) => {
+      const ja = l.find((i) => i.salaId === salaAtual);
+      if (ja) return l.map((i) => (i.salaId === salaAtual ? { ...i, numerosAula: [...new Set([...i.numerosAula, ...aulasSel])].sort((x, y) => x - y) } : i));
+      return [...l, { salaId: salaAtual, numerosAula: [...aulasSel].sort((x, y) => x - y) }];
     });
+    setAulasSel([]);
+    setSalaAtual(0);
+  }
+
+  const itensFinais: ItemReserva[] = podeAdicionar
+    ? (() => {
+        const ja = itens.find((i) => i.salaId === salaAtual);
+        return ja
+          ? itens.map((i) => (i.salaId === salaAtual ? { ...i, numerosAula: [...new Set([...i.numerosAula, ...aulasSel])] } : i))
+          : [...itens, { salaId: salaAtual, numerosAula: aulasSel }];
+      })()
+    : itens;
+  const totalAulas = itensFinais.reduce((n, i) => n + i.numerosAula.length, 0);
+  // turma e disciplina das aulas escolhidas (vem da grade do professor no dia)
+  const aulaDe = (n: number) => horariosDoTurno.find((x) => x.numeroAula === n)?.aula ?? null;
+  const descreverAulas = (nums: number[]) =>
+    [...new Set(nums.map(aulaDe).filter((a): a is NonNullable<typeof a> => !!a).map((a) => `${a.disciplinaNome} · ${a.turmaNome}`))].join("; ");
+  const tituloAuto = descreverAulas(itensFinais.flatMap((i) => i.numerosAula));
+  useEffect(() => { if (!tituloEditado) setTitulo(tituloAuto); }, [tituloAuto, tituloEditado]);
+
+  async function enviar() {
+    if (!turno || !data || totalAulas === 0 || !titulo.trim()) return;
+    setEnviando(true);
+    try {
+      const r = await customFetchOcupacao<{ criadas: number; confirmadas: number; pendentes: number }>("/api/minha-agenda/reservas/lote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data, turno, itens: itensFinais, titulo: titulo.trim(), observacoes: observacoes.trim() || undefined }),
+        responseType: "json",
+      });
+      queryClient.invalidateQueries({ queryKey: getGetMinhaAgendaReservasQueryKey() });
+      queryClient.invalidateQueries({ queryKey: ["ocupacao-salas"] });
+      queryClient.invalidateQueries({ queryKey: ["ocupacao-mes"] });
+      toast({
+        title: r.pendentes === 0 ? (r.criadas > 1 ? `${r.criadas} reservas confirmadas` : "Reserva confirmada") : r.confirmadas === 0 ? "Solicitação enviada" : `${r.confirmadas} confirmada(s), ${r.pendentes} aguardando`,
+        description: r.pendentes > 0 ? "As reservas pendentes entraram na fila de aprovação da coordenação." : "Tudo certo, as reservas já estão na sua agenda.",
+      });
+      setOpen(false);
+      limpar();
+    } catch (err: any) {
+      toast({ title: "Não foi possível reservar", description: err?.data?.error ?? "Verifique os horários e tente de novo.", variant: "destructive" });
+    } finally {
+      setEnviando(false);
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) limpar(); }}>
       <DialogTrigger asChild>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
           <span className="hidden sm:inline">Nova reserva</span><span className="sm:hidden">Reservar</span>
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-2xl max-h-[92dvh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Solicitar reserva de espaço</DialogTitle>
+          <DialogTitle>Reservar espaço</DialogTitle>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="salaId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Espaço</FormLabel>
-                  <Select onValueChange={(v) => field.onChange(Number(v))} value={field.value ? String(field.value) : undefined}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Escolha o espaço" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {salas?.map((s) => (
-                        <SelectItem key={s.id} value={String(s.id)}>
-                          {s.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
+        <div className="space-y-5">
+          <Passo n={1} titulo="Dia">
+            <CalendarioReserva
+              salaId={salaAtual}
+              value={data}
+              onChange={(iso) => { setData(iso); setTurno(null); setAulasSel([]); setItens([]); }}
             />
-            <FormField
-              control={form.control}
-              name="data"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Data</FormLabel>
-                  <FormControl>
-                    <div>
-                      <CalendarioReserva salaId={Number(salaSel) || 0} value={field.value} onChange={field.onChange} />
-                    </div>
-                  </FormControl>{/* [CALENDARIO-RESERVA] antes: <Input type="date"> (seletor nativo nao mostra reservas) */}
-                  <FormMessage />
-                </FormItem>
+          </Passo>
+
+          {data && (
+            <Passo n={2} titulo="Período">
+              {turnosDoDia.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Você não tem aula neste dia. A reserva é feita para as suas aulas: escolha outro dia.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {ORDEM_PERIODO.map((t) => {
+                    const n = minhasAulasDoDia.filter((a) => a.turno === t).length;
+                    if (!n) return null;
+                    const sel = turno === t;
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => { setTurno(t); setAulasSel([]); setItens([]); }}
+                        className={`rounded-lg border px-4 py-2 text-left text-sm transition-colors ${sel ? "border-[#1565C0] bg-[#1565C0] text-white" : "hover:bg-muted"}`}
+                      >
+                        <span className="block font-semibold">{NOME_PERIODO[t] ?? t}</span>
+                        <span className={`text-xs ${sel ? "text-white/80" : "text-muted-foreground"}`}>{n} aula{n === 1 ? "" : "s"} sua{n === 1 ? "" : "s"}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               )}
-            />
-            <FormField
-              control={form.control}
-              name="numeroAula"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Aula</FormLabel>
-                  <FormControl>
-                    <Input type="number" min={1} {...field} />
-                  </FormControl>
-                  <DisponibilidadeSala salaId={Number(salaSel) || 0} data={dataSel} aulaSelecionada={Number(field.value)} onEscolher={(n) => field.onChange(n)} />{/* [OCUPACAO-SALAS] */}
-                  <FormMessage />
-                </FormItem>
+            </Passo>
+          )}
+
+          {turno && (
+            <Passo n={3} titulo="Aulas (pode marcar mais de uma)">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {horariosDoTurno.map(({ numeroAula, hora, aula }) => {
+                  const naLista = aulasNaLista.has(numeroAula);
+                  const sel = aulasSel.includes(numeroAula);
+                  const st = salaAtual ? statusSala(salaAtual, numeroAula) : null;
+                  const desab = !aula || naLista;
+                  return (
+                    <button
+                      key={numeroAula}
+                      type="button"
+                      disabled={desab}
+                      onClick={() => setAulasSel((l) => (l.includes(numeroAula) ? l.filter((x) => x !== numeroAula) : [...l, numeroAula]))}
+                      className={`rounded-lg border px-3 py-2 text-left text-xs transition-colors ${
+                        desab ? "cursor-not-allowed bg-muted/40 text-muted-foreground/70"
+                        : sel ? "border-[#1565C0] bg-[#1565C0]/10 ring-2 ring-[#1565C0]"
+                        : "hover:bg-muted"}`}
+                    >
+                      <span className="flex items-baseline justify-between gap-1">
+                        <span className="text-sm font-semibold">{numeroAula}ª aula</span>
+                        {hora && <span className="tabular-nums text-muted-foreground">{hora}</span>}
+                      </span>
+                      {naLista ? <span className="block">Já na lista</span> : aula ? (
+                        <>
+                          <span className="block truncate font-medium">{aula.turmaNome}</span>
+                          <span className="block truncate text-muted-foreground">{aula.disciplinaNome}</span>
+                        </>
+                      ) : <span className="block">Sem aula sua</span>}
+                      {sel && st === "confirmada" && <span className="block font-medium text-destructive">Espaço ocupado</span>}
+                      {sel && st === "pendente" && <span className="block font-medium text-amber-700">Espaço em análise</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </Passo>
+          )}
+
+          {turno && (
+            <Passo n={4} titulo="Espaço">
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Select value={salaAtual ? String(salaAtual) : undefined} onValueChange={(v) => setSalaAtual(Number(v))}>
+                  <SelectTrigger className="sm:flex-1"><SelectValue placeholder="Escolha o espaço" /></SelectTrigger>
+                  <SelectContent>
+                    {salas?.map((s) => <SelectItem key={s.id} value={String(s.id)}>{s.nome}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Button type="button" variant="outline" onClick={adicionar} disabled={!podeAdicionar}>
+                  <Plus className="h-4 w-4 mr-1" /> Adicionar à lista
+                </Button>
+              </div>
+              {salaAtual > 0 && aulasSel.length > 0 && (
+                <p className={`text-xs ${ocupadasNaSala.length ? "text-destructive" : "text-muted-foreground"}`}>
+                  {ocupadasNaSala.length
+                    ? `${nomeSala(salaAtual)} já está reservado na ${ocupadasNaSala.map(rotuloAula).join(", ")} aula. Desmarque essa aula ou escolha outro espaço.`
+                    : `${nomeSala(salaAtual)}: ${aulasSel.sort((x, y) => x - y).map((n) => `${rotuloAula(n)} ${statusSala(salaAtual, n) === "pendente" ? "em análise" : "livre"}`).join(" · ")}`}
+                </p>
               )}
-            />
-            <FormField
-              control={form.control}
-              name="titulo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Objetivo da reserva</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex.: Prova, Aula prática..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="observacoes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Observações (opcional)</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" className="w-full" disabled={criar.isPending}>
-              {criar.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-              Solicitar reserva
-            </Button>
-          </form>
-        </Form>
+              <p className="text-xs text-muted-foreground">Precisa de outro espaço em outras aulas? Adicione à lista e escolha o próximo.</p>
+            </Passo>
+          )}
+
+          {itens.length > 0 && (
+            <div className="rounded-lg border bg-muted/30 p-3">
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Na lista</p>
+              <ul className="space-y-1">
+                {itens.map((i) => (
+                  <li key={i.salaId} className="flex items-center justify-between gap-2 text-sm">
+                    <span>
+                      <strong>{nomeSala(i.salaId)}</strong> · {i.numerosAula.map(rotuloAula).join(", ")} aula
+                      <span className="block text-xs text-muted-foreground">{descreverAulas(i.numerosAula)}</span>
+                    </span>
+                    <button type="button" className="text-xs text-muted-foreground underline hover:text-foreground" onClick={() => setItens((l) => l.filter((x) => x.salaId !== i.salaId))}>Tirar</button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {turno && (
+            <Passo n={5} titulo="Objetivo">
+              <Input placeholder="Ex.: Prova, Aula prática..." value={titulo} onChange={(e) => { setTitulo(e.target.value); setTituloEditado(true); }} />
+              <p className="text-xs text-muted-foreground">Turma e disciplina já vêm da sua grade. Pode completar, ex.: &quot;Prova&quot;, &quot;Aula prática&quot;.</p>
+              <Textarea placeholder="Observações (opcional)" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
+            </Passo>
+          )}
+
+          <Button type="button" className="w-full" disabled={enviando || !turno || totalAulas === 0 || !titulo.trim()} onClick={() => void enviar()}>
+            {enviando ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+            {totalAulas > 1 ? `Solicitar ${totalAulas} reservas` : "Solicitar reserva"}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -761,59 +866,6 @@ export default function MinhaAgendaPage() {
           </CardContent>
         </Card>
       </main>
-    </div>
-  );
-}
-
-// [OCUPACAO-SALAS] disponibilidade do espaco na data, por aula, na "Nova reserva".
-// Mostra so livre/ocupada/em analise -- sem nome de quem reservou.
-type OcupacaoDiaResp = { data: string; maxAula: number; ocupacao: Array<{ salaId: number; numeroAula: number; status: string }> };
-
-function DisponibilidadeSala({ salaId, data, aulaSelecionada, onEscolher }: {
-  salaId: number;
-  data: string;
-  aulaSelecionada: number;
-  onEscolher: (n: number) => void;
-}) {
-  const ativo = salaId > 0 && /^\d{4}-\d{2}-\d{2}$/.test(data ?? "");
-  const { data: oc, isLoading, isError } = useQueryOcupacao({
-    queryKey: ["ocupacao-salas", data],
-    queryFn: () => customFetchOcupacao<OcupacaoDiaResp>("/api/minha-agenda/ocupacao?data=" + encodeURIComponent(data), { responseType: "json" }),
-    enabled: ativo,
-  });
-  if (!ativo) return <p className="text-xs text-muted-foreground">Escolha o espaço e a data para ver as aulas livres.</p>;
-  if (isLoading) return <p className="text-xs text-muted-foreground">Verificando disponibilidade...</p>;
-  if (isError || !oc) return <p className="text-xs text-destructive">Não foi possível verificar a disponibilidade agora.</p>;
-  const daSala = oc.ocupacao.filter((o) => o.salaId === salaId);
-  return (
-    <div className="space-y-1.5">
-      <p className="text-xs text-muted-foreground">Disponibilidade deste espaço na data (clique numa aula livre):</p>
-      <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
-        {Array.from({ length: oc.maxAula }, (_, i) => i + 1).map((n) => {
-          const o = daSala.find((x) => x.numeroAula === n);
-          const ocupada = o?.status === "confirmada";
-          const analise = o?.status === "pendente";
-          const sel = aulaSelecionada === n;
-          const cor = ocupada
-            ? "bg-muted text-muted-foreground line-through cursor-not-allowed"
-            : analise
-              ? "bg-amber-50 text-amber-800 ring-1 ring-amber-300 hover:bg-amber-100"
-              : "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-300 hover:bg-emerald-100";
-          return (
-            <button
-              key={n}
-              type="button"
-              disabled={ocupada}
-              onClick={() => onEscolher(n)}
-              className={"rounded-md px-2 py-1.5 text-left text-xs transition-colors " + cor + (sel ? " outline outline-2 outline-primary" : "")}
-              title={ocupada ? "Já reservado nesta aula" : analise ? "Há uma solicitação em análise nesta aula" : "Livre"}
-            >
-              <span className="block font-bold">{n}ª aula</span>
-              <span>{ocupada ? "Ocupada" : analise ? "Em análise" : "Livre"}</span>
-            </button>
-          );
-        })}
-      </div>
     </div>
   );
 }

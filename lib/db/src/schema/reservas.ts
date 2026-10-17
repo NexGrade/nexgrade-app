@@ -31,6 +31,9 @@ export const reservasTable = pgTable(
     data: date("data", { mode: "string" }).notNull(),
     diaSemana: integer("dia_semana").notNull(),
     numeroAula: integer("numero_aula").notNull(),
+    // [RESERVA-TURNO] (17/10/2026) turno da aula reservada (a 1a aula da manha nao e a da noite).
+    // Vazio so em reservas antigas que nao deu para descobrir o turno.
+    turno: text("turno"),
     titulo: text("titulo").notNull(),
     observacoes: text("observacoes"),
     // "confirmada" | "pendente" | "cancelada"
@@ -50,12 +53,12 @@ export const reservasTable = pgTable(
     // banco contra corrida de concorrencia (duas pessoas reservando
     // ao mesmo tempo), independente da validacao em codigo.
     salaSlotUnico: uniqueIndex("reservas_sala_slot_unico")
-      .on(table.escolaId, table.salaId, table.data, table.numeroAula)
+      .on(table.escolaId, table.salaId, table.data, table.numeroAula, sql`coalesce(${table.turno}, '')`)
       .where(sql`${table.status} != 'cancelada'`),
     // [SEGURANCA] Mesma logica para o professor -- nunca duas
     // reservas ativas dele no mesmo dia/aula.
     professorSlotUnico: uniqueIndex("reservas_professor_slot_unico")
-      .on(table.escolaId, table.professorId, table.data, table.numeroAula)
+      .on(table.escolaId, table.professorId, table.data, table.numeroAula, sql`coalesce(${table.turno}, '')`)
       .where(sql`${table.status} != 'cancelada'`),
   }),
 );

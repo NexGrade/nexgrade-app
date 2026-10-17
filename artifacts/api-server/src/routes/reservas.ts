@@ -35,6 +35,7 @@ import {
   regrasReservaProfessorTable,
   reservasTable,
   salasTable,
+  turmasTable, // [RESERVA-TURNO]
 } from "@workspace/db";
 import { getEscolaId } from "../lib/escola-id";
 
@@ -161,6 +162,7 @@ export type ValidationSuccess = {
   sala: typeof salasTable.$inferSelect;
   professor: typeof professoresTable.$inferSelect;
   horario: typeof horariosTable.$inferSelect;
+  turno: string | null; // [RESERVA-TURNO]
   rule: typeof regrasReservaProfessorTable.$inferSelect | null;
   prioridade: number;
   reservaParaDeslocar: ReservaData | null;
@@ -177,6 +179,7 @@ export async function validateReserva(
     data: string;
     diaSemana: number;
     numeroAula: number;
+    turno?: string | null; // [RESERVA-TURNO]
   },
   excludeId?: number,
 ): Promise<ValidationError | ValidationSuccess> {
@@ -209,9 +212,11 @@ export async function validateReserva(
         ),
       )
       .then((rows) => rows[0] ?? null),
+    // [RESERVA-TURNO] a aula do professor naquele turno (sem turno informado: a primeira que achar)
     db
-      .select()
+      .select({ horario: horariosTable, turno: turmasTable.turno })
       .from(horariosTable)
+      .innerJoin(turmasTable, eq(turmasTable.id, horariosTable.turmaId))
       .where(
         and(
           eq(horariosTable.escolaId, escolaId),
@@ -219,6 +224,7 @@ export async function validateReserva(
           eq(horariosTable.diaSemana, input.diaSemana),
           eq(horariosTable.numeroAula, input.numeroAula),
           or(eq(horariosTable.versaoGrade, "oficial"), isNull(horariosTable.versaoGrade)),
+          ...(input.turno ? [eq(turmasTable.turno, input.turno)] : []),
         ),
       )
       .then((rows) => rows[0] ?? null),
@@ -235,6 +241,7 @@ export async function validateReserva(
       error: "Não há aula desse professor na grade oficial para o dia e período selecionados.",
     };
   }
+  const turnoAula = horario.turno ?? null; // [RESERVA-TURNO]
 
   const reservationConditions: SQL[] = [
     eq(reservasTable.escolaId, escolaId),
@@ -242,6 +249,8 @@ export async function validateReserva(
     eq(reservasTable.numeroAula, input.numeroAula),
     ne(reservasTable.status, "cancelada"),
   ];
+  // [RESERVA-TURNO] so conflita no mesmo turno; reserva antiga sem turno vale para qualquer turno
+  if (turnoAula) reservationConditions.push(or(eq(reservasTable.turno, turnoAula), isNull(reservasTable.turno))!);
   if (excludeId !== undefined) {
     reservationConditions.push(ne(reservasTable.id, excludeId));
   }
@@ -330,7 +339,8 @@ export async function validateReserva(
   return {
     sala,
     professor,
-    horario,
+    horario: horario.horario,
+    turno: turnoAula, // [RESERVA-TURNO]
     rule,
     prioridade: prioridadeSolicitante,
     reservaParaDeslocar,
@@ -466,6 +476,7 @@ router.post("/", async (req, res): Promise<void> => {
         ...data,
         escolaId,
         horarioId: validation.horario.id,
+        turno: validation.turno, // [RESERVA-TURNO]
         titulo: parsed.data.titulo,
         observacoes: parsed.data.observacoes,
         prioridadeAplicada: validation.prioridade,
@@ -595,7 +606,9 @@ router.patch("/:id", async (req, res): Promise<void> => {
     diaSemana: parsed.data.diaSemana ?? current.diaSemana,
     numeroAula: parsed.data.numeroAula ?? current.numeroAula,
   };
-  const validation = await validateReserva(escolaId, data, current.id);
+  // [RESERVA-TURNO] mantem o turno da reserva quando a aula nao mudou
+  const turnoAtual = parsed.data.numeroAula === undefined && !parsed.data.data && parsed.data.diaSemana === undefined ? current.turno : null;
+  const validation = await validateReserva(escolaId, { ...data, turno: turnoAtual }, current.id);
   if ("error" in validation) {
     res.status(validation.status).json(validation);
     return;
@@ -617,6 +630,7 @@ router.patch("/:id", async (req, res): Promise<void> => {
       .set({
         ...data,
         horarioId: validation.horario.id,
+        turno: validation.turno, // [RESERVA-TURNO]
         titulo: parsed.data.titulo ?? current.titulo,
         observacoes:
           parsed.data.observacoes === undefined
