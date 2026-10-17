@@ -27,7 +27,8 @@ export const pool = new Pool({
         },
       }
     : {}),
-  ssl: { rejectUnauthorized: false },
+  // padrao inalterado (SSL ligado). So os testes de integracao/CI, com Postgres local sem SSL, usam DATABASE_SSL=disable.
+  ssl: process.env.DATABASE_SSL === "disable" ? false : { rejectUnauthorized: false },
   idleTimeoutMillis: 15_000,
   keepAlive: true,
 });

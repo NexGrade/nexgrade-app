@@ -9,6 +9,20 @@ jobs:
   typecheck:
     name: Typecheck (libs + backend + frontend)
     runs-on: ubuntu-latest
+    # [CI-BANCO] Postgres de teste: aplica as migracoes do zero e roda os testes de integracao das reservas
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nexgrade_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
     steps:
       - uses: actions/checkout@v4
 
@@ -41,8 +55,29 @@ jobs:
         working-directory: artifacts/horario-escolar
         run: pnpm exec tsc --noEmit -p tsconfig.json
 
-      # [CI-TESTES] (17/10/2026) testes do servidor (permissoes, escola, importacao...). Nao precisam de banco:
-      # o vitest.config.ts injeta uma DATABASE_URL ficticia e os testes nao fazem consulta.
-      - name: Testes do backend
+      # [CI-MIGRACOES] mudou o esquema sem gerar a migracao? Este passo falha. (generate nao precisa de banco)
+      - name: Migrações em dia com o esquema
+        working-directory: lib/db
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:1/placeholder
+        run: |
+          pnpm exec drizzle-kit generate --config ./drizzle.config.ts
+          if [ -n "$(git status --porcelain -- drizzle)" ]; then
+            echo "::error::O esquema (lib/db/src/schema) mudou e falta gerar a migração: rode 'pnpm --filter @workspace/db run generate', revise o SQL e commite."
+            git status --porcelain -- drizzle
+            exit 1
+          fi
+
+      # Aplica TODAS as migracoes num banco vazio: pega migracao quebrada antes de chegar ao banco real.
+      - name: Banco de teste (aplicar as migrações do zero)
+        run: pnpm --filter @workspace/db run migrate
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexgrade_test
+
+      # [CI-TESTES] testes do servidor: unitarios (permissoes, escola, importacao...) e de integracao com o
+      # Postgres acima (tablets, bloqueios, gestor, permissoes por cargo, trava de pedidos simultaneos).
+      - name: Testes do backend (com banco de teste)
         working-directory: artifacts/api-server
         run: pnpm run test
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexgrade_test
