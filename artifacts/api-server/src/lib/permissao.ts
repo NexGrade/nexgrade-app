@@ -71,6 +71,7 @@ const LEITURAS_SOMENTE_ADMIN = [
   "/audit", "/usuarios-acessos", "/export/ponto", "/export/relatorio-seed",
   "/export/relatorio-carga-pdf", "/export/carga-horaria-pdf",
   "/codigos-rco", // [CODIGOS-RCO-TELA]
+  "/reservas/regras-professores", // [LEITURA-EQUIPE] prioridade e limite de cada professor: so a coordenacao
 ];
 export function ehLeituraSomenteAdmin(caminhoBruto: string): boolean {
   const caminho = normalizarCaminho(caminhoBruto);
@@ -81,7 +82,9 @@ export function ehLeituraSomenteAdmin(caminhoBruto: string): boolean {
 // [LEITURA-EQUIPE] (17/10/2026) consultas do portal do gestor de reservas (agenda da semana com o nome de
 // quem reservou, grade de qualquer professor): so a equipe da escola (coordenacao, direcao, secretaria e
 // gestor de reservas). O professor usa so a Minha Agenda, que de proposito nao mostra quem reservou.
-const LEITURAS_DA_EQUIPE = ["/reservas/gestor"];
+// Alem do portal do gestor, cobre as listas e relatorios de reservas (trazem o nome de quem reservou):
+// so as telas de Reservas (equipe) usam; o professor nao abre essas telas e nao chama estas rotas.
+const LEITURAS_DA_EQUIPE = ["/reservas", "/export/reservas-pdf", "/export/reservas-dados"];
 export function ehLeituraDaEquipe(caminhoBruto: string): boolean {
   const caminho = normalizarCaminho(caminhoBruto);
   return LEITURAS_DA_EQUIPE.some((p) => caminho === p || caminho.startsWith(p + "/"));
@@ -103,13 +106,15 @@ function exigirPorCargo(req: Request, res: Response, next: NextFunction) {
   }
   const total = CARGOS_TOTAIS.has(a.cargo);
   if (METODOS_LEITURA.has(req.method)) {
+    if (ehLeituraSomenteAdmin(req.path) && !total) {
+      res.status(403).json({ error: "Apenas a direção, a coordenação ou a secretaria podem consultar estes dados." });
+      return;
+    }
     if (ehLeituraDaEquipe(req.path) && !(CARGOS_EQUIPE as readonly string[]).includes(a.cargo)) { // [LEITURA-EQUIPE]
       res.status(403).json({ error: MSG_LEITURA_EQUIPE });
       return;
     }
-    if (!ehLeituraSomenteAdmin(req.path) || total) return next();
-    res.status(403).json({ error: "Apenas a direção, a coordenação ou a secretaria podem consultar estes dados." });
-    return;
+    return next();
   }
   if (PREFIXOS_LIBERADOS.some((p) => caminho === p || caminho.startsWith(p + "/"))) return next();
   if (total) return next();
@@ -124,6 +129,12 @@ function exigirPorCargo(req: Request, res: Response, next: NextFunction) {
 export function exigirAdminParaAlterar(req: Request, res: Response, next: NextFunction) {
   if (acessosPeloBanco()) return exigirPorCargo(req, res, next); // [ACESSOS-ESCOLA]
   if (METODOS_LEITURA.has(req.method)) {
+    if (ehLeituraSomenteAdmin(req.path)) {
+      const { userId, orgId, orgRole } = getAuth(req);
+      if (!userId || !orgId || orgRole === PAPEL_ADMIN) return next();
+      res.status(403).json({ error: "Apenas a coordenação da escola pode consultar estes dados." });
+      return;
+    }
     if (ehLeituraDaEquipe(req.path)) { // [LEITURA-EQUIPE]
       const { userId, orgId, orgRole } = getAuth(req);
       if (!userId || !orgId || orgRole === PAPEL_ADMIN || orgRole === PAPEL_RESERVAS) return next();
@@ -139,11 +150,7 @@ export function exigirAdminParaAlterar(req: Request, res: Response, next: NextFu
       res.status(403).json({ error: MSG_LEITURA_EQUIPE });
       return;
     }
-    if (!ehLeituraSomenteAdmin(req.path)) return next();
-    const { userId, orgId, orgRole } = getAuth(req);
-    if (!userId || !orgId || orgRole === PAPEL_ADMIN) return next();
-    res.status(403).json({ error: "Apenas a coordenação da escola pode consultar estes dados." });
-    return;
+    return next();
   }
   const caminhoReq = normalizarCaminho(req.path);
   if (PREFIXOS_LIBERADOS.some((p) => caminhoReq === p || caminhoReq.startsWith(p + "/"))) return next();
