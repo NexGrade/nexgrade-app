@@ -10,12 +10,16 @@ type ReservaMapa = {
   professor?: { nome?: string | null } | null;
 };
 
-export function MapaOcupacaoSalas({ salas, reservas, maxAulaMinimo = 0 }: { salas: ReadonlyArray<SalaMapa>; reservas: ReadonlyArray<ReservaMapa>; maxAulaMinimo?: number }) { // [MAPA-AULAS-GRADE]
+// [MAPA-TABLETS] (17/10/2026) tablets contados por unidade: reservadas por aula (e periodo) do total do carrinho
+export type TabletsMapa = { nome: string; total: number; ocupacao: ReadonlyArray<{ numeroAula: number; turno: string; reservadas: number }> };
+const NOME_PERIODO_CURTO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
+
+export function MapaOcupacaoSalas({ salas, reservas, maxAulaMinimo = 0, tablets = null }: { salas: ReadonlyArray<SalaMapa>; reservas: ReadonlyArray<ReservaMapa>; maxAulaMinimo?: number; tablets?: TabletsMapa | null }) { // [MAPA-AULAS-GRADE]
   const ativas = salas.filter((s) => s.ativa !== false);
   const validas = reservas.filter((r) => r.status !== "cancelada");
-  const maxAula = Math.max(5, maxAulaMinimo, ...validas.map((r) => r.numeroAula)); // [MAPA-AULAS-GRADE]
+  const maxAula = Math.max(5, maxAulaMinimo, ...validas.map((r) => r.numeroAula), ...(tablets?.ocupacao.map((o) => o.numeroAula) ?? [])); // [MAPA-AULAS-GRADE]
   const aulas = Array.from({ length: maxAula }, (_, i) => i + 1);
-  if (ativas.length === 0) return null;
+  if (ativas.length === 0 && !tablets) return null;
 
   return (
     <div className="rounded-lg border border-border bg-card">
@@ -39,6 +43,7 @@ export function MapaOcupacaoSalas({ salas, reservas, maxAulaMinimo = 0 }: { sala
               {ativas.map((s) => (
                 <th key={s.id} className="min-w-[140px] px-2 py-2 text-left font-semibold">{s.nome}</th>
               ))}
+              {tablets && <th className="min-w-[140px] px-2 py-2 text-left font-semibold">{tablets.nome}</th>}
             </tr>
           </thead>
           <tbody>
@@ -71,6 +76,29 @@ export function MapaOcupacaoSalas({ salas, reservas, maxAulaMinimo = 0 }: { sala
                     </td>
                   );
                 })}
+                {tablets && (() => {
+                  const usos = tablets.ocupacao.filter((o) => o.numeroAula === n && o.reservadas > 0);
+                  if (usos.length === 0) {
+                    return (
+                      <td key="tablets" className="px-1.5 py-1.5">
+                        <div className="rounded-md bg-emerald-50 px-2 py-2 font-medium text-emerald-700 ring-1 ring-emerald-200">Livre · {tablets.total}</div>
+                      </td>
+                    );
+                  }
+                  const lotado = usos.some((o) => o.reservadas >= tablets.total);
+                  return (
+                    <td key="tablets" className="px-1.5 py-1.5">
+                      <div className={"rounded-md px-2 py-1.5 ring-1 " + (lotado ? "bg-blue-100 text-blue-900 ring-blue-400" : "bg-blue-50 text-blue-800 ring-blue-300")}>
+                        {usos.map((o) => (
+                          <div key={o.turno} className="truncate font-semibold">
+                            {usos.length > 1 ? `${NOME_PERIODO_CURTO[o.turno] ?? o.turno}: ` : ""}{o.reservadas} de {tablets.total}
+                          </div>
+                        ))}
+                        {usos.length === 1 && <div className="truncate opacity-80">{lotado ? "Todos reservados" : `${tablets.total - usos[0]!.reservadas} livres`}</div>}
+                      </div>
+                    </td>
+                  );
+                })()}
               </tr>
             ))}
           </tbody>

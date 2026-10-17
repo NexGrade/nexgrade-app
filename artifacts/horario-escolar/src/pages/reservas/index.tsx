@@ -2,13 +2,14 @@ import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useEhGestorReservas } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA]
 import { BotaoRelatorioReservas } from "@/components/relatorio-reservas"; // [RELATORIO-RESERVAS]
 import { MapaOcupacaoSalas } from "@/components/mapa-ocupacao-salas"; // [OCUPACAO-SALAS]
 import { NovaReservaDialog } from "@/components/nova-reserva-dialog"; // [RESERVA-GESTOR]
 import { ReservasDaSemana, CHAVE_RESERVAS_SEMANA } from "@/components/reservas-da-semana"; // [RESERVAS-DA-SEMANA]
+import { ehSalaTablets } from "@/lib/reservas-formato"; // [MAPA-TABLETS]
 import {
   AlertTriangle,
   ArrowRight,
@@ -27,6 +28,7 @@ import {
   X,
 } from "lucide-react";
 import {
+  customFetch,
   getGetReservasResumoQueryKey,
   getListHorariosQueryKey,
   getListRegrasReservaProfessoresQueryKey,
@@ -308,6 +310,11 @@ export default function ReservasPage() {
   const salasQuery = useListSalas({ query: { queryKey: getListSalasQueryKey() } });
   const professoresQuery = useListProfessores({ query: { queryKey: getListProfessoresQueryKey() } });
   const horariosQuery = useListHorarios(undefined, { query: { queryKey: getListHorariosQueryKey() } });
+  // [MAPA-TABLETS] tablets do dia por quantidade (mesma chave do formulario, que atualiza ao reservar)
+  const tabletsQuery = useQuery({
+    queryKey: ["ocupacao-recursos", selectedDate],
+    queryFn: () => customFetch<{ recursos: Array<{ id: number; nome: string; total: number; ocupacao: Array<{ numeroAula: number; turno: string; reservadas: number }> }> }>(`/api/reservas/gestor/recursos/ocupacao?data=${selectedDate}`, { responseType: "json" }),
+  });
   const createReserva = useCreateReserva();
   const updateReserva = useUpdateReserva();
   const deleteReserva = useDeleteReserva();
@@ -348,6 +355,7 @@ export default function ReservasPage() {
     queryClient.invalidateQueries({ queryKey: getGetReservasResumoQueryKey({ data: selectedDate }) });
     queryClient.invalidateQueries({ queryKey: getListRegrasReservaProfessoresQueryKey() });
     queryClient.invalidateQueries({ queryKey: CHAVE_RESERVAS_SEMANA }); // [RESERVAS-DA-SEMANA]
+    queryClient.invalidateQueries({ queryKey: ["ocupacao-recursos"] }); // [MAPA-TABLETS]
   };
 
   const openEdit = (reserva: (typeof reservas)[number]) => {
@@ -486,7 +494,7 @@ export default function ReservasPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          <MapaOcupacaoSalas salas={salasQuery.data ?? []} reservas={reservas} maxAulaMinimo={(horariosQuery.data ?? []).reduce((m, h) => Math.max(m, h.numeroAula), 0)} />{/* [MAPA-AULAS-GRADE] */}{/* [OCUPACAO-SALAS] */}
+          <MapaOcupacaoSalas salas={(salasQuery.data ?? []).filter((s) => !ehSalaTablets(s.nome) || reservas.some((r) => r.salaId === s.id && r.status !== "cancelada"))} tablets={tabletsQuery.data?.recursos[0] ?? null} reservas={reservas} maxAulaMinimo={(horariosQuery.data ?? []).reduce((m, h) => Math.max(m, h.numeroAula), 0)} />{/* [MAPA-AULAS-GRADE] */}{/* [OCUPACAO-SALAS] */}
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-heading text-lg font-bold">Agenda do dia</h2>

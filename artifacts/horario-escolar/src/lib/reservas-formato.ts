@@ -16,5 +16,8 @@ export const abreviarNome = (nome: string) => {
   return p.length > 2 ? `${p[0]} ${p[p.length - 1]}` : nome.trim();
 };
 
+/** o espaco antigo "Tablets" (exclusivo por aula): os tablets agora vao por quantidade */
+export const ehSalaTablets = (nome: string) => /^tablets?$/i.test(nome.trim());
+
 /** [1, 2] -> "1ª, 2ª aulas" */
 export const rotuloAulas = (aulas: number[]) => `${aulas.map((n) => `${n}ª`).join(", ")} aula${aulas.length > 1 ? "s" : ""}`;
