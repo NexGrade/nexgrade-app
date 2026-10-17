@@ -7,6 +7,7 @@ import { Link } from "wouter";
 import { useEhGestorReservas } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA]
 import { BotaoRelatorioReservas } from "@/components/relatorio-reservas"; // [RELATORIO-RESERVAS]
 import { MapaOcupacaoSalas } from "@/components/mapa-ocupacao-salas"; // [OCUPACAO-SALAS]
+import { NovaReservaDialog } from "@/components/nova-reserva-dialog"; // [RESERVA-GESTOR]
 import {
   AlertTriangle,
   ArrowRight,
@@ -347,12 +348,6 @@ export default function ReservasPage() {
     queryClient.invalidateQueries({ queryKey: getListRegrasReservaProfessoresQueryKey() });
   };
 
-  const openCreate = () => {
-    setEditing(null);
-    form.reset({ salaId: 0, professorId: 0, data: selectedDate, numeroAula: 1, titulo: "", observacoes: "" });
-    setDialogOpen(true);
-  };
-
   const openEdit = (reserva: (typeof reservas)[number]) => {
     setEditing(reserva);
     form.reset({
@@ -439,9 +434,7 @@ export default function ReservasPage() {
         <div className="flex flex-wrap gap-2">
           <BotaoRegrasPorProfessor />{/* [PAPEL-RESERVAS] */}
           <BotaoRelatorioReservas />{/* [RELATORIO-RESERVAS] */}
-          <Button data-testid="button-new-reservation" onClick={openCreate} className="bg-primary text-primary-foreground shadow-sm hover:bg-primary/90">
-            <Plus className="mr-2 h-4 w-4" /> Nova reserva
-          </Button>
+          <NovaReservaDialog modo="gestor" professores={professores} aoCriar={invalidateReservations} />{/* [RESERVA-GESTOR] mesmo fluxo do app do professor, ja confirmada */}
         </div>
       </div>
 
@@ -484,7 +477,7 @@ export default function ReservasPage() {
             <div className="rounded-2xl bg-[#dcefe3] p-4 text-primary"><DoorOpen className="h-7 w-7" /></div>
             <p className="font-heading text-xl font-bold">Dia livre de reservas</p>
             <p className="max-w-md text-sm leading-relaxed text-muted-foreground">Nenhum espaço foi solicitado para {displayDate(selectedDate)}. Registre uma reserva quando uma atividade precisar sair da sala de aula.</p>
-            <Button data-testid="button-empty-new-reservation" onClick={openCreate}><Plus className="mr-2 h-4 w-4" /> Registrar primeira reserva</Button>
+            <NovaReservaDialog modo="gestor" professores={professores} aoCriar={invalidateReservations} />
           </CardContent>
         </Card>
       ) : (
