@@ -14,7 +14,7 @@ import {
 } from "@workspace/api-client-react";
 import { NotificationBell } from "@/components/notification-bell";
 import { CalendarioMesEscola, type ReservaNoCalendario } from "@/components/calendario-mes-escola"; // [CALENDARIO-PROFESSOR]
-import { CalendarDays, Download, Loader2, Plus, MonitorSmartphone, Tablet } from "lucide-react";
+import { CalendarDays, Download, Loader2, Plus, MonitorSmartphone } from "lucide-react";
 import {
   useGetMeuProfessor,
   useGetMinhaAgendaHorario,
@@ -141,6 +141,7 @@ function NovaReservaDialog({ professorId: _professorId }: { professorId: number 
   const [open, setOpen] = useState(false);
   const { data: salas } = useListSalas();
   const { data: minhasReservas } = useGetMinhaAgendaReservas({ query: { queryKey: getGetMinhaAgendaReservasQueryKey() } }); // [RESERVA-NO-CALENDARIO]
+  const { data: minhasReservasTablets } = useReservasTablets(true); // [RECURSOS-TABLETS]
   const { data: dadosHorarioApi } = useGetMinhaAgendaHorario({ query: { queryKey: getGetMinhaAgendaHorarioQueryKey() } });
   // a API devolve tambem turno e horarios (fora do tipo gerado)
   const dadosHorario = dadosHorarioApi as unknown as {
@@ -157,8 +158,11 @@ function NovaReservaDialog({ professorId: _professorId }: { professorId: number 
   const [tituloEditado, setTituloEditado] = useState(false); // [RESERVA-LOTE] enquanto nao editar, preenche com turma e disciplina
   const [observacoes, setObservacoes] = useState("");
   const [enviando, setEnviando] = useState(false);
+  // [RECURSOS-TABLETS] passo opcional: quantidade de tablets por aula (carrinho com total fixo, sem espaco)
+  const [quantidade, setQuantidade] = useState("");
+  const [tablets, setTablets] = useState<Record<number, number>>({});
 
-  const limpar = () => { setData(""); setTurno(null); setAulasSel([]); setSalaAtual(0); setItens([]); setTitulo(""); setTituloEditado(false); setObservacoes(""); };
+  const limpar = () => { setData(""); setTurno(null); setAulasSel([]); setSalaAtual(0); setItens([]); setTitulo(""); setTituloEditado(false); setObservacoes(""); setQuantidade(""); setTablets({}); };
   const diaSemana = /^\d{4}-\d{2}-\d{2}$/.test(data) ? diaSemanaDaData(data) : -1;
 
   // aulas do professor no dia escolhido, por turno
@@ -191,11 +195,27 @@ function NovaReservaDialog({ professorId: _professorId }: { professorId: number 
   const statusSala = (salaId: number, numeroAula: number) =>
     ocupacao?.ocupacao.find((o) => o.salaId === salaId && o.numeroAula === numeroAula && (!o.turno || o.turno === turno))?.status ?? null;
 
+  const { data: ocupacaoRecursos } = useQueryOcupacao({
+    queryKey: ["ocupacao-recursos", data],
+    queryFn: () => customFetchOcupacao<OcupacaoRecursosResp>("/api/minha-agenda/recursos/ocupacao?data=" + encodeURIComponent(data), { responseType: "json" }),
+    enabled: diaSemana >= 0 && diaSemana <= 4,
+  });
+  const recurso = ocupacaoRecursos?.recursos[0] ?? null;
+  const restamTablets = (numeroAula: number) =>
+    recurso ? recurso.total - recurso.ocupacao.filter((o) => o.numeroAula === numeroAula && o.turno === turno).reduce((n, o) => n + o.reservadas, 0) : 0;
+  const menorSaldo = aulasSel.length ? Math.min(...aulasSel.map(restamTablets)) : (recurso?.total ?? 0);
+  const qtd = Number(quantidade);
+  const qtdValida = Number.isInteger(qtd) && qtd >= 1 && qtd <= menorSaldo;
+  const comTablets = quantidade !== "" && aulasSel.length > 0;
+  const podeAddTablets = comTablets && qtdValida;
+
   // [RESERVA-VARIOS-ESPACOS] a mesma aula pode ir para outro espaco (turma dividida);
   // so fica travada a aula que ja esta na lista PARA O ESPACO escolhido agora
   const espacosDaAula = (n: number) => itens.filter((i) => i.numerosAula.includes(n)).map((i) => i.salaId);
   const ocupadasNaSala = salaAtual ? aulasSel.filter((n) => statusSala(salaAtual, n) === "confirmada") : [];
-  const podeAdicionar = salaAtual > 0 && aulasSel.length > 0 && ocupadasNaSala.length === 0;
+  const podeAddSala = salaAtual > 0 && aulasSel.length > 0 && ocupadasNaSala.length === 0;
+  // o botao serve para espaco, tablets ou os dois juntos (as mesmas aulas marcadas)
+  const podeAdicionar = (podeAddSala || (salaAtual === 0 && podeAddTablets)) && (quantidade === "" || qtdValida);
   const nomeSala = (id: number) => salas?.find((s) => s.id === id)?.nome ?? "Espaço";
   const rotuloAula = (n: number) => {
     const h = horariosDoTurno.find((x) => x.numeroAula === n);
@@ -204,16 +224,20 @@ function NovaReservaDialog({ professorId: _professorId }: { professorId: number 
 
   function adicionar() {
     if (!podeAdicionar) return;
-    setItens((l) => {
-      const ja = l.find((i) => i.salaId === salaAtual);
-      if (ja) return l.map((i) => (i.salaId === salaAtual ? { ...i, numerosAula: [...new Set([...i.numerosAula, ...aulasSel])].sort((x, y) => x - y) } : i));
-      return [...l, { salaId: salaAtual, numerosAula: [...aulasSel].sort((x, y) => x - y) }];
-    });
+    if (podeAddSala) {
+      setItens((l) => {
+        const ja = l.find((i) => i.salaId === salaAtual);
+        if (ja) return l.map((i) => (i.salaId === salaAtual ? { ...i, numerosAula: [...new Set([...i.numerosAula, ...aulasSel])].sort((x, y) => x - y) } : i));
+        return [...l, { salaId: salaAtual, numerosAula: [...aulasSel].sort((x, y) => x - y) }];
+      });
+    }
+    if (podeAddTablets) setTablets((t) => ({ ...t, ...Object.fromEntries(aulasSel.map((n) => [n, qtd])) }));
     setAulasSel([]);
     setSalaAtual(0);
+    setQuantidade("");
   }
 
-  const itensFinais: ItemReserva[] = podeAdicionar
+  const itensFinais: ItemReserva[] = podeAddSala
     ? (() => {
         const ja = itens.find((i) => i.salaId === salaAtual);
         return ja
@@ -222,34 +246,65 @@ function NovaReservaDialog({ professorId: _professorId }: { professorId: number 
       })()
     : itens;
   const totalAulas = itensFinais.reduce((n, i) => n + i.numerosAula.length, 0);
+  // tablets que vao no pedido: os da lista mais a selecao atual, se estiver valida
+  const tabletsFinais: Record<number, number> = podeAddTablets ? { ...tablets, ...Object.fromEntries(aulasSel.map((n) => [n, qtd])) } : tablets;
+  const aulasComTablets = Object.keys(tabletsFinais).map(Number).sort((x, y) => x - y);
+  const nomeTablets = (recurso?.nome ?? "Tablets").toLowerCase();
   // turma e disciplina das aulas escolhidas (vem da grade do professor no dia)
   const aulaDe = (n: number) => horariosDoTurno.find((x) => x.numeroAula === n)?.aula ?? null;
   const descreverAulas = (nums: number[]) =>
     [...new Set(nums.map(aulaDe).filter((a): a is NonNullable<typeof a> => !!a).map((a) => `${a.disciplinaNome} · ${a.turmaNome}`))].join("; ");
-  const tituloAuto = descreverAulas(itensFinais.flatMap((i) => i.numerosAula));
+  const tituloAuto = descreverAulas([...new Set([...itensFinais.flatMap((i) => i.numerosAula), ...aulasComTablets])]);
   useEffect(() => { if (!tituloEditado) setTitulo(tituloAuto); }, [tituloAuto, tituloEditado]);
 
   async function enviar() {
-    if (!turno || !data || totalAulas === 0 || !titulo.trim()) return;
+    if (!turno || !data || (totalAulas === 0 && aulasComTablets.length === 0) || !titulo.trim() || (comTablets && !qtdValida)) return;
     setEnviando(true);
-    try {
-      const r = await customFetchOcupacao<{ criadas: number; confirmadas: number; pendentes: number }>("/api/minha-agenda/reservas/lote", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data, turno, itens: itensFinais, titulo: titulo.trim(), observacoes: observacoes.trim() || undefined }),
-        responseType: "json",
-      });
+    let espacosFeitos = false;
+    const atualizar = () => {
       queryClient.invalidateQueries({ queryKey: getGetMinhaAgendaReservasQueryKey() });
       queryClient.invalidateQueries({ queryKey: ["ocupacao-salas"] });
       queryClient.invalidateQueries({ queryKey: ["ocupacao-mes"] });
-      toast({
+      queryClient.invalidateQueries({ queryKey: CHAVE_TABLETS });
+      queryClient.invalidateQueries({ queryKey: ["ocupacao-recursos"] });
+    };
+    try {
+      let r: { criadas: number; confirmadas: number; pendentes: number } | null = null;
+      if (itensFinais.length > 0) {
+        r = await customFetchOcupacao<{ criadas: number; confirmadas: number; pendentes: number }>("/api/minha-agenda/reservas/lote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data, turno, itens: itensFinais, titulo: titulo.trim(), observacoes: observacoes.trim() || undefined }),
+          responseType: "json",
+        });
+        espacosFeitos = true;
+      }
+      if (aulasComTablets.length > 0 && recurso) {
+        await customFetchOcupacao("/api/minha-agenda/recursos/reservas", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recursoId: recurso.id, data, turno, itens: aulasComTablets.map((n) => ({ numeroAula: n, quantidade: tabletsFinais[n] })), titulo: titulo.trim(), observacoes: observacoes.trim() || undefined }),
+          responseType: "json",
+        });
+      }
+      atualizar();
+      const textoTablets = aulasComTablets.length ? `${recurso?.nome ?? "Tablets"} confirmados (${aulasComTablets.map((n) => `${n}ª aula: ${tabletsFinais[n]}`).join(", ")}).` : "";
+      toast(r ? {
         title: r.pendentes === 0 ? (r.criadas > 1 ? `${r.criadas} reservas confirmadas` : "Reserva confirmada") : r.confirmadas === 0 ? "Solicitação enviada" : `${r.confirmadas} confirmada(s), ${r.pendentes} aguardando`,
-        description: r.pendentes > 0 ? "As reservas pendentes entraram na fila de aprovação da coordenação." : "Tudo certo, as reservas já estão na sua agenda.",
-      });
+        description: [r.pendentes > 0 ? "As reservas pendentes entraram na fila de aprovação da coordenação." : "Tudo certo, as reservas já estão na sua agenda.", textoTablets].filter(Boolean).join(" "),
+      } : { title: `${recurso?.nome ?? "Tablets"} reservados`, description: textoTablets });
       setOpen(false);
       limpar();
     } catch (err: any) {
-      toast({ title: "Não foi possível reservar", description: err?.data?.error ?? "Verifique os horários e tente de novo.", variant: "destructive" });
+      atualizar();
+      if (espacosFeitos) {
+        // os espacos ja foram gravados: nao deixa tentar de novo tudo junto (daria conflito com a propria reserva)
+        toast({ title: "Espaços reservados, mas os tablets não", description: `${err?.data?.error ?? "Não foi possível reservar os tablets."} Abra Nova reserva e tente só os tablets.`, variant: "destructive" });
+        setOpen(false);
+        limpar();
+      } else {
+        toast({ title: "Não foi possível reservar", description: err?.data?.error ?? "Verifique os horários e tente de novo.", variant: "destructive" });
+      }
     } finally {
       setEnviando(false);
     }
@@ -270,7 +325,7 @@ function NovaReservaDialog({ professorId: _professorId }: { professorId: number 
         <div className="space-y-5">
           <Passo n={1} titulo="Dia">
             <CalendarioReserva
-              diasComReserva={[...new Set((minhasReservas ?? []).map((r) => String(r.data).slice(0, 10)))]}
+              diasComReserva={[...new Set([...(minhasReservas ?? []), ...(minhasReservasTablets ?? [])].map((r) => String(r.data).slice(0, 10)))]}
               salaId={salaAtual}
               value={data}
               onChange={(iso) => { setData(iso); setTurno(null); setAulasSel([]); setItens([]); }}
@@ -368,11 +423,35 @@ function NovaReservaDialog({ professorId: _professorId }: { professorId: number 
                     : `${nomeSala(salaAtual)}: ${aulasSel.sort((x, y) => x - y).map((n) => `${rotuloAula(n)} ${statusSala(salaAtual, n) === "pendente" ? "em análise" : "livre"}`).join(" · ")}`}
                 </p>
               )}
-              <p className="text-xs text-muted-foreground">Precisa de outro espaço? Adicione à lista e escolha o próximo, nas mesmas aulas (turma dividida) ou em outras.</p>
+              <p className="text-xs text-muted-foreground">Precisa de outro espaço? Adicione à lista e escolha o próximo, nas mesmas aulas (turma dividida) ou em outras. Só precisa de tablets? Deixe o espaço em branco e use o passo 5.</p>
             </Passo>
           )}
 
-          {itens.length > 0 && (
+          {turno && recurso && (
+            <Passo n={5} titulo="Tablets (opcional)">
+              <div className="space-y-1">
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={Math.max(menorSaldo, 1)}
+                  placeholder={`${recurso.nome} (opcional): quantos?`}
+                  value={quantidade}
+                  onChange={(e) => setQuantidade(e.target.value)}
+                />
+                <p className={`text-xs ${comTablets && !qtdValida ? "text-destructive" : "text-muted-foreground"}`}>
+                  {aulasSel.length === 0
+                    ? `Marque as aulas acima. O carrinho tem ${recurso.total} ${nomeTablets}.`
+                    : comTablets && !qtdValida
+                      ? menorSaldo < 1 ? `Não há ${nomeTablets} livres nessas aulas.` : `Informe de 1 a ${menorSaldo}.`
+                      : `Livres nas aulas marcadas: ${menorSaldo} de ${recurso.total}. Você leva os ${nomeTablets} para a sua sala; confirma na hora.`}
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground">Entra no pedido ao solicitar. Para juntar espaço e tablets em aulas diferentes, use &quot;Adicionar à lista&quot; no passo 4 a cada vez.</p>
+            </Passo>
+          )}
+
+          {(itens.length > 0 || Object.keys(tablets).length > 0) && (
             <div className="rounded-lg border bg-muted/30 p-3">
               <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Na lista</p>
               <ul className="space-y-1">
@@ -385,21 +464,32 @@ function NovaReservaDialog({ professorId: _professorId }: { professorId: number 
                     <button type="button" className="text-xs text-muted-foreground underline hover:text-foreground" onClick={() => setItens((l) => l.filter((x) => x.salaId !== i.salaId))}>Tirar</button>
                   </li>
                 ))}
+                {[...new Set(Object.values(tablets))].map((q) => {
+                  const aulasQ = Object.entries(tablets).filter(([, v]) => v === q).map(([k]) => Number(k)).sort((x, y) => x - y);
+                  return (
+                    <li key={`tablets-${q}`} className="flex items-center justify-between gap-2 text-sm">
+                      <span>
+                        <strong>{recurso?.nome ?? "Tablets"}</strong> · {q} {q === 1 ? "unidade" : "unidades"} · {aulasQ.map(rotuloAula).join(", ")} aula
+                      </span>
+                      <button type="button" className="text-xs text-muted-foreground underline hover:text-foreground" onClick={() => setTablets((t) => Object.fromEntries(Object.entries(t).filter(([, v]) => v !== q)))}>Tirar</button>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}
 
           {turno && (
-            <Passo n={5} titulo="Objetivo">
+            <Passo n={6} titulo="Objetivo">
               <Input placeholder="Ex.: Prova, Aula prática..." value={titulo} onChange={(e) => { setTitulo(e.target.value); setTituloEditado(true); }} />
               <p className="text-xs text-muted-foreground">Turma e disciplina já vêm da sua grade. Pode completar, ex.: &quot;Prova&quot;, &quot;Aula prática&quot;.</p>
               <Textarea placeholder="Observações (opcional)" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
             </Passo>
           )}
 
-          <Button type="button" className="w-full" disabled={enviando || !turno || totalAulas === 0 || !titulo.trim()} onClick={() => void enviar()}>
+          <Button type="button" className="w-full" disabled={enviando || !turno || (totalAulas === 0 && aulasComTablets.length === 0) || !titulo.trim() || (comTablets && !qtdValida)} onClick={() => void enviar()}>
             {enviando ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-            {totalAulas > 1 ? `Solicitar ${totalAulas} reservas` : "Solicitar reserva"}
+            {totalAulas === 0 ? "Reservar tablets" : aulasComTablets.length > 0 ? "Solicitar reservas" : totalAulas > 1 ? `Solicitar ${totalAulas} reservas` : "Solicitar reserva"}
           </Button>
         </div>
       </DialogContent>
@@ -419,228 +509,6 @@ function useReservasTablets(enabled: boolean) {
     queryFn: () => customFetchOcupacao<ReservaTablet[]>("/api/minha-agenda/recursos/reservas", { responseType: "json" }),
     enabled,
   });
-}
-
-function ReservaTabletsDialog() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const { data: minhasReservas } = useGetMinhaAgendaReservas({ query: { queryKey: getGetMinhaAgendaReservasQueryKey() } });
-  const { data: minhasReservasTablets } = useReservasTablets(true);
-  const { data: dadosHorarioApi } = useGetMinhaAgendaHorario({ query: { queryKey: getGetMinhaAgendaHorarioQueryKey() } });
-  const dadosHorario = dadosHorarioApi as unknown as {
-    aulas: Array<{ diaSemana: number; numeroAula: number; turno: string; turmaNome: string; disciplinaNome: string }>;
-    horarios: Array<{ turno: string; numeroAula: number; horaInicio: string }>;
-  } | undefined;
-
-  const [data, setData] = useState("");
-  const [turno, setTurno] = useState<string | null>(null);
-  const [aulasSel, setAulasSel] = useState<number[]>([]);
-  const [recursoId, setRecursoId] = useState(0);
-  const [quantidade, setQuantidade] = useState("");
-  const [titulo, setTitulo] = useState("");
-  const [tituloEditado, setTituloEditado] = useState(false);
-  const [observacoes, setObservacoes] = useState("");
-  const [enviando, setEnviando] = useState(false);
-
-  const limpar = () => { setData(""); setTurno(null); setAulasSel([]); setQuantidade(""); setTitulo(""); setTituloEditado(false); setObservacoes(""); };
-  const diaSemana = /^\d{4}-\d{2}-\d{2}$/.test(data) ? diaSemanaDaData(data) : -1;
-
-  const minhasAulasDoDia = useMemo(() => (dadosHorario?.aulas ?? []).filter((a) => a.diaSemana === diaSemana), [dadosHorario, diaSemana]);
-  const turnosDoDia = ORDEM_PERIODO.filter((t) => minhasAulasDoDia.some((a) => a.turno === t));
-  const unicoTurno = turnosDoDia.length === 1 ? turnosDoDia[0]! : null;
-  useEffect(() => { if (data && !turno && unicoTurno) setTurno(unicoTurno); }, [data, turno, unicoTurno]);
-  const horariosDoTurno = useMemo(() => {
-    if (!turno) return [];
-    const nums = new Set<number>([
-      ...(dadosHorario?.horarios ?? []).filter((h) => h.turno === turno).map((h) => h.numeroAula),
-      ...minhasAulasDoDia.filter((a) => a.turno === turno).map((a) => a.numeroAula),
-    ]);
-    return [...nums].sort((x, y) => x - y).map((n) => ({
-      numeroAula: n,
-      hora: (dadosHorario?.horarios ?? []).find((h) => h.turno === turno && h.numeroAula === n)?.horaInicio?.slice(0, 5) ?? "",
-      aula: minhasAulasDoDia.find((a) => a.turno === turno && a.numeroAula === n) ?? null,
-    }));
-  }, [turno, dadosHorario, minhasAulasDoDia]);
-
-  const { data: ocupacao } = useQueryOcupacao({
-    queryKey: ["ocupacao-recursos", data],
-    queryFn: () => customFetchOcupacao<OcupacaoRecursosResp>("/api/minha-agenda/recursos/ocupacao?data=" + encodeURIComponent(data), { responseType: "json" }),
-    enabled: diaSemana >= 0 && diaSemana <= 4,
-  });
-  const recursos = ocupacao?.recursos ?? [];
-  useEffect(() => { if (recursos.length && !recursos.some((r) => r.id === recursoId)) setRecursoId(recursos[0]!.id); }, [recursos, recursoId]);
-  const recurso = recursos.find((r) => r.id === recursoId) ?? null;
-  const nomeRecurso = recurso?.nome ?? "Tablets";
-  const restam = (numeroAula: number) =>
-    recurso ? recurso.total - recurso.ocupacao.filter((o) => o.numeroAula === numeroAula && o.turno === turno).reduce((s, o) => s + o.reservadas, 0) : 0;
-  const menorSaldo = aulasSel.length ? Math.min(...aulasSel.map(restam)) : (recurso?.total ?? 0);
-  const qtd = Number(quantidade);
-  const qtdValida = Number.isInteger(qtd) && qtd >= 1 && qtd <= menorSaldo;
-
-  const rotuloAula = (n: number) => {
-    const h = horariosDoTurno.find((x) => x.numeroAula === n);
-    return `${n}ª${h?.hora ? ` (${h.hora})` : ""}`;
-  };
-  const tituloAuto = [...new Set(aulasSel.map((n) => horariosDoTurno.find((x) => x.numeroAula === n)?.aula).filter((a): a is NonNullable<typeof a> => !!a).map((a) => `${a.disciplinaNome} · ${a.turmaNome}`))].join("; ");
-  useEffect(() => { if (!tituloEditado) setTitulo(tituloAuto); }, [tituloAuto, tituloEditado]);
-
-  async function enviar() {
-    if (!turno || !data || !recurso || aulasSel.length === 0 || !qtdValida || !titulo.trim()) return;
-    setEnviando(true);
-    try {
-      const r = await customFetchOcupacao<{ criadas: number }>("/api/minha-agenda/recursos/reservas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recursoId: recurso.id, data, turno, numerosAula: aulasSel, quantidade: qtd, titulo: titulo.trim(), observacoes: observacoes.trim() || undefined }),
-        responseType: "json",
-      });
-      queryClient.invalidateQueries({ queryKey: CHAVE_TABLETS });
-      queryClient.invalidateQueries({ queryKey: ["ocupacao-recursos"] });
-      toast({
-        title: r.criadas > 1 ? `${r.criadas} reservas de ${nomeRecurso.toLowerCase()} confirmadas` : `Reserva de ${nomeRecurso.toLowerCase()} confirmada`,
-        description: `${qtd} ${qtd === 1 ? "unidade" : "unidades"} · ${[...aulasSel].sort((a, b) => a - b).map((n) => `${n}ª`).join(", ")} aula.`,
-      });
-      setOpen(false);
-      limpar();
-    } catch (err: any) {
-      queryClient.invalidateQueries({ queryKey: ["ocupacao-recursos"] });
-      toast({ title: "Não foi possível reservar", description: err?.data?.error ?? "Verifique os dados e tente de novo.", variant: "destructive" });
-    } finally {
-      setEnviando(false);
-    }
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) limpar(); }}>
-      <DialogTrigger asChild>
-        <Button variant="outline">
-          <Tablet className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Reservar tablets</span><span className="sm:hidden">Tablets</span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl max-h-[92dvh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Reservar tablets</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-5">
-          <Passo n={1} titulo="Dia">
-            <CalendarioReserva
-              diasComReserva={[...new Set([...(minhasReservas ?? []).map((r) => String(r.data).slice(0, 10)), ...(minhasReservasTablets ?? []).map((r) => String(r.data).slice(0, 10))])]}
-              salaId={0}
-              ocultarDica
-              value={data}
-              onChange={(iso) => { setData(iso); setTurno(null); setAulasSel([]); }}
-            />
-          </Passo>
-
-          {data && (
-            <Passo n={2} titulo="Período">
-              {turnosDoDia.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Você não tem aula neste dia. A reserva é feita para as suas aulas: escolha outro dia.</p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {ORDEM_PERIODO.map((t) => {
-                    const n = minhasAulasDoDia.filter((a) => a.turno === t).length;
-                    if (!n) return null;
-                    const sel = turno === t;
-                    return (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => { setTurno(t); setAulasSel([]); }}
-                        className={`rounded-lg border px-4 py-2 text-left text-sm transition-colors ${sel ? "border-[#1565C0] bg-[#1565C0] text-white" : "hover:bg-muted"}`}
-                      >
-                        <span className="block font-semibold">{NOME_PERIODO[t] ?? t}</span>
-                        <span className={`text-xs ${sel ? "text-white/80" : "text-muted-foreground"}`}>{n} aula{n === 1 ? "" : "s"} sua{n === 1 ? "" : "s"}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-              {turnosDoDia.length > 1 && !turno && <p className="text-xs text-muted-foreground">Toque no período para ver as suas aulas.</p>}
-            </Passo>
-          )}
-
-          {turno && (
-            <Passo n={3} titulo="Aulas (pode marcar mais de uma)">
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {horariosDoTurno.map(({ numeroAula, hora, aula }) => {
-                  const sel = aulasSel.includes(numeroAula);
-                  const sobra = restam(numeroAula);
-                  const desab = !aula || sobra <= 0;
-                  return (
-                    <button
-                      key={numeroAula}
-                      type="button"
-                      disabled={desab}
-                      onClick={() => setAulasSel((l) => (l.includes(numeroAula) ? l.filter((x) => x !== numeroAula) : [...l, numeroAula]))}
-                      className={`rounded-lg border px-3 py-2 text-left text-xs transition-colors ${
-                        desab ? "cursor-not-allowed bg-muted/40 text-muted-foreground/70"
-                        : sel ? "border-[#1565C0] bg-[#1565C0]/10 ring-2 ring-[#1565C0]"
-                        : "hover:bg-muted"}`}
-                    >
-                      <span className="flex items-baseline justify-between gap-1">
-                        <span className="text-sm font-semibold">{numeroAula}ª aula</span>
-                        {hora && <span className="tabular-nums text-muted-foreground">{hora}</span>}
-                      </span>
-                      {aula ? (
-                        <>
-                          <span className="block truncate font-medium">{aula.turmaNome}</span>
-                          <span className="block truncate text-muted-foreground">{aula.disciplinaNome}</span>
-                          <span className={`block font-medium ${sobra <= 0 ? "text-destructive" : sobra < 10 ? "text-amber-700" : "text-emerald-700"}`}>
-                            {sobra <= 0 ? "Todos reservados" : `Restam ${sobra} de ${recurso?.total ?? "—"}`}
-                          </span>
-                        </>
-                      ) : <span className="block">Sem aula sua</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            </Passo>
-          )}
-
-          {turno && aulasSel.length > 0 && (
-            <Passo n={4} titulo="Quantidade">
-              {recursos.length > 1 && (
-                <Select value={String(recursoId)} onValueChange={(v) => setRecursoId(Number(v))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{recursos.map((r) => <SelectItem key={r.id} value={String(r.id)}>{r.nome}</SelectItem>)}</SelectContent>
-                </Select>
-              )}
-              <Input
-                type="number"
-                inputMode="numeric"
-                min={1}
-                max={menorSaldo}
-                placeholder={`Quantos ${nomeRecurso.toLowerCase()}?`}
-                value={quantidade}
-                onChange={(e) => setQuantidade(e.target.value)}
-              />
-              <p className={`text-xs ${quantidade && !qtdValida ? "text-destructive" : "text-muted-foreground"}`}>
-                {quantidade && !qtdValida
-                  ? menorSaldo < 1 ? "Não há unidades livres nessas aulas." : `Informe de 1 a ${menorSaldo}.`
-                  : `Disponíveis nas ${aulasSel.length > 1 ? "aulas escolhidas" : "aula escolhida"}: ${menorSaldo}. Você leva os ${nomeRecurso.toLowerCase()} para a sua sala; a reserva é confirmada na hora.`}
-              </p>
-              <p className="text-xs text-muted-foreground">Aulas: {[...aulasSel].sort((a, b) => a - b).map(rotuloAula).join(", ")}.</p>
-            </Passo>
-          )}
-
-          {turno && aulasSel.length > 0 && (
-            <Passo n={5} titulo="Objetivo">
-              <Input placeholder="Ex.: Pesquisa, Atividade digital..." value={titulo} onChange={(e) => { setTitulo(e.target.value); setTituloEditado(true); }} />
-              <Textarea placeholder="Observações (opcional)" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
-            </Passo>
-          )}
-
-          <Button type="button" className="w-full" disabled={enviando || !turno || aulasSel.length === 0 || !qtdValida || !titulo.trim()} onClick={() => void enviar()}>
-            {enviando ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-            {aulasSel.length > 1 ? `Reservar em ${aulasSel.length} aulas` : "Reservar tablets"}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
 }
 
 function usePwaInstall() {
@@ -875,7 +743,6 @@ export default function MinhaAgendaPage() {
             {baixandoPdf ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
             <span className="hidden sm:inline">Baixar PDF</span><span className="sm:hidden">PDF</span>
           </Button>
-          <ReservaTabletsDialog />
           <NovaReservaDialog professorId={professor.id} />
         </div>
 
@@ -1167,7 +1034,7 @@ export default function MinhaAgendaPage() {
 // Dias passados e fins de semana desabilitados. Sem nomes de quem reservou.
 type OcupacaoMesResp = { mes: string; maxAula: number; dias: Record<string, { confirmadas: number; pendentes: number }> };
 
-function CalendarioReserva({ salaId, value, onChange, diasComReserva = [], ocultarDica = false }: { salaId: number; value: string; onChange: (iso: string) => void; diasComReserva?: string[]; ocultarDica?: boolean }) {
+function CalendarioReserva({ salaId, value, onChange, diasComReserva = [] }: { salaId: number; value: string; onChange: (iso: string) => void; diasComReserva?: string[] }) {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
   const selecionada = /^\d{4}-\d{2}-\d{2}$/.test(value ?? "")
@@ -1228,9 +1095,9 @@ function CalendarioReserva({ salaId, value, onChange, diasComReserva = [], ocult
           <span className="flex items-center gap-1"><i className="h-2.5 w-2.5 rounded-sm bg-amber-100 ring-1 ring-amber-300" /> Algumas aulas reservadas</span>
           <span className="flex items-center gap-1"><i className="h-2.5 w-2.5 rounded-sm bg-muted ring-1 ring-border" /> Lotado</span>
         </div>
-      ) : !ocultarDica ? (
+      ) : (
         <p className="text-xs text-muted-foreground">Depois de escolher o espaço, os dias ficam coloridos com a ocupação dele.</p>
-      ) : null}
+      )}
       {diasComReserva.length > 0 && (
         <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <span className="font-bold text-foreground underline decoration-[#1565C0] decoration-2 underline-offset-4">12</span> dia em que você já tem reserva
