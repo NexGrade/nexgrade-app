@@ -1,4 +1,4 @@
-import { and, eq, isNull, ne, or, sql } from "drizzle-orm";
+import { and, asc, eq, gte, isNull, ne, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, horariosTable, recursosTable, reservasRecursosTable, turmasTable } from "@workspace/db";
 
@@ -150,4 +150,43 @@ export async function criarReservasRecursos(p: {
     if (err instanceof ErroRecurso) return { status: err.status, body: { error: err.message } };
     throw err;
   }
+}
+
+// [RECURSOS-CONFIG] (17/10/2026) a coordenacao ajusta o total do equipamento (ex.: carrinho de tablets).
+// So reduz se nenhuma reserva futura passar do novo total; a conferencia trava a linha do recurso, como a reserva.
+export const AlterarRecursoBody = z.object({ quantidadeTotal: z.number().int().min(1).max(500) });
+
+export async function alterarTotalRecurso(p: { escolaId: string; id: number; quantidadeTotal: number }): Promise<ResultadoRecursos> {
+  const { escolaId, id, quantidadeTotal } = p;
+  const hoje = new Date().toISOString().slice(0, 10);
+  return db.transaction(async (tx) => {
+    const [recurso] = await tx
+      .select()
+      .from(recursosTable)
+      .where(and(eq(recursosTable.id, id), eq(recursosTable.escolaId, escolaId)))
+      .for("update");
+    if (!recurso) return { status: 404, body: { error: "Equipamento não encontrado." } };
+    const [excede] = await tx
+      .select({
+        data: reservasRecursosTable.data,
+        numeroAula: reservasRecursosTable.numeroAula,
+        turno: reservasRecursosTable.turno,
+        total: sql<number>`sum(${reservasRecursosTable.quantidade})::int`,
+      })
+      .from(reservasRecursosTable)
+      .where(and(eq(reservasRecursosTable.escolaId, escolaId), eq(reservasRecursosTable.recursoId, id), gte(reservasRecursosTable.data, hoje), ne(reservasRecursosTable.status, "cancelada")))
+      .groupBy(reservasRecursosTable.data, reservasRecursosTable.numeroAula, reservasRecursosTable.turno)
+      .having(sql`sum(${reservasRecursosTable.quantidade}) > ${quantidadeTotal}`)
+      .orderBy(asc(reservasRecursosTable.data), asc(reservasRecursosTable.numeroAula))
+      .limit(1);
+    if (excede) {
+      const dia = `${String(excede.data).slice(8, 10)}/${String(excede.data).slice(5, 7)}`;
+      return {
+        status: 409,
+        body: { error: `Já há ${excede.total} ${recurso.nome.toLowerCase()} reservados em ${dia} (${excede.numeroAula}ª aula). Cancele ou reduza essas reservas antes de diminuir o total para ${quantidadeTotal}.` },
+      };
+    }
+    const [atualizado] = await tx.update(recursosTable).set({ quantidadeTotal }).where(eq(recursosTable.id, id)).returning();
+    return { status: 200, body: { id: atualizado!.id, nome: atualizado!.nome, quantidadeTotal: atualizado!.quantidadeTotal } };
+  });
 }
