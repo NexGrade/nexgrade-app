@@ -106,6 +106,21 @@ export const clerkPtBR = {
   formFieldLabel__currentPassword: "Senha atual",
   formFieldLabel__signOutOfOtherSessions: "Sair de todos os outros dispositivos",
   formFieldInputPlaceholder__emailAddress: "Digite seu e-mail",
+  // [LOGIN-PTBR] (17/10/2026) link e dicas que ainda apareciam em ingles no login
+  formFieldAction__forgotPassword: "Esqueceu a senha?",
+  formFieldInputPlaceholder__password: "Digite sua senha",
+  formFieldHintText__optional: "Opcional",
+  formFieldInputShowPassword: "Mostrar senha",
+  formFieldInputHidePassword: "Ocultar senha",
+  unstable__errors: {
+    form_password_incorrect: "Senha incorreta. Tente novamente ou clique em \"Esqueceu a senha?\".",
+    form_identifier_not_found: "Não encontramos uma conta com esse e-mail.",
+    form_param_format_invalid__email_address: "Digite um e-mail válido.",
+    form_password_pwned: "Esta senha apareceu em vazamentos de dados. Escolha outra senha.",
+    form_password_length_too_short: "A senha é muito curta.",
+    form_code_incorrect: "Código incorreto. Confira e tente de novo.",
+    too_many_requests: "Muitas tentativas. Aguarde um pouco e tente de novo.",
+  },
   // [LOGIN-PTBR] telas de entrar e cadastrar
   dividerText: "ou",
   socialButtonsBlockButton: "Continuar com {{provider|titleize}}",
