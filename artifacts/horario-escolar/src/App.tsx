@@ -13,7 +13,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Layout } from "@/components/layout";
-import { Sparkles, Clock, Lock, CalendarDays, Library, DoorOpen, Download, FileUp, History, ShieldCheck, LogOut } from "lucide-react"; // [LOGIN] [BOTAO-SAIR]
+import { Sparkles, Clock, Lock, CalendarDays, Library, DoorOpen, Download, FileUp, History, ShieldCheck, LogOut, Mail, UserPlus, Building2 } from "lucide-react"; // [LOGIN] [BOTAO-SAIR]
 
 // [FIX] Divisão do pacote JS (code-splitting) -- antes, todas as ~24
 // telas eram importadas de forma estática aqui no topo, o que fazia o
@@ -189,7 +189,10 @@ const BENEFICIOS = [
 
 // [LOGIN] Moldura comum do login/cadastro: formulario a esquerda, beneficios a direita
 // (no celular fica so o formulario), com orientacao para convidados e rodape de suporte.
-function AuthShell({ subtitulo, aviso, children }: { subtitulo: string; aviso: string; children: React.ReactNode }) {
+// [LOGIN-AVISO] (17/10/2026) orientacoes em linhas separadas, cada uma com icone
+type AvisoLogin = { icone: React.ComponentType<{ className?: string }>; titulo: string; texto: string };
+
+function AuthShell({ subtitulo, aviso, children }: { subtitulo: string; aviso: AvisoLogin[]; children: React.ReactNode }) {
   return (
     <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-slate-50 px-4 py-8">
       <div className="w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-xl lg:grid lg:grid-cols-[minmax(0,460px)_1fr]">
@@ -202,7 +205,17 @@ function AuthShell({ subtitulo, aviso, children }: { subtitulo: string; aviso: s
             <p className="text-slate-500 text-sm mt-1">{subtitulo}</p>
           </div>
           {children}
-          <p className="mt-2 max-w-[400px] text-center text-xs text-slate-500 leading-relaxed">{aviso}</p>
+          <ul className="mt-3 w-full max-w-[400px] space-y-2">
+            {aviso.map(({ icone: Icone, titulo, texto }) => (
+              <li key={titulo} className="flex items-start gap-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5">
+                <Icone className="mt-0.5 h-4 w-4 shrink-0 text-[#1565C0]" aria-hidden />
+                <div className="text-xs leading-relaxed">
+                  <div className="font-semibold text-slate-700">{titulo}</div>
+                  <div className="text-slate-500">{texto}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
         <aside className="hidden lg:block border-l border-slate-100 bg-slate-50 px-8 py-8">
           <h2 className="text-lg font-bold text-slate-900 font-heading">O que o NexGrade resolve</h2>
@@ -242,7 +255,10 @@ function SignInPage() {
   return (
     <AuthShell
       subtitulo="Sistema de Gestão de Horários Escolares"
-      aviso="Use o e-mail que a sua escola cadastrou no NexGrade. Primeiro acesso? Clique em &quot;Cadastre-se&quot; com esse mesmo e-mail."
+      aviso={[
+        { icone: Mail, titulo: "Qual e-mail usar", texto: "Use o e-mail que a sua escola cadastrou no NexGrade." },
+        { icone: UserPlus, titulo: "Primeiro acesso?", texto: "Clique em \u201cCadastre-se\u201d e use esse mesmo e-mail." },
+      ]}
     >
       <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} appearance={clerkAppearance} />
     </AuthShell>
@@ -253,7 +269,10 @@ function SignUpPage() {
   return (
     <AuthShell
       subtitulo="Crie o seu acesso ao NexGrade"
-      aviso="Use o e-mail que a sua escola cadastrou no NexGrade. Escolas novas são cadastradas pela Nexus Core: fale com o suporte."
+      aviso={[
+        { icone: Mail, titulo: "Qual e-mail usar", texto: "Use o e-mail que a sua escola cadastrou no NexGrade." },
+        { icone: Building2, titulo: "Escola nova?", texto: "Escolas novas são cadastradas pela Nexus Core. Fale com o suporte." },
+      ]}
     >
       <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} appearance={clerkAppearance} />
     </AuthShell>
