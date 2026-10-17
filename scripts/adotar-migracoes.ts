@@ -52,7 +52,10 @@ async function main() {
   const adotaveis = migracoes.slice(0, ate);
   const paraMigrate = migracoes.slice(ate);
   const faltam = adotaveis.filter((m) => !jaRegistradas.has(m.hash));
-  for (const m of paraMigrate) console.log(`  NAO sera registrada (o migrate a aplica): hash ${m.hash.slice(0, 12)}…  data ${new Date(m.folderMillis).toISOString()}`);
+  for (const m of paraMigrate) {
+    const quando = `hash ${m.hash.slice(0, 12)}…  data ${new Date(m.folderMillis).toISOString()}`;
+    console.log(jaRegistradas.has(m.hash) ? `  ja aplicada pelo migrate: ${quando}` : `  NAO sera registrada (o migrate a aplica): ${quando}`);
+  }
   if (faltam.length === 0) {
     console.log("\nNada a fazer: a base ja esta registrada.");
     process.exit(0);
