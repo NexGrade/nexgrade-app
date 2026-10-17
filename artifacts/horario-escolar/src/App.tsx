@@ -340,7 +340,22 @@ function EscolaGate({ component: Component }: { component: React.ComponentType }
   );
 }
 
+// [SESSAO-PROFESSOR] (17/10/2026) /minha-agenda nao conferia se havia sessao: com a sessao
+// expirada as chamadas iam sem token (401) e aparecia "falha de conexao" em vez do login.
 function ProfessorRoute({ component: Component }: { component: React.ComponentType }) {
+  return (
+    <>
+      <Show when="signed-in">
+        <ProfessorConteudo component={Component} />
+      </Show>
+      <Show when="signed-out">
+        <Redirect to="/sign-in" />
+      </Show>
+    </>
+  );
+}
+
+function ProfessorConteudo({ component: Component }: { component: React.ComponentType }) {
   const { semEscola } = usePapelEfetivo(); // [ACESSOS-ESCOLA]
   const { data, isLoading, isError, refetch } = useGetEscolaAtual({
     query: { queryKey: getGetEscolaAtualQueryKey() },
