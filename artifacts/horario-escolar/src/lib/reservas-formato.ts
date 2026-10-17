@@ -10,6 +10,15 @@ export const abreviarSala = (nome: string) =>
     .replace(/\s*\((\d+)\)$/, " · $1 un.")
     .replace(/\s{2,}/g, " ");
 
+/** nome bem curto para o cabecalho do mapa de ocupacao: "Laboratório de Informática - 01 Bloco 1" -> "Lab. Info. · 01 B1" */
+export const abreviarSalaMapa = (nome: string) =>
+  abreviarSala(nome)
+    .replace(/Inform[áa]tica/gi, "Info.")
+    .replace(/\bBloco\s+(\d+)/gi, "B$1")
+    .replace(/Poliesportiva/gi, "Poli.")
+    .replace(/Programa[çc][ãa]o/gi, "Prog.")
+    .replace(/\s{2,}/g, " ");
+
 /** "Simone Vitoriano de Barros" -> "Simone Barros" */
 export const abreviarNome = (nome: string) => {
   const p = nome.trim().split(/\s+/);
