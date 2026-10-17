@@ -1,8 +1,9 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, X } from "lucide-react";
 import { customFetch } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DIA_CURTO, NOME_TURNO, abreviarNome, abreviarSala, rotuloAulas } from "@/lib/reservas-formato";
@@ -43,7 +44,8 @@ function topicosDoDia(espacos: EspacoSemana[], tablets: TabletSemana[]): Topico[
     .sort((a, b) => a.aulas[0]! - b.aulas[0]! || a.nome.localeCompare(b.nome));
 }
 
-export function ReservasDaSemana({ data, onEscolherDia }: { data: string; onEscolherDia?: (iso: string) => void }) {
+/** reservas de segunda a sexta da semana da data (usado pelo card-indicador e pelo detalhe) */
+export function useSemanaReservas(data: string) {
   const segunda = useMemo(() => segundaDe(data), [data]);
   const { data: semana, isLoading, isError } = useQuery({
     queryKey: [...CHAVE_RESERVAS_SEMANA, segunda],
@@ -52,9 +54,14 @@ export function ReservasDaSemana({ data, onEscolherDia }: { data: string; onEsco
   const dias = useMemo(() => Array.from({ length: 5 }, (_, i) => somaDias(segunda, i)), [segunda]);
   const total = (semana?.espacos.length ?? 0) + (semana?.tablets.length ?? 0);
   const aguardando = (semana?.espacos.filter((e) => e.status === "pendente").length ?? 0) + (semana?.tablets.filter((t) => t.status === "pendente").length ?? 0);
+  return { semana, isLoading, isError, dias, total, aguardando };
+}
+
+export function ReservasDaSemana({ data, onEscolherDia, onFechar }: { data: string; onEscolherDia?: (iso: string) => void; onFechar?: () => void }) {
+  const { semana, isLoading, isError, dias, total, aguardando } = useSemanaReservas(data);
 
   return (
-    <Card className="border-card-border bg-card shadow-[0_8px_24px_hsl(174_29%_14%/_.04)]" data-testid="card-reservas-semana">
+    <Card id="reservas-semana-painel" className="scroll-mt-4 border-card-border bg-card shadow-[0_8px_24px_hsl(174_29%_14%/_.04)]" data-testid="card-reservas-semana">
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0 pb-3">
         <div>
           <CardTitle className="flex items-center gap-2 font-heading text-lg font-bold">
@@ -66,6 +73,7 @@ export function ReservasDaSemana({ data, onEscolherDia }: { data: string; onEsco
           <div className="flex items-center gap-1.5">
             <Badge variant="secondary">{total} {total === 1 ? "reserva" : "reservas"}</Badge>
             {aguardando > 0 && <Badge className="border border-[#ead58b] bg-[#fff7d7] text-[#796116] hover:bg-[#fff7d7]">{aguardando} aguardando</Badge>}
+            {onFechar && <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={onFechar} title="Fechar" aria-label="Fechar reservas da semana"><X className="h-4 w-4" /></Button>}
           </div>
         )}
       </CardHeader>

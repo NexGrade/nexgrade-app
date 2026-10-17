@@ -8,7 +8,7 @@ import { useEhGestorReservas } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-
 import { BotaoRelatorioReservas } from "@/components/relatorio-reservas"; // [RELATORIO-RESERVAS]
 import { MapaOcupacaoSalas } from "@/components/mapa-ocupacao-salas"; // [OCUPACAO-SALAS]
 import { NovaReservaDialog } from "@/components/nova-reserva-dialog"; // [RESERVA-GESTOR]
-import { ReservasDaSemana, CHAVE_RESERVAS_SEMANA } from "@/components/reservas-da-semana"; // [RESERVAS-DA-SEMANA]
+import { ReservasDaSemana, CHAVE_RESERVAS_SEMANA, useSemanaReservas } from "@/components/reservas-da-semana"; // [RESERVAS-DA-SEMANA]
 import { ehSalaTablets } from "@/lib/reservas-formato"; // [MAPA-TABLETS]
 import { BotaoConfigurarTablets } from "@/components/config-tablets"; // [RECURSOS-CONFIG]
 import {
@@ -126,21 +126,36 @@ function statusClass(status: string) {
       : "border-[#ead58b] bg-[#fff7d7] text-[#796116]";
 }
 
+// [CARDS-CLICAVEIS] (17/10/2026) cada indicador leva para a informacao dele (filtra a lista, abre o mapa ou a semana)
 function SummaryCard({
   label,
   value,
   detail,
   tone,
   icon: Icon,
+  onClick,
+  ativo = false,
+  dica,
 }: {
   label: string;
   value: string | number;
   detail: string;
   tone: string;
   icon: typeof CalendarDays;
+  onClick?: () => void;
+  ativo?: boolean;
+  dica?: string;
 }) {
   return (
-    <Card className="relative overflow-hidden border-card-border bg-card shadow-[0_8px_24px_hsl(174_29%_14%/_.04)]">
+    <Card
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-pressed={onClick ? ativo : undefined}
+      title={dica}
+      onClick={onClick}
+      onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } } : undefined}
+      className={`relative overflow-hidden border-card-border bg-card shadow-[0_8px_24px_hsl(174_29%_14%/_.04)] ${onClick ? "cursor-pointer transition hover:-translate-y-0.5 hover:shadow-[0_12px_28px_hsl(174_29%_14%/_.10)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" : ""} ${ativo ? "ring-2 ring-primary" : ""}`}
+    >
       <div className={`absolute inset-y-0 left-0 w-1 ${tone}`} />
       <CardContent className="flex items-start justify-between p-5 pl-6">
         <div>
@@ -316,6 +331,10 @@ export default function ReservasPage() {
     queryKey: ["ocupacao-recursos", selectedDate],
     queryFn: () => customFetch<{ recursos: Array<{ id: number; nome: string; total: number; ocupacao: Array<{ numeroAula: number; turno: string; reservadas: number }> }> }>(`/api/reservas/gestor/recursos/ocupacao?data=${selectedDate}`, { responseType: "json" }),
   });
+  // [CARDS-CLICAVEIS] filtro da agenda do dia (pelos cards) e detalhe da semana (card "Reservas da semana")
+  const [filtroStatus, setFiltroStatus] = useState<"confirmada" | "pendente" | null>(null);
+  const [mostrarSemana, setMostrarSemana] = useState(false);
+  const semanaInfo = useSemanaReservas(selectedDate);
   const createReserva = useCreateReserva();
   const updateReserva = useUpdateReserva();
   const deleteReserva = useDeleteReserva();
@@ -429,6 +448,25 @@ export default function ReservasPage() {
   const scheduleFor = (reserva: (typeof reservas)[number]) =>
     horarios.find((slot) => slot.professorId === reserva.professorId && slot.diaSemana === reserva.diaSemana && slot.numeroAula === reserva.numeroAula);
 
+  const reservasVisiveis = filtroStatus ? reservas.filter((r) => r.status === filtroStatus) : reservas;
+  const irPara = (id: string) => {
+    const el = document.getElementById(id);
+    if (!el) {
+      toast({ title: "Não há reservas neste dia para mostrar." });
+      return;
+    }
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const verAgenda = (filtro: "confirmada" | "pendente" | null) => {
+    setFiltroStatus(filtro);
+    requestAnimationFrame(() => irPara("agenda-do-dia"));
+  };
+  const alternarSemana = () => {
+    const abrir = !mostrarSemana;
+    setMostrarSemana(abrir);
+    if (abrir) requestAnimationFrame(() => document.getElementById("reservas-semana-painel")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
+
   return (
     <div className="animate-rise-in space-y-6 pb-10">
       <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
@@ -465,14 +503,24 @@ export default function ReservasPage() {
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard label="Reservas do dia" value={summary?.total ?? "—"} detail="solicitações registradas" tone="bg-primary" icon={CalendarDays} />
-        <SummaryCard label="Confirmadas" value={summary?.confirmadas ?? "—"} detail="espaços protegidos" tone="bg-[#5eaa83]" icon={ShieldCheck} />
-        <SummaryCard label="Pendentes" value={summary?.pendentes ?? "—"} detail="aguardando decisão" tone="bg-accent" icon={Clock3} />
-        <SummaryCard label="Salas ocupadas" value={summary?.salasOcupadas ?? "—"} detail="com pelo menos uma reserva" tone="bg-[#d07b54]" icon={DoorOpen} />
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <SummaryCard label="Reservas do dia" value={summary?.total ?? "—"} detail="solicitações registradas" tone="bg-primary" icon={CalendarDays} onClick={() => verAgenda(null)} dica="Ver a agenda do dia (todas)" />
+        <SummaryCard label="Confirmadas" value={summary?.confirmadas ?? "—"} detail="espaços protegidos" tone="bg-[#5eaa83]" icon={ShieldCheck} onClick={() => verAgenda("confirmada")} ativo={filtroStatus === "confirmada"} dica="Ver só as confirmadas do dia" />
+        <SummaryCard label="Pendentes" value={summary?.pendentes ?? "—"} detail="aguardando decisão" tone="bg-accent" icon={Clock3} onClick={() => verAgenda("pendente")} ativo={filtroStatus === "pendente"} dica="Ver só as pendentes do dia" />
+        <SummaryCard label="Salas ocupadas" value={summary?.salasOcupadas ?? "—"} detail="com pelo menos uma reserva" tone="bg-[#d07b54]" icon={DoorOpen} onClick={() => irPara("mapa-ocupacao")} dica="Ir para o mapa de ocupação" />
+        <SummaryCard
+          label="Reservas da semana"
+          value={semanaInfo.semana ? semanaInfo.total : "—"}
+          detail={`${semanaInfo.dias[0]!.slice(8, 10)}/${semanaInfo.dias[0]!.slice(5, 7)} a ${semanaInfo.dias[4]!.slice(8, 10)}/${semanaInfo.dias[4]!.slice(5, 7)}${semanaInfo.aguardando > 0 ? ` · ${semanaInfo.aguardando} aguardando` : ""}`}
+          tone="bg-[#7a6fc7]"
+          icon={CalendarDays}
+          onClick={alternarSemana}
+          ativo={mostrarSemana}
+          dica="Ver as reservas de segunda a sexta"
+        />
       </div>
 
-      <ReservasDaSemana data={selectedDate} onEscolherDia={setSelectedDate} />{/* [RESERVAS-DA-SEMANA] portal e app do gestor */}
+      {mostrarSemana && <ReservasDaSemana data={selectedDate} onEscolherDia={setSelectedDate} onFechar={() => setMostrarSemana(false)} />}{/* [RESERVAS-DA-SEMANA] portal e app do gestor */}
 
       {isError ? (
         <Card className="border-[#e7b9b0] bg-[#fff7f4]">
@@ -496,18 +544,28 @@ export default function ReservasPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          <MapaOcupacaoSalas salas={(salasQuery.data ?? []).filter((s) => !ehSalaTablets(s.nome) || reservas.some((r) => r.salaId === s.id && r.status !== "cancelada"))} tablets={tabletsQuery.data?.recursos[0] ?? null} reservas={reservas} maxAulaMinimo={(horariosQuery.data ?? []).reduce((m, h) => Math.max(m, h.numeroAula), 0)} />{/* [MAPA-AULAS-GRADE] */}{/* [OCUPACAO-SALAS] */}
-          <div className="flex items-center justify-between">
+          <div id="mapa-ocupacao" className="scroll-mt-4"><MapaOcupacaoSalas salas={(salasQuery.data ?? []).filter((s) => !ehSalaTablets(s.nome) || reservas.some((r) => r.salaId === s.id && r.status !== "cancelada"))} tablets={tabletsQuery.data?.recursos[0] ?? null} reservas={reservas} maxAulaMinimo={(horariosQuery.data ?? []).reduce((m, h) => Math.max(m, h.numeroAula), 0)} /></div>{/* [MAPA-AULAS-GRADE] */}{/* [OCUPACAO-SALAS] */}
+          <div id="agenda-do-dia" className="scroll-mt-4 flex items-center justify-between">
             <div>
               <h2 className="font-heading text-lg font-bold">Agenda do dia</h2>
-              <p className="text-xs text-muted-foreground">{reservas.length} registro{reservas.length === 1 ? "" : "s"} · ordenados por aula</p>
+              <p className="text-xs text-muted-foreground">{reservasVisiveis.length} registro{reservasVisiveis.length === 1 ? "" : "s"} · ordenados por aula</p>
+              {filtroStatus && (
+                <button type="button" onClick={() => setFiltroStatus(null)} className="mt-1 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold text-secondary-foreground hover:bg-secondary/80">
+                  Só {filtroStatus === "confirmada" ? "confirmadas" : "pendentes"} <X className="h-3 w-3" />
+                </button>
+              )}
             </div>
             <div className="hidden items-center gap-3 text-[11px] font-medium text-muted-foreground sm:flex">
               <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-[#5eaa83]" /> Confirmada</span>
               <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-accent" /> Pendente</span>
             </div>
           </div>
-          {reservas.slice().sort((a, b) => a.numeroAula - b.numeroAula).map((reserva) => {
+          {reservasVisiveis.length === 0 && (
+            <p className="rounded-xl border border-dashed border-border bg-card px-4 py-6 text-center text-sm text-muted-foreground">
+              Nenhuma reserva {filtroStatus === "confirmada" ? "confirmada" : "pendente"} neste dia.
+            </p>
+          )}
+          {reservasVisiveis.slice().sort((a, b) => a.numeroAula - b.numeroAula).map((reserva) => {
             const schedule = scheduleFor(reserva);
             const roomConflict = conflicts.has(`${reserva.salaId}-${reserva.numeroAula}`);
             return (
