@@ -1,7 +1,7 @@
 import { Router, type Request } from "express";
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq, gte, lte, ne } from "drizzle-orm";
 import { z } from "zod";
-import { comunicadosTable, db, professoresTable } from "@workspace/db";
+import { comunicadosTable, db, professoresTable, recursosTable, reservasRecursosTable, reservasTable, salasTable } from "@workspace/db";
 import { getEscolaId } from "../lib/escola-id";
 import { dadosAgenda } from "../lib/agenda-professor";
 import { ocupacaoDoDia, ocupacaoDoMes } from "../lib/ocupacao-reservas";
@@ -65,6 +65,60 @@ router.get("/recursos/ocupacao", async (req, res) => {
     return;
   }
   res.json(await ocupacaoRecursosDoDia(getEscolaId(req), data));
+});
+
+// [RESERVAS-DA-SEMANA] (17/10/2026) tudo o que esta reservado de segunda a sexta da semana da data
+// informada (espacos e tablets, pendentes e confirmadas), para o card do portal e do app do gestor.
+router.get("/semana", async (req, res) => {
+  const q = req.query.data;
+  if (typeof q !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(q)) {
+    res.status(400).json({ error: "Informe a data (AAAA-MM-DD)." });
+    return;
+  }
+  const base = new Date(`${q}T12:00:00Z`);
+  const dow = base.getUTCDay();
+  base.setUTCDate(base.getUTCDate() - (dow === 0 ? 6 : dow - 1));
+  const inicio = base.toISOString().slice(0, 10);
+  base.setUTCDate(base.getUTCDate() + 4);
+  const fim = base.toISOString().slice(0, 10);
+  const escolaId = getEscolaId(req);
+
+  const [espacos, tablets] = await Promise.all([
+    db
+      .select({
+        id: reservasTable.id,
+        data: reservasTable.data,
+        numeroAula: reservasTable.numeroAula,
+        turno: reservasTable.turno,
+        titulo: reservasTable.titulo,
+        status: reservasTable.status,
+        salaNome: salasTable.nome,
+        professorNome: professoresTable.nome,
+      })
+      .from(reservasTable)
+      .innerJoin(salasTable, eq(salasTable.id, reservasTable.salaId))
+      .innerJoin(professoresTable, eq(professoresTable.id, reservasTable.professorId))
+      .where(and(eq(reservasTable.escolaId, escolaId), gte(reservasTable.data, inicio), lte(reservasTable.data, fim), ne(reservasTable.status, "cancelada")))
+      .orderBy(asc(reservasTable.data), asc(reservasTable.numeroAula)),
+    db
+      .select({
+        id: reservasRecursosTable.id,
+        data: reservasRecursosTable.data,
+        numeroAula: reservasRecursosTable.numeroAula,
+        turno: reservasRecursosTable.turno,
+        titulo: reservasRecursosTable.titulo,
+        status: reservasRecursosTable.status,
+        quantidade: reservasRecursosTable.quantidade,
+        recursoNome: recursosTable.nome,
+        professorNome: professoresTable.nome,
+      })
+      .from(reservasRecursosTable)
+      .innerJoin(recursosTable, eq(recursosTable.id, reservasRecursosTable.recursoId))
+      .innerJoin(professoresTable, eq(professoresTable.id, reservasRecursosTable.professorId))
+      .where(and(eq(reservasRecursosTable.escolaId, escolaId), gte(reservasRecursosTable.data, inicio), lte(reservasRecursosTable.data, fim), ne(reservasRecursosTable.status, "cancelada")))
+      .orderBy(asc(reservasRecursosTable.data), asc(reservasRecursosTable.numeroAula)),
+  ]);
+  res.json({ inicio, fim, espacos, tablets });
 });
 
 async function avisarProfessor(escolaId: string, professorId: number, titulo: string, data: string, quantas: number) {

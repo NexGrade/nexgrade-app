@@ -8,6 +8,7 @@ import { useEhGestorReservas } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-
 import { BotaoRelatorioReservas } from "@/components/relatorio-reservas"; // [RELATORIO-RESERVAS]
 import { MapaOcupacaoSalas } from "@/components/mapa-ocupacao-salas"; // [OCUPACAO-SALAS]
 import { NovaReservaDialog } from "@/components/nova-reserva-dialog"; // [RESERVA-GESTOR]
+import { ReservasDaSemana, CHAVE_RESERVAS_SEMANA } from "@/components/reservas-da-semana"; // [RESERVAS-DA-SEMANA]
 import {
   AlertTriangle,
   ArrowRight,
@@ -346,6 +347,7 @@ export default function ReservasPage() {
     queryClient.invalidateQueries({ queryKey: getListReservasQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetReservasResumoQueryKey({ data: selectedDate }) });
     queryClient.invalidateQueries({ queryKey: getListRegrasReservaProfessoresQueryKey() });
+    queryClient.invalidateQueries({ queryKey: CHAVE_RESERVAS_SEMANA }); // [RESERVAS-DA-SEMANA]
   };
 
   const openEdit = (reserva: (typeof reservas)[number]) => {
@@ -459,6 +461,8 @@ export default function ReservasPage() {
         <SummaryCard label="Pendentes" value={summary?.pendentes ?? "—"} detail="aguardando decisão" tone="bg-accent" icon={Clock3} />
         <SummaryCard label="Salas ocupadas" value={summary?.salasOcupadas ?? "—"} detail="com pelo menos uma reserva" tone="bg-[#d07b54]" icon={DoorOpen} />
       </div>
+
+      <ReservasDaSemana data={selectedDate} onEscolherDia={setSelectedDate} />{/* [RESERVAS-DA-SEMANA] portal e app do gestor */}
 
       {isError ? (
         <Card className="border-[#e7b9b0] bg-[#fff7f4]">
