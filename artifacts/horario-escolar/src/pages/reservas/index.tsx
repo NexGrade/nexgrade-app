@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -461,6 +461,28 @@ export default function ReservasPage() {
     setFiltroStatus(filtro);
     requestAnimationFrame(() => irPara("agenda-do-dia"));
   };
+  // [PENDENTES-DA-SEMANA] o card Pendentes conta o dia escolhido; as aguardando de outros dias da semana
+  // aparecem no detalhe do card e o clique leva ao primeiro dia que tem pendente (nao passa despercebida)
+  const pendentesOutrosDias = (semanaInfo.semana?.espacos ?? [])
+    .filter((e) => e.status === "pendente" && String(e.data).slice(0, 10) !== selectedDate)
+    .map((e) => String(e.data).slice(0, 10))
+    .sort();
+  const [rolarParaAgenda, setRolarParaAgenda] = useState(false);
+  useEffect(() => {
+    if (rolarParaAgenda && !reservationsQuery.isFetching) {
+      setRolarParaAgenda(false);
+      document.getElementById("agenda-do-dia")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [rolarParaAgenda, reservationsQuery.isFetching, reservas.length]);
+  const verPendentes = () => {
+    if ((summary?.pendentes ?? 0) === 0 && pendentesOutrosDias.length > 0) {
+      setFiltroStatus("pendente");
+      setSelectedDate(pendentesOutrosDias[0]!); // carrega o dia e rola para a agenda quando chegar
+      setRolarParaAgenda(true);
+      return;
+    }
+    verAgenda("pendente");
+  };
   const alternarSemana = () => {
     const abrir = !mostrarSemana;
     setMostrarSemana(abrir);
@@ -506,7 +528,7 @@ export default function ReservasPage() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <SummaryCard label="Reservas do dia" value={summary?.total ?? "—"} detail="solicitações registradas" tone="bg-primary" icon={CalendarDays} onClick={() => verAgenda(null)} dica="Ver a agenda do dia (todas)" />
         <SummaryCard label="Confirmadas" value={summary?.confirmadas ?? "—"} detail="espaços protegidos" tone="bg-[#5eaa83]" icon={ShieldCheck} onClick={() => verAgenda("confirmada")} ativo={filtroStatus === "confirmada"} dica="Ver só as confirmadas do dia" />
-        <SummaryCard label="Pendentes" value={summary?.pendentes ?? "—"} detail="aguardando decisão" tone="bg-accent" icon={Clock3} onClick={() => verAgenda("pendente")} ativo={filtroStatus === "pendente"} dica="Ver só as pendentes do dia" />
+        <SummaryCard label="Pendentes" value={summary?.pendentes ?? "—"} detail={pendentesOutrosDias.length > 0 ? `aguardando decisão · +${pendentesOutrosDias.length} em outros dias da semana` : "aguardando decisão"} tone="bg-accent" icon={Clock3} onClick={verPendentes} ativo={filtroStatus === "pendente"} dica={pendentesOutrosDias.length > 0 && (summary?.pendentes ?? 0) === 0 ? "Ir para o primeiro dia da semana com reserva pendente" : "Ver só as pendentes do dia"} />
         <SummaryCard label="Salas ocupadas" value={summary?.salasOcupadas ?? "—"} detail="com pelo menos uma reserva" tone="bg-[#d07b54]" icon={DoorOpen} onClick={() => irPara("mapa-ocupacao")} dica="Ir para o mapa de ocupação" />
         <SummaryCard
           label="Reservas da semana"
