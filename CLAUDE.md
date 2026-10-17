@@ -21,7 +21,8 @@ Sistema SaaS de gestão de horários escolares (grade, professores, turmas, sala
 
 ## Verificar antes de commitar
 - `pnpm run typecheck:libs` (recompila as libs; sem isso o typecheck vê tipos antigos), depois o typecheck de `artifacts/api-server` e `artifacts/horario-escolar` (`pnpm run typecheck` na raiz faz tudo).
-- `pnpm --filter @workspace/api-server run test` (o CI também roda).
+- `pnpm --filter @workspace/api-server run test` (o CI também roda). Os testes de **integração** (`*.integration.test.ts`, reservas com banco real) só rodam com `TEST_DATABASE_URL` apontando para um Postgres **já migrado** (o CI sobe um e aplica as migrações); sem ela são pulados. Mudou regra de reserva, bloqueio, tablets ou permissão? **Acrescente o caso nesse arquivo** e rode contra um Postgres local antes do PR.
+- O CI falha se o esquema (`lib/db/src/schema`) mudou **sem a migração gerada** e se as migrações não aplicam num banco vazio.
 - Mexeu em permissão (`artifacts/api-server/src/lib/permissao.ts`)? Rode os testes e acrescente casos: o professor **não** pode ler nem gravar dados da equipe.
 
 ## Git
