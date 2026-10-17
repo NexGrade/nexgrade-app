@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { ehSalaTablets } from "@/lib/reservas-formato"; // tablets agora vao por quantidade (passo proprio)
 
 // [NOVA-RESERVA-COMPARTILHADA] (17/10/2026) A mesma "Nova reserva" serve ao professor (Minha Agenda,
 // passa pela aprovacao) e ao gestor de reservas (portal: escolhe o professor, ja nasce confirmada).
@@ -65,8 +66,6 @@ function Passo({ n, titulo: t, children }: { n: number; titulo: string; children
 
 type ProfessorOpcao = { id: number; nome: string; ativo?: boolean | null };
 
-// o espaco "Tablets" antigo (exclusivo por aula) sai da escolha: tablets agora vao por quantidade (passo proprio)
-const ehSalaTablets = (nome: string) => /^tablets?$/i.test(nome.trim());
 
 export function NovaReservaDialog({ modo = "professor", professores = [], aoCriar }: { modo?: "professor" | "gestor"; professores?: ProfessorOpcao[]; aoCriar?: () => void }) {
   const gestor = modo === "gestor";
