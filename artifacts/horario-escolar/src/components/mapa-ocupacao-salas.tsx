@@ -1,3 +1,5 @@
+import { abreviarSalaMapa } from "@/lib/reservas-formato"; // [MAPA-NOMES-CURTOS]
+
 // [OCUPACAO-SALAS] (2026-10-01) Mapa de ocupacao do dia: salas nas colunas, aulas
 // nas linhas. Verde = livre, azul = confirmada, ambar = pendente, vermelho = conflito.
 type SalaMapa = { id: number; nome: string; ativa?: boolean | null };
@@ -41,9 +43,9 @@ export function MapaOcupacaoSalas({ salas, reservas, maxAulaMinimo = 0, tablets 
             <tr>
               <th className="sticky left-0 z-10 bg-card px-3 py-2 text-left font-semibold text-muted-foreground">Aula</th>
               {ativas.map((s) => (
-                <th key={s.id} className="min-w-[140px] px-2 py-2 text-left font-semibold">{s.nome}</th>
+                <th key={s.id} title={s.nome} className="min-w-[104px] px-2 py-2 text-left font-semibold">{abreviarSalaMapa(s.nome)}</th>
               ))}
-              {tablets && <th className="min-w-[140px] px-2 py-2 text-left font-semibold">{tablets.nome}</th>}
+              {tablets && <th className="min-w-[104px] px-2 py-2 text-left font-semibold">{tablets.nome}</th>}
             </tr>
           </thead>
           <tbody>
