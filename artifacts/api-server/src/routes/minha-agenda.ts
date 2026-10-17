@@ -1,5 +1,4 @@
 import { ocupacaoDoDia, ocupacaoDoMes } from "../lib/ocupacao-reservas"; // [OCUPACAO-SALAS] [CALENDARIO-RESERVA]
-import { horarioSlotsTable } from "@workspace/db"; // [AGENDA-TURNOS]
 import { Router } from "express";
 import { getAuth } from "@clerk/express";
 import { emailVerificado } from "../lib/identidade"; // [ACESSOS-ESCOLA]
@@ -7,23 +6,20 @@ import { db } from "@workspace/db";
 import {
   professoresTable,
   comunicadosTable,
-  horariosTable,
-  disciplinasTable,
-  turmasTable,
   reservasTable,
   recursosTable, // [RECURSOS-TABLETS]
   reservasRecursosTable, // [RECURSOS-TABLETS]
   salasTable,
-  disponibilidadeTable,
   escolasTable, // [PDF-AGENDA]
   calendarioEscolarTable, // [PDF-AGENDA]
 } from "@workspace/db";
 import { and, eq, gte, lte, ne, or, isNull, sql } from "drizzle-orm";
 import { gerarPdfAgendaProfessor } from "../lib/pdf-agenda-professor"; // [PDF-AGENDA]
 import { getEscolaId } from "../lib/escola-id";
-import { ehHAOutroTurno } from "../lib/ha-contraturno"; // [HA-OUTRO-TURNO]
-import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
-import { carregarAssSoTurma } from "../lib/assincrona-so-turma"; // [ASS-SO-TURMA]
+import { dadosAgenda } from "../lib/agenda-professor"; // [PDF-AGENDA]
+import { criarLoteReservas, LoteReservaBody } from "../lib/reservas-lote"; // [RESERVA-LOTE]
+import { criarReservasRecursos, ocupacaoRecursosDoDia, ReservaRecursoBody } from "../lib/reservas-recursos"; // [RECURSOS-TABLETS]
+import { hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
 import { z } from "zod";
 import { validateReserva, publicReserva } from "./reservas";
 import { regrasReservaProfessorTable } from "@workspace/db";
@@ -66,78 +62,6 @@ router.get("/professor", async (req, res) => {
   res.json(professor);
 });
 
-// [PDF-AGENDA] dados da agenda (aulas oficiais, HA e horarios) usados pela tela e pelo PDF
-async function dadosAgenda(professor: { id: number }, escolaId: string) {
-  const linhasTodas = await db
-    .select({
-      diaSemana: horariosTable.diaSemana,
-      numeroAula: horariosTable.numeroAula,
-      sala: horariosTable.sala,
-      disciplinaNome: disciplinasTable.nome,
-      disciplinaSigla: disciplinasTable.sigla,
-      assincrona: horariosTable.assincrona, // [ASSINCRONA-EXIBICAO]
-      turmaId: horariosTable.turmaId, // [REVEZAMENTO-TRIO]
-      disciplinaId: horariosTable.disciplinaId,
-      disciplinaCor: disciplinasTable.cor,
-      turmaNome: turmasTable.nome,
-      turno: turmasTable.turno, // [AGENDA-TURNOS]
-      nivelEnsino: turmasTable.nivelEnsino, // [ASS-SO-TURMA]
-    })
-    .from(horariosTable)
-    .innerJoin(disciplinasTable, eq(disciplinasTable.id, horariosTable.disciplinaId))
-    .innerJoin(turmasTable, eq(turmasTable.id, horariosTable.turmaId))
-    .where(
-      and(
-        eq(horariosTable.professorId, professor.id),
-        eq(horariosTable.escolaId, escolaId),
-        or(eq(horariosTable.versaoGrade, "oficial"), isNull(horariosTable.versaoGrade)),
-      ),
-    )
-    .orderBy(horariosTable.diaSemana, horariosTable.numeroAula);
-  // [ASS-SO-TURMA] a assincrona da 7a aula (nao letiva) e so da turma: fora da agenda do professor
-  const ehAssSoTurma = await carregarAssSoTurma(escolaId);
-  const linhas = linhasTodas.filter((l) => !ehAssSoTurma(l, { turno: l.turno, nivelEnsino: l.nivelEnsino }));
-
-  // [HA] Hora-Atividade obrigatoria do professor -- slots vazios na
-  // grade (sem aula de nenhuma turma) que ainda assim sao
-  // "ocupados" por HA, pra distinguir de horario realmente livre.
-  const horasAtividadeBrutas = await db
-    .select({
-      diaSemana: disponibilidadeTable.diaSemana,
-      numeroAula: disponibilidadeTable.horarioSlot,
-      turno: disponibilidadeTable.turno, // [AGENDA-TURNOS]
-      motivo: disponibilidadeTable.motivo, // [HA-OUTRO-TURNO]
-    })
-    .from(disponibilidadeTable)
-    .where(
-      and(
-        eq(disponibilidadeTable.professorId, professor.id),
-        eq(disponibilidadeTable.horaAtividadeObrigatoria, true),
-      ),
-    );
-
-  // [HA-OUTRO-TURNO] devolve so a marca (HA de aulas de outro turno = HA*), nunca o motivo
-  const horasAtividade = horasAtividadeBrutas.map(({ motivo, ...h }) => ({ ...h, outroTurno: ehHAOutroTurno(motivo) }));
-
-  // [AGENDA-TURNOS] horario de inicio de cada aula, por turno (esquema de aulas da escola)
-  const slots = await db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId));
-  const horarios: Array<{ turno: string; numeroAula: number; horaInicio: string }> = [];
-  for (const s of slots) {
-    if (s.letivo === false) continue;
-    const turnoS = String(s.turno ?? "");
-    if (!horarios.some((h) => h.turno === turnoS && h.numeroAula === s.numeroAula)) {
-      horarios.push({ turno: turnoS, numeroAula: s.numeroAula, horaInicio: String(s.horaInicio ?? "") });
-    }
-  }
-
-  // [REVEZAMENTO-TRIO] aula de trio: presencial ou suporte nesta semana
-  const revez = await mapaRevezamento([...new Set(linhas.map((l) => l.turmaId))], hojeBrasil());
-  const aulas = linhas.map(({ turmaId, disciplinaId, ...l }) => ({
-    ...l,
-    trio: l.assincrona ? null : revez.get(`${turmaId}|${disciplinaId}|${professor.id}`) ?? null,
-  }));
-  return { aulas, horasAtividade, horarios, slots };
-}
 
 router.get("/horario", async (req, res) => {
   const professor = await resolverProfessorLogado(req);
@@ -361,119 +285,25 @@ router.post("/reservas", async (req, res) => {
   res.status(201).json(result);
 });
 
-// [RESERVA-LOTE] (17/10/2026) varias aulas e varios espacos de uma vez, no mesmo dia e turno.
-// Cada item e um espaco com as aulas dele. Confere tudo antes: se alguma aula nao puder,
-// nada e gravado e a resposta diz qual (espaco + aula) e por que. [RESERVA-VARIOS-ESPACOS]
-// a mesma aula pode ir para mais de um espaco (turma dividida); o mesmo espaco na mesma aula, nao.
-const LoteMinhaReservaBody = z.object({
-  data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  turno: z.string().min(1),
-  itens: z.array(z.object({ salaId: z.number().int(), numerosAula: z.array(z.number().int().min(1)).min(1) })).min(1).max(10),
-  titulo: z.string().min(1),
-  observacoes: z.string().optional(),
-});
+// [RESERVA-LOTE] varias aulas e varios espacos de uma vez (logica em lib/reservas-lote.ts,
+// a mesma que o gestor de reservas usa no portal). Aqui o professor logado sempre passa pela aprovacao.
 router.post("/reservas/lote", async (req, res) => {
   const professor = await resolverProfessorLogado(req);
   if (!professor) {
     res.status(404).json({ error: "Nenhum professor vinculado a esta conta." });
     return;
   }
-  const parsed = LoteMinhaReservaBody.safeParse(req.body);
+  const parsed = LoteReservaBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Pedido de reserva incompleto." });
     return;
   }
-  const escolaId = getEscolaId(req);
-  const { data: dataISO, turno, itens, titulo, observacoes } = parsed.data;
-  const d = new Date(`${dataISO}T12:00:00Z`).getUTCDay();
-  const diaSemana = d === 0 ? 6 : d - 1;
-  const pares = itens.flatMap((i) => i.numerosAula.map((n) => `${i.salaId}|${n}`));
-  if (new Set(pares).size !== pares.length || new Set(itens.map((i) => i.salaId)).size !== itens.length) {
-    res.status(400).json({ error: "O mesmo espaço aparece duas vezes na mesma aula. Confira a lista." });
-    return;
-  }
-  const salas = await db.select({ id: salasTable.id, nome: salasTable.nome }).from(salasTable).where(eq(salasTable.escolaId, escolaId));
-  const nomeSala = (id: number) => salas.find((s) => s.id === id)?.nome ?? "Espaço";
-
-  const validacoes: Array<{ salaId: number; numeroAula: number; v: Extract<Awaited<ReturnType<typeof validateReserva>>, { horario: unknown }> }> = [];
-  const problemas: Array<{ salaId: number; numeroAula: number; erro: string }> = [];
-  for (const item of itens) {
-    for (const numeroAula of item.numerosAula) {
-      const v = await validateReserva(escolaId, { salaId: item.salaId, professorId: professor.id, data: dataISO, diaSemana, numeroAula, turno });
-      if ("error" in v) problemas.push({ salaId: item.salaId, numeroAula, erro: v.error });
-      else validacoes.push({ salaId: item.salaId, numeroAula, v });
-    }
-  }
-  if (problemas.length) {
-    res.status(409).json({
-      error: problemas.map((p) => `${nomeSala(p.salaId)}, ${p.numeroAula}ª aula: ${p.erro}`).join(" "),
-      problemas,
-    });
-    return;
-  }
-
-  const rule = await db
-    .select()
-    .from(regrasReservaProfessorTable)
-    .where(and(eq(regrasReservaProfessorTable.professorId, professor.id), eq(regrasReservaProfessorTable.escolaId, escolaId)))
-    .then((r) => r[0] ?? null);
-  const prioridadeProfessor = rule?.prioridade ?? 3;
-  let criadas: Array<typeof reservasTable.$inferSelect> = [];
-  try {
-    criadas = await db.transaction(async (tx) => {
-      const linhas: Array<typeof reservasTable.$inferSelect> = [];
-      for (const [i, { salaId, numeroAula, v }] of validacoes.entries()) {
-        if (v.reservaParaDeslocar) {
-          await tx.update(reservasTable).set({ status: "pendente" }).where(eq(reservasTable.id, v.reservaParaDeslocar.id));
-        }
-        // limite semanal conta tambem as aulas deste mesmo pedido
-        const passouLimite = v.reservasNaSemana + i >= v.limiteSemanal;
-        const status = prioridadeProfessor >= 4 && !passouLimite ? "confirmada" : "pendente";
-        const [row] = await tx
-          .insert(reservasTable)
-          .values({ escolaId, salaId, professorId: professor.id, data: dataISO, diaSemana, numeroAula, turno: v.turno ?? turno, horarioId: v.horario.id, titulo, observacoes, prioridadeAplicada: v.prioridade, status })
-          .returning();
-        linhas.push(row!);
-      }
-      return linhas;
-    });
-  } catch {
-    res.status(409).json({ error: "Alguma dessas aulas acabou de ser reservada por outra pessoa. Atualize e tente de novo." });
-    return;
-  }
-  const pendentes = criadas.filter((r) => r.status === "pendente");
-  if (pendentes.length) {
-    const resumo = [...new Set(pendentes.map((r) => r.salaId))].map((s) => `${nomeSala(s)} (${pendentes.filter((r) => r.salaId === s).map((r) => `${r.numeroAula}ª`).join(", ")} aula)`).join("; ");
-    await db.insert(comunicadosTable).values({
-      escolaId,
-      titulo: "Nova reserva pendente",
-      mensagem: `${professor.nome} solicitou "${titulo}" para ${dataISO}: ${resumo} -- aguardando confirmacao.`,
-      tipo: "reserva",
-      autorNome: professor.nome,
-    });
-  }
-  res.status(201).json({ criadas: criadas.length, confirmadas: criadas.length - pendentes.length, pendentes: pendentes.length });
+  const r = await criarLoteReservas({ escolaId: getEscolaId(req), professor, corpo: parsed.data, aprovarDireto: false });
+  res.status(r.status).json(r.body);
 });
 
 // [RECURSOS-TABLETS] (17/10/2026) Equipamento contado por unidade (carrinho de tablets).
-// Confirma na hora, sem escolher espaco; varios professores na mesma aula ate o total do recurso.
-const RECURSO_PADRAO = { nome: "Tablets", quantidadeTotal: 30 };
-
-class ErroRecurso extends Error {
-  constructor(public status: number, message: string) {
-    super(message);
-  }
-}
-
-// cria o recurso padrao da escola na primeira consulta (sem depender de seed no banco)
-async function garantirRecursos(escolaId: string) {
-  await db
-    .insert(recursosTable)
-    .values({ escolaId, ...RECURSO_PADRAO })
-    .onConflictDoNothing();
-  return db.select().from(recursosTable).where(and(eq(recursosTable.escolaId, escolaId), eq(recursosTable.ativo, true))).orderBy(recursosTable.nome);
-}
-
+// A logica de capacidade esta em lib/reservas-recursos.ts (a mesma que o gestor usa no portal).
 router.get("/recursos/ocupacao", async (req, res) => {
   const professor = await resolverProfessorLogado(req);
   if (!professor) {
@@ -486,27 +316,7 @@ router.get("/recursos/ocupacao", async (req, res) => {
     res.status(400).json({ error: "Informe a data (AAAA-MM-DD)." });
     return;
   }
-  const escolaId = getEscolaId(req);
-  const recursos = await garantirRecursos(escolaId);
-  const linhas = await db
-    .select({
-      recursoId: reservasRecursosTable.recursoId,
-      numeroAula: reservasRecursosTable.numeroAula,
-      turno: reservasRecursosTable.turno,
-      reservadas: sql<number>`coalesce(sum(${reservasRecursosTable.quantidade}), 0)::int`,
-    })
-    .from(reservasRecursosTable)
-    .where(and(eq(reservasRecursosTable.escolaId, escolaId), eq(reservasRecursosTable.data, data), ne(reservasRecursosTable.status, "cancelada")))
-    .groupBy(reservasRecursosTable.recursoId, reservasRecursosTable.numeroAula, reservasRecursosTable.turno);
-  res.json({
-    data,
-    recursos: recursos.map((r) => ({
-      id: r.id,
-      nome: r.nome,
-      total: r.quantidadeTotal,
-      ocupacao: linhas.filter((l) => l.recursoId === r.id).map((l) => ({ numeroAula: l.numeroAula, turno: l.turno, reservadas: l.reservadas })),
-    })),
-  });
+  res.json(await ocupacaoRecursosDoDia(getEscolaId(req), data));
 });
 
 router.get("/recursos/reservas", async (req, res) => {
@@ -543,16 +353,6 @@ router.get("/recursos/reservas", async (req, res) => {
   res.json(linhas);
 });
 
-const ReservaRecursoBody = z.object({
-  recursoId: z.number().int(),
-  data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  turno: z.string().min(1),
-  // quantidade por aula, tudo gravado numa transacao so
-  itens: z.array(z.object({ numeroAula: z.number().int().min(1), quantidade: z.number().int().min(1) })).min(1).max(10),
-  titulo: z.string().min(1),
-  observacoes: z.string().optional(),
-});
-
 router.post("/recursos/reservas", async (req, res) => {
   const professor = await resolverProfessorLogado(req);
   if (!professor) {
@@ -564,104 +364,8 @@ router.post("/recursos/reservas", async (req, res) => {
     res.status(400).json({ error: "Pedido de reserva incompleto." });
     return;
   }
-  const escolaId = getEscolaId(req);
-  const { recursoId, data, turno, itens, titulo, observacoes } = parsed.data;
-  const numerosAula = itens.map((i) => i.numeroAula);
-  if (new Set(numerosAula).size !== numerosAula.length) {
-    res.status(400).json({ error: "A mesma aula aparece duas vezes. Confira a lista." });
-    return;
-  }
-  const d = new Date(`${data}T12:00:00Z`).getUTCDay();
-  const diaSemana = d === 0 ? 6 : d - 1;
-  if (diaSemana > 4) {
-    res.status(400).json({ error: "O dia precisa estar entre segunda e sexta-feira." });
-    return;
-  }
-  if (data < new Date().toISOString().slice(0, 10)) {
-    res.status(400).json({ error: "Não é possível reservar em uma data que já passou." });
-    return;
-  }
-
-  try {
-    // a reserva e para a aula do proprio professor (mesma regra dos espacos)
-    const minhasAulas = await db
-      .select({ numeroAula: horariosTable.numeroAula })
-      .from(horariosTable)
-      .innerJoin(turmasTable, eq(turmasTable.id, horariosTable.turmaId))
-      .where(
-        and(
-          eq(horariosTable.escolaId, escolaId),
-          eq(horariosTable.professorId, professor.id),
-          eq(horariosTable.diaSemana, diaSemana),
-          eq(turmasTable.turno, turno),
-          or(eq(horariosTable.versaoGrade, "oficial"), isNull(horariosTable.versaoGrade)),
-        ),
-      );
-    const semAula = numerosAula.filter((n) => !minhasAulas.some((a) => a.numeroAula === n));
-    if (semAula.length) {
-      throw new ErroRecurso(409, `Você não tem aula na ${semAula.map((n) => `${n}ª`).join(", ")} aula desse dia e período.`);
-    }
-
-    const criadas = await db.transaction(async (tx) => {
-      // trava a linha do recurso: dois pedidos ao mesmo tempo esperam um pelo outro, e a soma nunca passa do total
-      const [recurso] = await tx
-        .select()
-        .from(recursosTable)
-        .where(and(eq(recursosTable.id, recursoId), eq(recursosTable.escolaId, escolaId), eq(recursosTable.ativo, true)))
-        .for("update");
-      if (!recurso) throw new ErroRecurso(404, "Equipamento não encontrado.");
-      const problemas: string[] = [];
-      for (const { numeroAula, quantidade } of itens) {
-        const [linha] = await tx
-          .select({ reservadas: sql<number>`coalesce(sum(${reservasRecursosTable.quantidade}), 0)::int` })
-          .from(reservasRecursosTable)
-          .where(
-            and(
-              eq(reservasRecursosTable.escolaId, escolaId),
-              eq(reservasRecursosTable.recursoId, recursoId),
-              eq(reservasRecursosTable.data, data),
-              eq(reservasRecursosTable.numeroAula, numeroAula),
-              eq(reservasRecursosTable.turno, turno),
-              ne(reservasRecursosTable.status, "cancelada"),
-            ),
-          );
-        const [minha] = await tx
-          .select({ id: reservasRecursosTable.id })
-          .from(reservasRecursosTable)
-          .where(
-            and(
-              eq(reservasRecursosTable.escolaId, escolaId),
-              eq(reservasRecursosTable.recursoId, recursoId),
-              eq(reservasRecursosTable.professorId, professor.id),
-              eq(reservasRecursosTable.data, data),
-              eq(reservasRecursosTable.numeroAula, numeroAula),
-              eq(reservasRecursosTable.turno, turno),
-              ne(reservasRecursosTable.status, "cancelada"),
-            ),
-          );
-        if (minha) {
-          problemas.push(`${numeroAula}ª aula: você já reservou ${recurso.nome.toLowerCase()} nessa aula (cancele a reserva para refazer).`);
-          continue;
-        }
-        const restam = recurso.quantidadeTotal - (linha?.reservadas ?? 0);
-        if (quantidade > restam) {
-          problemas.push(`${numeroAula}ª aula: restam ${restam} de ${recurso.quantidadeTotal}.`);
-        }
-      }
-      if (problemas.length) throw new ErroRecurso(409, `Não há ${recurso.nome.toLowerCase()} suficientes. ${problemas.join(" ")}`);
-      return tx
-        .insert(reservasRecursosTable)
-        .values(itens.map(({ numeroAula, quantidade }) => ({ escolaId, recursoId, professorId: professor.id, data, diaSemana, numeroAula, turno, quantidade, titulo, observacoes, status: "confirmada" })))
-        .returning();
-    });
-    res.status(201).json({ criadas: criadas.length, confirmadas: criadas.length, pendentes: 0 });
-  } catch (err) {
-    if (err instanceof ErroRecurso) {
-      res.status(err.status).json({ error: err.message });
-      return;
-    }
-    throw err;
-  }
+  const r = await criarReservasRecursos({ escolaId: getEscolaId(req), professor, corpo: parsed.data });
+  res.status(r.status).json(r.body);
 });
 
 // o professor cancela a PROPRIA reserva de equipamento; as unidades voltam na hora
