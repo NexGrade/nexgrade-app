@@ -4,7 +4,10 @@
 // local reescrevia o pnpm-lock.yaml (removia o artifacts/mockup-sandbox) e
 // arriscava o build do Render. Chaves que o Clerk nao reconhecer sao ignoradas
 // (o texto fica no padrao em ingles), entao isto e seguro de ajustar aos poucos.
-export const clerkPtBR = {
+import { clerkPtBRBase } from "./clerk-ptbr-base";
+
+// Textos proprios do NexGrade (escola em vez de organizacao etc.). Tem prioridade sobre a base oficial.
+const textosNexGrade = {
   locale: "pt-BR",
   userButton: {
     action__manageAccount: "Gerenciar conta",
@@ -172,6 +175,11 @@ export const clerkPtBR = {
       actionText: "Não tem nenhum destes?",
       blockButton__emailCode: "Enviar código por e-mail",
       blockButton__password: "Entrar com senha",
+      getHelp: {
+        title: "Precisa de ajuda?",
+        content: "Se não conseguir entrar na sua conta, mande um e-mail para o suporte do NexGrade. Vamos ajudar a recuperar o acesso o quanto antes.",
+        blockButton__emailSupport: "Enviar e-mail ao suporte",
+      },
     },
   },
   signUp: {
@@ -215,3 +223,16 @@ export const clerkPtBR = {
   badge__unverified: "Não verificado",
   badge__you: "Você",
 };
+// [CLERK-PTBR-BASE] (17/10/2026) tudo o que nao esta acima vem da traducao oficial (ex.: "Ajuda" no login)
+function mesclar(base: Record<string, unknown>, proprio: Record<string, unknown>): Record<string, unknown> {
+  const r: Record<string, unknown> = { ...base };
+  for (const [k, v] of Object.entries(proprio)) {
+    const b = r[k];
+    r[k] = v && typeof v === "object" && !Array.isArray(v) && b && typeof b === "object"
+      ? mesclar(b as Record<string, unknown>, v as Record<string, unknown>)
+      : v;
+  }
+  return r;
+}
+
+export const clerkPtBR = mesclar(clerkPtBRBase, textosNexGrade as Record<string, unknown>);
