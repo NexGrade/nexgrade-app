@@ -547,8 +547,8 @@ const ReservaRecursoBody = z.object({
   recursoId: z.number().int(),
   data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   turno: z.string().min(1),
-  numerosAula: z.array(z.number().int().min(1)).min(1).max(10),
-  quantidade: z.number().int().min(1),
+  // quantidade por aula, tudo gravado numa transacao so
+  itens: z.array(z.object({ numeroAula: z.number().int().min(1), quantidade: z.number().int().min(1) })).min(1).max(10),
   titulo: z.string().min(1),
   observacoes: z.string().optional(),
 });
@@ -565,8 +565,12 @@ router.post("/recursos/reservas", async (req, res) => {
     return;
   }
   const escolaId = getEscolaId(req);
-  const { recursoId, data, turno, quantidade, titulo, observacoes } = parsed.data;
-  const numerosAula = [...new Set(parsed.data.numerosAula)];
+  const { recursoId, data, turno, itens, titulo, observacoes } = parsed.data;
+  const numerosAula = itens.map((i) => i.numeroAula);
+  if (new Set(numerosAula).size !== numerosAula.length) {
+    res.status(400).json({ error: "A mesma aula aparece duas vezes. Confira a lista." });
+    return;
+  }
   const d = new Date(`${data}T12:00:00Z`).getUTCDay();
   const diaSemana = d === 0 ? 6 : d - 1;
   if (diaSemana > 4) {
@@ -606,11 +610,8 @@ router.post("/recursos/reservas", async (req, res) => {
         .where(and(eq(recursosTable.id, recursoId), eq(recursosTable.escolaId, escolaId), eq(recursosTable.ativo, true)))
         .for("update");
       if (!recurso) throw new ErroRecurso(404, "Equipamento não encontrado.");
-      if (quantidade > recurso.quantidadeTotal) {
-        throw new ErroRecurso(409, `A escola tem ${recurso.quantidadeTotal} ${recurso.nome.toLowerCase()} no total.`);
-      }
       const problemas: string[] = [];
-      for (const numeroAula of numerosAula) {
+      for (const { numeroAula, quantidade } of itens) {
         const [linha] = await tx
           .select({ reservadas: sql<number>`coalesce(sum(${reservasRecursosTable.quantidade}), 0)::int` })
           .from(reservasRecursosTable)
@@ -650,7 +651,7 @@ router.post("/recursos/reservas", async (req, res) => {
       if (problemas.length) throw new ErroRecurso(409, `Não há ${recurso.nome.toLowerCase()} suficientes. ${problemas.join(" ")}`);
       return tx
         .insert(reservasRecursosTable)
-        .values(numerosAula.map((numeroAula) => ({ escolaId, recursoId, professorId: professor.id, data, diaSemana, numeroAula, turno, quantidade, titulo, observacoes, status: "confirmada" })))
+        .values(itens.map(({ numeroAula, quantidade }) => ({ escolaId, recursoId, professorId: professor.id, data, diaSemana, numeroAula, turno, quantidade, titulo, observacoes, status: "confirmada" })))
         .returning();
     });
     res.status(201).json({ criadas: criadas.length, confirmadas: criadas.length, pendentes: 0 });
