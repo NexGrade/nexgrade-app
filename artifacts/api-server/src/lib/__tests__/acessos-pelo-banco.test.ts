@@ -74,3 +74,39 @@ describe("com a chave desligada (como antes)", () => {
     expect(getEscolaId(r)).toBe("org_X");
   });
 });
+
+// [LEITURA-EQUIPE] portal do gestor: leitura so para a equipe (nao para o professor), nos dois modos de acesso
+describe("leitura do portal do gestor de reservas", () => {
+  describe("com ACESSOS_PELO_BANCO=1", () => {
+    beforeEach(() => { process.env.ACESSOS_PELO_BANCO = "1"; });
+    afterEach(() => { delete process.env.ACESSOS_PELO_BANCO; });
+    it("equipe consulta (direcao, coordenacao, secretaria e gestor de reservas)", () => {
+      for (const cargo of ["direcao", "coordenacao", "secretaria", "reservas"]) {
+        expect(rodar(req({ path: "/reservas/gestor/semana", cargo })).passou, cargo).toBe(true);
+        expect(rodar(req({ path: "/reservas/gestor/horario", cargo })).passou, cargo).toBe(true);
+      }
+    });
+    it("professor nao consulta, em qualquer caixa", () => {
+      for (const path of ["/reservas/gestor/semana", "/Reservas/Gestor/Horario", "/reservas/gestor/recursos/ocupacao"]) {
+        expect(rodar(req({ path, cargo: "professor" })), path).toMatchObject({ passou: false, status: 403 });
+      }
+    });
+    it("professor segue com o que ja tinha", () => {
+      expect(rodar(req({ path: "/minha-agenda/ocupacao", cargo: "professor" })).passou).toBe(true);
+      expect(rodar(req({ path: "/horarios", cargo: "professor" })).passou).toBe(true);
+    });
+  });
+
+  describe("pelo Clerk (sem a chave do banco)", () => {
+    function reqClerk(path: string, orgRole?: string) {
+      return { method: "GET", path, auth: { userId: "user_1", orgId: "org_A", orgRole } } as any;
+    }
+    it("admin e papel de reservas consultam", () => {
+      expect(rodar(reqClerk("/reservas/gestor/semana", "org:admin")).passou).toBe(true);
+      expect(rodar(reqClerk("/reservas/gestor/semana", "org:reservas")).passou).toBe(true);
+    });
+    it("papel sem acesso ao portal nao consulta", () => {
+      expect(rodar(reqClerk("/reservas/gestor/semana", "org:viewer"))).toMatchObject({ passou: false, status: 403 });
+    });
+  });
+});

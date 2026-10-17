@@ -16,7 +16,7 @@
  */
 import type { Request, Response, NextFunction } from "express";
 import { getAuth, clerkClient } from "@clerk/express";
-import { acessosPeloBanco, acessoDe, CARGOS_TOTAIS } from "./acesso"; // [ACESSOS-ESCOLA]
+import { acessosPeloBanco, acessoDe, CARGOS_TOTAIS, CARGOS_EQUIPE } from "./acesso"; // [ACESSOS-ESCOLA]
 
 const METODOS_LEITURA = new Set(["GET", "HEAD", "OPTIONS"]);
 
@@ -78,6 +78,16 @@ export function ehLeituraSomenteAdmin(caminhoBruto: string): boolean {
   return LEITURAS_SOMENTE_ADMIN.some((p) => caminho === p || caminho.startsWith(p + "/"));
 }
 
+// [LEITURA-EQUIPE] (17/10/2026) consultas do portal do gestor de reservas (agenda da semana com o nome de
+// quem reservou, grade de qualquer professor): so a equipe da escola (coordenacao, direcao, secretaria e
+// gestor de reservas). O professor usa so a Minha Agenda, que de proposito nao mostra quem reservou.
+const LEITURAS_DA_EQUIPE = ["/reservas/gestor"];
+export function ehLeituraDaEquipe(caminhoBruto: string): boolean {
+  const caminho = normalizarCaminho(caminhoBruto);
+  return LEITURAS_DA_EQUIPE.some((p) => caminho === p || caminho.startsWith(p + "/"));
+}
+const MSG_LEITURA_EQUIPE = "Apenas a equipe da escola (coordenação ou gestor de reservas) pode consultar estes dados.";
+
 // [ACESSOS-ESCOLA] Com ACESSOS_PELO_BANCO=1 a regra e a mesma, mas pelo CARGO do nosso
 // banco (lib/acesso.ts): direcao/coordenacao/secretaria = acesso total; reservas = so
 // reservas; professor = consultas e a propria agenda. Sem escola liberada, so /eu e /master.
@@ -93,6 +103,10 @@ function exigirPorCargo(req: Request, res: Response, next: NextFunction) {
   }
   const total = CARGOS_TOTAIS.has(a.cargo);
   if (METODOS_LEITURA.has(req.method)) {
+    if (ehLeituraDaEquipe(req.path) && !(CARGOS_EQUIPE as readonly string[]).includes(a.cargo)) { // [LEITURA-EQUIPE]
+      res.status(403).json({ error: MSG_LEITURA_EQUIPE });
+      return;
+    }
     if (!ehLeituraSomenteAdmin(req.path) || total) return next();
     res.status(403).json({ error: "Apenas a direção, a coordenação ou a secretaria podem consultar estes dados." });
     return;
@@ -110,6 +124,21 @@ function exigirPorCargo(req: Request, res: Response, next: NextFunction) {
 export function exigirAdminParaAlterar(req: Request, res: Response, next: NextFunction) {
   if (acessosPeloBanco()) return exigirPorCargo(req, res, next); // [ACESSOS-ESCOLA]
   if (METODOS_LEITURA.has(req.method)) {
+    if (ehLeituraDaEquipe(req.path)) { // [LEITURA-EQUIPE]
+      const { userId, orgId, orgRole } = getAuth(req);
+      if (!userId || !orgId || orgRole === PAPEL_ADMIN || orgRole === PAPEL_RESERVAS) return next();
+      if (orgRole === "org:member") {
+        ehGestorReservasPorMetadata(orgId, userId)
+          .then((ok) => {
+            if (ok) return next();
+            res.status(403).json({ error: MSG_LEITURA_EQUIPE });
+          })
+          .catch(() => res.status(403).json({ error: "Não foi possível conferir o seu acesso. Tente novamente." }));
+        return;
+      }
+      res.status(403).json({ error: MSG_LEITURA_EQUIPE });
+      return;
+    }
     if (!ehLeituraSomenteAdmin(req.path)) return next();
     const { userId, orgId, orgRole } = getAuth(req);
     if (!userId || !orgId || orgRole === PAPEL_ADMIN) return next();
