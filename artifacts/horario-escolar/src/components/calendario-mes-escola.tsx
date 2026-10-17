@@ -14,6 +14,27 @@ import { COR_TRIMESTRE, DIAS_SEMANA, FUNDO_DIA, MESES, TIPO_LABELS, tipoDoEvento
 export type ReservaNoCalendario = { data: string; numeroAula: number; status: string; salaNome: string; turno?: string | null };
 const NOME_TURNO: Record<string, string> = { matutino: "manhã", vespertino: "tarde", noturno: "noite" };
 
+// [RESERVAS-TOPICOS] lista "Minhas reservas" em topicos (PC e celular): um dia por linha, um topico por espaco
+const DIA_CURTO = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
+const abreviarSala = (nome: string) =>
+  nome
+    .replace(/^Laborat[óo]rio\s+(de\s+|da\s+|do\s+)?/i, "Lab. ")
+    .replace(/\s+-\s+/g, " · ")
+    .replace(/\s*\((\d+)\)$/, " · $1 un.")
+    .replace(/\s{2,}/g, " ");
+function topicosDoDia(rs: ReservaNoCalendario[]) {
+  const mapa = new Map<string, { sala: string; status: string; turno: string | null; aulas: number[] }>();
+  for (const r of rs) {
+    const k = `${r.salaNome}|${r.status}|${r.turno ?? ""}`;
+    const t = mapa.get(k) ?? { sala: r.salaNome, status: r.status, turno: r.turno ?? null, aulas: [] };
+    t.aulas.push(r.numeroAula);
+    mapa.set(k, t);
+  }
+  return [...mapa.values()]
+    .map((t) => ({ ...t, aulas: [...new Set(t.aulas)].sort((a, b) => a - b) }))
+    .sort((a, b) => a.aulas[0]! - b.aulas[0]!);
+}
+
 type Evento = { id: number; data: string; tipo: string; descricao: string; diaLetivo?: boolean };
 const isoLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const ddmm = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
@@ -207,8 +228,24 @@ export function CalendarioMesEscola({ reservas = [] }: { reservas?: ReservaNoCal
                 <p className="text-sm font-semibold">Minhas reservas em {MESES[mes]}</p>
                 {reservasDoMes.map(([d, rs]) => (
                   <div key={d} className="flex items-start gap-3 text-sm">
-                    <span className="w-[4.5rem] shrink-0 pt-0.5 text-xs font-semibold tabular-nums text-[#1565C0]">{ddmm(d)}</span>
-                    <span className="min-w-0 flex-1 leading-snug">{descreverReservas(rs).join(" · ")}</span>
+                    <span className="w-14 shrink-0 pt-0.5 text-xs font-semibold tabular-nums text-[#1565C0]">
+                      {ddmm(d)}
+                      <span className="block font-normal text-muted-foreground">{DIA_CURTO[new Date(`${d}T12:00:00`).getDay()]}</span>
+                    </span>
+                    <ul className="min-w-0 flex-1 space-y-1">
+                      {topicosDoDia(rs).map((t) => (
+                        <li key={`${t.sala}|${t.status}|${t.turno}`} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 leading-snug before:mr-0.5 before:content-['•'] before:text-[#1565C0]">
+                          <span className="min-w-0 break-words font-medium">{abreviarSala(t.sala)}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {t.aulas.map((n) => `${n}ª`).join(", ")} aula{t.aulas.length > 1 ? "s" : ""}
+                            {t.turno ? ` · ${NOME_TURNO[t.turno] ?? t.turno}` : ""}
+                          </span>
+                          <span className={`rounded px-1.5 py-px text-[10px] font-semibold ${t.status === "pendente" ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>
+                            {t.status === "pendente" ? "Aguardando" : "Confirmada"}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 ))}
               </div>
