@@ -13,7 +13,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Layout } from "@/components/layout";
-import { Sparkles, Clock, Lock, CalendarDays, Library, DoorOpen, Download, FileUp, History, ShieldCheck, LogOut, Mail, UserPlus, Building2 } from "lucide-react"; // [LOGIN] [BOTAO-SAIR]
+import { Sparkles, Clock, Lock, CalendarDays, Library, DoorOpen, Download, FileUp, History, ShieldCheck, LogOut, Mail, UserPlus, Building2, ArrowLeft } from "lucide-react"; // [LOGIN] [BOTAO-SAIR] [MASTER-VOLTAR]
 
 // [FIX] Divisão do pacote JS (code-splitting) -- antes, todas as ~24
 // telas eram importadas de forma estática aqui no topo, o que fazia o
@@ -696,10 +696,10 @@ function GlobalTopBar() {
             type="button"
             onClick={() => navegar("/")}
             title="Voltar ao sistema da escola"
-            aria-label="Plataforma NexGrade: voltar ao sistema da escola"
+            aria-label="Voltar ao sistema da escola"
             className="inline-flex h-9 items-center gap-1.5 rounded-md bg-[#0D47A1] px-3 text-sm font-medium text-white hover:bg-[#08306b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0D47A1] focus-visible:ring-offset-2"
           >
-            <ShieldCheck className="h-4 w-4" /><span className="hidden sm:inline">Plataforma NexGrade</span>
+            <ArrowLeft className="h-4 w-4" /><span className="hidden sm:inline">Voltar ao sistema</span>
           </button>
         ) : (
           <button
