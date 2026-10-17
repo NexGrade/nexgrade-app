@@ -15,34 +15,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarDays, GraduationCap, ChevronLeft, ChevronRight } from "lucide-react";
+import { COR_TRIMESTRE, DIAS_SEMANA, FUNDO_DIA, MESES, TIPO_LABELS } from "@/lib/calendario-cores";
 
-const TIPO_LABELS: Record<string, { label: string; color: string; dot: string }> = {
-  feriado: { label: "Feriado", color: "bg-red-100 text-red-700", dot: "bg-red-500" },
-  recesso: { label: "Recesso", color: "bg-amber-100 text-amber-700", dot: "bg-amber-500" },
-  ponto_facultativo: { label: "Ponto Facultativo", color: "bg-orange-100 text-orange-700", dot: "bg-orange-500" },
-  estudo_planejamento: { label: "Estudo e Planejamento", color: "bg-purple-100 text-purple-700", dot: "bg-purple-500" },
-  inicio_ano_letivo: { label: "Início do Ano Letivo", color: "bg-green-100 text-green-700", dot: "bg-green-500" },
-  fim_ano_letivo: { label: "Fim do Ano Letivo", color: "bg-green-100 text-green-700", dot: "bg-green-500" },
-  inicio_trimestre: { label: "Início de Trimestre", color: "bg-[#1565C0]/10 text-[#1565C0]", dot: "bg-[#1565C0]" },
-  fim_trimestre: { label: "Fim de Trimestre", color: "bg-[#1565C0]/10 text-[#1565C0]", dot: "bg-[#1565C0]" },
-  reposicao: { label: "Reposição (dia letivo)", color: "bg-teal-100 text-teal-700", dot: "bg-teal-500" },
-};
-
-// [CALENDARIO-CORES] (15/10/2026) cores suaves: cada trimestre com um tom, dias de feriado e
-// recesso pintados de leve, fim de semana em cinza claro. [CALENDARIO-ZEBRA] semanas
-// intercaladas: uma semana no tom claro, a seguinte um pouco mais forte.
-const COR_TRIMESTRE = [
-  { card: "bg-gradient-to-br from-sky-50 to-white border-sky-200", icone: "text-sky-600", numero: "text-sky-700", dia: "bg-sky-50/70", dia2: "bg-sky-100/70", borda: "border-sky-200" },
-  { card: "bg-gradient-to-br from-emerald-50 to-white border-emerald-200", icone: "text-emerald-600", numero: "text-emerald-700", dia: "bg-emerald-50/70", dia2: "bg-emerald-100/70", borda: "border-emerald-200" },
-  { card: "bg-gradient-to-br from-violet-50 to-white border-violet-200", icone: "text-violet-600", numero: "text-violet-700", dia: "bg-violet-50/70", dia2: "bg-violet-100/70", borda: "border-violet-200" },
-  { card: "bg-gradient-to-br from-amber-50 to-white border-amber-200", icone: "text-amber-600", numero: "text-amber-700", dia: "bg-amber-50/70", dia2: "bg-amber-100/70", borda: "border-amber-200" },
-];
-const FUNDO_DIA: Record<string, string> = {
-  feriado: "bg-rose-50",
-  recesso: "bg-amber-50",
-  ponto_facultativo: "bg-orange-50",
-  estudo_planejamento: "bg-purple-50",
-};
+// [CALENDARIO-CORES] cores e nomes em @/lib/calendario-cores (os mesmos do app do professor)
 
 type CalendarioOficialResumo = { ano: number; fonte: string; diasLetivos: number; eventos: number };
 type TrimestreForm = { trimestre: number; dataInicio: string; dataFim: string; diasLetivos: number };
@@ -70,8 +45,6 @@ function diasUteis(inicio: string, fim: string): number {
   return n;
 }
 
-const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-const DIAS_SEMANA = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
 
 function formatarData(data: string) {
   const [ano, mes, dia] = data.split("-");

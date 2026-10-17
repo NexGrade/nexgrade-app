@@ -16,6 +16,7 @@ import {
   getGetMinhaAgendaNotificacoesQueryKey,
 } from "@workspace/api-client-react";
 import { NotificationBell } from "@/components/notification-bell";
+import { CalendarioMesEscola } from "@/components/calendario-mes-escola"; // [CALENDARIO-PROFESSOR]
 import { CalendarDays, Download, Loader2, Plus, MonitorSmartphone } from "lucide-react";
 import {
   useGetMeuProfessor,
@@ -395,12 +396,6 @@ export default function MinhaAgendaPage() {
     { ano: new Date().getFullYear() },
     { query: { queryKey: ["calendario-escolar", new Date().getFullYear()], enabled: !!professor } },
   );
-  // [AGENDA-CALENDARIO] proximas datas agrupadas (o grupo em andamento continua aparecendo)
-  const proximosEventos = useMemo(() => {
-    if (!eventosCalendario) return [];
-    const hoje = isoLocal(new Date());
-    return agruparDatas(eventosCalendario as EventoCal[]).filter((g) => g.fim >= hoje).slice(0, 6);
-  }, [eventosCalendario]);
   const semana = useMemo(() => datasDaSemana(), []);
   /** evento sem aula num dia da semana mostrada (indice 0 = segunda) */
   const semAulaNoDia = useMemo(() => {
@@ -495,41 +490,7 @@ export default function MinhaAgendaPage() {
           <NovaReservaDialog professorId={professor.id} />
         </div>
 
-        {mostrarCalendario && (
-          <Card className="print:hidden">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarDays className="h-5 w-5" />
-                Próximas datas do calendário da escola
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {proximosEventos.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum evento próximo cadastrado.</p>
-              ) : (
-                proximosEventos.map((g) => {
-                  const hoje = isoLocal(new Date());
-                  const emAndamento = g.inicio <= hoje && g.fim >= hoje;
-                  const cor = COR_TIPO[g.tipo] ?? "#1565C0";
-                  const periodo = g.inicio === g.fim
-                    ? new Date(`${g.inicio}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit" })
-                    : `de ${ddmm(g.inicio)} a ${ddmm(g.fim)}`;
-                  return (
-                    <div key={g.inicio + g.tipo + g.descricao} className="flex items-center justify-between gap-3 rounded-md border-l-4 bg-muted/30 px-3 py-2" style={{ borderLeftColor: cor }}>
-                      <div className="min-w-0">
-                        <div className="font-medium truncate">{g.descricao}</div>
-                        <div className="text-xs text-muted-foreground">{periodo}{emAndamento && <span className="ml-1 font-semibold text-foreground">· agora</span>}</div>
-                      </div>
-                      <Badge variant="secondary" className="shrink-0" style={{ color: cor }}>
-                        {ROTULO_TIPO[g.tipo] ?? g.tipo}
-                      </Badge>
-                    </div>
-                  );
-                })
-              )}
-            </CardContent>
-          </Card>
-        )}
+        {mostrarCalendario && <CalendarioMesEscola />}{/* [CALENDARIO-PROFESSOR] mesmo visual do Calendario Escolar */}
 
         <Card>
           <CardHeader>
