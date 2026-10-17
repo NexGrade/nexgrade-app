@@ -13,10 +13,12 @@ type ReservaMapa = {
 };
 
 // [MAPA-TABLETS] (17/10/2026) tablets contados por unidade: reservadas por aula (e periodo) do total do carrinho
-export type TabletsMapa = { nome: string; total: number; ocupacao: ReadonlyArray<{ numeroAula: number; turno: string; reservadas: number }> };
+export type TabletsMapa = { nome: string; total: number; ocupacao: ReadonlyArray<{ numeroAula: number; turno: string; reservadas: number; bloqueadas?: number }> };
+// [BLOQUEIOS] bloqueios ativos do dia (sala ou equipamento em manutencao, limpeza...)
+export type BloqueioMapa = { alvoTipo: string; alvoId: number | null; motivoRotulo: string; numerosAula: ReadonlyArray<number> };
 const NOME_PERIODO_CURTO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
 
-export function MapaOcupacaoSalas({ salas, reservas, maxAulaMinimo = 0, tablets = null }: { salas: ReadonlyArray<SalaMapa>; reservas: ReadonlyArray<ReservaMapa>; maxAulaMinimo?: number; tablets?: TabletsMapa | null }) { // [MAPA-AULAS-GRADE]
+export function MapaOcupacaoSalas({ salas, reservas, maxAulaMinimo = 0, tablets = null, bloqueios = [] }: { salas: ReadonlyArray<SalaMapa>; reservas: ReadonlyArray<ReservaMapa>; maxAulaMinimo?: number; tablets?: TabletsMapa | null; bloqueios?: ReadonlyArray<BloqueioMapa> }) { // [MAPA-AULAS-GRADE]
   const ativas = salas.filter((s) => s.ativa !== false);
   const validas = reservas.filter((r) => r.status !== "cancelada");
   const maxAula = Math.max(5, maxAulaMinimo, ...validas.map((r) => r.numeroAula), ...(tablets?.ocupacao.map((o) => o.numeroAula) ?? [])); // [MAPA-AULAS-GRADE]
@@ -35,6 +37,7 @@ export function MapaOcupacaoSalas({ salas, reservas, maxAulaMinimo = 0, tablets 
           <span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-blue-100 ring-1 ring-blue-300" /> Confirmada</span>
           <span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-amber-100 ring-1 ring-amber-300" /> Pendente</span>
           <span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-red-100 ring-1 ring-red-300" /> Conflito</span>
+          <span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-slate-200 ring-1 ring-slate-400" /> Bloqueado</span>
         </div>
       </div>
       <div className="overflow-x-auto">
@@ -54,6 +57,17 @@ export function MapaOcupacaoSalas({ salas, reservas, maxAulaMinimo = 0, tablets 
                 <td className="sticky left-0 z-10 bg-card px-3 py-2 font-mono font-bold text-primary">{n}ª</td>
                 {ativas.map((s) => {
                   const aqui = validas.filter((r) => r.salaId === s.id && r.numeroAula === n);
+                  const bloqueio = bloqueios.find((b) => b.alvoTipo === "sala" && b.alvoId === s.id && (b.numerosAula.length === 0 || b.numerosAula.includes(n)));
+                  if (bloqueio) {
+                    return (
+                      <td key={s.id} className="px-1.5 py-1.5">
+                        <div className="rounded-md bg-slate-100 px-2 py-1.5 text-slate-700 ring-1 ring-slate-300" title={`Bloqueado: ${bloqueio.motivoRotulo}${aqui.length ? ` · ${aqui.length} reserva(s) a revisar` : ""}`}>
+                          <div className="truncate font-semibold">Bloqueado</div>
+                          <div className="truncate opacity-80">{aqui.length ? `${aqui.length} reserva(s) a revisar` : bloqueio.motivoRotulo}</div>
+                        </div>
+                      </td>
+                    );
+                  }
                   if (aqui.length === 0) {
                     return (
                       <td key={s.id} className="px-1.5 py-1.5">
@@ -79,7 +93,8 @@ export function MapaOcupacaoSalas({ salas, reservas, maxAulaMinimo = 0, tablets 
                   );
                 })}
                 {tablets && (() => {
-                  const usos = tablets.ocupacao.filter((o) => o.numeroAula === n && o.reservadas > 0);
+                  const bloqTablets = bloqueios.filter((b) => b.alvoTipo === "recurso" && (b.numerosAula.length === 0 || b.numerosAula.includes(n)));
+                  const usos = tablets.ocupacao.filter((o) => o.numeroAula === n && (o.reservadas > 0 || (o.bloqueadas ?? 0) > 0));
                   if (usos.length === 0) {
                     return (
                       <td key="tablets" className="px-1.5 py-1.5">
@@ -87,16 +102,21 @@ export function MapaOcupacaoSalas({ salas, reservas, maxAulaMinimo = 0, tablets 
                       </td>
                     );
                   }
-                  const lotado = usos.some((o) => o.reservadas >= tablets.total);
+                  const ocupadas = (o: (typeof usos)[number]) => o.reservadas + (o.bloqueadas ?? 0);
+                  const lotado = usos.some((o) => ocupadas(o) >= tablets.total);
+                  const soBloqueio = usos.every((o) => o.reservadas === 0);
                   return (
                     <td key="tablets" className="px-1.5 py-1.5">
-                      <div className={"rounded-md px-2 py-1.5 ring-1 " + (lotado ? "bg-blue-100 text-blue-900 ring-blue-400" : "bg-blue-50 text-blue-800 ring-blue-300")}>
+                      <div
+                        className={"rounded-md px-2 py-1.5 ring-1 " + (soBloqueio ? "bg-slate-100 text-slate-700 ring-slate-300" : lotado ? "bg-blue-100 text-blue-900 ring-blue-400" : "bg-blue-50 text-blue-800 ring-blue-300")}
+                        title={bloqTablets.length ? `Bloqueado: ${bloqTablets.map((b) => b.motivoRotulo).join(", ")}` : undefined}
+                      >
                         {usos.map((o) => (
                           <div key={o.turno} className="truncate font-semibold">
-                            {usos.length > 1 ? `${NOME_PERIODO_CURTO[o.turno] ?? o.turno}: ` : ""}{o.reservadas} de {tablets.total}
+                            {usos.length > 1 ? `${NOME_PERIODO_CURTO[o.turno] ?? o.turno}: ` : ""}{o.reservadas} de {tablets.total}{(o.bloqueadas ?? 0) > 0 ? ` · ${o.bloqueadas} bloq.` : ""}
                           </div>
                         ))}
-                        {usos.length === 1 && <div className="truncate opacity-80">{lotado ? "Todos reservados" : `${tablets.total - usos[0]!.reservadas} livres`}</div>}
+                        {usos.length === 1 && <div className="truncate opacity-80">{lotado ? "Todos ocupados" : `${tablets.total - ocupadas(usos[0]!)} livres`}</div>}
                       </div>
                     </td>
                   );

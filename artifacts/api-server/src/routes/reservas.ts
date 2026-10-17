@@ -38,6 +38,7 @@ import {
   turmasTable, // [RESERVA-TURNO]
 } from "@workspace/db";
 import { getEscolaId } from "../lib/escola-id";
+import { bloqueioDaSala, rotuloMotivo } from "../lib/bloqueios"; // [BLOQUEIOS]
 
 const router = Router();
 const diasSemana = [0, 1, 2, 3, 4] as const;
@@ -242,6 +243,12 @@ export async function validateReserva(
     };
   }
   const turnoAula = horario.turno ?? null; // [RESERVA-TURNO]
+
+  // [BLOQUEIOS] sala em manutencao, limpeza ou outro motivo nao aceita reserva nesse dia e aula
+  const bloqueio = await bloqueioDaSala(escolaId, input.salaId, input.data, turnoAula, input.numeroAula);
+  if (bloqueio) {
+    return { status: 409, error: `Espaço bloqueado neste dia e aula (${rotuloMotivo(bloqueio)}).`, conflito: { tipo: "bloqueio" } };
+  }
 
   const reservationConditions: SQL[] = [
     eq(reservasTable.escolaId, escolaId),

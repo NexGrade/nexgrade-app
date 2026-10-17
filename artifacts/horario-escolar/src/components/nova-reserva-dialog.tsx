@@ -32,7 +32,7 @@ function diaSemanaDaData(dataISO: string): number {
 // [RECURSOS-TABLETS] (17/10/2026) Reserva de tablets: secao propria, por QUANTIDADE (carrinho com
 // total fixo), sem escolher espaco. Confirma na hora; varios professores na mesma aula ate o total.
 export type ReservaTablet = { id: number; data: string; diaSemana: number; numeroAula: number; turno: string; quantidade: number; titulo: string; observacoes: string | null; status: string; recursoNome: string };
-type OcupacaoRecursosResp = { data: string; recursos: Array<{ id: number; nome: string; total: number; ocupacao: Array<{ numeroAula: number; turno: string; reservadas: number }> }> };
+type OcupacaoRecursosResp = { data: string; recursos: Array<{ id: number; nome: string; total: number; ocupacao: Array<{ numeroAula: number; turno: string; reservadas: number; bloqueadas?: number }> }> };
 export const CHAVE_TABLETS = ["reservas-tablets"] as const;
 
 export function useReservasTablets(enabled: boolean) {
@@ -49,7 +49,7 @@ export function useReservasTablets(enabled: boolean) {
 const NOME_PERIODO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
 const ORDEM_PERIODO = ["matutino", "vespertino", "noturno"];
 type ItemReserva = { salaId: number; numerosAula: number[] };
-type OcupacaoDiaResp = { data: string; maxAula: number; ocupacao: Array<{ salaId: number; numeroAula: number; status: string; turno: string | null }> };
+type OcupacaoDiaResp = { data: string; maxAula: number; ocupacao: Array<{ salaId: number; numeroAula: number; status: string; turno: string | null; motivo?: string }> };
 
 // fora do componente: definido dentro dele, o campo de texto perdia o foco a cada letra
 function Passo({ n, titulo: t, children }: { n: number; titulo: string; children: React.ReactNode }) {
@@ -133,8 +133,14 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
     queryFn: () => customFetchOcupacao<OcupacaoDiaResp>(`${BASE}/ocupacao?data=` + encodeURIComponent(data), { responseType: "json" }),
     enabled: diaSemana >= 0 && diaSemana <= 4,
   });
-  const statusSala = (salaId: number, numeroAula: number) =>
-    ocupacao?.ocupacao.find((o) => o.salaId === salaId && o.numeroAula === numeroAula && (!o.turno || o.turno === turno))?.status ?? null;
+  // [BLOQUEIOS] "bloqueada" (manutencao, limpeza...) tem prioridade sobre reserva na mesma aula
+  const linhasSala = (salaId: number, numeroAula: number) =>
+    ocupacao?.ocupacao.filter((o) => o.salaId === salaId && o.numeroAula === numeroAula && (!o.turno || o.turno === turno)) ?? [];
+  const statusSala = (salaId: number, numeroAula: number) => {
+    const l = linhasSala(salaId, numeroAula);
+    return l.find((o) => o.status === "bloqueada")?.status ?? l[0]?.status ?? null;
+  };
+  const motivoBloqueio = (salaId: number, numeroAula: number) => linhasSala(salaId, numeroAula).find((o) => o.status === "bloqueada")?.motivo ?? "";
 
   const { data: ocupacaoRecursos } = useQueryOcupacao({
     queryKey: ["ocupacao-recursos", data],
@@ -143,7 +149,7 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
   });
   const recurso = ocupacaoRecursos?.recursos[0] ?? null;
   const restamTablets = (numeroAula: number) =>
-    recurso ? recurso.total - recurso.ocupacao.filter((o) => o.numeroAula === numeroAula && o.turno === turno).reduce((n, o) => n + o.reservadas, 0) : 0;
+    recurso ? Math.max(0, recurso.total - recurso.ocupacao.filter((o) => o.numeroAula === numeroAula && o.turno === turno).reduce((n, o) => n + o.reservadas + (o.bloqueadas ?? 0), 0)) : 0; // [BLOQUEIOS] bloqueadas saem do saldo
   const menorSaldo = aulasSel.length ? Math.min(...aulasSel.map(restamTablets)) : (recurso?.total ?? 0);
   const qtd = Number(quantidade);
   const qtdValida = Number.isInteger(qtd) && qtd >= 1 && qtd <= menorSaldo;
@@ -153,7 +159,8 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
   // [RESERVA-VARIOS-ESPACOS] a mesma aula pode ir para outro espaco (turma dividida);
   // so fica travada a aula que ja esta na lista PARA O ESPACO escolhido agora
   const espacosDaAula = (n: number) => itens.filter((i) => i.numerosAula.includes(n)).map((i) => i.salaId);
-  const ocupadasNaSala = salaAtual ? aulasSel.filter((n) => statusSala(salaAtual, n) === "confirmada") : [];
+  const ocupadasNaSala = salaAtual ? aulasSel.filter((n) => statusSala(salaAtual, n) === "confirmada" || statusSala(salaAtual, n) === "bloqueada") : [];
+  const bloqueadasNaSala = salaAtual ? ocupadasNaSala.filter((n) => statusSala(salaAtual, n) === "bloqueada") : []; // [BLOQUEIOS]
   const podeAddSala = salaAtual > 0 && aulasSel.length > 0 && ocupadasNaSala.length === 0;
   // o botao serve para espaco, tablets ou os dois juntos (as mesmas aulas marcadas)
   const podeAdicionar = (podeAddSala || (salaAtual === 0 && podeAddTablets)) && (quantidade === "" || qtdValida);
@@ -355,6 +362,7 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
                         </span>
                       )}
                       {sel && st === "confirmada" && <span className="block font-medium text-destructive">Espaço ocupado</span>}
+                      {sel && st === "bloqueada" && <span className="block font-medium text-destructive">Espaço bloqueado{motivoBloqueio(salaAtual, numeroAula) ? ` (${motivoBloqueio(salaAtual, numeroAula)})` : ""}</span>}
                       {sel && st === "pendente" && <span className="block font-medium text-amber-700">Espaço em análise</span>}
                     </button>
                   );
@@ -379,7 +387,9 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
               {salaAtual > 0 && aulasSel.length > 0 && (
                 <p className={`text-xs ${ocupadasNaSala.length ? "text-destructive" : "text-muted-foreground"}`}>
                   {ocupadasNaSala.length
-                    ? `${nomeSala(salaAtual)} já está reservado na ${ocupadasNaSala.map(rotuloAula).join(", ")} aula. Desmarque essa aula ou escolha outro espaço.`
+                    ? bloqueadasNaSala.length
+                      ? `${nomeSala(salaAtual)} está bloqueado na ${bloqueadasNaSala.map(rotuloAula).join(", ")} aula${motivoBloqueio(salaAtual, bloqueadasNaSala[0]!) ? ` (${motivoBloqueio(salaAtual, bloqueadasNaSala[0]!)})` : ""}. Desmarque essa aula ou escolha outro espaço.`
+                      : `${nomeSala(salaAtual)} já está reservado na ${ocupadasNaSala.map(rotuloAula).join(", ")} aula. Desmarque essa aula ou escolha outro espaço.`
                     : `${nomeSala(salaAtual)}: ${aulasSel.sort((x, y) => x - y).map((n) => `${rotuloAula(n)} ${statusSala(salaAtual, n) === "pendente" ? "em análise" : "livre"}`).join(" · ")}`}
                 </p>
               )}

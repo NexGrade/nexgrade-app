@@ -27,6 +27,7 @@ import limitesDiariosProfessorRouter from "./limites-diarios-professor";
 import matrizesOficiaisRouter from "./matrizes-oficiais";
 import reservasRouter from "./reservas";
 import reservasGestorRouter from "./reservas-gestor"; // [RESERVA-GESTOR]
+import bloqueiosRouter from "./bloqueios"; // [BLOQUEIOS]
 import recursosRouter from "./recursos"; // [RECURSOS-CONFIG]
 import minhaAgendaRouter from "./minha-agenda";
 import codigosRcoRouter from "./codigos-rco"; // [CODIGOS-RCO-TELA]
@@ -72,6 +73,7 @@ router.use("/aulas-fixas", aulasFixasRouter);
 router.use("/limites-diarios-professor", limitesDiariosProfessorRouter);
 router.use("/matrizes-oficiais", matrizesOficiaisRouter);
 router.use("/reservas/gestor", reservasGestorRouter); // [RESERVA-GESTOR] antes de /reservas
+router.use("/reservas/bloqueios", bloqueiosRouter); // [BLOQUEIOS] antes de /reservas
 router.use("/reservas", reservasRouter);
 router.use("/recursos", recursosRouter); // [RECURSOS-CONFIG] total dos equipamentos (so coordenacao altera)
 router.use("/minha-agenda", minhaAgendaRouter);
