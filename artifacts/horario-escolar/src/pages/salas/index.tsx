@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2, Building2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -22,6 +22,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useListaFiltrada } from "@/hooks/use-lista-filtrada";
 import { CampoBusca } from "@/components/campo-busca";
+import { CardsEquipamentos } from "@/components/cards-equipamentos"; // [RECURSOS-CONFIG]
+import { ehSalaTablets } from "@/lib/reservas-formato"; // [RECURSOS-CONFIG]
 
 // [TIPO-LIVRE] opcoes prontas; qualquer outro tipo pode ser digitado no formulario
 const TIPOS_SALA = [
@@ -43,7 +45,9 @@ const salaSchema = z.object({
 type SalaFormValues = z.infer<typeof salaSchema>;
 
 export default function SalasList() {
-  const { data: salas, isLoading } = useListSalas();
+  const { data: salasCadastradas, isLoading } = useListSalas();
+  // o espaco antigo "Tablets" (exclusivo por aula) e substituido pelo card de equipamento por quantidade
+  const salas = useMemo(() => salasCadastradas?.filter((s) => !ehSalaTablets(s.nome)), [salasCadastradas]);
   const { busca, setBusca, itensFiltrados: salasFiltradas } = useListaFiltrada(salas, (s) => s.nome);
   const createSala = useCreateSala();
   const updateSala = useUpdateSala();
@@ -178,6 +182,8 @@ export default function SalasList() {
         placeholder="Buscar sala por nome..."
         className="max-w-sm"
       />
+
+      <CardsEquipamentos busca={busca} />{/* [RECURSOS-CONFIG] tablets por quantidade, dentro de Salas */}
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
