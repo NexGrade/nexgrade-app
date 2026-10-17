@@ -131,3 +131,34 @@ describe("leitura do portal do gestor de reservas", () => {
     });
   });
 });
+
+// [BLOQUEIOS] bloquear sala/equipamento: gestor de reservas, coordenacao, direcao e secretaria criam e liberam;
+// professor nao. (A rota fica em /reservas/bloqueios, coberta pela regra de reservas.)
+describe("bloqueios de salas e equipamentos", () => {
+  describe("com ACESSOS_PELO_BANCO=1", () => {
+    beforeEach(() => { process.env.ACESSOS_PELO_BANCO = "1"; });
+    afterEach(() => { delete process.env.ACESSOS_PELO_BANCO; });
+    it("equipe cria, lista e libera bloqueios", () => {
+      for (const cargo of ["direcao", "coordenacao", "secretaria", "reservas"]) {
+        expect(rodar(req({ method: "POST", path: "/reservas/bloqueios", cargo })).passou, `${cargo} POST`).toBe(true);
+        expect(rodar(req({ method: "DELETE", path: "/reservas/bloqueios/7", cargo })).passou, `${cargo} DELETE`).toBe(true);
+        expect(rodar(req({ method: "GET", path: "/reservas/bloqueios", cargo })).passou, `${cargo} GET`).toBe(true);
+      }
+    });
+    it("professor nao cria, nao libera e nao lista", () => {
+      expect(rodar(req({ method: "POST", path: "/reservas/bloqueios", cargo: "professor" }))).toMatchObject({ passou: false, status: 403 });
+      expect(rodar(req({ method: "DELETE", path: "/Reservas/Bloqueios/7", cargo: "professor" }))).toMatchObject({ passou: false, status: 403 });
+      expect(rodar(req({ method: "GET", path: "/reservas/bloqueios", cargo: "professor" }))).toMatchObject({ passou: false, status: 403 });
+    });
+  });
+  describe("pelo Clerk", () => {
+    function reqClerk(method: string, path: string, orgRole?: string) {
+      return { method, path, auth: { userId: "user_1", orgId: "org_A", orgRole } } as any;
+    }
+    it("admin e papel de reservas criam; outro papel nao", () => {
+      expect(rodar(reqClerk("POST", "/reservas/bloqueios", "org:admin")).passou).toBe(true);
+      expect(rodar(reqClerk("POST", "/reservas/bloqueios", "org:reservas")).passou).toBe(true);
+      expect(rodar(reqClerk("POST", "/reservas/bloqueios", "org:viewer"))).toMatchObject({ passou: false, status: 403 });
+    });
+  });
+});

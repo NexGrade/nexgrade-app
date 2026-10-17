@@ -8,6 +8,13 @@
       "when": 1792264908974,
       "tag": "0000_absent_human_torch",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792265281186,
+      "tag": "0001_fuzzy_brother_voodoo",
+      "breakpoints": true
     }
   ]
 }

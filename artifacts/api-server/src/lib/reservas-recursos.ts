@@ -1,6 +1,7 @@
 import { and, asc, eq, gte, isNull, ne, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, horariosTable, recursosTable, reservasRecursosTable, turmasTable } from "@workspace/db";
+import { bloqueiosAtivos, maxAulaDaEscola, slotsDoBloqueio, unidadesBloqueadas } from "./bloqueios"; // [BLOQUEIOS]
 
 // [RECURSOS-TABLETS] (17/10/2026) Equipamento contado por unidade (carrinho de tablets).
 // Confirma na hora, sem escolher espaco; varios professores na mesma aula ate o total do recurso.
@@ -34,14 +35,26 @@ export async function ocupacaoRecursosDoDia(escolaId: string, data: string) {
     .from(reservasRecursosTable)
     .where(and(eq(reservasRecursosTable.escolaId, escolaId), eq(reservasRecursosTable.data, data), ne(reservasRecursosTable.status, "cancelada")))
     .groupBy(reservasRecursosTable.recursoId, reservasRecursosTable.numeroAula, reservasRecursosTable.turno);
+  // [BLOQUEIOS] unidades bloqueadas (manutencao, limpeza...) por periodo e aula; saem do saldo como as reservas
+  const bloqueios = (await bloqueiosAtivos(escolaId, data, data)).filter((b) => b.alvoTipo === "recurso");
+  const maxAula = bloqueios.length ? await maxAulaDaEscola(escolaId) : 0;
   return {
     data,
-    recursos: recursos.map((r) => ({
-      id: r.id,
-      nome: r.nome,
-      total: r.quantidadeTotal,
-      ocupacao: linhas.filter((l) => l.recursoId === r.id).map((l) => ({ numeroAula: l.numeroAula, turno: l.turno, reservadas: l.reservadas })),
-    })),
+    recursos: recursos.map((r) => {
+      const porSlot = new Map<string, { numeroAula: number; turno: string; reservadas: number; bloqueadas: number }>();
+      for (const l of linhas.filter((x) => x.recursoId === r.id)) porSlot.set(`${l.turno}|${l.numeroAula}`, { numeroAula: l.numeroAula, turno: l.turno, reservadas: l.reservadas, bloqueadas: 0 });
+      for (const b of bloqueios.filter((x) => x.recursoId === r.id)) {
+        const { turnos, aulas } = slotsDoBloqueio(b, maxAula);
+        for (const turno of turnos) {
+          for (const numeroAula of aulas) {
+            const linha = porSlot.get(`${turno}|${numeroAula}`) ?? { numeroAula, turno, reservadas: 0, bloqueadas: 0 };
+            linha.bloqueadas = Math.min(r.quantidadeTotal, linha.bloqueadas + (b.quantidade ?? r.quantidadeTotal));
+            porSlot.set(`${turno}|${numeroAula}`, linha);
+          }
+        }
+      }
+      return { id: r.id, nome: r.nome, total: r.quantidadeTotal, ocupacao: [...porSlot.values()] };
+    }),
   };
 }
 
@@ -104,6 +117,7 @@ export async function criarReservasRecursos(p: {
         .for("update");
       if (!recurso) throw new ErroRecurso(404, "Equipamento não encontrado.");
       const problemas: string[] = [];
+      const bloqueios = await bloqueiosAtivos(escolaId, data, data, { recursoId }, tx); // [BLOQUEIOS]
       for (const { numeroAula, quantidade } of itens) {
         const [linha] = await tx
           .select({ reservadas: sql<number>`coalesce(sum(${reservasRecursosTable.quantidade}), 0)::int` })
@@ -136,8 +150,9 @@ export async function criarReservasRecursos(p: {
           problemas.push(`${numeroAula}ª aula: já há reserva de ${recurso.nome.toLowerCase()} do professor nessa aula (cancele para refazer).`);
           continue;
         }
-        const restam = recurso.quantidadeTotal - (linha?.reservadas ?? 0);
-        if (quantidade > restam) problemas.push(`${numeroAula}ª aula: restam ${restam} de ${recurso.quantidadeTotal}.`);
+        const bloqueadas = unidadesBloqueadas(bloqueios, recurso.quantidadeTotal, data, turno, numeroAula); // [BLOQUEIOS]
+        const restam = Math.max(0, recurso.quantidadeTotal - (linha?.reservadas ?? 0) - bloqueadas);
+        if (quantidade > restam) problemas.push(`${numeroAula}ª aula: restam ${restam} de ${recurso.quantidadeTotal}${bloqueadas > 0 ? ` (${bloqueadas} bloqueados)` : ""}.`);
       }
       if (problemas.length) throw new ErroRecurso(409, `Não há ${recurso.nome.toLowerCase()} suficientes. ${problemas.join(" ")}`);
       return tx

@@ -10,6 +10,7 @@ import { MapaOcupacaoSalas } from "@/components/mapa-ocupacao-salas"; // [OCUPAC
 import { NovaReservaDialog } from "@/components/nova-reserva-dialog"; // [RESERVA-GESTOR]
 import { ReservasDaSemana, CHAVE_RESERVAS_SEMANA, useSemanaReservas } from "@/components/reservas-da-semana"; // [RESERVAS-DA-SEMANA]
 import { ehSalaTablets } from "@/lib/reservas-formato"; // [MAPA-TABLETS]
+import { BotaoBloqueios, CHAVE_BLOQUEIOS, type BloqueioItem } from "@/components/bloqueios-dialog"; // [BLOQUEIOS]
 import {
   AlertTriangle,
   ArrowRight,
@@ -334,6 +335,11 @@ export default function ReservasPage() {
   const [filtroStatus, setFiltroStatus] = useState<"confirmada" | "pendente" | null>(null);
   const [mostrarSemana, setMostrarSemana] = useState(false);
   const semanaInfo = useSemanaReservas(selectedDate);
+  // [BLOQUEIOS] bloqueios ativos do dia escolhido (aparecem no mapa de ocupacao)
+  const bloqueiosDoDiaQuery = useQuery({
+    queryKey: [...CHAVE_BLOQUEIOS, "dia", selectedDate],
+    queryFn: () => customFetch<BloqueioItem[]>(`/api/reservas/bloqueios?data=${selectedDate}`, { responseType: "json" }),
+  });
   const createReserva = useCreateReserva();
   const updateReserva = useUpdateReserva();
   const deleteReserva = useDeleteReserva();
@@ -375,6 +381,7 @@ export default function ReservasPage() {
     queryClient.invalidateQueries({ queryKey: getListRegrasReservaProfessoresQueryKey() });
     queryClient.invalidateQueries({ queryKey: CHAVE_RESERVAS_SEMANA }); // [RESERVAS-DA-SEMANA]
     queryClient.invalidateQueries({ queryKey: ["ocupacao-recursos"] }); // [MAPA-TABLETS]
+    queryClient.invalidateQueries({ queryKey: CHAVE_BLOQUEIOS }); // [BLOQUEIOS]
   };
 
   const openEdit = (reserva: (typeof reservas)[number]) => {
@@ -503,6 +510,7 @@ export default function ReservasPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <BotaoRegrasPorProfessor />{/* [PAPEL-RESERVAS] */}
+          <BotaoBloqueios aoMudar={invalidateReservations} />{/* [BLOQUEIOS] gestor, coordenacao, direcao e secretaria */}
           <BotaoRelatorioReservas />{/* [RELATORIO-RESERVAS] */}
           <NovaReservaDialog modo="gestor" professores={professores} aoCriar={invalidateReservations} />{/* [RESERVA-GESTOR] mesmo fluxo do app do professor, ja confirmada */}
         </div>
@@ -564,7 +572,7 @@ export default function ReservasPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          <div id="mapa-ocupacao" className="scroll-mt-4"><MapaOcupacaoSalas salas={(salasQuery.data ?? []).filter((s) => !ehSalaTablets(s.nome) || reservas.some((r) => r.salaId === s.id && r.status !== "cancelada"))} tablets={tabletsQuery.data?.recursos[0] ?? null} reservas={reservas} maxAulaMinimo={(horariosQuery.data ?? []).reduce((m, h) => Math.max(m, h.numeroAula), 0)} /></div>{/* [MAPA-AULAS-GRADE] */}{/* [OCUPACAO-SALAS] */}
+          <div id="mapa-ocupacao" className="scroll-mt-4"><MapaOcupacaoSalas salas={(salasQuery.data ?? []).filter((s) => !ehSalaTablets(s.nome) || reservas.some((r) => r.salaId === s.id && r.status !== "cancelada"))} tablets={tabletsQuery.data?.recursos[0] ?? null} bloqueios={bloqueiosDoDiaQuery.data ?? []} reservas={reservas} maxAulaMinimo={(horariosQuery.data ?? []).reduce((m, h) => Math.max(m, h.numeroAula), 0)} /></div>{/* [MAPA-AULAS-GRADE] */}{/* [OCUPACAO-SALAS] */}
           <div id="agenda-do-dia" className="scroll-mt-4 flex items-center justify-between">
             <div>
               <h2 className="font-heading text-lg font-bold">Agenda do dia</h2>

@@ -23,6 +23,7 @@ export * from "./asaas-webhook-eventos";
 
 export * from "./reservas";
 export * from "./recursos"; // [RECURSOS-TABLETS]
+export * from "./bloqueios"; // [BLOQUEIOS]
 export * from "./disciplina-codigos-rco"; // [CODIGOS-RCO]
 export * from "./acessos-escola"; // [ACESSOS-ESCOLA]
 
