@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ehAlteracaoDeReservaPermitida, ehLeituraSomenteAdmin, normalizarCaminho } from "../permissao";
+import { ehAlteracaoDeReservaPermitida, ehLeituraDaEquipe, ehLeituraSomenteAdmin, normalizarCaminho } from "../permissao";
 
 // O Express casa rotas sem diferenciar maiusculas e minusculas. O filtro de permissao precisa fazer
 // o mesmo, senao "/Audit" (leitura) ou "/reservas/Regras-Professores" (gestor de reservas) escapam.
@@ -38,6 +38,20 @@ describe("ehAlteracaoDeReservaPermitida (gestor de reservas)", () => {
   it("nao permite alterar outras areas", () => {
     for (const c of ["/turmas", "/professores/1", "/horarios"]) {
       expect(ehAlteracaoDeReservaPermitida(c), c).toBe(false);
+    }
+  });
+});
+
+// [LEITURA-EQUIPE] consultas do portal do gestor (nomes de quem reservou, grade de qualquer professor)
+describe("ehLeituraDaEquipe", () => {
+  it("cobre todo o portal do gestor, em qualquer caixa", () => {
+    for (const c of ["/reservas/gestor/semana", "/Reservas/Gestor/Horario", "/RESERVAS/GESTOR/", "/reservas/gestor"]) {
+      expect(ehLeituraDaEquipe(c), c).toBe(true);
+    }
+  });
+  it("nao pega o que o professor usa", () => {
+    for (const c of ["/minha-agenda/ocupacao", "/minha-agenda/recursos/ocupacao", "/reservas", "/reservas/12", "/reservas/gestores-fake", "/horarios"]) {
+      expect(ehLeituraDaEquipe(c), c).toBe(false);
     }
   });
 });
