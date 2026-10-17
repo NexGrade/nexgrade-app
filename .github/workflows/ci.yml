@@ -40,3 +40,9 @@ jobs:
       - name: Typecheck do frontend
         working-directory: artifacts/horario-escolar
         run: pnpm exec tsc --noEmit -p tsconfig.json
+
+      # [CI-TESTES] (17/10/2026) testes do servidor (permissoes, escola, importacao...). Nao precisam de banco:
+      # o vitest.config.ts injeta uma DATABASE_URL ficticia e os testes nao fazem consulta.
+      - name: Testes do backend
+        working-directory: artifacts/api-server
+        run: pnpm run test

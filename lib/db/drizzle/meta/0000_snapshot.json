@@ -1,5 +1,5 @@
 {
-  "id": "4ac50caf-abdc-4c81-b04e-0a82e9c207d1",
+  "id": "d7298a94-335a-4947-bf3d-15eca5784008",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -35,6 +35,19 @@
           "tableTo": "professores",
           "columnsFrom": [
             "professor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "professor_disciplinas_disciplina_id_disciplinas_id_fk": {
+          "name": "professor_disciplinas_disciplina_id_disciplinas_id_fk",
+          "tableFrom": "professor_disciplinas",
+          "tableTo": "disciplinas",
+          "columnsFrom": [
+            "disciplina_id"
           ],
           "columnsTo": [
             "id"
@@ -110,6 +123,12 @@
           "notNull": true,
           "default": true
         },
+        "professor_principal_id": {
+          "name": "professor_principal_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -156,6 +175,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "sigla": {
+          "name": "sigla",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "carga_semanal": {
           "name": "carga_semanal",
           "type": "integer",
@@ -175,6 +200,32 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "codigo_externo_rco": {
+          "name": "codigo_externo_rco",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tipo_sala_exigido": {
+          "name": "tipo_sala_exigido",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "categoria_curricular_padrao": {
+          "name": "categoria_curricular_padrao",
+          "type": "composicao_curricular",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sem_turma": {
+          "name": "sem_turma",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "created_at": {
           "name": "created_at",
@@ -221,9 +272,58 @@
           "primaryKey": false,
           "notNull": true
         },
+        "professor_id": {
+          "name": "professor_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "professor_apoio_id": {
+          "name": "professor_apoio_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "carga_horaria_semanal_override": {
           "name": "carga_horaria_semanal_override",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aulas_assincronas": {
+          "name": "aulas_assincronas",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "grupo_trio": {
+          "name": "grupo_trio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trio_ordem": {
+          "name": "trio_ordem",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trio_inicio": {
+          "name": "trio_inicio",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "max_aulas_consecutivas_dia": {
+          "name": "max_aulas_consecutivas_dia",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grupo_compartilhado_id": {
+          "name": "grupo_compartilhado_id",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         }
@@ -241,6 +341,32 @@
             "id"
           ],
           "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "turma_disciplinas_professor_id_professores_id_fk": {
+          "name": "turma_disciplinas_professor_id_professores_id_fk",
+          "tableFrom": "turma_disciplinas",
+          "tableTo": "professores",
+          "columnsFrom": [
+            "professor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "turma_disciplinas_professor_apoio_id_professores_id_fk": {
+          "name": "turma_disciplinas_professor_apoio_id_professores_id_fk",
+          "tableFrom": "turma_disciplinas",
+          "tableTo": "professores",
+          "columnsFrom": [
+            "professor_apoio_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -286,14 +412,40 @@
           "notNull": true,
           "default": "'matutino'"
         },
+        "nivel_ensino": {
+          "name": "nivel_ensino",
+          "type": "nivel_ensino",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
         "ano_letivo": {
           "name": "ano_letivo",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
+        "fantasma": {
+          "name": "fantasma",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "matriz_curricular_id": {
           "name": "matriz_curricular_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "codigo_sere": {
+          "name": "codigo_sere",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "codigo_sere_if": {
+          "name": "codigo_sere_if",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
@@ -325,7 +477,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -394,6 +546,20 @@
           "primaryKey": false,
           "notNull": false,
           "default": "'oficial'"
+        },
+        "assincrona": {
+          "name": "assincrona",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "fixa": {
+          "name": "fixa",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "created_at": {
           "name": "created_at",
@@ -643,8 +809,7 @@
           "name": "escola_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "default": "'escola_default'"
+          "notNull": true
         },
         "titulo": {
           "name": "titulo",
@@ -802,8 +967,7 @@
           "name": "escola_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "default": "'escola_default'"
+          "notNull": true
         },
         "clerk_id": {
           "name": "clerk_id",
@@ -978,6 +1142,20 @@
           "primaryKey": false,
           "notNull": false
         },
+        "assincrona": {
+          "name": "assincrona",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "fixa": {
+          "name": "fixa",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "ativo": {
           "name": "ativo",
           "type": "boolean",
@@ -1049,6 +1227,30 @@
           "notNull": true,
           "default": "'regular'"
         },
+        "codigo_inep": {
+          "name": "codigo_inep",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nre": {
+          "name": "nre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "turnos_ofertados": {
+          "name": "turnos_ofertados",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resolucao_seed_pr": {
+          "name": "resolucao_seed_pr",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "plano_id": {
           "name": "plano_id",
           "type": "integer",
@@ -1073,6 +1275,48 @@
           "primaryKey": false,
           "notNull": false
         },
+        "email_contato": {
+          "name": "email_contato",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "telefone_contato": {
+          "name": "telefone_contato",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email_cobranca": {
+          "name": "email_cobranca",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "asaas_customer_id": {
+          "name": "asaas_customer_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "asaas_subscription_id": {
+          "name": "asaas_subscription_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "asaas_status_assinatura": {
+          "name": "asaas_status_assinatura",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "asaas_proximo_vencimento": {
+          "name": "asaas_proximo_vencimento",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
         "plano_ativo": {
           "name": "plano_ativo",
           "type": "boolean",
@@ -1085,6 +1329,13 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
+        },
+        "isenta": {
+          "name": "isenta",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "created_at": {
           "name": "created_at",
@@ -1147,12 +1398,18 @@
           "primaryKey": false,
           "notNull": true
         },
-        "preco": {
-          "name": "preco",
+        "preco_mensal": {
+          "name": "preco_mensal",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "default": 0
+        },
+        "preco_anual": {
+          "name": "preco_anual",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
         },
         "max_professores": {
           "name": "max_professores",
@@ -1196,8 +1453,34 @@
           "notNull": true,
           "default": true
         },
-        "stripe_price_id": {
-          "name": "stripe_price_id",
+        "visivel_publicamente": {
+          "name": "visivel_publicamente",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "cobranca": {
+          "name": "cobranca",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'fixa'"
+        },
+        "preco_por_turma_anual": {
+          "name": "preco_por_turma_anual",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stripe_price_id_mensal": {
+          "name": "stripe_price_id_mensal",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stripe_price_id_anual": {
+          "name": "stripe_price_id_anual",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -1258,6 +1541,19 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "turno": {
+          "name": "turno",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hora_atividade_obrigatoria": {
+          "name": "hora_atividade_obrigatoria",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "created_at": {
           "name": "created_at",
@@ -1430,6 +1726,27 @@
           "notNull": true,
           "default": "'fundamental'"
         },
+        "eixo_tecnologico": {
+          "name": "eixo_tecnologico",
+          "type": "eixo_tecnologico",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "forma_oferta": {
+          "name": "forma_oferta",
+          "type": "forma_oferta",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ofertado": {
+          "name": "ofertado",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -1477,10 +1794,11 @@
         },
         "categoria_curricular": {
           "name": "categoria_curricular",
-          "type": "text",
+          "type": "composicao_curricular",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'base_nacional_comum'"
+          "default": "'BNC'"
         },
         "carga_horaria_semanal": {
           "name": "carga_horaria_semanal",
@@ -1568,6 +1886,12 @@
           "notNull": true,
           "default": 0
         },
+        "codigo_matriz_sere": {
+          "name": "codigo_matriz_sere",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -1597,9 +1921,1224 @@
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
+    },
+    "public.calendario_escolar": {
+      "name": "calendario_escolar",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "escola_id": {
+          "name": "escola_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'escola_default'"
+        },
+        "ano": {
+          "name": "ano",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "data": {
+          "name": "data",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descricao": {
+          "name": "descricao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dia_letivo": {
+          "name": "dia_letivo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.trimestres_letivos": {
+      "name": "trimestres_letivos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "escola_id": {
+          "name": "escola_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'escola_default'"
+        },
+        "ano": {
+          "name": "ano",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trimestre": {
+          "name": "trimestre",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "data_inicio": {
+          "name": "data_inicio",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "data_fim": {
+          "name": "data_fim",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dias_letivos": {
+          "name": "dias_letivos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.aulas_fixas": {
+      "name": "aulas_fixas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "escola_id": {
+          "name": "escola_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'escola_default'"
+        },
+        "turma_id": {
+          "name": "turma_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "disciplina_id": {
+          "name": "disciplina_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "professor_id": {
+          "name": "professor_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dia_semana": {
+          "name": "dia_semana",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "numero_aula": {
+          "name": "numero_aula",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ano_letivo": {
+          "name": "ano_letivo",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "aulas_fixas_turma_id_turmas_id_fk": {
+          "name": "aulas_fixas_turma_id_turmas_id_fk",
+          "tableFrom": "aulas_fixas",
+          "tableTo": "turmas",
+          "columnsFrom": [
+            "turma_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "aulas_fixas_disciplina_id_disciplinas_id_fk": {
+          "name": "aulas_fixas_disciplina_id_disciplinas_id_fk",
+          "tableFrom": "aulas_fixas",
+          "tableTo": "disciplinas",
+          "columnsFrom": [
+            "disciplina_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "aulas_fixas_professor_id_professores_id_fk": {
+          "name": "aulas_fixas_professor_id_professores_id_fk",
+          "tableFrom": "aulas_fixas",
+          "tableTo": "professores",
+          "columnsFrom": [
+            "professor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.horario_slots": {
+      "name": "horario_slots",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "escola_id": {
+          "name": "escola_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'escola_default'"
+        },
+        "turno": {
+          "name": "turno",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nivel_ensino": {
+          "name": "nivel_ensino",
+          "type": "nivel_ensino",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "numero_aula": {
+          "name": "numero_aula",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hora_inicio": {
+          "name": "hora_inicio",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "duracao_minutos": {
+          "name": "duracao_minutos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 50
+        },
+        "letivo": {
+          "name": "letivo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.limites_diarios_professor": {
+      "name": "limites_diarios_professor",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "escola_id": {
+          "name": "escola_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'escola_default'"
+        },
+        "professor_id": {
+          "name": "professor_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "turma_id": {
+          "name": "turma_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "max_aulas_por_dia": {
+          "name": "max_aulas_por_dia",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 2
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "limites_diarios_professor_professor_id_professores_id_fk": {
+          "name": "limites_diarios_professor_professor_id_professores_id_fk",
+          "tableFrom": "limites_diarios_professor",
+          "tableTo": "professores",
+          "columnsFrom": [
+            "professor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "limites_diarios_professor_turma_id_turmas_id_fk": {
+          "name": "limites_diarios_professor_turma_id_turmas_id_fk",
+          "tableFrom": "limites_diarios_professor",
+          "tableTo": "turmas",
+          "columnsFrom": [
+            "turma_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.disciplinas_catalogo": {
+      "name": "disciplinas_catalogo",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "codigo_sae": {
+          "name": "codigo_sae",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "codigo_externo_rco": {
+          "name": "codigo_externo_rco",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "categoria_curricular_padrao": {
+          "name": "categoria_curricular_padrao",
+          "type": "composicao_curricular",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "carga_semanal_sugerida": {
+          "name": "carga_semanal_sugerida",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 2
+        },
+        "tipo_sala_exigido": {
+          "name": "tipo_sala_exigido",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sigla": {
+          "name": "sigla",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.asaas_webhook_eventos": {
+      "name": "asaas_webhook_eventos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "processado_em": {
+          "name": "processado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.regras_reserva_professor": {
+      "name": "regras_reserva_professor",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "escola_id": {
+          "name": "escola_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "professor_id": {
+          "name": "professor_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "limite_semanal": {
+          "name": "limite_semanal",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 2
+        },
+        "prioridade": {
+          "name": "prioridade",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 3
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "regras_reserva_professor_escola_professor_idx": {
+          "name": "regras_reserva_professor_escola_professor_idx",
+          "columns": [
+            {
+              "expression": "escola_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "professor_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "regras_reserva_professor_professor_id_professores_id_fk": {
+          "name": "regras_reserva_professor_professor_id_professores_id_fk",
+          "tableFrom": "regras_reserva_professor",
+          "tableTo": "professores",
+          "columnsFrom": [
+            "professor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.reservas": {
+      "name": "reservas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "escola_id": {
+          "name": "escola_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sala_id": {
+          "name": "sala_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "professor_id": {
+          "name": "professor_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "horario_id": {
+          "name": "horario_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data": {
+          "name": "data",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dia_semana": {
+          "name": "dia_semana",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "numero_aula": {
+          "name": "numero_aula",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "turno": {
+          "name": "turno",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "titulo": {
+          "name": "titulo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "observacoes": {
+          "name": "observacoes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'confirmada'"
+        },
+        "prioridade_aplicada": {
+          "name": "prioridade_aplicada",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 3
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "reservas_sala_slot_unico": {
+          "name": "reservas_sala_slot_unico",
+          "columns": [
+            {
+              "expression": "escola_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sala_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "data",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "numero_aula",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "coalesce(\"turno\", '')",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"reservas\".\"status\" != 'cancelada'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "reservas_sala_id_salas_id_fk": {
+          "name": "reservas_sala_id_salas_id_fk",
+          "tableFrom": "reservas",
+          "tableTo": "salas",
+          "columnsFrom": [
+            "sala_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "reservas_professor_id_professores_id_fk": {
+          "name": "reservas_professor_id_professores_id_fk",
+          "tableFrom": "reservas",
+          "tableTo": "professores",
+          "columnsFrom": [
+            "professor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "reservas_horario_id_horarios_id_fk": {
+          "name": "reservas_horario_id_horarios_id_fk",
+          "tableFrom": "reservas",
+          "tableTo": "horarios",
+          "columnsFrom": [
+            "horario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.recursos": {
+      "name": "recursos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "escola_id": {
+          "name": "escola_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantidade_total": {
+          "name": "quantidade_total",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ativo": {
+          "name": "ativo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "recursos_escola_nome_idx": {
+          "name": "recursos_escola_nome_idx",
+          "columns": [
+            {
+              "expression": "escola_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "nome",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.reservas_recursos": {
+      "name": "reservas_recursos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "escola_id": {
+          "name": "escola_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "recurso_id": {
+          "name": "recurso_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "professor_id": {
+          "name": "professor_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "data": {
+          "name": "data",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dia_semana": {
+          "name": "dia_semana",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "numero_aula": {
+          "name": "numero_aula",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "turno": {
+          "name": "turno",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantidade": {
+          "name": "quantidade",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "titulo": {
+          "name": "titulo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "observacoes": {
+          "name": "observacoes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'confirmada'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "reservas_recursos_recurso_id_recursos_id_fk": {
+          "name": "reservas_recursos_recurso_id_recursos_id_fk",
+          "tableFrom": "reservas_recursos",
+          "tableTo": "recursos",
+          "columnsFrom": [
+            "recurso_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "reservas_recursos_professor_id_professores_id_fk": {
+          "name": "reservas_recursos_professor_id_professores_id_fk",
+          "tableFrom": "reservas_recursos",
+          "tableTo": "professores",
+          "columnsFrom": [
+            "professor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.codigos_rco_disciplina": {
+      "name": "codigos_rco_disciplina",
+      "schema": "",
+      "columns": {
+        "codigo_sae": {
+          "name": "codigo_sae",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "codigo_externo": {
+          "name": "codigo_externo",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome_rco": {
+          "name": "nome_rco",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.acessos_escola": {
+      "name": "acessos_escola",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "escola_id": {
+          "name": "escola_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cargo": {
+          "name": "cargo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ativo": {
+          "name": "ativo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "criado_por": {
+          "name": "criado_por",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "ultimo_acesso_em": {
+          "name": "ultimo_acesso_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "acessos_escola_escola_email_uq": {
+          "name": "acessos_escola_escola_email_uq",
+          "columns": [
+            {
+              "expression": "escola_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "acessos_escola_email_idx": {
+          "name": "acessos_escola_email_idx",
+          "columns": [
+            {
+              "expression": "email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "acessos_escola_user_idx": {
+          "name": "acessos_escola_user_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.nivel_ensino": {
+      "name": "nivel_ensino",
+      "schema": "public",
+      "values": [
+        "fundamental",
+        "medio_tecnico"
+      ]
+    },
+    "public.composicao_curricular": {
+      "name": "composicao_curricular",
+      "schema": "public",
+      "values": [
+        "BNC",
+        "PD",
+        "FGB",
+        "PFO",
+        "IFA",
+        "IF",
+        "IFP",
+        "APF"
+      ]
+    },
+    "public.eixo_tecnologico": {
+      "name": "eixo_tecnologico",
+      "schema": "public",
+      "values": [
+        "ambiente_saude",
+        "controle_processos_industriais",
+        "desenvolvimento_educacional_social",
+        "gestao_negocios",
+        "informacao_comunicacao",
+        "infraestrutura",
+        "militar",
+        "producao_alimenticia",
+        "producao_cultural_design",
+        "producao_industrial",
+        "recursos_naturais",
+        "seguranca",
+        "turismo_hospitalidade_lazer"
+      ]
+    },
+    "public.forma_oferta": {
+      "name": "forma_oferta",
+      "schema": "public",
+      "values": [
+        "integrada",
+        "concomitante_intercomplementar"
+      ]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},

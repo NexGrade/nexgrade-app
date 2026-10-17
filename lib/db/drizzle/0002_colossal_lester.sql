@@ -1,1 +1,0 @@
-ALTER TABLE "horarios" ADD COLUMN "modalidade" text DEFAULT 'presencial' NOT NULL;

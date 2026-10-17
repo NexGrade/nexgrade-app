@@ -1,1 +1,0 @@
-ALTER TABLE "escolas" ADD COLUMN "email_cobranca" text;
