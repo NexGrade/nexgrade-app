@@ -13,7 +13,7 @@ import {
   getGetMinhaAgendaNotificacoesQueryKey,
 } from "@workspace/api-client-react";
 import { NotificationBell } from "@/components/notification-bell";
-import { CalendarioMesEscola } from "@/components/calendario-mes-escola"; // [CALENDARIO-PROFESSOR]
+import { CalendarioMesEscola, type ReservaNoCalendario } from "@/components/calendario-mes-escola"; // [CALENDARIO-PROFESSOR]
 import { CalendarDays, Download, Loader2, Plus, MonitorSmartphone } from "lucide-react";
 import {
   useGetMeuProfessor,
@@ -140,6 +140,7 @@ function NovaReservaDialog({ professorId: _professorId }: { professorId: number 
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const { data: salas } = useListSalas();
+  const { data: minhasReservas } = useGetMinhaAgendaReservas({ query: { queryKey: getGetMinhaAgendaReservasQueryKey() } }); // [RESERVA-NO-CALENDARIO]
   const { data: dadosHorarioApi } = useGetMinhaAgendaHorario({ query: { queryKey: getGetMinhaAgendaHorarioQueryKey() } });
   // a API devolve tambem turno e horarios (fora do tipo gerado)
   const dadosHorario = dadosHorarioApi as unknown as {
@@ -166,6 +167,9 @@ function NovaReservaDialog({ professorId: _professorId }: { professorId: number 
     [dadosHorario, diaSemana],
   );
   const turnosDoDia = ORDEM_PERIODO.filter((t) => minhasAulasDoDia.some((a) => a.turno === t));
+  // so um periodo com aula no dia: ja escolhe e mostra as aulas
+  const unicoTurno = turnosDoDia.length === 1 ? turnosDoDia[0]! : null;
+  useEffect(() => { if (data && !turno && unicoTurno) setTurno(unicoTurno); }, [data, turno, unicoTurno]);
   const horariosDoTurno = useMemo(() => {
     if (!turno) return [];
     const nums = new Set<number>([
@@ -187,7 +191,9 @@ function NovaReservaDialog({ professorId: _professorId }: { professorId: number 
   const statusSala = (salaId: number, numeroAula: number) =>
     ocupacao?.ocupacao.find((o) => o.salaId === salaId && o.numeroAula === numeroAula && (!o.turno || o.turno === turno))?.status ?? null;
 
-  const aulasNaLista = new Set(itens.flatMap((i) => i.numerosAula));
+  // [RESERVA-VARIOS-ESPACOS] a mesma aula pode ir para outro espaco (turma dividida);
+  // so fica travada a aula que ja esta na lista PARA O ESPACO escolhido agora
+  const espacosDaAula = (n: number) => itens.filter((i) => i.numerosAula.includes(n)).map((i) => i.salaId);
   const ocupadasNaSala = salaAtual ? aulasSel.filter((n) => statusSala(salaAtual, n) === "confirmada") : [];
   const podeAdicionar = salaAtual > 0 && aulasSel.length > 0 && ocupadasNaSala.length === 0;
   const nomeSala = (id: number) => salas?.find((s) => s.id === id)?.nome ?? "Espaço";
@@ -264,6 +270,7 @@ function NovaReservaDialog({ professorId: _professorId }: { professorId: number 
         <div className="space-y-5">
           <Passo n={1} titulo="Dia">
             <CalendarioReserva
+              diasComReserva={[...new Set((minhasReservas ?? []).map((r) => String(r.data).slice(0, 10)))]}
               salaId={salaAtual}
               value={data}
               onChange={(iso) => { setData(iso); setTurno(null); setAulasSel([]); setItens([]); }}
@@ -294,6 +301,7 @@ function NovaReservaDialog({ professorId: _professorId }: { professorId: number 
                   })}
                 </div>
               )}
+              {turnosDoDia.length > 1 && !turno && <p className="text-xs text-muted-foreground">Toque no período para ver as suas aulas.</p>}
             </Passo>
           )}
 
@@ -301,10 +309,10 @@ function NovaReservaDialog({ professorId: _professorId }: { professorId: number 
             <Passo n={3} titulo="Aulas (pode marcar mais de uma)">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {horariosDoTurno.map(({ numeroAula, hora, aula }) => {
-                  const naLista = aulasNaLista.has(numeroAula);
+                  const naLista = espacosDaAula(numeroAula);
                   const sel = aulasSel.includes(numeroAula);
                   const st = salaAtual ? statusSala(salaAtual, numeroAula) : null;
-                  const desab = !aula || naLista;
+                  const desab = !aula || (salaAtual > 0 && naLista.includes(salaAtual));
                   return (
                     <button
                       key={numeroAula}
@@ -320,12 +328,17 @@ function NovaReservaDialog({ professorId: _professorId }: { professorId: number 
                         <span className="text-sm font-semibold">{numeroAula}ª aula</span>
                         {hora && <span className="tabular-nums text-muted-foreground">{hora}</span>}
                       </span>
-                      {naLista ? <span className="block">Já na lista</span> : aula ? (
+                      {aula ? (
                         <>
                           <span className="block truncate font-medium">{aula.turmaNome}</span>
                           <span className="block truncate text-muted-foreground">{aula.disciplinaNome}</span>
                         </>
                       ) : <span className="block">Sem aula sua</span>}
+                      {naLista.length > 0 && (
+                        <span className="mt-0.5 block truncate font-medium text-[#1565C0]" title={naLista.map(nomeSala).join(", ")}>
+                          Na lista: {naLista.map(nomeSala).join(", ")}
+                        </span>
+                      )}
                       {sel && st === "confirmada" && <span className="block font-medium text-destructive">Espaço ocupado</span>}
                       {sel && st === "pendente" && <span className="block font-medium text-amber-700">Espaço em análise</span>}
                     </button>
@@ -355,7 +368,7 @@ function NovaReservaDialog({ professorId: _professorId }: { professorId: number 
                     : `${nomeSala(salaAtual)}: ${aulasSel.sort((x, y) => x - y).map((n) => `${rotuloAula(n)} ${statusSala(salaAtual, n) === "pendente" ? "em análise" : "livre"}`).join(" · ")}`}
                 </p>
               )}
-              <p className="text-xs text-muted-foreground">Precisa de outro espaço em outras aulas? Adicione à lista e escolha o próximo.</p>
+              <p className="text-xs text-muted-foreground">Precisa de outro espaço? Adicione à lista e escolha o próximo, nas mesmas aulas (turma dividida) ou em outras.</p>
             </Passo>
           )}
 
@@ -605,7 +618,7 @@ export default function MinhaAgendaPage() {
           <NovaReservaDialog professorId={professor.id} />
         </div>
 
-        {mostrarCalendario && <CalendarioMesEscola />}{/* [CALENDARIO-PROFESSOR] mesmo visual do Calendario Escolar */}
+        {mostrarCalendario && <CalendarioMesEscola reservas={(reservas ?? []) as unknown as ReservaNoCalendario[]} />}{/* [CALENDARIO-PROFESSOR] mesmo visual do Calendario Escolar */}
 
         <Card>
           <CardHeader>
@@ -875,7 +888,7 @@ export default function MinhaAgendaPage() {
 // Dias passados e fins de semana desabilitados. Sem nomes de quem reservou.
 type OcupacaoMesResp = { mes: string; maxAula: number; dias: Record<string, { confirmadas: number; pendentes: number }> };
 
-function CalendarioReserva({ salaId, value, onChange }: { salaId: number; value: string; onChange: (iso: string) => void }) {
+function CalendarioReserva({ salaId, value, onChange, diasComReserva = [] }: { salaId: number; value: string; onChange: (iso: string) => void; diasComReserva?: string[] }) {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
   const selecionada = /^\d{4}-\d{2}-\d{2}$/.test(value ?? "")
@@ -920,8 +933,10 @@ function CalendarioReserva({ salaId, value, onChange }: { salaId: number; value:
         month={mesVisivel}
         onMonthChange={setMesVisivel}
         disabled={[{ before: hoje }, { dayOfWeek: [0, 6] }, ...lotado]}
-        modifiers={{ livre, parcial, lotado }}
+        modifiers={{ livre, parcial, lotado, minhaReserva: diasComReserva.map((iso) => new Date(Number(iso.slice(0, 4)), Number(iso.slice(5, 7)) - 1, Number(iso.slice(8, 10)))) }}
         modifiersClassNames={{
+          // [RESERVA-NO-CALENDARIO] dia em que o professor ja tem reserva: sublinhado azul
+          minhaReserva: "[&>button]:font-bold [&>button]:underline [&>button]:decoration-[#1565C0] [&>button]:decoration-2 [&>button]:underline-offset-4",
           livre: "[&>button]:bg-emerald-50 [&>button]:text-emerald-800",
           parcial: "[&>button]:bg-amber-100 [&>button]:text-amber-900",
           lotado: "[&>button]:bg-muted [&>button]:text-muted-foreground [&>button]:line-through",
@@ -935,7 +950,12 @@ function CalendarioReserva({ salaId, value, onChange }: { salaId: number; value:
           <span className="flex items-center gap-1"><i className="h-2.5 w-2.5 rounded-sm bg-muted ring-1 ring-border" /> Lotado</span>
         </div>
       ) : (
-        <p className="text-xs text-muted-foreground">Escolha o espaço para ver a ocupação dos dias.</p>
+        <p className="text-xs text-muted-foreground">Depois de escolher o espaço, os dias ficam coloridos com a ocupação dele.</p>
+      )}
+      {diasComReserva.length > 0 && (
+        <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <span className="font-bold text-foreground underline decoration-[#1565C0] decoration-2 underline-offset-4">12</span> dia em que você já tem reserva
+        </p>
       )}
     </div>
   );

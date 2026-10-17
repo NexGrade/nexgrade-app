@@ -361,8 +361,8 @@ router.post("/reservas", async (req, res) => {
 
 // [RESERVA-LOTE] (17/10/2026) varias aulas e varios espacos de uma vez, no mesmo dia e turno.
 // Cada item e um espaco com as aulas dele. Confere tudo antes: se alguma aula nao puder,
-// nada e gravado e a resposta diz qual (espaco + aula) e por que. Mesmo espaco ou mesma
-// aula repetidos no pedido sao recusados (o professor nao fica em dois espacos na mesma aula).
+// nada e gravado e a resposta diz qual (espaco + aula) e por que. [RESERVA-VARIOS-ESPACOS]
+// a mesma aula pode ir para mais de um espaco (turma dividida); o mesmo espaco na mesma aula, nao.
 const LoteMinhaReservaBody = z.object({
   data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   turno: z.string().min(1),
@@ -385,9 +385,9 @@ router.post("/reservas/lote", async (req, res) => {
   const { data: dataISO, turno, itens, titulo, observacoes } = parsed.data;
   const d = new Date(`${dataISO}T12:00:00Z`).getUTCDay();
   const diaSemana = d === 0 ? 6 : d - 1;
-  const aulasPedidas = itens.flatMap((i) => i.numerosAula);
-  if (new Set(aulasPedidas).size !== aulasPedidas.length) {
-    res.status(400).json({ error: "A mesma aula foi escolhida em dois espaços. Você só pode estar em um espaço por aula." });
+  const pares = itens.flatMap((i) => i.numerosAula.map((n) => `${i.salaId}|${n}`));
+  if (new Set(pares).size !== pares.length || new Set(itens.map((i) => i.salaId)).size !== itens.length) {
+    res.status(400).json({ error: "O mesmo espaço aparece duas vezes na mesma aula. Confira a lista." });
     return;
   }
   const salas = await db.select({ id: salasTable.id, nome: salasTable.nome }).from(salasTable).where(eq(salasTable.escolaId, escolaId));

@@ -255,41 +255,13 @@ export async function validateReserva(
     reservationConditions.push(ne(reservasTable.id, excludeId));
   }
 
-  const [roomConflict, professorConflict] = await Promise.all([
-    db
-      .select()
-      .from(reservasTable)
-      .where(
-        and(
-          ...reservationConditions,
-          eq(reservasTable.salaId, input.salaId),
-        ),
-      )
-      .then((rows) => rows[0] ?? null),
-    db
-      .select()
-      .from(reservasTable)
-      .where(
-        and(
-          ...reservationConditions,
-          eq(reservasTable.professorId, input.professorId),
-        ),
-      )
-      .then((rows) => rows[0] ?? null),
-  ]);
-
-  // Conflito de PROFESSOR nunca e resolvivel por prioridade -- e
-  // fisicamente impossivel a mesma pessoa estar em dois lugares ao
-  // mesmo tempo, independente de quem pediu primeiro ou tem mais
-  // prioridade. Bloqueia sempre.
-  if (professorConflict) {
-    return {
-      status: 409,
-      error: "Este professor já possui outra reserva no mesmo período.",
-      conflito: { tipo: "professor", reservaId: professorConflict.id },
-      prioridadeExistente: professorConflict.prioridadeAplicada,
-    };
-  }
+  // [RESERVA-VARIOS-ESPACOS] (17/10/2026) so o conflito de ESPACO bloqueia. O professor pode ter
+  // mais de um espaco na mesma aula (turma dividida); antes isso era recusado.
+  const roomConflict = await db
+    .select()
+    .from(reservasTable)
+    .where(and(...reservationConditions, eq(reservasTable.salaId, input.salaId)))
+    .then((rows) => rows[0] ?? null);
 
   const prioridadeSolicitante = rule?.prioridade ?? 3;
 

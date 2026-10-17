@@ -4,11 +4,15 @@
 // as mesmas da tela do sistema.
 import { useMemo, useState } from "react";
 import { useListCalendarioEscolar, useListTrimestresLetivos } from "@workspace/api-client-react";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, DoorOpen } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { COR_TRIMESTRE, DIAS_SEMANA, FUNDO_DIA, MESES, TIPO_LABELS, tipoDoEvento } from "@/lib/calendario-cores";
+
+// [RESERVA-NO-CALENDARIO] (17/10/2026) reservas do professor marcadas no calendario
+export type ReservaNoCalendario = { data: string; numeroAula: number; status: string; salaNome: string; turno?: string | null };
+const NOME_TURNO: Record<string, string> = { matutino: "manhã", vespertino: "tarde", noturno: "noite" };
 
 type Evento = { id: number; data: string; tipo: string; descricao: string; diaLetivo?: boolean };
 const isoLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -28,7 +32,7 @@ function agrupar(eventos: Evento[]) {
   return grupos;
 }
 
-export function CalendarioMesEscola() {
+export function CalendarioMesEscola({ reservas = [] }: { reservas?: ReservaNoCalendario[] }) {
   const hojeISO = isoLocal(new Date());
   const [ref, setRef] = useState(() => { const d = new Date(); return { ano: d.getFullYear(), mes: d.getMonth() }; });
   const { ano, mes } = ref;
@@ -56,6 +60,23 @@ export function CalendarioMesEscola() {
   }, [ano, mes]);
 
   const prefixo = `${ano}-${String(mes + 1).padStart(2, "0")}`;
+  const reservasPorDia = useMemo(() => {
+    const m = new Map<string, ReservaNoCalendario[]>();
+    for (const r of reservas) {
+      if (r.status === "cancelada") continue;
+      const d = String(r.data).slice(0, 10);
+      if (!m.has(d)) m.set(d, []);
+      m.get(d)!.push(r);
+    }
+    return m;
+  }, [reservas]);
+  const descreverReservas = (rs: ReservaNoCalendario[]) =>
+    [...new Set(rs.map((r) => r.salaNome))].map((sala) => {
+      const aulas = rs.filter((r) => r.salaNome === sala).sort((a, b) => a.numeroAula - b.numeroAula);
+      const turno = aulas[0]?.turno ? ` (${NOME_TURNO[aulas[0].turno] ?? aulas[0].turno})` : "";
+      return `${sala}: ${aulas.map((a) => `${a.numeroAula}ª`).join(", ")} aula${turno}${aulas.every((a) => a.status === "pendente") ? " · aguardando" : ""}`;
+    });
+  const reservasDoMes = [...reservasPorDia.entries()].filter(([d]) => d.startsWith(prefixo)).sort(([a], [b]) => a.localeCompare(b));
   const grupos = useMemo(() => agrupar((eventos as Evento[]).filter((e) => e.data.startsWith(prefixo))), [eventos, prefixo]);
   const tiposNoMes = [...new Set(grupos.map((g) => g.tipo))];
   const trimestreDaData = (data: string) => {
@@ -103,6 +124,8 @@ export function CalendarioMesEscola() {
                 <div key={si} className="grid grid-cols-7">
                   {semana.map((data, ci) => {
                     const evs = data ? porDia.get(data) ?? [] : [];
+                    const minhas = data ? reservasPorDia.get(data) ?? [] : [];
+                    const soPendente = minhas.length > 0 && minhas.every((r) => r.status === "pendente");
                     const fimDeSemana = ci === 0 || ci === 6;
                     const tipoForte = evs.find((e) => FUNDO_DIA[e.tipo] && !e.diaLetivo)?.tipo;
                     const tri = data ? trimestreDaData(data) : -1;
@@ -114,11 +137,20 @@ export function CalendarioMesEscola() {
                     return (
                       <div
                         key={ci}
-                        title={evs.map((e) => `${tipoDoEvento(e.tipo).label}: ${e.descricao}`).join("\n") || undefined}
-                        className={`min-h-[56px] sm:min-h-[84px] p-1 sm:p-1.5 border-r border-b border-border/40 last:border-r-0 ${si === semanas.length - 1 ? "last:border-b-0" : ""} ${fundo}`}
+                        title={[...evs.map((e) => `${tipoDoEvento(e.tipo).label}: ${e.descricao}`), ...descreverReservas(minhas).map((t) => `Sua reserva — ${t}`)].join("\n") || undefined}
+                        className={`relative min-h-[56px] sm:min-h-[84px] p-1 sm:p-1.5 border-r border-b border-border/40 last:border-r-0 ${si === semanas.length - 1 ? "last:border-b-0" : ""} ${fundo}`}
                       >
                         {data && (
                           <>
+                            {minhas.length > 0 && (
+                              <span
+                                className={`absolute right-1 top-1 inline-flex items-center gap-0.5 rounded px-1 py-0.5 text-[9px] font-bold leading-none ${soPendente ? "bg-amber-100 text-amber-800 ring-1 ring-amber-300" : "bg-[#1565C0] text-white"}`}
+                                aria-label={`${minhas.length} reserva(s) sua(s)`}
+                              >
+                                <DoorOpen className="h-2.5 w-2.5" aria-hidden />
+                                {minhas.length}
+                              </span>
+                            )}
                             <span className={`text-xs font-medium inline-flex items-center justify-center ${data === hojeISO ? "w-5 h-5 rounded-full bg-[#1565C0] text-white shadow" : fimDeSemana ? "text-slate-400" : "text-foreground"}`}>
                               {Number(data.slice(8, 10))}
                             </span>
@@ -147,7 +179,7 @@ export function CalendarioMesEscola() {
               ))}
             </div>
 
-            {(tiposNoMes.length > 0 || trimestres.length > 0) && (
+            {(tiposNoMes.length > 0 || trimestres.length > 0 || reservasDoMes.length > 0) && (
               <div className="flex flex-wrap gap-3 mt-4">
                 {trimestres.map((t) => (
                   <div key={"tri" + t.id} className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -155,10 +187,28 @@ export function CalendarioMesEscola() {
                     {t.trimestre}º trimestre
                   </div>
                 ))}
+                {reservasDoMes.length > 0 && (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-0.5 rounded bg-[#1565C0] px-1 py-0.5 text-[9px] font-bold leading-none text-white"><DoorOpen className="h-2.5 w-2.5" aria-hidden />1</span>
+                    Sua reserva (amarelo: aguardando)
+                  </div>
+                )}
                 {tiposNoMes.map((k) => (
                   <div key={k} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <span className={`w-2 h-2 rounded-full ${tipoDoEvento(k).dot}`} />
                     {tipoDoEvento(k).label}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {reservasDoMes.length > 0 && (
+              <div className="mt-4 border-t pt-3 space-y-1.5">
+                <p className="text-sm font-semibold">Minhas reservas em {MESES[mes]}</p>
+                {reservasDoMes.map(([d, rs]) => (
+                  <div key={d} className="flex items-start gap-3 text-sm">
+                    <span className="w-[4.5rem] shrink-0 pt-0.5 text-xs font-semibold tabular-nums text-[#1565C0]">{ddmm(d)}</span>
+                    <span className="min-w-0 flex-1 leading-snug">{descreverReservas(rs).join(" · ")}</span>
                   </div>
                 ))}
               </div>

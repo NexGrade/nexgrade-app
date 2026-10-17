@@ -55,11 +55,8 @@ export const reservasTable = pgTable(
     salaSlotUnico: uniqueIndex("reservas_sala_slot_unico")
       .on(table.escolaId, table.salaId, table.data, table.numeroAula, sql`coalesce(${table.turno}, '')`)
       .where(sql`${table.status} != 'cancelada'`),
-    // [SEGURANCA] Mesma logica para o professor -- nunca duas
-    // reservas ativas dele no mesmo dia/aula.
-    professorSlotUnico: uniqueIndex("reservas_professor_slot_unico")
-      .on(table.escolaId, table.professorId, table.data, table.numeroAula, sql`coalesce(${table.turno}, '')`)
-      .where(sql`${table.status} != 'cancelada'`),
+    // [RESERVA-VARIOS-ESPACOS] (17/10/2026) o indice "uma reserva por professor por aula" saiu:
+    // o professor pode reservar mais de um espaco na mesma aula (turma dividida).
   }),
 );
 
