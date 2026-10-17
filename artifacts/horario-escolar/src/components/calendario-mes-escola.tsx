@@ -9,19 +9,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { COR_TRIMESTRE, DIAS_SEMANA, FUNDO_DIA, MESES, TIPO_LABELS, tipoDoEvento } from "@/lib/calendario-cores";
+import { NOME_TURNO, DIA_CURTO, abreviarSala, rotuloAulas } from "@/lib/reservas-formato"; // [RESERVAS-TOPICOS]
 
 // [RESERVA-NO-CALENDARIO] (17/10/2026) reservas do professor marcadas no calendario
 export type ReservaNoCalendario = { data: string; numeroAula: number; status: string; salaNome: string; turno?: string | null };
-const NOME_TURNO: Record<string, string> = { matutino: "manhã", vespertino: "tarde", noturno: "noite" };
 
 // [RESERVAS-TOPICOS] lista "Minhas reservas" em topicos (PC e celular): um dia por linha, um topico por espaco
-const DIA_CURTO = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
-const abreviarSala = (nome: string) =>
-  nome
-    .replace(/^Laborat[óo]rio\s+(de\s+|da\s+|do\s+)?/i, "Lab. ")
-    .replace(/\s+-\s+/g, " · ")
-    .replace(/\s*\((\d+)\)$/, " · $1 un.")
-    .replace(/\s{2,}/g, " ");
 function topicosDoDia(rs: ReservaNoCalendario[]) {
   const mapa = new Map<string, { sala: string; status: string; turno: string | null; aulas: number[] }>();
   for (const r of rs) {
@@ -237,7 +230,7 @@ export function CalendarioMesEscola({ reservas = [] }: { reservas?: ReservaNoCal
                         <li key={`${t.sala}|${t.status}|${t.turno}`} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 leading-snug before:mr-0.5 before:content-['•'] before:text-[#1565C0]">
                           <span className="min-w-0 break-words font-medium">{abreviarSala(t.sala)}</span>
                           <span className="text-xs text-muted-foreground">
-                            {t.aulas.map((n) => `${n}ª`).join(", ")} aula{t.aulas.length > 1 ? "s" : ""}
+                            {rotuloAulas(t.aulas)}
                             {t.turno ? ` · ${NOME_TURNO[t.turno] ?? t.turno}` : ""}
                           </span>
                           <span className={`rounded px-1.5 py-px text-[10px] font-semibold ${t.status === "pendente" ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>
