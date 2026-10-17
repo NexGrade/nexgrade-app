@@ -412,16 +412,26 @@ export default function MinhaAgendaPage() {
     return dow === 0 ? 6 : dow - 1;
   }, []);
 
-  function handleBaixarPdf() {
-    // [DICA] Alguns navegadores nao selecionam "Paisagem" sozinhos
-    // no dialogo de impressao, mesmo com a orientacao configurada no
-    // CSS -- avisa o usuario pra conferir/marcar manualmente antes
-    // de salvar, evitando conteudo cortado.
-    toast({
-      title: "Dica de impressão",
-      description: 'Na tela que abrir, confira se "Paisagem" está selecionado em Layout antes de salvar.',
-    });
-    window.print();
+  // [PDF-AGENDA] (17/10/2026) PDF proprio gerado no servidor (1 pagina, todos os turnos),
+  // em vez de imprimir a pagina (saia com menu, so a aba aberta e pagina em branco).
+  const [baixandoPdf, setBaixandoPdf] = useState(false);
+  async function handleBaixarPdf() {
+    setBaixandoPdf(true);
+    try {
+      const blob = await customFetchOcupacao<Blob>("/api/minha-agenda/agenda-pdf", { responseType: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `agenda-${(professor?.nome ?? "professor").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").toLowerCase()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch {
+      toast({ title: "Não foi possível gerar o PDF", description: "Tente novamente em instantes.", variant: "destructive" });
+    } finally {
+      setBaixandoPdf(false);
+    }
   }
 
   if (carregandoProfessor) {
@@ -483,8 +493,8 @@ export default function MinhaAgendaPage() {
               <span className="hidden sm:inline">Instalar app</span><span className="sm:hidden">App</span>
             </Button>
           )}
-          <Button variant="outline" onClick={handleBaixarPdf}>
-            <Download className="h-4 w-4 mr-2" />
+          <Button variant="outline" onClick={() => void handleBaixarPdf()} disabled={baixandoPdf}>
+            {baixandoPdf ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
             <span className="hidden sm:inline">Baixar PDF</span><span className="sm:hidden">PDF</span>
           </Button>
           <NovaReservaDialog professorId={professor.id} />
