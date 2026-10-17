@@ -1,1 +1,0 @@
-ALTER TABLE "matrizes_curriculares" ADD COLUMN "codigo_matriz_sere" text;

@@ -1,1 +1,0 @@
-﻿ALTER TABLE "planos" ADD COLUMN "visivel_publicamente" boolean DEFAULT true NOT NULL;

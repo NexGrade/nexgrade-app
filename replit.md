@@ -83,14 +83,15 @@ SaaS completo de gestão de horários escolares para escolas públicas brasileir
 
 ## Migrations versionadas (substitui `drizzle-kit push`)
 
-`lib/db/drizzle.config.ts` agora tem `out: ./drizzle` e os scripts `generate`/`migrate` (além do `push` antigo, mantido por compatibilidade). Uma migration inicial de baseline já foi gerada (`lib/db/drizzle/0000_slow_saracen.sql`), refletindo o schema atual — gerada sem precisar de banco vivo (`generate` só faz diff de schema, não conecta).
+**Regularizado em 17/10/2026.** A cadeia antiga (0000 a 0024) estava quebrada — a 0001 mexia em tabela que a 0000 nunca criou — e os snapshots não batiam com o banco. Foi substituída por **uma única migração de base** (`lib/db/drizzle/0000_*.sql`) gerada do schema atual (`lib/db/src/schema`). Conferido num banco vazio: aplicar a base gera um banco **idêntico** ao criado por `push` (200 objetos, 0 diferenças) e o `drizzle-kit push` seguinte não muda nada.
 
-**Atenção — passo manual obrigatório antes de usar `migrate` no banco já em uso:** o banco de produção/desenvolvimento atual já tem esse schema aplicado via `push`. Rodar `pnpm run migrate` direto tentaria `CREATE TABLE` em tabelas que já existem e falharia. Antes de adotar `migrate` dali pra frente:
-1. Rodar a migration 0000 uma vez contra um banco **vazio** para confirmar que o SQL gerado está correto.
-2. No banco real (já populado), marcar a migration 0000 como "já aplicada" inserindo manualmente o registro correspondente na tabela de controle do drizzle (`drizzle.__drizzle_migrations` — nome padrão, confirmar exato na versão instalada do drizzle-kit) com o hash da migration 0000, **sem executar o SQL dela**.
-3. Só a partir daí, toda mudança de schema nova segue `generate` → revisar o SQL → commitar → `migrate`, nunca mais `push`.
+Fluxo daqui para frente (nunca mais `push` no banco real):
+1. Mudou o schema → `pnpm --filter @workspace/db run generate` → **revisar o SQL gerado** → commitar.
+2. Aplicar com `pnpm --filter @workspace/db run migrate`.
 
-Isso não foi executado nesta sessão porque não há uma `DATABASE_URL` de banco real disponível neste ambiente de revisão — fazer esse passo com cuidado, olhando o SQL gerado, é mais seguro do que eu tentar simular sem visibilidade do banco de verdade.
+**Passo único no banco real (já populado, criado por `push`/scripts):** ele precisa "adotar" a base sem executá-la, senão o `migrate` tentaria `CREATE TABLE` em tabelas que já existem. Use `scripts/adotar-migracoes.ts` (dry-run por padrão; `--aplicar` registra a base na tabela de controle `drizzle.__drizzle_migrations`, sem rodar o SQL; para se o banco não tiver o esquema esperado). Só depois disso o `migrate` passa a valer nesse banco.
+
+Banco novo (outro ambiente): `pnpm --filter @workspace/db run migrate` já cria tudo a partir da base.
 
 ## Testes automatizados (início)
 
@@ -135,7 +136,7 @@ Mais 3 achados da mesma varredura, também corrigidos:
 - ~~Zero testes automatizados~~ — **início feito**: Vitest com 9 testes (ver seção "Testes automatizados" acima); ainda falta cobertura de integração e do Solver.
 - ~~Sem CI/CD~~ — **corrigido**: `.github/workflows/ci.yml` (typecheck em PR/push).
 - Pool do Postgres sem configuração de SSL/timeout explícita — **ainda pendente**.
-- ~~Schema gerenciado só por `drizzle-kit push`~~ — **scaffolding pronto** (ver seção "Migrations versionadas" acima), mas a transição segura no banco real ainda precisa do passo manual documentado ali.
+- ~~Schema gerenciado só por `drizzle-kit push`~~ — **regularizado** (ver "Migrations versionadas"): base nova validada; falta só rodar `scripts/adotar-migracoes.ts` no banco real.
 
 ## Gotchas
 
