@@ -91,6 +91,16 @@ describe("leitura do portal do gestor de reservas", () => {
         expect(rodar(req({ path, cargo: "professor" })), path).toMatchObject({ passou: false, status: 403 });
       }
     });
+    it("listas e relatorios de reservas (com o nome de quem reservou): equipe sim, professor nao", () => {
+      for (const path of ["/reservas", "/reservas/resumo", "/export/reservas-pdf", "/export/reservas-dados"]) {
+        for (const cargo of ["direcao", "coordenacao", "secretaria", "reservas"]) expect(rodar(req({ path, cargo })).passou, `${cargo} ${path}`).toBe(true);
+        expect(rodar(req({ path, cargo: "professor" })), path).toMatchObject({ passou: false, status: 403 });
+      }
+    });
+    it("regras por professor (prioridade e limite): so a coordenacao, nem o gestor de reservas", () => {
+      for (const cargo of ["direcao", "coordenacao", "secretaria"]) expect(rodar(req({ path: "/reservas/regras-professores", cargo })).passou, cargo).toBe(true);
+      for (const cargo of ["reservas", "professor"]) expect(rodar(req({ path: "/reservas/regras-professores", cargo })), cargo).toMatchObject({ passou: false, status: 403 });
+    });
     it("professor segue com o que ja tinha", () => {
       expect(rodar(req({ path: "/minha-agenda/ocupacao", cargo: "professor" })).passou).toBe(true);
       expect(rodar(req({ path: "/horarios", cargo: "professor" })).passou).toBe(true);
@@ -107,6 +117,17 @@ describe("leitura do portal do gestor de reservas", () => {
     });
     it("papel sem acesso ao portal nao consulta", () => {
       expect(rodar(reqClerk("/reservas/gestor/semana", "org:viewer"))).toMatchObject({ passou: false, status: 403 });
+    });
+    it("listas e relatorios de reservas: admin e papel de reservas sim, outro papel nao", () => {
+      for (const path of ["/reservas", "/reservas/resumo", "/export/reservas-pdf", "/export/reservas-dados"]) {
+        expect(rodar(reqClerk(path, "org:admin")).passou, path).toBe(true);
+        expect(rodar(reqClerk(path, "org:reservas")).passou, path).toBe(true);
+        expect(rodar(reqClerk(path, "org:viewer")), path).toMatchObject({ passou: false, status: 403 });
+      }
+    });
+    it("regras por professor: so admin, nem o papel de reservas", () => {
+      expect(rodar(reqClerk("/reservas/regras-professores", "org:admin")).passou).toBe(true);
+      expect(rodar(reqClerk("/reservas/regras-professores", "org:reservas"))).toMatchObject({ passou: false, status: 403 });
     });
   });
 });

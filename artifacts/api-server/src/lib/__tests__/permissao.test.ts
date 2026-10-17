@@ -13,7 +13,7 @@ describe("normalizarCaminho", () => {
 
 describe("ehLeituraSomenteAdmin", () => {
   it("bloqueia as consultas da coordenacao, em qualquer caixa", () => {
-    for (const c of ["/audit", "/Audit", "/AUDIT/", "/usuarios", "/Usuarios/", "/usuarios-acessos", "/USUARIOS-ACESSOS/membros", "/export/ponto", "/Export/Relatorio-Seed", "/codigos-rco", "/Codigos-RCO/"]) {
+    for (const c of ["/audit", "/Audit", "/AUDIT/", "/usuarios", "/Usuarios/", "/usuarios-acessos", "/USUARIOS-ACESSOS/membros", "/export/ponto", "/Export/Relatorio-Seed", "/codigos-rco", "/Codigos-RCO/", "/reservas/regras-professores", "/Reservas/Regras-Professores"]) {
       expect(ehLeituraSomenteAdmin(c), c).toBe(true);
     }
   });
@@ -44,13 +44,13 @@ describe("ehAlteracaoDeReservaPermitida (gestor de reservas)", () => {
 
 // [LEITURA-EQUIPE] consultas do portal do gestor (nomes de quem reservou, grade de qualquer professor)
 describe("ehLeituraDaEquipe", () => {
-  it("cobre todo o portal do gestor, em qualquer caixa", () => {
-    for (const c of ["/reservas/gestor/semana", "/Reservas/Gestor/Horario", "/RESERVAS/GESTOR/", "/reservas/gestor"]) {
+  it("cobre o portal do gestor, as listas e os relatorios de reservas, em qualquer caixa", () => {
+    for (const c of ["/reservas/gestor/semana", "/Reservas/Gestor/Horario", "/RESERVAS/GESTOR/", "/reservas/gestor", "/reservas", "/Reservas/", "/reservas/resumo", "/export/reservas-pdf", "/Export/Reservas-Dados"]) {
       expect(ehLeituraDaEquipe(c), c).toBe(true);
     }
   });
   it("nao pega o que o professor usa", () => {
-    for (const c of ["/minha-agenda/ocupacao", "/minha-agenda/recursos/ocupacao", "/reservas", "/reservas/12", "/reservas/gestores-fake", "/horarios"]) {
+    for (const c of ["/minha-agenda/ocupacao", "/minha-agenda/recursos/ocupacao", "/minha-agenda/reservas", "/reservasx", "/horarios", "/export/ponto"]) {
       expect(ehLeituraDaEquipe(c), c).toBe(false);
     }
   });
