@@ -10,7 +10,6 @@ import { MapaOcupacaoSalas } from "@/components/mapa-ocupacao-salas"; // [OCUPAC
 import { NovaReservaDialog } from "@/components/nova-reserva-dialog"; // [RESERVA-GESTOR]
 import { ReservasDaSemana, CHAVE_RESERVAS_SEMANA, useSemanaReservas } from "@/components/reservas-da-semana"; // [RESERVAS-DA-SEMANA]
 import { ehSalaTablets } from "@/lib/reservas-formato"; // [MAPA-TABLETS]
-import { BotaoConfigurarTablets } from "@/components/config-tablets"; // [RECURSOS-CONFIG]
 import {
   AlertTriangle,
   ArrowRight,
@@ -504,7 +503,6 @@ export default function ReservasPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <BotaoRegrasPorProfessor />{/* [PAPEL-RESERVAS] */}
-          <BotaoConfigurarTablets />{/* [RECURSOS-CONFIG] total de tablets: so coordenacao */}
           <BotaoRelatorioReservas />{/* [RELATORIO-RESERVAS] */}
           <NovaReservaDialog modo="gestor" professores={professores} aoCriar={invalidateReservations} />{/* [RESERVA-GESTOR] mesmo fluxo do app do professor, ja confirmada */}
         </div>
