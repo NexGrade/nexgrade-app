@@ -14,7 +14,7 @@ import {
 } from "@workspace/api-client-react";
 import { NotificationBell } from "@/components/notification-bell";
 import { CalendarioMesEscola, type ReservaNoCalendario } from "@/components/calendario-mes-escola"; // [CALENDARIO-PROFESSOR]
-import { CalendarDays, Download, Loader2, Plus, MonitorSmartphone } from "lucide-react";
+import { CalendarDays, Download, Loader2, Plus, MonitorSmartphone, Tablet } from "lucide-react";
 import {
   useGetMeuProfessor,
   useGetMinhaAgendaHorario,
@@ -407,6 +407,242 @@ function NovaReservaDialog({ professorId: _professorId }: { professorId: number 
   );
 }
 
+// [RECURSOS-TABLETS] (17/10/2026) Reserva de tablets: secao propria, por QUANTIDADE (carrinho com
+// total fixo), sem escolher espaco. Confirma na hora; varios professores na mesma aula ate o total.
+type ReservaTablet = { id: number; data: string; diaSemana: number; numeroAula: number; turno: string; quantidade: number; titulo: string; observacoes: string | null; status: string; recursoNome: string };
+type OcupacaoRecursosResp = { data: string; recursos: Array<{ id: number; nome: string; total: number; ocupacao: Array<{ numeroAula: number; turno: string; reservadas: number }> }> };
+const CHAVE_TABLETS = ["reservas-tablets"] as const;
+
+function useReservasTablets(enabled: boolean) {
+  return useQueryOcupacao({
+    queryKey: CHAVE_TABLETS,
+    queryFn: () => customFetchOcupacao<ReservaTablet[]>("/api/minha-agenda/recursos/reservas", { responseType: "json" }),
+    enabled,
+  });
+}
+
+function ReservaTabletsDialog() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const { data: minhasReservas } = useGetMinhaAgendaReservas({ query: { queryKey: getGetMinhaAgendaReservasQueryKey() } });
+  const { data: minhasReservasTablets } = useReservasTablets(true);
+  const { data: dadosHorarioApi } = useGetMinhaAgendaHorario({ query: { queryKey: getGetMinhaAgendaHorarioQueryKey() } });
+  const dadosHorario = dadosHorarioApi as unknown as {
+    aulas: Array<{ diaSemana: number; numeroAula: number; turno: string; turmaNome: string; disciplinaNome: string }>;
+    horarios: Array<{ turno: string; numeroAula: number; horaInicio: string }>;
+  } | undefined;
+
+  const [data, setData] = useState("");
+  const [turno, setTurno] = useState<string | null>(null);
+  const [aulasSel, setAulasSel] = useState<number[]>([]);
+  const [recursoId, setRecursoId] = useState(0);
+  const [quantidade, setQuantidade] = useState("");
+  const [titulo, setTitulo] = useState("");
+  const [tituloEditado, setTituloEditado] = useState(false);
+  const [observacoes, setObservacoes] = useState("");
+  const [enviando, setEnviando] = useState(false);
+
+  const limpar = () => { setData(""); setTurno(null); setAulasSel([]); setQuantidade(""); setTitulo(""); setTituloEditado(false); setObservacoes(""); };
+  const diaSemana = /^\d{4}-\d{2}-\d{2}$/.test(data) ? diaSemanaDaData(data) : -1;
+
+  const minhasAulasDoDia = useMemo(() => (dadosHorario?.aulas ?? []).filter((a) => a.diaSemana === diaSemana), [dadosHorario, diaSemana]);
+  const turnosDoDia = ORDEM_PERIODO.filter((t) => minhasAulasDoDia.some((a) => a.turno === t));
+  const unicoTurno = turnosDoDia.length === 1 ? turnosDoDia[0]! : null;
+  useEffect(() => { if (data && !turno && unicoTurno) setTurno(unicoTurno); }, [data, turno, unicoTurno]);
+  const horariosDoTurno = useMemo(() => {
+    if (!turno) return [];
+    const nums = new Set<number>([
+      ...(dadosHorario?.horarios ?? []).filter((h) => h.turno === turno).map((h) => h.numeroAula),
+      ...minhasAulasDoDia.filter((a) => a.turno === turno).map((a) => a.numeroAula),
+    ]);
+    return [...nums].sort((x, y) => x - y).map((n) => ({
+      numeroAula: n,
+      hora: (dadosHorario?.horarios ?? []).find((h) => h.turno === turno && h.numeroAula === n)?.horaInicio?.slice(0, 5) ?? "",
+      aula: minhasAulasDoDia.find((a) => a.turno === turno && a.numeroAula === n) ?? null,
+    }));
+  }, [turno, dadosHorario, minhasAulasDoDia]);
+
+  const { data: ocupacao } = useQueryOcupacao({
+    queryKey: ["ocupacao-recursos", data],
+    queryFn: () => customFetchOcupacao<OcupacaoRecursosResp>("/api/minha-agenda/recursos/ocupacao?data=" + encodeURIComponent(data), { responseType: "json" }),
+    enabled: diaSemana >= 0 && diaSemana <= 4,
+  });
+  const recursos = ocupacao?.recursos ?? [];
+  useEffect(() => { if (recursos.length && !recursos.some((r) => r.id === recursoId)) setRecursoId(recursos[0]!.id); }, [recursos, recursoId]);
+  const recurso = recursos.find((r) => r.id === recursoId) ?? null;
+  const nomeRecurso = recurso?.nome ?? "Tablets";
+  const restam = (numeroAula: number) =>
+    recurso ? recurso.total - recurso.ocupacao.filter((o) => o.numeroAula === numeroAula && o.turno === turno).reduce((s, o) => s + o.reservadas, 0) : 0;
+  const menorSaldo = aulasSel.length ? Math.min(...aulasSel.map(restam)) : (recurso?.total ?? 0);
+  const qtd = Number(quantidade);
+  const qtdValida = Number.isInteger(qtd) && qtd >= 1 && qtd <= menorSaldo;
+
+  const rotuloAula = (n: number) => {
+    const h = horariosDoTurno.find((x) => x.numeroAula === n);
+    return `${n}ª${h?.hora ? ` (${h.hora})` : ""}`;
+  };
+  const tituloAuto = [...new Set(aulasSel.map((n) => horariosDoTurno.find((x) => x.numeroAula === n)?.aula).filter((a): a is NonNullable<typeof a> => !!a).map((a) => `${a.disciplinaNome} · ${a.turmaNome}`))].join("; ");
+  useEffect(() => { if (!tituloEditado) setTitulo(tituloAuto); }, [tituloAuto, tituloEditado]);
+
+  async function enviar() {
+    if (!turno || !data || !recurso || aulasSel.length === 0 || !qtdValida || !titulo.trim()) return;
+    setEnviando(true);
+    try {
+      const r = await customFetchOcupacao<{ criadas: number }>("/api/minha-agenda/recursos/reservas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recursoId: recurso.id, data, turno, numerosAula: aulasSel, quantidade: qtd, titulo: titulo.trim(), observacoes: observacoes.trim() || undefined }),
+        responseType: "json",
+      });
+      queryClient.invalidateQueries({ queryKey: CHAVE_TABLETS });
+      queryClient.invalidateQueries({ queryKey: ["ocupacao-recursos"] });
+      toast({
+        title: r.criadas > 1 ? `${r.criadas} reservas de ${nomeRecurso.toLowerCase()} confirmadas` : `Reserva de ${nomeRecurso.toLowerCase()} confirmada`,
+        description: `${qtd} ${qtd === 1 ? "unidade" : "unidades"} · ${[...aulasSel].sort((a, b) => a - b).map((n) => `${n}ª`).join(", ")} aula.`,
+      });
+      setOpen(false);
+      limpar();
+    } catch (err: any) {
+      queryClient.invalidateQueries({ queryKey: ["ocupacao-recursos"] });
+      toast({ title: "Não foi possível reservar", description: err?.data?.error ?? "Verifique os dados e tente de novo.", variant: "destructive" });
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) limpar(); }}>
+      <DialogTrigger asChild>
+        <Button variant="outline">
+          <Tablet className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Reservar tablets</span><span className="sm:hidden">Tablets</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-2xl max-h-[92dvh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Reservar tablets</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-5">
+          <Passo n={1} titulo="Dia">
+            <CalendarioReserva
+              diasComReserva={[...new Set([...(minhasReservas ?? []).map((r) => String(r.data).slice(0, 10)), ...(minhasReservasTablets ?? []).map((r) => String(r.data).slice(0, 10))])]}
+              salaId={0}
+              ocultarDica
+              value={data}
+              onChange={(iso) => { setData(iso); setTurno(null); setAulasSel([]); }}
+            />
+          </Passo>
+
+          {data && (
+            <Passo n={2} titulo="Período">
+              {turnosDoDia.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Você não tem aula neste dia. A reserva é feita para as suas aulas: escolha outro dia.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {ORDEM_PERIODO.map((t) => {
+                    const n = minhasAulasDoDia.filter((a) => a.turno === t).length;
+                    if (!n) return null;
+                    const sel = turno === t;
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => { setTurno(t); setAulasSel([]); }}
+                        className={`rounded-lg border px-4 py-2 text-left text-sm transition-colors ${sel ? "border-[#1565C0] bg-[#1565C0] text-white" : "hover:bg-muted"}`}
+                      >
+                        <span className="block font-semibold">{NOME_PERIODO[t] ?? t}</span>
+                        <span className={`text-xs ${sel ? "text-white/80" : "text-muted-foreground"}`}>{n} aula{n === 1 ? "" : "s"} sua{n === 1 ? "" : "s"}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {turnosDoDia.length > 1 && !turno && <p className="text-xs text-muted-foreground">Toque no período para ver as suas aulas.</p>}
+            </Passo>
+          )}
+
+          {turno && (
+            <Passo n={3} titulo="Aulas (pode marcar mais de uma)">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {horariosDoTurno.map(({ numeroAula, hora, aula }) => {
+                  const sel = aulasSel.includes(numeroAula);
+                  const sobra = restam(numeroAula);
+                  const desab = !aula || sobra <= 0;
+                  return (
+                    <button
+                      key={numeroAula}
+                      type="button"
+                      disabled={desab}
+                      onClick={() => setAulasSel((l) => (l.includes(numeroAula) ? l.filter((x) => x !== numeroAula) : [...l, numeroAula]))}
+                      className={`rounded-lg border px-3 py-2 text-left text-xs transition-colors ${
+                        desab ? "cursor-not-allowed bg-muted/40 text-muted-foreground/70"
+                        : sel ? "border-[#1565C0] bg-[#1565C0]/10 ring-2 ring-[#1565C0]"
+                        : "hover:bg-muted"}`}
+                    >
+                      <span className="flex items-baseline justify-between gap-1">
+                        <span className="text-sm font-semibold">{numeroAula}ª aula</span>
+                        {hora && <span className="tabular-nums text-muted-foreground">{hora}</span>}
+                      </span>
+                      {aula ? (
+                        <>
+                          <span className="block truncate font-medium">{aula.turmaNome}</span>
+                          <span className="block truncate text-muted-foreground">{aula.disciplinaNome}</span>
+                          <span className={`block font-medium ${sobra <= 0 ? "text-destructive" : sobra < 10 ? "text-amber-700" : "text-emerald-700"}`}>
+                            {sobra <= 0 ? "Todos reservados" : `Restam ${sobra} de ${recurso?.total ?? "—"}`}
+                          </span>
+                        </>
+                      ) : <span className="block">Sem aula sua</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </Passo>
+          )}
+
+          {turno && aulasSel.length > 0 && (
+            <Passo n={4} titulo="Quantidade">
+              {recursos.length > 1 && (
+                <Select value={String(recursoId)} onValueChange={(v) => setRecursoId(Number(v))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{recursos.map((r) => <SelectItem key={r.id} value={String(r.id)}>{r.nome}</SelectItem>)}</SelectContent>
+                </Select>
+              )}
+              <Input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={menorSaldo}
+                placeholder={`Quantos ${nomeRecurso.toLowerCase()}?`}
+                value={quantidade}
+                onChange={(e) => setQuantidade(e.target.value)}
+              />
+              <p className={`text-xs ${quantidade && !qtdValida ? "text-destructive" : "text-muted-foreground"}`}>
+                {quantidade && !qtdValida
+                  ? menorSaldo < 1 ? "Não há unidades livres nessas aulas." : `Informe de 1 a ${menorSaldo}.`
+                  : `Disponíveis nas ${aulasSel.length > 1 ? "aulas escolhidas" : "aula escolhida"}: ${menorSaldo}. Você leva os ${nomeRecurso.toLowerCase()} para a sua sala; a reserva é confirmada na hora.`}
+              </p>
+              <p className="text-xs text-muted-foreground">Aulas: {[...aulasSel].sort((a, b) => a - b).map(rotuloAula).join(", ")}.</p>
+            </Passo>
+          )}
+
+          {turno && aulasSel.length > 0 && (
+            <Passo n={5} titulo="Objetivo">
+              <Input placeholder="Ex.: Pesquisa, Atividade digital..." value={titulo} onChange={(e) => { setTitulo(e.target.value); setTituloEditado(true); }} />
+              <Textarea placeholder="Observações (opcional)" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
+            </Passo>
+          )}
+
+          <Button type="button" className="w-full" disabled={enviando || !turno || aulasSel.length === 0 || !qtdValida || !titulo.trim()} onClick={() => void enviar()}>
+            {enviando ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+            {aulasSel.length > 1 ? `Reservar em ${aulasSel.length} aulas` : "Reservar tablets"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function usePwaInstall() {
   const [prompt, setPrompt] = useState<any>(null);
 
@@ -510,6 +746,30 @@ export default function MinhaAgendaPage() {
   const { data: reservas, isLoading: carregandoReservas } = useGetMinhaAgendaReservas({
     query: { queryKey: getGetMinhaAgendaReservasQueryKey(), enabled: !!professor },
   });
+  const { data: reservasTablets } = useReservasTablets(!!professor); // [RECURSOS-TABLETS]
+  const [cancelandoTablet, setCancelandoTablet] = useState<number | null>(null);
+  async function cancelarTablet(id: number) {
+    if (!window.confirm("Cancelar esta reserva de tablets? As unidades voltam a ficar livres.")) return;
+    setCancelandoTablet(id);
+    try {
+      await customFetchOcupacao("/api/minha-agenda/recursos/reservas/" + id, { method: "DELETE", responseType: "json" });
+      queryClient.invalidateQueries({ queryKey: CHAVE_TABLETS });
+      queryClient.invalidateQueries({ queryKey: ["ocupacao-recursos"] });
+      toast({ title: "Reserva de tablets cancelada" });
+    } catch {
+      toast({ title: "Não foi possível cancelar", description: "Tente novamente em instantes.", variant: "destructive" });
+    } finally {
+      setCancelandoTablet(null);
+    }
+  }
+  // tablets entram no calendario como mais um "espaco", com a quantidade no nome
+  const reservasNoCalendario = useMemo(
+    () => [
+      ...((reservas ?? []) as unknown as ReservaNoCalendario[]),
+      ...(reservasTablets ?? []).map((t) => ({ data: t.data, numeroAula: t.numeroAula, status: t.status, turno: t.turno, salaNome: `${t.recursoNome} (${t.quantidade})` })),
+    ],
+    [reservas, reservasTablets],
+  );
   const { data: eventosCalendario } = useListCalendarioEscolar(
     { ano: new Date().getFullYear() },
     { query: { queryKey: ["calendario-escolar", new Date().getFullYear()], enabled: !!professor } },
@@ -615,10 +875,11 @@ export default function MinhaAgendaPage() {
             {baixandoPdf ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
             <span className="hidden sm:inline">Baixar PDF</span><span className="sm:hidden">PDF</span>
           </Button>
+          <ReservaTabletsDialog />
           <NovaReservaDialog professorId={professor.id} />
         </div>
 
-        {mostrarCalendario && <CalendarioMesEscola reservas={(reservas ?? []) as unknown as ReservaNoCalendario[]} />}{/* [CALENDARIO-PROFESSOR] mesmo visual do Calendario Escolar */}
+        {mostrarCalendario && <CalendarioMesEscola reservas={reservasNoCalendario} />}{/* [CALENDARIO-PROFESSOR] mesmo visual do Calendario Escolar */}
 
         <Card>
           <CardHeader>
@@ -853,10 +1114,27 @@ export default function MinhaAgendaPage() {
           <CardContent className="space-y-2">
             {carregandoReservas ? (
               <Skeleton className="h-24 w-full" />
-            ) : !reservas || reservas.length === 0 ? (
+            ) : (!reservas || reservas.length === 0) && (!reservasTablets || reservasTablets.length === 0) ? (
               <p className="text-sm text-muted-foreground">Nenhuma reserva ativa.</p>
             ) : (
-              reservas.map((r) => (
+              <>
+              {(reservasTablets ?? []).map((t) => (
+                <div key={`tablet-${t.id}`} className="flex items-center justify-between gap-2 border rounded-md p-3 border-l-4 border-l-[#22c55e] imprimir-sem-quebra">
+                  <div>
+                    <div className="font-medium">{t.titulo}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {t.data} · {t.numeroAula}ª aula · {t.recursoNome}: {t.quantidade} {t.quantidade === 1 ? "unidade" : "unidades"}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 print:hidden">
+                    <Badge>Confirmada</Badge>
+                    <Button type="button" variant="ghost" size="sm" disabled={cancelandoTablet === t.id} onClick={() => void cancelarTablet(t.id)}>
+                      {cancelandoTablet === t.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Cancelar"}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              {(reservas ?? []).map((r) => (
                 <div
                   key={r.id}
                   className="flex items-center justify-between border rounded-md p-3 border-l-4 imprimir-sem-quebra"
@@ -874,7 +1152,8 @@ export default function MinhaAgendaPage() {
                     {r.status === "confirmada" ? "Confirmada" : r.status === "pendente" ? "Pendente" : r.status}
                   </Badge>
                 </div>
-              ))
+              ))}
+              </>
             )}
           </CardContent>
         </Card>
@@ -888,7 +1167,7 @@ export default function MinhaAgendaPage() {
 // Dias passados e fins de semana desabilitados. Sem nomes de quem reservou.
 type OcupacaoMesResp = { mes: string; maxAula: number; dias: Record<string, { confirmadas: number; pendentes: number }> };
 
-function CalendarioReserva({ salaId, value, onChange, diasComReserva = [] }: { salaId: number; value: string; onChange: (iso: string) => void; diasComReserva?: string[] }) {
+function CalendarioReserva({ salaId, value, onChange, diasComReserva = [], ocultarDica = false }: { salaId: number; value: string; onChange: (iso: string) => void; diasComReserva?: string[]; ocultarDica?: boolean }) {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
   const selecionada = /^\d{4}-\d{2}-\d{2}$/.test(value ?? "")
@@ -949,9 +1228,9 @@ function CalendarioReserva({ salaId, value, onChange, diasComReserva = [] }: { s
           <span className="flex items-center gap-1"><i className="h-2.5 w-2.5 rounded-sm bg-amber-100 ring-1 ring-amber-300" /> Algumas aulas reservadas</span>
           <span className="flex items-center gap-1"><i className="h-2.5 w-2.5 rounded-sm bg-muted ring-1 ring-border" /> Lotado</span>
         </div>
-      ) : (
+      ) : !ocultarDica ? (
         <p className="text-xs text-muted-foreground">Depois de escolher o espaço, os dias ficam coloridos com a ocupação dele.</p>
-      )}
+      ) : null}
       {diasComReserva.length > 0 && (
         <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <span className="font-bold text-foreground underline decoration-[#1565C0] decoration-2 underline-offset-4">12</span> dia em que você já tem reserva

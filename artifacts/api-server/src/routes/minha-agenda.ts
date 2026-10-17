@@ -11,6 +11,8 @@ import {
   disciplinasTable,
   turmasTable,
   reservasTable,
+  recursosTable, // [RECURSOS-TABLETS]
+  reservasRecursosTable, // [RECURSOS-TABLETS]
   salasTable,
   disponibilidadeTable,
   escolasTable, // [PDF-AGENDA]
@@ -451,6 +453,238 @@ router.post("/reservas/lote", async (req, res) => {
     });
   }
   res.status(201).json({ criadas: criadas.length, confirmadas: criadas.length - pendentes.length, pendentes: pendentes.length });
+});
+
+// [RECURSOS-TABLETS] (17/10/2026) Equipamento contado por unidade (carrinho de tablets).
+// Confirma na hora, sem escolher espaco; varios professores na mesma aula ate o total do recurso.
+const RECURSO_PADRAO = { nome: "Tablets", quantidadeTotal: 30 };
+
+class ErroRecurso extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
+
+// cria o recurso padrao da escola na primeira consulta (sem depender de seed no banco)
+async function garantirRecursos(escolaId: string) {
+  await db
+    .insert(recursosTable)
+    .values({ escolaId, ...RECURSO_PADRAO })
+    .onConflictDoNothing();
+  return db.select().from(recursosTable).where(and(eq(recursosTable.escolaId, escolaId), eq(recursosTable.ativo, true))).orderBy(recursosTable.nome);
+}
+
+router.get("/recursos/ocupacao", async (req, res) => {
+  const professor = await resolverProfessorLogado(req);
+  if (!professor) {
+    res.status(404).json({ error: "Nenhum professor vinculado a esta conta." });
+    return;
+  }
+  const q = req.query.data;
+  const data = typeof q === "string" && /^\d{4}-\d{2}-\d{2}$/.test(q) ? q : null;
+  if (!data) {
+    res.status(400).json({ error: "Informe a data (AAAA-MM-DD)." });
+    return;
+  }
+  const escolaId = getEscolaId(req);
+  const recursos = await garantirRecursos(escolaId);
+  const linhas = await db
+    .select({
+      recursoId: reservasRecursosTable.recursoId,
+      numeroAula: reservasRecursosTable.numeroAula,
+      turno: reservasRecursosTable.turno,
+      reservadas: sql<number>`coalesce(sum(${reservasRecursosTable.quantidade}), 0)::int`,
+    })
+    .from(reservasRecursosTable)
+    .where(and(eq(reservasRecursosTable.escolaId, escolaId), eq(reservasRecursosTable.data, data), ne(reservasRecursosTable.status, "cancelada")))
+    .groupBy(reservasRecursosTable.recursoId, reservasRecursosTable.numeroAula, reservasRecursosTable.turno);
+  res.json({
+    data,
+    recursos: recursos.map((r) => ({
+      id: r.id,
+      nome: r.nome,
+      total: r.quantidadeTotal,
+      ocupacao: linhas.filter((l) => l.recursoId === r.id).map((l) => ({ numeroAula: l.numeroAula, turno: l.turno, reservadas: l.reservadas })),
+    })),
+  });
+});
+
+router.get("/recursos/reservas", async (req, res) => {
+  const professor = await resolverProfessorLogado(req);
+  if (!professor) {
+    res.status(404).json({ error: "Nenhum professor vinculado a esta conta." });
+    return;
+  }
+  const hoje = new Date().toISOString().slice(0, 10);
+  const linhas = await db
+    .select({
+      id: reservasRecursosTable.id,
+      data: reservasRecursosTable.data,
+      diaSemana: reservasRecursosTable.diaSemana,
+      numeroAula: reservasRecursosTable.numeroAula,
+      turno: reservasRecursosTable.turno,
+      quantidade: reservasRecursosTable.quantidade,
+      titulo: reservasRecursosTable.titulo,
+      observacoes: reservasRecursosTable.observacoes,
+      status: reservasRecursosTable.status,
+      recursoNome: recursosTable.nome,
+    })
+    .from(reservasRecursosTable)
+    .innerJoin(recursosTable, eq(recursosTable.id, reservasRecursosTable.recursoId))
+    .where(
+      and(
+        eq(reservasRecursosTable.professorId, professor.id),
+        eq(reservasRecursosTable.escolaId, getEscolaId(req)),
+        ne(reservasRecursosTable.status, "cancelada"),
+        gte(reservasRecursosTable.data, hoje),
+      ),
+    )
+    .orderBy(reservasRecursosTable.data, reservasRecursosTable.numeroAula);
+  res.json(linhas);
+});
+
+const ReservaRecursoBody = z.object({
+  recursoId: z.number().int(),
+  data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  turno: z.string().min(1),
+  numerosAula: z.array(z.number().int().min(1)).min(1).max(10),
+  quantidade: z.number().int().min(1),
+  titulo: z.string().min(1),
+  observacoes: z.string().optional(),
+});
+
+router.post("/recursos/reservas", async (req, res) => {
+  const professor = await resolverProfessorLogado(req);
+  if (!professor) {
+    res.status(404).json({ error: "Nenhum professor vinculado a esta conta." });
+    return;
+  }
+  const parsed = ReservaRecursoBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Pedido de reserva incompleto." });
+    return;
+  }
+  const escolaId = getEscolaId(req);
+  const { recursoId, data, turno, quantidade, titulo, observacoes } = parsed.data;
+  const numerosAula = [...new Set(parsed.data.numerosAula)];
+  const d = new Date(`${data}T12:00:00Z`).getUTCDay();
+  const diaSemana = d === 0 ? 6 : d - 1;
+  if (diaSemana > 4) {
+    res.status(400).json({ error: "O dia precisa estar entre segunda e sexta-feira." });
+    return;
+  }
+  if (data < new Date().toISOString().slice(0, 10)) {
+    res.status(400).json({ error: "Não é possível reservar em uma data que já passou." });
+    return;
+  }
+
+  try {
+    // a reserva e para a aula do proprio professor (mesma regra dos espacos)
+    const minhasAulas = await db
+      .select({ numeroAula: horariosTable.numeroAula })
+      .from(horariosTable)
+      .innerJoin(turmasTable, eq(turmasTable.id, horariosTable.turmaId))
+      .where(
+        and(
+          eq(horariosTable.escolaId, escolaId),
+          eq(horariosTable.professorId, professor.id),
+          eq(horariosTable.diaSemana, diaSemana),
+          eq(turmasTable.turno, turno),
+          or(eq(horariosTable.versaoGrade, "oficial"), isNull(horariosTable.versaoGrade)),
+        ),
+      );
+    const semAula = numerosAula.filter((n) => !minhasAulas.some((a) => a.numeroAula === n));
+    if (semAula.length) {
+      throw new ErroRecurso(409, `Você não tem aula na ${semAula.map((n) => `${n}ª`).join(", ")} aula desse dia e período.`);
+    }
+
+    const criadas = await db.transaction(async (tx) => {
+      // trava a linha do recurso: dois pedidos ao mesmo tempo esperam um pelo outro, e a soma nunca passa do total
+      const [recurso] = await tx
+        .select()
+        .from(recursosTable)
+        .where(and(eq(recursosTable.id, recursoId), eq(recursosTable.escolaId, escolaId), eq(recursosTable.ativo, true)))
+        .for("update");
+      if (!recurso) throw new ErroRecurso(404, "Equipamento não encontrado.");
+      if (quantidade > recurso.quantidadeTotal) {
+        throw new ErroRecurso(409, `A escola tem ${recurso.quantidadeTotal} ${recurso.nome.toLowerCase()} no total.`);
+      }
+      const problemas: string[] = [];
+      for (const numeroAula of numerosAula) {
+        const [linha] = await tx
+          .select({ reservadas: sql<number>`coalesce(sum(${reservasRecursosTable.quantidade}), 0)::int` })
+          .from(reservasRecursosTable)
+          .where(
+            and(
+              eq(reservasRecursosTable.escolaId, escolaId),
+              eq(reservasRecursosTable.recursoId, recursoId),
+              eq(reservasRecursosTable.data, data),
+              eq(reservasRecursosTable.numeroAula, numeroAula),
+              eq(reservasRecursosTable.turno, turno),
+              ne(reservasRecursosTable.status, "cancelada"),
+            ),
+          );
+        const [minha] = await tx
+          .select({ id: reservasRecursosTable.id })
+          .from(reservasRecursosTable)
+          .where(
+            and(
+              eq(reservasRecursosTable.escolaId, escolaId),
+              eq(reservasRecursosTable.recursoId, recursoId),
+              eq(reservasRecursosTable.professorId, professor.id),
+              eq(reservasRecursosTable.data, data),
+              eq(reservasRecursosTable.numeroAula, numeroAula),
+              eq(reservasRecursosTable.turno, turno),
+              ne(reservasRecursosTable.status, "cancelada"),
+            ),
+          );
+        if (minha) {
+          problemas.push(`${numeroAula}ª aula: você já reservou ${recurso.nome.toLowerCase()} nessa aula (cancele a reserva para refazer).`);
+          continue;
+        }
+        const restam = recurso.quantidadeTotal - (linha?.reservadas ?? 0);
+        if (quantidade > restam) {
+          problemas.push(`${numeroAula}ª aula: restam ${restam} de ${recurso.quantidadeTotal}.`);
+        }
+      }
+      if (problemas.length) throw new ErroRecurso(409, `Não há ${recurso.nome.toLowerCase()} suficientes. ${problemas.join(" ")}`);
+      return tx
+        .insert(reservasRecursosTable)
+        .values(numerosAula.map((numeroAula) => ({ escolaId, recursoId, professorId: professor.id, data, diaSemana, numeroAula, turno, quantidade, titulo, observacoes, status: "confirmada" })))
+        .returning();
+    });
+    res.status(201).json({ criadas: criadas.length, confirmadas: criadas.length, pendentes: 0 });
+  } catch (err) {
+    if (err instanceof ErroRecurso) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
+});
+
+// o professor cancela a PROPRIA reserva de equipamento; as unidades voltam na hora
+router.delete("/recursos/reservas/:id", async (req, res) => {
+  const professor = await resolverProfessorLogado(req);
+  if (!professor) {
+    res.status(404).json({ error: "Nenhum professor vinculado a esta conta." });
+    return;
+  }
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) {
+    res.status(400).json({ error: "Reserva inválida." });
+    return;
+  }
+  const [row] = await db
+    .update(reservasRecursosTable)
+    .set({ status: "cancelada" })
+    .where(and(eq(reservasRecursosTable.id, id), eq(reservasRecursosTable.professorId, professor.id), eq(reservasRecursosTable.escolaId, getEscolaId(req)), ne(reservasRecursosTable.status, "cancelada")))
+    .returning({ id: reservasRecursosTable.id });
+  if (!row) {
+    res.status(404).json({ error: "Reserva não encontrada." });
+    return;
+  }
+  res.json({ ok: true });
 });
 
 // [NOTIFICACOES] Lista notificacoes visiveis para o professor logado:
