@@ -89,7 +89,7 @@ Fluxo daqui para frente (nunca mais `push` no banco real):
 1. Mudou o schema → `pnpm --filter @workspace/db run generate` → **revisar o SQL gerado** → commitar.
 2. Aplicar com `pnpm --filter @workspace/db run migrate`.
 
-**Passo único no banco real (já populado, criado por `push`/scripts):** ele precisa "adotar" a base sem executá-la, senão o `migrate` tentaria `CREATE TABLE` em tabelas que já existem. Use `scripts/adotar-migracoes.ts` (dry-run por padrão; `--aplicar` registra a base na tabela de controle `drizzle.__drizzle_migrations`, sem rodar o SQL; para se o banco não tiver o esquema esperado). Só depois disso o `migrate` passa a valer nesse banco.
+**Passo único no banco real (já populado, criado por `push`/scripts):** ele precisa "adotar" a base sem executá-la, senão o `migrate` tentaria `CREATE TABLE` em tabelas que já existem. Use `scripts/adotar-migracoes.ts` (dry-run por padrão; `--aplicar` registra **só a base (0000)** na tabela de controle `drizzle.__drizzle_migrations`, sem rodar o SQL; as migrações seguintes ficam para o `migrate` aplicar de verdade; `--ate=N` só se o banco já refletir as N primeiras; para se o banco não tiver o esquema esperado). Só depois disso o `migrate` passa a valer nesse banco. A tabela de controle pode já existir com registros da cadeia antiga: não atrapalha, pois o drizzle decide o que aplicar pela **data** da migração, não pelo hash (que muda com a quebra de linha do Windows).
 
 Banco novo (outro ambiente): `pnpm --filter @workspace/db run migrate` já cria tudo a partir da base.
 
