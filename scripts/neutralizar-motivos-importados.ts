@@ -20,7 +20,7 @@ async function main() {
   console.log(`Modo: ${aplicar ? "APLICAR" : "DRY-RUN (nada sera gravado)"}\n`);
   const grupos = await db.execute(sql`
     select motivo, count(*)::int as n,
-           regexp_replace(motivo, ${PADRAO}, ${NOME_FIXO}, 'gi') as depois
+           replace(regexp_replace(motivo, ${PADRAO}, ${NOME_FIXO}, 'gi'), 'PDF oficial ' || ${NOME_FIXO}, 'PDF oficial') as depois
     from disponibilidade_professores
     where motivo ~* ${PADRAO}
     group by motivo order by n desc`);
@@ -35,7 +35,7 @@ async function main() {
   }
   if (total === 0) { console.log("\nNada a fazer."); process.exit(0); }
   const r = await db.execute(sql`
-    update disponibilidade_professores set motivo = regexp_replace(motivo, ${PADRAO}, ${NOME_FIXO}, 'gi')
+    update disponibilidade_professores set motivo = replace(regexp_replace(motivo, ${PADRAO}, ${NOME_FIXO}, 'gi'), 'PDF oficial ' || ${NOME_FIXO}, 'PDF oficial')
     where motivo ~* ${PADRAO} returning id`);
   console.log(`\nFeito: ${r.rows.length} linha(s) atualizada(s).`);
   process.exit(0);
