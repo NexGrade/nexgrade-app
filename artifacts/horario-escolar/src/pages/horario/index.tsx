@@ -197,7 +197,7 @@ function paraMinutos(hora: string): number {
 }
 
 // Exibição compacta na grade: só o primeiro nome, igual ao padrão dos
-// relatórios do Urania (que usam apenas o primeiro nome do professor
+// relatórios do sistema anterior (que usam apenas o primeiro nome do professor
 // como identificação nas células). O cadastro completo (nome inteiro)
 // continua intacto em todo o resto do sistema -- isso é só visual,
 // pra caber no espaço apertado da célula da grade.
@@ -800,8 +800,8 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
     );
   };
 
-  // [GRADE-ROTULO-ATIVIDADE] (05/10/2026) horario bloqueado com atividade do
-  // Urania ("(ocupado: FORM)", "(ocupado: IF-1B)"...) aparece com o rotulo na
+  // [GRADE-ROTULO-ATIVIDADE] (05/10/2026) horario bloqueado com atividade fora
+  // de sala ("(ocupado: FORM)", "(ocupado: IF-1B)"...) aparece com o rotulo na
   // grade por professor, igual ao PDF -- antes saia "Vago" e parecia janela.
   const getAtividade = (diaSemana: number, numeroAula: number): string | undefined => {
     if (!professorIdSelecionado || !disponibilidadeProf) return undefined;
@@ -845,7 +845,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
   };
   const dispNoTurno = (t: string, dia: number, aula: number) =>
     (disponibilidadeProf ?? []).filter((d) => d.diaSemana === dia && d.horarioSlot === aula && d.turno === t);
-  // [GRADE-LIVRE-BLOQUEADO] horario indisponivel de verdade (traco do Urania, bloqueio manual);
+  // [GRADE-LIVRE-BLOQUEADO] horario indisponivel de verdade (traco do sistema anterior, bloqueio manual);
   // o bloqueio automatico do periodo nao letivo (18:00) aparece como "não letivo"
   const estadoVazio = (disp: Array<{ horaAtividadeObrigatoria: boolean; disponivel?: boolean | null; motivo?: string | null }>): "bloqueado" | "naoLetivo" | "livre" => {
     const b = disp.find((d) => !d.horaAtividadeObrigatoria && d.disponivel === false);
@@ -1325,7 +1325,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                               </div>
                             ) : atividade ? (
                               <div className="h-full w-full rounded-md p-2 border-l-4 bg-slate-100 border-slate-400 flex items-center justify-center">
-                                <span className="text-xs font-semibold text-slate-600" title="Atividade fora da sala (bloqueio sincronizado do Urania) -- nao e janela">{atividade}</span>
+                                <span className="text-xs font-semibold text-slate-600" title="Atividade fora da sala (bloqueio sincronizado) -- nao e janela">{atividade}</span>
                               </div>
                             ) : estadoProf === "bloqueado" ? (
                               <div
@@ -2168,7 +2168,7 @@ function AbaExperimental() {
   };
 
   // [SIMULAR-PROMOCAO] (05/10/2026) compara janelas (aula + HA recalculada +
-  // atividade do Urania) da grade oficial com a do experimento, sem gravar nada.
+  // atividade do sistema anterior) da grade oficial com a do experimento, sem gravar nada.
   type JanelaSim = { professorNome: string; turno: string; dia: string; janelas: number; dia_detalhe: string };
   type ResultadoSim = {
     turnos: string[];
@@ -2426,7 +2426,7 @@ function AbaExperimental() {
                           <button type="button" className="opacity-60 hover:opacity-100" onClick={() => setSimulacoes((s) => { const n = { ...s }; delete n[nome]; return n; })}><X className="w-3.5 h-3.5" /></button>
                         </div>
                         <div className="mt-1">
-                          Janelas de professor ({sim.turnos.join(", ")}), contando aula + HA recalculada + atividade do Urânia:
+                          Janelas de professor ({sim.turnos.join(", ")}), contando aula + HA recalculada + atividade fora de sala:
                           {" "}<strong>experimento {sim.experimento.janelas}</strong> × <strong>oficial {sim.oficial.janelas}</strong>.
                           {" "}Ao promover, a HA de {sim.professoresComHAMudando} professor(es) mudaria de lugar.
                         </div>

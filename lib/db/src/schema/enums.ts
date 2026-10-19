@@ -6,7 +6,7 @@ import { pgEnum } from "drizzle-orm/pg-core";
  * todos os níveis de ensino.
  *
  * [ATUALIZADO] Adicionado "IF" (sem sufixo). A seção 2.2 de
- * docs/analise-formatos-uranin-sere.md identificou que cursos "ENSINO
+ * docs/analise-formatos-sere.md identificou que cursos "ENSINO
  * MEDIO IF..." usam a etiqueta "IF" sozinha para categorias equivalentes
  * a "IFA" em outros cursos — ainda não confirmado oficialmente com a
  * SEED-PR se são a mesma coisa ou categorias distintas (ver item

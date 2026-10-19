@@ -8,7 +8,7 @@ export const disciplinasTable = pgTable("disciplinas", {
   nome: text("nome").notNull(),
   // [NOVO] Sigla curta (ex.: "MAT", "L.POR", "ED.FIS"), usada nas
   // grades PDF compactas (ver lib/pdf-grade.ts) — formato oficial já
-  // praticado pela escola nos exports do Urânia, com várias turmas por
+  // praticado pela escola nos exports do sistema anterior, com várias turmas por
   // página. Nula até ser preenchida manualmente ou populada em lote.
   sigla: text("sigla"),
   cargaSemanal: integer("carga_semanal").notNull().default(2),

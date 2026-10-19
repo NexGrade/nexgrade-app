@@ -121,7 +121,7 @@ function desenharBloco(
         const bloqueada = bloco.celulasBloqueadas?.find(
           (c) => c.diaSemana === diaSemana && c.numeroAula === numeroAula,
         );
-        // [ROTULO-BLOQUEIO] atividade com nome (PAEE, COORD, LAB...) sai escrita, como no Urania;
+        // [ROTULO-BLOQUEIO] atividade com nome (PAEE, COORD, LAB...) sai escrita, como no sistema anterior;
         // bloqueio sem nome continua com a hachura pontilhada.
         if (bloqueada?.rotulo) desenharTextoNaCelula(page, [sanitizarTextoPdf(bloqueada.rotulo)], font, x, yLinha, colDiaLargura - 6, alturaLinhaDado, 7);
         else if (bloqueada) desenharPontilhado(page, x, yLinha, colDiaLargura, alturaLinhaDado);

@@ -1,5 +1,5 @@
 // Script pontual — registra a FORMAÇÃO (curso de formadores) de terça à noite
-// do Mário Braga, vista no PDF do Urânia de 12/10 a 16/10/2026:
+// do Mário Braga, vista no PDF do sistema anterior de 12/10 a 16/10/2026:
 //   JOÃO LUCAS  terça 18:00, 18:45 e 19:35  (aulas 1, 2 e 3)
 //   VIVIANE     terça 18:00 e 18:45          (aulas 1 e 2)
 //
@@ -75,7 +75,7 @@ async function main() {
         continue;
       }
       // só mexe em: vazio, linha livre, a HA fixa FORM da 1a versão e o bloqueio automático do 18:00.
-      // Outra HA, atividade do Urânia ou bloqueio real não é sobrescrito.
+      // Outra HA, atividade do sistema anterior ou bloqueio real não é sobrescrito.
       const seguro =
         !atual ||
         (atual.horaAtividadeObrigatoria && atual.motivo === MOTIVO_HA_FORM_ANTIGO) ||

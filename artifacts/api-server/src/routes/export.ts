@@ -83,7 +83,7 @@ function toCSV(headers: string[], rows: string[][]): string {
 }
 
 // Primeiro nome apenas (ex.: "Anderson Silva" -> "ANDERSON") -- formato
-// real confirmado nos PDFs do Urânia, que nunca mostram sobrenome.
+// real confirmado nos PDFs do sistema anterior, que nunca mostram sobrenome.
 // [PDF-NOME-PROF] primeiro nome + inicial do sobrenome ("JOÃO L."), para distinguir professores com o mesmo primeiro nome
 function nomeCurto(nomeCompleto: string): string {
   const p = nomeCompleto.trim().split(/\s+/);
@@ -130,9 +130,9 @@ function lerOffsetSemana(req: { query: { semana?: unknown } }): number {
   return req.query.semana === "proxima" ? 1 : 0;
 }
 
-// [ROTULO-BLOQUEIO] Codigo da atividade que o Urania grava no motivo do bloqueio
-// ("Sincronizado do PDF oficial Urania (ocupado: PAEE) -- ..."): PAEE, COORD, PAC,
-// LAB, FORM, REP* etc. Sai escrito na celula do PDF, como no proprio Urania.
+// [ROTULO-BLOQUEIO] Codigo da atividade que o sistema anterior grava no motivo do bloqueio
+// ("Sincronizado do PDF oficial (ocupado: PAEE) -- ..."): PAEE, COORD, PAC,
+// LAB, FORM, REP* etc. Sai escrito na celula do PDF, como no proprio sistema anterior.
 function rotuloDoBloqueio(motivo: string | null | undefined): string | undefined {
   const m = /\(ocupado:\s*([^)]+?)\s*\)/.exec(motivo ?? "");
   return m ? m[1] : undefined;
@@ -165,12 +165,12 @@ async function buscarHorariosPorAula(
   const mapa: Record<number, string> = {};
   rows.forEach((r) => { mapa[r.numeroAula] = r.horaInicio.slice(0, 5); });
   // [NOVO] O turno noturno sempre mostra 18:00 no topo da grade, mesmo
-  // sem nenhuma aula real ali -- e o padrao visual do proprio Urania.
+  // sem nenhuma aula real ali -- e o padrao visual do proprio sistema anterior.
   // numeroAula 0 nunca e usado por aula de verdade, entao essa linha
   // sempre aparece vazia.
   // [FIX-1800-DUPLICADO] (05/10/2026) a linha extra 0 = "18:00" so era criada
   // quando JA existia um horario real as 18:00 (aula 1 nao letiva) -- o PDF saia
-  // com "18:00" duas vezes. O Urania mostra 18:00 uma vez so (a propria aula 1),
+  // com "18:00" duas vezes. O sistema anterior mostra 18:00 uma vez so (a propria aula 1),
   // entao a linha extra saiu: o 18:00 continua aparecendo pela aula 1.
   return mapa;
 }
@@ -344,7 +344,7 @@ router.get("/ponto-diario", async (req, res) => {
   res.send(Buffer.from(bytes));
 });
 
-// [RCO-EXPORT-BANCO] (06/10/2026) Arquivo IMPORT_URANIA para o RCO com os codigos do BANCO
+// [RCO-EXPORT-BANCO] (06/10/2026) Arquivo de importacao do RCO com os codigos do BANCO
 // (mesma regra do lib/db/gerar-xml-sere.cjs, que o RCO ja aceitou):
 //  - CODDISC  = disciplinas.codigo_externo_rco; senao codigos_rco_disciplina pelo codigo_sae;
 //               senao o dicionario abaixo (codigos externos confirmados por nome).
@@ -366,7 +366,7 @@ router.get("/relatorio-seed", async (req, res) => {
   const comAssincronas = req.query.assincronas !== "0"; // [RCO-ASSINC-PADRAO] assincronas (e hibridas) constam no RCO; ?assincronas=0 tira
 
   if (estado !== "PR") {
-    res.status(400).json({ error: `Exportação no formato SERE/Urânia só está implementada para o Paraná (PR) no momento.` });
+    res.status(400).json({ error: `Exportação no formato SERE só está implementada para o Paraná (PR) no momento.` });
     return;
   }
   if (!turno || !["matutino", "vespertino", "noturno"].includes(turno)) {
@@ -545,13 +545,13 @@ router.get("/relatorio-seed", async (req, res) => {
 
   const dataHoje = new Date().toISOString().slice(0, 10);
   res.setHeader("Content-Type", "application/xml");
-  res.setHeader("Content-Disposition", `attachment; filename="IMPORT_URANIA-${turno}-${dataHoje}.xml"`);
+  res.setHeader("Content-Disposition", `attachment; filename="RCO-${turno}-${dataHoje}.xml"`);
   res.send(partes.join("\r\n"));
 });
 
 // ------------------------------------------------------------------
 // PDF — Visão por Turma: formato compacto multi-turma por página
-// (padrão real do Urânia). Sigla da disciplina + primeiro nome do
+// (padrão real do sistema anterior). Sigla da disciplina + primeiro nome do
 // professor em cada célula, horário real na coluna "Hor".
 //
 // [NOVO] Aceita `?semana=proxima` pra mostrar a data da semana seguinte
@@ -762,7 +762,7 @@ router.get("/grade-pdf/professor", async (req, res) => {
         .filter((t): t is string => !!t && !turnosAulaSemana.has(t) && !turnosComAulaNoEscopo.includes(t))
     )];
     // [ROTULO-BLOQUEIO] turno em que o professor so tem atividade (PAEE, COORD, PAC...)
-    // tambem vira bloco, como no Urania (antes esses professores nem apareciam).
+    // tambem vira bloco, como no sistema anterior (antes esses professores nem apareciam).
     const turnosSoComAtividade = [...new Set(
       disponibilidades
         .filter((d) => d.professorId === prof.id && ehBloqueioReal(d) && !!rotuloDoBloqueio(d.motivo))
@@ -810,7 +810,7 @@ router.get("/grade-pdf/professor", async (req, res) => {
       // [ASS-SO-TURMA] tira a 7a aula (nao letiva, do fim do turno): ela e so da turma
       horariosPorAula = podarLinhasExtras(horariosPorAula, extrasFinaisProf(turno, null), []);
 
-      // "HA" literal, igual ao Urânia — sem linha2 pra não formatar como
+      // "HA" literal, igual ao sistema anterior — sem linha2 pra não formatar como
       // célula combinada. Filtra pelo turno certo (disponibilidade já
       // guarda o turno direto, não precisa inferir pela turma).
       // [NOVO] No modo experimental, usa a HA SIMULADA (calculada em
@@ -878,7 +878,7 @@ router.get("/grade-pdf/professor", async (req, res) => {
 
       // [FIX-6A-AULA] Linha que tem aula, HA ou bloqueio mas nao existe no
       // horario do nivel escolhido (ex.: HA na 6a aula 11:55 de professor so
-      // do Fundamental, igual ao Urania) -- busca o horario nos dois niveis
+      // do Fundamental, igual ao sistema anterior) -- busca o horario nos dois niveis
       // do turno e acrescenta so as linhas usadas, senao a celula sumia do PDF.
       const numerosUsados = [...aulasDoProf, ...haDoProf, ...bloqueadasDoProf].map((x) => x.numeroAula);
       if (numerosUsados.some((n) => !(n in horariosPorAula))) {

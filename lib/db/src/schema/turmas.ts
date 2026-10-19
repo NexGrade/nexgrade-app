@@ -5,7 +5,7 @@ import { matrizesCurricularesTable } from "./cursos";
 import { professoresTable } from "./professores";
 
 // [NOVO] Distingue os dois esquemas de horario matutino que a escola
-// pratica de verdade (confirmado com PDFs reais da SEED-PR/Urania):
+// pratica de verdade (confirmado com PDFs reais da SEED-PR):
 // Fundamental (6-9 ano) tem 5 aulas de manha (07:30-11:05), Medio e
 // Tecnico (1a-3a serie) tem 6 aulas de manha (07:30-11:55). Vespertino
 // e sempre Fundamental (5 aulas), noturno e uniforme para todos os

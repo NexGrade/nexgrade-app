@@ -5,7 +5,7 @@ import { nivelEnsinoEnum } from "./turmas";
 
 // [CORRIGIDO] A analise anterior deste comentario estava incompleta: o
 // matutino NAO tem um unico esquema de 6 aulas para todo mundo. Grades
-// reais da SEED-PR/Urania (PDFs de junho/2026) confirmam DOIS esquemas
+// reais da SEED-PR (PDFs de junho/2026) confirmam DOIS esquemas
 // diferentes dentro do proprio turno matutino, dependendo do nivel de
 // ensino da turma:
 //   - Fundamental (6o-9o ano): 5 aulas -- 07:30, 08:20, 09:25, 10:15, 11:05

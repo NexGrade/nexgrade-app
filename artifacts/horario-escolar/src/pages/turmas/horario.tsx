@@ -24,7 +24,7 @@ const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
 const turnosMap: Record<string, string> = { matutino: "Matutino", vespertino: "Vespertino", noturno: "Noturno" };
 
 // Mostra só o primeiro nome do professor nas células compactas da
-// grade (mesma convenção do Urania) -- o nome completo continua nos
+// grade (mesma convenção do sistema anterior) -- o nome completo continua nos
 // selects/dropdowns, só aqui no grid é abreviado. Quando existe MAIS
 // de um professor com o mesmo primeiro nome (ex.: "Eliane" e "Eliane
 // Rocha"), desambigua acrescentando a inicial do segundo nome (ex.:

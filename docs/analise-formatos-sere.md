@@ -86,7 +86,7 @@ Lista de alocações fixas (aulas que não podem ser remanejadas pelo Solver), e
 
 ### 1.6 Menu Geral / Integração
 
-O menu principal expõe, entre outras opções: Importar Dados, Exportar Horário, Exportar Vários Horários, Exportar Ponto, integração "Urania+", **Importar dados da SEED-PR**, e **Exportar Horário para RCO**.
+O menu principal expõe, entre outras opções: Importar Dados, Exportar Horário, Exportar Vários Horários, Exportar Ponto, integração com sistemas de horário de terceiros, **Importar dados da SEED-PR**, e **Exportar Horário para RCO**.
 
 **Observação relevante para o PRD:** os nomes **SEED-PR** e **RCO** são os sistemas oficiais do governo do Paraná — não pertencem ao URÂNIN UP. O fato de o concorrente já ter esse tipo de integração **confirma que é uma demanda real do mercado** (o PRD do NexGrade já previa isso, de forma independente, como "Integração Nativa RCO/SERE"), não uma cópia — é a mesma necessidade de negócio sendo endereçada por dois produtos diferentes.
 

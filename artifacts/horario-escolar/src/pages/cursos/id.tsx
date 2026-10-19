@@ -32,7 +32,7 @@ import {
 
 // RF-CUR-02/03/05: matriz curricular = uma série/ano de um curso, com
 // disciplinas + carga horária semanal + categoria curricular. Categoria
-// usa nomenclatura própria do NexGrade (ver docs/analise-formatos-uranin-sere.md
+// usa nomenclatura própria do NexGrade (ver docs/analise-formatos-sere.md
 // — não reproduz a "Composição Curricular" nem qualquer taxonomia do
 // SERE ou de produtos de terceiros, embora cubra o mesmo espaço de dado
 // público quando aplicável).
