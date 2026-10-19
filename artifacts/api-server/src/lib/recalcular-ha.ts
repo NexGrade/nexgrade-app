@@ -51,6 +51,28 @@ export function ehBloqueioPeriodoNaoLetivo(motivo: string | null | undefined): b
 // Conflitos) em vez de virar HA a noite. HA_PERMITIR_NOTURNO_DE_OUTRO_TURNO=1 volta ao antigo.
 const HA_PERMITIR_NOTURNO_DE_OUTRO_TURNO = process.env.HA_PERMITIR_NOTURNO_DE_OUTRO_TURNO === "1";
 
+// [HA-1A-DA-TARDE] (17/10/2026, decisao da escola) pausa de 1 hora entre turnos (lib/pausa-entre-turnos.ts):
+// no dia em que o professor da a ULTIMA aula da manha, a 1a aula da tarde e a melhor posicao para a HA
+// dele na tarde (a HA pode ficar colada, a aula nao). E so PREFERENCIA de desempate (depois de menos
+// janelas): nunca cria janela nem tira aula do lugar. HA_1A_DA_TARDE=0 desliga.
+const HA_PREFERE_1A_DA_TARDE = process.env.HA_1A_DA_TARDE !== "0";
+const PAR_PAUSA: readonly [string, string] = ["matutino", "vespertino"];
+
+/** A HA em (dia, aula) de `turno` fecha a pausa de 1 hora? (1a letiva da tarde num dia com a ultima letiva da manha em aula) */
+export function haFechaPausaEntreTurnos(
+  turno: string,
+  aula: number,
+  dia: number,
+  limites: Map<string, { primeira: number; ultima: number }>,
+  aulasPorTurno: Map<string, Set<string>>,
+): boolean {
+  if (!HA_PREFERE_1A_DA_TARDE || turno !== PAR_PAUSA[1]) return false;
+  const lAnt = limites.get(PAR_PAUSA[0]);
+  const lSeg = limites.get(PAR_PAUSA[1]);
+  if (!lAnt || !lSeg || aula !== lSeg.primeira) return false;
+  return aulasPorTurno.get(PAR_PAUSA[0])?.has(`${dia}-${lAnt.ultima}`) ?? false;
+}
+
 const TABELA_OFICIAL_HA: readonly number[] = [
   0,
   0, 0, 1, 1, 2, 2, 2, 2, 3, 3,
@@ -411,6 +433,7 @@ export async function calcularHAIdeal(
           dia: number;
           aula: number;
           janelas: number;
+          fechaPausa: boolean; // [HA-1A-DA-TARDE]
           diaCount: number;
           colado: boolean;
           dist: number;
@@ -420,6 +443,7 @@ export async function calcularHAIdeal(
           const testado = new Set(ocupado);
           testado.add(`${c.dia}-${c.aula}`);
           const janelas = contarJanelas(testado);
+          const fechaPausa = haFechaPausaEntreTurnos(turno, c.aula, c.dia, limitesLetivos, ocupadoPorTurnoOriginal); // [HA-1A-DA-TARDE]
           const diaCount = contagemDiaAtual.get(`${turno}|${c.dia}`) ?? 0;
           const colado = ocupado.has(`${c.dia}-${c.aula - 1}`) || ocupado.has(`${c.dia}-${c.aula + 1}`);
           // [CONTRATURNO-ENCOSTADO] no contraturno, a "borda" preferida e a do lado
@@ -434,15 +458,18 @@ export async function calcularHAIdeal(
           // o contarJanelas nao detectar buraco de 2+ slots (corrigido
           // acima); com isso corrigido, o criterio "janelas" (que vem
           // primeiro) ja resolve sozinho, sem precisar mexer nessa ordem.
+          // [HA-1A-DA-TARDE] com o mesmo numero de janelas, a HA que fecha a pausa entre turnos vem antes
+          const mesmaFaixa = !melhor || (janelas === melhor.janelas && fechaPausa === melhor.fechaPausa);
           if (
             !melhor ||
             janelas < melhor.janelas ||
-            (janelas === melhor.janelas && diaCount < melhor.diaCount) ||
-            (janelas === melhor.janelas && diaCount === melhor.diaCount && colado && !melhor.colado) ||
-            (janelas === melhor.janelas && diaCount === melhor.diaCount && colado === melhor.colado && dist < melhor.dist) ||
-            (janelas === melhor.janelas && diaCount === melhor.diaCount && colado === melhor.colado && dist === melhor.dist && c.dia < melhor.dia)
+            (janelas === melhor.janelas && fechaPausa && !melhor.fechaPausa) ||
+            (mesmaFaixa && diaCount < melhor.diaCount) ||
+            (mesmaFaixa && diaCount === melhor.diaCount && colado && !melhor.colado) ||
+            (mesmaFaixa && diaCount === melhor.diaCount && colado === melhor.colado && dist < melhor.dist) ||
+            (mesmaFaixa && diaCount === melhor.diaCount && colado === melhor.colado && dist === melhor.dist && c.dia < melhor.dia)
           ) {
-            melhor = { ...c, janelas, diaCount, colado, dist };
+            melhor = { ...c, janelas, fechaPausa, diaCount, colado, dist };
           }
         }
         if (!melhor) break;
