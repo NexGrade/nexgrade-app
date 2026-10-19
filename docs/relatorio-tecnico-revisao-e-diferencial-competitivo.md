@@ -82,8 +82,8 @@ O que resta não é mais nem "brecha de segurança" nem "funcionalidade ausente"
 | Motor de geração de horário (RF-SOLV) | ✅ Funcional (heurística gulosa por turma, não um solver de otimização global — ver seção 6) |
 | Detecção de conflitos (RF-ALOC) | ✅ 6 tipos detectados, com sugestão de resolução |
 | Assistente de IA com ações (RF-IA) | ✅ RF-IA-01/03/05 implementados; RF-IA-02 (consulta livre) funcional; RF-IA-04 parcial |
-| Parser de importação (RF-PARSE) | 🟡 Só CSV genérico — não lê arquivos exportados pelo RCO/SEED-PR (bloqueado por falta de especificação oficial, ver `docs/analise-formatos-uranin-sere.md`) |
-| Exportação para o RCO (RF-REL) | ✅ XML no formato Urânia/SERE gerado pela tela Exportar Dados (só PR, por turno); importação do arquivo no RCO testada nas escolas Romário Martins e Mário Braga (09/10/2026). Exige Código INEP, códigos SERE das turmas e códigos do RCO das disciplinas cadastrados. Envio ao RCO é manual (não há API). |
+| Parser de importação (RF-PARSE) | 🟡 Só CSV genérico — não lê arquivos exportados pelo RCO/SEED-PR (bloqueado por falta de especificação oficial, ver `docs/analise-formatos-sere.md`) |
+| Exportação para o RCO (RF-REL) | ✅ XML no formato SERE gerado pela tela Exportar Dados (só PR, por turno); importação do arquivo no RCO testada nas escolas Romário Martins e Mário Braga (09/10/2026). Exige Código INEP, códigos SERE das turmas e códigos do RCO das disciplinas cadastrados. Envio ao RCO é manual (não há API). |
 | Painel Master SaaS (RF-MASTER) | ✅ Implementado: gestão de escolas (ativar/desativar, trocar plano), gestão de planos (CRUD), métricas agregadas da plataforma. RF-MASTER-04 (suporte) e RF-MASTER-05 (changelog) ainda não iniciados. |
 | Auditoria geral (RF-AUD) | 🟡 Professores, disciplinas, turmas, cursos/matriz, importação em lote e todas as ações de IA gravam log; faltam salas/licenças/comunicados/configurações |
 | Simulação de cenários (RF-SIM) | 🟡 Existe "horário experimental" (promover/descartar), mas sem comparação lado a lado |
@@ -92,7 +92,7 @@ O que resta não é mais nem "brecha de segurança" nem "funcionalidade ausente"
 
 ## 5. Diferencial competitivo
 
-Esta seção usa como referência o levantamento de mercado já registrado em `docs/analise-formatos-uranin-sere.md` (dados públicos do SERE/SEED-PR e funcionalidades observadas em sistemas de gestão de horário escolar hoje usados por escolas do Paraná). Nenhuma comparação aqui envolve nome de produto de terceiros — o objetivo é mostrar em que eixos o NexGrade se diferencia de qualquer sistema tradicional do gênero.
+Esta seção usa como referência o levantamento de mercado já registrado em `docs/analise-formatos-sere.md` (dados públicos do SERE/SEED-PR e funcionalidades observadas em sistemas de gestão de horário escolar hoje usados por escolas do Paraná). Nenhuma comparação aqui envolve nome de produto de terceiros — o objetivo é mostrar em que eixos o NexGrade se diferencia de qualquer sistema tradicional do gênero.
 
 ### 5.1 Onde o NexGrade já entrega algo que o modelo tradicional do mercado não tem
 
@@ -148,4 +148,4 @@ O que resta, em ordem de valor/esforço:
 
 ---
 
-*Relatório produzido como parte da revisão técnica solicitada. Referências: `docs/requisitos-funcionais-e-nao-funcionais.md` (especificação completa de RF/RNF) e `docs/analise-formatos-uranin-sere.md` (base de mercado e diretrizes de originalidade).*
+*Relatório produzido como parte da revisão técnica solicitada. Referências: `docs/requisitos-funcionais-e-nao-funcionais.md` (especificação completa de RF/RNF) e `docs/analise-formatos-sere.md` (base de mercado e diretrizes de originalidade).*

@@ -7,7 +7,7 @@ import { getEscolaId } from "../lib/escola-id";
 
 // Regra "complementar" do modelo de distribuição de aulas: limite de
 // aulas diárias para um professor que leciona mais de uma disciplina
-// na mesma turma (ver URÂNIA+, passos 26-29 — "Francisco pode dar no
+// na mesma turma (ver levantamento de mercado, passos 26-29 — "Francisco pode dar no
 // máximo 2 aulas por dia por turma").
 //
 // turmaId NULO = valor padrão do professor, válido em qualquer turma

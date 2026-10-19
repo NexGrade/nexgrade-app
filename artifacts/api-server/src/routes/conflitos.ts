@@ -219,7 +219,7 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
       slotsProf[chaveProfTurno]![d.diaSemana]!.push(d.horarioSlot);
     });
   // [JANELA-ATIVIDADE-OCUPADA] (05/10/2026) horario bloqueado com atividade
-  // ("(ocupado: FORM)", "(ocupado: IF-1B)"... vindo do Urania) e o professor
+  // ("(ocupado: FORM)", "(ocupado: IF-1B)"... vindo do sistema anterior) e o professor
   // trabalhando fora da sala, nao janela: aula, FORM, FORM, HA dava "2 janelas"
   // (Eduarda, ter). So preenche buraco -- nao estica o inicio/fim do dia.
   const ocupadoPorAtividade = new Set(

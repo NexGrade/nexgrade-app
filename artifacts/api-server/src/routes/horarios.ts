@@ -1638,7 +1638,7 @@ async function runCpsatGeneracaoUnica(
 
   // [DUPLA-DOCENCIA] Algumas combinacoes turma+disciplina tem DUAS linhas
   // na matriz curricular (2 professores dando aula juntos, ao mesmo tempo,
-  // pra mesma turma -- confirmado na grade real do Urania, ex.: Rec.
+  // pra mesma turma -- confirmado na grade real do sistema anterior, ex.: Rec.
   // Aprend. L. Port e Rec. Aprend. Matematica do 6o/9o ano). Cada uma
   // dessas linhas vira um "grupoDupla" com o mesmo id -- o solver usa isso
   // pra forcar as duas a caírem sempre no mesmo horario, em vez de tratar

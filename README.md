@@ -1,7 +1,7 @@
 # Pipeline de sincronização da grade oficial (PDF -> NexGrade)
 
 Processo pra manter a grade oficial do sistema batendo com o PDF que a
-escola manda toda semana (sistema Urânia). Validado com o noturno em
+escola manda toda semana (sistema de horários anterior). Validado com o noturno em
 2026-07-24 (150/150 aulas, 100% de acerto).
 
 ## Pré-requisitos (só na primeira vez)

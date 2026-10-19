@@ -2,7 +2,7 @@
 // que ja existe. Feito para o Romario (16/10/2026): a regra de pausa entre turnos impedia a HA
 // nos horarios da ponta da manha/tarde e deixou HA faltando; a regra foi corrigida (commit
 // e63ec97), mas a HA que faltou nao volta sozinha. O recalculo normal NAO e usado porque ele pode
-// mudar de lugar a HA importada do Urania (ehHAMovel), e no Romario a HA atual deve ficar como esta.
+// mudar de lugar a HA importada do sistema anterior (ehHAMovel), e no Romario a HA atual deve ficar como esta.
 //
 // Como funciona:
 //   1. calcula a HA ideal da escola (calcularHAIdeal, mesma regra do sistema);

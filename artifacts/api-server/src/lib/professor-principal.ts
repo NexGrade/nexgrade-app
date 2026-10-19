@@ -1,7 +1,7 @@
 // [MESMA-PESSOA-HA] (07/10/2026) Cadastros diferentes da MESMA pessoa.
 //
 // Quando um professor da duas disciplinas do mesmo trio, ele precisa de dois
-// cadastros (ex.: "Jessica" e "Jessica (IFA)", como faz o Urania), senao o
+// cadastros (ex.: "Jessica" e "Jessica (IFA)", como faz o sistema anterior), senao o
 // sistema acusa professor duplicado. O cadastro secundario aponta para o
 // principal em `professores.professor_principal_id`.
 //

@@ -205,7 +205,7 @@ export default function CodigosRcoPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">Código da turma no SERE</CardTitle>
               <CardDescription>
-                É o código da turma no SERE (no Urânia, campo "Código Externo" da turma). O <strong>código da parte IF</strong> só
+                É o código da turma no SERE (campo "Código Externo" da turma). O <strong>código da parte IF</strong> só
                 se preenche no 3º ano técnico que o RCO divide em duas turmas (formação geral e itinerário formativo).
               </CardDescription>
               {turnos.length > 1 && (
@@ -274,7 +274,7 @@ export default function CodigosRcoPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">Código Externo da disciplina</CardTitle>
               <CardDescription>
-                É o "Código Externo" da disciplina no SERE/Urânia, <strong>não</strong> o código SAE. Quando a disciplina tem SAE
+                É o "Código Externo" da disciplina no SERE, <strong>não</strong> o código SAE. Quando a disciplina tem SAE
                 conhecido, o sistema já usa o código pela tabela do SAE e não é preciso preencher. Se preencher, o Código Externo
                 cadastrado aqui vale sobre o do SAE.
               </CardDescription>

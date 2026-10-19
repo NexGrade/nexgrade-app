@@ -35,7 +35,7 @@ import {
 import { eq, inArray, sql } from "drizzle-orm";
 import { PARES_TURNO } from "./intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 
-import { MOTIVO_HA_AUTO, MOTIVO_HA_AUTO_OUTRO_TURNO, ehHAMovel } from "./ha-contraturno"; // [HA-OUTRO-TURNO] [HA-URANIA-MOVEL]
+import { MOTIVO_HA_AUTO, MOTIVO_HA_AUTO_OUTRO_TURNO, ehHAMovel } from "./ha-contraturno"; // [HA-OUTRO-TURNO] [HA-IMPORTADA-MOVEL]
 import { montarMapaPrincipal, principalDe } from "./professor-principal"; // [MESMA-PESSOA-HA]
 
 // [HA-NA-ENTRADA-NOTURNO] motivo do bloqueio gravado em 2026-09-23 na aula 1 do
@@ -89,7 +89,7 @@ export function calcularHoraAtividadeInstitucional(aulasNoTurno: number): number
 // [HA-POR-TURNO] (15/10/2026) a tabela oficial e consultada com as aulas de CADA turno
 // (nao com o total da escola). `descontar` = HA manual ja marcada fora do calculo
 // (contraturno): sai do orcamento, tirando sempre do turno com mais HA.
-// [HA-MANUAL-NO-PROPRIO-TURNO] (16/10/2026) a HA manual (ex.: a importada do Urania) desconta
+// [HA-MANUAL-NO-PROPRIO-TURNO] (16/10/2026) a HA manual (ex.: a importada do sistema anterior) desconta
 // do orcamento do PROPRIO turno dela; so a de turno sem aula (contraturno) sai do turno com mais
 // HA. Antes tudo saia do turno com mais HA: a HA da tarde zerava a da manha (caso Andrew).
 function calcularHoraAtividadePorTurno(aulasPorTurno: Record<string, number>, descontar: number | Record<string, number> = 0): Record<string, number> {
@@ -221,11 +221,11 @@ export async function calcularHAIdeal(
     const bloqueadoPorTurno = new Map<string, Set<string>>();
     for (const d of disponibilidades) {
       if (d.professorId !== prof.id || d.disponivel) continue;
-      // [HA-NA-ENTRADA-NOTURNO] (05/10/2026, igual ao Urania) o bloqueio automatico
+      // [HA-NA-ENTRADA-NOTURNO] (05/10/2026, igual ao sistema anterior) o bloqueio automatico
       // da aula 1 do noturno (18:00, nao letiva) so impede AULA -- a geracao ja
       // ignora periodo nao letivo sozinha. Hora-atividade pode ficar nesse horario,
       // mas so em dia em que o professor tem a 1a aula LETIVA do turno (18:45):
-      // a HA das 18:00 emenda direto na aula, como no Urania. [HA-1800-SO-COLADA]
+      // a HA das 18:00 emenda direto na aula, como no sistema anterior. [HA-1800-SO-COLADA]
       // (05/10/2026) antes bastava ter aula no dia, e a HA das 18:00 criava janela
       // em quem so comecava as 19:35 (Dorival, Geverson).
       if (ehBloqueioPeriodoNaoLetivo(d.motivo) && d.turno) {
@@ -448,7 +448,7 @@ export async function calcularHAIdeal(
           const colado = ocupado.has(`${c.dia}-${c.aula - 1}`) || ocupado.has(`${c.dia}-${c.aula + 1}`);
           // [CONTRATURNO-ENCOSTADO] no contraturno, a "borda" preferida e a do lado
           // do turno em que o professor da aula naquele dia (ex.: professor da tarde
-          // faz HA* no fim da manha, encostado nas aulas -- igual ao Urania).
+          // faz HA* no fim da manha, encostado nas aulas -- igual ao sistema anterior).
           const lado = ladoPreferido?.(c.dia);
           const dist = lado === "fim" ? maxAula - c.aula : lado === "inicio" ? c.aula - 1 : Math.min(c.aula - 1, maxAula - c.aula);
 
@@ -505,7 +505,7 @@ export async function calcularHAIdeal(
     const haPosicoesPorDiaProfessor = new Map<string, Set<number>>();
     // [HA-OUTRO-TURNO] sobra guardada por turno de ORIGEM (o turno cujas aulas
     // geraram a HA). HA cumprida num turno diferente do de origem e "HA de outro
-    // turno" e sai como HA* (decisao 05/10/2026, igual ao Urania) -- mesmo quando
+    // turno" e sai como HA* (decisao 05/10/2026, igual ao sistema anterior) -- mesmo quando
     // o professor tambem da aula no turno onde ela e cumprida.
     const sobraPorTurno: Record<string, number> = {};
     const totalSobra = (): number => Object.values(sobraPorTurno).reduce((s, n) => s + n, 0);
@@ -572,7 +572,7 @@ export async function calcularHAIdeal(
 
     // [CONTRATURNO-AUTOMATICO] O que nao coube nos turnos de ensino vai para
     // contraturno (turno onde o professor NAO da aula), so em dia com aula.
-    // [CONTRATURNO-VIZINHO] (decisao 05/10/2026, igual ao Urania) preferencia
+    // [CONTRATURNO-VIZINHO] (decisao 05/10/2026, igual ao sistema anterior) preferencia
     // pelo turno DIURNO vizinho: professor da tarde faz HA* de manha, o da manha
     // faz a tarde, o da noite faz a tarde; a noite so entra se nao couber no
     // diurno. Empate: turno com mais horario livre (regra anterior).
@@ -761,7 +761,7 @@ async function recalcularHoraAtividadeUmaPassada(escolaId: string): Promise<Resu
         target: [disponibilidadeTable.professorId, disponibilidadeTable.diaSemana, disponibilidadeTable.horarioSlot, disponibilidadeTable.turno],
         set: { disponivel: true, horaAtividadeObrigatoria: true, motivo: sql`excluded.motivo` }, // [HA-OUTRO-TURNO]
         // [FIX-GRAVAR-LINHA-LIVRE] converte tambem linha livre (disponivel=true, sem HA) em HA;
-        // nunca sobrescreve bloqueio real (disponivel=false) nem marcador "ocupado" do Urania.
+        // nunca sobrescreve bloqueio real (disponivel=false) nem marcador "ocupado" do sistema anterior.
         // [HA-NA-ENTRADA-NOTURNO] tambem aceita o bloqueio automatico do periodo nao letivo (18:00).
         where: sql`${disponibilidadeTable.horaAtividadeObrigatoria} = true OR (${disponibilidadeTable.disponivel} = true AND COALESCE(${disponibilidadeTable.motivo}, '') NOT LIKE '%ocupado:%') OR COALESCE(${disponibilidadeTable.motivo}, '') LIKE ${MOTIVO_BLOQUEIO_NAO_LETIVO + "%"}`,
       }).returning({ id: disponibilidadeTable.id });

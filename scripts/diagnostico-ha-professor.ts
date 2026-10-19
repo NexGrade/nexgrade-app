@@ -1,6 +1,6 @@
 // SO LEITURA. Mostra, por professor e turno, o quadro da semana para entender a HA:
 //   A = aula   a = aula assincrona   H = HA de hoje   N = HA que o NexGrade colocaria
-//   B = HA hoje e NexGrade no mesmo lugar   X = bloqueio   O = marcador "ocupado" (Urania)
+//   B = HA hoje e NexGrade no mesmo lugar   X = bloqueio   O = marcador "ocupado" (sistema anterior)
 //   . = livre   - = periodo nao letivo
 // E a conta da tabela SEED por turno (aulas -> HA exigida).
 //

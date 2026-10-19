@@ -39,7 +39,7 @@ type CelulaEstado = "disponivel" | "bloqueado" | "ha_obrigatoria" | "ha_fixa" | 
 type CelulaState = Record<string, CelulaEstado>;
 
 // [ATIVIDADE-FORA-DE-SALA] (05/10/2026) a escola passa a cadastrar no NexGrade
-// (nao mais no Urania) as atividades fora de sala. Gravadas como bloqueio com
+// (nao mais no sistema anterior) as atividades fora de sala. Gravadas como bloqueio com
 // "(ocupado: ROTULO)" no motivo -- o mesmo formato que Conflitos, HA, PDF e a
 // tela Grade ja entendem (horario ocupado, nao janela, com o rotulo visivel).
 const ATIVIDADES_SUGERIDAS = [

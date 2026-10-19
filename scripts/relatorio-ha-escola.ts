@@ -79,7 +79,7 @@ async function main() {
     const entra = haNova.filter((h) => !setHoje.has(k(h)));
 
     const ocupaBase = new Set<string>(minhasAulas.map((x) => `${x.turno}|${x.h.diaSemana}|${x.h.numeroAula}`));
-    // atividade do Urania ("(ocupado: FORM)" etc.) ocupa o horario, como na tela de Conflitos
+    // atividade do sistema anterior ("(ocupado: FORM)" etc.) ocupa o horario, como na tela de Conflitos
     for (const d of disp) if (d.professorId === p.id && !d.horaAtividadeObrigatoria && d.turno && /\(ocupado:/.test(d.motivo ?? "")) ocupaBase.add(`${d.turno}|${d.diaSemana}|${d.horarioSlot}`);
     const jHoje = janelas(new Set([...ocupaBase, ...setHoje]));
     const jNova = janelas(new Set([...ocupaBase, ...setNova]));

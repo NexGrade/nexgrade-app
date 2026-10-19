@@ -1,7 +1,7 @@
 /**
  * [REGRA-BLOQUEIO-REAL] Unica fonte da verdade sobre o que e bloqueio de professor.
  *
- * Bloqueio real = indisponibilidade de verdade (tracos do Urania, PAEE,
+ * Bloqueio real = indisponibilidade de verdade (tracos do sistema anterior, PAEE,
  * bloqueios manuais). A hora-atividade (HA) NUNCA e bloqueio: ela e
  * calculada DEPOIS da grade (recalcularHoraAtividade) e gravada com
  * disponivel=true + horaAtividadeObrigatoria=true.

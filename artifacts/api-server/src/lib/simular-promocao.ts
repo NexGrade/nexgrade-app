@@ -3,7 +3,7 @@
 // promover: troca so as aulas dos pares turma+professor do experimento), roda o
 // MESMO calculo de HA da promocao (calcularHAIdeal com aulasOverride, sem gravar)
 // e conta as janelas de professor dos turnos envolvidos do jeito da tela de
-// Conflitos: aula, HA e atividade do Urania ("(ocupado: FORM)"...) ocupam o
+// Conflitos: aula, HA e atividade do sistema anterior ("(ocupado: FORM)"...) ocupam o
 // horario. Compara com a oficial atual. Nada e gravado.
 import { db, professoresTable, turmasTable, horariosTable, horariosExperimentaisTable, disponibilidadeTable } from "@workspace/db";
 import { and, eq } from "drizzle-orm";

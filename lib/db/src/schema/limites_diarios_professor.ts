@@ -4,7 +4,7 @@ import { z } from "zod/v4";
 import { professoresTable } from "./professores";
 import { turmasTable } from "./turmas";
 
-// Regra "complementar" do modelo de distribuição de aulas (ver URÂNIA+
+// Regra "complementar" do modelo de distribuição de aulas (ver levantamento de mercado
 // passos 26-29): limite de aulas diárias para um professor que leciona
 // mais de uma disciplina na mesma turma.
 //
