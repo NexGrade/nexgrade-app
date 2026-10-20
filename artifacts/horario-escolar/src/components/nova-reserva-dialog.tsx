@@ -101,9 +101,12 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
   const [enviando, setEnviando] = useState(false);
   // [RECURSOS-TABLETS] passo opcional: quantidade de tablets por aula (carrinho com total fixo, sem espaco)
   const [quantidade, setQuantidade] = useState("");
-  const [tablets, setTablets] = useState<Record<number, number>>({});
+  // [RESERVA-EQUIPAMENTOS] (20/10/2026) qualquer equipamento por quantidade (nao so tablets):
+  // o escolhido agora e a lista de "equipamento + aula + quantidade" do pedido
+  const [recursoAtualId, setRecursoAtualId] = useState(0);
+  const [equip, setEquip] = useState<Array<{ recursoId: number; numeroAula: number; quantidade: number }>>([]);
 
-  const limpar = () => { setProfessorSel(0); setData(""); setTurno(null); setAulasSel([]); setSalaAtual(0); setItens([]); setTitulo(""); setTituloEditado(false); setObservacoes(""); setQuantidade(""); setTablets({}); };
+  const limpar = () => { setProfessorSel(0); setData(""); setTurno(null); setAulasSel([]); setSalaAtual(0); setItens([]); setTitulo(""); setTituloEditado(false); setObservacoes(""); setQuantidade(""); setEquip([]); setRecursoAtualId(0); };
   const diaSemana = /^\d{4}-\d{2}-\d{2}$/.test(data) ? diaSemanaDaData(data) : -1;
 
   // aulas do professor no dia escolhido, por turno
@@ -147,7 +150,9 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
     queryFn: () => customFetchOcupacao<OcupacaoRecursosResp>(`${BASE}/recursos/ocupacao?data=` + encodeURIComponent(data), { responseType: "json" }),
     enabled: diaSemana >= 0 && diaSemana <= 4,
   });
-  const recurso = ocupacaoRecursos?.recursos[0] ?? null;
+  const listaRecursos = ocupacaoRecursos?.recursos ?? [];
+  const recurso = listaRecursos.find((r) => r.id === recursoAtualId) ?? listaRecursos[0] ?? null;
+  const nomeRecurso = (id: number) => listaRecursos.find((r) => r.id === id)?.nome ?? "Equipamento";
   const restamTablets = (numeroAula: number) =>
     recurso ? Math.max(0, recurso.total - recurso.ocupacao.filter((o) => o.numeroAula === numeroAula && o.turno === turno).reduce((n, o) => n + o.reservadas + (o.bloqueadas ?? 0), 0)) : 0; // [BLOQUEIOS] bloqueadas saem do saldo
   const menorSaldo = aulasSel.length ? Math.min(...aulasSel.map(restamTablets)) : (recurso?.total ?? 0);
@@ -179,7 +184,7 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
         return [...l, { salaId: salaAtual, numerosAula: [...aulasSel].sort((x, y) => x - y) }];
       });
     }
-    if (podeAddTablets) setTablets((t) => ({ ...t, ...Object.fromEntries(aulasSel.map((n) => [n, qtd])) }));
+    if (podeAddTablets && recurso) setEquip((l) => [...l.filter((e) => !(e.recursoId === recurso.id && aulasSel.includes(e.numeroAula))), ...aulasSel.map((n) => ({ recursoId: recurso.id, numeroAula: n, quantidade: qtd }))]);
     setAulasSel([]);
     setSalaAtual(0);
     setQuantidade("");
@@ -194,10 +199,12 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
       })()
     : itens;
   const totalAulas = itensFinais.reduce((n, i) => n + i.numerosAula.length, 0);
-  // tablets que vao no pedido: os da lista mais a selecao atual, se estiver valida
-  const tabletsFinais: Record<number, number> = podeAddTablets ? { ...tablets, ...Object.fromEntries(aulasSel.map((n) => [n, qtd])) } : tablets;
-  const aulasComTablets = Object.keys(tabletsFinais).map(Number).sort((x, y) => x - y);
-  const nomeTablets = (recurso?.nome ?? "Tablets").toLowerCase();
+  // equipamentos que vao no pedido: os da lista mais a selecao atual, se estiver valida
+  const equipFinais = podeAddTablets && recurso
+    ? [...equip.filter((e) => !(e.recursoId === recurso.id && aulasSel.includes(e.numeroAula))), ...aulasSel.map((n) => ({ recursoId: recurso.id, numeroAula: n, quantidade: qtd }))]
+    : equip;
+  const aulasComTablets = [...new Set(equipFinais.map((e) => e.numeroAula))].sort((x, y) => x - y);
+  const nomeTablets = (recurso?.nome ?? "Equipamento").toLowerCase();
   // turma e disciplina das aulas escolhidas (vem da grade do professor no dia)
   const aulaDe = (n: number) => horariosDoTurno.find((x) => x.numeroAula === n)?.aula ?? null;
   const descreverAulas = (nums: number[]) =>
@@ -228,27 +235,31 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
         });
         espacosFeitos = true;
       }
-      if (aulasComTablets.length > 0 && recurso) {
+      // um pedido por equipamento
+      for (const recursoId of [...new Set(equipFinais.map((e) => e.recursoId))]) {
+        const doRecurso = equipFinais.filter((e) => e.recursoId === recursoId).sort((x, y) => x.numeroAula - y.numeroAula);
         await customFetchOcupacao(gestor ? `${BASE}/recursos` : `${BASE}/recursos/reservas`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...(gestor ? { professorId: professorSel } : {}), recursoId: recurso.id, data, turno, itens: aulasComTablets.map((n) => ({ numeroAula: n, quantidade: tabletsFinais[n] })), titulo: titulo.trim(), observacoes: observacoes.trim() || undefined }),
+          body: JSON.stringify({ ...(gestor ? { professorId: professorSel } : {}), recursoId, data, turno, itens: doRecurso.map((e) => ({ numeroAula: e.numeroAula, quantidade: e.quantidade })), titulo: titulo.trim(), observacoes: observacoes.trim() || undefined }),
           responseType: "json",
         });
       }
       atualizar();
-      const textoTablets = aulasComTablets.length ? `${recurso?.nome ?? "Tablets"} confirmados (${aulasComTablets.map((n) => `${n}ª aula: ${tabletsFinais[n]}`).join(", ")}).` : "";
+      const textoTablets = [...new Set(equipFinais.map((e) => e.recursoId))]
+        .map((id) => `${nomeRecurso(id)} confirmados (${equipFinais.filter((e) => e.recursoId === id).sort((x, y) => x.numeroAula - y.numeroAula).map((e) => `${e.numeroAula}ª aula: ${e.quantidade}`).join(", ")}).`)
+        .join(" ");
       toast(r ? {
         title: r.pendentes === 0 ? (r.criadas > 1 ? `${r.criadas} reservas confirmadas` : "Reserva confirmada") : r.confirmadas === 0 ? "Solicitação enviada" : `${r.confirmadas} confirmada(s), ${r.pendentes} aguardando`,
         description: [r.pendentes > 0 ? "As reservas pendentes entraram na fila de aprovação da coordenação." : gestor ? "Reservas confirmadas e o professor foi avisado." : "Tudo certo, as reservas já estão na sua agenda.", textoTablets].filter(Boolean).join(" "),
-      } : { title: `${recurso?.nome ?? "Tablets"} reservados`, description: textoTablets });
+      } : { title: new Set(equipFinais.map((e) => e.recursoId)).size === 1 ? `${nomeRecurso(equipFinais[0]!.recursoId)} reservados` : "Equipamentos reservados", description: textoTablets });
       setOpen(false);
       limpar();
     } catch (err: any) {
       atualizar();
       if (espacosFeitos) {
         // os espacos ja foram gravados: nao deixa tentar de novo tudo junto (daria conflito com a propria reserva)
-        toast({ title: "Espaços reservados, mas os tablets não", description: `${err?.data?.error ?? "Não foi possível reservar os tablets."} Abra Nova reserva e tente só os tablets.`, variant: "destructive" });
+        toast({ title: "Espaços reservados, mas os equipamentos não", description: `${err?.data?.error ?? "Não foi possível reservar os equipamentos."} Abra Nova reserva e tente só os equipamentos.`, variant: "destructive" });
         setOpen(false);
         limpar();
       } else {
@@ -276,7 +287,7 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
             <Passo n={1} titulo="Professor">
               <Select
                 value={professorSel ? String(professorSel) : undefined}
-                onValueChange={(v) => { setProfessorSel(Number(v)); setData(""); setTurno(null); setAulasSel([]); setSalaAtual(0); setItens([]); setTablets({}); setQuantidade(""); setTituloEditado(false); }}
+                onValueChange={(v) => { setProfessorSel(Number(v)); setData(""); setTurno(null); setAulasSel([]); setSalaAtual(0); setItens([]); setEquip([]); setQuantidade(""); setTituloEditado(false); }}
               >
                 <SelectTrigger><SelectValue placeholder="Para qual professor?" /></SelectTrigger>
                 <SelectContent>
@@ -393,12 +404,20 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
                     : `${nomeSala(salaAtual)}: ${aulasSel.sort((x, y) => x - y).map((n) => `${rotuloAula(n)} ${statusSala(salaAtual, n) === "pendente" ? "em análise" : "livre"}`).join(" · ")}`}
                 </p>
               )}
-              <p className="text-xs text-muted-foreground">Precisa de outro espaço? Adicione à lista e escolha o próximo, nas mesmas aulas (turma dividida) ou em outras. Só precisa de tablets? Deixe o espaço em branco e use o passo dos tablets.</p>
+              <p className="text-xs text-muted-foreground">Precisa de outro espaço? Adicione à lista e escolha o próximo, nas mesmas aulas (turma dividida) ou em outras. Só precisa de equipamento (tablets etc.)? Deixe o espaço em branco e use o passo dos equipamentos.</p>
             </Passo>
           )}
 
           {turno && recurso && (
-            <Passo n={5 + off} titulo="Tablets (opcional)">
+            <Passo n={5 + off} titulo={listaRecursos.length > 1 ? "Equipamentos (opcional)" : `${recurso.nome} (opcional)`}>
+              {listaRecursos.length > 1 && (
+                <Select value={String(recurso.id)} onValueChange={(v) => { setRecursoAtualId(Number(v)); setQuantidade(""); }}>
+                  <SelectTrigger aria-label="Equipamento"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {listaRecursos.map((r) => <SelectItem key={r.id} value={String(r.id)}>{r.nome} ({r.total})</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              )}
               <div className="space-y-1">
                 <Input
                   type="number"
@@ -411,17 +430,17 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
                 />
                 <p className={`text-xs ${comTablets && !qtdValida ? "text-destructive" : "text-muted-foreground"}`}>
                   {aulasSel.length === 0
-                    ? `Marque as aulas acima. O carrinho tem ${recurso.total} ${nomeTablets}.`
+                    ? `Marque as aulas acima. A escola tem ${recurso.total} (${nomeTablets}).`
                     : comTablets && !qtdValida
                       ? menorSaldo < 1 ? `Não há ${nomeTablets} livres nessas aulas.` : `Informe de 1 a ${menorSaldo}.`
-                      : `Livres nas aulas marcadas: ${menorSaldo} de ${recurso.total}. Você leva os ${nomeTablets} para a sua sala; confirma na hora.`}
+                      : `Livres nas aulas marcadas: ${menorSaldo} de ${recurso.total}. Você leva para a sua sala; confirma na hora.`}
                 </p>
               </div>
-              <p className="text-xs text-muted-foreground">Entra no pedido ao solicitar. Para juntar espaço e tablets em aulas diferentes, use &quot;Adicionar à lista&quot; no passo do espaço a cada vez.</p>
+              <p className="text-xs text-muted-foreground">Entra no pedido ao solicitar. Para mais de um equipamento, ou espaço e equipamento em aulas diferentes, use &quot;Adicionar à lista&quot; a cada vez.</p>
             </Passo>
           )}
 
-          {(itens.length > 0 || Object.keys(tablets).length > 0) && (
+          {(itens.length > 0 || equip.length > 0) && (
             <div className="rounded-lg border bg-muted/30 p-3">
               <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Na lista</p>
               <ul className="space-y-1">
@@ -434,14 +453,15 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
                     <button type="button" className="text-xs text-muted-foreground underline hover:text-foreground" onClick={() => setItens((l) => l.filter((x) => x.salaId !== i.salaId))}>Tirar</button>
                   </li>
                 ))}
-                {[...new Set(Object.values(tablets))].map((q) => {
-                  const aulasQ = Object.entries(tablets).filter(([, v]) => v === q).map(([k]) => Number(k)).sort((x, y) => x - y);
+                {[...new Set(equip.map((e) => `${e.recursoId}|${e.quantidade}`))].map((chave) => {
+                  const [rid, q] = chave.split("|").map(Number) as [number, number];
+                  const aulasQ = equip.filter((e) => e.recursoId === rid && e.quantidade === q).map((e) => e.numeroAula).sort((x, y) => x - y);
                   return (
-                    <li key={`tablets-${q}`} className="flex items-center justify-between gap-2 text-sm">
+                    <li key={`equip-${chave}`} className="flex items-center justify-between gap-2 text-sm">
                       <span>
-                        <strong>{recurso?.nome ?? "Tablets"}</strong> · {q} {q === 1 ? "unidade" : "unidades"} · {aulasQ.map(rotuloAula).join(", ")} aula
+                        <strong>{nomeRecurso(rid)}</strong> · {q} {q === 1 ? "unidade" : "unidades"} · {aulasQ.map(rotuloAula).join(", ")} aula
                       </span>
-                      <button type="button" className="text-xs text-muted-foreground underline hover:text-foreground" onClick={() => setTablets((t) => Object.fromEntries(Object.entries(t).filter(([, v]) => v !== q)))}>Tirar</button>
+                      <button type="button" className="text-xs text-muted-foreground underline hover:text-foreground" onClick={() => setEquip((l) => l.filter((e) => !(e.recursoId === rid && e.quantidade === q)))}>Tirar</button>
                     </li>
                   );
                 })}
@@ -459,7 +479,7 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
 
           <Button type="button" className="w-full" disabled={enviando || (gestor && !professorSel) || !turno || (totalAulas === 0 && aulasComTablets.length === 0) || !titulo.trim() || (comTablets && !qtdValida)} onClick={() => void enviar()}>
             {enviando ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-            {totalAulas === 0 ? "Reservar tablets" : aulasComTablets.length > 0 ? "Solicitar reservas" : totalAulas > 1 ? `Solicitar ${totalAulas} reservas` : "Solicitar reserva"}
+            {totalAulas === 0 ? (new Set(equipFinais.map((e) => e.recursoId)).size === 1 ? `Reservar ${nomeRecurso(equipFinais[0]!.recursoId).toLowerCase()}` : "Reservar equipamentos") : aulasComTablets.length > 0 ? "Solicitar reservas" : totalAulas > 1 ? `Solicitar ${totalAulas} reservas` : "Solicitar reserva"}
           </Button>
         </div>
       </DialogContent>

@@ -19,6 +19,7 @@ import { exigirAdminParaAlterar } from "../../lib/permissao";
 import bloqueiosRouter from "../bloqueios";
 import recursosRouter from "../recursos";
 import reservasGestorRouter from "../reservas-gestor";
+import reservasRouter from "../reservas";
 
 // [BLINDAGEM] (17/10/2026) Testes de integracao das reservas com um Postgres de verdade (as rotas reais, o filtro de
 // permissao real e as migracoes reais). Cobrem o que so tinha sido testado com scripts avulsos:
@@ -59,6 +60,7 @@ const D2 = segundaDaqui(67); // tablets
 const D3 = segundaDaqui(74); // bloqueios de sala
 const D4 = segundaDaqui(81); // bloqueios de tablets
 const D5 = segundaDaqui(88); // permissoes
+const D6 = segundaDaqui(102); // equipamentos cadastrados
 
 const lote = (professorId: number, data: string, numerosAula: number[], salaId = ids.sala) =>
   chamar("POST", "/reservas/gestor/lote", { professorId, data, turno: "matutino", itens: [{ salaId, numerosAula }], titulo: "Aula pratica" });
@@ -81,6 +83,7 @@ describe.skipIf(!TEM_BANCO)("reservas: integracao com banco real", () => {
     app.use("/reservas/gestor", reservasGestorRouter);
     app.use("/reservas/bloqueios", bloqueiosRouter);
     app.use("/recursos", recursosRouter);
+    app.use("/reservas", reservasRouter); // [RESUMO-EQUIPAMENTOS] quadros do dia
     server = app.listen(0);
     porta = (server.address() as AddressInfo).port;
 
@@ -306,6 +309,46 @@ describe.skipIf(!TEM_BANCO)("reservas: integracao com banco real", () => {
     it("coordenacao muda o total de tablets e faz tudo que o gestor faz", async () => {
       expect((await chamar("PATCH", `/recursos/${ids.recurso}`, { quantidadeTotal: 30 }, como("coordenacao"))).status).toBe(200);
       expect((await chamar("GET", `/reservas/gestor/semana?data=${D5}`, undefined, como("coordenacao"))).status).toBe(200);
+    });
+  });
+
+  // [RECURSOS-CADASTRO] [RESUMO-EQUIPAMENTOS] (20/10/2026)
+  describe("equipamentos cadastrados pela coordenacao", () => {
+    let notebooks = 0;
+    it("cadastra outro equipamento por quantidade e recusa nome repetido", async () => {
+      const r = await chamar("POST", "/recursos", { nome: "Notebooks", quantidadeTotal: 12 });
+      expect(r.status).toBe(201);
+      notebooks = r.body.id;
+      expect((await chamar("POST", "/recursos", { nome: " notebooks ", quantidadeTotal: 5 })).status).toBe(409);
+      expect((await chamar("POST", "/recursos", { nome: "X", quantidadeTotal: 5 })).status).toBe(400);
+      const lista = await chamar("GET", `/reservas/gestor/recursos/ocupacao?data=${D6}`);
+      expect(lista.body.recursos.map((x: any) => x.nome)).toEqual(expect.arrayContaining(["Tablets", "Notebooks"]));
+    });
+    it("professor e gestor de reservas nao cadastram equipamento", async () => {
+      expect((await chamar("POST", "/recursos", { nome: "Kits", quantidadeTotal: 5 }, { "x-org-role": "org:member" })).status).toBe(403);
+    });
+    it("reserva por quantidade respeita o total do novo equipamento", async () => {
+      const ok = await chamar("POST", "/reservas/gestor/recursos", { professorId: ids.prof[0], recursoId: notebooks, data: D6, turno: "matutino", itens: [{ numeroAula: 1, quantidade: 10 }], titulo: "Pesquisa" });
+      expect(ok.status).toBe(201);
+      const passa = await chamar("POST", "/reservas/gestor/recursos", { professorId: ids.prof[1], recursoId: notebooks, data: D6, turno: "matutino", itens: [{ numeroAula: 1, quantidade: 3 }], titulo: "Pesquisa" });
+      expect(passa.status).toBe(409);
+    });
+    it("os quadros do dia contam espacos e equipamentos", async () => {
+      expect((await lote(ids.prof[2]!, D6, [2])).status).toBe(201);
+      const t = await chamar("POST", "/reservas/gestor/recursos", { professorId: ids.prof[3], recursoId: ids.recurso, data: D6, turno: "matutino", itens: [{ numeroAula: 3, quantidade: 5 }], titulo: "Pesquisa" });
+      expect(t.status).toBe(201);
+      const r = await chamar("GET", `/reservas/resumo?data=${D6}`);
+      expect(r.status).toBe(200);
+      // 1 sala + 1 de notebooks + 1 de tablets; em uso: a sala, os notebooks e os tablets
+      expect(r.body).toMatchObject({ total: 3, confirmadas: 3, salasOcupadas: 3 });
+    });
+    it("nao desativa equipamento com reserva futura; renomeia sem recriar os Tablets", async () => {
+      expect((await chamar("PATCH", `/recursos/${notebooks}`, { ativo: false })).status).toBe(409);
+      const ren = await chamar("PATCH", `/recursos/${ids.recurso}`, { nome: "Tablets Samsung" });
+      expect(ren.status).toBe(200);
+      const lista = await chamar("GET", "/recursos");
+      expect(lista.body.filter((x: any) => x.nome === "Tablets")).toHaveLength(0);
+      expect((await chamar("PATCH", `/recursos/${ids.recurso}`, { nome: "Tablets" })).status).toBe(200);
     });
   });
 

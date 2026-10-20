@@ -34,6 +34,7 @@ import {
   professoresTable,
   regrasReservaProfessorTable,
   reservasTable,
+  reservasRecursosTable, // [RESUMO-EQUIPAMENTOS]
   salasTable,
   turmasTable, // [RESERVA-TURNO]
 } from "@workspace/db";
@@ -360,22 +361,33 @@ router.get("/resumo", async (req, res): Promise<void> => {
     return;
   }
   const data = dateOnly(parsed.data.data);
-  const reservas = await db
-    .select()
-    .from(reservasTable)
-    .where(and(eq(reservasTable.escolaId, getEscolaId(req)), eq(reservasTable.data, data)));
+  const escolaId = getEscolaId(req);
+  const [reservas, deEquipamentos] = await Promise.all([
+    db
+      .select()
+      .from(reservasTable)
+      .where(and(eq(reservasTable.escolaId, escolaId), eq(reservasTable.data, data))),
+    // [RESUMO-EQUIPAMENTOS] (20/10/2026) reservas de equipamentos por quantidade (tablets e os que
+    // forem cadastrados) tambem contam nos quadros do dia
+    db
+      .select({ recursoId: reservasRecursosTable.recursoId, status: reservasRecursosTable.status })
+      .from(reservasRecursosTable)
+      .where(and(eq(reservasRecursosTable.escolaId, escolaId), eq(reservasRecursosTable.data, data))),
+  ]);
   const ativas = reservas.filter((reserva) => reserva.status !== "cancelada");
+  const equipamentosAtivos = deEquipamentos.filter((r) => r.status !== "cancelada");
   const porPrioridade = [1, 2, 3, 4, 5].map((prioridade) => ({
     prioridade,
     quantidade: ativas.filter((reserva) => reserva.prioridadeAplicada === prioridade).length,
   }));
   const result = {
     data: parsed.data.data,
-    total: reservas.length,
-    confirmadas: reservas.filter((reserva) => reserva.status === "confirmada").length,
-    pendentes: reservas.filter((reserva) => reserva.status === "pendente").length,
-    canceladas: reservas.filter((reserva) => reserva.status === "cancelada").length,
-    salasOcupadas: new Set(ativas.map((reserva) => reserva.salaId)).size,
+    total: reservas.length + deEquipamentos.length,
+    confirmadas: reservas.filter((reserva) => reserva.status === "confirmada").length + deEquipamentos.filter((r) => r.status === "confirmada").length,
+    pendentes: reservas.filter((reserva) => reserva.status === "pendente").length + deEquipamentos.filter((r) => r.status === "pendente").length,
+    canceladas: reservas.filter((reserva) => reserva.status === "cancelada").length + deEquipamentos.filter((r) => r.status === "cancelada").length,
+    // espacos e equipamentos com pelo menos uma reserva no dia
+    salasOcupadas: new Set(ativas.map((reserva) => reserva.salaId)).size + new Set(equipamentosAtivos.map((r) => r.recursoId)).size,
     porPrioridade,
   };
   res.json(GetReservasResumoResponse.parse(result));

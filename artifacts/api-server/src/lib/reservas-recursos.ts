@@ -14,12 +14,17 @@ class ErroRecurso extends Error {
   }
 }
 
-// cria o recurso padrao da escola na primeira consulta (sem depender de seed no banco)
+// cria o recurso padrao da escola na primeira consulta (sem depender de seed no banco).
+// [RECURSOS-CADASTRO] so quando a escola ainda nao tem nenhum equipamento: se a coordenacao
+// renomear ou desativar os Tablets, eles nao voltam sozinhos.
 export async function garantirRecursos(escolaId: string) {
-  await db
-    .insert(recursosTable)
-    .values({ escolaId, ...RECURSO_PADRAO })
-    .onConflictDoNothing();
+  const [algum] = await db.select({ id: recursosTable.id }).from(recursosTable).where(eq(recursosTable.escolaId, escolaId)).limit(1);
+  if (!algum) {
+    await db
+      .insert(recursosTable)
+      .values({ escolaId, ...RECURSO_PADRAO })
+      .onConflictDoNothing();
+  }
   return db.select().from(recursosTable).where(and(eq(recursosTable.escolaId, escolaId), eq(recursosTable.ativo, true))).orderBy(recursosTable.nome);
 }
 
@@ -169,7 +174,40 @@ export async function criarReservasRecursos(p: {
 
 // [RECURSOS-CONFIG] (17/10/2026) a coordenacao ajusta o total do equipamento (ex.: carrinho de tablets).
 // So reduz se nenhuma reserva futura passar do novo total; a conferencia trava a linha do recurso, como a reserva.
-export const AlterarRecursoBody = z.object({ quantidadeTotal: z.number().int().min(1).max(500) });
+export const AlterarRecursoBody = z.object({
+  quantidadeTotal: z.number().int().min(1).max(500).optional(),
+  nome: z.string().trim().min(2).max(60).optional(), // [RECURSOS-CADASTRO]
+  ativo: z.boolean().optional(),
+}).refine((b) => b.quantidadeTotal !== undefined || b.nome !== undefined || b.ativo !== undefined);
+export const NovoRecursoBody = z.object({ nome: z.string().trim().min(2).max(60), quantidadeTotal: z.number().int().min(1).max(500) });
+
+// [RECURSOS-CADASTRO] (20/10/2026) novo equipamento contado por unidade (notebooks, kits, caixas de som...)
+export async function criarRecurso(p: { escolaId: string; nome: string; quantidadeTotal: number }): Promise<ResultadoRecursos> {
+  const existentes = await db.select({ id: recursosTable.id, nome: recursosTable.nome, ativo: recursosTable.ativo }).from(recursosTable).where(eq(recursosTable.escolaId, p.escolaId));
+  const igual = existentes.find((r) => r.nome.trim().toLowerCase() === p.nome.trim().toLowerCase());
+  if (igual) return { status: 409, body: { error: igual.ativo ? `Já existe um equipamento chamado "${igual.nome}".` : `"${igual.nome}" já existe e está desativado. Reative em vez de criar outro.` } };
+  const [novo] = await db.insert(recursosTable).values({ escolaId: p.escolaId, nome: p.nome.trim(), quantidadeTotal: p.quantidadeTotal }).returning();
+  return { status: 201, body: { id: novo!.id, nome: novo!.nome, quantidadeTotal: novo!.quantidadeTotal, ativo: novo!.ativo } };
+}
+
+// [RECURSOS-CADASTRO] renomear e desativar/reativar. Desativar so sem reservas futuras.
+export async function editarRecurso(p: { escolaId: string; id: number; nome?: string; ativo?: boolean }): Promise<ResultadoRecursos> {
+  const [recurso] = await db.select().from(recursosTable).where(and(eq(recursosTable.id, p.id), eq(recursosTable.escolaId, p.escolaId)));
+  if (!recurso) return { status: 404, body: { error: "Equipamento não encontrado." } };
+  if (p.nome !== undefined) {
+    const outros = await db.select({ id: recursosTable.id, nome: recursosTable.nome }).from(recursosTable).where(eq(recursosTable.escolaId, p.escolaId));
+    if (outros.some((r) => r.id !== p.id && r.nome.trim().toLowerCase() === p.nome!.trim().toLowerCase())) return { status: 409, body: { error: `Já existe um equipamento chamado "${p.nome.trim()}".` } };
+  }
+  if (p.ativo === false && recurso.ativo) {
+    const hoje = new Date().toISOString().slice(0, 10);
+    const [futura] = await db.select({ data: reservasRecursosTable.data }).from(reservasRecursosTable)
+      .where(and(eq(reservasRecursosTable.escolaId, p.escolaId), eq(reservasRecursosTable.recursoId, p.id), gte(reservasRecursosTable.data, hoje), ne(reservasRecursosTable.status, "cancelada")))
+      .orderBy(asc(reservasRecursosTable.data)).limit(1);
+    if (futura) return { status: 409, body: { error: `Há reserva de ${recurso.nome.toLowerCase()} em ${String(futura.data).slice(8, 10)}/${String(futura.data).slice(5, 7)}. Cancele as reservas futuras antes de desativar.` } };
+  }
+  const [atualizado] = await db.update(recursosTable).set({ ...(p.nome !== undefined ? { nome: p.nome.trim() } : {}), ...(p.ativo !== undefined ? { ativo: p.ativo } : {}) }).where(eq(recursosTable.id, p.id)).returning();
+  return { status: 200, body: { id: atualizado!.id, nome: atualizado!.nome, quantidadeTotal: atualizado!.quantidadeTotal, ativo: atualizado!.ativo } };
+}
 
 export async function alterarTotalRecurso(p: { escolaId: string; id: number; quantidadeTotal: number }): Promise<ResultadoRecursos> {
   const { escolaId, id, quantidadeTotal } = p;

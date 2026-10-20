@@ -198,13 +198,13 @@ export default function MinhaAgendaPage() {
   const { data: reservasTablets } = useReservasTablets(!!professor); // [RECURSOS-TABLETS]
   const [cancelandoTablet, setCancelandoTablet] = useState<number | null>(null);
   async function cancelarTablet(id: number) {
-    if (!window.confirm("Cancelar esta reserva de tablets? As unidades voltam a ficar livres.")) return;
+    if (!window.confirm("Cancelar esta reserva de equipamento? As unidades voltam a ficar livres.")) return;
     setCancelandoTablet(id);
     try {
       await customFetchOcupacao("/api/minha-agenda/recursos/reservas/" + id, { method: "DELETE", responseType: "json" });
       queryClient.invalidateQueries({ queryKey: CHAVE_TABLETS });
       queryClient.invalidateQueries({ queryKey: ["ocupacao-recursos"] });
-      toast({ title: "Reserva de tablets cancelada" });
+      toast({ title: "Reserva de equipamento cancelada" });
     } catch {
       toast({ title: "Não foi possível cancelar", description: "Tente novamente em instantes.", variant: "destructive" });
     } finally {

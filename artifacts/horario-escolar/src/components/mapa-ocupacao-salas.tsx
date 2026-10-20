@@ -13,17 +13,18 @@ type ReservaMapa = {
 };
 
 // [MAPA-TABLETS] (17/10/2026) tablets contados por unidade: reservadas por aula (e periodo) do total do carrinho
-export type TabletsMapa = { nome: string; total: number; ocupacao: ReadonlyArray<{ numeroAula: number; turno: string; reservadas: number; bloqueadas?: number }> };
+// [MAPA-EQUIPAMENTOS] (20/10/2026) uma coluna por equipamento cadastrado (tablets e os demais)
+export type TabletsMapa = { id?: number; nome: string; total: number; ocupacao: ReadonlyArray<{ numeroAula: number; turno: string; reservadas: number; bloqueadas?: number }> };
 // [BLOQUEIOS] bloqueios ativos do dia (sala ou equipamento em manutencao, limpeza...)
 export type BloqueioMapa = { alvoTipo: string; alvoId: number | null; motivoRotulo: string; numerosAula: ReadonlyArray<number> };
 const NOME_PERIODO_CURTO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
 
-export function MapaOcupacaoSalas({ salas, reservas, maxAulaMinimo = 0, tablets = null, bloqueios = [] }: { salas: ReadonlyArray<SalaMapa>; reservas: ReadonlyArray<ReservaMapa>; maxAulaMinimo?: number; tablets?: TabletsMapa | null; bloqueios?: ReadonlyArray<BloqueioMapa> }) { // [MAPA-AULAS-GRADE]
+export function MapaOcupacaoSalas({ salas, reservas, maxAulaMinimo = 0, equipamentos = [], bloqueios = [] }: { salas: ReadonlyArray<SalaMapa>; reservas: ReadonlyArray<ReservaMapa>; maxAulaMinimo?: number; equipamentos?: ReadonlyArray<TabletsMapa>; bloqueios?: ReadonlyArray<BloqueioMapa> }) { // [MAPA-AULAS-GRADE]
   const ativas = salas.filter((s) => s.ativa !== false);
   const validas = reservas.filter((r) => r.status !== "cancelada");
-  const maxAula = Math.max(5, maxAulaMinimo, ...validas.map((r) => r.numeroAula), ...(tablets?.ocupacao.map((o) => o.numeroAula) ?? [])); // [MAPA-AULAS-GRADE]
+  const maxAula = Math.max(5, maxAulaMinimo, ...validas.map((r) => r.numeroAula), ...equipamentos.flatMap((e) => e.ocupacao.map((o) => o.numeroAula))); // [MAPA-AULAS-GRADE]
   const aulas = Array.from({ length: maxAula }, (_, i) => i + 1);
-  if (ativas.length === 0 && !tablets) return null;
+  if (ativas.length === 0 && equipamentos.length === 0) return null;
 
   return (
     <div className="rounded-lg border border-border bg-card">
@@ -48,7 +49,7 @@ export function MapaOcupacaoSalas({ salas, reservas, maxAulaMinimo = 0, tablets 
               {ativas.map((s) => (
                 <th key={s.id} title={s.nome} className="min-w-[104px] px-2 py-2 text-left font-semibold">{abreviarSalaMapa(s.nome)}</th>
               ))}
-              {tablets && <th className="min-w-[104px] px-2 py-2 text-left font-semibold">{tablets.nome}</th>}
+              {equipamentos.map((e) => <th key={`eq-${e.id ?? e.nome}`} className="min-w-[104px] px-2 py-2 text-left font-semibold">{e.nome}</th>)}
             </tr>
           </thead>
           <tbody>
@@ -92,12 +93,12 @@ export function MapaOcupacaoSalas({ salas, reservas, maxAulaMinimo = 0, tablets 
                     </td>
                   );
                 })}
-                {tablets && (() => {
-                  const bloqTablets = bloqueios.filter((b) => b.alvoTipo === "recurso" && (b.numerosAula.length === 0 || b.numerosAula.includes(n)));
+                {equipamentos.map((tablets) => {
+                  const bloqTablets = bloqueios.filter((b) => b.alvoTipo === "recurso" && (tablets.id == null || b.alvoId == null || b.alvoId === tablets.id) && (b.numerosAula.length === 0 || b.numerosAula.includes(n)));
                   const usos = tablets.ocupacao.filter((o) => o.numeroAula === n && (o.reservadas > 0 || (o.bloqueadas ?? 0) > 0));
                   if (usos.length === 0) {
                     return (
-                      <td key="tablets" className="px-1.5 py-1.5">
+                      <td key={`eq-${tablets.id ?? tablets.nome}`} className="px-1.5 py-1.5">
                         <div className="rounded-md bg-emerald-50 px-2 py-2 font-medium text-emerald-700 ring-1 ring-emerald-200">Livre · {tablets.total}</div>
                       </td>
                     );
@@ -106,7 +107,7 @@ export function MapaOcupacaoSalas({ salas, reservas, maxAulaMinimo = 0, tablets 
                   const lotado = usos.some((o) => ocupadas(o) >= tablets.total);
                   const soBloqueio = usos.every((o) => o.reservadas === 0);
                   return (
-                    <td key="tablets" className="px-1.5 py-1.5">
+                    <td key={`eq-${tablets.id ?? tablets.nome}`} className="px-1.5 py-1.5">
                       <div
                         className={"rounded-md px-2 py-1.5 ring-1 " + (soBloqueio ? "bg-slate-100 text-slate-700 ring-slate-300" : lotado ? "bg-blue-100 text-blue-900 ring-blue-400" : "bg-blue-50 text-blue-800 ring-blue-300")}
                         title={bloqTablets.length ? `Bloqueado: ${bloqTablets.map((b) => b.motivoRotulo).join(", ")}` : undefined}
@@ -120,7 +121,7 @@ export function MapaOcupacaoSalas({ salas, reservas, maxAulaMinimo = 0, tablets 
                       </div>
                     </td>
                   );
-                })()}
+                })}
               </tr>
             ))}
           </tbody>

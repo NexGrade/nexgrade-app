@@ -533,9 +533,9 @@ export default function ReservasPage() {
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <SummaryCard label="Reservas do dia" value={summary?.total ?? "—"} detail="solicitações registradas" tone="bg-primary" icon={CalendarDays} onClick={() => verAgenda(null)} dica="Ver a agenda do dia (todas)" />
-        <SummaryCard label="Confirmadas" value={summary?.confirmadas ?? "—"} detail="espaços protegidos" tone="bg-[#5eaa83]" icon={ShieldCheck} onClick={() => verAgenda("confirmada")} ativo={filtroStatus === "confirmada"} dica="Ver só as confirmadas do dia" />
+        <SummaryCard label="Confirmadas" value={summary?.confirmadas ?? "—"} detail="espaços e equipamentos garantidos" tone="bg-[#5eaa83]" icon={ShieldCheck} onClick={() => verAgenda("confirmada")} ativo={filtroStatus === "confirmada"} dica="Ver só as confirmadas do dia" />
         <SummaryCard label="Pendentes" value={summary?.pendentes ?? "—"} detail={pendentesOutrosDias.length > 0 ? `aguardando decisão · +${pendentesOutrosDias.length} em outros dias da semana` : "aguardando decisão"} tone="bg-accent" icon={Clock3} onClick={verPendentes} ativo={filtroStatus === "pendente"} dica={pendentesOutrosDias.length > 0 && (summary?.pendentes ?? 0) === 0 ? "Ir para o primeiro dia da semana com reserva pendente" : "Ver só as pendentes do dia"} />
-        <SummaryCard label="Salas ocupadas" value={summary?.salasOcupadas ?? "—"} detail="com pelo menos uma reserva" tone="bg-[#d07b54]" icon={DoorOpen} onClick={() => irPara("mapa-ocupacao")} dica="Ir para o mapa de ocupação" />
+        <SummaryCard label="Espaços em uso" value={summary?.salasOcupadas ?? "—"} detail="espaços e equipamentos com reserva" tone="bg-[#d07b54]" icon={DoorOpen} onClick={() => irPara("mapa-ocupacao")} dica="Ir para o mapa de ocupação" />
         <SummaryCard
           label="Reservas da semana"
           value={semanaInfo.semana ? semanaInfo.total : "—"}
@@ -572,7 +572,7 @@ export default function ReservasPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          <div id="mapa-ocupacao" className="scroll-mt-4"><MapaOcupacaoSalas salas={(salasQuery.data ?? []).filter((s) => !ehSalaTablets(s.nome) || reservas.some((r) => r.salaId === s.id && r.status !== "cancelada"))} tablets={tabletsQuery.data?.recursos[0] ?? null} bloqueios={bloqueiosDoDiaQuery.data ?? []} reservas={reservas} maxAulaMinimo={(horariosQuery.data ?? []).reduce((m, h) => Math.max(m, h.numeroAula), 0)} /></div>{/* [MAPA-AULAS-GRADE] */}{/* [OCUPACAO-SALAS] */}
+          <div id="mapa-ocupacao" className="scroll-mt-4"><MapaOcupacaoSalas salas={(salasQuery.data ?? []).filter((s) => !ehSalaTablets(s.nome) || reservas.some((r) => r.salaId === s.id && r.status !== "cancelada"))} equipamentos={tabletsQuery.data?.recursos ?? []} bloqueios={bloqueiosDoDiaQuery.data ?? []} reservas={reservas} maxAulaMinimo={(horariosQuery.data ?? []).reduce((m, h) => Math.max(m, h.numeroAula), 0)} /></div>{/* [MAPA-AULAS-GRADE] */}{/* [OCUPACAO-SALAS] */}
           <div id="agenda-do-dia" className="scroll-mt-4 flex items-center justify-between">
             <div>
               <h2 className="font-heading text-lg font-bold">Agenda do dia</h2>
