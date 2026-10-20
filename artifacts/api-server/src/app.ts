@@ -10,6 +10,7 @@ import { logger } from "./lib/logger";
 import { requireAuth } from "./middlewares/requireAuth";
 import { limitadorGeral } from "./middlewares/rateLimit";
 import { errorHandler } from "./middlewares/errorHandler";
+import { cabecalhosSeguranca } from "./middlewares/cabecalhosSeguranca"; // [CABECALHOS-SEGURANCA]
 import {
   CLERK_PROXY_PATH,
   clerkProxyMiddleware,
@@ -17,6 +18,8 @@ import {
 } from "./middlewares/clerkProxyMiddleware";
 
 const app: Express = express();
+// [CABECALHOS-SEGURANCA] nao anunciar "X-Powered-By: Express" (ajuda quem procura falhas conhecidas)
+app.disable("x-powered-by");
 
 app.use(
   pinoHttp({
@@ -39,6 +42,7 @@ app.use(
 );
 
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
+app.use(cabecalhosSeguranca); // [CABECALHOS-SEGURANCA] depois do proxy do Clerk, de proposito
 
 // RNF-SEG-01/03: `origin: true` refletia qualquer origem de volta no
 // cabeçalho de resposta, e com `credentials: true` isso permite que

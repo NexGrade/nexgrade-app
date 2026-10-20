@@ -49,6 +49,11 @@ onlyBuiltDependencies:
 
 overrides:
   '@esbuild-kit/esm-loader': npm:tsx@^4.21.0
+  # [SEGURANCA-DEPS] (20/10/2026) versoes corrigidas de dependencias indiretas do servidor (pnpm audit)
+  follow-redirects: ^1.16.1
+  ip-address: ^10.7.4
+  proxy-addr: ^2.0.8
+  qs: ^6.16.1
   '@expo/ngrok-bin>@expo/ngrok-bin-darwin-arm64': '-'
   '@expo/ngrok-bin>@expo/ngrok-bin-darwin-x64': '-'
   '@expo/ngrok-bin>@expo/ngrok-bin-freebsd-ia32': '-'
