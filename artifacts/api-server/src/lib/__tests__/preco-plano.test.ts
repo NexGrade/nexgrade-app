@@ -9,8 +9,9 @@ describe("valorAssinatura por turma", () => {
     expect(valorAssinatura(escola, 55, "anual").valorReais).toBe(1650);
   });
   it("mensal: o anual em 12 parcelas", () => {
-    expect(valorAssinatura(escola, 55, "mensal").valorReais).toBe(137.5);
-    expect(valorAssinatura(escola, 7, "mensal").valorReais).toBe(17.5);
+    // [PRECO-MENSAL-ANUAL] a parcela arredonda para cima ao real inteiro (137,50 -> 138; 17,50 -> 18)
+    expect(valorAssinatura(escola, 55, "mensal").valorReais).toBe(138);
+    expect(valorAssinatura(escola, 7, "mensal").valorReais).toBe(18);
   });
   it("sem valor minimo", () => {
     expect(valorAssinatura(escola, 1, "anual").valorReais).toBe(30);
