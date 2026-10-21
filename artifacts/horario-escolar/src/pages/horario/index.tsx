@@ -2156,7 +2156,11 @@ function AbaExperimental() {
 
   const handlePromover = async (nome: string) => {
     const qtdTurmas = new Set(expSlots.filter((s) => s.nome === nome).map((s) => s.turmaId)).size;
-    if (!confirm(`Promover "${nome}" para horário oficial? Isso substituirá o horário atual de ${qtdTurmas} turma(s) envolvida(s).\n\nAntes de trocar, o sistema guarda uma cópia da grade oficial atual (aulas e HA). Se precisar, use "Voltar à grade anterior".`)) return;
+    const simAviso = simDe(nome);
+    const aviso = simAviso?.veredito === "pior"
+      ? `ATENÇÃO: a simulação recomenda NÃO promover (${simAviso.experimento.janelas} janela(s) de professor depois de promover, contra ${(simAviso.oficialHoje ?? simAviso.oficial).janelas} na oficial de hoje).\n\n`
+      : "";
+    if (!confirm(`${aviso}Promover "${nome}" para horário oficial? Isso substituirá o horário atual de ${qtdTurmas} turma(s) envolvida(s).\n\nAntes de trocar, o sistema guarda uma cópia da grade oficial atual (aulas e HA). Se precisar, use "Voltar à grade anterior".`)) return;
     try {
       const r: any = await promover({ nome });
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
@@ -2209,6 +2213,18 @@ function AbaExperimental() {
     veredito: "melhor" | "empate" | "pior";
   };
   const [simulacoes, setSimulacoes] = useState<Record<string, ResultadoSim | "carregando" | { erro: string }>>({});
+  // "1:aula 2:HA 6:aula" -> "1º aula · 2º HA · 3º-5º sem aula/HA · 6º aula"
+  const descreverDia = (detalhe: string) => {
+    const itens = detalhe.split(" ").map((p) => { const [n, tipo] = p.split(":"); return { n: Number(n), tipo: tipo === "HA*" ? "HA (outro turno)" : tipo }; });
+    const partes: string[] = [];
+    itens.forEach((it, i) => {
+      const ant = itens[i - 1];
+      if (ant && it.n - ant.n > 1) partes.push(it.n - ant.n === 2 ? `${ant.n + 1}º sem aula/HA` : `${ant.n + 1}º-${it.n - 1}º sem aula/HA`);
+      partes.push(`${it.n}º ${it.tipo}`);
+    });
+    return partes.join(" · ");
+  };
+  const simDe = (nome: string) => { const s = simulacoes[nome]; return s && s !== "carregando" && !("erro" in s) ? s : null; };
   const simularPromocao = async (nome: string) => {
     setSimulacoes((s) => ({ ...s, [nome]: "carregando" }));
     try {
@@ -2443,7 +2459,14 @@ function AbaExperimental() {
                         <Sparkles className="w-3.5 h-3.5" />
                         {simulacoes[nome] === "carregando" ? "Simulando..." : "Simular promoção"}
                       </Button>
-                      <Button size="sm" variant="outline" className="border-green-300 text-green-700 hover:bg-green-50 gap-1.5" onClick={() => handlePromover(nome)}>
+                      <Button
+                        size="sm" variant="outline"
+                        className={simDe(nome)?.veredito === "pior"
+                          ? "border-amber-400 text-amber-800 hover:bg-amber-50 gap-1.5"
+                          : "border-green-300 text-green-700 hover:bg-green-50 gap-1.5"}
+                        title={simDe(nome)?.veredito === "pior" ? "A simulação recomenda não promover: a grade oficial tem menos janelas" : undefined}
+                        onClick={() => handlePromover(nome)}
+                      >
                         <ArrowUpCircle className="w-3.5 h-3.5" />Promover para oficial
                       </Button>
                       <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDelete(nome)}>
@@ -2463,11 +2486,19 @@ function AbaExperimental() {
                     const titulo = sim.veredito === "melhor" ? "Experimento MELHOR que a oficial"
                       : sim.veredito === "empate" ? "Empate com a oficial -- promover não ganha nada em janelas"
                       : "Oficial MELHOR -- recomendado não promover";
+                    const LIMITE = 8;
                     const lista = (det: JanelaSim[]) => det.length === 0
                       ? <div className="text-muted-foreground">nenhuma janela</div>
-                      : det.slice(0, 8).map((d, i) => (
-                        <div key={i}>{d.professorNome} · {d.dia} ({d.turno}): {d.janelas} janela(s){d.janelas >= 2 ? " — aparece em Conflitos" : ""} <span className="text-muted-foreground">[{d.dia_detalhe}]</span></div>
-                      ));
+                      : <>
+                        {det.slice(0, LIMITE).map((d, i) => (
+                          <div key={i} className="mb-1">
+                            <strong>{d.professorNome}</strong> · {d.dia} ({d.turno}): {d.janelas} janela(s)
+                            <div className="text-muted-foreground">{descreverDia(d.dia_detalhe)}</div>
+                            {d.janelas >= 2 && <div className="opacity-80">2 ou mais janelas no mesmo turno aparecem em Conflitos.</div>}
+                          </div>
+                        ))}
+                        {det.length > LIMITE && <div className="text-muted-foreground">+ {det.length - LIMITE} outro(s) caso(s) não mostrados</div>}
+                      </>;
                     return (
                       <div className={`mb-3 rounded-md border p-3 text-xs ${cor}`}>
                         <div className="flex items-start justify-between gap-2">
@@ -2485,8 +2516,18 @@ function AbaExperimental() {
                                 {" "}<strong>depois de promover {sim.experimento.janelas}</strong> × <strong>oficial hoje {hoje.janelas}</strong>.
                                 {sim.oficialHoje && <span className="opacity-70"> (oficial com a HA recalculada pela regra: {sim.oficial.janelas})</span>}
                               </div>
+                              {(() => {
+                                const dif = sim.experimento.janelas - hoje.janelas;
+                                return (
+                                  <div className="mt-1 font-medium">
+                                    {dif > 0 ? `Resultado: ${dif} janela(s) a mais que a oficial de hoje.`
+                                      : dif < 0 ? `Resultado: ${-dif} janela(s) a menos que a oficial de hoje.`
+                                      : "Resultado: mesmo número de janelas da oficial de hoje."}
+                                  </div>
+                                );
+                              })()}
                               <div className="mt-1">
-                                Ao promover: <strong>{sim.aulasMudando ?? movidas.length} aula(s) mudam de lugar</strong> e a HA de <strong>{sim.professoresComHAMudando} professor(es)</strong> muda.
+                                Ao promover:<strong>{sim.aulasMudando ?? movidas.length} aula(s) mudam de lugar</strong> e a HA de <strong>{sim.professoresComHAMudando} professor(es)</strong> muda.
                               </div>
                               <div className="mt-2 grid gap-2 md:grid-cols-2">
                                 <div><div className="font-medium mb-0.5">Depois de promover</div>{lista(sim.experimento.detalhe)}</div>
