@@ -54,8 +54,8 @@ function featuresDoPlano(p: Plano) {
 }
 
 // [PRECO-POR-TURMA] (15/10/2026) plano cobrado por turma por ano
-// [PRECO-SO-MENSAL] (21/10/2026) a página mostra só a assinatura mensal:
-// sem seletor Mensal/Anual e sem "12x"; o valor mensal da escola é o destaque
+// [PRECO-MENSAL-SEM-12X] (21/10/2026) mensal vira assinatura mensal (sem "12x"),
+// com o valor mensal da escola em destaque; o anual à vista continua igual
 type PlanoComTurma = Plano & { cobranca?: string | null; precoPorTurmaAnual?: number | null; precoPorTurmaParcelado?: number | null };
 const ehPorTurma = (p: Plano) => (p as PlanoComTurma).cobranca === "por_turma" && ((p as PlanoComTurma).precoPorTurmaAnual ?? 0) > 0;
 const brl = (centavos: number) => (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -116,12 +116,10 @@ export default function PlanosPage() {
   const assinarPlano = async (plano: Plano) => {
     setAssinandoId(plano.id);
     try {
-      // [PRECO-SO-MENSAL] plano por turma sempre assina no mensal
-      const periodo = ehPorTurma(plano) ? "mensal" : periodicidade;
       const resposta = await customFetch<{ mensagem: string; asaasSubscriptionId: string }>("/api/escolas/assinatura-asaas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planoId: plano.id, periodicidade: periodo }),
+        body: JSON.stringify({ planoId: plano.id, periodicidade }),
         responseType: "json",
       });
       queryClient.invalidateQueries({ queryKey: getGetEscolaAtualQueryKey() });
@@ -148,8 +146,6 @@ export default function PlanosPage() {
         </p>
       </div>
 
-      {/* [PRECO-SO-MENSAL] seletor Mensal/Anual só aparece para os planos fixos antigos */}
-      {!planosPorTurma.length && (
       <div className="flex items-center justify-center gap-2">
         <button
           onClick={() => setPeriodicidade("mensal")}
@@ -167,13 +163,14 @@ export default function PlanosPage() {
             periodicidade === "anual" ? "bg-[#1565C0] text-white" : "text-muted-foreground hover:text-foreground",
           )}
         >
-          Anual
+          {planosPorTurma.length ? "Anual (à vista)" : "Anual"}
+          {!planosPorTurma.length && (
           <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full", periodicidade === "anual" ? "bg-white/20" : "bg-emerald-100 text-emerald-700")}>
             2 meses grátis
           </span>
+          )}
         </button>
       </div>
-      )}
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -187,11 +184,12 @@ export default function PlanosPage() {
         <>
         {/* [PRECO-POR-TURMA] plano por turma: um cartao com o valor calculado para a escola */}
         {planosPorTurma.map((plano) => {
-          // [PRECO-SO-MENSAL] preco de UMA turma POR ANO, cobrado mes a mes
+          // [PRECO-MENSAL-ANUAL] preco de UMA turma POR ANO em cada opcao
           const porTurmaAnual = (plano as PlanoComTurma).precoPorTurmaAnual ?? 0;
-          const porTurma = (plano as PlanoComTurma).precoPorTurmaParcelado || porTurmaAnual;
+          const porTurmaMensal = (plano as PlanoComTurma).precoPorTurmaParcelado || porTurmaAnual;
+          const anual = totalTurmas * porTurmaAnual;
           // valor mensal arredondado para cima ao real inteiro (igual ao backend: lib/preco-plano.ts)
-          const mensal = Math.ceil((totalTurmas * porTurma) / 1200) * 100;
+          const mensal = Math.ceil((totalTurmas * porTurmaMensal) / 1200) * 100;
           return (
             <Card key={plano.id} className="mx-auto max-w-3xl border-[#42A5F5] ring-2 ring-[#1565C0] ring-offset-2 shadow-lg">
               <CardContent className="grid gap-8 p-6 md:grid-cols-2 md:p-8">
@@ -201,30 +199,55 @@ export default function PlanosPage() {
                     <h2 className="text-2xl font-bold font-heading">{plano.nome}</h2>
                     <p className="text-sm text-muted-foreground">Tudo incluído, cobrado por turma.</p>
                   </div>
-                  <div className="rounded-xl border border-[#BBDEFB] bg-[#E3F2FD]/60 p-4">
-                    <p className="text-sm font-medium text-[#0D47A1]">Para a sua escola</p>
-                    {totalTurmas > 0 ? (
-                      <>
-                        <p className="mt-2">
-                          <span className="text-4xl font-bold text-[#0D47A1]">{brl(mensal)}</span>
-                          <span className="ml-1 text-muted-foreground">/mês</span>
-                        </p>
-                        <p className="mt-1 text-sm text-slate-700">
-                          {totalTurmas} turma{totalTurmas === 1 ? "" : "s"} × {brl(porTurma)} por turma/ano, cobrado mês a mês
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="mt-2">
-                          <span className="text-4xl font-bold text-[#0D47A1]">{brl(porTurma)}</span>
-                          <span className="ml-1 text-muted-foreground">por turma / ano</span>
-                        </p>
-                        <p className="mt-1 text-sm text-slate-700">Cadastre as turmas da escola para ver o valor mensal.</p>
-                      </>
-                    )}
-                  </div>
+                  {periodicidade === "anual" ? (
+                    <>
+                      {/* anual à vista: igual ao que já era */}
+                      <div>
+                        <span className="text-4xl font-bold">{brl(porTurmaAnual)}</span>
+                        <span className="ml-1 text-muted-foreground">por turma / ano</span>
+                      </div>
+                      <div className="rounded-xl border border-[#BBDEFB] bg-[#E3F2FD]/60 p-4">
+                        <p className="text-sm font-medium text-[#0D47A1]">Para a sua escola</p>
+                        {totalTurmas > 0 ? (
+                          <>
+                            <p className="mt-1 text-sm text-slate-700">{totalTurmas} turma{totalTurmas === 1 ? "" : "s"} cadastrada{totalTurmas === 1 ? "" : "s"} × {brl(porTurmaAnual)}</p>
+                            <p className="mt-2 text-2xl font-bold text-[#0D47A1]">{brl(anual)}</p>
+                            <p className="text-xs text-slate-600">
+                              por ano, à vista no Pix ou boleto, ou parcelado no cartão com os juros do cartão (fale conosco)
+                            </p>
+                          </>
+                        ) : (
+                          <p className="mt-1 text-sm text-slate-700">Cadastre as turmas da escola para ver o valor.</p>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="rounded-xl border border-[#BBDEFB] bg-[#E3F2FD]/60 p-4">
+                      {/* [PRECO-MENSAL-SEM-12X] mensal: valor mensal da escola em destaque */}
+                      <p className="text-sm font-medium text-[#0D47A1]">Para a sua escola</p>
+                      {totalTurmas > 0 ? (
+                        <>
+                          <p className="mt-2">
+                            <span className="text-4xl font-bold text-[#0D47A1]">{brl(mensal)}</span>
+                            <span className="ml-1 text-muted-foreground">/mês</span>
+                          </p>
+                          <p className="mt-1 text-sm text-slate-700">
+                            {totalTurmas} turma{totalTurmas === 1 ? "" : "s"} × {brl(porTurmaMensal)} por turma/ano, cobrado mês a mês
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="mt-2">
+                            <span className="text-4xl font-bold text-[#0D47A1]">{brl(porTurmaMensal)}</span>
+                            <span className="ml-1 text-muted-foreground">por turma / ano</span>
+                          </p>
+                          <p className="mt-1 text-sm text-slate-700">Cadastre as turmas da escola para ver o valor mensal.</p>
+                        </>
+                      )}
+                    </div>
+                  )}
                   <div className="space-y-2">
-                    <Button className="w-full" onClick={() => setPlanoInteresse(`${plano.nome} (mensal)`)}>
+                    <Button className="w-full" onClick={() => setPlanoInteresse(`${plano.nome} (${periodicidade === "anual" ? "anual à vista" : "mensal"})`)}>
                       Fale Conosco
                     </Button>
                     <button
