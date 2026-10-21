@@ -54,16 +54,22 @@ function featuresDoPlano(p: Plano) {
 }
 
 // [PRECO-POR-TURMA] (15/10/2026) plano cobrado por turma por ano (anual a vista ou 12x)
-type PlanoComTurma = Plano & { cobranca?: string | null; precoPorTurmaAnual?: number | null };
+type PlanoComTurma = Plano & { cobranca?: string | null; precoPorTurmaAnual?: number | null; precoPorTurmaParcelado?: number | null };
 const ehPorTurma = (p: Plano) => (p as PlanoComTurma).cobranca === "por_turma" && ((p as PlanoComTurma).precoPorTurmaAnual ?? 0) > 0;
 const brl = (centavos: number) => (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const RECURSOS_ESCOLA = [
-  "Geração automática da grade",
-  "Disponibilidade, hora-atividade e aulas fixas",
+  "Geração automática da grade, com redução de janelas",
+  "Conformidade SEED-PR: regência, hora-atividade e tetos por turno",
+  "Disponibilidade, aulas fixas e regras de distribuição",
   "Trio, co-docência e aulas assíncronas",
-  "Arquivo da grade para importar no RCO",
-  "Reservas de salas e espaços",
+  "Catálogo oficial SEED-PR de cursos e matrizes",
+  "Reservas de salas, espaços e equipamentos",
+  "Licenças, comunicados e calendário escolar",
+  "Minha Agenda: portal do professor",
+  "Acessos por cargo: direção, coordenação, secretaria e reservas",
   "PDFs da grade por turma e por professor",
+  "Relatórios de carga horária e de ponto",
+  "Arquivo da grade para importar no RCO",
   "Assistente de IA",
   "Equipe e professores sem limite de usuários",
   "Suporte direto com a Nexus Core",
@@ -176,9 +182,14 @@ export default function PlanosPage() {
         <>
         {/* [PRECO-POR-TURMA] plano por turma: um cartao com o valor calculado para a escola */}
         {planosPorTurma.map((plano) => {
-          const porTurma = (plano as PlanoComTurma).precoPorTurmaAnual ?? 0;
-          const anual = totalTurmas * porTurma;
-          const mensal = Math.round(anual / 12);
+          // [PRECO-MENSAL-ANUAL] porTurma = preco de UMA turma POR ANO na opcao escolhida
+          const porTurmaAnual = (plano as PlanoComTurma).precoPorTurmaAnual ?? 0;
+          const porTurmaParcelado = (plano as PlanoComTurma).precoPorTurmaParcelado || porTurmaAnual;
+          const porTurma = periodicidade === "anual" ? porTurmaAnual : porTurmaParcelado;
+          const anual = totalTurmas * porTurmaAnual;
+          // parcela do mensal arredondada para cima ao real inteiro (igual ao backend: lib/preco-plano.ts)
+          const mensal = Math.ceil((totalTurmas * porTurmaParcelado) / 1200) * 100;
+          const totalParcelado = mensal * 12;
           return (
             <Card key={plano.id} className="mx-auto max-w-3xl border-[#42A5F5] ring-2 ring-[#1565C0] ring-offset-2 shadow-lg">
               <CardContent className="grid gap-8 p-6 md:grid-cols-2 md:p-8">
@@ -201,7 +212,7 @@ export default function PlanosPage() {
                           {periodicidade === "anual" ? brl(anual) : `12x de ${brl(mensal)}`}
                         </p>
                         <p className="text-xs text-slate-600">
-                          {periodicidade === "anual" ? `por ano, à vista (ou 12x de ${brl(mensal)})` : `total de ${brl(anual)} por ano`}
+                          {periodicidade === "anual" ? "por ano, à vista no Pix ou boleto, ou parcelado no cartão com os juros do cartão (fale com a gente)" : `total de ${brl(totalParcelado)} por ano`}
                         </p>
                       </>
                     ) : (

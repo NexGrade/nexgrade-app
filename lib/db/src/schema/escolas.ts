@@ -23,6 +23,10 @@ export const planosTable = pgTable("planos", {
   // ou 12x mensal). Plano "NexGrade Escola": R$ 30,00 por turma por ano.
   cobranca: text("cobranca").notNull().default("fixa"),
   precoPorTurmaAnual: integer("preco_por_turma_anual"), // centavos
+  // [PRECO-MENSAL-ANUAL] (21/10/2026) preco por turma POR ANO no plano mensal (pago em 12x).
+  // precoPorTurmaAnual = plano anual (a vista); precoPorTurmaParcelado = plano mensal.
+  // Nulo = comportamento antigo (mensal = precoPorTurmaAnual em 12x).
+  precoPorTurmaParcelado: integer("preco_por_turma_parcelado"), // centavos
   // [RENOMEADO/NOVO] Era um único "stripePriceId" -- o Stripe usa um
   // Price ID diferente por periodicidade dentro do mesmo Product
   // (RF-BILLING). Ambos nulos até você colar os price_... do Stripe
