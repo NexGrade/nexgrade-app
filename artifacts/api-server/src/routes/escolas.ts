@@ -244,4 +244,46 @@ router.post("/assinatura-asaas", limitadorCadastro, async (req, res) => {
   }
 });
 
+// [LOGO-ESCOLA] (21/10/2026) PUT/DELETE /escolas/logo -- troca ou remove a logo
+// da escola. A leitura vem junto no GET /escolas/me (ele devolve a escola inteira).
+// Permissao: o filtro unico (lib/permissao.ts) ja barra alteracao de quem nao e
+// direcao/coordenacao/secretaria, como em qualquer outra rota.
+// Formato: so PNG, JPG e WEBP em data URL (SVG fica de fora: pode carregar script).
+// Tamanho: o navegador reduz a imagem antes de enviar; aqui o teto fica abaixo dos
+// 100 KB do express.json() global, entao app.ts nao precisa mudar.
+const LOGO_FORMATO = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+const LOGO_MAX_CARACTERES = 95_000;
+
+router.put("/logo", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const logo = req.body?.logoDataUrl;
+  if (typeof logo !== "string" || !LOGO_FORMATO.test(logo)) {
+    res.status(400).json({ error: "Envie a logo em PNG, JPG ou WEBP." });
+    return;
+  }
+  if (logo.length > LOGO_MAX_CARACTERES) {
+    res.status(413).json({ error: "A logo ficou grande demais mesmo depois de reduzida. Tente uma imagem mais simples." });
+    return;
+  }
+  const [atualizada] = await db
+    .update(escolasTable)
+    .set({ logoDataUrl: logo, updatedAt: new Date() })
+    .where(eq(escolasTable.id, escolaId))
+    .returning({ id: escolasTable.id });
+  if (!atualizada) {
+    res.status(404).json({ error: "Complete o cadastro da escola antes de enviar a logo." });
+    return;
+  }
+  res.json({ ok: true });
+});
+
+router.delete("/logo", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  await db
+    .update(escolasTable)
+    .set({ logoDataUrl: null, updatedAt: new Date() })
+    .where(eq(escolasTable.id, escolaId));
+  res.json({ ok: true });
+});
+
 export default router;

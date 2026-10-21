@@ -51,6 +51,10 @@ export const escolasTable = pgTable("escolas", {
   // escrita sem precisar de driver específico pra tipo array.
   turnosOfertados: text("turnos_ofertados"),
   resolucaoSeedPr: text("resolucao_seed_pr"),
+  // [LOGO-ESCOLA] (21/10/2026) logo da escola como data URL (PNG/JPG/WEBP),
+  // reduzida no navegador antes do envio para caber no limite de 100 KB do
+  // express.json(). Nula = escola sem logo. Criada por lib/db/adicionar-logo-escola.cjs.
+  logoDataUrl: text("logo_data_url"),
   planoId: integer("plano_id").references(() => planosTable.id),
   clerkOrgId: text("clerk_org_id").unique(),
   stripeCustomerId: text("stripe_customer_id"),
@@ -63,7 +67,7 @@ export const escolasTable = pgTable("escolas", {
   emailContato: text("email_contato"),
   telefoneContato: text("telefone_contato"),
   emailCobranca: text("email_cobranca"),
-  
+
   // [NOVO] RF-BILLING-ASAAS: substituem stripeCustomerId/
   // stripeSubscriptionId como billing provider ativo -- os campos do
   // Stripe acima ficam intactos (não usados) até a migração completa

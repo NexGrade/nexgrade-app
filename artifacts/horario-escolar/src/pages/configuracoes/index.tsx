@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Settings, Save, ShieldCheck } from "lucide-react";
+import { LogoEscolaCard } from "@/components/logo-escola-card"; // [LOGO-ESCOLA]
 
 const ESTADOS_BR = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"
@@ -134,6 +135,9 @@ export default function ConfiguracoesList() {
             </div>
           </CardContent>
         </Card>
+
+        {/* [LOGO-ESCOLA] (21/10/2026) salva sozinho, fora do "Salvar todas" (grava na tabela escolas) */}
+        <LogoEscolaCard className="lg:col-span-2" />
 
         <Link href="/configuracoes/seed-pr">
           <Card className="lg:col-span-2 border-[#1565C0]/30 hover:border-[#1565C0] transition-colors cursor-pointer">
