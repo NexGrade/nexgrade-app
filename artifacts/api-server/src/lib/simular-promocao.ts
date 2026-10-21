@@ -122,14 +122,30 @@ export async function simularPromocao(escolaId: string, nome: string): Promise<R
 
   const resOficialHoje = contar(aulasOficial, haHoje);
   const resOficial = contar(aulasOficial, haOficial);
-  const resExp = contar(aulasSimuladas, haSimulada);
 
   const TURNO_ROT: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
   const rotulo = (d: number, a: number) => `${DIAS[d] ?? d} ${a}ª`;
 
   // HA: hoje x depois de promover, só nos turnos do experimento
   const chave = (m: MarcaHACalculada) => `${m.professorId}|${m.turno}|${m.diaSemana}|${m.horarioSlot}`;
-  const haDepois = haSimulada.filter((m) => turnos.includes(m.turno));
+  // [HA-SO-QUEM-MUDOU] igual a promocao: quem nao teve aula mexida fica com a HA de hoje
+  const chaveAulaP = (x: { turmaId: number; diaSemana: number; numeroAula: number }) => `${x.turmaId}|${x.diaSemana}|${x.numeroAula}`;
+  const porProf = (rows: AulaParaCalculoHA[]) => {
+    const m = new Map<number, Set<string>>();
+    for (const r of rows) { if (!m.has(r.professorId)) m.set(r.professorId, new Set()); m.get(r.professorId)!.add(chaveAulaP(r)); }
+    return m;
+  };
+  const antesP = porProf(aulasOficial); const depoisP = porProf(aulasSimuladas);
+  const mudou = new Set<number>();
+  for (const p of new Set([...antesP.keys(), ...depoisP.keys()])) {
+    const a = antesP.get(p) ?? new Set<string>(); const d = depoisP.get(p) ?? new Set<string>();
+    if (a.size !== d.size || [...a].some((k) => !d.has(k))) mudou.add(p);
+  }
+  const haDepois = [
+    ...haSimulada.filter((m) => turnos.includes(m.turno) && mudou.has(m.professorId)),
+    ...haHoje.filter((m) => !mudou.has(m.professorId)),
+  ];
+  const resExp = contar(aulasSimuladas, haDepois);
   const sHoje = new Set(haHoje.map(chave));
   const sDepois = new Set(haDepois.map(chave));
   const haPorProf = new Map<number, { sai: string[]; entra: string[] }>();

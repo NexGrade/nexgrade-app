@@ -193,10 +193,12 @@ def melhorar_grade_endpoint(payload: dict):
             aulas_iniciais=aulas_iniciais,
             fixar_raw=payload.get("recursos"),  # [AULA-FIXA]
             ha_por_professor=payload.get("haPorProfessor"),  # [HA-NO-CPSAT]
+            ha_atual=payload.get("haAtual"),  # [HA-OCUPA-MELHORIA]
         )
-        resultado["janelasProfessorAntes"] = contar_janelas_professor(aulas_iniciais)
+        ha_ocup = {(h["professor"], int(h["dia"]), int(h["aula"])) for h in (payload.get("haAtual") or [])} or None
+        resultado["janelasProfessorAntes"] = contar_janelas_professor(aulas_iniciais, ha_ocup)
         if resultado.get("aulas"):
-            resultado["janelasProfessorDepois"] = contar_janelas_professor(resultado["aulas"])
+            resultado["janelasProfessorDepois"] = contar_janelas_professor(resultado["aulas"], ha_ocup)
         return resultado
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

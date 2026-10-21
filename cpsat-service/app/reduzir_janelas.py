@@ -99,10 +99,17 @@ def preparar_contexto(aulas, disciplinas_turma_raw, bloqueios_raw, aulas_por_dia
     }
 
 
-def contar_janelas_professor(aulas):
+def contar_janelas_professor(aulas, ha_ocupado=None):
+    """[HA-OCUPA-MELHORIA] ha_ocupado: set opcional (professor, dia, aula) da HA atual,
+    que conta como horario ocupado (vao tapado por HA nao e janela)."""
     por_prof_dia = defaultdict(set)
     for a in aulas:
         por_prof_dia[(a["professor"], a["dia"])].add(a["aula"])
+    if ha_ocupado:
+        profs_com_aula = {p for (p, _d) in por_prof_dia}
+        for (p, d, a) in ha_ocupado:
+            if p in profs_com_aula:
+                por_prof_dia[(p, d)].add(a)
     total = 0
     for slots in por_prof_dia.values():
         if len(slots) < 2:
@@ -339,6 +346,7 @@ def reduzir_janelas(
     ao_melhorar=None,  # [PROGRESSO-MOTOR] chamado com o novo total de janelas a cada melhora
     deve_parar=None,  # [PARAR-MOTOR] devolve True quando o usuario pediu para parar
     iniciais=None,  # [ESTABILIDADE] set (turma, codigoSae, professor, dia, aula) da grade de partida
+    ha_ocupado=None,  # [HA-OCUPA-MELHORIA] set (professor, dia, aula) da HA atual
 ):
     """
     Recebe a grade ja viavel (resultado["aulas"] de gerar_grade()) e as
@@ -357,7 +365,7 @@ def reduzir_janelas(
     rng = random.Random(seed)
     atual = [dict(a) for a in aulas]
     melhor = [dict(a) for a in atual]
-    janelas_atual = contar_janelas_professor(atual)
+    janelas_atual = contar_janelas_professor(atual, ha_ocupado)
     janelas_antes = janelas_atual
     janelas_melhor = janelas_atual
 
@@ -401,7 +409,7 @@ def reduzir_janelas(
             continue
 
         avaliados = sorted(
-            ((c, j, custo(c, j)) for c in candidatos for j in [contar_janelas_professor(c)]), key=lambda x: x[2]
+            ((c, j, custo(c, j)) for c in candidatos for j in [contar_janelas_professor(c, ha_ocupado)]), key=lambda x: x[2]
         )
         melhor_candidato, janelas_candidato, custo_candidato = avaliados[0]
 

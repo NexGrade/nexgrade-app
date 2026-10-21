@@ -978,6 +978,30 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     return;
   }
 
+  // [HA-SO-QUEM-MUDOU] (21/10/2026) quem nao teve nenhuma aula mexida fica com a HA
+  // exatamente como esta (inclusive a importada); o recalculo so reposiciona a de quem mudou.
+  const chaveAula = (h: { turmaId: number; disciplinaId: number; diaSemana: number; numeroAula: number }) => `${h.turmaId}|${h.disciplinaId}|${h.diaSemana}|${h.numeroAula}`;
+  const oficialAntes = await db.select().from(horariosTable)
+    .where(and(eq(horariosTable.escolaId, escolaId), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`));
+  const paresSet = new Set(turmaProfessorPares.map((x) => `${x.turmaId}|${x.professorId}`));
+  const aulasProf = (rows: Array<{ turmaId: number; disciplinaId: number; professorId: number; diaSemana: number; numeroAula: number }>) => {
+    const m = new Map<number, Set<string>>();
+    for (const r of rows) { if (!m.has(r.professorId)) m.set(r.professorId, new Set()); m.get(r.professorId)!.add(chaveAula(r)); }
+    return m;
+  };
+  const antesPorProf = aulasProf(oficialAntes);
+  const depoisPorProf = aulasProf([...oficialAntes.filter((h) => !paresSet.has(`${h.turmaId}|${h.professorId}`)), ...expSlots]);
+  const profsMudaram = new Set<number>();
+  for (const p of new Set([...antesPorProf.keys(), ...depoisPorProf.keys()])) {
+    const a = antesPorProf.get(p) ?? new Set<string>(); const d = depoisPorProf.get(p) ?? new Set<string>();
+    if (a.size !== d.size || [...a].some((k) => !d.has(k))) profsMudaram.add(p);
+  }
+  const profsEscola = (await db.select({ id: professoresTable.id }).from(professoresTable).where(eq(professoresTable.escolaId, escolaId))).map((p) => p.id);
+  const profsMantem = profsEscola.filter((p) => !profsMudaram.has(p));
+  const haMantida = profsMantem.length
+    ? await db.select().from(disponibilidadeTable).where(and(inArray(disponibilidadeTable.professorId, profsMantem), eq(disponibilidadeTable.horaAtividadeObrigatoria, true)))
+    : [];
+
   const inserted = await db.transaction(async (tx) => {
     await travarGradeOficial(tx, escolaId); // [TRAVA-GRADE-OFICIAL]
     for (const { turmaId, professorId } of turmaProfessorPares) {
@@ -995,8 +1019,25 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
   } catch (err) {
     console.error("[HA] Falha ao recalcular hora-atividade apos promover:", err);
   }
+  // [HA-SO-QUEM-MUDOU] devolve a HA de antes a quem nao teve aula mexida
+  try {
+    if (profsMantem.length) {
+      await db.transaction(async (tx) => {
+        await tx.delete(disponibilidadeTable)
+          .where(and(inArray(disponibilidadeTable.professorId, profsMantem), eq(disponibilidadeTable.horaAtividadeObrigatoria, true)));
+        for (let i = 0; i < haMantida.length; i += 500) {
+          const lote = haMantida.slice(i, i + 500);
+          await tx.delete(disponibilidadeTable).where(sql`(${disponibilidadeTable.professorId}, ${disponibilidadeTable.diaSemana}, ${disponibilidadeTable.horarioSlot}, COALESCE(${disponibilidadeTable.turno}, '')) IN (${sql.join(
+            lote.map((x) => sql`(${x.professorId}, ${x.diaSemana}, ${x.horarioSlot}, ${x.turno ?? ""})`), sql`, `)})`);
+          await tx.insert(disponibilidadeTable).values(lote.map(({ id: _id, createdAt: _c, ...resto }) => resto));
+        }
+      });
+    }
+  } catch (err) {
+    console.error("[HA-SO-QUEM-MUDOU] Falha ao devolver a HA de quem nao mudou:", err);
+  }
 
-  res.json({ slotsGerados: inserted.length, conflitos: [], horario: [], backupId, avisoBackup });
+  res.json({ slotsGerados: inserted.length, conflitos: [], horario: [], backupId, avisoBackup, professoresComAulaMexida: profsMudaram.size });
 });
 
 // [BACKUP-GRADE] cópias da grade oficial guardadas antes de promover (mais nova primeiro)
@@ -2018,6 +2059,7 @@ async function runCpsatGeneracaoUnica(
   // (turma + disciplina + professor -- isso resolve tambem as duplas); se
   // alguma nao casar, aborta em vez de melhorar uma grade incompleta.
   const aulasIniciais: Array<{ turma: string; codigoSae: string; disciplina: string; professor: string; dia: number; diaNome: string; aula: number }> = [];
+  const haAtual: Array<{ professor: string; dia: number; aula: number }> = []; // [HA-OCUPA-MELHORIA]
   if (modoMelhoria) {
     const DIAS_NOME = ["Segunda", "Terca", "Quarta", "Quinta", "Sexta"];
     const codigoPorChave = new Map<string, { codigoSae: string; disciplina: string }>();
@@ -2039,6 +2081,19 @@ async function runCpsatGeneracaoUnica(
       }
       if (baseDeEspelho.has(`${turmaH.nome}||${info.codigoSae}`)) continue; // [TRIO-MESMO-PROFESSOR] a base ja representa esta aula
       aulasIniciais.push({ turma: turmaH.nome, codigoSae: info.codigoSae, disciplina: info.disciplina, professor: profNome, dia: h.diaSemana, diaNome: DIAS_NOME[h.diaSemana] ?? String(h.diaSemana), aula: h.numeroAula });
+    }
+    // [HA-OCUPA-MELHORIA] HA de hoje dos professores do turno: o motor conta como horario ocupado,
+    // para nao "consertar" um vao que a HA ja tapa
+    const haHoje = professorIdsUsados.size
+      ? await db.select().from(disponibilidadeTable).where(and(
+          inArray(disponibilidadeTable.professorId, [...professorIdsUsados]),
+          eq(disponibilidadeTable.turno, turno),
+          eq(disponibilidadeTable.horaAtividadeObrigatoria, true),
+        ))
+      : [];
+    for (const d of haHoje) {
+      const nomeP = professorMap.get(d.professorId)?.nome;
+      if (nomeP) haAtual.push({ professor: nomeP, dia: d.diaSemana, aula: d.horarioSlot });
     }
     if (aulasIniciais.length === 0 || semMapa.length > 0) {
       return {
@@ -2073,7 +2128,7 @@ async function runCpsatGeneracaoUnica(
       // medios/grandes (60KB+) na rede interna do Render, mesmo dentro do
       // timeout configurado. axios usa http/https nativos do Node.
       const progressoId = progressoGeracao.getStore()?.jobId; // [PROGRESSO-MOTOR]
-      const corpoMotor = { ...(modoMelhoria ? { ...payloadComHa, aulasIniciais } : payloadComHa), ...(progressoId ? { progressoId } : {}) };
+      const corpoMotor = { ...(modoMelhoria ? { ...payloadComHa, aulasIniciais, haAtual } : payloadComHa), ...(progressoId ? { progressoId } : {}) }; // [HA-OCUPA-MELHORIA]
       const axiosResponse = await axios.post(`${CPSAT_SERVICE_URL}/${modoMelhoria ? "melhorar-grade" : usarCoordenacao ? "gerar-grade-coordenada" : "gerar-grade"}`, corpoMotor, { // [MELHORAR-GRADE] [HA-NO-CPSAT]
         headers: { "Content-Type": "application/json", ...(CPSAT_TOKEN ? { "X-NexGrade-Token": CPSAT_TOKEN } : {}) }, // [CPSAT-TOKEN]
         timeout: timeoutMs,
