@@ -1,6 +1,6 @@
 import { useEhGestorReservas } from "@/lib/papeis"; // [CONSULTA-GESTOR]
 import { useState, useEffect } from "react";
-import { useSearch, Link } from "wouter";
+import { useSearch, Link, useLocation } from "wouter";
 import {
   useListHorarioSlots, useSetHorarioSlotsLote, getListHorarioSlotsQueryKey,
   useListAulasFixas, useCriarAulaFixa, getListAulasFixasQueryKey,
@@ -1481,9 +1481,9 @@ const TIPO_LABELS: Record<string, string> = {
 
 // [CONFLITO-VAI-AO-PROBLEMA] (21/10/2026) cada conflito leva para onde o problema aparece (antes todos
 // iam para a Disponibilidade do professor). Grade da turma ou do professor com o dia/aula destacados;
-// HA na Disponibilidade; calendário no Calendário.
+// HA na Disponibilidade; habilitação no cadastro do professor; calendário no Calendário.
 type ConflitoItem = { tipo: string; descricao: string; turmaId?: number | null; professorId?: number | null; diaSemana?: number | null; numeroAula?: number | null };
-const TIPOS_DA_TURMA = new Set(["periodo_invalido", "carga_insuficiente", "turma_sem_horario", "aulas_geminadas_excedidas", "sala_incompativel", "professor_nao_habilitado"]);
+const TIPOS_DA_TURMA = new Set(["periodo_invalido", "carga_insuficiente", "turma_sem_horario", "aulas_geminadas_excedidas", "sala_incompativel"]);
 const TIPOS_DO_PROFESSOR = new Set(["professor_duplicado", "janelas_excessivas", "professor_indisponivel", "teto_aulas_turno_excedido", "intervalo_entre_turnos", "pausa_entre_turnos"]);
 const TIPOS_DA_DISPONIBILIDADE = new Set(["hora_atividade_insuficiente", "hora_atividade_turno_incorreto"]);
 function destinoDoConflito(c: ConflitoItem): { href: string; rotulo: string } | null {
@@ -1492,6 +1492,8 @@ function destinoDoConflito(c: ConflitoItem): { href: string; rotulo: string } | 
   if (c.numeroAula != null) q.set("aula", String(c.numeroAula));
   if (TIPOS_DA_DISPONIBILIDADE.has(c.tipo) && c.professorId != null) return { href: `/disponibilidade?professorId=${c.professorId}`, rotulo: "Ver disponibilidade" };
   if (c.tipo === "turma_sem_calendario") return { href: "/calendario", rotulo: "Ver calendário" };
+  // professor sem habilitação: o conserto é marcar a disciplina no cadastro dele
+  if (c.tipo === "professor_nao_habilitado" && c.professorId != null) return { href: `/professores/${c.professorId}`, rotulo: "Ver cadastro do professor" };
   if (TIPOS_DO_PROFESSOR.has(c.tipo) && c.professorId != null) { q.set("professor", String(c.professorId)); return { href: `/horario?${q}`, rotulo: "Ver na grade do professor" }; }
   if (TIPOS_DA_TURMA.has(c.tipo) && c.turmaId != null) { q.set("turma", String(c.turmaId)); return { href: `/horario?${q}`, rotulo: "Ver na grade da turma" }; }
   if (c.professorId != null) { q.set("professor", String(c.professorId)); return { href: `/horario?${q}`, rotulo: "Ver na grade do professor" }; }
@@ -1500,6 +1502,7 @@ function destinoDoConflito(c: ConflitoItem): { href: string; rotulo: string } | 
 }
 
 function AbaConflitos() {
+  const [, irPara] = useLocation(); // [CONFLITO-VAI-AO-PROBLEMA]
   const { data: conflitosComSugestoes = [], isLoading, refetch, isFetching } = useGetConflitosComSugestoes();
   const [expanded, setExpanded] = useState<number | null>(null);
   // [CONFLITOS-FILTRO] (16/10/2026) clicar num quadro ou num tipo mostra so aqueles conflitos
@@ -1589,20 +1592,21 @@ function AbaConflitos() {
               <Card key={idx} className={`border ${g.color} transition-all`}>
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-2 min-w-0">
+                    <div
+                      className={`flex items-start gap-2 min-w-0 flex-1 ${destino ? "cursor-pointer group" : ""}`}
+                      role={destino ? "link" : undefined}
+                      tabIndex={destino ? 0 : undefined}
+                      title={destino?.rotulo}
+                      onClick={() => destino && irPara(destino.href)}
+                      onKeyDown={(e) => { if (destino && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); irPara(destino.href); } }}
+                    >{/* [CONFLITO-VAI-AO-PROBLEMA] clicar no conflito leva ao problema */}
                       <span className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${g.dot}`} />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <Badge className={`border text-xs whitespace-normal ${g.color}`}>{g.label}</Badge>
                           <span className="text-xs text-muted-foreground">{TIPO_LABELS[item.conflito.tipo] ?? item.conflito.tipo}</span>
                         </div>
-                        {destino ? (
-                          <Link href={destino.href} className="block hover:underline" title={destino.rotulo}>
-                            <CardTitle className="text-sm font-medium mt-1">{item.conflito.descricao}</CardTitle>
-                          </Link>
-                        ) : (
-                          <CardTitle className="text-sm font-medium mt-1">{item.conflito.descricao}</CardTitle>
-                        )}{/* [CONFLITO-VAI-AO-PROBLEMA] */}
+                        <CardTitle className="text-sm font-medium mt-1 group-hover:underline">{item.conflito.descricao}</CardTitle>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
