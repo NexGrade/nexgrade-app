@@ -138,6 +138,8 @@ export default function HorarioHubPage() {
   if (tabParam === "esquema" && typeof window !== "undefined") window.location.replace("/calendario?tab=turnos"); // [FASE-C3]
   const abaInicial = (ABAS.some((a) => a.key === tabParam) ? tabParam : "grade") as AbaKey; // [FASE-C3] Horario abre na Grade
   const [aba, setAba] = useState<AbaKey>(abaInicial);
+  // [CONFLITO-VAI-AO-PROBLEMA] clicar num conflito troca o ?tab= sem recarregar: a aba acompanha
+  useEffect(() => { if (tabParam && ABAS.some((a) => a.key === tabParam)) setAba(tabParam as AbaKey); }, [tabParam, search]);
   const somenteConsulta = useEhGestorReservas(); // [CONSULTA-GESTOR]
 
   return (
@@ -696,8 +698,18 @@ function MenuCelula({ estado, rotulo, className, children, onEscolher }: {
 
 function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { // [CONSULTA-GESTOR]
   const [turmaId, setTurmaId] = useState<string>(() => new URLSearchParams(window.location.search).get("turma") ?? "all"); // [FASE-A] ?turma=
-  const [professorId, setProfessorId] = useState<string>("all");
+  const [professorId, setProfessorId] = useState<string>(() => new URLSearchParams(window.location.search).get("professor") ?? "all"); // [CONFLITO-VAI-AO-PROBLEMA] ?professor=
   const [turno, setTurno] = useState<string>("all");
+  // [CONFLITO-VAI-AO-PROBLEMA] (21/10/2026) vindo da aba Conflitos: destaca o dia/aula do problema
+  const [destaque, setDestaque] = useState<{ dia: number | null; aula: number | null; texto: string } | null>(() => {
+    const q = new URLSearchParams(window.location.search);
+    const texto = q.get("conflito");
+    if (!texto) return null;
+    const n = (k: string) => (q.get(k) != null && q.get(k) !== "" && !Number.isNaN(Number(q.get(k))) ? Number(q.get(k)) : null);
+    return { dia: n("dia"), aula: n("aula"), texto };
+  });
+  const diaDestaque = (i: number) => destaque?.dia === i;
+  const aulaDestaque = (a: number) => destaque?.aula === a;
   // [LINHA-1800-SE-EXISTE] a linha "18:00" do noturno so aparece se o esquema da escola tiver aula as 18:00
   const { data: slotsDoTurnoGrade } = useListHorarioSlots({ turno: turno as any }, { query: { queryKey: getListHorarioSlotsQueryKey({ turno: turno as any }) } });
   const temLinha1800 = turno === "noturno" && (slotsDoTurnoGrade ?? []).some((s: any) => String(s.horaInicio ?? "").startsWith("18:00"));
@@ -991,6 +1003,18 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
 
   return (
     <div className="space-y-4 pt-2">
+      {destaque && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-800">
+          <span>
+            <strong>Conflito:</strong> {destaque.texto}
+            {destaque.dia != null && <> · destacado: <strong>{diasSemana[destaque.dia]}{destaque.aula != null ? `, ${destaque.aula}ª aula` : ""}</strong></>}
+          </span>
+          <span className="flex items-center gap-3">
+            <Link href="/horario?tab=conflitos" className="text-xs font-medium underline">Voltar aos conflitos</Link>
+            <button type="button" className="text-xs underline" onClick={() => setDestaque(null)}>Tirar destaque</button>
+          </span>
+        </div>
+      )}{/* [CONFLITO-VAI-AO-PROBLEMA] */}
       <Card>
         <CardContent className="p-4 flex flex-col md:flex-row gap-4 items-end">
           <div className="space-y-2 w-full md:w-44">
@@ -1099,14 +1123,14 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                     <div className="min-w-[700px]">
                       <div className="grid grid-cols-6 border-b border-border bg-muted/20">
                         <div className="p-2 text-xs font-medium text-muted-foreground text-center border-r border-border">Aula</div>
-                        {diasSemana.map((dia) => (
-                          <div key={dia} className="p-2 text-xs font-semibold text-center border-r border-border last:border-0">{dia}</div>
+                        {diasSemana.map((dia, iDia) => (
+                          <div key={dia} className={`p-2 text-xs font-semibold text-center border-r border-border last:border-0 ${diaDestaque(iDia) ? "bg-red-100 text-red-800" : ""}`}>{dia}</div>
                         ))}
                       </div>
                       {numerosAula.map((aulaNum) => {
                         return (
                           <div key={aulaNum} className="grid grid-cols-6 border-b border-border last:border-0">
-                            <div className="p-1.5 flex items-center justify-center text-xs font-medium text-muted-foreground border-r border-border bg-muted/10">
+                            <div className={`p-1.5 flex items-center justify-center text-xs font-medium border-r border-border ${aulaDestaque(aulaNum) ? "bg-red-100 text-red-800" : "text-muted-foreground bg-muted/10"}`}>
                               {aulaNum === 0 ? "18:00" : `${aulaNum}ª`}
                             </div>
                             {Array.from({ length: 5 }).map((_, colIndex) => {
@@ -1169,7 +1193,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                       <div className="grid grid-cols-[46px_repeat(5,minmax(0,1fr))] border-b border-border bg-muted/20">
                         <div className="p-2 text-xs font-medium text-muted-foreground text-center border-r border-border">Aula</div>
                         {diasSemana.map((dia, iDia) => (
-                          <div key={dia} className="p-2 text-xs font-semibold text-center border-r border-border last:border-0">
+                          <div key={dia} className={`p-2 text-xs font-semibold text-center border-r border-border last:border-0 ${diaDestaque(iDia) ? "bg-red-100 text-red-800" : ""}`}>
                             <span title={dia}>{dia.slice(0, 3)}</span>
                             {diaTodoBloqueado(t, iDia) && <div className="text-[9px] font-normal leading-tight text-muted-foreground">indisp.</div>}
                           </div>
@@ -1177,7 +1201,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                       </div>
                       {linhasDoTurno(t).map((aulaNum) => (
                         <div key={aulaNum} className="grid grid-cols-[46px_repeat(5,minmax(0,1fr))] border-b border-border last:border-0">
-                          <div className="p-1.5 flex flex-col items-center justify-center text-xs font-medium text-muted-foreground border-r border-border bg-muted/10">
+                          <div className={`p-1.5 flex flex-col items-center justify-center text-xs font-medium border-r border-border ${aulaDestaque(aulaNum) ? "bg-red-100 text-red-800" : "text-muted-foreground bg-muted/10"}`}>
                             <span>{aulaNum}ª</span>
                             {horaDaAula(t, aulaNum) && <span className="text-[10px] font-normal tabular-nums">{horaDaAula(t, aulaNum)}</span>}
                           </div>
@@ -1268,15 +1292,15 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
             <div className="min-w-[800px]">
               <div className="grid grid-cols-6 border-b border-border bg-muted/50">
                 <div className="p-4 font-medium text-muted-foreground text-center border-r border-border">Aula</div>
-                {diasSemana.map((dia) => (
-                  <div key={dia} className="p-4 font-semibold text-center border-r border-border last:border-0">{dia}</div>
+                {diasSemana.map((dia, iDia) => (
+                  <div key={dia} className={`p-4 font-semibold text-center border-r border-border last:border-0 ${diaDestaque(iDia) ? "bg-red-100 text-red-800" : ""}`}>{dia}</div>
                 ))}
               </div>
               {Array.from({ length: numRows }).map((_, rowIndex) => {
                 const aulaNum = rowIndex + 1;
                 return (
                   <div key={aulaNum} className="grid grid-cols-6 border-b border-border last:border-0">
-                    <div className="p-4 flex items-center justify-center font-medium text-muted-foreground border-r border-border bg-muted/20">
+                    <div className={`p-4 flex items-center justify-center font-medium border-r border-border ${aulaDestaque(aulaNum) ? "bg-red-100 text-red-800" : "text-muted-foreground bg-muted/20"}`}>
                       {aulaNum}ª Aula
                     </div>
                     {Array.from({ length: 5 }).map((_, colIndex) => {
@@ -1455,6 +1479,26 @@ const TIPO_LABELS: Record<string, string> = {
   turma_sem_calendario: "Turma Sem Calendário",
 };
 
+// [CONFLITO-VAI-AO-PROBLEMA] (21/10/2026) cada conflito leva para onde o problema aparece (antes todos
+// iam para a Disponibilidade do professor). Grade da turma ou do professor com o dia/aula destacados;
+// HA na Disponibilidade; calendário no Calendário.
+type ConflitoItem = { tipo: string; descricao: string; turmaId?: number | null; professorId?: number | null; diaSemana?: number | null; numeroAula?: number | null };
+const TIPOS_DA_TURMA = new Set(["periodo_invalido", "carga_insuficiente", "turma_sem_horario", "aulas_geminadas_excedidas", "sala_incompativel", "professor_nao_habilitado"]);
+const TIPOS_DO_PROFESSOR = new Set(["professor_duplicado", "janelas_excessivas", "professor_indisponivel", "teto_aulas_turno_excedido", "intervalo_entre_turnos", "pausa_entre_turnos"]);
+const TIPOS_DA_DISPONIBILIDADE = new Set(["hora_atividade_insuficiente", "hora_atividade_turno_incorreto"]);
+function destinoDoConflito(c: ConflitoItem): { href: string; rotulo: string } | null {
+  const q = new URLSearchParams({ tab: "grade", conflito: c.descricao });
+  if (c.diaSemana != null) q.set("dia", String(c.diaSemana));
+  if (c.numeroAula != null) q.set("aula", String(c.numeroAula));
+  if (TIPOS_DA_DISPONIBILIDADE.has(c.tipo) && c.professorId != null) return { href: `/disponibilidade?professorId=${c.professorId}`, rotulo: "Ver disponibilidade" };
+  if (c.tipo === "turma_sem_calendario") return { href: "/calendario", rotulo: "Ver calendário" };
+  if (TIPOS_DO_PROFESSOR.has(c.tipo) && c.professorId != null) { q.set("professor", String(c.professorId)); return { href: `/horario?${q}`, rotulo: "Ver na grade do professor" }; }
+  if (TIPOS_DA_TURMA.has(c.tipo) && c.turmaId != null) { q.set("turma", String(c.turmaId)); return { href: `/horario?${q}`, rotulo: "Ver na grade da turma" }; }
+  if (c.professorId != null) { q.set("professor", String(c.professorId)); return { href: `/horario?${q}`, rotulo: "Ver na grade do professor" }; }
+  if (c.turmaId != null) { q.set("turma", String(c.turmaId)); return { href: `/horario?${q}`, rotulo: "Ver na grade da turma" }; }
+  return null;
+}
+
 function AbaConflitos() {
   const { data: conflitosComSugestoes = [], isLoading, refetch, isFetching } = useGetConflitosComSugestoes();
   const [expanded, setExpanded] = useState<number | null>(null);
@@ -1540,6 +1584,7 @@ function AbaConflitos() {
           {visiveis.map((item, idx) => {
             const g = GRAVIDADE_CONFIG[item.conflito.gravidade as keyof typeof GRAVIDADE_CONFIG] ?? GRAVIDADE_CONFIG.baixo;
             const isOpen = expanded === idx;
+            const destino = destinoDoConflito(item.conflito); // [CONFLITO-VAI-AO-PROBLEMA]
             return (
               <Card key={idx} className={`border ${g.color} transition-all`}>
                 <CardHeader className="pb-2">
@@ -1551,17 +1596,26 @@ function AbaConflitos() {
                           <Badge className={`border text-xs whitespace-normal ${g.color}`}>{g.label}</Badge>
                           <span className="text-xs text-muted-foreground">{TIPO_LABELS[item.conflito.tipo] ?? item.conflito.tipo}</span>
                         </div>
-                        <CardTitle className="text-sm font-medium mt-1">{item.conflito.descricao}</CardTitle>
+                        {destino ? (
+                          <Link href={destino.href} className="block hover:underline" title={destino.rotulo}>
+                            <CardTitle className="text-sm font-medium mt-1">{item.conflito.descricao}</CardTitle>
+                          </Link>
+                        ) : (
+                          <CardTitle className="text-sm font-medium mt-1">{item.conflito.descricao}</CardTitle>
+                        )}{/* [CONFLITO-VAI-AO-PROBLEMA] */}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      {item.conflito.professorId != null && (
-                        <Link href={`/disponibilidade?professorId=${item.conflito.professorId}`}>
+                      {destino && (
+                        <Link href={destino.href}>
                           <Button variant="outline" size="sm" className="text-xs gap-1">
-                            Ver disponibilidade
+                            {destino.rotulo}
                             <ArrowRight className="w-3.5 h-3.5" />
                           </Button>
                         </Link>
+                      )}
+                      {item.conflito.tipo === "professor_indisponivel" && item.conflito.professorId != null && (
+                        <Link href={`/disponibilidade?professorId=${item.conflito.professorId}`} className="text-xs text-primary underline">Disponibilidade</Link>
                       )}
                       <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => setExpanded(isOpen ? null : idx)}>
                         {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
