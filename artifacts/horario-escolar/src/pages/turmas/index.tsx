@@ -8,7 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Link, useSearch } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Trash2, GraduationCap, CalendarDays } from "lucide-react";
+import { Plus, Edit, Trash2, GraduationCap, CalendarDays, UserX } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
@@ -298,10 +298,17 @@ export default function TurmasList() {
   const { busca, setBusca, itensFiltrados: turmasBuscadas } = useListaFiltrada(turmas, (t) => t.nome);
   // [FILTRO-SEM-HORARIO] vindo do cartao "Turmas sem Horario" da Visao Geral (?filtro=sem-horario)
   const search = useSearch();
-  const soSemHorario = new URLSearchParams(search).get("filtro") === "sem-horario";
+  const filtroUrl = new URLSearchParams(search).get("filtro");
+  const soSemHorario = filtroUrl === "sem-horario";
   const { data: horariosTodos, isError: erroHorarios } = useListHorarios(undefined, { query: { queryKey: getListHorariosQueryKey(), enabled: soSemHorario } });
   const turmasComHorario = new Set((horariosTodos ?? []).map((h) => h.turmaId));
-  const turmasFiltradas = soSemHorario && horariosTodos ? turmasBuscadas.filter((t) => !turmasComHorario.has(t.id)) : turmasBuscadas;
+  // [FILTRO-SEM-PROFESSOR] turmas com disciplina sem professor (contagem vem de GET /turmas)
+  const [soSemProfessor, setSoSemProfessor] = useState(filtroUrl === "sem-professor");
+  const semProfessorDa = (t: any) => Number(t?.disciplinasSemProfessor ?? 0);
+  const qtdTurmasSemProfessor = (turmas ?? []).filter((t) => semProfessorDa(t) > 0).length;
+  const turmasFiltradas = turmasBuscadas
+    .filter((t) => !(soSemHorario && horariosTodos) || !turmasComHorario.has(t.id))
+    .filter((t) => !soSemProfessor || semProfessorDa(t) > 0);
   const deleteTurma = useDeleteTurma();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -350,12 +357,27 @@ export default function TurmasList() {
         </Dialog>
       </div>
 
-      <CampoBusca
-        value={busca}
-        onChange={setBusca}
-        placeholder="Buscar turma por nome..."
-        className="max-w-sm"
-      />
+      <div className="flex flex-wrap items-center gap-3">
+        <CampoBusca
+          value={busca}
+          onChange={setBusca}
+          placeholder="Buscar turma por nome..."
+          className="max-w-sm"
+        />
+        {/* [FILTRO-SEM-PROFESSOR] */}
+        <Button
+          type="button"
+          size="sm"
+          variant={soSemProfessor ? "default" : "outline"}
+          className="h-9"
+          disabled={isLoading}
+          onClick={() => setSoSemProfessor((v) => !v)}
+          title="Mostrar só as turmas que têm disciplina sem professor"
+        >
+          <UserX className="mr-2 h-4 w-4" />
+          Sem professor ({qtdTurmasSemProfessor})
+        </Button>
+      </div>
 
       {soSemHorario && (
         <div className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900">
@@ -376,7 +398,13 @@ export default function TurmasList() {
         </div>
       ) : turmasFiltradas.length === 0 ? (
         <div className="text-center py-12 bg-card rounded-lg border border-border">
-          <p className="text-sm text-muted-foreground">{soSemHorario && !busca ? "Todas as turmas já têm horário." : `Nenhuma turma encontrada para "${busca}".`}</p>
+          <p className="text-sm text-muted-foreground">
+            {busca
+              ? `Nenhuma turma encontrada para "${busca}".`
+              : soSemProfessor
+                ? "Todas as disciplinas das turmas já têm professor."
+                : "Todas as turmas já têm horário."}
+          </p>
         </div>
       ) : (
         <div className="grid gap-4">
@@ -389,6 +417,11 @@ export default function TurmasList() {
                       <h3 className="text-lg font-semibold">{turma.nome}</h3>
                       <Badge variant="outline">{turnoLabels[turma.turno]}</Badge>
                       <Badge variant="secondary">{turma.anoLetivo}</Badge>
+                      {semProfessorDa(turma) > 0 && (
+                        <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-800">
+                          {semProfessorDa(turma)} sem professor
+                        </Badge>
+                      )}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       Série: {turma.serie} • {(turma.disciplinaIds || []).length} disciplinas

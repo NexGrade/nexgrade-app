@@ -121,11 +121,19 @@ router.get("/", async (req, res) => {
     ? await db.select().from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, ids))
     : [];
   const disciplinaIdsPorTurma = new Map<number, number[]>();
+  // [FILTRO-SEM-PROFESSOR] vínculos turma x disciplina sem professor, por turma
+  // (mesma conta do quadro "Professores, co-docência e trio" da turma)
+  const semProfessorPorTurma = new Map<number, number>();
   links.forEach((l) => {
     if (!disciplinaIdsPorTurma.has(l.turmaId)) disciplinaIdsPorTurma.set(l.turmaId, []);
     disciplinaIdsPorTurma.get(l.turmaId)!.push(l.disciplinaId);
+    if (l.professorId == null) semProfessorPorTurma.set(l.turmaId, (semProfessorPorTurma.get(l.turmaId) ?? 0) + 1);
   });
-  const result = turmas.map((t) => ({ ...t, disciplinaIds: disciplinaIdsPorTurma.get(t.id) ?? [] }));
+  const result = turmas.map((t) => ({
+    ...t,
+    disciplinaIds: disciplinaIdsPorTurma.get(t.id) ?? [],
+    disciplinasSemProfessor: semProfessorPorTurma.get(t.id) ?? 0,
+  }));
   res.json(result);
 });
 
