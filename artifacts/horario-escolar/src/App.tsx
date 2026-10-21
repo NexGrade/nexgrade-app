@@ -772,7 +772,7 @@ function App() {
       routerPush={(to) => window.history.pushState(null, "", to)}
       routerReplace={(to) => window.history.replaceState(null, "", to)}
       localization={clerkPtBR as any} // [CLERK-PTBR]
-      appearance={{ variables: clerkAppearance.variables }} // [CLERK-CONTA] largura fixa so no login/cadastro
+      appearance={{ variables: clerkAppearance.variables, elements: { organizationAvatarUploaderContainer: { display: "none" } } }} // [LOGO-ESCOLA] campo de logo do Clerk oculto (logo fica em Configuracoes); [CLERK-CONTA] largura fixa so no login/cadastro
       // [FIX] Em versões recentes do Clerk (6.x), afterSignOutUrl saiu
       // de ser prop do <UserButton> individual e passou a ser opção
       // global do provider -- faz sentido, já que é comportamento de
