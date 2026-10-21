@@ -411,6 +411,9 @@ def resolver(
         for dia in range(len(DIAS))
         for aula in range(1, aulas_por_dia + 1)
         if (dt.professor, dia, aula) in evitar
+        # [PAUSA-TOLERA-OFICIAL] no "Melhorar", aula que ja esta nesse horario na oficial fica tolerada:
+        # a regra so impede levar aula nova para la (a pausa e boa pratica, nao pode bagunçar a grade)
+        and not (posicoes_iniciais and (i, dia, aula) in posicoes_iniciais)
     ]
     peso_pausa = int(os.getenv("CPSAT_PESO_PAUSA_TURNOS", "5"))
     custo_base = sum(penalidades_turma) + peso_professor * sum(penalidades_professor) + peso_ha * sum(deficits_ha) + peso_assincrona * sum(penalidades_assincrona) + peso_pausa * sum(penalidades_pausa)
