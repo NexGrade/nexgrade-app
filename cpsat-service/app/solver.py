@@ -83,6 +83,7 @@ def resolver(
     forcar_zero_janela: bool = False,
     fixar: dict | None = None,
     ha_por_professor: dict | None = None,  # [HA-NO-CPSAT]
+    posicoes_iniciais: set | None = None,  # [ESTABILIDADE] (dt_idx, dia, aula) da grade de partida
 ):
     model = cp_model.CpModel()
 
@@ -407,7 +408,20 @@ def resolver(
         if (dt.professor, dia, aula) in evitar
     ]
     peso_pausa = int(os.getenv("CPSAT_PESO_PAUSA_TURNOS", "5"))
-    model.Minimize(sum(penalidades_turma) + peso_professor * sum(penalidades_professor) + peso_ha * sum(deficits_ha) + peso_assincrona * sum(penalidades_assincrona) + peso_pausa * sum(penalidades_pausa))
+    custo_base = sum(penalidades_turma) + peso_professor * sum(penalidades_professor) + peso_ha * sum(deficits_ha) + peso_assincrona * sum(penalidades_assincrona) + peso_pausa * sum(penalidades_pausa)
+    # [ESTABILIDADE] (21/10/2026) "Melhorar grade oficial" parte da oficial e so
+    # muda o necessario: cada aula que sai do lugar em que estava custa
+    # CPSAT_PESO_MUDANCA (padrao 3) numa escala em que 1 janela custa 10. Uma
+    # troca simples (2 aulas = 6) so vale se tirar pelo menos 1 janela; trocas
+    # em cadeia (4+ aulas) so se tirarem 2 ou mais. Sem grade de partida
+    # (geracao do zero), o objetivo fica como sempre foi.
+    if posicoes_iniciais:
+        escala = int(os.getenv("CPSAT_ESCALA_ESTABILIDADE", "10"))
+        peso_mudanca = int(os.getenv("CPSAT_PESO_MUDANCA", "3"))
+        mudancas = [1 - aula_var[k] for k in posicoes_iniciais if k in aula_var]
+        model.Minimize(escala * custo_base + peso_mudanca * sum(mudancas))
+    else:
+        model.Minimize(custo_base)
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = tempo_limite_s
@@ -534,6 +548,8 @@ def gerar_grade(
             i = idx_por_chave.get((a["turma"], a["codigoSae"]))
             if i is not None and (i, a["dia"], a["aula"]) in hints_ini:
                 hints_ini[(i, a["dia"], a["aula"])] = 1
+    # [ESTABILIDADE] posicoes da grade de partida: sair delas custa no objetivo
+    posicoes_ini = {k for k, v in hints_ini.items() if v == 1} if hints_ini else None
 
     inicio = time.time()
     # [LIMITE-PRATICO] Objetivo de janela de professor e' custoso e
@@ -548,7 +564,7 @@ def gerar_grade(
         progresso.definir_fase("Encaixando as aulas sem buraco nas turmas")  # [PROGRESSO-MOTOR]
         solver_f1, status_f1, aula_var_f1 = resolver(
             disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
-            tempo_limite_s, apenas_turma=True, fixar=fixar,
+            tempo_limite_s, apenas_turma=True, fixar=fixar, posicoes_iniciais=posicoes_ini,  # [ESTABILIDADE]
         )
         duracao_f1 = time.time() - inicio
         # [TETO-FASE-2] A fase 2 usava TODO o tempo restante do limite
@@ -569,7 +585,7 @@ def gerar_grade(
             progresso.definir_fase("Reduzindo janelas dos professores")  # [PROGRESSO-MOTOR]
             solver_f2, status_f2, aula_var_f2 = resolver(
                 disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
-                int(tempo_restante), apenas_turma=False, hints=hints_ini or hints_f1, fixar=fixar, ha_por_professor=ha_por_professor,  # [WARM-START] [HA-NO-CPSAT]
+                int(tempo_restante), apenas_turma=False, hints=hints_ini or hints_f1, fixar=fixar, ha_por_professor=ha_por_professor, posicoes_iniciais=posicoes_ini,  # [WARM-START] [HA-NO-CPSAT] [ESTABILIDADE]
             )
             if status_f2 in (cp_model.OPTIMAL, cp_model.FEASIBLE):
                 solver, status, aula_var = solver_f2, status_f2, aula_var_f2
@@ -592,7 +608,7 @@ def gerar_grade(
         progresso.definir_fase("Procurando grade sem nenhum buraco nas turmas")  # [PROGRESSO-MOTOR]
         solver_rigido, status_rigido, aula_var_rigido = resolver(
             disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
-            tempo_rigida, apenas_turma=False, forcar_zero_janela=True, fixar=fixar, hints=hints_ini, ha_por_professor=ha_por_professor,  # [WARM-START] [HA-NO-CPSAT]
+            tempo_rigida, apenas_turma=False, forcar_zero_janela=True, fixar=fixar, hints=hints_ini, ha_por_professor=ha_por_professor, posicoes_iniciais=posicoes_ini,  # [WARM-START] [HA-NO-CPSAT] [ESTABILIDADE]
         )
         if status_rigido in (cp_model.OPTIMAL, cp_model.FEASIBLE) or progresso.pedido_parar():  # [PARAR-MOTOR]
             solver, status, aula_var = solver_rigido, status_rigido, aula_var_rigido
@@ -601,7 +617,7 @@ def gerar_grade(
             progresso.definir_fase("Reduzindo janelas de turmas e professores")  # [PROGRESSO-MOTOR]
             solver, status, aula_var = resolver(
                 disciplinas_turma, bloqueios, turno, aulas_por_dia, turmas_nomes,
-                tempo_suave, apenas_turma=False, fixar=fixar, hints=hints_ini, ha_por_professor=ha_por_professor,  # [WARM-START] [HA-NO-CPSAT]
+                tempo_suave, apenas_turma=False, fixar=fixar, hints=hints_ini, ha_por_professor=ha_por_professor, posicoes_iniciais=posicoes_ini,  # [WARM-START] [HA-NO-CPSAT] [ESTABILIDADE]
             )
     duracao = time.time() - inicio
 
@@ -646,6 +662,7 @@ def gerar_grade(
         aulas_otimizadas, janelas_antes, janelas_depois = reduzir_janelas(
             aulas, disciplinas_turma_raw, bloqueios_raw, aulas_por_dia,
             fixadas=fixadas_fase3,
+            iniciais=({(a["turma"], a["codigoSae"], a["professor"], a["dia"], a["aula"]) for a in aulas_iniciais} if aulas_iniciais else None),  # [ESTABILIDADE]
             ao_melhorar=(lambda j: progresso.registrar_solucao(pid_fase3, j)) if pid_fase3 else None,  # [PROGRESSO-MOTOR]
             deve_parar=(lambda: progresso.pedido_parar(pid_fase3)) if pid_fase3 else None,  # [PARAR-MOTOR]
         )

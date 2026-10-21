@@ -44,6 +44,7 @@ cada professor da no total, entao o teto por turno e invariante.
 """
 
 import math
+import os
 import random
 import time
 from collections import defaultdict
@@ -337,6 +338,7 @@ def reduzir_janelas(
     fixadas=None,
     ao_melhorar=None,  # [PROGRESSO-MOTOR] chamado com o novo total de janelas a cada melhora
     deve_parar=None,  # [PARAR-MOTOR] devolve True quando o usuario pediu para parar
+    iniciais=None,  # [ESTABILIDADE] set (turma, codigoSae, professor, dia, aula) da grade de partida
 ):
     """
     Recebe a grade ja viavel (resultado["aulas"] de gerar_grade()) e as
@@ -358,6 +360,21 @@ def reduzir_janelas(
     janelas_atual = contar_janelas_professor(atual)
     janelas_antes = janelas_atual
     janelas_melhor = janelas_atual
+
+    # [ESTABILIDADE] (21/10/2026) com grade de partida, o custo e
+    # 10 x janelas + 3 x aulas fora do lugar original (mesmos pesos do solver):
+    # troca neutra que so embaralha deixa de ser aceita de graca.
+    escala = int(os.getenv("CPSAT_ESCALA_ESTABILIDADE", "10"))
+    peso_mudanca = int(os.getenv("CPSAT_PESO_MUDANCA", "3"))
+
+    def custo(grade, janelas):
+        if not iniciais:
+            return janelas
+        fora = sum(1 for a in grade if (a["turma"], a["codigoSae"], a["professor"], a["dia"], a["aula"]) not in iniciais)
+        return escala * janelas + peso_mudanca * fora
+
+    custo_atual = custo(atual, janelas_atual)
+    custo_melhor = custo_atual
     if ao_melhorar:
         ao_melhorar(janelas_atual)
 
@@ -374,7 +391,7 @@ def reduzir_janelas(
             break
         if deve_parar and deve_parar():
             break
-        if janelas_melhor == 0:
+        if janelas_melhor == 0 and not iniciais:
             if verbose:
                 print(f"[parada] zero janelas atingido na iteracao {i}")
             break
@@ -384,19 +401,21 @@ def reduzir_janelas(
             continue
 
         avaliados = sorted(
-            ((c, contar_janelas_professor(c)) for c in candidatos), key=lambda x: x[1]
+            ((c, j, custo(c, j)) for c in candidatos for j in [contar_janelas_professor(c)]), key=lambda x: x[2]
         )
-        melhor_candidato, janelas_candidato = avaliados[0]
+        melhor_candidato, janelas_candidato, custo_candidato = avaliados[0]
 
-        delta = janelas_candidato - janelas_atual
+        delta = (custo_candidato - custo_atual) / (escala if iniciais else 1)
         aceitar = delta <= 0 or rng.random() < math.exp(-delta / max(T, 1e-6))
 
         if aceitar:
             atual = melhor_candidato
             janelas_atual = janelas_candidato
-            if janelas_atual < janelas_melhor:
+            custo_atual = custo_candidato
+            if custo_atual < custo_melhor:
                 melhor = [dict(a) for a in atual]
                 janelas_melhor = janelas_atual
+                custo_melhor = custo_atual
                 if ao_melhorar:
                     ao_melhorar(janelas_melhor)
                 if verbose:
