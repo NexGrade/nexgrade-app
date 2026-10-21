@@ -221,7 +221,7 @@ export default function PlanosPage() {
                   </div>
                   <div className="space-y-2">
                     <Button className="w-full" onClick={() => setPlanoInteresse(`${plano.nome} (${periodicidade === "anual" ? "anual à vista" : "12x mensal"})`)}>
-                      Falar conosco
+                      Fale Conosco
                     </Button>
                     <button
                       disabled={assinandoId === plano.id || !temContato || totalTurmas === 0}
@@ -303,7 +303,7 @@ export default function PlanosPage() {
                       disabled={gratuito}
                       onClick={() => setPlanoInteresse(`${plano.nome} (${periodicidade === "anual" ? "anual" : "mensal"})`)}
                     >
-                      {gratuito ? "Plano atual" : "Falar conosco"}
+                      {gratuito ? "Plano atual" : "Fale Conosco"}
                     </Button>
 
                     {!gratuito && (
