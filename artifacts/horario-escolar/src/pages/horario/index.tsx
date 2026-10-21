@@ -2172,9 +2172,13 @@ function AbaExperimental() {
   type JanelaSim = { professorNome: string; turno: string; dia: string; janelas: number; dia_detalhe: string };
   type ResultadoSim = {
     turnos: string[];
+    oficialHoje?: { janelas: number; diasComConflito: number; detalhe: JanelaSim[] }; // [SIMULAR-MUDANCA-REAL]
     oficial: { janelas: number; diasComConflito: number; detalhe: JanelaSim[] };
     experimento: { janelas: number; diasComConflito: number; detalhe: JanelaSim[] };
     professoresComHAMudando: number;
+    aulasMudando?: number;
+    aulasMovidas?: Array<{ professorNome: string; turma: string; disciplina: string; sai: string[]; entra: string[] }>;
+    haMovidas?: Array<{ professorNome: string; sai: string[]; entra: string[] }>;
     veredito: "melhor" | "empate" | "pior";
   };
   const [simulacoes, setSimulacoes] = useState<Record<string, ResultadoSim | "carregando" | { erro: string }>>({});
@@ -2425,15 +2429,57 @@ function AbaExperimental() {
                           <div className="font-semibold text-sm">{titulo}</div>
                           <button type="button" className="opacity-60 hover:opacity-100" onClick={() => setSimulacoes((s) => { const n = { ...s }; delete n[nome]; return n; })}><X className="w-3.5 h-3.5" /></button>
                         </div>
-                        <div className="mt-1">
-                          Janelas de professor ({sim.turnos.join(", ")}), contando aula + HA recalculada + atividade fora de sala:
-                          {" "}<strong>experimento {sim.experimento.janelas}</strong> × <strong>oficial {sim.oficial.janelas}</strong>.
-                          {" "}Ao promover, a HA de {sim.professoresComHAMudando} professor(es) mudaria de lugar.
-                        </div>
-                        <div className="mt-2 grid gap-2 md:grid-cols-2">
-                          <div><div className="font-medium mb-0.5">Experimento</div>{lista(sim.experimento.detalhe)}</div>
-                          <div><div className="font-medium mb-0.5">Oficial atual</div>{lista(sim.oficial.detalhe)}</div>
-                        </div>
+                        {(() => { // [SIMULAR-MUDANCA-REAL] compara com a oficial como está HOJE (HA gravada de verdade)
+                          const hoje = sim.oficialHoje ?? sim.oficial;
+                          const movidas = sim.aulasMovidas ?? [];
+                          const has = sim.haMovidas ?? [];
+                          return (
+                            <>
+                              <div className="mt-1">
+                                Janelas de professor ({sim.turnos.join(", ")}), contando aula + HA + atividade fora de sala:
+                                {" "}<strong>depois de promover {sim.experimento.janelas}</strong> × <strong>oficial hoje {hoje.janelas}</strong>.
+                                {sim.oficialHoje && <span className="opacity-70"> (oficial com a HA recalculada pela regra: {sim.oficial.janelas})</span>}
+                              </div>
+                              <div className="mt-1">
+                                Ao promover: <strong>{sim.aulasMudando ?? movidas.length} aula(s) mudam de lugar</strong> e a HA de <strong>{sim.professoresComHAMudando} professor(es)</strong> muda.
+                              </div>
+                              <div className="mt-2 grid gap-2 md:grid-cols-2">
+                                <div><div className="font-medium mb-0.5">Depois de promover</div>{lista(sim.experimento.detalhe)}</div>
+                                <div><div className="font-medium mb-0.5">Oficial hoje</div>{lista(hoje.detalhe)}</div>
+                              </div>
+                              {movidas.length > 0 && (
+                                <details className="mt-2">
+                                  <summary className="cursor-pointer font-medium">Aulas que mudam de lugar ({movidas.length} professor/turma)</summary>
+                                  <div className="mt-1 max-h-64 overflow-y-auto space-y-0.5">
+                                    {movidas.map((m, i) => (
+                                      <div key={i}>
+                                        <strong>{m.professorNome}</strong> · {m.turma} · {m.disciplina}:
+                                        {" "}{m.sai.length > 0 && <span className="line-through opacity-70">{m.sai.join(", ")}</span>}
+                                        {m.sai.length > 0 && m.entra.length > 0 && " → "}
+                                        {m.entra.length > 0 && <span className="font-medium">{m.entra.join(", ")}</span>}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </details>
+                              )}
+                              {has.length > 0 && (
+                                <details className="mt-1">
+                                  <summary className="cursor-pointer font-medium">HA que muda ({has.length} professor(es))</summary>
+                                  <div className="mt-1 max-h-64 overflow-y-auto space-y-0.5">
+                                    {has.map((h, i) => (
+                                      <div key={i}>
+                                        <strong>{h.professorNome}</strong>:
+                                        {h.sai.length > 0 && <> sai <span className="line-through opacity-70">{h.sai.join(", ")}</span></>}
+                                        {h.sai.length > 0 && h.entra.length > 0 && ";"}
+                                        {h.entra.length > 0 && <> entra <span className="font-medium">{h.entra.join(", ")}</span></>}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </details>
+                              )}
+                            </>
+                          );
+                        })()}
                         <div className="mt-2 text-[11px] opacity-70">Simulação: nada foi gravado.</div>
                       </div>
                     );

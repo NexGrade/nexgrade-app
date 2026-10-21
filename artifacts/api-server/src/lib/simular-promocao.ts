@@ -5,7 +5,7 @@
 // e conta as janelas de professor dos turnos envolvidos do jeito da tela de
 // Conflitos: aula, HA e atividade do sistema anterior ("(ocupado: FORM)"...) ocupam o
 // horario. Compara com a oficial atual. Nada e gravado.
-import { db, professoresTable, turmasTable, horariosTable, horariosExperimentaisTable, disponibilidadeTable } from "@workspace/db";
+import { db, professoresTable, turmasTable, horariosTable, horariosExperimentaisTable, disponibilidadeTable, disciplinasTable } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
 import { calcularHAIdeal, type AulaParaCalculoHA, type MarcaHACalculada } from "./recalcular-ha";
 
@@ -20,23 +20,45 @@ export interface JanelaSimulada {
   dia_detalhe: string; // ex.: "3:aula 5:HA 6:aula"
 }
 
+// [SIMULAR-MUDANCA-REAL] (21/10/2026) o que muda de verdade na grade ao promover
+export interface AulaMovida {
+  professorNome: string;
+  turma: string;
+  disciplina: string;
+  sai: string[];   // ex.: ["Seg 4ª"] (horários da oficial que deixam de ter essa aula)
+  entra: string[]; // ex.: ["Seg 2ª"]
+}
+export interface HAMovida {
+  professorNome: string;
+  sai: string[];   // HA de hoje que sai (ex.: "Manhã Seg 3ª")
+  entra: string[]; // HA que entra
+}
+
 export interface ResultadoSimulacao {
   nome: string;
   turnos: string[];
+  /** oficial como está HOJE (HA gravada de verdade: automática, manual, fixa, importada) */
+  oficialHoje: { janelas: number; diasComConflito: number; detalhe: JanelaSimulada[] };
+  /** oficial com a HA recalculada pela regra (o que o recálculo faria sem promover) */
   oficial: { janelas: number; diasComConflito: number; detalhe: JanelaSimulada[] };
   experimento: { janelas: number; diasComConflito: number; detalhe: JanelaSimulada[] };
   professoresComHAMudando: number;
+  aulasMudando: number;
+  aulasMovidas: AulaMovida[];
+  haMovidas: HAMovida[];
+  /** experimento (depois de promover) comparado com a oficial de HOJE */
   veredito: "melhor" | "empate" | "pior";
 }
 
 export async function simularPromocao(escolaId: string, nome: string): Promise<ResultadoSimulacao | null> {
-  const [profs, turmas, oficial, exp, disp] = await Promise.all([
+  const [profs, turmas, oficial, exp, disp, discs] = await Promise.all([
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
     db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
     db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
     db.select().from(horariosExperimentaisTable)
       .where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome))),
     db.select().from(disponibilidadeTable),
+    db.select({ id: disciplinasTable.id, nome: disciplinasTable.nome }).from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
   ]);
   if (exp.length === 0) return null;
 
@@ -93,23 +115,71 @@ export async function simularPromocao(escolaId: string, nome: string): Promise<R
     };
   };
 
+  // [SIMULAR-MUDANCA-REAL] HA gravada hoje (qualquer tipo), nos turnos do experimento
+  const haHoje: MarcaHACalculada[] = disp
+    .filter((d) => profIds.has(d.professorId) && d.horaAtividadeObrigatoria && d.turno && turnos.includes(d.turno))
+    .map((d) => ({ professorId: d.professorId, turno: d.turno!, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, outroTurno: /outro turno|HA\*/i.test(d.motivo ?? "") }));
+
+  const resOficialHoje = contar(aulasOficial, haHoje);
   const resOficial = contar(aulasOficial, haOficial);
   const resExp = contar(aulasSimuladas, haSimulada);
 
+  const TURNO_ROT: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
+  const rotulo = (d: number, a: number) => `${DIAS[d] ?? d} ${a}ª`;
+
+  // HA: hoje x depois de promover, só nos turnos do experimento
   const chave = (m: MarcaHACalculada) => `${m.professorId}|${m.turno}|${m.diaSemana}|${m.horarioSlot}`;
-  const sOf = new Set(haOficial.map(chave));
-  const sEx = new Set(haSimulada.map(chave));
-  const mudam = new Set([
-    ...haOficial.filter((m) => !sEx.has(chave(m))),
-    ...haSimulada.filter((m) => !sOf.has(chave(m))),
-  ].map((m) => m.professorId));
+  const haDepois = haSimulada.filter((m) => turnos.includes(m.turno));
+  const sHoje = new Set(haHoje.map(chave));
+  const sDepois = new Set(haDepois.map(chave));
+  const haPorProf = new Map<number, { sai: string[]; entra: string[] }>();
+  const addHA = (m: MarcaHACalculada, lado: "sai" | "entra") => {
+    if (!haPorProf.has(m.professorId)) haPorProf.set(m.professorId, { sai: [], entra: [] });
+    haPorProf.get(m.professorId)![lado].push(`${TURNO_ROT[m.turno] ?? m.turno} ${rotulo(m.diaSemana, m.horarioSlot)}`);
+  };
+  for (const m of haHoje) if (!sDepois.has(chave(m))) addHA(m, "sai");
+  for (const m of haDepois) if (!sHoje.has(chave(m))) addHA(m, "entra");
+  const haMovidas: HAMovida[] = [...haPorProf.entries()]
+    .map(([p, v]) => ({ professorNome: nomeProf.get(p) ?? `#${p}`, ...v }))
+    .sort((a, b) => a.professorNome.localeCompare(b.professorNome, "pt-BR"));
+
+  // aulas: o que sai e o que entra, por professor + turma + disciplina (só os pares que a promoção troca)
+  const nomeTurma = new Map(turmas.map((t) => [t.id, t.nome]));
+  const nomeDisc = new Map(discs.map((d) => [d.id, d.nome]));
+  const grupo = new Map<string, { p: number; t: number; d: number; of: Set<string>; ex: Set<string> }>();
+  const g = (p: number, t: number, d: number) => {
+    const k = `${p}|${t}|${d}`;
+    if (!grupo.has(k)) grupo.set(k, { p, t, d, of: new Set(), ex: new Set() });
+    return grupo.get(k)!;
+  };
+  for (const h of oficial) if (pares.has(`${h.turmaId}|${h.professorId}`)) g(h.professorId, h.turmaId, h.disciplinaId).of.add(`${h.diaSemana}|${h.numeroAula}`);
+  for (const e of exp) g(e.professorId, e.turmaId, e.disciplinaId).ex.add(`${e.diaSemana}|${e.numeroAula}`);
+  const lbl = (k: string) => { const [d, a] = k.split("|").map(Number); return rotulo(d!, a!); };
+  const ordem = (a: string, b: string) => a.localeCompare(b);
+  const aulasMovidas: AulaMovida[] = [];
+  let aulasMudando = 0;
+  for (const x of grupo.values()) {
+    const sai = [...x.of].filter((k) => !x.ex.has(k)).sort(ordem);
+    const entra = [...x.ex].filter((k) => !x.of.has(k)).sort(ordem);
+    if (sai.length === 0 && entra.length === 0) continue;
+    aulasMudando += Math.max(sai.length, entra.length);
+    aulasMovidas.push({
+      professorNome: nomeProf.get(x.p) ?? `#${x.p}`, turma: nomeTurma.get(x.t) ?? `#${x.t}`, disciplina: nomeDisc.get(x.d) ?? `#${x.d}`,
+      sai: sai.map(lbl), entra: entra.map(lbl),
+    });
+  }
+  aulasMovidas.sort((a, b) => a.professorNome.localeCompare(b.professorNome, "pt-BR") || a.turma.localeCompare(b.turma, "pt-BR"));
 
   return {
     nome,
     turnos,
+    oficialHoje: resOficialHoje,
     oficial: resOficial,
     experimento: resExp,
-    professoresComHAMudando: mudam.size,
-    veredito: resExp.janelas < resOficial.janelas ? "melhor" : resExp.janelas === resOficial.janelas ? "empate" : "pior",
+    professoresComHAMudando: haMovidas.length,
+    aulasMudando,
+    aulasMovidas,
+    haMovidas,
+    veredito: resExp.janelas < resOficialHoje.janelas ? "melhor" : resExp.janelas === resOficialHoje.janelas ? "empate" : "pior",
   };
 }

@@ -195,7 +195,7 @@ PASSO A PASSO
 
 CONFERIR E PROMOVER
 - Em cada experimento: veja a grade por turma, baixe "PDF por turma" ou "PDF por professor".
-- "Simular promoção": compara as janelas dos professores (aula + HA + atividade fora de sala) do experimento com a oficial, sem gravar nada, e diz se vale promover. Use sempre antes de promover.
+- "Simular promoção": sem gravar nada, compara as janelas dos professores (aula + HA + atividade fora de sala) de como a grade ficaria depois de promover com a oficial como está hoje, e diz se vale promover. Mostra também quais aulas mudam de lugar (professor, turma, disciplina, de onde sai e para onde vai) e a HA que muda de cada professor. Use sempre antes de promover.
 - "Promover para oficial" substitui o horário das turmas do experimento (pede confirmação) e recalcula a HA desses professores. HA marcada à mão (HA manual, HA fixa, probatório) é mantida.
 - Apague os experimentos que não for usar.
 
