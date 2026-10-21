@@ -5,9 +5,10 @@
 // e conta as janelas de professor dos turnos envolvidos do jeito da tela de
 // Conflitos: aula, HA e atividade do sistema anterior ("(ocupado: FORM)"...) ocupam o
 // horario. Compara com a oficial atual. Nada e gravado.
-import { db, professoresTable, turmasTable, horariosTable, horariosExperimentaisTable, disponibilidadeTable, disciplinasTable } from "@workspace/db";
+import { db, professoresTable, turmasTable, horariosTable, horariosExperimentaisTable, disponibilidadeTable, disciplinasTable, horarioSlotsTable } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
 import { calcularHAIdeal, type AulaParaCalculoHA, type MarcaHACalculada } from "./recalcular-ha";
+import { reposicionarHAMovel, slotsLetivosPorTurno, type AulaPos } from "./reposicionar-ha";
 
 const DIAS = ["Seg", "Ter", "Qua", "Qui", "Sex"];
 
@@ -51,7 +52,7 @@ export interface ResultadoSimulacao {
 }
 
 export async function simularPromocao(escolaId: string, nome: string): Promise<ResultadoSimulacao | null> {
-  const [profs, turmas, oficial, exp, disp, discs] = await Promise.all([
+  const [profs, turmas, oficial, exp, disp, discs, slots] = await Promise.all([
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
     db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
     db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
@@ -59,6 +60,7 @@ export async function simularPromocao(escolaId: string, nome: string): Promise<R
       .where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome))),
     db.select().from(disponibilidadeTable),
     db.select({ id: disciplinasTable.id, nome: disciplinasTable.nome }).from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
+    db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId)),
   ]);
   if (exp.length === 0) return null;
 
@@ -141,9 +143,26 @@ export async function simularPromocao(escolaId: string, nome: string): Promise<R
     const a = antesP.get(p) ?? new Set<string>(); const d = depoisP.get(p) ?? new Set<string>();
     if (a.size !== d.size || [...a].some((k) => !d.has(k))) mudou.add(p);
   }
+  // [HA-MOVEL-MELHORIA] quem nao teve aula mexida: a HA movel vai para onde tira janela (igual a promocao)
+  const aulasSimPos: AulaPos[] = aulasSimuladas.flatMap((a) => {
+    const t = turnoDe.get(a.turmaId);
+    return t ? [{ professorId: a.professorId, turno: t, diaSemana: a.diaSemana, numeroAula: a.numeroAula }] : [];
+  });
+  const dispEscola = disp.filter((d) => profIds.has(d.professorId));
+  const movHA = reposicionarHAMovel({
+    aulas: aulasSimPos, disp: dispEscola, slotsLetivos: slotsLetivosPorTurno(slots), turnos,
+    professores: [...profIds].filter((p) => !mudou.has(p)),
+  });
+  const novoLugar = new Map(movHA.map((m) => [m.linha, m]));
+  const haHojeReposta: MarcaHACalculada[] = dispEscola
+    .filter((d) => d.horaAtividadeObrigatoria && d.turno && turnos.includes(d.turno) && !mudou.has(d.professorId))
+    .map((d) => {
+      const mv = novoLugar.get(d);
+      return { professorId: d.professorId, turno: d.turno!, diaSemana: mv ? mv.diaSemana : d.diaSemana, horarioSlot: mv ? mv.horarioSlot : d.horarioSlot, outroTurno: /outro turno|HA\*/i.test(d.motivo ?? "") };
+    });
   const haDepois = [
     ...haSimulada.filter((m) => turnos.includes(m.turno) && mudou.has(m.professorId)),
-    ...haHoje.filter((m) => !mudou.has(m.professorId)),
+    ...haHojeReposta,
   ];
   const resExp = contar(aulasSimuladas, haDepois);
   const sHoje = new Set(haHoje.map(chave));
