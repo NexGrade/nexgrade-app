@@ -28,6 +28,7 @@ import { getEscolaId } from "../lib/escola-id";
 import { randomUUID } from "node:crypto";
 import { recalcularHoraAtividade } from "../lib/recalcular-ha";
 import { simularPromocao } from "../lib/simular-promocao"; // [SIMULAR-PROMOCAO]
+import { salvarBackupGrade, listarBackupsGrade, restaurarBackupGrade } from "../lib/backup-grade"; // [BACKUP-GRADE]
 import { carregarAssSoTurma } from "../lib/assincrona-so-turma"; // [ASS-SO-TURMA]
 import { evitarPorPausaEntreTurnos } from "../lib/pausa-entre-turnos"; // [PAUSA-ENTRE-TURNOS]
 import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
@@ -966,6 +967,17 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
   const turmaProfessorPares = [...new Set(expSlots.map((s) => `${s.turmaId}|${s.professorId}`))]
     .map((k) => { const [t, p] = k.split("|"); return { turmaId: Number(t), professorId: Number(p) }; });
 
+  // [BACKUP-GRADE] cópia da oficial (aulas + HA) antes de trocar, para "Voltar à grade anterior"
+  let avisoBackup: string | null = null;
+  let backupId: number | null = null;
+  try {
+    const b = await salvarBackupGrade(escolaId, `Antes de promover "${nome}"`);
+    if (b.ok) backupId = b.id; else avisoBackup = b.aviso;
+  } catch (err) {
+    res.status(500).json({ error: "Não foi possível guardar a cópia de segurança da grade. Nada foi promovido.", detalhe: err instanceof Error ? err.message : String(err) });
+    return;
+  }
+
   const inserted = await db.transaction(async (tx) => {
     await travarGradeOficial(tx, escolaId); // [TRAVA-GRADE-OFICIAL]
     for (const { turmaId, professorId } of turmaProfessorPares) {
@@ -984,7 +996,28 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     console.error("[HA] Falha ao recalcular hora-atividade apos promover:", err);
   }
 
-  res.json({ slotsGerados: inserted.length, conflitos: [], horario: [] });
+  res.json({ slotsGerados: inserted.length, conflitos: [], horario: [], backupId, avisoBackup });
+});
+
+// [BACKUP-GRADE] cópias da grade oficial guardadas antes de promover (mais nova primeiro)
+router.get("/backups", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  res.json(await listarBackupsGrade(escolaId));
+});
+
+// [BACKUP-GRADE] volta a grade oficial (aulas + HA) para a cópia escolhida;
+// antes guarda a grade atual como nova cópia (a volta também tem volta)
+router.post("/backups/:id/restaurar", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) { res.status(400).json({ error: "Cópia inválida" }); return; }
+  try {
+    const r = await restaurarBackupGrade(escolaId, id, (tx) => travarGradeOficial(tx, escolaId));
+    if (!r) { res.status(404).json({ error: "Cópia não encontrada" }); return; }
+    res.json(r);
+  } catch (err) {
+    res.status(500).json({ error: "Não foi possível voltar a grade. Nada foi alterado.", detalhe: err instanceof Error ? err.message : String(err) });
+  }
 });
 
 router.delete("/experimentais/:nome", async (req, res) => {

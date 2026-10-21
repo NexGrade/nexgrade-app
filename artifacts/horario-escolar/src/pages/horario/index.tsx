@@ -32,7 +32,7 @@ import { ProgressoGeracao, type EtapaGeracao, type ProgressoGeracaoDados, type P
 import {
   Check, ArrowRight, ArrowLeft, Lock, ChevronDown, ChevronRight, Plus,
   Calendar, ListChecks, AlertTriangle, FlaskConical,
-  CheckCircle2, RefreshCw, ChevronUp, ArrowUpCircle, Trash2, Clock, Info, X, Sparkles, Download,
+  CheckCircle2, RefreshCw, ChevronUp, ArrowUpCircle, Trash2, Clock, Info, X, Sparkles, Download, RotateCcw,
 } from "lucide-react";
 
 // Hub único de Horário — Esquema > Regras > Grade > Conflitos > Experimental,
@@ -2156,14 +2156,41 @@ function AbaExperimental() {
 
   const handlePromover = async (nome: string) => {
     const qtdTurmas = new Set(expSlots.filter((s) => s.nome === nome).map((s) => s.turmaId)).size;
-    if (!confirm(`Promover "${nome}" para horário oficial? Isso substituirá o horário atual de ${qtdTurmas} turma(s) envolvida(s).`)) return;
+    if (!confirm(`Promover "${nome}" para horário oficial? Isso substituirá o horário atual de ${qtdTurmas} turma(s) envolvida(s).\n\nAntes de trocar, o sistema guarda uma cópia da grade oficial atual (aulas e HA). Se precisar, use "Voltar à grade anterior".`)) return;
     try {
-      await promover({ nome });
+      const r: any = await promover({ nome });
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios"] });
-      toast({ title: `"${nome}" promovido para horário oficial!` });
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/backups"] }); // [BACKUP-GRADE]
+      toast({
+        title: `"${nome}" promovido para horário oficial!`,
+        description: r?.avisoBackup ? String(r.avisoBackup) : "A grade anterior foi guardada em \"Voltar à grade anterior\".",
+      });
     } catch {
       toast({ title: "Erro ao promover", variant: "destructive" });
+    }
+  };
+
+  // [BACKUP-GRADE] (21/10/2026) cópias da grade oficial guardadas antes de cada promoção
+  type BackupGrade = { id: number; motivo: string; qtdAulas: number; qtdHa: number; createdAt: string };
+  const { data: backupsGrade = [] } = useQuery({
+    queryKey: ["/api/horarios/backups"],
+    queryFn: () => customFetch<BackupGrade[]>("/api/horarios/backups", { responseType: "json" }),
+  });
+  const [restaurandoId, setRestaurandoId] = useState<number | null>(null);
+  const handleRestaurarBackup = async (b: BackupGrade) => {
+    const quando = new Date(b.createdAt).toLocaleString("pt-BR");
+    if (!confirm(`Voltar a grade oficial para a cópia de ${quando}?\n(${b.motivo})\n\nAulas (${b.qtdAulas}) e HA (${b.qtdHa}) de TODOS os turnos voltam a ficar exatamente como estavam nessa hora. A grade de agora também é guardada antes, então dá para desfazer.`)) return;
+    setRestaurandoId(b.id);
+    try {
+      const r = await customFetch<{ aulas: number; ha: number }>(`/api/horarios/backups/${b.id}/restaurar`, { method: "POST", responseType: "json" });
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/backups"] });
+      toast({ title: "Grade oficial restaurada", description: `${r.aulas} aulas e ${r.ha} HA voltaram como estavam em ${quando}.` });
+    } catch (err) {
+      toast({ title: "Não foi possível voltar a grade", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+    } finally {
+      setRestaurandoId(null);
     }
   };
 
@@ -2232,10 +2259,28 @@ function AbaExperimental() {
         <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 text-sm text-purple-800 flex-1 mr-4">
           <p className="font-medium mb-1">Como funciona o Modo Experimental?</p>
           <ul className="list-disc space-y-0.5 pl-5">{/* [MODO-EXPERIMENTAL-TOPICOS] */}
-            <li>Gere versões alternativas do horário sem mexer na grade oficial.</li>
+            <li>Gere versões alternativas do horário sem mexer na grade oficial. Toda geração e todo "Melhorar" partem sempre da <strong>grade oficial atual</strong>, nunca de outro experimento.</li>
             <li>Compare com a oficial em <strong>Simular promoção</strong> e ajuste o que precisar.</li>
-            <li>Quando estiver satisfeito, clique em <strong>Promover para oficial</strong> para aplicar.</li>
+            <li>Quando estiver satisfeito, clique em <strong>Promover para oficial</strong> para aplicar. Antes, o sistema guarda uma cópia da oficial; se algo der errado, use <strong>Voltar à grade anterior</strong>.</li>
           </ul>
+          {backupsGrade.length > 0 && ( /* [BACKUP-GRADE] */
+            <details className="mt-3 rounded-md border border-purple-200 bg-white/70 p-2 text-xs text-foreground">
+              <summary className="cursor-pointer font-medium text-purple-900 inline-flex items-center gap-1.5"><RotateCcw className="w-3.5 h-3.5" />Voltar à grade anterior ({backupsGrade.length} cópia{backupsGrade.length > 1 ? "s" : ""})</summary>
+              <div className="mt-2 space-y-1.5">
+                {backupsGrade.map((b) => (
+                  <div key={b.id} className="flex items-center justify-between gap-2 border-t pt-1.5 first:border-t-0 first:pt-0">
+                    <div>
+                      <div className="font-medium">{new Date(b.createdAt).toLocaleString("pt-BR")}</div>
+                      <div className="text-muted-foreground">{b.motivo} · {b.qtdAulas} aulas, {b.qtdHa} HA</div>
+                    </div>
+                    <Button size="sm" variant="outline" className="h-7 shrink-0" disabled={restaurandoId !== null} onClick={() => handleRestaurarBackup(b)}>
+                      {restaurandoId === b.id ? "Voltando..." : "Voltar para esta"}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
         </div>
         <div className="flex flex-col gap-3 shrink-0 items-stretch w-56">
           <div>
