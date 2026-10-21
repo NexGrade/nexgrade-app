@@ -212,7 +212,7 @@ export default function PlanosPage() {
                           {periodicidade === "anual" ? brl(anual) : `12x de ${brl(mensal)}`}
                         </p>
                         <p className="text-xs text-slate-600">
-                          {periodicidade === "anual" ? "por ano, à vista no Pix ou boleto, ou parcelado no cartão com os juros do cartão (fale com a gente)" : `total de ${brl(totalParcelado)} por ano`}
+                          {periodicidade === "anual" ? "por ano, à vista no Pix ou boleto, ou parcelado no cartão com os juros do cartão (fale conosco)" : `total de ${brl(totalParcelado)} por ano`}
                         </p>
                       </>
                     ) : (
@@ -221,7 +221,7 @@ export default function PlanosPage() {
                   </div>
                   <div className="space-y-2">
                     <Button className="w-full" onClick={() => setPlanoInteresse(`${plano.nome} (${periodicidade === "anual" ? "anual à vista" : "12x mensal"})`)}>
-                      Falar com a gente
+                      Falar conosco
                     </Button>
                     <button
                       disabled={assinandoId === plano.id || !temContato || totalTurmas === 0}
@@ -303,7 +303,7 @@ export default function PlanosPage() {
                       disabled={gratuito}
                       onClick={() => setPlanoInteresse(`${plano.nome} (${periodicidade === "anual" ? "anual" : "mensal"})`)}
                     >
-                      {gratuito ? "Plano atual" : "Falar com a gente"}
+                      {gratuito ? "Plano atual" : "Falar conosco"}
                     </Button>
 
                     {!gratuito && (
@@ -352,7 +352,7 @@ export default function PlanosPage() {
               Assinar plano {planoInteresse}
             </DialogTitle>
             <DialogDescription>
-              Entre em contato com a gente pra ativar. Copia o e-mail abaixo ou, se preferir, use o link pra abrir direto no seu aplicativo de e-mail.
+              Entre em contato conosco para ativar. Copia o e-mail abaixo ou, se preferir, use o link pra abrir direto no seu aplicativo de e-mail.
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-3">
