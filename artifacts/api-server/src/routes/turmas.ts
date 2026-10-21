@@ -121,13 +121,22 @@ router.get("/", async (req, res) => {
     ? await db.select().from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, ids))
     : [];
   const disciplinaIdsPorTurma = new Map<number, number[]>();
-  // [FILTRO-SEM-PROFESSOR] vínculos turma x disciplina sem professor, por turma
-  // (mesma conta do quadro "Professores, co-docência e trio" da turma)
+  // [FILTRO-SEM-PROFESSOR] vínculos turma x disciplina sem professor, por turma.
+  // Conta também o cadastro provisório "A definir ..." (ex.: "A definir - Geografia 9ME"),
+  // que ocupa o lugar do professor enquanto a escola não contrata.
+  const provisorios = new Set(
+    (await db.select({ id: professoresTable.id, nome: professoresTable.nome }).from(professoresTable)
+      .where(eq(professoresTable.escolaId, escolaId)))
+      .filter((p) => /^\s*a definir\b/i.test(p.nome ?? ""))
+      .map((p) => p.id),
+  );
   const semProfessorPorTurma = new Map<number, number>();
   links.forEach((l) => {
     if (!disciplinaIdsPorTurma.has(l.turmaId)) disciplinaIdsPorTurma.set(l.turmaId, []);
     disciplinaIdsPorTurma.get(l.turmaId)!.push(l.disciplinaId);
-    if (l.professorId == null) semProfessorPorTurma.set(l.turmaId, (semProfessorPorTurma.get(l.turmaId) ?? 0) + 1);
+    if (l.professorId == null || provisorios.has(l.professorId)) {
+      semProfessorPorTurma.set(l.turmaId, (semProfessorPorTurma.get(l.turmaId) ?? 0) + 1);
+    }
   });
   const result = turmas.map((t) => ({
     ...t,

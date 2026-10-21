@@ -72,7 +72,8 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
     }
     g.linhas.push(l);
   }
-  const semProfessor = linhas.filter((l) => !l.professorId).length;
+  // [FILTRO-SEM-PROFESSOR] cadastro provisório "A definir ..." também conta como sem professor
+  const semProfessor = linhas.filter((l) => !l.professorId || /^\s*a definir\b/i.test(l.professorNome ?? "")).length;
 
   // avisos de trio: cada rotulo precisa de exatamente 3 disciplinas, com a mesma carga
   const trios = new Map<string, Array<{ nome: string; carga: number }>>();
