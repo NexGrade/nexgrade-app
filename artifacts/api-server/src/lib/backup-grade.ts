@@ -15,7 +15,8 @@ export interface DadosBackup {
     turmaId: number; disciplinaId: number; professorId: number; diaSemana: number; numeroAula: number;
     sala: string | null; assincrona: boolean; fixa: boolean;
   }>;
-  ha: Array<{ professorId: number; turno: string | null; diaSemana: number; horarioSlot: number; motivo: string | null }>;
+  // disponivel=false + HA = HA fixa / probatório (o motor não move); cópias antigas não têm o campo (= true)
+  ha: Array<{ professorId: number; turno: string | null; diaSemana: number; horarioSlot: number; motivo: string | null; disponivel?: boolean }>;
 }
 
 function tabelaAusente(err: unknown): boolean {
@@ -36,7 +37,7 @@ async function lerGradeOficial(escolaId: string): Promise<DadosBackup> {
       turmaId: h.turmaId, disciplinaId: h.disciplinaId, professorId: h.professorId, diaSemana: h.diaSemana, numeroAula: h.numeroAula,
       sala: h.sala ?? null, assincrona: !!h.assincrona, fixa: !!h.fixa,
     })),
-    ha: ha.map((d) => ({ professorId: d.professorId, turno: d.turno ?? null, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, motivo: d.motivo ?? null })),
+    ha: ha.map((d) => ({ professorId: d.professorId, turno: d.turno ?? null, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, motivo: d.motivo ?? null, disponivel: d.disponivel })),
   };
 }
 
@@ -84,7 +85,8 @@ export async function restaurarBackupGrade(
   const [b] = await db.select().from(gradeBackupsTable).where(and(eq(gradeBackupsTable.id, id), eq(gradeBackupsTable.escolaId, escolaId)));
   if (!b) return null;
   const dados = b.dados as DadosBackup;
-  const antes = await salvarBackupGrade(escolaId, `Antes de voltar à cópia de ${b.createdAt.toISOString()} (${b.motivo})`, usuarioNome);
+  const quando = b.createdAt.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+  const antes = await salvarBackupGrade(escolaId, `Antes de voltar à cópia de ${quando} (${b.motivo})`, usuarioNome);
 
   const profIds = (await db.select({ id: professoresTable.id }).from(professoresTable).where(eq(professoresTable.escolaId, escolaId))).map((p) => p.id);
   await db.transaction(async (tx) => {
@@ -103,7 +105,7 @@ export async function restaurarBackupGrade(
     for (let i = 0; i < haValidas.length; i += 500) {
       const lote = haValidas.slice(i, i + 500).map((x) => ({
         professorId: x.professorId, turno: x.turno, diaSemana: x.diaSemana, horarioSlot: x.horarioSlot,
-        disponivel: true, horaAtividadeObrigatoria: true, motivo: x.motivo,
+        disponivel: x.disponivel ?? true, horaAtividadeObrigatoria: true, motivo: x.motivo,
       }));
       if (lote.length) {
         // o que existir hoje no mesmo horário (livre/bloqueio criado depois da cópia) dá lugar à HA da cópia
