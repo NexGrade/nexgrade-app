@@ -25,6 +25,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast"; // [HA-TRAVADA-NA-GRADE]
 import { SeletorBusca } from "@/components/seletor-busca";
 import { PainelCapacidade } from "@/components/painel-capacidade";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"; // [EDITAR-CELULA-GRADE]
@@ -1320,6 +1321,8 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                           ? null
                           : temHA ? (haLinha && !ehHATravada(haLinha.motivo) ? "ha" : null)
                           : estadoProf === "livre" || estadoProf === "bloqueado" ? estadoProf : null;
+                        const haTravada = !!haLinha && ehHATravada(haLinha.motivo); // [HA-TRAVADA-NA-GRADE]
+                        const ehProbatorio = !!haLinha && /probat/i.test(haLinha.motivo ?? "");
                         if (estadoMenu && turnoEmUso) {
                           const ehHaStar = getHAContraturno(colIndex, aulaNum);
                           return (
@@ -1340,12 +1343,27 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                           <button
                             key={`${aulaNum}-${colIndex}`}
                             type="button"
-                            onClick={() => abrirAdicionarNaCelula(colIndex, aulaNum)}
+                            onClick={() => {
+                              // [HA-TRAVADA-NA-GRADE] (21/10/2026) HA fixa e probatório só mudam na Disponibilidade:
+                              // o clique explica isso (antes caía em "adicionar aula" e pedia uma turma)
+                              if (haTravada) {
+                                toast({
+                                  title: ehProbatorio ? "Estágio probatório (travado)" : "HA fixa (travada)",
+                                  description: "Este horário não muda pela grade. Para tirar ou trocar de lugar, use a tela Disponibilidade do professor.",
+                                  action: <ToastAction altText="Abrir Disponibilidade" asChild><a href={`/disponibilidade?professorId=${professorId}`}>Abrir Disponibilidade</a></ToastAction>,
+                                });
+                                return;
+                              }
+                              abrirAdicionarNaCelula(colIndex, aulaNum);
+                            }}
                             className={`p-2 border-r border-border last:border-0 min-h-[100px] flex items-center justify-center w-full group transition-colors ${temHA ? "bg-background" : "bg-background hover:bg-muted/40"}`}
                           >
                             {temHA ? (
                               <div className="h-full w-full rounded-md p-2 border-l-4 bg-amber-50 border-amber-400 flex items-center justify-center">
-                                <span className="text-xs font-semibold text-amber-700" title={getHAContraturno(colIndex, aulaNum) ? "Hora-atividade em contraturno (turno sem aula)" : "Hora-atividade"}>{getHAContraturno(colIndex, aulaNum) ? "HA*" : "HA"}</span>
+                                <span className="text-xs font-semibold text-amber-700 inline-flex items-center gap-1" title={haTravada ? (ehProbatorio ? "Estágio probatório: só muda na Disponibilidade" : "HA fixa: só muda na Disponibilidade") : getHAContraturno(colIndex, aulaNum) ? "Hora-atividade em contraturno (turno sem aula)" : "Hora-atividade"}>
+                                  {ehProbatorio ? "PROB" : getHAContraturno(colIndex, aulaNum) ? "HA*" : "HA"}
+                                  {haTravada && <Lock className="h-3 w-3" />}
+                                </span>
                               </div>
                             ) : atividade ? (
                               <div className="h-full w-full rounded-md p-2 border-l-4 bg-slate-100 border-slate-400 flex items-center justify-center">
