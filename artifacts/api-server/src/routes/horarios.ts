@@ -1877,7 +1877,9 @@ async function runCpsatGeneracaoUnica(
     const vistos = new Set<string>();
     const repetidas = new Set<(typeof disciplinasTurma)[number]>();
     for (const d of ordem) {
-      if (!d.grupoDupla || d.assincrona) continue;
+      // [DUPLA-SEM-REPETIR] trio fica de fora: o mesmo professor dando 2 disciplinas do trio e legitimo
+      // (ex.: Viviane, Fisica e Tecnociencia + Robotica na 2NC) e e tratado em [TRIO-MESMO-PROFESSOR]
+      if (!d.grupoDupla || d.assincrona || d.grupoDupla.startsWith("trio::")) continue;
       const k = `${d.grupoDupla}|${d.professor}`;
       if (vistos.has(k)) repetidas.add(d); else vistos.add(k);
     }
