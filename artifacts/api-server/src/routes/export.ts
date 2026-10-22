@@ -25,8 +25,15 @@ import { gerarPdfPontoDiario, type PontoDiario, type CelulaPonto, type LinhaPont
 // (18:40, 19:30, 20:30, 21:20, 22:10); a escola pode ter o horario real um pouco diferente
 // (Romario: 3a aula 20:35). No arquivo vai o horario do RCO mais proximo (ate 10 min).
 const RCO_NOTURNO: Array<[string, string]> = [["18:40", "19:30"], ["19:30", "20:20"], ["20:30", "21:20"], ["21:20", "22:10"], ["22:10", "23:00"]];
-export function horarioRco(turno: string, inicio: string, fim: string): [string, string] {
-  if (turno !== "noturno") return [inicio, fim];
+// [RCO-NOTURNO-18H] (22/10/2026) escola cujo noturno comeca as 18:00 (Mario Braga: 18:00, 18:45, 19:35,
+// 20:35, 21:25, 22:10 -- o mesmo horario do Urania) vai com o horario REAL dela: o RCO dessa escola ja
+// tem esse horario (confirmado pela Simone em 22/10). Escola que comeca as 18:40 (Romario) continua com o
+// horario fixo do RCO acima, que ja foi importado com sucesso.
+export function noturnoComecaAs18(iniciosNoturno: string[]): boolean {
+  return iniciosNoturno.some((i) => i.slice(0, 5) === "18:00");
+}
+export function horarioRco(turno: string, inicio: string, fim: string, horarioDaEscola = false): [string, string] {
+  if (turno !== "noturno" || horarioDaEscola) return [inicio, fim];
   const min = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
   const achado = RCO_NOTURNO.find(([i]) => Math.abs(min(i) - min(inicio)) <= 10);
   return achado ?? [inicio, fim];
@@ -482,6 +489,7 @@ router.get("/relatorio-seed", async (req, res) => {
     return turno === "matutino" ? `${numeroAula}|${nivelEnsino ?? "?"}` : `${numeroAula}|todos`;
   }
   const horarioPorSlot = new Map<string, [string, string]>();
+  const usarHorarioDaEscola = turno === "noturno" && noturnoComecaAs18(slots.map((s) => String(s.horaInicio))); // [RCO-NOTURNO-18H]
   for (const s of slots) {
     const chave = chaveSlot(s.numeroAula, turno === "matutino" ? s.nivelEnsino : null);
     if (!horarioPorSlot.has(chave)) {
@@ -489,7 +497,7 @@ router.get("/relatorio-seed", async (req, res) => {
       const [h, m] = inicio.split(":").map(Number);
       const totalMin = h * 60 + m + (s.duracaoMinutos ?? 0);
       const fim = `${String(Math.floor(totalMin / 60) % 24).padStart(2, "0")}:${String(totalMin % 60).padStart(2, "0")}`;
-      horarioPorSlot.set(chave, horarioRco(turno, inicio, fim)); // [RCO-HORARIO-NOTURNO]
+      horarioPorSlot.set(chave, horarioRco(turno, inicio, fim, usarHorarioDaEscola)); // [RCO-HORARIO-NOTURNO] [RCO-NOTURNO-18H]
     }
   }
 
