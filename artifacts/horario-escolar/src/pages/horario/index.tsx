@@ -35,6 +35,7 @@ import {
   Check, ArrowRight, ArrowLeft, Lock, ChevronDown, ChevronRight, Plus,
   Calendar, ListChecks, AlertTriangle, FlaskConical,
   CheckCircle2, RefreshCw, ChevronUp, ArrowUpCircle, Trash2, Clock, Info, X, Sparkles, Download, RotateCcw,
+  Wand2,
 } from "lucide-react";
 
 // Hub único de Horário — Esquema > Regras > Grade > Conflitos > Experimental,
@@ -2404,7 +2405,7 @@ function AbaExperimental() {
 
   // [SIMULAR-PROMOCAO] (05/10/2026) compara janelas (aula + HA recalculada +
   // atividade do sistema anterior) da grade oficial com a do experimento, sem gravar nada.
-  type JanelaSim = { professorNome: string; turno: string; dia: string; janelas: number; dia_detalhe: string };
+  type JanelaSim = { professorId?: number; professorNome: string; turno: string; dia: string; diaSemana?: number; janelas: number; dia_detalhe: string };
   type ResultadoSim = {
     turnos: string[];
     oficialHoje?: { janelas: number; diasComConflito: number; detalhe: JanelaSim[] }; // [SIMULAR-MUDANCA-REAL]
@@ -2437,6 +2438,40 @@ function AbaExperimental() {
     } catch {
       setSimulacoes((s) => ({ ...s, [nome]: { erro: "Não foi possível simular agora. Tente de novo." } }));
     }
+  };
+
+  // [FECHAR-JANELA] (22/10/2026) trocas de aula, só dentro do experimento, para fechar a janela de um professor num dia
+  type OpcaoTroca = { ids: number[]; turma: string; passos: string[]; janelasDepois: number };
+  const [trocas, setTrocas] = useState<Record<string, { janelasAntes: number; opcoes: OpcaoTroca[] } | "carregando" | { erro: string }>>({});
+  const [aplicandoTroca, setAplicandoTroca] = useState<string | null>(null);
+  const chaveTroca = (nome: string, d: JanelaSim) => `${nome}|${d.professorId}|${d.turno}|${d.diaSemana}`;
+  const buscarTrocas = async (nome: string, d: JanelaSim) => {
+    const k = chaveTroca(nome, d);
+    setTrocas((t) => ({ ...t, [k]: "carregando" }));
+    try {
+      const r = await customFetch<{ janelasAntes: number; opcoes: OpcaoTroca[] }>(
+        `/api/horarios/experimentais/${encodeURIComponent(nome)}/fechar-janela?professorId=${d.professorId}&turno=${d.turno}&dia=${d.diaSemana}`, { responseType: "json" });
+      setTrocas((t) => ({ ...t, [k]: r }));
+    } catch {
+      setTrocas((t) => ({ ...t, [k]: { erro: "Não foi possível procurar trocas agora. Tente de novo." } }));
+    }
+  };
+  const aplicarTroca = async (nome: string, d: JanelaSim, o: OpcaoTroca) => {
+    const k = chaveTroca(nome, d);
+    setAplicandoTroca(`${k}|${o.ids.join(",")}`);
+    try {
+      await customFetch(`/api/horarios/experimentais/${encodeURIComponent(nome)}/trocar`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ professorId: d.professorId, turno: d.turno, dia: d.diaSemana, ids: o.ids }),
+      });
+      toast({ title: "Troca feita no experimento", description: `A grade oficial não mudou. Janelas do experimento: ${o.janelasDepois}.` });
+      setTrocas({});
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
+      await simularPromocao(nome);
+    } catch {
+      toast({ title: "Não foi possível fazer a troca", description: "O experimento pode ter mudado. Clique em Fechar esta janela de novo.", variant: "destructive" });
+      setTrocas((t) => { const n = { ...t }; delete n[k]; return n; });
+    } finally { setAplicandoTroca(null); }
   };
 
   const handleDelete = async (nome: string) => {
@@ -2756,6 +2791,35 @@ function AbaExperimental() {
                                     <div><strong>{d.professorNome}</strong> · {d.dia} ({d.turno}): {d.janelas} janela(s) <span className="text-xs opacity-70">— {situacao}</span></div>
                                     <div className="text-xs opacity-80">{descreverDia(d.dia_detalhe)}</div>
                                     {d.janelas >= 2 && <div className="text-xs opacity-80">Com 2 ou mais janelas no mesmo turno, aparece em Conflitos.</div>}
+                                    {d.professorId != null && d.diaSemana != null && (() => {
+                                      const t = trocas[chaveTroca(nome, d)];
+                                      if (!t) return (
+                                        <Button variant="outline" size="sm" className="mt-1 h-7 text-xs gap-1" onClick={() => buscarTrocas(nome, d)}
+                                          title="Procura trocas de aula só neste experimento (a oficial não muda)">
+                                          <Wand2 className="w-3.5 h-3.5" /> Fechar esta janela
+                                        </Button>
+                                      );
+                                      if (t === "carregando") return <div className="mt-1 text-xs opacity-70">Procurando trocas…</div>;
+                                      if ("erro" in t) return <div className="mt-1 text-xs text-destructive">{t.erro}</div>;
+                                      if (t.opcoes.length === 0) return <div className="mt-1 text-xs opacity-80">Nenhuma troca simples fecha esta janela sem abrir outra. Dá para deixar como está, ou mudar à mão na Disponibilidade depois de promover.</div>;
+                                      return (
+                                        <div className="mt-2 space-y-2">
+                                          <div className="text-xs font-medium">Trocas possíveis (só neste experimento; a oficial só muda se você promover):</div>
+                                          {t.opcoes.map((o) => {
+                                            const aplicando = aplicandoTroca === `${chaveTroca(nome, d)}|${o.ids.join(",")}`;
+                                            return (
+                                              <div key={o.ids.join(",")} className="rounded border bg-white p-2 text-xs">
+                                                <div className="font-medium">Turma {o.turma} · o experimento fica com {o.janelasDepois} janela(s) (hoje {t.janelasAntes})</div>
+                                                <ul className="mt-1 list-disc pl-4">{o.passos.map((p, i) => <li key={i}>{p}</li>)}</ul>
+                                                <Button size="sm" className="mt-1 h-7 text-xs" disabled={aplicandoTroca != null} onClick={() => aplicarTroca(nome, d, o)}>
+                                                  {aplicando ? "Trocando…" : "Fazer esta troca"}
+                                                </Button>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      );
+                                    })()}{/* [FECHAR-JANELA] */}
                                   </div>
                                 );
                               })}

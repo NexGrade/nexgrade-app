@@ -28,6 +28,7 @@ import { getEscolaId } from "../lib/escola-id";
 import { randomUUID } from "node:crypto";
 import { recalcularHoraAtividade } from "../lib/recalcular-ha";
 import { simularPromocao } from "../lib/simular-promocao"; // [SIMULAR-PROMOCAO]
+import { opcoesFecharJanela } from "../lib/fechar-janela"; // [FECHAR-JANELA]
 import { REGRAS_REDE } from "../lib/regras-rede"; // [REGRAS-REDE]
 import { CHAVE_TETO_LIBERADO } from "./conflitos"; // [TETO-AUTORIZADO]
 import { salvarBackupGrade, listarBackupsGrade, restaurarBackupGrade } from "../lib/backup-grade"; // [BACKUP-GRADE]
@@ -902,6 +903,53 @@ router.get("/experimentais/:nome/simulacao", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: "Erro ao simular a promoção.", detalhe: err instanceof Error ? err.message : String(err) });
   }
+});
+
+// [FECHAR-JANELA] (22/10/2026) opções de troca de aula, dentro do experimento, para fechar a janela
+// de um professor num dia (botão "Fechar esta janela" da simulação). Nada é gravado aqui.
+const FecharJanelaQuery = z.object({
+  professorId: z.coerce.number().int(),
+  turno: z.enum(["matutino", "vespertino", "noturno"]),
+  dia: z.coerce.number().int().min(0).max(6),
+});
+router.get("/experimentais/:nome/fechar-janela", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const q = FecharJanelaQuery.safeParse(req.query);
+  if (!q.success) { res.status(400).json({ error: q.error.message }); return; }
+  try {
+    const r = await opcoesFecharJanela(escolaId, req.params.nome, q.data.professorId, q.data.turno, q.data.dia);
+    if (!r) { res.status(404).json({ error: "Horário experimental não encontrado" }); return; }
+    res.json(r);
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao procurar trocas.", detalhe: err instanceof Error ? err.message : String(err) });
+  }
+});
+// [FECHAR-JANELA] grava a troca escolhida SÓ no experimento (a oficial muda apenas ao promover)
+const TrocarBody = FecharJanelaQuery.extend({ ids: z.array(z.number().int()).min(2).max(3) });
+router.post("/experimentais/:nome/trocar", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const nome = req.params.nome;
+  const b = TrocarBody.safeParse(req.body);
+  if (!b.success) { res.status(400).json({ error: b.error.message }); return; }
+  const v = await opcoesFecharJanela(escolaId, nome, b.data.professorId, b.data.turno, b.data.dia, 0, { ids: b.data.ids });
+  if (!v) { res.status(404).json({ error: "Horário experimental não encontrado" }); return; }
+  if (!v.valida) { res.status(409).json({ error: "Essa troca não vale mais (o experimento mudou). Simule de novo." }); return; }
+  await db.transaction(async (tx) => {
+    // cada BLOCO (todas as linhas da turma naquele horário: dupla docência vai junta) vai para o lugar do seguinte
+    const doExp = and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome));
+    const blocos: Array<{ ids: number[]; dia: number; aula: number }> = [];
+    for (const id of b.data.ids) {
+      const [x] = await tx.select().from(horariosExperimentaisTable).where(and(doExp, eq(horariosExperimentaisTable.id, id)));
+      const ids = (await tx.select({ id: horariosExperimentaisTable.id }).from(horariosExperimentaisTable)
+        .where(and(doExp, eq(horariosExperimentaisTable.turmaId, x!.turmaId), eq(horariosExperimentaisTable.diaSemana, x!.diaSemana), eq(horariosExperimentaisTable.numeroAula, x!.numeroAula)))).map((r) => r.id);
+      blocos.push({ ids, dia: x!.diaSemana, aula: x!.numeroAula });
+    }
+    for (let i = 0; i < blocos.length; i++) {
+      const para = blocos[(i + 1) % blocos.length]!;
+      await tx.update(horariosExperimentaisTable).set({ diaSemana: para.dia, numeroAula: para.aula }).where(inArray(horariosExperimentaisTable.id, blocos[i]!.ids));
+    }
+  });
+  res.json({ ok: true });
 });
 
 router.post("/experimentais/:nome/promover", async (req, res) => {
