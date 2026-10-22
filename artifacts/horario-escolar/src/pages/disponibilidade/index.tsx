@@ -20,6 +20,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Users, Save, RotateCcw, Lock, CheckCircle2, Info, GraduationCap, BookOpen, Pin, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AceitarConflito } from "@/components/aceitar-conflito"; // [CONFLITO-ACEITO]
 import { SeletorBusca } from "@/components/seletor-busca";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"; // [AULA-FIXA-DISP]
@@ -99,6 +100,7 @@ export default function DisponibilidadePage() {
   }, []);
   // [CONFLITO-VAI-AO-PROBLEMA] vindo da aba Conflitos: a mensagem do conflito fica visivel aqui
   const [conflitoVindo, setConflitoVindo] = useState<string | null>(() => new URLSearchParams(window.location.search).get("conflito"));
+  const tipoConflitoVindo = new URLSearchParams(window.location.search).get("tipo");
 
   const { data: professores = [], isLoading: carregandoProfessores } = useListProfessores();
 
@@ -377,6 +379,7 @@ export default function DisponibilidadePage() {
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-800">
           <span><strong>Conflito:</strong> {conflitoVindo}</span>
           <span className="flex items-center gap-3">
+            <AceitarConflito tipo={tipoConflitoVindo} descricao={conflitoVindo} />{/* [CONFLITO-ACEITO] */}
             <a href="/horario?tab=conflitos" className="text-xs font-medium underline">Voltar aos conflitos</a>
             <button type="button" className="text-xs underline" onClick={() => setConflitoVindo(null)}>Fechar</button>
           </span>
