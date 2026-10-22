@@ -141,6 +141,18 @@ export default function DisponibilidadePage() {
     () => horariosProf.filter((h: any) => h.turma?.turno === turno),
     [horariosProf, turno],
   );
+  // [HA-POR-TURNO-NA-TELA] (21/10/2026) aulas e HA de cada turno pela tabela oficial SEED-PR (a mesma da
+  // tela de Conflitos e do recálculo; PROB e HA fixa contam como HA marcada)
+  const resumoHA = useMemo(() => {
+    const TABELA = [0, 0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 4, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 10, 10];
+    const pede = (n: number) => (n <= 0 ? 0 : n <= 30 ? TABELA[n]! : Math.ceil(n / 3));
+    const linhas = TURNOS.map((t) => {
+      const aulas = horariosProf.filter((h: any) => h.turma?.turno === t.value).length;
+      const marcadas = (disponibilidadeRows as any[]).filter((d) => d.turno === t.value && d.horaAtividadeObrigatoria).length;
+      return { turno: t.value, rotulo: t.label, aulas, pede: pede(aulas), marcadas };
+    }).filter((l) => l.aulas > 0 || l.marcadas > 0);
+    return { linhas, pede: linhas.reduce((s, l) => s + l.pede, 0), marcadas: linhas.reduce((s, l) => s + l.marcadas, 0) };
+  }, [horariosProf, disponibilidadeRows]);
   // [ASS-SO-TURMA] periodo nao letivo depois da ultima aula do turno (ex.: 7a aula da manha,
   // so para a assincrona da 3STM): a linha so aparece para o professor que tem aula nela.
   const slotsOrdenados = useMemo(() => {
@@ -410,6 +422,20 @@ export default function DisponibilidadePage() {
         )}
       </div>
 
+      {professorIdNum && resumoHA.linhas.length > 0 && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md border border-border bg-muted/30 px-4 py-2 text-sm">
+          <span className="font-medium">Aulas e HA por turno (tabela SEED):</span>
+          {resumoHA.linhas.map((l) => (
+            <span key={l.turno} className={l.marcadas < l.pede ? "text-red-700" : "text-muted-foreground"}>
+              <strong>{l.rotulo}</strong>: {l.aulas} aula(s) → {l.pede} HA · marcadas {l.marcadas}
+            </span>
+          ))}
+          <span className={resumoHA.marcadas < resumoHA.pede ? "font-medium text-red-700" : "font-medium text-emerald-700"}>
+            Total: pede {resumoHA.pede} HA, tem {resumoHA.marcadas}{resumoHA.marcadas < resumoHA.pede ? ` (faltam ${resumoHA.pede - resumoHA.marcadas})` : " ✓"}
+          </span>
+        </div>
+      )}{/* [HA-POR-TURNO-NA-TELA] */}
+
       <div className="flex flex-wrap items-center gap-4">
         <SeletorBusca
           className="w-72"
@@ -436,6 +462,7 @@ export default function DisponibilidadePage() {
               <div className="w-4 h-4 rounded bg-emerald-100 border border-emerald-300" />
               <span className="text-muted-foreground">Disponível</span>
             </div>
+
             <div className="flex items-center gap-1.5">
               <div className="w-4 h-4 rounded bg-rose-100 border border-rose-300" />
               <span className="text-muted-foreground">Bloqueado</span>
