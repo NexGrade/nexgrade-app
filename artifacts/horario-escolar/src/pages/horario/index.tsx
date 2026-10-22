@@ -2660,94 +2660,113 @@ function AbaExperimental() {
                   {(() => { // [SIMULAR-PROMOCAO]
                     const sim = simulacoes[nome];
                     if (!sim || sim === "carregando") return null;
-                    if ("erro" in sim) return <div className="mb-3 text-xs text-destructive">{sim.erro}</div>;
-                    const cor = sim.veredito === "melhor" ? "border-green-300 bg-green-50 text-green-800"
-                      : sim.veredito === "empate" ? "border-slate-300 bg-slate-50 text-slate-700"
-                      : "border-amber-300 bg-amber-50 text-amber-800";
-                    const titulo = sim.veredito === "melhor" ? "Experimento MELHOR que a oficial"
-                      : sim.veredito === "empate" ? "Empate com a oficial -- promover não ganha nada em janelas"
-                      : "Oficial MELHOR -- recomendado não promover";
+                    if ("erro" in sim) return <div className="mb-3 text-sm text-destructive">{sim.erro}</div>;
+                    const hoje = sim.oficialHoje ?? sim.oficial; // [SIMULAR-MUDANCA-REAL] a oficial como está HOJE (HA gravada de verdade)
+                    const movidas = sim.aulasMovidas ?? [];
+                    const has = sim.haMovidas ?? [];
+                    const qtdAulas = sim.aulasMudando ?? movidas.length;
+                    const dif = sim.experimento.janelas - hoje.janelas;
+                    const cor = sim.veredito === "melhor" ? "border-green-300 bg-green-50 text-green-900"
+                      : sim.veredito === "empate" ? "border-slate-300 bg-slate-50 text-slate-800"
+                      : "border-amber-300 bg-amber-50 text-amber-900";
+                    const titulo = sim.veredito === "melhor" ? "Vale promover: a nova grade deixa menos horários vagos"
+                      : sim.veredito === "empate" ? "Tanto faz: o número de horários vagos é o mesmo da oficial"
+                      : "Não recomendo promover: a nova grade deixa mais horários vagos";
+                    const textoDif = dif > 0 ? `${dif} a mais` : dif < 0 ? `${-dif} a menos` : "igual à oficial";
+                    const corDif = dif > 0 ? "text-red-700" : dif < 0 ? "text-green-700" : "text-slate-600";
+                    const chave = (d: JanelaSim) => `${d.professorNome}|${d.dia}|${d.turno}`;
+                    const janelasHoje = new Map(hoje.detalhe.map((d) => [chave(d), d.janelas]));
                     const LIMITE = 8;
-                    const lista = (det: JanelaSim[]) => det.length === 0
-                      ? <div className="text-muted-foreground">nenhuma janela</div>
-                      : <>
-                        {det.slice(0, LIMITE).map((d, i) => (
-                          <div key={i} className="mb-1">
-                            <strong>{d.professorNome}</strong> · {d.dia} ({d.turno}): {d.janelas} janela(s)
-                            <div className="text-muted-foreground">{descreverDia(d.dia_detalhe)}</div>
-                            {d.janelas >= 2 && <div className="opacity-80">2 ou mais janelas no mesmo turno aparecem em Conflitos.</div>}
-                          </div>
-                        ))}
-                        {det.length > LIMITE && <div className="text-muted-foreground">+ {det.length - LIMITE} outro(s) caso(s) não mostrados</div>}
-                      </>;
+                    const itens = sim.experimento.detalhe;
                     return (
-                      <div className={`mb-3 rounded-md border p-3 text-xs ${cor}`}>
+                      <div className={`mb-3 rounded-md border p-4 text-sm ${cor}`}>
                         <div className="flex items-start justify-between gap-2">
-                          <div className="font-semibold text-sm">{titulo}</div>
-                          <button type="button" className="opacity-60 hover:opacity-100" onClick={() => setSimulacoes((s) => { const n = { ...s }; delete n[nome]; return n; })}><X className="w-3.5 h-3.5" /></button>
+                          <div className="font-semibold text-base">{titulo}</div>
+                          <button type="button" className="opacity-60 hover:opacity-100" title="Fechar" onClick={() => setSimulacoes((s) => { const n = { ...s }; delete n[nome]; return n; })}><X className="w-4 h-4" /></button>
                         </div>
-                        {(() => { // [SIMULAR-MUDANCA-REAL] compara com a oficial como está HOJE (HA gravada de verdade)
-                          const hoje = sim.oficialHoje ?? sim.oficial;
-                          const movidas = sim.aulasMovidas ?? [];
-                          const has = sim.haMovidas ?? [];
-                          return (
-                            <>
-                              <div className="mt-1">
-                                Janelas de professor ({sim.turnos.join(", ")}), contando aula + HA + atividade fora de sala:
-                                {" "}<strong>depois de promover {sim.experimento.janelas}</strong> × <strong>oficial hoje {hoje.janelas}</strong>.
-                                {sim.oficialHoje && <span className="opacity-70"> (oficial com a HA recalculada pela regra: {sim.oficial.janelas})</span>}
-                              </div>
-                              {(() => {
-                                const dif = sim.experimento.janelas - hoje.janelas;
+                        <p className="mt-1 text-xs opacity-80">
+                          <strong>Janela</strong> é um horário vago entre duas atividades do mesmo professor no mesmo turno
+                          (conta aula, HA e atividade fora de sala). Turno comparado: {sim.turnos.join(", ")}.
+                        </p>
+
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          <div className="rounded-md border bg-white/70 p-3">
+                            <div className="text-xs opacity-70">Grade oficial hoje</div>
+                            <div className="text-2xl font-bold">{hoje.janelas} <span className="text-sm font-normal">janela(s)</span></div>
+                          </div>
+                          <div className="rounded-md border bg-white/70 p-3">
+                            <div className="text-xs opacity-70">Se promover este experimento</div>
+                            <div className="text-2xl font-bold">{sim.experimento.janelas} <span className="text-sm font-normal">janela(s)</span></div>
+                            <div className={`text-xs font-medium ${corDif}`}>{textoDif}</div>
+                          </div>
+                        </div>
+                        {sim.oficialHoje && sim.oficial.janelas !== hoje.janelas && (
+                          <p className="mt-1 text-xs opacity-70">Para comparar: se a HA da oficial fosse recalculada pela regra, ela teria {sim.oficial.janelas} janela(s).</p>
+                        )}
+
+                        <div className="mt-3">
+                          <div className="font-medium">O que muda na grade ao promover</div>
+                          <ul className="mt-1 list-disc pl-5">
+                            <li><strong>{qtdAulas}</strong> aula(s) mudam de lugar{qtdAulas === 0 && " (nenhuma)"}</li>
+                            <li>A HA de <strong>{sim.professoresComHAMudando}</strong> professor(es) muda</li>
+                          </ul>
+                        </div>
+
+                        <div className="mt-3">
+                          <div className="font-medium">Professores com janela depois de promover</div>
+                          {itens.length === 0 ? (
+                            <div className="mt-1 opacity-80">Nenhum. Ninguém fica com horário vago entre as atividades.</div>
+                          ) : (
+                            <div className="mt-1 space-y-2">
+                              {itens.slice(0, LIMITE).map((d, i) => {
+                                const antes = janelasHoje.get(chave(d));
+                                const situacao = antes == null ? "novo, não existe na oficial hoje"
+                                  : antes === d.janelas ? "já existe na oficial hoje"
+                                  : `hoje são ${antes}`;
                                 return (
-                                  <div className="mt-1 font-medium">
-                                    {dif > 0 ? `Resultado: ${dif} janela(s) a mais que a oficial de hoje.`
-                                      : dif < 0 ? `Resultado: ${-dif} janela(s) a menos que a oficial de hoje.`
-                                      : "Resultado: mesmo número de janelas da oficial de hoje."}
+                                  <div key={i} className="rounded-md border bg-white/70 p-2">
+                                    <div><strong>{d.professorNome}</strong> · {d.dia} ({d.turno}): {d.janelas} janela(s) <span className="text-xs opacity-70">— {situacao}</span></div>
+                                    <div className="text-xs opacity-80">{descreverDia(d.dia_detalhe)}</div>
+                                    {d.janelas >= 2 && <div className="text-xs opacity-80">Com 2 ou mais janelas no mesmo turno, aparece em Conflitos.</div>}
                                   </div>
                                 );
-                              })()}
-                              <div className="mt-1">
-                                Ao promover:{" "}<strong>{sim.aulasMudando ?? movidas.length} aula(s) mudam de lugar</strong> e a HA de <strong>{sim.professoresComHAMudando} professor(es)</strong> muda.
-                              </div>
-                              <div className="mt-2 grid gap-2 md:grid-cols-2">
-                                <div><div className="font-medium mb-0.5">Depois de promover</div>{lista(sim.experimento.detalhe)}</div>
-                                <div><div className="font-medium mb-0.5">Oficial hoje</div>{lista(hoje.detalhe)}</div>
-                              </div>
-                              {movidas.length > 0 && (
-                                <details className="mt-2">
-                                  <summary className="cursor-pointer font-medium">Aulas que mudam de lugar ({movidas.length} professor/turma)</summary>
-                                  <div className="mt-1 max-h-64 overflow-y-auto space-y-0.5">
-                                    {movidas.map((m, i) => (
-                                      <div key={i}>
-                                        <strong>{m.professorNome}</strong> · {m.turma} · {m.disciplina}:
-                                        {" "}{m.sai.length > 0 && <span className="line-through opacity-70">{m.sai.join(", ")}</span>}
-                                        {m.sai.length > 0 && m.entra.length > 0 && " → "}
-                                        {m.entra.length > 0 && <span className="font-medium">{m.entra.join(", ")}</span>}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </details>
-                              )}
-                              {has.length > 0 && (
-                                <details className="mt-1">
-                                  <summary className="cursor-pointer font-medium">HA que muda ({has.length} professor(es))</summary>
-                                  <div className="mt-1 max-h-64 overflow-y-auto space-y-0.5">
-                                    {has.map((h, i) => (
-                                      <div key={i}>
-                                        <strong>{h.professorNome}</strong>:
-                                        {h.sai.length > 0 && <> sai <span className="line-through opacity-70">{h.sai.join(", ")}</span></>}
-                                        {h.sai.length > 0 && h.entra.length > 0 && ";"}
-                                        {h.entra.length > 0 && <> entra <span className="font-medium">{h.entra.join(", ")}</span></>}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </details>
-                              )}
-                            </>
-                          );
-                        })()}
-                        <div className="mt-2 text-[11px] opacity-70">Simulação: nada foi gravado.</div>
+                              })}
+                              {itens.length > LIMITE && <div className="text-xs opacity-70">+ {itens.length - LIMITE} outro(s) caso(s) não mostrados</div>}
+                            </div>
+                          )}
+                        </div>
+
+                        {movidas.length > 0 && (
+                          <details className="mt-3">
+                            <summary className="cursor-pointer font-medium">Ver as aulas que mudam de lugar ({movidas.length} professor/turma)</summary>
+                            <div className="mt-1 max-h-64 overflow-y-auto space-y-0.5 text-xs">
+                              {movidas.map((m, i) => (
+                                <div key={i}>
+                                  <strong>{m.professorNome}</strong> · {m.turma} · {m.disciplina}:
+                                  {" "}{m.sai.length > 0 && <span className="line-through opacity-70">{m.sai.join(", ")}</span>}
+                                  {m.sai.length > 0 && m.entra.length > 0 && " → "}
+                                  {m.entra.length > 0 && <span className="font-medium">{m.entra.join(", ")}</span>}
+                                </div>
+                              ))}
+                            </div>
+                          </details>
+                        )}
+                        {has.length > 0 && (
+                          <details className="mt-2">
+                            <summary className="cursor-pointer font-medium">Ver a HA que muda ({has.length} professor(es))</summary>
+                            <div className="mt-1 max-h-64 overflow-y-auto space-y-0.5 text-xs">
+                              {has.map((h, i) => (
+                                <div key={i}>
+                                  <strong>{h.professorNome}</strong>:
+                                  {h.sai.length > 0 && <> sai <span className="line-through opacity-70">{h.sai.join(", ")}</span></>}
+                                  {h.sai.length > 0 && h.entra.length > 0 && ";"}
+                                  {h.entra.length > 0 && <> entra <span className="font-medium">{h.entra.join(", ")}</span></>}
+                                </div>
+                              ))}
+                            </div>
+                          </details>
+                        )}
+                        <div className="mt-3 text-xs opacity-70">Simulação: nada foi gravado.</div>
                       </div>
                     );
                   })()}
