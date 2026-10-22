@@ -2162,13 +2162,16 @@ function AbaExperimental() {
       : "";
     if (!confirm(`${aviso}Promover "${nome}" para horário oficial? Isso substituirá o horário atual de ${qtdTurmas} turma(s) envolvida(s).\n\nAntes de trocar, o sistema guarda uma cópia da grade oficial atual (aulas e HA). Se precisar, use "Voltar à grade anterior".`)) return;
     try {
-      const r: any = await promover({ nome });
+      const r: any = await promover({ nome: encodeURIComponent(nome) }); // [NOME-EXPERIMENTO] espaço no fim do nome sumia do endereço
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios"] });
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/backups"] }); // [BACKUP-GRADE]
       toast({
         title: `"${nome}" promovido para horário oficial!`,
-        description: r?.avisoBackup ? String(r.avisoBackup) : "A grade anterior foi guardada em \"Voltar à grade anterior\".",
+        description: [
+          r?.avisoBackup ? String(r.avisoBackup) : "A grade anterior foi guardada em \"Voltar à grade anterior\".",
+          r?.haReposicionadas ? `${r.haReposicionadas} HA mudaram de lugar para tirar janela.` : "", // [HA-MOVEL-MELHORIA]
+        ].filter(Boolean).join(" "),
       });
     } catch {
       toast({ title: "Erro ao promover", variant: "destructive" });
@@ -2237,7 +2240,12 @@ function AbaExperimental() {
 
   const handleDelete = async (nome: string) => {
     if (!confirm(`Remover o experimento "${nome}"?`)) return;
-    await deleteExp({ nome });
+    try {
+      await deleteExp({ nome: encodeURIComponent(nome) }); // [NOME-EXPERIMENTO] espaço no fim do nome sumia do endereço
+    } catch {
+      toast({ title: "Não foi possível remover o experimento", description: "Nada foi apagado. Recarregue a página e tente de novo.", variant: "destructive" });
+      return;
+    }
     await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
     toast({ title: `Experimento "${nome}" removido` });
   };
@@ -2919,7 +2927,7 @@ function AbaExperimental() {
             >
               {gerandoCpsat ? "Cancelar geração" : "Cancelar"}
             </Button>
-            <Button variant="outline" onClick={handleMelhorarGradeOficial} disabled={gerandoCpsat} title="Parte da grade oficial deste turno e tenta reduzir janelas trocando aulas de lugar. Nunca fica pior que a oficial.">{melhorandoCpsat ? "Melhorando..." : "Melhorar grade oficial"}</Button>
+            <Button variant="outline" onClick={handleMelhorarGradeOficial} disabled={gerandoCpsat} title="Parte da grade oficial deste turno. Primeiro muda de lugar a HA móvel (automática ou importada) para tirar janela; só troca aulas de lugar se ainda sobrar janela. Nunca fica pior que a oficial.">{melhorandoCpsat ? "Melhorando..." : "Melhorar grade oficial"}</Button>
             <Button onClick={handleGerarCpsat} disabled={gerandoCpsat}>{gerandoCpsat && !melhorandoCpsat ? "Gerando…" : "Gerar grade"}</Button>
           </DialogFooter>
         </DialogContent>

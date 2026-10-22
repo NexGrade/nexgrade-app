@@ -29,6 +29,7 @@ import { randomUUID } from "node:crypto";
 import { recalcularHoraAtividade } from "../lib/recalcular-ha";
 import { simularPromocao } from "../lib/simular-promocao"; // [SIMULAR-PROMOCAO]
 import { salvarBackupGrade, listarBackupsGrade, restaurarBackupGrade } from "../lib/backup-grade"; // [BACKUP-GRADE]
+import { reposicionarHAMovel, slotsLetivosPorTurno, type AulaPos } from "../lib/reposicionar-ha"; // [HA-MOVEL-MELHORIA]
 import { carregarAssSoTurma } from "../lib/assincrona-so-turma"; // [ASS-SO-TURMA]
 import { evitarPorPausaEntreTurnos } from "../lib/pausa-entre-turnos"; // [PAUSA-ENTRE-TURNOS]
 import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
@@ -998,9 +999,33 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
   }
   const profsEscola = (await db.select({ id: professoresTable.id }).from(professoresTable).where(eq(professoresTable.escolaId, escolaId))).map((p) => p.id);
   const profsMantem = profsEscola.filter((p) => !profsMudaram.has(p));
-  const haMantida = profsMantem.length
+  const haMantidaHoje = profsMantem.length
     ? await db.select().from(disponibilidadeTable).where(and(inArray(disponibilidadeTable.professorId, profsMantem), eq(disponibilidadeTable.horaAtividadeObrigatoria, true)))
     : [];
+  // [HA-MOVEL-MELHORIA] (21/10/2026) e a HA movel dessas pessoas vai para onde tira janela
+  // (mesma regra do simulador); HA fixa, probatorio e manual ficam onde estao
+  let haMantida = haMantidaHoje;
+  let haReposicionadas = 0;
+  try {
+    const turnosExp = [...new Set(turmasProm.map((t) => t.turno).filter((t): t is string => !!t))];
+    if (profsMantem.length && turnosExp.length) {
+      const turmasEscola = await db.select({ id: turmasTable.id, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
+      const turnoDaTurma = new Map(turmasEscola.map((t) => [t.id, t.turno]));
+      const aulasDepois: AulaPos[] = [...oficialAntes.filter((h) => !paresSet.has(`${h.turmaId}|${h.professorId}`)), ...expSlots].flatMap((h) => {
+        const t = turnoDaTurma.get(h.turmaId);
+        return t ? [{ professorId: h.professorId, turno: t, diaSemana: h.diaSemana, numeroAula: h.numeroAula }] : [];
+      });
+      const dispMantem = await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, profsMantem));
+      const slotsEscola = await db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId));
+      const movs = reposicionarHAMovel({ aulas: aulasDepois, disp: dispMantem, slotsLetivos: slotsLetivosPorTurno(slotsEscola), turnos: turnosExp, professores: profsMantem });
+      const novo = new Map(movs.map((m) => [m.linha.id, m]));
+      haMantida = haMantidaHoje.map((h) => { const m = novo.get(h.id); return m ? { ...h, diaSemana: m.diaSemana, horarioSlot: m.horarioSlot } : h; });
+      haReposicionadas = movs.length;
+    }
+  } catch (err) {
+    console.error("[HA-MOVEL-MELHORIA] falhou ao reposicionar HA; mantendo a de hoje:", err);
+    haMantida = haMantidaHoje;
+  }
 
   const inserted = await db.transaction(async (tx) => {
     await travarGradeOficial(tx, escolaId); // [TRAVA-GRADE-OFICIAL]
@@ -1037,7 +1062,7 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     console.error("[HA-SO-QUEM-MUDOU] Falha ao devolver a HA de quem nao mudou:", err);
   }
 
-  res.json({ slotsGerados: inserted.length, conflitos: [], horario: [], backupId, avisoBackup, professoresComAulaMexida: profsMudaram.size });
+  res.json({ slotsGerados: inserted.length, conflitos: [], horario: [], backupId, avisoBackup, professoresComAulaMexida: profsMudaram.size, haReposicionadas });
 });
 
 // [BACKUP-GRADE] cópias da grade oficial guardadas antes de promover (mais nova primeiro)
@@ -1063,8 +1088,12 @@ router.post("/backups/:id/restaurar", async (req, res) => {
 
 router.delete("/experimentais/:nome", async (req, res) => {
   const escolaId = getEscolaId(req);
-  await db.delete(horariosExperimentaisTable)
-    .where(and(eq(horariosExperimentaisTable.nome, req.params.nome), eq(horariosExperimentaisTable.escolaId, escolaId)));
+  const apagadas = await db.delete(horariosExperimentaisTable)
+    .where(and(eq(horariosExperimentaisTable.nome, req.params.nome), eq(horariosExperimentaisTable.escolaId, escolaId)))
+    .returning({ id: horariosExperimentaisTable.id });
+  // [NOME-EXPERIMENTO] (21/10/2026) antes respondia 204 mesmo sem apagar nada (nome com espaco no fim
+  // chegava cortado): a tela dizia "removido" e o experimento continuava la
+  if (apagadas.length === 0) { res.status(404).json({ error: "Experimento não encontrado. Nada foi apagado." }); return; }
   res.status(204).send();
 });
 
@@ -2091,9 +2120,51 @@ async function runCpsatGeneracaoUnica(
           eq(disponibilidadeTable.horaAtividadeObrigatoria, true),
         ))
       : [];
+    // [HA-MOVEL-MELHORIA] (21/10/2026) antes de mexer em aula, a HA movel vai para onde tira janela;
+    // o motor recebe a HA ja reposicionada e so move aula se ainda sobrar janela
+    let novoLugarHA = new Map<number, { diaSemana: number; horarioSlot: number }>();
+    try {
+      if (haHoje.length) {
+        const profsT = [...professorIdsUsados];
+        const turmasEsc = await db.select({ id: turmasTable.id, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
+        const turnoT = new Map(turmasEsc.map((t) => [t.id, t.turno]));
+        const aulasProfs = await db.select().from(horariosTable).where(and(
+          eq(horariosTable.escolaId, escolaId), inArray(horariosTable.professorId, profsT), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`));
+        const dispProfs = await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, profsT));
+        const slotsEsc = await db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId));
+        const movs = reposicionarHAMovel({
+          aulas: aulasProfs.flatMap((h) => { const t = turnoT.get(h.turmaId); return t ? [{ professorId: h.professorId, turno: t, diaSemana: h.diaSemana, numeroAula: h.numeroAula }] : []; }),
+          disp: dispProfs, slotsLetivos: slotsLetivosPorTurno(slotsEsc), turnos: [turno], professores: profsT,
+        });
+        novoLugarHA = new Map(movs.map((m) => [m.linha.id, { diaSemana: m.diaSemana, horarioSlot: m.horarioSlot }]));
+        console.log(`[HA-MOVEL-MELHORIA] turno=${turno} HA reposicionadas antes do motor: ${movs.length}`);
+      }
+    } catch (err) {
+      console.error("[HA-MOVEL-MELHORIA] falhou ao reposicionar HA; motor recebe a HA de hoje:", err);
+      novoLugarHA = new Map();
+    }
     for (const d of haHoje) {
       const nomeP = professorMap.get(d.professorId)?.nome;
-      if (nomeP) haAtual.push({ professor: nomeP, dia: d.diaSemana, aula: d.horarioSlot });
+      const lugar = novoLugarHA.get(d.id);
+      if (nomeP) haAtual.push({ professor: nomeP, dia: lugar ? lugar.diaSemana : d.diaSemana, aula: lugar ? lugar.horarioSlot : d.horarioSlot });
+    }
+    // [ATIVIDADE-OCUPA-MELHORIA] (21/10/2026) atividade fora de sala ("(ocupado: FOR)", DOC 2, CGH...) tambem
+    // ocupa o professor: o simulador e a tela de Conflitos nao contam como janela, e o motor contava
+    // (movia aula para "consertar" um vao que e FOR). Vai junto com a HA como horario ocupado.
+    if (professorIdsUsados.size) {
+      const atividades = await db.select().from(disponibilidadeTable).where(and(
+        inArray(disponibilidadeTable.professorId, [...professorIdsUsados]),
+        eq(disponibilidadeTable.turno, turno),
+        eq(disponibilidadeTable.horaAtividadeObrigatoria, false),
+        eq(disponibilidadeTable.disponivel, false),
+      ));
+      for (const d of atividades) {
+        if (!/\(ocupado:\s*[^)]+\)/.test(d.motivo ?? "")) continue;
+        const nomeP = professorMap.get(d.professorId)?.nome;
+        if (nomeP && !haAtual.some((h) => h.professor === nomeP && h.dia === d.diaSemana && h.aula === d.horarioSlot)) {
+          haAtual.push({ professor: nomeP, dia: d.diaSemana, aula: d.horarioSlot });
+        }
+      }
     }
     if (aulasIniciais.length === 0 || semMapa.length > 0) {
       return {
