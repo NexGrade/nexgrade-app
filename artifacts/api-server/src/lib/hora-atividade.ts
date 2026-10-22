@@ -55,6 +55,16 @@ export function calcularHoraAtividadePorTurno(
   return resultado;
 }
 
+/**
+ * [ESTUDIO-SEM-HA] (22/10/2026) "Escola Estudio (SEED) - ..." nao e professor de verdade: sao as aulas
+ * transmitidas pelo estudio da SEED (ex.: Romario, "Escola Estudio (SEED) - Banco de Dados"). Nao recebe
+ * hora-atividade: nao entra na cobranca de HA (Conflitos, Disponibilidade), nem na cota de HA do motor,
+ * nem no recalculo automatico de HA.
+ */
+export function ehProfessorEstudio(nome: string | null | undefined): boolean {
+  return /^\s*escola\s+est[uú]dio\b/i.test(nome ?? "");
+}
+
 /** Total de HA do professor = soma da tabela consultada turno a turno. */
 export function calcularHoraAtividadeTotal(aulasPorTurno: Record<string, number>): number {
   return Object.values(calcularHoraAtividadePorTurno(aulasPorTurno)).reduce((s, n) => s + n, 0);

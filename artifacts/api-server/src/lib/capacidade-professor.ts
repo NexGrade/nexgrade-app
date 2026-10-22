@@ -11,7 +11,7 @@ import { db, turmasTable, turmaDisciplinasTable, disciplinasTable, professoresTa
 import { and, eq, inArray } from "drizzle-orm";
 import { ehBloqueioReal, ehHaFixa } from "./bloqueio-real"; // [HA-FIXA]
 import { calcularHoraAtividadeTotalPorTurno, ehBloqueioPeriodoNaoLetivo } from "./recalcular-ha";
-import { calcularHoraAtividadePorTurno } from "./hora-atividade";
+import { calcularHoraAtividadePorTurno, ehProfessorEstudio } from "./hora-atividade";
 import { montarMapaPrincipal, ehSecundario, principalDe } from "./professor-principal"; // [MESMA-PESSOA-HA]
 
 export interface ProblemaCapacidade {
@@ -112,6 +112,7 @@ export async function calcularCotaHaPorTurno(escolaId: string, turno: string): P
   const r: Record<string, number> = {};
   for (const c of cargas) {
     if (ehSecundario(principal, c.professorId)) continue; // [MESMA-PESSOA-HA]
+    if (ehProfessorEstudio(c.professor)) continue; // [ESTUDIO-SEM-HA]
     const cota = Math.max(0, (calcularHoraAtividadePorTurno(porTurnoHA.get(c.professorId) ?? c.aulasPorTurno)[turno] ?? 0) - (fixasPorProfessor.get(c.professorId) ?? 0));
     if (cota > 0) r[c.professor] = cota;
   }
@@ -174,7 +175,7 @@ export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro
     }
     const aulasTotal = Object.values(porTurno).reduce((s, n) => s + n, 0);
     // [MESMA-PESSOA-HA] secundario nao tem HA; principal usa o total da pessoa
-    const ha = ehSecundario(principal, pid) ? 0 : calcularHoraAtividadeTotalPorTurno(porTurnoHA.get(pid) ?? porTurno); // [HA-POR-TURNO]
+    const ha = (ehSecundario(principal, pid) || ehProfessorEstudio(p.nome)) ? 0 : calcularHoraAtividadeTotalPorTurno(porTurnoHA.get(pid) ?? porTurno); // [HA-POR-TURNO]
     const turnosEnsino = Object.keys(porTurno);
     const livresEnsino = turnosEnsino.reduce((s, t) => s + (livres[t] ?? 0) + (livresSoHA[t] ?? 0), 0); // [CAPACIDADE-NAO-LETIVO]
     const livresTotal = turnos.reduce((s, t) => s + (livres[t] ?? 0) + (livresSoHA[t] ?? 0), 0);
@@ -182,7 +183,7 @@ export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro
     if (turnoFiltro) { // [CAPACIDADE-POR-TURNO]
       const aulasT = porTurno[turnoFiltro] ?? 0;
       if (aulasT === 0) continue;
-      const haT = ehSecundario(principal, pid) ? 0 : (calcularHoraAtividadePorTurno(porTurnoHA.get(pid) ?? porTurno)[turnoFiltro] ?? 0);
+      const haT = (ehSecundario(principal, pid) || ehProfessorEstudio(p.nome)) ? 0 : (calcularHoraAtividadePorTurno(porTurnoHA.get(pid) ?? porTurno)[turnoFiltro] ?? 0);
       const livresT = livres[turnoFiltro] ?? 0;
       const livresComHA = livresT + (livresSoHA[turnoFiltro] ?? 0);
       const nomeT = ({ matutino: "manhã", vespertino: "tarde", noturno: "noite" } as Record<string, string>)[turnoFiltro] ?? turnoFiltro;
@@ -193,7 +194,7 @@ export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro
         // [CAPACIDADE-HA-OUTRO-TURNO] o que nao cabe vai para outro turno como HA* -- se houver espaco la.
         // Diurno nunca vai para a noite (HA-NUNCA-NOITE); a noite pode ir para o diurno.
         const sobra = aulasT + haT - livresComHA;
-        const haPorTurno = ehSecundario(principal, pid) ? {} : calcularHoraAtividadePorTurno(porTurnoHA.get(pid) ?? porTurno);
+        const haPorTurno = (ehSecundario(principal, pid) || ehProfessorEstudio(p.nome)) ? {} : calcularHoraAtividadePorTurno(porTurnoHA.get(pid) ?? porTurno);
         // ordem igual a do recalculo: primeiro outro turno em que ele da aula, depois o turno vizinho
         const VIZINHO: Record<string, string[]> = { matutino: ["vespertino"], vespertino: ["matutino"], noturno: ["vespertino", "matutino"] };
         const destinos = turnos
