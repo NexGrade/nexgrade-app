@@ -1612,8 +1612,8 @@ function AbaConflitos() {
                     <div className="flex items-center gap-2 shrink-0">
                       {destino && (
                         <Link href={destino.href}>
-                          <Button variant="outline" size="sm" className="text-xs gap-1">
-                            {destino.rotulo}
+                          <Button variant="outline" size="sm" className="text-xs gap-1" title={destino.rotulo}>
+                            Ver conflito
                             <ArrowRight className="w-3.5 h-3.5" />
                           </Button>
                         </Link>
