@@ -37,6 +37,7 @@ import { PARES_TURNO } from "./intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURN
 
 import { MOTIVO_HA_AUTO, MOTIVO_HA_AUTO_OUTRO_TURNO, ehHAMovel } from "./ha-contraturno"; // [HA-OUTRO-TURNO] [HA-IMPORTADA-MOVEL]
 import { montarMapaPrincipal, principalDe } from "./professor-principal"; // [MESMA-PESSOA-HA]
+import { ehProfessorEstudio } from "./hora-atividade"; // [ESTUDIO-SEM-HA]
 
 // [HA-NA-ENTRADA-NOTURNO] motivo do bloqueio gravado em 2026-09-23 na aula 1 do
 // noturno (18:00, so entrada, letivo=false). Bloqueia aula, nao hora-atividade.
@@ -202,6 +203,7 @@ export async function calcularHAIdeal(
 
   for (const prof of professores) {
     if (principalDe(mapaPrincipal, prof.id) !== prof.id) continue; // [MESMA-PESSOA-HA] secundario
+    if (ehProfessorEstudio(prof.nome)) continue; // [ESTUDIO-SEM-HA]
     const aulasDoProf = horarios.filter((h) => principalDe(mapaPrincipal, h.professorId) === prof.id);
     if (aulasDoProf.length === 0) continue;
 

@@ -15,7 +15,7 @@ import { getEscolaId } from "../lib/escola-id";
 import { getAuth, clerkClient } from "@clerk/express";
 import { acessosPeloBanco, limparCacheAcessos } from "../lib/acesso"; // [ACESSOS-ESCOLA]
 import { registrarAuditoria } from "../lib/audit";
-import { calcularHoraAtividadePorTurno } from "../lib/hora-atividade";
+import { calcularHoraAtividadePorTurno, ehProfessorEstudio } from "../lib/hora-atividade";
 
 const router = Router();
 
@@ -240,7 +240,7 @@ router.get("/:id/carga", async (req, res) => {
   }
 
   // [NOVO] RNF-SEED-01: HA institucional necessária, por turno.
-  const haInstitucionalPorTurno = calcularHoraAtividadePorTurno(porTurnoHA);
+  const haInstitucionalPorTurno = ehProfessorEstudio(professor.nome) ? {} : calcularHoraAtividadePorTurno(porTurnoHA); // [ESTUDIO-SEM-HA]
   const haInstitucionalTotal = Object.values(haInstitucionalPorTurno).reduce((a, b) => a + b, 0);
 
   // [NOVO] Quantas HA obrigatórias já estão de fato marcadas em

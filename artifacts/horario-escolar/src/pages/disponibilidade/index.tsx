@@ -145,14 +145,16 @@ export default function DisponibilidadePage() {
   // tela de Conflitos e do recálculo; PROB e HA fixa contam como HA marcada)
   const resumoHA = useMemo(() => {
     const TABELA = [0, 0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 4, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 10, 10];
-    const pede = (n: number) => (n <= 0 ? 0 : n <= 30 ? TABELA[n]! : Math.ceil(n / 3));
+    // [ESTUDIO-SEM-HA] "Escola Estúdio (SEED) - ..." são aulas do estúdio da SEED: não pedem HA
+    const estudio = /^\s*escola\s+est[uú]dio\b/i.test(professores.find((p) => p.id === professorIdNum)?.nome ?? "");
+    const pede = (n: number) => (estudio || n <= 0 ? 0 : n <= 30 ? TABELA[n]! : Math.ceil(n / 3));
     const linhas = TURNOS.map((t) => {
       const aulas = horariosProf.filter((h: any) => h.turma?.turno === t.value).length;
       const marcadas = (disponibilidadeRows as any[]).filter((d) => d.turno === t.value && d.horaAtividadeObrigatoria).length;
       return { turno: t.value, rotulo: t.label, aulas, pede: pede(aulas), marcadas };
     }).filter((l) => l.aulas > 0 || l.marcadas > 0);
     return { linhas, pede: linhas.reduce((s, l) => s + l.pede, 0), marcadas: linhas.reduce((s, l) => s + l.marcadas, 0) };
-  }, [horariosProf, disponibilidadeRows]);
+  }, [horariosProf, disponibilidadeRows, professores, professorIdNum]);
   // [ASS-SO-TURMA] periodo nao letivo depois da ultima aula do turno (ex.: 7a aula da manha,
   // so para a assincrona da 3STM): a linha so aparece para o professor que tem aula nela.
   const slotsOrdenados = useMemo(() => {

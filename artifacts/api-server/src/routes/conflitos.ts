@@ -6,7 +6,7 @@ import { getEscolaId } from "../lib/escola-id";
 import { getAuth } from "@clerk/express";
 import { REGRAS_REDE } from "../lib/regras-rede"; // [REGRAS-REDE]
 import { z } from "zod";
-import { calcularHoraAtividadePorTurno } from "../lib/hora-atividade";
+import { calcularHoraAtividadePorTurno, ehProfessorEstudio } from "../lib/hora-atividade";
 import { montarMapaPrincipal, principalDe } from "../lib/professor-principal"; // [MESMA-PESSOA-HA]
 import { limitesLetivosPorTurno, PARES_TURNO } from "../lib/intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 import { casosPausaEntreTurnos } from "../lib/pausa-entre-turnos"; // [PAUSA-ENTRE-TURNOS]
@@ -433,7 +433,7 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
   // [MESMA-PESSOA-HA] cadastro secundario (ex.: "Jessica (IFA)") nao e cobrado de HA:
   // as aulas dele somam na conta do principal, que recebe a HA toda.
   const mapaPrincipalHA = montarMapaPrincipal(professores);
-  professores.filter((prof) => prof.cargaHorariaTotal > 0 && principalDe(mapaPrincipalHA, prof.id) === prof.id).forEach((prof) => {
+  professores.filter((prof) => prof.cargaHorariaTotal > 0 && !ehProfessorEstudio(prof.nome) && principalDe(mapaPrincipalHA, prof.id) === prof.id).forEach((prof) => { // [ESTUDIO-SEM-HA]
     const turnosComAula: Record<string, number> = {};
     slots.filter((s) => principalDe(mapaPrincipalHA, s.professorId) === prof.id).forEach((s) => {
       const turma = turmas.find((t) => t.id === s.turmaId);
