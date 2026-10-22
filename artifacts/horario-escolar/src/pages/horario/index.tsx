@@ -1541,6 +1541,30 @@ function AbaConflitos() {
       toast({ title: "Não foi possível autorizar", description: "Nada foi alterado.", variant: "destructive" });
     } finally { setLiberando(null); }
   };
+  // [CONFLITO-ACEITO] aceitar como está (quando não há o que fazer); volta se a grade mudar
+  const TIPOS_ACEITAVEIS = new Set(["pausa_entre_turnos", "intervalo_entre_turnos", "janelas_excessivas", "aulas_geminadas_excedidas", "hora_atividade_insuficiente", "hora_atividade_turno_incorreto", "sala_incompativel", "turma_sem_calendario"]);
+  const { data: aceitos = [], refetch: recarregarAceitos } = useQuery({
+    queryKey: ["/api/conflitos/aceitos"],
+    queryFn: () => customFetch<Array<{ tipo: string; descricao: string; em: string }>>("/api/conflitos/aceitos", { responseType: "json" }),
+  });
+  const [verAceitos, setVerAceitos] = useState(false);
+  const aceitarConflito = async (c: { tipo: string; descricao: string }) => {
+    if (!confirm(`${c.descricao}\n\nAceitar este conflito como está? Ele some da lista. Se a grade mudar (outro dia, outra turma), ele volta a aparecer. Dá para desfazer depois em "Aceitos como estão".`)) return;
+    try {
+      await customFetch("/api/conflitos/aceitar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo: c.tipo, descricao: c.descricao }) });
+      await Promise.all([refetch(), recarregarAceitos()]);
+    } catch {
+      toast({ title: "Não foi possível aceitar", description: "A grade pode ter mudado. Clique em Reanalisar.", variant: "destructive" });
+    }
+  };
+  const desfazerAceite = async (c: { tipo: string; descricao: string }) => {
+    try {
+      await customFetch("/api/conflitos/desfazer-aceite", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo: c.tipo, descricao: c.descricao }) });
+      await Promise.all([refetch(), recarregarAceitos()]);
+    } catch {
+      toast({ title: "Não foi possível desfazer", variant: "destructive" });
+    }
+  };
   const revogarTeto = async (l: { professorId: number; professorNome: string; turno: string }) => {
     if (!confirm(`Revogar a autorização de ${l.professorNome} na ${TURNO_NOME[l.turno] ?? l.turno}? O conflito de aulas demais volta a aparecer.`)) return;
     try {
@@ -1628,6 +1652,23 @@ function AbaConflitos() {
           ))}
         </div>
       )}{/* [TETO-LIBERADO] */}
+      {aceitos.length > 0 && (
+        <div className="rounded-md border border-border bg-muted/30 px-4 py-2 text-xs text-muted-foreground">
+          <button type="button" className="font-medium text-foreground underline-offset-2 hover:underline" onClick={() => setVerAceitos((v) => !v)}>
+            {verAceitos ? "▾" : "▸"} Aceitos como estão ({aceitos.length})
+          </button>
+          {verAceitos && (
+            <ul className="mt-2 space-y-1">
+              {aceitos.map((a) => (
+                <li key={`${a.tipo}|${a.descricao}`} className="flex items-start justify-between gap-3">
+                  <span><span className="font-medium">{TIPO_LABELS[a.tipo] ?? a.tipo}:</span> {a.descricao}</span>
+                  <button type="button" className="shrink-0 underline hover:text-foreground" onClick={() => desfazerAceite(a)}>desfazer</button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}{/* [CONFLITO-ACEITO] */}
 
       {isLoading ? (
         <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}</div>
@@ -1685,6 +1726,12 @@ function AbaConflitos() {
                           <Check className="w-3.5 h-3.5" /> Autorizar
                         </Button>
                       )}{/* [TETO-LIBERADO] */}
+                      {TIPOS_ACEITAVEIS.has(item.conflito.tipo) && (
+                        <Button variant="outline" size="sm" className="text-xs gap-1" title="Não há o que fazer: deixar como está (volta se a grade mudar)"
+                          onClick={() => aceitarConflito(item.conflito)}>
+                          <Check className="w-3.5 h-3.5" /> Aceitar como está
+                        </Button>
+                      )}{/* [CONFLITO-ACEITO] */}
                       {item.conflito.tipo === "professor_indisponivel" && item.conflito.professorId != null && (
                         <Link href={`/disponibilidade?professorId=${item.conflito.professorId}`} className="text-xs text-primary underline">Disponibilidade</Link>
                       )}

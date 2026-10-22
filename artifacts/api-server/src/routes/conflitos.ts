@@ -31,6 +31,17 @@ type Conflito = {
 export const CHAVE_TETO_LIBERADO = "seed_pr.teto_aulas_turno_liberado";
 type LiberacoesTeto = Record<string, { limite: number; em: string; por?: string | null }>;
 
+// [CONFLITO-ACEITO] (21/10/2026) conflito que a escola decidiu deixar como esta (ex.: pausa entre turnos que
+// o Urania sempre teve). Guardado em configuracoes: { "tipo|descricao": { em, por } }. A descricao traz
+// professor, dia e turmas: se a grade mudar, a descricao muda e o conflito volta a aparecer.
+export const CHAVE_CONFLITOS_ACEITOS = "conflitos.aceitos";
+type ConflitosAceitos = Record<string, { em: string; por?: string | null }>;
+export const TIPOS_ACEITAVEIS = new Set([
+  "pausa_entre_turnos", "intervalo_entre_turnos", "janelas_excessivas", "aulas_geminadas_excedidas",
+  "hora_atividade_insuficiente", "hora_atividade_turno_incorreto", "sala_incompativel", "turma_sem_calendario",
+]);
+const chaveAceite = (c: { tipo: string; descricao: string }) => `${c.tipo}|${c.descricao}`;
+
 type ConflitoComSugestao = {
   conflito: Conflito;
   sugestoes: string[];
@@ -588,7 +599,9 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     }
   }
 
-  return conflitos;
+  // [CONFLITO-ACEITO] os aceitos pela escola nao aparecem (nem contam no painel)
+  const aceitos = configValor<ConflitosAceitos>(CHAVE_CONFLITOS_ACEITOS, {});
+  return conflitos.filter((c) => !aceitos[chaveAceite(c)]);
 }
 
 function gerarSugestoes(conflito: Conflito): string[] {
@@ -766,6 +779,49 @@ router.delete("/teto-liberar/:professorId/:turno", async (req, res) => {
   delete atual.valor[k];
   await gravarLiberacoesTeto(escolaId, atual, atual.valor);
   res.status(204).send();
+});
+
+// [CONFLITO-ACEITO] aceitar / desfazer
+async function lerAceitos(escolaId: string): Promise<{ id: number | null; valor: ConflitosAceitos }> {
+  const [cfg] = await db.select().from(configuracoesTable)
+    .where(and(eq(configuracoesTable.escolaId, escolaId), eq(configuracoesTable.chave, CHAVE_CONFLITOS_ACEITOS)));
+  return { id: cfg?.id ?? null, valor: (cfg?.valor as ConflitosAceitos | null) ?? {} };
+}
+async function gravarAceitos(escolaId: string, id: number | null, valor: ConflitosAceitos) {
+  if (id != null) await db.update(configuracoesTable).set({ valor }).where(eq(configuracoesTable.id, id));
+  else await db.insert(configuracoesTable).values({ escolaId, chave: CHAVE_CONFLITOS_ACEITOS, valor, descricao: "Conflitos aceitos como estão pela escola" });
+}
+router.get("/aceitos", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  const { valor } = await lerAceitos(getEscolaId(req));
+  res.json(Object.entries(valor).map(([k, v]) => {
+    const i = k.indexOf("|");
+    return { tipo: k.slice(0, i), descricao: k.slice(i + 1), em: v.em };
+  }).sort((a, b) => b.em.localeCompare(a.em)));
+});
+const AceiteBody = z.object({ tipo: z.string().min(1), descricao: z.string().min(1) });
+router.post("/aceitar", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const parsed = AceiteBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  if (!TIPOS_ACEITAVEIS.has(parsed.data.tipo)) { res.status(422).json({ error: "Este tipo de conflito não pode ser aceito como está." }); return; }
+  const existe = (await detectarConflitos(escolaId)).some((c) => c.tipo === parsed.data.tipo && c.descricao === parsed.data.descricao);
+  if (!existe) { res.status(404).json({ error: "Conflito não encontrado (a grade pode ter mudado). Clique em Reanalisar." }); return; }
+  const atual = await lerAceitos(escolaId);
+  atual.valor[chaveAceite(parsed.data)] = { em: new Date().toISOString(), por: getAuth(req).userId ?? null };
+  await gravarAceitos(escolaId, atual.id, atual.valor);
+  res.json({ ok: true });
+});
+router.post("/desfazer-aceite", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const parsed = AceiteBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const atual = await lerAceitos(escolaId);
+  const k = chaveAceite(parsed.data);
+  if (!atual.valor[k]) { res.status(404).json({ error: "Aceite não encontrado." }); return; }
+  delete atual.valor[k];
+  await gravarAceitos(escolaId, atual.id, atual.valor);
+  res.json({ ok: true });
 });
 
 export default router;
