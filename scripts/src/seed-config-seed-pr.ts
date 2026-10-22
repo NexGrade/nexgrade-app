@@ -42,7 +42,7 @@ const CONFIGS_SEED_PR: Array<{ chave: string; valor: unknown; descricao: string 
   },
   {
     chave: "seed_pr.max_aulas_geminadas_padrao",
-    valor: 3, // [REGRAS-REDE] padrão do Romário; o sistema usa lib/regras-rede.ts (travado)
+    valor: 2,
     descricao:
       "Prática pedagógica comum (evitar 3+ aulas seguidas da mesma disciplina para a mesma turma) — valor padrão aplicado quando `turma_disciplinas.max_aulas_consecutivas_dia` está vazio. Ajustável por turma/disciplina no painel. Não é um artigo específico confirmado da resolução — trate como recomendação operacional, editável pela escola.",
   },

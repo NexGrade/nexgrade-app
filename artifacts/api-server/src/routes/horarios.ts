@@ -28,7 +28,6 @@ import { getEscolaId } from "../lib/escola-id";
 import { randomUUID } from "node:crypto";
 import { recalcularHoraAtividade } from "../lib/recalcular-ha";
 import { simularPromocao } from "../lib/simular-promocao"; // [SIMULAR-PROMOCAO]
-import { REGRAS_REDE } from "../lib/regras-rede"; // [REGRAS-REDE]
 import { salvarBackupGrade, listarBackupsGrade, restaurarBackupGrade } from "../lib/backup-grade"; // [BACKUP-GRADE]
 import { reposicionarHAMovel, slotsLetivosPorTurno, type AulaPos } from "../lib/reposicionar-ha"; // [HA-MOVEL-MELHORIA]
 import { carregarAssSoTurma } from "../lib/assincrona-so-turma"; // [ASS-SO-TURMA]
@@ -67,7 +66,7 @@ export interface GerarOpts {
 }
 
 const CHAVE_MAX_GEMINADAS_PADRAO = "seed_pr.max_aulas_geminadas_padrao";
-const DEFAULT_MAX_GEMINADAS = REGRAS_REDE.maxAulasGeminadasPadrao; // [REGRAS-REDE] padrão do Romário (3)
+const DEFAULT_MAX_GEMINADAS = 2;
 const CHAVE_MAX_COMPLEMENTAR_PADRAO = "seed_pr.max_aulas_complementar_padrao";
 
 export async function gerarAlgoritmo(opts: GerarOpts) {
@@ -128,10 +127,13 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
   }
   const discIdsAlvo = new Set(turmaDiscsAlvo.map((td) => td.disciplinaId));
 
-  // [REGRAS-REDE] regra da rede: ignora o que a escola tiver gravado (configGeminadas/configComplementarPadrao)
-  void configGeminadas; void configComplementarPadrao;
-  const maxGeminadasPadrao = DEFAULT_MAX_GEMINADAS;
-  const maxComplementarPadrao: number | undefined = REGRAS_REDE.maxAulasComplementarPadrao;
+  const maxGeminadasPadrao = typeof configGeminadas?.valor === "number"
+    ? configGeminadas.valor
+    : DEFAULT_MAX_GEMINADAS;
+
+  const maxComplementarPadrao = typeof configComplementarPadrao?.valor === "number"
+    ? configComplementarPadrao.valor
+    : undefined;
 
   function limiteDiarioProfessor(professorId: number): number {
     const especifico = limitesProfessor.find(l => l.professorId === professorId && l.turmaId === turmaId);
@@ -1721,7 +1723,10 @@ async function runCpsatGeneracaoUnica(
     return porNomeTurma ?? null;
   }
 
-  const maxGeminadasPadraoCpsat = REGRAS_REDE.maxAulasGeminadasPadrao; // [REGRAS-REDE] igual em todas as escolas (Romário: 3)
+  const configGeminadasCpsat = await db.select().from(configuracoesTable)
+    .where(and(eq(configuracoesTable.escolaId, escolaId), eq(configuracoesTable.chave, CHAVE_MAX_GEMINADAS_PADRAO)))
+    .then((r) => r[0]);
+  const maxGeminadasPadraoCpsat = typeof configGeminadasCpsat?.valor === "number" ? configGeminadasCpsat.valor : 2;
 
   const maxAulaPorNivelEnsino = new Map<string, number>();
   for (const slot of horarioSlotsTurno) {

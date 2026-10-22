@@ -4,7 +4,6 @@ import { horariosTable, professoresTable, disciplinasTable, turmasTable, turmaDi
 import { eq, inArray, and, isNull } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
 import { getAuth } from "@clerk/express";
-import { REGRAS_REDE } from "../lib/regras-rede"; // [REGRAS-REDE]
 import { z } from "zod";
 import { calcularHoraAtividadePorTurno } from "../lib/hora-atividade";
 import { montarMapaPrincipal, principalDe } from "../lib/professor-principal"; // [MESMA-PESSOA-HA]
@@ -71,10 +70,9 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     const cfg = configs.find((c) => c.chave === chave);
     return (cfg?.valor as T) ?? padrao;
   }
-  // [REGRAS-REDE] regras da rede (padrão do Romário), iguais em todas as escolas
-  const tetoAulasTurno = REGRAS_REDE.tetoAulasTurno;
-  const horaAtividadeMesmoTurnoAte = REGRAS_REDE.horaAtividadeMesmoTurnoAte;
-  const maxAulasGeminadasPadrao = REGRAS_REDE.maxAulasGeminadasPadrao;
+  const tetoAulasTurno = configValor("seed_pr.teto_aulas_turno", { noturno: 19, diurno: 24 });
+  const horaAtividadeMesmoTurnoAte = configValor("seed_pr.hora_atividade_mesmo_turno_ate", 19);
+  const maxAulasGeminadasPadrao = configValor("seed_pr.max_aulas_geminadas_padrao", 2);
   // [FIX] padrao20h/padrao40h removidos -- não são mais usados agora que
   // a exigência de HA é calculada proporcionalmente às aulas reais de
   // cada professor, não por um regime fixo não confirmado (ver seção 11

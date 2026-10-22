@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ChevronDown, ChevronRight, Plus, Check, Lock } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const CHAVE_MAX_GEMINADAS = "seed_pr.max_aulas_geminadas_padrao";
@@ -64,19 +64,46 @@ export default function RegrasDistribuicaoPage() {
 }
 
 function SecaoGeral() {
-  // [REGRAS-REDE] (21/10/2026) regra padrão da rede, igual em todas as escolas (referência: Romário).
-  // A escola não altera; o limite próprio de uma turma+disciplina continua na seção abaixo.
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { data: config, isLoading } = useGetConfiguracao(CHAVE_MAX_GEMINADAS, {
+    query: { queryKey: getGetConfiguracaoQueryKey(CHAVE_MAX_GEMINADAS), retry: false },
+  });
+  const [valor, setValor] = useState("2");
+  const salvar = useUpsertConfiguracao();
+
+  const valorAtual = typeof config?.valor === "number" ? config.valor : Number(valor);
+
+  function salvarValor() {
+    salvar.mutate(
+      { chave: CHAVE_MAX_GEMINADAS, data: { valor: Number(valor), descricao: "Máximo de aulas geminadas por padrão, quando a disciplina/turma não tem override específico." } },
+      {
+        onSuccess: () => {
+          toast({ title: "Padrão salvo!" });
+          queryClient.invalidateQueries({ queryKey: getGetConfiguracaoQueryKey(CHAVE_MAX_GEMINADAS) });
+        },
+        onError: () => toast({ title: "Erro ao salvar", variant: "destructive" }),
+      },
+    );
+  }
+
   return (
     <div className="pt-2">
       <div className="bg-muted/50 rounded-lg p-4">
-        <label className="text-sm font-medium block mb-1">Máximo de aulas geminadas (padrão da rede)</label>
+        <label className="text-sm font-medium block mb-1">Máximo de aulas geminadas (padrão da escola)</label>
         <p className="text-xs text-muted-foreground mb-3">
           Vale para toda disciplina/turma que não tiver um limite específico configurado na seção abaixo.
-          É igual em todas as escolas e não muda por escola.
         </p>
         <div className="flex items-center gap-2">
-          <Input type="number" value={3} disabled className="w-24" />
-          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Lock className="h-3.5 w-3.5" /> Regra da rede</span>
+          <Input
+            type="number" min={1} max={6}
+            defaultValue={isLoading ? undefined : valorAtual}
+            onChange={(e) => setValor(e.target.value)}
+            className="w-24"
+          />
+          <Button size="sm" onClick={salvarValor} disabled={salvar.isPending}>
+            <Check className="h-3.5 w-3.5 mr-1" /> Salvar
+          </Button>
         </div>
       </div>
       <p className="text-xs text-amber-600 mt-3">

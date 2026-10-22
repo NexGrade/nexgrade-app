@@ -4,7 +4,6 @@ import { configuracoesTable } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
-import { CHAVES_REGRA_REDE } from "../lib/regras-rede"; // [REGRAS-REDE]
 
 const router = Router();
 
@@ -37,11 +36,6 @@ router.get("/:chave", async (req, res) => {
 router.put("/:chave", async (req, res) => {
   const escolaId = getEscolaId(req);
   const chave = req.params.chave;
-  // [REGRAS-REDE] regra de geração da rede: igual para todas as escolas, não se grava por escola
-  if (CHAVES_REGRA_REDE.has(chave)) {
-    res.status(403).json({ error: "Esta é uma regra padrão da rede (igual para todas as escolas) e não pode ser alterada pela escola." });
-    return;
-  }
   const parsed = ConfiguracaoInput.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });

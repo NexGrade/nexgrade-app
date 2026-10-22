@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ShieldCheck, ArrowLeft, Lock } from "lucide-react";
+import { ShieldCheck, Save, ArrowLeft } from "lucide-react";
 
 // RNF-SEED-01: valores confirmados na Resolução SEED n.º 7.200/2025 —
 // ver scripts/src/seed-config-seed-pr.ts para a fonte de cada um. Ficam
@@ -18,7 +18,7 @@ const SEED_PR_DEFAULTS = {
   "seed_pr.padrao_40h": { aulasRegencia: 30, horasAtividade: 18 },
   "seed_pr.teto_aulas_turno": { noturno: 19, diurno: 24 },
   "seed_pr.hora_atividade_mesmo_turno_ate": 19,
-  "seed_pr.max_aulas_geminadas_padrao": 3, // [REGRAS-REDE] padrão do Romário
+  "seed_pr.max_aulas_geminadas_padrao": 2,
 };
 
 // [NOVO] Extraída de pages/configuracoes/index.tsx -- essa seção é
@@ -37,8 +37,9 @@ export default function ConformidadeSeedPrPage() {
   const [savingSeed, setSavingSeed] = useState(false);
 
   const getSeedVal = <T,>(chave: keyof typeof SEED_PR_DEFAULTS): T => {
-    // [REGRAS-REDE] regras travadas: mostra sempre o padrão da rede (o sistema não usa valor gravado pela escola)
-    void configs; void seedForm;
+    if (seedForm[chave] !== undefined) return seedForm[chave] as T;
+    const saved = configs.find((c) => c.chave === chave);
+    if (saved?.valor !== undefined && saved.valor !== null) return saved.valor as T;
     return SEED_PR_DEFAULTS[chave] as T;
   };
 
@@ -81,17 +82,18 @@ export default function ConformidadeSeedPrPage() {
               Valores confirmados na Resolução SEED n.º 7.200/2025 (Art. 11).
             </p>
           </div>
-          {/* [REGRAS-REDE] regras travadas: sem botão de salvar */}
-          <span className="inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm text-muted-foreground"><Lock className="w-4 h-4" /> Regras da rede (travadas)</span>
+          <Button onClick={handleSaveSeed} disabled={savingSeed || isLoading}>
+            <Save className="w-4 h-4 mr-2" />
+            {savingSeed ? "Salvando..." : "Salvar conformidade"}
+          </Button>
         </div>
       </div>
 
       <Card className="border-[#1565C0]/30">
         <CardContent className="space-y-6 pt-6">
           <p className="text-sm text-muted-foreground">
-            <strong>Regras padrão da rede, iguais para todas as escolas</strong> (referência: C.E. Romário Martins). A escola
-            não altera estes valores: se a SEED-PR mudar a proporção hora-aula/hora-atividade, a mudança é feita pela
-            administração da plataforma e vale para todas as escolas.
+            Ficam editáveis aqui — não fixos no sistema — porque a proporção hora-aula/hora-atividade está sob
+            disputa judicial ativa entre a SEED-PR e o sindicato dos professores e pode mudar.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -102,7 +104,6 @@ export default function ConformidadeSeedPrPage() {
                 <div className="space-y-1.5">
                   <Label className="text-xs">Aulas de regência</Label>
                   <Input
-                    disabled
                     type="number" min={1}
                     value={getSeedVal<{ aulasRegencia: number }>("seed_pr.padrao_20h").aulasRegencia}
                     onChange={(e) => setSeedSubVal("seed_pr.padrao_20h", "aulasRegencia", Number(e.target.value))}
@@ -111,7 +112,6 @@ export default function ConformidadeSeedPrPage() {
                 <div className="space-y-1.5">
                   <Label className="text-xs">Horas-atividade</Label>
                   <Input
-                    disabled
                     type="number" min={1}
                     value={getSeedVal<{ horasAtividade: number }>("seed_pr.padrao_20h").horasAtividade}
                     onChange={(e) => setSeedSubVal("seed_pr.padrao_20h", "horasAtividade", Number(e.target.value))}
@@ -127,7 +127,6 @@ export default function ConformidadeSeedPrPage() {
                 <div className="space-y-1.5">
                   <Label className="text-xs">Aulas de regência</Label>
                   <Input
-                    disabled
                     type="number" min={1}
                     value={getSeedVal<{ aulasRegencia: number }>("seed_pr.padrao_40h").aulasRegencia}
                     onChange={(e) => setSeedSubVal("seed_pr.padrao_40h", "aulasRegencia", Number(e.target.value))}
@@ -136,7 +135,6 @@ export default function ConformidadeSeedPrPage() {
                 <div className="space-y-1.5">
                   <Label className="text-xs">Horas-atividade</Label>
                   <Input
-                    disabled
                     type="number" min={1}
                     value={getSeedVal<{ horasAtividade: number }>("seed_pr.padrao_40h").horasAtividade}
                     onChange={(e) => setSeedSubVal("seed_pr.padrao_40h", "horasAtividade", Number(e.target.value))}
@@ -152,7 +150,6 @@ export default function ConformidadeSeedPrPage() {
                 <div className="space-y-1.5">
                   <Label className="text-xs">Turno da noite</Label>
                   <Input
-                    disabled
                     type="number" min={1}
                     value={getSeedVal<{ noturno: number }>("seed_pr.teto_aulas_turno").noturno}
                     onChange={(e) => setSeedSubVal("seed_pr.teto_aulas_turno", "noturno", Number(e.target.value))}
@@ -161,7 +158,6 @@ export default function ConformidadeSeedPrPage() {
                 <div className="space-y-1.5">
                   <Label className="text-xs">Demais turnos</Label>
                   <Input
-                    disabled
                     type="number" min={1}
                     value={getSeedVal<{ diurno: number }>("seed_pr.teto_aulas_turno").diurno}
                     onChange={(e) => setSeedSubVal("seed_pr.teto_aulas_turno", "diurno", Number(e.target.value))}
@@ -177,7 +173,6 @@ export default function ConformidadeSeedPrPage() {
                 <div className="space-y-1.5">
                   <Label className="text-xs">HA no mesmo turno até (nº aulas)</Label>
                   <Input
-                    disabled
                     type="number" min={1}
                     value={getSeedVal<number>("seed_pr.hora_atividade_mesmo_turno_ate")}
                     onChange={(e) => setSeedSubVal("seed_pr.hora_atividade_mesmo_turno_ate", null, Number(e.target.value))}
@@ -186,7 +181,6 @@ export default function ConformidadeSeedPrPage() {
                 <div className="space-y-1.5">
                   <Label className="text-xs">Máx. aulas geminadas/dia (padrão)</Label>
                   <Input
-                    disabled
                     type="number" min={1}
                     value={getSeedVal<number>("seed_pr.max_aulas_geminadas_padrao")}
                     onChange={(e) => setSeedSubVal("seed_pr.max_aulas_geminadas_padrao", null, Number(e.target.value))}
