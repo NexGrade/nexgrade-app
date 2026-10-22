@@ -1818,6 +1818,26 @@ async function runCpsatGeneracaoUnica(
     })
     .filter((d) => d.aulasSemana > 0);
 
+  // [DUPLA-SEM-REPETIR] (22/10/2026) a mesma dupla docencia cadastrada duas vezes -- vinculo "titular X +
+  // apoio Y" E outro vinculo so de Y na mesma turma+disciplina (27 casos no Mario Braga: Lisiane, Julio
+  // Cesar, Silmara, Ivanir...) -- punha Y duas vezes no mesmo grupo: o motor obrigava Y a estar em dois
+  // lugares no mesmo horario e respondia "nao existe grade". Cada professor entra uma vez por grupo
+  // (fica a linha propria dele; a de apoio repetida sai). Nao muda dado nenhum.
+  {
+    const ordem = [...disciplinasTurma].sort((a, b) => Number(a.codigoSae.endsWith("#AP")) - Number(b.codigoSae.endsWith("#AP")));
+    const vistos = new Set<string>();
+    const repetidas = new Set<(typeof disciplinasTurma)[number]>();
+    for (const d of ordem) {
+      if (!d.grupoDupla || d.assincrona) continue;
+      const k = `${d.grupoDupla}|${d.professor}`;
+      if (vistos.has(k)) repetidas.add(d); else vistos.add(k);
+    }
+    if (repetidas.size) {
+      for (let i = disciplinasTurma.length - 1; i >= 0; i--) if (repetidas.has(disciplinasTurma[i]!)) disciplinasTurma.splice(i, 1);
+      console.log(`[DUPLA-SEM-REPETIR] turno=${turno} ${repetidas.size} linha(s) repetida(s) na mesma dupla: ${[...repetidas].map((d) => `${d.turma}/${d.nome}/${d.professor}`).slice(0, 10).join("; ")}`);
+    }
+  }
+
   // [ASSINCRONA-TRIO] Trava: todas as linhas de um mesmo grupo (dupla ou trio)
   // precisam ter a MESMA quantidade de aulas -- senao o motor fica inviavel sem
   // explicacao. Para aqui com uma mensagem que diz exatamente o que ajustar.
