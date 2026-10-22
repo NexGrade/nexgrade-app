@@ -18,7 +18,7 @@ def _fixas_da_linha(fixar, dt):
     return (fixar or {}).get((dt.turma, dt.codigo_sae, dt.professor), [])
 
 
-def diagnosticar_inviabilidade(disciplinas_turma, bloqueios, aulas_por_dia, teto, fixar=None, dias=5):
+def diagnosticar_inviabilidade(disciplinas_turma, bloqueios, aulas_por_dia, teto, fixar=None, dias=5, teto_por_professor=None):
     """Devolve uma lista de frases (mais graves primeiro). Lista vazia = nenhuma contradicao de contagem."""
     achados = []  # (prioridade, texto)
 
@@ -49,8 +49,9 @@ def diagnosticar_inviabilidade(disciplinas_turma, bloqueios, aulas_por_dia, teto
     for dt in disciplinas_turma:
         aulas_do_prof[dt.professor] += dt.aulas_semana
     for prof, total in sorted(aulas_do_prof.items()):
-        if total > teto:
-            achados.append((2, f"{prof}: {total} aulas no turno, acima do teto de {teto}."))
+        teto_prof = max(teto, (teto_por_professor or {}).get(prof, 0))  # [TETO-AUTORIZADO]
+        if total > teto_prof:
+            achados.append((2, f"{prof}: {total} aulas no turno, acima do teto de {teto_prof}."))
         livres = dias * aulas_por_dia - len(bloqueados_do_prof[prof])
         if total > livres:
             achados.append((3, f"{prof}: {total} aulas no turno, mas só tem {livres} horário(s) livre(s) "

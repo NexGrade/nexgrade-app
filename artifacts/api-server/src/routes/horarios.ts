@@ -29,6 +29,7 @@ import { randomUUID } from "node:crypto";
 import { recalcularHoraAtividade } from "../lib/recalcular-ha";
 import { simularPromocao } from "../lib/simular-promocao"; // [SIMULAR-PROMOCAO]
 import { REGRAS_REDE } from "../lib/regras-rede"; // [REGRAS-REDE]
+import { CHAVE_TETO_LIBERADO } from "./conflitos"; // [TETO-AUTORIZADO]
 import { salvarBackupGrade, listarBackupsGrade, restaurarBackupGrade } from "../lib/backup-grade"; // [BACKUP-GRADE]
 import { reposicionarHAMovel, slotsLetivosPorTurno, type AulaPos } from "../lib/reposicionar-ha"; // [HA-MOVEL-MELHORIA]
 import { carregarAssSoTurma } from "../lib/assincrona-so-turma"; // [ASS-SO-TURMA]
@@ -2083,7 +2084,21 @@ async function runCpsatGeneracaoUnica(
   const evitarProfessor = await evitarPorPausaEntreTurnos(escolaId, turno, [...professorIdsUsados], (id) => professorMap.get(id)?.nome ?? `Professor #${id}`)
     .catch((err) => { console.error("[PAUSA-ENTRE-TURNOS] falhou, gerando sem:", err); return []; });
   console.log(`[PAUSA-ENTRE-TURNOS] turno=${turno} evitar=${evitarProfessor.length}`);
-  const payloadComHa = { ...payload, haPorProfessor, recursos: recursosFixos, evitarProfessor }; // [AULA-FIXA] [PAUSA-ENTRE-TURNOS]
+  // [TETO-AUTORIZADO] (22/10/2026) professor autorizado na tela de Conflitos a passar do teto do turno
+  // (configuracoes seed_pr.teto_aulas_turno_liberado): o motor usa o limite autorizado so para ele.
+  // Motor antigo ignora o campo (nada quebra).
+  const tetoPorProfessor: Record<string, number> = {};
+  try {
+    const [cfgTeto] = await db.select().from(configuracoesTable)
+      .where(and(eq(configuracoesTable.escolaId, escolaId), eq(configuracoesTable.chave, CHAVE_TETO_LIBERADO)));
+    for (const [k, v] of Object.entries((cfgTeto?.valor ?? {}) as Record<string, { limite?: number }>)) {
+      const [pid, t] = k.split("|");
+      const nome = professorMap.get(Number(pid))?.nome;
+      if (t === turno && nome && typeof v?.limite === "number") tetoPorProfessor[nome] = v.limite;
+    }
+    if (Object.keys(tetoPorProfessor).length) console.log(`[TETO-AUTORIZADO] turno=${turno} ${JSON.stringify(tetoPorProfessor)}`);
+  } catch (err) { console.error("[TETO-AUTORIZADO] falhou ao ler autorizações; segue com o teto padrão:", err); }
+  const payloadComHa = { ...payload, haPorProfessor, recursos: recursosFixos, evitarProfessor, tetoPorProfessor }; // [AULA-FIXA] [PAUSA-ENTRE-TURNOS] [TETO-AUTORIZADO]
   console.log("[DEBUG-CPSAT-PAYLOAD]", JSON.stringify(payload));
 
   let resultado:
