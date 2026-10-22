@@ -321,6 +321,25 @@ export default function DisponibilidadePage() {
     });
   };
 
+  // [COORD-DIA] (22/10/2026) marca o dia inteiro como atividade fora de sala "COORD" (coordenação),
+  // igual ao Bloquear/Liberar. Horário com aula real ou HA fica como está (não some aula nem HA).
+  const coordenacaoDia = (dia: number) => {
+    const pulados: string[] = [];
+    const marcar: string[] = [];
+    slotsOrdenados.forEach((slot) => {
+      const key = cellKey(dia, slot.numeroAula);
+      const estado = matriz[key];
+      if (aulaReal(dia, slot.numeroAula) || estado === "ha_obrigatoria" || estado === "ha_fixa") pulados.push(`${slot.numeroAula}ª`);
+      else marcar.push(key);
+    });
+    setMatriz((prev) => { const next = { ...prev }; for (const k of marcar) next[k] = "atividade"; return next; });
+    setRotulos((prev) => { const next = { ...prev }; for (const k of marcar) next[k] = "COORD"; return next; });
+    toast({
+      title: `${DIAS[dia]}: ${marcar.length} horário(s) marcados como COORD`,
+      description: pulados.length ? `Ficaram como estavam (têm aula ou HA): ${pulados.join(", ")}. Clique em Salvar para gravar.` : "Clique em Salvar para gravar.",
+    });
+  };
+
   const liberarDia = (dia: number) => {
     setMatriz((prev) => {
       const next = { ...prev };
@@ -629,6 +648,13 @@ export default function DisponibilidadePage() {
                             >
                               Liberar
                             </button>
+                            <button
+                              className="text-[9px] px-1.5 py-0.5 rounded bg-violet-50 text-violet-700 hover:bg-violet-100 border border-violet-200 leading-none"
+                              onClick={() => coordenacaoDia(i)}
+                              title="Coordenação o dia inteiro (atividade fora de sala COORD; horário com aula ou HA fica como está)"
+                            >
+                              Coord.
+                            </button>{/* [COORD-DIA] */}
                           </div>
                         </div>
                       </th>
