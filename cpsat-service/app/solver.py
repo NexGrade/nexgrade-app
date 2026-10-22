@@ -27,6 +27,16 @@ def definir_evitar(lista):
     _CTX.evitar = {(e["professor"], int(e["dia"]), int(e["aula"])) for e in (lista or [])}
 
 
+# [TETO-AUTORIZADO] (22/10/2026) professor autorizado pela escola a passar do teto de aulas do turno
+# (tela de Conflitos, "Autorizar"): {nome: limite}. Para ele o teto e o limite autorizado. Por requisicao.
+def definir_teto_professor(mapa):
+    _CTX.teto_professor = {str(k): int(v) for k, v in (mapa or {}).items()}
+
+
+def teto_do_professor(prof, teto_padrao):
+    return max(teto_padrao, getattr(_CTX, "teto_professor", {}).get(prof, 0))
+
+
 class _ObservadorProgresso(cp_model.CpSolverSolutionCallback):
     """[PROGRESSO-MOTOR] registra cada grade melhor que o solver encontra (janelas e HA sem espaco)."""
 
@@ -171,7 +181,7 @@ def resolver(
             for dia in range(len(DIAS))
             for aula in range(1, aulas_por_dia + 1)
         )
-        model.Add(total <= teto)
+        model.Add(total <= teto_do_professor(prof, teto))  # [TETO-AUTORIZADO]
 
     # [FORCAR-ZERO-JANELA] Restrição RÍGIDA (não soft) via automaton de
     # estados finitos: obriga cada professor a ter, em cada dia, no
@@ -691,7 +701,8 @@ def gerar_grade(
         )
         if status == cp_model.INFEASIBLE:  # [DIAGNOSTICO-INVIAVEL] diz QUEM trava, em vez de so "nao existe grade"
             try:
-                causas = diagnosticar_inviabilidade(disciplinas_turma, bloqueios, aulas_por_dia, TETO_AULAS_TURNO.get(turno, 24), fixar=fixar)
+                causas = diagnosticar_inviabilidade(disciplinas_turma, bloqueios, aulas_por_dia, TETO_AULAS_TURNO.get(turno, 24), fixar=fixar,
+                                                    teto_por_professor=getattr(_CTX, "teto_professor", None))  # [TETO-AUTORIZADO]
                 resultado["causasInviabilidade"] = causas
                 resultado["mensagem"] = montar_mensagem(resultado["mensagem"], causas)
                 print(f"[INVIAVEL] {turno}: {len(causas)} causa(s) encontrada(s)", flush=True)

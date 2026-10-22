@@ -3,7 +3,7 @@ import hmac  # [CPSAT-TOKEN]
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse  # [CPSAT-TOKEN]
 from google import genai
-from .solver import gerar_grade, definir_evitar  # [PAUSA-ENTRE-TURNOS]
+from .solver import gerar_grade, definir_evitar, definir_teto_professor  # [PAUSA-ENTRE-TURNOS] [TETO-AUTORIZADO]
 from .pipeline_coordenada import gerar_grade_coordenada
 from . import progresso  # [PROGRESSO-MOTOR]
 app = FastAPI(title="Nexgrade CP-SAT Solver API")
@@ -103,6 +103,7 @@ def parar_endpoint(progresso_id: str):
 def gerar_grade_endpoint(payload: dict):
     try:
         definir_evitar(payload.get("evitarProfessor"))  # [PAUSA-ENTRE-TURNOS]
+        definir_teto_professor(payload.get("tetoPorProfessor"))  # [TETO-AUTORIZADO]
         progresso.iniciar(payload.get("progressoId"))  # [PROGRESSO-MOTOR]
         disciplinas_raw = payload.get("disciplinasTurma", [])
         bloqueios_raw = payload.get("bloqueiosProfessor", [])
@@ -135,6 +136,7 @@ def gerar_grade_endpoint(payload: dict):
 def gerar_grade_coordenada_endpoint(payload: dict):
     try:
         definir_evitar(payload.get("evitarProfessor"))  # [PAUSA-ENTRE-TURNOS]
+        definir_teto_professor(payload.get("tetoPorProfessor"))  # [TETO-AUTORIZADO]
         progresso.iniciar(payload.get("progressoId"))  # [PROGRESSO-MOTOR]
         disciplinas_raw = payload.get("disciplinasTurma", [])
         bloqueios_raw = payload.get("bloqueiosProfessor", [])
@@ -178,6 +180,7 @@ def gerar_grade_coordenada_endpoint(payload: dict):
 def melhorar_grade_endpoint(payload: dict):
     try:
         definir_evitar(payload.get("evitarProfessor"))  # [PAUSA-ENTRE-TURNOS]
+        definir_teto_professor(payload.get("tetoPorProfessor"))  # [TETO-AUTORIZADO]
         progresso.iniciar(payload.get("progressoId"))  # [PROGRESSO-MOTOR]
         from .reduzir_janelas import contar_janelas_professor
         aulas_iniciais = payload.get("aulasIniciais", [])
