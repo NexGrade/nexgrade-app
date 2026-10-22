@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from typing import Optional
 import time
 from . import progresso  # [PROGRESSO-MOTOR]
+from .diagnostico_inviabilidade import diagnosticar_inviabilidade, montar_mensagem  # [DIAGNOSTICO-INVIAVEL]
 
 TETO_AULAS_TURNO = {"noturno": 19, "matutino": 24, "vespertino": 24}
 DIAS = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"]
@@ -688,6 +689,16 @@ def gerar_grade(
             if status == cp_model.INFEASIBLE
             else ("Cálculo interrompido antes de encontrar uma grade válida." if progresso.pedido_parar() else f"Solver não terminou dentro do tempo limite de {tempo_limite_s}s.")  # [PARAR-MOTOR]
         )
+        if status == cp_model.INFEASIBLE:  # [DIAGNOSTICO-INVIAVEL] diz QUEM trava, em vez de so "nao existe grade"
+            try:
+                causas = diagnosticar_inviabilidade(disciplinas_turma, bloqueios, aulas_por_dia, TETO_AULAS_TURNO.get(turno, 24), fixar=fixar)
+                resultado["causasInviabilidade"] = causas
+                resultado["mensagem"] = montar_mensagem(resultado["mensagem"], causas)
+                print(f"[INVIAVEL] {turno}: {len(causas)} causa(s) encontrada(s)", flush=True)
+                for c in causas:
+                    print(f"[INVIAVEL]   {c}", flush=True)
+            except Exception as e:  # o diagnostico nunca pode derrubar a resposta
+                print(f"[INVIAVEL] diagnostico falhou: {e}", flush=True)
 
     resultado["paradoPeloUsuario"] = progresso.pedido_parar()  # [PARAR-MOTOR]
     return resultado
