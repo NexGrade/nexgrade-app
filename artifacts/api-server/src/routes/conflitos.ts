@@ -3,6 +3,8 @@ import { db } from "@workspace/db";
 import { horariosTable, professoresTable, disciplinasTable, turmasTable, turmaDisciplinasTable, professorDisciplinasTable, disponibilidadeTable, salasTable, configuracoesTable, trimestresLetivosTable, horarioSlotsTable } from "@workspace/db";
 import { eq, inArray, and, isNull } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
+import { getAuth } from "@clerk/express";
+import { z } from "zod";
 import { calcularHoraAtividadePorTurno } from "../lib/hora-atividade";
 import { montarMapaPrincipal, principalDe } from "../lib/professor-principal"; // [MESMA-PESSOA-HA]
 import { limitesLetivosPorTurno, PARES_TURNO } from "../lib/intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
@@ -18,7 +20,16 @@ type Conflito = {
   professorId: number | null;
   diaSemana: number | null;
   numeroAula: number | null;
+  turno?: string | null; // [TETO-LIBERADO] para a tela autorizar o professor nesse turno
+  total?: number | null;
+  limite?: number | null;
 };
+
+// [TETO-LIBERADO] (21/10/2026) professor autorizado a passar do teto de aulas do turno (alguns tem essa
+// liberacao). Guardado em configuracoes (chave abaixo): { "profId|turno": { limite, em, por } }. Vale ate o
+// numero de aulas que ele tinha quando foi autorizado; se ganhar mais aulas, o conflito volta.
+export const CHAVE_TETO_LIBERADO = "seed_pr.teto_aulas_turno_liberado";
+type LiberacoesTeto = Record<string, { limite: number; em: string; por?: string | null }>;
 
 type ConflitoComSugestao = {
   conflito: Conflito;
@@ -378,9 +389,12 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     const key = `${s.professorId}-${turma.turno}`;
     aulasPorProfTurno[key] = (aulasPorProfTurno[key] ?? 0) + 1;
   });
+  const liberacoesTeto = configValor<LiberacoesTeto>(CHAVE_TETO_LIBERADO, {}); // [TETO-LIBERADO]
   Object.entries(aulasPorProfTurno).forEach(([key, total]) => {
     const [profId, turno] = key.split("-", 2) as [string, string];
     const teto = turno === "noturno" ? tetoAulasTurno.noturno : tetoAulasTurno.diurno;
+    const liberado = liberacoesTeto[`${profId}|${turno}`];
+    if (liberado && total <= liberado.limite) return; // [TETO-LIBERADO] autorizado pela escola
     if (total > teto) {
       const prof = professores.find((p) => p.id === Number(profId));
       conflitos.push({
@@ -391,6 +405,9 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
         professorId: Number(profId),
         diaSemana: null,
         numeroAula: null,
+        turno,
+        total,
+        limite: teto,
       });
     }
   });
@@ -652,6 +669,7 @@ function gerarSugestoes(conflito: Conflito): string[] {
       ];
     case "teto_aulas_turno_excedido":
       return [
+        "Se o professor tem liberação para dar mais aulas neste turno, clique em \"Autorizar\" (o conflito some enquanto ele não ganhar mais aulas)",
         "Redistribua parte da carga do professor para outro turno",
         "Confirme o padrão (20h/40h) cadastrado do professor — o teto muda conforme o padrão e o turno",
         "Considere dividir a disciplina entre dois professores habilitados",
@@ -699,6 +717,55 @@ router.get("/sugestoes", async (req, res) => {
     sugestoes: gerarSugestoes(c),
   }));
   res.json(resultado);
+});
+
+// [TETO-LIBERADO] autorizacoes de professor acima do teto de aulas do turno
+async function lerLiberacoesTeto(escolaId: string): Promise<{ id: number | null; valor: LiberacoesTeto }> {
+  const [cfg] = await db.select().from(configuracoesTable)
+    .where(and(eq(configuracoesTable.escolaId, escolaId), eq(configuracoesTable.chave, CHAVE_TETO_LIBERADO)));
+  return { id: cfg?.id ?? null, valor: (cfg?.valor as LiberacoesTeto | null) ?? {} };
+}
+async function gravarLiberacoesTeto(escolaId: string, atual: { id: number | null }, valor: LiberacoesTeto) {
+  if (atual.id != null) await db.update(configuracoesTable).set({ valor }).where(eq(configuracoesTable.id, atual.id));
+  else await db.insert(configuracoesTable).values({ escolaId, chave: CHAVE_TETO_LIBERADO, valor, descricao: "Professores autorizados a passar do teto de aulas do turno" });
+}
+
+router.get("/teto-liberacoes", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  const escolaId = getEscolaId(req);
+  const { valor } = await lerLiberacoesTeto(escolaId);
+  const profs = await db.select({ id: professoresTable.id, nome: professoresTable.nome }).from(professoresTable).where(eq(professoresTable.escolaId, escolaId));
+  const nome = new Map(profs.map((p) => [p.id, p.nome]));
+  res.json(Object.entries(valor).map(([k, v]) => {
+    const [p, turno] = k.split("|");
+    return { professorId: Number(p), professorNome: nome.get(Number(p)) ?? `#${p}`, turno, limite: v.limite, em: v.em };
+  }).filter((x) => nome.has(x.professorId)));
+});
+
+const LiberarTetoBody = z.object({ professorId: z.number().int(), turno: z.enum(["matutino", "vespertino", "noturno"]) });
+router.post("/teto-liberar", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const parsed = LiberarTetoBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const { professorId, turno } = parsed.data;
+  // autoriza o numero de aulas que o professor tem HOJE nesse turno
+  const c = (await detectarConflitos(escolaId)).find((x) => x.tipo === "teto_aulas_turno_excedido" && x.professorId === professorId && x.turno === turno);
+  if (!c || c.total == null) { res.status(404).json({ error: "Esse professor não está acima do teto nesse turno." }); return; }
+  const atual = await lerLiberacoesTeto(escolaId);
+  const { userId } = getAuth(req);
+  atual.valor[`${professorId}|${turno}`] = { limite: c.total, em: new Date().toISOString(), por: userId ?? null };
+  await gravarLiberacoesTeto(escolaId, atual, atual.valor);
+  res.json({ ok: true, professorId, turno, limite: c.total });
+});
+
+router.delete("/teto-liberar/:professorId/:turno", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const atual = await lerLiberacoesTeto(escolaId);
+  const k = `${Number(req.params.professorId)}|${req.params.turno}`;
+  if (!atual.valor[k]) { res.status(404).json({ error: "Autorização não encontrada." }); return; }
+  delete atual.valor[k];
+  await gravarLiberacoesTeto(escolaId, atual, atual.valor);
+  res.status(204).send();
 });
 
 export default router;

@@ -2623,7 +2623,10 @@ export const ListConflitosResponseItem = zod.object({
   "turmaId": zod.number().nullish(),
   "professorId": zod.number().nullish(),
   "diaSemana": zod.number().nullish(),
-  "numeroAula": zod.number().nullish()
+  "numeroAula": zod.number().nullish(),
+  "turno": zod.string().nullish(),
+  "total": zod.number().nullish(),
+  "limite": zod.number().nullish()
 })
 export const ListConflitosResponse = zod.array(ListConflitosResponseItem)
 
@@ -2639,7 +2642,10 @@ export const GetConflitosComSugestoesResponseItem = zod.object({
   "turmaId": zod.number().nullish(),
   "professorId": zod.number().nullish(),
   "diaSemana": zod.number().nullish(),
-  "numeroAula": zod.number().nullish()
+  "numeroAula": zod.number().nullish(),
+  "turno": zod.string().nullish(),
+  "total": zod.number().nullish(),
+  "limite": zod.number().nullish()
 }),
   "sugestoes": zod.array(zod.string())
 })

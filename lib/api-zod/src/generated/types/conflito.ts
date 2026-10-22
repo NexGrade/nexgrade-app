@@ -19,4 +19,10 @@ export interface Conflito {
   diaSemana?: number | null;
   /** @nullable */
   numeroAula?: number | null;
+  /** @nullable */
+  turno?: string | null;
+  /** @nullable */
+  total?: number | null;
+  /** @nullable */
+  limite?: number | null;
 }

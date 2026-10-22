@@ -1508,7 +1508,7 @@ function destinoDoConflito(c: ConflitoItem): { href: string; rotulo: string } | 
   const q = new URLSearchParams({ tab: "grade", conflito: c.descricao });
   if (c.diaSemana != null) q.set("dia", String(c.diaSemana));
   if (c.numeroAula != null) q.set("aula", String(c.numeroAula));
-  if (TIPOS_DA_DISPONIBILIDADE.has(c.tipo) && c.professorId != null) return { href: `/disponibilidade?professorId=${c.professorId}`, rotulo: "Ver disponibilidade" };
+  if (TIPOS_DA_DISPONIBILIDADE.has(c.tipo) && c.professorId != null) return { href: `/disponibilidade?${new URLSearchParams({ professorId: String(c.professorId), conflito: c.descricao })}`, rotulo: "Ver disponibilidade" };
   if (c.tipo === "turma_sem_calendario") return { href: "/calendario", rotulo: "Ver calendário" };
   // professor sem habilitação: o conserto é marcar a disciplina no cadastro dele
   if (c.tipo === "professor_nao_habilitado" && c.professorId != null) return { href: `/professores/${c.professorId}`, rotulo: "Ver cadastro do professor" };
@@ -1521,6 +1521,35 @@ function destinoDoConflito(c: ConflitoItem): { href: string; rotulo: string } | 
 
 function AbaConflitos() {
   const [, irPara] = useLocation(); // [CONFLITO-VAI-AO-PROBLEMA]
+  const { toast } = useToast();
+  // [TETO-LIBERADO] professores autorizados a passar do teto de aulas do turno
+  const TURNO_NOME: Record<string, string> = { matutino: "manhã", vespertino: "tarde", noturno: "noite" };
+  const { data: liberacoesTeto = [], refetch: recarregarLiberacoes } = useQuery({
+    queryKey: ["/api/conflitos/teto-liberacoes"],
+    queryFn: () => customFetch<Array<{ professorId: number; professorNome: string; turno: string; limite: number; em: string }>>("/api/conflitos/teto-liberacoes", { responseType: "json" }),
+  });
+  const [liberando, setLiberando] = useState<string | null>(null);
+  const autorizarTeto = async (c: { professorId?: number | null; turno?: string | null; total?: number | null; limite?: number | null; descricao: string }) => {
+    if (c.professorId == null || !c.turno) return;
+    if (!confirm(`${c.descricao}\n\nAutorizar este professor a dar ${c.total} aulas na ${TURNO_NOME[c.turno] ?? c.turno} (o teto é ${c.limite})?\n\nO conflito some. Se ele ganhar mais aulas nesse turno, o conflito volta. Dá para revogar depois aqui mesmo.`)) return;
+    setLiberando(`${c.professorId}|${c.turno}`);
+    try {
+      await customFetch("/api/conflitos/teto-liberar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ professorId: c.professorId, turno: c.turno }) });
+      toast({ title: "Autorizado", description: `Liberado para ${c.total} aulas na ${TURNO_NOME[c.turno] ?? c.turno}.` });
+      await Promise.all([refetch(), recarregarLiberacoes()]);
+    } catch {
+      toast({ title: "Não foi possível autorizar", description: "Nada foi alterado.", variant: "destructive" });
+    } finally { setLiberando(null); }
+  };
+  const revogarTeto = async (l: { professorId: number; professorNome: string; turno: string }) => {
+    if (!confirm(`Revogar a autorização de ${l.professorNome} na ${TURNO_NOME[l.turno] ?? l.turno}? O conflito de aulas demais volta a aparecer.`)) return;
+    try {
+      await customFetch(`/api/conflitos/teto-liberar/${l.professorId}/${l.turno}`, { method: "DELETE" });
+      await Promise.all([refetch(), recarregarLiberacoes()]);
+    } catch {
+      toast({ title: "Não foi possível revogar", variant: "destructive" });
+    }
+  };
   const { data: conflitosComSugestoes = [], isLoading, refetch, isFetching } = useGetConflitosComSugestoes();
   const [expanded, setExpanded] = useState<number | null>(null);
   // [CONFLITOS-FILTRO] (16/10/2026) clicar num quadro ou num tipo mostra so aqueles conflitos
@@ -1587,6 +1616,19 @@ function AbaConflitos() {
         </div>
       )}
 
+      {liberacoesTeto.length > 0 && (
+        <div className="rounded-md border border-border bg-muted/30 px-4 py-2 text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">Autorizados acima do teto de aulas:</span>{" "}
+          {liberacoesTeto.map((l, i) => (
+            <span key={`${l.professorId}|${l.turno}`}>
+              {i > 0 && " · "}
+              {l.professorNome} ({TURNO_NOME[l.turno] ?? l.turno}, até {l.limite} aulas){" "}
+              <button type="button" className="underline hover:text-foreground" onClick={() => revogarTeto(l)}>revogar</button>
+            </span>
+          ))}
+        </div>
+      )}{/* [TETO-LIBERADO] */}
+
       {isLoading ? (
         <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}</div>
       ) : total === 0 ? (
@@ -1636,6 +1678,13 @@ function AbaConflitos() {
                           </Button>
                         </Link>
                       )}
+                      {item.conflito.tipo === "teto_aulas_turno_excedido" && item.conflito.turno && (
+                        <Button variant="outline" size="sm" className="text-xs gap-1" disabled={liberando === `${item.conflito.professorId}|${item.conflito.turno}`}
+                          title="O professor tem liberação para dar mais aulas neste turno"
+                          onClick={() => autorizarTeto(item.conflito)}>
+                          <Check className="w-3.5 h-3.5" /> Autorizar
+                        </Button>
+                      )}{/* [TETO-LIBERADO] */}
                       {item.conflito.tipo === "professor_indisponivel" && item.conflito.professorId != null && (
                         <Link href={`/disponibilidade?professorId=${item.conflito.professorId}`} className="text-xs text-primary underline">Disponibilidade</Link>
                       )}
