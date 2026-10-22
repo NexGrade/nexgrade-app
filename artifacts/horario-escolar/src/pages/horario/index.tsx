@@ -26,7 +26,6 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast"; // [HA-TRAVADA-NA-GRADE]
-import { AceitarConflito, TIPOS_ACEITAVEIS } from "@/components/aceitar-conflito"; // [CONFLITO-ACEITO]
 import { SeletorBusca } from "@/components/seletor-busca";
 import { PainelCapacidade } from "@/components/painel-capacidade";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"; // [EDITAR-CELULA-GRADE]
@@ -703,12 +702,12 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
   const [professorId, setProfessorId] = useState<string>(() => new URLSearchParams(window.location.search).get("professor") ?? "all"); // [CONFLITO-VAI-AO-PROBLEMA] ?professor=
   const [turno, setTurno] = useState<string>("all");
   // [CONFLITO-VAI-AO-PROBLEMA] (21/10/2026) vindo da aba Conflitos: destaca o dia/aula do problema
-  const [destaque, setDestaque] = useState<{ dia: number | null; aula: number | null; texto: string; tipo: string | null } | null>(() => {
+  const [destaque, setDestaque] = useState<{ dia: number | null; aula: number | null; texto: string } | null>(() => {
     const q = new URLSearchParams(window.location.search);
     const texto = q.get("conflito");
     if (!texto) return null;
     const n = (k: string) => (q.get(k) != null && q.get(k) !== "" && !Number.isNaN(Number(q.get(k))) ? Number(q.get(k)) : null);
-    return { dia: n("dia"), aula: n("aula"), texto, tipo: q.get("tipo") };
+    return { dia: n("dia"), aula: n("aula"), texto };
   });
   const diaDestaque = (i: number) => destaque?.dia === i;
   const aulaDestaque = (a: number) => destaque?.aula === a;
@@ -1012,7 +1011,6 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
             {destaque.dia != null && <> · destacado: <strong>{diasSemana[destaque.dia]}{destaque.aula != null ? `, ${destaque.aula}ª aula` : ""}</strong></>}
           </span>
           <span className="flex items-center gap-3">
-            <AceitarConflito tipo={destaque.tipo} descricao={destaque.texto} />{/* [CONFLITO-ACEITO] */}
             <Link href="/horario?tab=conflitos" className="text-xs font-medium underline">Voltar aos conflitos</Link>
             <button type="button" className="text-xs underline" onClick={() => setDestaque(null)}>Tirar destaque</button>
           </span>
@@ -1507,10 +1505,10 @@ const TIPOS_DA_TURMA = new Set(["periodo_invalido", "carga_insuficiente", "turma
 const TIPOS_DO_PROFESSOR = new Set(["professor_duplicado", "janelas_excessivas", "professor_indisponivel", "teto_aulas_turno_excedido", "intervalo_entre_turnos", "pausa_entre_turnos"]);
 const TIPOS_DA_DISPONIBILIDADE = new Set(["hora_atividade_insuficiente", "hora_atividade_turno_incorreto"]);
 function destinoDoConflito(c: ConflitoItem): { href: string; rotulo: string } | null {
-  const q = new URLSearchParams({ tab: "grade", conflito: c.descricao, tipo: c.tipo });
+  const q = new URLSearchParams({ tab: "grade", conflito: c.descricao });
   if (c.diaSemana != null) q.set("dia", String(c.diaSemana));
   if (c.numeroAula != null) q.set("aula", String(c.numeroAula));
-  if (TIPOS_DA_DISPONIBILIDADE.has(c.tipo) && c.professorId != null) return { href: `/disponibilidade?${new URLSearchParams({ professorId: String(c.professorId), conflito: c.descricao, tipo: c.tipo })}`, rotulo: "Ver disponibilidade" };
+  if (TIPOS_DA_DISPONIBILIDADE.has(c.tipo) && c.professorId != null) return { href: `/disponibilidade?${new URLSearchParams({ professorId: String(c.professorId), conflito: c.descricao })}`, rotulo: "Ver disponibilidade" };
   if (c.tipo === "turma_sem_calendario") return { href: "/calendario", rotulo: "Ver calendário" };
   // professor sem habilitação: o conserto é marcar a disciplina no cadastro dele
   if (c.tipo === "professor_nao_habilitado" && c.professorId != null) return { href: `/professores/${c.professorId}`, rotulo: "Ver cadastro do professor" };
@@ -1544,6 +1542,7 @@ function AbaConflitos() {
     } finally { setLiberando(null); }
   };
   // [CONFLITO-ACEITO] aceitar como está (quando não há o que fazer); volta se a grade mudar
+  const TIPOS_ACEITAVEIS = new Set(["pausa_entre_turnos", "intervalo_entre_turnos", "janelas_excessivas", "aulas_geminadas_excedidas", "hora_atividade_insuficiente", "hora_atividade_turno_incorreto", "sala_incompativel", "turma_sem_calendario"]);
   const { data: aceitos = [], refetch: recarregarAceitos } = useQuery({
     queryKey: ["/api/conflitos/aceitos"],
     queryFn: () => customFetch<Array<{ tipo: string; descricao: string; em: string }>>("/api/conflitos/aceitos", { responseType: "json" }),
