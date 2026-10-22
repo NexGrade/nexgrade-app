@@ -1558,6 +1558,20 @@ function AbaConflitos() {
       toast({ title: "Não foi possível aceitar", description: "A grade pode ter mudado. Clique em Reanalisar.", variant: "destructive" });
     }
   };
+  // [CONFLITO-ACEITO-TODOS] (22/10/2026) aceita de uma vez todos os aceitaveis da lista que esta na tela (respeita o filtro)
+  const [aceitandoTodos, setAceitandoTodos] = useState(false);
+  const aceitarTodos = async (itens: Array<{ tipo: string; descricao: string }>, rotulo: string) => {
+    if (!itens.length) return;
+    if (!confirm(`Aceitar como estão os ${itens.length} conflito(s) ${rotulo}?\n\nEles somem da lista. Se a grade mudar (outro dia, outra turma), voltam a aparecer. Dá para desfazer um a um em "Aceitos como estão".`)) return;
+    setAceitandoTodos(true);
+    try {
+      const r = await customFetch<{ aceitos: number; ignorados: number }>("/api/conflitos/aceitar-varios", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ itens: itens.map((c) => ({ tipo: c.tipo, descricao: c.descricao })) }), responseType: "json" });
+      toast({ title: `${r.aceitos} conflito(s) aceito(s)`, description: r.ignorados ? `${r.ignorados} não foram aceitos (a grade mudou ou já estavam aceitos).` : undefined });
+      await Promise.all([refetch(), recarregarAceitos()]);
+    } catch {
+      toast({ title: "Não foi possível aceitar", description: "Nada foi alterado. Clique em Reanalisar e tente de novo.", variant: "destructive" });
+    } finally { setAceitandoTodos(false); }
+  };
   const desfazerAceite = async (c: { tipo: string; descricao: string }) => {
     try {
       await customFetch("/api/conflitos/desfazer-aceite", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo: c.tipo, descricao: c.descricao }) });
@@ -1686,6 +1700,20 @@ function AbaConflitos() {
           {visiveis.length === 0 && (
             <Card className="p-8 text-center text-sm text-muted-foreground">Nenhum conflito nesse filtro.</Card>
           )}
+          {(() => {
+            const aceitaveis = visiveis.filter((c) => TIPOS_ACEITAVEIS.has(c.conflito.tipo)).map((c) => c.conflito);
+            if (aceitaveis.length < 2) return null;
+            const rotulo = filtroTipo !== "todos" ? `de "${TIPO_LABELS[filtroTipo] ?? filtroTipo}"` : "desta lista";
+            return (
+              <div className="flex justify-end">
+                <Button variant="outline" size="sm" className="text-xs gap-1" disabled={aceitandoTodos}
+                  title="Deixar como estão todos os conflitos aceitáveis que estão na tela (voltam se a grade mudar)"
+                  onClick={() => aceitarTodos(aceitaveis, rotulo)}>
+                  <Check className="w-3.5 h-3.5" /> Aceitar todos {rotulo} ({aceitaveis.length})
+                </Button>
+              </div>
+            );
+          })()}{/* [CONFLITO-ACEITO-TODOS] */}
           {visiveis.map((item, idx) => {
             const g = GRAVIDADE_CONFIG[item.conflito.gravidade as keyof typeof GRAVIDADE_CONFIG] ?? GRAVIDADE_CONFIG.baixo;
             const isOpen = expanded === idx;

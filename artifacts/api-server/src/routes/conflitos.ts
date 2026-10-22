@@ -814,6 +814,27 @@ router.post("/aceitar", async (req, res) => {
   await gravarAceitos(escolaId, atual.id, atual.valor);
   res.json({ ok: true });
 });
+// [CONFLITO-ACEITO-TODOS] (22/10/2026) aceita varios de uma vez (botao "Aceitar todos" da lista filtrada).
+// So aceita o que ainda existe na grade de hoje e e de tipo aceitavel; o resto e ignorado e contado.
+const AceiteVariosBody = z.object({ itens: z.array(AceiteBody).min(1).max(500) });
+router.post("/aceitar-varios", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const parsed = AceiteVariosBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const existentes = new Set((await detectarConflitos(escolaId)).map(chaveAceite));
+  const atual = await lerAceitos(escolaId);
+  const em = new Date().toISOString();
+  const por = getAuth(req).userId ?? null;
+  let aceitos = 0;
+  for (const item of parsed.data.itens) {
+    const k = chaveAceite(item);
+    if (!TIPOS_ACEITAVEIS.has(item.tipo) || !existentes.has(k) || atual.valor[k]) continue;
+    atual.valor[k] = { em, por };
+    aceitos++;
+  }
+  if (aceitos) await gravarAceitos(escolaId, atual.id, atual.valor);
+  res.json({ aceitos, ignorados: parsed.data.itens.length - aceitos });
+});
 router.post("/desfazer-aceite", async (req, res) => {
   const escolaId = getEscolaId(req);
   const parsed = AceiteBody.safeParse(req.body);
