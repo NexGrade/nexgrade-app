@@ -2968,6 +2968,9 @@ components:
         professorId: { type: ["integer", "null"] }
         diaSemana: { type: ["integer", "null"] }
         numeroAula: { type: ["integer", "null"] }
+        turno: { type: ["string", "null"] }
+        total: { type: ["integer", "null"] }
+        limite: { type: ["integer", "null"] }
 
     ConflitoComSugestao:
       type: object

@@ -97,6 +97,8 @@ export default function DisponibilidadePage() {
     const idFromUrl = params.get("professorId");
     if (idFromUrl) setProfessorId(idFromUrl);
   }, []);
+  // [CONFLITO-VAI-AO-PROBLEMA] vindo da aba Conflitos: a mensagem do conflito fica visivel aqui
+  const [conflitoVindo, setConflitoVindo] = useState<string | null>(() => new URLSearchParams(window.location.search).get("conflito"));
 
   const { data: professores = [], isLoading: carregandoProfessores } = useListProfessores();
 
@@ -371,6 +373,15 @@ export default function DisponibilidadePage() {
 
   return (
     <div className="space-y-6">
+      {conflitoVindo && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-800">
+          <span><strong>Conflito:</strong> {conflitoVindo}</span>
+          <span className="flex items-center gap-3">
+            <a href="/horario?tab=conflitos" className="text-xs font-medium underline">Voltar aos conflitos</a>
+            <button type="button" className="text-xs underline" onClick={() => setConflitoVindo(null)}>Fechar</button>
+          </span>
+        </div>
+      )}{/* [CONFLITO-VAI-AO-PROBLEMA] */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
