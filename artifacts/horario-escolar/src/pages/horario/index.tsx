@@ -2708,7 +2708,7 @@ function AbaExperimental() {
                                 );
                               })()}
                               <div className="mt-1">
-                                Ao promover:<strong>{sim.aulasMudando ?? movidas.length} aula(s) mudam de lugar</strong> e a HA de <strong>{sim.professoresComHAMudando} professor(es)</strong> muda.
+                                Ao promover:{" "}<strong>{sim.aulasMudando ?? movidas.length} aula(s) mudam de lugar</strong> e a HA de <strong>{sim.professoresComHAMudando} professor(es)</strong> muda.
                               </div>
                               <div className="mt-2 grid gap-2 md:grid-cols-2">
                                 <div><div className="font-medium mb-0.5">Depois de promover</div>{lista(sim.experimento.detalhe)}</div>
