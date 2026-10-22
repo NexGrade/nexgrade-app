@@ -145,7 +145,7 @@ export default function ExportPage() {
       const blob = await customFetch<Blob>(url, { responseType: "blob" });
       const objUrl = URL.createObjectURL(blob);
       const extensao = seedEstado === "PR" ? "xml" : "json";
-      handleDownload(objUrl, `relatorio_seed_${seedEstado}_${seedTurno}_${new Date().getFullYear()}${seedEstado === "PR" ? (seedAssinc ? "_com-assincronas" : "_sem-assincronas") : ""}.${extensao}`);
+      handleDownload(objUrl, `relatorio_seed_${seedEstado}_${seedTurno}_${new Date().getFullYear()}${seedEstado === "PR" ? (seedAssinc ? "" : "_sem-assincronas") : ""}.${extensao}`);
       URL.revokeObjectURL(objUrl);
     } catch (err) {
       if (err instanceof ApiError && err.data && typeof err.data === "object") {
