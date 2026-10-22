@@ -6,7 +6,7 @@
 // Conflitos: aula, HA e atividade do sistema anterior ("(ocupado: FORM)"...) ocupam o
 // horario. Compara com a oficial atual. Nada e gravado.
 import { db, professoresTable, turmasTable, horariosTable, horariosExperimentaisTable, disponibilidadeTable, disciplinasTable, horarioSlotsTable } from "@workspace/db";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { calcularHAIdeal, type AulaParaCalculoHA, type MarcaHACalculada } from "./recalcular-ha";
 import { reposicionarHAMovel, slotsLetivosPorTurno, type AulaPos } from "./reposicionar-ha";
 
@@ -17,6 +17,7 @@ export interface JanelaSimulada {
   professorNome: string;
   turno: string;
   dia: string;
+  diaSemana: number; // [FECHAR-JANELA] 0 = segunda
   janelas: number;
   dia_detalhe: string; // ex.: "3:aula 5:HA 6:aula"
 }
@@ -51,8 +52,13 @@ export interface ResultadoSimulacao {
   veredito: "melhor" | "empate" | "pior";
 }
 
-export async function simularPromocao(escolaId: string, nome: string): Promise<ResultadoSimulacao | null> {
-  const [profs, turmas, oficial, exp, disp, discs, slots] = await Promise.all([
+// [FECHAR-JANELA] expOverride: linhas do experimento com trocas feitas em memória (para avaliar uma troca sem gravar)
+export async function simularPromocao(
+  escolaId: string,
+  nome: string,
+  expOverride?: Array<typeof horariosExperimentaisTable.$inferSelect>,
+): Promise<ResultadoSimulacao | null> {
+  const [profs, turmas, oficial, expDoBanco, disp, discs, slots] = await Promise.all([
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
     db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
     db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
@@ -62,7 +68,11 @@ export async function simularPromocao(escolaId: string, nome: string): Promise<R
     db.select({ id: disciplinasTable.id, nome: disciplinasTable.nome }).from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
     db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId)),
   ]);
+  const exp = expOverride ?? expDoBanco;
   if (exp.length === 0) return null;
+  // [DISCIPLINA-NOME] parte das disciplinas e do catálogo comum (escola_id "escola_default"): busca também por id
+  const idsDisc = [...new Set([...exp, ...oficial].map((x) => x.disciplinaId))].filter((id) => !discs.some((d) => d.id === id));
+  if (idsDisc.length) discs.push(...await db.select({ id: disciplinasTable.id, nome: disciplinasTable.nome }).from(disciplinasTable).where(inArray(disciplinasTable.id, idsDisc)));
 
   const nomeProf = new Map(profs.map((p) => [p.id, p.nome]));
   const profIds = new Set(profs.map((p) => p.id));
@@ -104,7 +114,7 @@ export async function simularPromocao(escolaId: string, nome: string): Promise<R
       for (let a = nums[0]! + 1; a < nums[nums.length - 1]!; a++) if (!m.has(a) && !atividade.has(`${p}|${t}|${d}|${a}`)) janelas++;
       if (janelas > 0) {
         detalhe.push({
-          professorId: Number(p), professorNome: nomeProf.get(Number(p)) ?? `#${p}`, turno: t!, dia: DIAS[Number(d)] ?? d!,
+          professorId: Number(p), professorNome: nomeProf.get(Number(p)) ?? `#${p}`, turno: t!, dia: DIAS[Number(d)] ?? d!, diaSemana: Number(d),
           janelas, dia_detalhe: nums.map((a) => `${a}:${m.get(a)}`).join(" "),
         });
       }
