@@ -163,11 +163,11 @@ Os espaços cadastrados aqui são os que aparecem em Reservas.`,
     titulo: "Regras de Distribuição (limites usados na geração)",
     palavras: ["regras", "geminadas", "aulas seguidas", "limite por dia", "máximo por dia", "distribuição"],
     texto: `Menu Regras de Distribuição — mostra como o gerador aplica cada regra, em camadas.
-- "Máximo de aulas geminadas (padrão da escola)": vale para toda disciplina/turma sem limite próprio. Ajuste e clique em Salvar.
+- "Máximo de aulas geminadas (padrão da rede)": 3, igual em todas as escolas (regra travada, a escola não altera). Vale para toda disciplina/turma sem limite próprio.
 - Por turma/disciplina: defina o "máx. geminadas/dia" de cada disciplina.
 - Por professor: "Adicionar regra" → Professor, Turma (opcional — vazio vale para qualquer turma) e Máx./dia.
 - Trio, co-docência e aulas assíncronas não ficam aqui: configure em Turmas → editar a turma.
-- Os parâmetros da Resolução SEED 7.200/2025 (regência, HA, tetos por turno) ficam em Escola → Configurações → Conformidade SEED-PR.`,
+- Os parâmetros da Resolução SEED 7.200/2025 (regência, HA, tetos por turno) aparecem em Escola → Configurações → Conformidade SEED-PR, só para consulta: são regras da rede, iguais em todas as escolas.`,
   },
 
   gerar_grade: {
@@ -306,7 +306,7 @@ Depois de importar professores, marque as disciplinas de cada um em Professores;
     palavras: ["escola", "dados da escola", "cnpj", "inep", "nre", "configurações", "conformidade", "resolução 7200", "hora-atividade padrão", "assinatura", "plano", "boleto", "pix", "cobrança"],
     texto: `Menu Escola. Três abas:
 - Dados da Escola: Nome, CNPJ, Cidade, Estado, Modalidade, e-mail e WhatsApp de contato; Identificação oficial (Código INEP, NRE); Turnos ofertados; Resolução SEED-PR. Usados nos relatórios, na grade e na cobrança.
-- Configurações: padrões de geração (Aulas por dia, Reduzir janelas automaticamente, Fator pedagógico) e formato do relatório SEED. O link "Conformidade SEED-PR → Configurar" abre os parâmetros da Resolução SEED 7.200/2025 (Art. 11): aulas de regência e horas-atividade para 20h e 40h, teto de aulas por turno (noite e demais turnos), até quantas aulas a HA fica no mesmo turno e máximo de geminadas. Ficam editáveis porque a proporção hora-aula/hora-atividade pode mudar.
+- Configurações: padrões de geração (Aulas por dia, Reduzir janelas automaticamente, Fator pedagógico) e formato do relatório SEED. O link "Conformidade SEED-PR → Configurar" abre os parâmetros da Resolução SEED 7.200/2025 (Art. 11): aulas de regência e horas-atividade para 20h e 40h, teto de aulas por turno (noite e demais turnos), até quantas aulas a HA fica no mesmo turno e máximo de geminadas. São regras padrão da rede, iguais em todas as escolas (referência: Romário) e travadas: a escola só consulta; mudança (por exemplo, se a SEED mudar a proporção hora-aula/hora-atividade) é feita pela administração da plataforma e vale para todas.
 - Assinatura: plano atual ("Ver planos") e contato de cobrança (e-mail e WhatsApp usados para boleto/PIX), que pode ser diferente do contato geral.`,
   },
 
