@@ -270,9 +270,6 @@ export default function ExportPage() {
           </CardContent>
         </Card>
 
-        {/* [PONTO-DIARIO] Ponto de um dia */}
-        <CardPontoDiario />
-
         {/* Grade em PDF */}
         <Card>
           <CardHeader>
@@ -356,6 +353,9 @@ export default function ExportPage() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* [PONTO-DIARIO] Ponto de um dia */}
+        <CardPontoDiario />
 
         {/* [RELATORIO-RESERVAS] Relatório de Reservas por Professor */}
         <Card>
