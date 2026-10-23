@@ -451,7 +451,7 @@ export default function ExportPage() {
         </Card>
 
         {/* Relatório SEED */}
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 border-2 border-[#1565C0] bg-[#1565C0]/5 shadow-md">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <BarChart3 className="w-4 h-4" /> Exportar para o RCO (XML)
