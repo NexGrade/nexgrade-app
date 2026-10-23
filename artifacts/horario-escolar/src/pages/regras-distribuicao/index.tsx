@@ -2,26 +2,24 @@ import { useState } from "react";
 import {
   useGetConfiguracao, useUpsertConfiguracao, getGetConfiguracaoQueryKey,
   useListTurmas, useGetTurma, useUpdateTurma, getGetTurmaQueryKey,
-  useListProfessores, useListLimitesDiariosProfessor, useSetLimiteDiarioProfessor,
-  getListLimitesDiariosProfessorQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ChevronDown, ChevronRight, Plus, Check, Lock } from "lucide-react";
+import { ChevronDown, ChevronRight, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const CHAVE_MAX_GEMINADAS = "seed_pr.max_aulas_geminadas_padrao";
 
+// [SEM-COMPLEMENTAR] (23/10/2026) Seção "Complementares" (limite diário do professor na turma) retirada
+// da tela: o motor CP-SAT não usa esse limite (só o gerador simples antigo). Tabela, rota e dados ficam.
 export default function RegrasDistribuicaoPage() {
-  const [aberto, setAberto] = useState<"geral" | "especifico" | "complementar" | null>("geral");
+  const [aberto, setAberto] = useState<"geral" | "especifico" | null>("geral");
 
   const secoes = [
     { key: "geral" as const, titulo: "Tipos gerais", subtitulo: "Regra padrão para toda a escola" },
     { key: "especifico" as const, titulo: "Tipos específicos", subtitulo: "Por disciplina/turma — sobrescreve o geral" },
-    { key: "complementar" as const, titulo: "Complementares", subtitulo: "Professor com múltiplas disciplinas na mesma turma" },
   ];
 
   return (
@@ -52,7 +50,6 @@ export default function RegrasDistribuicaoPage() {
                 <div className="px-5 pb-5">
                   {s.key === "geral" && <SecaoGeral />}
                   {s.key === "especifico" && <SecaoEspecifico />}
-                  {s.key === "complementar" && <SecaoComplementar />}
                 </div>
               )}
             </Card>
@@ -140,82 +137,3 @@ function SecaoEspecifico() {
     </div>
   );
 }
-
-function SecaoComplementar() {
-  const [aberto, setAberto] = useState(false);
-  const [professorId, setProfessorId] = useState("");
-  const [turmaId, setTurmaId] = useState<string>("");
-  const [maxAulas, setMaxAulas] = useState("2");
-
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { data: professores } = useListProfessores();
-  const { data: turmas } = useListTurmas();
-  const { data: limites } = useListLimitesDiariosProfessor(undefined, { query: { queryKey: getListLimitesDiariosProfessorQueryKey() } });
-  const salvar = useSetLimiteDiarioProfessor();
-
-  function salvarLimite() {
-    if (!professorId) return;
-    salvar.mutate(
-      { data: { professorId: Number(professorId), turmaId: turmaId ? Number(turmaId) : null, maxAulasPorDia: Number(maxAulas) } },
-      {
-        onSuccess: () => {
-          toast({ title: "Limite salvo!" });
-          queryClient.invalidateQueries({ queryKey: getListLimitesDiariosProfessorQueryKey() });
-          setAberto(false);
-        },
-        onError: () => toast({ title: "Erro ao salvar", variant: "destructive" }),
-      },
-    );
-  }
-
-  function nomeProfessor(id: number) {
-    return professores?.find((p) => p.id === id)?.nome ?? `#${id}`;
-  }
-  function nomeTurma(id: number | null) {
-    if (id === null) return "Qualquer turma (padrão do professor)";
-    return turmas?.find((t) => t.id === id)?.nome ?? `#${id}`;
-  }
-
-  return (
-    <div className="pt-2 space-y-2">
-      {limites?.map((l) => (
-        <div key={l.id} className="flex items-center justify-between bg-muted/50 rounded px-3 py-2 text-sm">
-          <span>{nomeProfessor(l.professorId)}</span>
-          <span className="text-xs text-muted-foreground">{nomeTurma(l.turmaId ?? null)} · máx. {l.maxAulasPorDia}/dia</span>
-        </div>
-      ))}
-
-      {!aberto ? (
-        <button onClick={() => setAberto(true)} className="text-xs text-primary font-medium flex items-center gap-1 mt-2">
-          <Plus className="h-3.5 w-3.5" /> Adicionar regra
-        </button>
-      ) : (
-        <div className="flex flex-wrap items-end gap-2 mt-3 pt-3 border-t">
-          <div className="w-48">
-            <label className="text-xs text-muted-foreground block mb-1">Professor</label>
-            <Select value={professorId} onValueChange={setProfessorId}>
-              <SelectTrigger><SelectValue placeholder="Professor" /></SelectTrigger>
-              <SelectContent>{professores?.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div className="w-48">
-            <label className="text-xs text-muted-foreground block mb-1">Turma (opcional)</label>
-            <Select value={turmaId} onValueChange={setTurmaId}>
-              <SelectTrigger><SelectValue placeholder="Qualquer turma" /></SelectTrigger>
-              <SelectContent>{turmas?.map((t) => <SelectItem key={t.id} value={String(t.id)}>{t.nome}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">Máx./dia</label>
-            <Input type="number" min={1} value={maxAulas} onChange={(e) => setMaxAulas(e.target.value)} className="w-20" />
-          </div>
-          <Button size="sm" onClick={salvarLimite} disabled={salvar.isPending || !professorId}>
-            <Check className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-}
-
