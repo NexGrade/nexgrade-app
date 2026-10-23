@@ -14,8 +14,11 @@ import { cn } from "@/lib/utils";
 
 const navGroups = [
   // [FASE-B] Menu reorganizado na ordem em que a escola trabalha (28/09/2026).
+  // [MENU-ORDEM] (23/10/2026) Cadastro separado da montagem da grade; grupos
+  // renomeados (Inicio, Relatorios e RCO, Configuracoes). O filtro do gestor de
+  // reservas (mais abaixo) usa o nome "1. Cadastro da escola".
   {
-    label: "Principal",
+    label: "Início",
     items: [
       { href: "/dashboard", label: "Visão Geral", icon: LayoutDashboard },
       { href: "/horario", label: "Horário", icon: Calendar },
@@ -25,14 +28,19 @@ const navGroups = [
   {
     // Ordem do cadastro de uma escola nova: professores ANTES de turmas,
     // porque na edicao da turma se escolhe o professor de cada disciplina.
-    label: "Montagem da escola",
+    label: "1. Cadastro da escola",
     items: [
       { href: "/calendario", label: "Calendário e Turnos", icon: CalendarDays }, // [FASE-C3]
       { href: "/cursos", label: "Cursos e Disciplinas", icon: Library }, // [FASE-C2] cursos, matrizes e disciplinas
       { href: "/professores", label: "Professores", icon: Users },
       { href: "/turmas", label: "Turmas", icon: GraduationCap },
-      { href: "/disponibilidade", label: "Disponibilidade", icon: Clock },
       { href: "/salas", label: "Salas", icon: Building2 },
+    ],
+  },
+  {
+    label: "2. Montagem da grade",
+    items: [
+      { href: "/disponibilidade", label: "Disponibilidade", icon: Clock },
       // Cada escola configura suas proprias regras (maximo de aulas geminadas,
       // limites por disciplina/turma e por professor) que o gerador usa.
       { href: "/regras-distribuicao", label: "Regras de Distribuição", icon: SlidersHorizontal },
@@ -47,15 +55,15 @@ const navGroups = [
     ],
   },
   {
-    label: "Dados",
+    label: "Relatórios e RCO",
     items: [
-      { href: "/importar", label: "Importar Dados", icon: Upload },
       { href: "/export", label: "Exportar Dados", icon: Download },
       { href: "/codigos-rco", label: "Códigos do RCO", icon: Hash }, // [CODIGOS-RCO-TELA]
+      { href: "/importar", label: "Importar Dados", icon: Upload },
     ],
   },
   {
-    label: "Sistema",
+    label: "Configurações",
     items: [
       { href: "/escola", label: "Escola", icon: Landmark }, // [FASE-C1] dados, configuracoes e assinatura
       { href: "/usuarios", label: "Usuários", icon: Shield },
@@ -97,7 +105,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // [PAPEL-RESERVAS] gestor de reservas ve so o item Reservas no menu
   const grupos = ehGestorMenu
     ? navGroups
-        .map((g) => ({ ...g, label: g.label === "Montagem da escola" ? "Consulta" : g.label, items: g.items
+        .map((g) => ({ ...g, label: g.label === "1. Cadastro da escola" ? "Consulta" : g.label, items: g.items
           .filter((i) => i.href === "/horario" || i.href === "/reservas" || i.href === "/calendario") // [CONSULTA-GESTOR]
           .map((i) => (i.href === "/calendario" ? { ...i, label: "Calendário" } : i)) })) // [CALENDARIO-GESTOR] so a aba do calendario letivo, somente leitura
         .filter((g) => g.items.length > 0)
