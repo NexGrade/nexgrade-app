@@ -462,6 +462,32 @@ function DialogAdicionarAula({
   const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
   const emEdicao = !!aulaExistente;
 
+  // [AULA-MANUAL-PROF-VINCULO] (24/10/2026, pedido do diretor do Romário)
+  // Com a turma escolhida, a lista de disciplinas mostra primeiro as da
+  // turma (com o professor do vínculo) e, ao escolher a disciplina, o
+  // professor titular e o de apoio já vêm preenchidos do vínculo
+  // turma x disciplina. Continua dando para trocar à mão.
+  type VinculoTurma = { disciplinaId: number; nome: string; professorId: number | null; professorNome: string | null; professorApoioId?: number | null };
+  const { data: turmaSel } = useQuery({
+    queryKey: ["turma", Number(turmaId)],
+    enabled: open && !!turmaId,
+    queryFn: () => customFetch<{ disciplinasComCarga?: VinculoTurma[] }>(`/api/turmas/${turmaId}`, { responseType: "json" }),
+  });
+  const vinculos: VinculoTurma[] = (turmaSel as { disciplinasComCarga?: VinculoTurma[] } | undefined)?.disciplinasComCarga ?? [];
+  const idsDaTurma = new Set(vinculos.map((v) => v.disciplinaId));
+  const nomeProfVinculo = (did: number) =>
+    [...new Set(vinculos.filter((v) => v.disciplinaId === did).map((v) => v.professorNome).filter(Boolean))].join(" + ");
+
+  function escolherDisciplina(v: string) {
+    setDisciplinaId(v);
+    const linhas = vinculos.filter((x) => x.disciplinaId === Number(v));
+    const titulares = [...new Set(linhas.map((x) => x.professorId).filter((x): x is number => x != null))];
+    const apoio = linhas.find((x) => x.professorApoioId)?.professorApoioId ?? titulares[1] ?? null;
+    if (titulares[0] != null) setProfessorId(String(titulares[0]));
+    if (apoio != null && apoio !== titulares[0]) { setTemApoio(true); setProfessorApoioId(String(apoio)); }
+    else { setTemApoio(false); setProfessorApoioId(""); }
+  }
+
   // Repopula os campos fixos toda vez que o dialog abre (célula
   // clicada na grade define turma/dia/aula; o resto começa vazio --
   // ou pré-preenchido com a aula existente, em modo edição).
@@ -553,9 +579,18 @@ function DialogAdicionarAula({
             </div>
             <div className="space-y-1.5">
               <Label>Disciplina *</Label>
-              <Select value={disciplinaId} onValueChange={setDisciplinaId}>
+              <Select value={disciplinaId} onValueChange={escolherDisciplina}>
                 <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                <SelectContent>{disciplinas?.map((d) => <SelectItem key={d.id} value={String(d.id)}>{d.nome}</SelectItem>)}</SelectContent>
+                <SelectContent>
+                  {/* [AULA-MANUAL-PROF-VINCULO] disciplinas da turma primeiro, com o professor */}
+                  {disciplinas?.filter((d) => idsDaTurma.has(d.id)).map((d) => (
+                    <SelectItem key={d.id} value={String(d.id)}>
+                      {d.nome}{nomeProfVinculo(d.id) ? ` — ${nomeProfVinculo(d.id)}` : ""}
+                    </SelectItem>
+                  ))}
+                  {idsDaTurma.size > 0 && <SelectItem value="__sep" disabled>── outras disciplinas ──</SelectItem>}
+                  {disciplinas?.filter((d) => !idsDaTurma.has(d.id)).map((d) => <SelectItem key={d.id} value={String(d.id)}>{d.nome}</SelectItem>)}
+                </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">

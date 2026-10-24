@@ -99,6 +99,7 @@ async function getTurmaWithDisciplinas(id: number, escolaId: string) {
         trioInicio: l.trioInicio,
         professorId: l.professorId,
         professorNome: prof?.nome ?? null,
+        professorApoioId: l.professorApoioId ?? null, // [AULA-MANUAL-PROF-VINCULO]
       };
     }),
   };
