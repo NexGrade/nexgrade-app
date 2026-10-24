@@ -7,7 +7,7 @@
 // enquanto nenhuma grade do ano novo tiver sido promovida.
 // Liberada a partir do fim do 3o trimestre do ano corrente; antes, so se a Nexus Core liberar.
 import {
-  aulasFixasTable, db, disponibilidadeTable, horariosExperimentaisTable, horariosTable, limitesDiariosProfessorTable,
+  aulasFixasTable, db, disciplinasTable, disponibilidadeTable, horariosExperimentaisTable, horariosTable, limitesDiariosProfessorTable,
   professoresTable, trimestresLetivosTable, turmaDisciplinasTable, turmasTable, viradasAnoTable,
 } from "@workspace/db";
 import { and, desc, eq, inArray, notInArray, sql } from "drizzle-orm";
@@ -103,8 +103,22 @@ export async function previaVirada(escolaId: string) {
   const turmas = await db.select({ id: turmasTable.id, nome: turmasTable.nome, serie: turmasTable.serie, turno: turmasTable.turno, anoLetivo: turmasTable.anoLetivo, codigoSere: turmasTable.codigoSere })
     .from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
   const ids = turmas.map((t) => t.id);
-  const vinc = ids.length ? await db.select({ turmaId: turmaDisciplinasTable.turmaId, professorId: turmaDisciplinasTable.professorId })
-    .from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, ids)) : [];
+  const vinc = ids.length ? await db.select({ turmaId: turmaDisciplinasTable.turmaId, professorId: turmaDisciplinasTable.professorId, professorApoioId: turmaDisciplinasTable.professorApoioId, disciplina: disciplinasTable.nome })
+    .from(turmaDisciplinasTable).leftJoin(disciplinasTable, eq(disciplinasTable.id, turmaDisciplinasTable.disciplinaId))
+    .where(inArray(turmaDisciplinasTable.turmaId, ids)) : [];
+  // [VIRADA-DISCIPLINAS] o que cada professor da (disciplina e turmas), para a escola saber o que fica vago quando ele sai
+  const nomeTurma = new Map(turmas.map((t) => [t.id, t.nome]));
+  const disciplinasDe = (profId: number) => {
+    const m = new Map<string, string[]>();
+    for (const v of vinc) {
+      if (v.professorId !== profId && v.professorApoioId !== profId) continue;
+      const d = (v.disciplina ?? "?") + (v.professorApoioId === profId && v.professorId !== profId ? " (apoio)" : "");
+      m.set(d, [...(m.get(d) ?? []), nomeTurma.get(v.turmaId) ?? "?"]);
+    }
+    return [...m.entries()]
+      .map(([disciplina, ts]) => ({ disciplina, turmas: ts.sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true })) }))
+      .sort((a, b) => a.disciplina.localeCompare(b.disciplina, "pt-BR"));
+  };
   const profs = await db.select({ id: professoresTable.id, nome: professoresTable.nome, ativo: professoresTable.ativo })
     .from(professoresTable).where(eq(professoresTable.escolaId, escolaId));
   const aulas = await db.select({ professorId: horariosTable.professorId, n: sql<number>`count(*)::int` }).from(horariosTable)
@@ -121,7 +135,7 @@ export async function previaVirada(escolaId: string) {
       .map((t) => ({ ...t, disciplinas: vinc.filter((v) => v.turmaId === t.id).length, semProfessor: vinc.filter((v) => v.turmaId === t.id && v.professorId == null).length }))
       .sort((a, b) => (ordemTurno[a.turno] ?? 9) - (ordemTurno[b.turno] ?? 9) || a.serie.localeCompare(b.serie, "pt-BR") || a.nome.localeCompare(b.nome, "pt-BR", { numeric: true })),
     professores: profs
-      .map((p) => ({ ...p, aulas: aulas.find((a) => a.professorId === p.id)?.n ?? 0 }))
+      .map((p) => ({ ...p, aulas: aulas.find((a) => a.professorId === p.id)?.n ?? 0, disciplinas: disciplinasDe(p.id) }))
       .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")),
     zera: {
       aulasOficiais: aulas.reduce((s, a) => s + a.n, 0),

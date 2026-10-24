@@ -27,7 +27,7 @@ type Resumo = { anoDe: number; anoPara: number; turmasContinuam: number; turmasE
 type Previa = {
   situacao: Situacao;
   turmas: Array<{ id: number; nome: string; serie: string; turno: string; anoLetivo: number; disciplinas: number; semProfessor: number }>;
-  professores: Array<{ id: number; nome: string; ativo: boolean; aulas: number }>;
+  professores: Array<{ id: number; nome: string; ativo: boolean; aulas: number; disciplinas?: Array<{ disciplina: string; turmas: string[] }> }>;
   zera: { aulasOficiais: number; experimentos: number; disponibilidade: number; codigosSere: number };
 };
 
@@ -76,7 +76,20 @@ export default function ViradaAnoPage() {
     return [...m.entries()];
   }, [previa]);
   const ativos = (previa?.professores ?? []).filter((p) => p.ativo);
-  const profsVisiveis = ativos.filter((p) => !busca.trim() || p.nome.toLowerCase().includes(busca.trim().toLowerCase()));
+  // busca pelo nome do professor ou pela disciplina
+  const profsVisiveis = ativos.filter((p) => {
+    const b = busca.trim().toLowerCase();
+    return !b || p.nome.toLowerCase().includes(b) || (p.disciplinas ?? []).some((d) => d.disciplina.toLowerCase().includes(b));
+  });
+  // [VIRADA-DISCIPLINAS] o que fica vago com quem sai, por disciplina (para saber quem contratar ou remanejar)
+  const vagas = useMemo(() => {
+    const m = new Map<string, Array<{ turmas: string[]; prof: string }>>();
+    for (const p of previa?.professores ?? []) {
+      if (!saem.has(p.id)) continue;
+      for (const d of p.disciplinas ?? []) m.set(d.disciplina, [...(m.get(d.disciplina) ?? []), { turmas: d.turmas, prof: p.nome }]);
+    }
+    return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0], "pt-BR"));
+  }, [previa, saem]);
   const usados = useMemo(() => new Set([
     ...(previa?.turmas ?? []).filter((t) => !excluir.has(t.id)).map((t) => t.nome.trim().toUpperCase()),
     ...duplicar.map((d) => d.nome.trim().toUpperCase()),
@@ -269,20 +282,38 @@ export default function ViradaAnoPage() {
               <CardDescription>Todos continuam. Desmarque quem saiu: fica inativo (não é excluído) e sai das disciplinas, que ficam para escolher outro professor.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Input placeholder="Buscar professor" value={busca} onChange={(e) => setBusca(e.target.value)} className="h-9 max-w-xs" />
-              <div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-3">
+              <Input placeholder="Buscar professor ou disciplina" value={busca} onChange={(e) => setBusca(e.target.value)} className="h-9 max-w-xs" />
+              <div className="grid gap-1.5 md:grid-cols-2">
                 {profsVisiveis.map((p) => {
                   const continua = !saem.has(p.id);
                   return (
-                    <label key={p.id} className={`flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-muted ${continua ? "" : "text-muted-foreground line-through"}`}>
-                      <Checkbox checked={continua} onCheckedChange={(v) => setSaem((x) => { const n = new Set(x); if (v) n.delete(p.id); else n.add(p.id); return n; })} />
-                      <span className="truncate">{p.nome}</span>
-                      <span className="ml-auto shrink-0 text-xs text-muted-foreground">{p.aulas} aulas</span>
+                    <label key={p.id} className={`flex cursor-pointer items-start gap-2 rounded-md border px-2.5 py-1.5 text-sm hover:bg-muted ${continua ? "" : "border-red-200 bg-red-50/60"}`}>
+                      <Checkbox className="mt-0.5" checked={continua} onCheckedChange={(v) => setSaem((x) => { const n = new Set(x); if (v) n.delete(p.id); else n.add(p.id); return n; })} />
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-baseline gap-2">
+                          <span className={`truncate font-medium ${continua ? "" : "text-muted-foreground line-through"}`}>{p.nome}</span>
+                          <span className="ml-auto shrink-0 text-xs text-muted-foreground">{p.aulas} aulas</span>
+                        </span>
+                        {/* [VIRADA-DISCIPLINAS] disciplinas e turmas do professor */}
+                        <span className="block text-xs text-muted-foreground">
+                          {(p.disciplinas ?? []).length === 0 ? "Sem disciplina em turma" : (p.disciplinas ?? []).map((d) => `${d.disciplina} (${d.turmas.join(", ")})`).join(" · ")}
+                        </span>
+                      </span>
                     </label>
                   );
                 })}
               </div>
               <p className="text-xs text-muted-foreground">{ativos.length - saem.size} continuam · {saem.size} saem</p>
+              {vagas.length > 0 && (
+                <div className="rounded-md border border-amber-200 bg-amber-50/60 p-3 text-sm">{/* [VIRADA-DISCIPLINAS] */}
+                  <p className="mb-1 font-semibold text-amber-900">Ficam sem professor em {s.anoPara} (escolher em Turmas → Sem professor):</p>
+                  <ul className="space-y-0.5">
+                    {vagas.map(([disc, itens]) => (
+                      <li key={disc}><span className="font-medium">{disc}:</span> {itens.map((i) => `${i.turmas.join(", ")} (era ${i.prof})`).join("; ")}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -295,7 +326,7 @@ export default function ViradaAnoPage() {
             <CardContent className="space-y-3 text-sm">
               <ul className="list-disc space-y-1 pl-5">
                 <li>{previa.turmas.length - excluir.size} turmas continuam{excluir.size ? `, ${excluir.size} fecham` : ""}{duplicar.length ? `, ${duplicar.length} novas` : ""}; todas passam para {s.anoPara}.</li>
-                <li>{saem.size ? `${saem.size} professores saem (ficam inativos).` : "Todos os professores continuam."}</li>
+                <li>{saem.size ? `${saem.size} professores saem (ficam inativos); ${vagas.reduce((n, [, itens]) => n + itens.reduce((m, i) => m + i.turmas.length, 0), 0)} disciplinas em turmas ficam sem professor.` : "Todos os professores continuam, com as mesmas disciplinas e turmas."}</li>
                 <li>Saem da grade e vão para o backup: {previa.zera.aulasOficiais} aulas da grade oficial, {previa.zera.disponibilidade} linhas de disponibilidade (bloqueios e HA){previa.zera.experimentos ? `, ${previa.zera.experimentos} de experimentos` : ""}{previa.zera.codigosSere ? ` e ${previa.zera.codigosSere} códigos SERE` : ""}.</li>
                 <li>As reservas já feitas continuam.</li>
               </ul>
