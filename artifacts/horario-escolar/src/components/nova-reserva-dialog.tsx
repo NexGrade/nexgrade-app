@@ -259,6 +259,13 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
   // o botao serve para espaco, tablets ou os dois juntos (as mesmas aulas marcadas)
   const podeAdicionar = (podeAddSala || (salaAtual === 0 && podeAddTablets)) && (quantidade === "" || qtdValida);
   const nomeSala = (id: number) => salas?.find((s) => s.id === id)?.nome ?? "Espaço";
+  // [ESPACO-SO-LIVRES] espacos ocupados (confirmada) ou bloqueados em alguma aula marcada saem da lista;
+  // "em análise" (pendente) continua, marcado. O espaco ja escolhido fica sempre (aviso abaixo do campo).
+  const espacosAtivos = (salas ?? []).filter((s) => s.ativa !== false && !ehSalaTablets(s.nome));
+  const espacosParaEscolher = aulasSel.length === 0
+    ? espacosAtivos
+    : espacosAtivos.filter((s) => s.id === salaAtual || aulasSel.every((n) => { const st = statusSala(s.id, n); return st !== "confirmada" && st !== "bloqueada"; }));
+  const espacosOcultos = espacosAtivos.length - espacosParaEscolher.length;
   const rotuloAula = (n: number) => {
     const h = horariosDoTurno.find((x) => x.numeroAula === n);
     return `${n}ª${h?.hora ? ` (${h.hora})` : ""}`;
@@ -499,7 +506,12 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
                 <Select value={salaAtual ? String(salaAtual) : undefined} onValueChange={(v) => setSalaAtual(Number(v))}>
                   <SelectTrigger className="sm:flex-1"><SelectValue placeholder="Escolha o espaço" /></SelectTrigger>
                   <SelectContent>
-                    {salas?.filter((s) => s.ativa !== false && !ehSalaTablets(s.nome)).map((s) => <SelectItem key={s.id} value={String(s.id)}>{s.nome}</SelectItem>)}
+                    {/* [ESPACO-SO-LIVRES] (24/10) com aula marcada, so os espacos livres em todas as aulas marcadas */}
+                    {espacosParaEscolher.map((s) => (
+                      <SelectItem key={s.id} value={String(s.id)}>
+                        {s.nome}{aulasSel.some((n) => statusSala(s.id, n) === "pendente") ? " (em análise)" : ""}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <Button type="button" variant="outline" onClick={adicionar} disabled={!podeAdicionar}>
@@ -513,6 +525,13 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
                       ? `${nomeSala(salaAtual)} está bloqueado na ${bloqueadasNaSala.map(rotuloAula).join(", ")} aula${motivoBloqueio(salaAtual, bloqueadasNaSala[0]!) ? ` (${motivoBloqueio(salaAtual, bloqueadasNaSala[0]!)})` : ""}. Desmarque essa aula ou escolha outro espaço.`
                       : `${nomeSala(salaAtual)} já está reservado na ${ocupadasNaSala.map(rotuloAula).join(", ")} aula. Desmarque essa aula ou escolha outro espaço.`
                     : `${nomeSala(salaAtual)}: ${aulasSel.sort((x, y) => x - y).map((n) => `${rotuloAula(n)} ${statusSala(salaAtual, n) === "pendente" ? "em análise" : "livre"}`).join(" · ")}`}
+                </p>
+              )}
+              {aulasSel.length > 0 && (
+                <p className="text-xs text-muted-foreground">{/* [ESPACO-SO-LIVRES] */}
+                  {espacosParaEscolher.length === 0
+                    ? "Nenhum espaço livre nas aulas marcadas. Desmarque alguma aula ou escolha outro dia."
+                    : `Aparecem só os espaços livres nas aulas marcadas (${espacosParaEscolher.length}${espacosOcultos > 0 ? `; ${espacosOcultos} ocupado${espacosOcultos > 1 ? "s" : ""} ou bloqueado${espacosOcultos > 1 ? "s" : ""}` : ""}).`}
                 </p>
               )}
               <p className="text-xs text-muted-foreground">Precisa de outro espaço? Adicione à lista e escolha o próximo, nas mesmas aulas (turma dividida) ou em outras. Só precisa de equipamento (tablets etc.)? Deixe o espaço em branco e use o passo dos equipamentos.</p>
