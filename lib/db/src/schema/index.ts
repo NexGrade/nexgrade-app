@@ -28,3 +28,4 @@ export * from "./disciplina-codigos-rco"; // [CODIGOS-RCO]
 export * from "./acessos-escola"; // [ACESSOS-ESCOLA]
 
 export * from "./grade_backups"; // [BACKUP-GRADE]
+export * from "./viradas_ano"; // [VIRADA-ANO]

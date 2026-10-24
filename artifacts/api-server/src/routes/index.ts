@@ -30,6 +30,7 @@ import reservasGestorRouter from "./reservas-gestor"; // [RESERVA-GESTOR]
 import bloqueiosRouter from "./bloqueios"; // [BLOQUEIOS]
 import recursosRouter from "./recursos"; // [RECURSOS-CONFIG]
 import minhaAgendaRouter from "./minha-agenda";
+import viradaAnoRouter from "./virada-ano"; // [VIRADA-ANO]
 import codigosRcoRouter from "./codigos-rco"; // [CODIGOS-RCO-TELA]
 import { exigirAdminParaAlterar } from "../lib/permissao"; // [PERMISSAO-PAPEL]
 import { carregarAcesso } from "../lib/acesso"; // [ACESSOS-ESCOLA]
@@ -77,6 +78,7 @@ router.use("/reservas/bloqueios", bloqueiosRouter); // [BLOQUEIOS] antes de /res
 router.use("/reservas", reservasRouter);
 router.use("/recursos", recursosRouter); // [RECURSOS-CONFIG] total dos equipamentos (so coordenacao altera)
 router.use("/minha-agenda", minhaAgendaRouter);
+router.use("/virada-ano", viradaAnoRouter); // [VIRADA-ANO]
 router.use("/codigos-rco", codigosRcoRouter); // [CODIGOS-RCO-TELA]
 
 export default router;

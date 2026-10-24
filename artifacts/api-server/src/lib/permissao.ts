@@ -72,6 +72,7 @@ const LEITURAS_SOMENTE_ADMIN = [
   "/export/relatorio-carga-pdf", "/export/carga-horaria-pdf",
   "/codigos-rco", // [CODIGOS-RCO-TELA]
   "/reservas/regras-professores", // [LEITURA-EQUIPE] prioridade e limite de cada professor: so a coordenacao
+  "/virada-ano", // [VIRADA-ANO] previa da virada do ano letivo: so direcao, coordenacao e secretaria
 ];
 export function ehLeituraSomenteAdmin(caminhoBruto: string): boolean {
   const caminho = normalizarCaminho(caminhoBruto);

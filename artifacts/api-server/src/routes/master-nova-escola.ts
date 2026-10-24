@@ -10,6 +10,7 @@ import { z } from "zod";
 import { db, escolasTable, planosTable, acessosEscolaTable } from "@workspace/db";
 import { eq, or, and, isNotNull } from "drizzle-orm";
 import { semearCatalogoEscola } from "../lib/semear-catalogo";
+import { liberarViradaAntes } from "../lib/virada-ano"; // [VIRADA-ANO]
 import { CALENDARIOS_OFICIAIS, aplicarCalendarioOficial } from "../lib/calendario-oficial"; // [CALENDARIO-OFICIAL]
 import { registrarAuditoria } from "../lib/audit";
 import { limparCacheAcessos, acessosPeloBanco } from "../lib/acesso";
@@ -165,6 +166,20 @@ router.post("/escolas/:id/meu-acesso", async (req, res) => {
     dadosAnteriores: existente ?? null, dadosNovos: { email, cargo: "coordenacao", motivo: "suporte Nexus Core" },
   }).catch(() => undefined);
   res.status(201).json({ ok: true, mensagem: "Acesso de suporte liberado em " + escola.nome + ". Ele aparece em Usuários da escola como \"Nexus Core (suporte)\"." });
+});
+
+// [VIRADA-ANO] (24/10/2026) POST /api/master/escolas/:id/liberar-virada -- a Nexus Core libera a virada do
+// ano letivo antes do fim do 3o trimestre (teste na escola de demonstracao ou caso especial).
+router.post("/escolas/:id/liberar-virada", async (req, res) => {
+  const escolaId = String(req.params.id);
+  const escola = await db.select({ id: escolasTable.id, nome: escolasTable.nomeFantasia }).from(escolasTable).where(eq(escolasTable.id, escolaId)).then((r) => r[0]);
+  if (!escola) {
+    res.status(404).json({ error: "Escola não encontrada." });
+    return;
+  }
+  const r = await liberarViradaAntes(escolaId, (await emailVerificado(req)) ?? null);
+  await registrarAuditoria({ req, escolaId, entidade: "virada_ano", entidadeId: 0, acao: "alteracao", dadosAnteriores: null, dadosNovos: { liberadaAntes: true, anoPara: r.anoPara } }).catch(() => undefined);
+  res.json({ ok: true, mensagem: `Virada para ${r.anoPara} liberada em ${escola.nome}.` });
 });
 
 export default router;
