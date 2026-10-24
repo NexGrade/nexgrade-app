@@ -10,7 +10,7 @@ import {
 } from "@workspace/api-client-react";
 import { NotificationBell } from "@/components/notification-bell";
 import { CalendarioMesEscola, type ReservaNoCalendario } from "@/components/calendario-mes-escola"; // [CALENDARIO-PROFESSOR]
-import { CalendarDays, Download, Loader2, MonitorSmartphone } from "lucide-react";
+import { CalendarDays, DoorOpen, Download, Loader2, MonitorSmartphone } from "lucide-react";
 import {
   useGetMeuProfessor,
   useGetMinhaAgendaHorario,
@@ -24,7 +24,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { NovaReservaDialog, useReservasTablets, CHAVE_TABLETS } from "@/components/nova-reserva-dialog"; // [NOVA-RESERVA-COMPARTILHADA]
+import { NovaReservaDialog, useReservasTablets, CHAVE_TABLETS, type PreenchimentoReserva } from "@/components/nova-reserva-dialog"; // [NOVA-RESERVA-COMPARTILHADA]
+import { QuadroSemanaReservas } from "@/components/quadro-semana-reservas"; // [QUADRO-SEMANA]
 
 const DIAS = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
 
@@ -170,6 +171,10 @@ export default function MinhaAgendaPage() {
   const { podeInstalar, instalar } = usePwaInstall();
   const { toast } = useToast();
   const [mostrarCalendario, setMostrarCalendario] = useState(true); // [AGENDA-CALENDARIO] visivel por padrao
+  // [QUADRO-SEMANA] espacos livres da semana (sem nomes); clicar numa aula sua abre a reserva preenchida
+  const [mostrarLivres, setMostrarLivres] = useState(false);
+  const [dataLivres, setDataLivres] = useState(() => { const h = new Date(); return `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, "0")}-${String(h.getDate()).padStart(2, "0")}`; });
+  const [preencher, setPreencher] = useState<PreenchimentoReserva | null>(null);
   const queryClient = useQueryClient();
   const { data: professor, isLoading: carregandoProfessor } = useGetMeuProfessor();
   const { data: notificacoes } = useGetMinhaAgendaNotificacoes({
@@ -324,8 +329,24 @@ export default function MinhaAgendaPage() {
             {baixandoPdf ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
             <span className="hidden sm:inline">Baixar PDF</span><span className="sm:hidden">PDF</span>
           </Button>
+          <Button variant={mostrarLivres ? "default" : "outline"} onClick={() => setMostrarLivres((v) => !v)}>{/* [QUADRO-SEMANA] */}
+            <DoorOpen className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Espaços livres</span><span className="sm:hidden">Livres</span>
+          </Button>
           <NovaReservaDialog />
         </div>
+        <NovaReservaDialog semBotao abrirCom={preencher} aoFechar={() => setPreencher(null)} />{/* [QUADRO-SEMANA] aberta pelo quadro */}
+
+        {mostrarLivres && (
+          <Card>{/* [QUADRO-SEMANA] */}
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-lg"><DoorOpen className="h-5 w-5" /> Espaços livres da semana</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <QuadroSemanaReservas modo="professor" data={dataLivres} onMudarData={setDataLivres} onReservar={setPreencher} />
+            </CardContent>
+          </Card>
+        )}
 
         {mostrarCalendario && <CalendarioMesEscola reservas={reservasNoCalendario} />}{/* [CALENDARIO-PROFESSOR] mesmo visual do Calendario Escolar */}
 

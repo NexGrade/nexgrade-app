@@ -5,6 +5,7 @@ import { comunicadosTable, db, professoresTable, recursosTable, reservasRecursos
 import { getEscolaId } from "../lib/escola-id";
 import { dadosAgenda } from "../lib/agenda-professor";
 import { ocupacaoDoDia, ocupacaoDoMes } from "../lib/ocupacao-reservas";
+import { espacosLivresDaSemana } from "../lib/espacos-livres"; // [QUADRO-SEMANA]
 import { criarLoteReservas, LoteReservaBody } from "../lib/reservas-lote";
 import { criarReservasRecursos, ocupacaoRecursosDoDia, ReservaRecursoBody } from "../lib/reservas-recursos";
 
@@ -119,6 +120,16 @@ router.get("/semana", async (req, res) => {
       .orderBy(asc(reservasRecursosTable.data), asc(reservasRecursosTable.numeroAula)),
   ]);
   res.json({ inicio, fim, espacos, tablets });
+});
+
+// [QUADRO-SEMANA] (24/10/2026) quadro da semana por periodo e aula: reservas (com professor) e espacos livres
+router.get("/quadro-semana", async (req, res) => {
+  const q = req.query.data;
+  if (typeof q !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(q)) {
+    res.status(400).json({ error: "Informe a data (AAAA-MM-DD)." });
+    return;
+  }
+  res.json(await espacosLivresDaSemana(getEscolaId(req), q));
 });
 
 async function avisarProfessor(escolaId: string, professorId: number, titulo: string, data: string, quantas: number) {

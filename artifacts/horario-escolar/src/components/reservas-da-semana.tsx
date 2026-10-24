@@ -6,6 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"; // [PDF-SEMANA-TURNO]
+import { QuadroSemanaReservas } from "@/components/quadro-semana-reservas"; // [QUADRO-SEMANA]
+import type { PreenchimentoReserva } from "@/components/nova-reserva-dialog";
 import { DIA_CURTO, NOME_TURNO, abreviarNome, abreviarSala, rotuloAulas } from "@/lib/reservas-formato";
 
 // [RESERVAS-DA-SEMANA] (17/10/2026) Card do gestor de reservas (portal e app do gestor): tudo o que
@@ -58,16 +61,22 @@ export function useSemanaReservas(data: string) {
 }
 
 // [ESPACOS-LIVRES] (24/10/2026) PDF do quadro da semana (reservas + espacos livres) para mandar no grupo
+// [PDF-SEMANA-TURNO] um PDF por periodo (cada grupo de professores recebe o seu)
+const PERIODOS_PDF = [
+  { turno: "matutino", nome: "Manhã" },
+  { turno: "vespertino", nome: "Tarde" },
+  { turno: "noturno", nome: "Noite" },
+];
 function BotaoPdfSemana({ segunda }: { segunda: string }) {
-  const [gerando, setGerando] = useState(false);
-  const baixar = async () => {
-    setGerando(true);
+  const [gerando, setGerando] = useState<string | null>(null);
+  const baixar = async (turno: string) => {
+    setGerando(turno);
     try {
-      const blob = await customFetch<Blob>(`/api/export/quadro-reservas-semana-pdf?data=${segunda}`, { responseType: "blob" });
+      const blob = await customFetch<Blob>(`/api/export/quadro-reservas-semana-pdf?data=${segunda}&turno=${turno}`, { responseType: "blob" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `reservas_semana_${segunda}.pdf`;
+      a.download = `reservas_semana_${PERIODOS_PDF.find((p) => p.turno === turno)?.nome.toLowerCase().replace("ã", "a") ?? turno}_${segunda}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -75,18 +84,27 @@ function BotaoPdfSemana({ segunda }: { segunda: string }) {
     } catch {
       window.alert("Não foi possível gerar o PDF da semana. Tente de novo.");
     } finally {
-      setGerando(false);
+      setGerando(null);
     }
   };
   return (
-    <Button type="button" variant="outline" size="sm" className="h-7" onClick={baixar} disabled={gerando} title="Reservas e espaços livres da semana, para imprimir ou mandar no grupo">
-      {gerando ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <FileDown className="mr-1.5 h-3.5 w-3.5" />} PDF da semana
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button type="button" variant="outline" size="sm" className="h-7" disabled={!!gerando} title="Reservas e espaços livres da semana, para imprimir ou mandar no grupo">
+          {gerando ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <FileDown className="mr-1.5 h-3.5 w-3.5" />} PDF da semana
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel className="text-xs">Período</DropdownMenuLabel>
+        {PERIODOS_PDF.map((p) => <DropdownMenuItem key={p.turno} onSelect={() => void baixar(p.turno)}>{p.nome}</DropdownMenuItem>)}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
-export function ReservasDaSemana({ data, onEscolherDia, onFechar }: { data: string; onEscolherDia?: (iso: string) => void; onFechar?: () => void }) {
+export function ReservasDaSemana({ data, onEscolherDia, onFechar, onReservar }: { data: string; onEscolherDia?: (iso: string) => void; onFechar?: () => void; onReservar?: (p: PreenchimentoReserva) => void }) {
   const { semana, isLoading, isError, dias, total, aguardando } = useSemanaReservas(data);
+  const [visao, setVisao] = useState<"grade" | "lista">(onReservar ? "grade" : "lista"); // [QUADRO-SEMANA]
 
   return (
     <Card id="reservas-semana-painel" className="scroll-mt-4 border-card-border bg-card shadow-[0_8px_24px_hsl(174_29%_14%/_.04)]" data-testid="card-reservas-semana">
@@ -103,6 +121,16 @@ export function ReservasDaSemana({ data, onEscolherDia, onFechar }: { data: stri
         </div>
         {semana && (
           <div className="flex flex-wrap items-center gap-1.5">
+            {onReservar && (
+              <div className="flex rounded-md border p-0.5">{/* [QUADRO-SEMANA] */}
+                {(["grade", "lista"] as const).map((v) => (
+                  <button key={v} type="button" onClick={() => setVisao(v)}
+                    className={`rounded px-2 py-0.5 text-xs font-semibold ${visao === v ? "bg-[#1565C0] text-white" : "text-muted-foreground hover:bg-muted"}`}>
+                    {v === "grade" ? "Grade" : "Lista"}
+                  </button>
+                ))}
+              </div>
+            )}
             <BotaoPdfSemana segunda={dias[0]!} />
             <Badge variant="secondary">{total} {total === 1 ? "reserva" : "reservas"}</Badge>
             {aguardando > 0 && <Badge className="border border-[#ead58b] bg-[#fff7d7] text-[#796116] hover:bg-[#fff7d7]">{aguardando} aguardando</Badge>}
@@ -111,7 +139,9 @@ export function ReservasDaSemana({ data, onEscolherDia, onFechar }: { data: stri
         )}
       </CardHeader>
       <CardContent className="space-y-1 pt-0">
-        {isLoading ? (
+        {visao === "grade" && onReservar ? (
+          <QuadroSemanaReservas modo="gestor" data={data} onMudarData={(iso) => onEscolherDia?.(iso)} onReservar={onReservar} />
+        ) : isLoading ? (
           <Skeleton className="h-28 w-full" />
         ) : isError || !semana ? (
           <p className="text-sm text-muted-foreground">Não foi possível carregar as reservas da semana.</p>

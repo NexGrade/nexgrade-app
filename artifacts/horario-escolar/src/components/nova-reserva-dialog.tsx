@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery as useQueryOcupacao, useQueryClient } from "@tanstack/react-query";
 import { Calendar as CalendarioUI } from "@/components/ui/calendar"; // [CALENDARIO-RESERVA]
 import { ptBR as ptBRCalendario } from "react-day-picker/locale"; // [CALENDARIO-RESERVA]
@@ -142,7 +142,13 @@ function proximaDataDoDia(diaSemana: number, base: string): string {
 }
 
 
-export function NovaReservaDialog({ modo = "professor", professores = [], aoCriar }: { modo?: "professor" | "gestor"; professores?: ProfessorOpcao[]; aoCriar?: () => void }) {
+// [QUADRO-SEMANA] (24/10/2026) abrir ja preenchido a partir de uma celula do quadro da semana
+export type PreenchimentoReserva = { data: string; turno: string; numeroAula: number; salaId?: number };
+
+export function NovaReservaDialog({ modo = "professor", professores = [], aoCriar, abrirCom = null, aoFechar, semBotao = false }: {
+  modo?: "professor" | "gestor"; professores?: ProfessorOpcao[]; aoCriar?: () => void;
+  abrirCom?: PreenchimentoReserva | null; aoFechar?: () => void; semBotao?: boolean;
+}) {
   const gestor = modo === "gestor";
   const BASE = gestor ? "/api/reservas/gestor" : "/api/minha-agenda";
   const off = gestor ? 1 : 0; // no gestor o passo 1 e escolher o professor
@@ -182,6 +188,14 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
   const [equip, setEquip] = useState<Array<{ recursoId: number; numeroAula: number; quantidade: number }>>([]);
 
   const limpar = () => { setProfessorSel(0); setData(""); setTurno(null); setAulasSel([]); setSalaAtual(0); setItens([]); setTitulo(""); setTituloEditado(false); setObservacoes(""); setQuantidade(""); setEquip([]); setRecursoAtualId(0); };
+  // [QUADRO-SEMANA] celula escolhida no quadro: abre com dia, periodo, aula e espaco
+  const preenchido = useRef<PreenchimentoReserva | null>(null);
+  useEffect(() => {
+    if (!abrirCom) return;
+    preenchido.current = abrirCom;
+    setData(abrirCom.data); setTurno(abrirCom.turno); setAulasSel([abrirCom.numeroAula]); setSalaAtual(abrirCom.salaId ?? 0); setItens([]); setEquip([]);
+    setOpen(true);
+  }, [abrirCom]);
   const diaSemana = /^\d{4}-\d{2}-\d{2}$/.test(data) ? diaSemanaDaData(data) : -1;
 
   // aulas do professor no dia escolhido, por turno
@@ -294,6 +308,7 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
     const atualizar = () => {
       queryClient.invalidateQueries({ queryKey: getGetMinhaAgendaReservasQueryKey() });
       queryClient.invalidateQueries({ queryKey: ["ocupacao-salas"] });
+      queryClient.invalidateQueries({ queryKey: ["quadro-semana"] }); // [QUADRO-SEMANA]
       queryClient.invalidateQueries({ queryKey: ["ocupacao-mes"] });
       queryClient.invalidateQueries({ queryKey: CHAVE_TABLETS });
       queryClient.invalidateQueries({ queryKey: ["ocupacao-recursos"] });
@@ -329,14 +344,14 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
         description: [r.pendentes > 0 ? "As reservas pendentes entraram na fila de aprovação da coordenação." : gestor ? "Reservas confirmadas e o professor foi avisado." : "Tudo certo, as reservas já estão na sua agenda.", textoTablets].filter(Boolean).join(" "),
       } : { title: new Set(equipFinais.map((e) => e.recursoId)).size === 1 ? `${nomeRecurso(equipFinais[0]!.recursoId)} reservados` : "Equipamentos reservados", description: textoTablets });
       setOpen(false);
-      limpar();
+      limpar(); preenchido.current = null; aoFechar?.();
     } catch (err: any) {
       atualizar();
       if (espacosFeitos) {
         // os espacos ja foram gravados: nao deixa tentar de novo tudo junto (daria conflito com a propria reserva)
         toast({ title: "Espaços reservados, mas os equipamentos não", description: `${err?.data?.error ?? "Não foi possível reservar os equipamentos."} Abra Nova reserva e tente só os equipamentos.`, variant: "destructive" });
         setOpen(false);
-        limpar();
+        limpar(); preenchido.current = null; aoFechar?.();
       } else {
         toast({ title: "Não foi possível reservar", description: err?.data?.error ?? "Verifique os horários e tente de novo.", variant: "destructive" });
       }
@@ -346,13 +361,15 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) limpar(); }}>
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { limpar(); preenchido.current = null; aoFechar?.(); } }}>
+      {!semBotao && (
       <DialogTrigger asChild>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
           <span className="hidden sm:inline">Nova reserva</span><span className="sm:hidden">Reservar</span>
         </Button>
       </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-2xl max-h-[92dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{gestor ? "Nova reserva para professor" : "Reservar espaço"}</DialogTitle>
@@ -362,7 +379,12 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
             <Passo n={1} titulo="Professor">
               <Select
                 value={professorSel ? String(professorSel) : undefined}
-                onValueChange={(v) => { setProfessorSel(Number(v)); setData(""); setTurno(null); setAulasSel([]); setSalaAtual(0); setItens([]); setEquip([]); setQuantidade(""); setTituloEditado(false); }}
+                onValueChange={(v) => {
+                  setProfessorSel(Number(v)); setItens([]); setEquip([]); setQuantidade(""); setTituloEditado(false);
+                  const p = preenchido.current; // [QUADRO-SEMANA] veio do quadro: mantem dia, periodo, aula e espaco
+                  if (p) { setData(p.data); setTurno(p.turno); setAulasSel([p.numeroAula]); setSalaAtual(p.salaId ?? 0); }
+                  else { setData(""); setTurno(null); setAulasSel([]); setSalaAtual(0); }
+                }}
               >
                 <SelectTrigger><SelectValue placeholder="Para qual professor?" /></SelectTrigger>
                 <SelectContent>
@@ -455,7 +477,7 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
                           <span className="block truncate font-medium">{aula.turmaNome}</span>
                           <span className="block truncate text-muted-foreground">{aula.disciplinaNome}</span>
                         </>
-                      ) : <span className="block">Sem aula sua</span>}
+                      ) : <span className="block">{gestor ? "Sem aula dele" : "Sem aula sua"}</span>}
                       {naLista.length > 0 && (
                         <span className="mt-0.5 block truncate font-medium text-[#1565C0]" title={naLista.map(nomeSala).join(", ")}>
                           Na lista: {naLista.map(nomeSala).join(", ")}

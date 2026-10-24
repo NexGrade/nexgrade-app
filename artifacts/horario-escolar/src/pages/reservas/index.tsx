@@ -7,7 +7,7 @@ import { Link } from "wouter";
 import { useEhGestorReservas } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA]
 import { BotaoRelatorioReservas } from "@/components/relatorio-reservas"; // [RELATORIO-RESERVAS]
 import { MapaOcupacaoSalas } from "@/components/mapa-ocupacao-salas"; // [OCUPACAO-SALAS]
-import { NovaReservaDialog } from "@/components/nova-reserva-dialog"; // [RESERVA-GESTOR]
+import { NovaReservaDialog, type PreenchimentoReserva } from "@/components/nova-reserva-dialog"; // [RESERVA-GESTOR]
 import { ReservasDaSemana, CHAVE_RESERVAS_SEMANA, useSemanaReservas } from "@/components/reservas-da-semana"; // [RESERVAS-DA-SEMANA]
 import { ehSalaTablets } from "@/lib/reservas-formato"; // [MAPA-TABLETS]
 import { BotaoBloqueios, CHAVE_BLOQUEIOS, type BloqueioItem } from "@/components/bloqueios-dialog"; // [BLOQUEIOS]
@@ -334,6 +334,7 @@ export default function ReservasPage() {
   // [CARDS-CLICAVEIS] filtro da agenda do dia (pelos cards) e detalhe da semana (card "Reservas da semana")
   const [filtroStatus, setFiltroStatus] = useState<"confirmada" | "pendente" | null>(null);
   const [mostrarSemana, setMostrarSemana] = useState(true); // [RESERVAS-SEMANA-VISIVEL] (24/10) a semana ja abre visivel
+  const [preencher, setPreencher] = useState<PreenchimentoReserva | null>(null); // [QUADRO-SEMANA]
   const semanaInfo = useSemanaReservas(selectedDate);
   // [BLOQUEIOS] bloqueios ativos do dia escolhido (aparecem no mapa de ocupacao)
   const bloqueiosDoDiaQuery = useQuery({
@@ -380,6 +381,7 @@ export default function ReservasPage() {
     queryClient.invalidateQueries({ queryKey: getGetReservasResumoQueryKey({ data: selectedDate }) });
     queryClient.invalidateQueries({ queryKey: getListRegrasReservaProfessoresQueryKey() });
     queryClient.invalidateQueries({ queryKey: CHAVE_RESERVAS_SEMANA }); // [RESERVAS-DA-SEMANA]
+    queryClient.invalidateQueries({ queryKey: ["quadro-semana"] }); // [QUADRO-SEMANA]
     queryClient.invalidateQueries({ queryKey: ["ocupacao-recursos"] }); // [MAPA-TABLETS]
     queryClient.invalidateQueries({ queryKey: CHAVE_BLOQUEIOS }); // [BLOQUEIOS]
   };
@@ -551,7 +553,8 @@ export default function ReservasPage() {
         />
       </div>
 
-      {mostrarSemana && <ReservasDaSemana data={selectedDate} onEscolherDia={setSelectedDate} onFechar={() => setMostrarSemana(false)} />}{/* [RESERVAS-DA-SEMANA] portal e app do gestor */}
+      {mostrarSemana && <ReservasDaSemana data={selectedDate} onEscolherDia={setSelectedDate} onFechar={() => setMostrarSemana(false)} onReservar={setPreencher} />}
+      <NovaReservaDialog modo="gestor" professores={professores} aoCriar={invalidateReservations} semBotao abrirCom={preencher} aoFechar={() => setPreencher(null)} />{/* [QUADRO-SEMANA] aberta pela grade da semana */}{/* [RESERVAS-DA-SEMANA] portal e app do gestor */}
 
       {isError ? (
         <Card className="border-[#e7b9b0] bg-[#fff7f4]">

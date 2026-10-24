@@ -40,7 +40,7 @@ export type EspacosLivresSemana = {
   turnos: Array<{
     turno: string;
     // livres[dia] = ids dos espacos livres; reservadas[dia] = "Espaco - Professor" (pendente marcada)
-    aulas: Array<{ numeroAula: number; horaInicio: string; livres: number[][]; reservadas: Array<Array<{ texto: string; pendente: boolean }>> }>;
+    aulas: Array<{ numeroAula: number; horaInicio: string; livres: number[][]; reservadas: Array<Array<{ texto: string; pendente: boolean; salaId: number | null }>> }>;
   }>;
 };
 
@@ -63,7 +63,7 @@ export async function espacosLivresDaSemana(escolaId: string, dataQualquer: stri
     db.select({ turno: horarioSlotsTable.turno, numeroAula: horarioSlotsTable.numeroAula, horaInicio: horarioSlotsTable.horaInicio, letivo: horarioSlotsTable.letivo })
       .from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId)),
     Promise.all(dias.map((d) => ocupacaoDoDia(escolaId, d))),
-    db.select({ data: reservasTable.data, numeroAula: reservasTable.numeroAula, turno: reservasTable.turno, status: reservasTable.status, nome: salasTable.nome, professor: professoresTable.nome })
+    db.select({ salaId: reservasTable.salaId, data: reservasTable.data, numeroAula: reservasTable.numeroAula, turno: reservasTable.turno, status: reservasTable.status, nome: salasTable.nome, professor: professoresTable.nome })
       .from(reservasTable)
       .innerJoin(salasTable, eq(salasTable.id, reservasTable.salaId))
       .innerJoin(professoresTable, eq(professoresTable.id, reservasTable.professorId))
@@ -76,9 +76,9 @@ export async function espacosLivresDaSemana(escolaId: string, dataQualquer: stri
   ]);
   const reservasNaAula = (dia: string, turno: string, numeroAula: number) => [
     ...resEspacos.filter((r) => String(r.data).slice(0, 10) === dia && r.numeroAula === numeroAula && (r.turno === turno || r.turno === null))
-      .map((r) => ({ texto: `${abreviarEspaco(r.nome)}: ${abreviarProfessor(r.professor)}`, pendente: r.status === "pendente" })),
+      .map((r) => ({ texto: `${abreviarEspaco(r.nome)}: ${abreviarProfessor(r.professor)}`, pendente: r.status === "pendente", salaId: r.salaId as number | null })),
     ...resEquip.filter((r) => String(r.data).slice(0, 10) === dia && r.numeroAula === numeroAula && r.turno === turno)
-      .map((r) => ({ texto: `${abreviarEspaco(r.nome)} (${r.quantidade}): ${abreviarProfessor(r.professor)}`, pendente: r.status === "pendente" })),
+      .map((r) => ({ texto: `${abreviarEspaco(r.nome)} (${r.quantidade}): ${abreviarProfessor(r.professor)}`, pendente: r.status === "pendente", salaId: null as number | null })),
   ].sort((a, b) => a.texto.localeCompare(b.texto, "pt-BR"));
   const espacos = salas.filter((s) => !ehSalaTablets(s.nome)).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
@@ -185,7 +185,7 @@ export async function gerarPdfEspacosLivres(nomeEscola: string, s: EspacosLivres
   if (s.espacos.length === 0 || s.turnos.length === 0) {
     pagina = pdf.addPage([LARG, ALT]);
     texto(nomeEscola, M, ALT - 40, 13, negrito);
-    texto(s.espacos.length === 0 ? "Nenhum espaço ativo cadastrado." : "Nenhum horário de aula cadastrado.", M, ALT - 60, 10, fonte, CINZA_ESCURO);
+    texto(s.espacos.length === 0 ? "Nenhum espaço ativo cadastrado." : "Nenhum horário de aula cadastrado neste período.", M, ALT - 60, 10, fonte, CINZA_ESCURO);
     return pdf.save();
   }
 
@@ -224,4 +224,9 @@ export async function gerarPdfEspacosLivres(nomeEscola: string, s: EspacosLivres
     p.drawText(t, { x: LARG - M - w, y: 14, size: 7, font: fonte, color: CINZA_ESCURO });
   });
   return pdf.save();
+}
+
+// [QUADRO-SEMANA] versao para o professor (Minha Agenda): so os espacos livres, sem quem reservou
+export function semNomes(s: EspacosLivresSemana): EspacosLivresSemana {
+  return { ...s, turnos: s.turnos.map((t) => ({ ...t, aulas: t.aulas.map((a) => ({ ...a, reservadas: a.reservadas.map(() => []) })) })) };
 }

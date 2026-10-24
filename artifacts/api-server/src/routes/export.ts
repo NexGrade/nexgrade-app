@@ -1100,9 +1100,13 @@ router.get("/quadro-reservas-semana-pdf", async (req, res) => {
   }
   const escolaId = getEscolaId(req);
   const semana = await espacosLivresDaSemana(escolaId, q);
+  // [PDF-SEMANA-TURNO] um periodo por PDF (cada grupo recebe o seu); sem turno = todos
+  const turno = typeof req.query.turno === "string" && ["matutino", "vespertino", "noturno"].includes(req.query.turno) ? req.query.turno : null;
+  if (turno) semana.turnos = semana.turnos.filter((t) => t.turno === turno);
   const pdfBytes = await gerarPdfEspacosLivres(await buscarNomeEscola(escolaId), semana);
+  const nomeTurno: Record<string, string> = { matutino: "manha", vespertino: "tarde", noturno: "noite" };
   res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", `attachment; filename="reservas_semana_${semana.inicio}.pdf"`);
+  res.setHeader("Content-Disposition", `attachment; filename="reservas_semana_${turno ? nomeTurno[turno] + "_" : ""}${semana.inicio}.pdf"`);
   res.send(Buffer.from(pdfBytes));
 });
 

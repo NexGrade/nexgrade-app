@@ -1,4 +1,5 @@
 import { ocupacaoDoDia, ocupacaoDoMes } from "../lib/ocupacao-reservas"; // [OCUPACAO-SALAS] [CALENDARIO-RESERVA]
+import { espacosLivresDaSemana, semNomes } from "../lib/espacos-livres"; // [QUADRO-SEMANA]
 import { Router } from "express";
 import { getAuth } from "@clerk/express";
 import { emailVerificado } from "../lib/identidade"; // [ACESSOS-ESCOLA]
@@ -413,6 +414,21 @@ router.get("/ocupacao", async (req, res) => {
 
 // [CALENDARIO-RESERVA] ocupacao de um espaco no mes (sem nomes), para o calendario
 // da "Nova reserva".
+// [QUADRO-SEMANA] (24/10/2026) espacos livres da semana por periodo e aula, sem nomes de quem reservou
+router.get("/espacos-livres-semana", async (req, res) => {
+  const professor = await resolverProfessorLogado(req);
+  if (!professor) {
+    res.status(404).json({ error: "Nenhum professor vinculado a esta conta." });
+    return;
+  }
+  const q = req.query.data;
+  if (typeof q !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(q)) {
+    res.status(400).json({ error: "Informe a data (AAAA-MM-DD)." });
+    return;
+  }
+  res.json(semNomes(await espacosLivresDaSemana(getEscolaId(req), q)));
+});
+
 router.get("/ocupacao-mes", async (req, res) => {
   const professor = await resolverProfessorLogado(req);
   if (!professor) {
