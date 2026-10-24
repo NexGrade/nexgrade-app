@@ -507,7 +507,7 @@ export default function ReservasPage() {
           </div>
           <h1 className="font-heading text-4xl font-bold tracking-tight text-foreground">Reservas de espaços</h1>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
-            Um quadro único para proteger salas, quadras e laboratórios do improviso — sempre alinhado ao horário dos professores.
+            Agende laboratórios, quadra, salas e equipamentos para as aulas dos professores e veja o que está livre em cada aula da semana.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
