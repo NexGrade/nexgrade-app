@@ -334,6 +334,21 @@ Cargos:
 - Sair: botão "Sair" no topo, em todos os cargos.`,
   },
 
+  virada_ano: {
+    titulo: "Virada do ano letivo (preparar a escola para o ano seguinte)",
+    palavras: ["virada", "ano novo", "ano letivo", "próximo ano", "2027", "começo do ano", "novas turmas", "novos professores", "início do ano", "renovar"],
+    texto: `Menu Configurações → Virada do ano. Só direção, coordenação e secretaria.
+- Fica liberada a partir do fim do 3º trimestre do calendário da escola (antes disso, só se a Nexus Core liberar). Até lá dá para abrir a tela, conferir e planejar.
+- As turmas CONTINUAM (mesma série, turno, disciplinas, cargas e professores) e passam para o ano novo: a turma é a vaga na grade, não o grupo de alunos. Ajuste só o que mudou:
+  1. Baixe os PDFs da grade do ano que termina (por turma e por professor).
+  2. Turmas: lixeira = a turma fecha; botão de copiar = abre mais uma turma da mesma série (mesmas disciplinas e cargas, sem professor). Dá para trocar o nome.
+  3. Professores: todos continuam; desmarque quem saiu (fica inativo, não é excluído, e sai das disciplinas).
+  4. Digite "VIRAR" e o ano (ex.: VIRAR 2027) e clique em Virar.
+- Na virada são zerados: grade oficial, experimentos, disponibilidade (bloqueios e HA) e códigos SERE das turmas. Tudo fica guardado e as reservas já feitas continuam.
+- "Desfazer virada" volta tudo como estava, enquanto não houver grade oficial do ano novo.
+- Depois: calendário do ano novo, cadastrar professores novos, escolher professor nas disciplinas vazias (Turmas → Sem professor), lançar a disponibilidade, códigos do RCO e gerar a grade no Modo Experimental.`,
+  },
+
   historico: {
     titulo: "Histórico de alterações (auditoria)",
     palavras: ["histórico", "auditoria", "quem alterou", "log", "registro de alterações"],

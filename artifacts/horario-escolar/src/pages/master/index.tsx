@@ -30,7 +30,7 @@ import {
 import {
   Building2, Users, GraduationCap, CalendarDays, Sparkles, ShieldCheck, Plus, Pencil, XCircle,
   Search, MapPin, Mail, Phone, KeyRound, // [MASTER-LAYOUT]
-  LogIn, LifeBuoy, // [MASTER-SUPORTE]
+  LogIn, LifeBuoy, CalendarClock, // [MASTER-SUPORTE]
 } from "lucide-react";
 
 // RF-MASTER-01 a RF-MASTER-03: painel administrativo da plataforma —
@@ -174,6 +174,18 @@ function EscolasTable() {
       const e = err as { data?: { error?: string }; message?: string };
       toast({ title: "Não foi possível liberar", description: e?.data?.error ?? e?.message ?? "Tente novamente.", variant: "destructive" });
       setLiberando(null);
+    }
+  }
+
+  // [VIRADA-ANO] (24/10/2026) libera a virada do ano letivo antes do fim do ano (teste ou caso especial)
+  async function liberarVirada(id: string, nome: string) {
+    if (!window.confirm("Liberar a virada do ano letivo em " + nome + " antes do fim do ano letivo?\n\nA escola passa a poder virar para o ano seguinte (com backup e desfazer). Use para a escola de demonstração ou em caso especial.")) return;
+    try {
+      const r = await customFetch<{ mensagem?: string }>("/api/master/escolas/" + encodeURIComponent(id) + "/liberar-virada", { method: "POST", responseType: "json" });
+      toast({ title: "Virada liberada", description: r?.mensagem });
+    } catch (err) {
+      const e = err as { data?: { error?: string }; message?: string };
+      toast({ title: "Não foi possível liberar", description: e?.data?.error ?? e?.message ?? "Tente novamente.", variant: "destructive" });
     }
   }
 
@@ -324,6 +336,9 @@ function EscolasTable() {
                       <LifeBuoy className="h-3.5 w-3.5" /> {liberando === e.id ? "Liberando..." : "Liberar meu acesso de suporte"}
                     </Button>
                   ))}
+                  <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-xs" onClick={() => liberarVirada(e.id, e.nomeFantasia)} title="Liberar a virada do ano letivo antes do fim do ano">
+                    <CalendarClock className="h-3.5 w-3.5" /> Liberar virada
+                  </Button>{/* [VIRADA-ANO] */}
                   <Badge className={e.planoAtivo ? "bg-emerald-600 text-white hover:bg-emerald-600" : undefined} variant={e.planoAtivo ? undefined : "secondary"}>
                     {e.planoAtivo ? "Ativa" : "Suspensa"}
                   </Badge>

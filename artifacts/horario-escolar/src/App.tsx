@@ -26,6 +26,7 @@ import { Sparkles, Clock, Lock, CalendarDays, Library, DoorOpen, Download, FileU
 // tela ainda está chegando (só na primeira vez que aquela rota é
 // visitada nessa sessão -- depois fica em cache no navegador).
 const Dashboard = lazy(() => import("@/pages/dashboard"));
+const ViradaAnoPage = lazy(() => import("@/pages/virada-ano/index")); // [VIRADA-ANO]
 const ProfessoresList = lazy(() => import("@/pages/professores/index"));
 const HorarioHubPage = lazy(() => import("@/pages/horario/index"));
 const ProfessorNovo = lazy(() => import("@/pages/professores/novo"));
@@ -520,6 +521,7 @@ function Router() {
       <Route path="/configuracoes/seed-pr" component={() => <ProtectedRoute component={ConformidadeSeedPrPage} />} />
       <Route path="/export" component={() => <ProtectedRoute component={ExportPage} />} />
       <Route path="/codigos-rco" component={() => <ProtectedRoute component={CodigosRcoPage} />} />{/* [CODIGOS-RCO-TELA] */}
+      <Route path="/virada-ano" component={() => <ProtectedRoute component={ViradaAnoPage} />} />{/* [VIRADA-ANO] */}
       <Route path="/assistente" component={() => <ProtectedRoute component={AssistentePage} />} />
       <Route path="/importar" component={() => <ProtectedRoute component={ImportarPage} />} />
       <Route path="/planos" component={() => <ProtectedRoute component={PlanosPage} />} />
