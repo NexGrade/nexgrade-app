@@ -11,6 +11,7 @@ import { GRADES_SEED_RCO } from "../lib/grades-seed-rco"; // [RCO-EXPORT-BANCO]
 import { resolverCoddisc } from "../lib/rco-codigos"; // [CODIGOS-RCO-TELA]
 import { getEscolaId } from "../lib/escola-id";
 import { buscarReservasParaRelatorio, gerarPdfReservasPorProfessor } from "../lib/relatorio-reservas"; // [RELATORIO-RESERVAS]
+import { espacosLivresDaSemana, gerarPdfEspacosLivres } from "../lib/espacos-livres"; // [ESPACOS-LIVRES]
 import { ehBloqueioReal } from "../lib/bloqueio-real";
 import { gerarPdfGradeCompacta, type BlocoGrade } from "../lib/pdf-grade";
 import { gerarPdfCargaProfessores, type RelatorioProfessor } from "../lib/pdf-carga-professor";
@@ -1087,6 +1088,21 @@ router.get("/reservas-pdf", async (req, res) => {
   const sufixo = (inicio ? "_" + inicio : "") + (fim ? "_a_" + fim : "");
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", `attachment; filename="reservas_por_professor${sufixo}.pdf"`);
+  res.send(Buffer.from(pdfBytes));
+});
+
+// [ESPACOS-LIVRES] (24/10/2026) quadro da semana (reservas + espacos livres) em PDF para o grupo dos professores
+router.get("/quadro-reservas-semana-pdf", async (req, res) => {
+  const q = req.query.data;
+  if (typeof q !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(q)) {
+    res.status(400).json({ error: "Informe a data (AAAA-MM-DD)." });
+    return;
+  }
+  const escolaId = getEscolaId(req);
+  const semana = await espacosLivresDaSemana(escolaId, q);
+  const pdfBytes = await gerarPdfEspacosLivres(await buscarNomeEscola(escolaId), semana);
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="reservas_semana_${semana.inicio}.pdf"`);
   res.send(Buffer.from(pdfBytes));
 });
 

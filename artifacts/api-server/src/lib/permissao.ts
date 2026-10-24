@@ -84,7 +84,7 @@ export function ehLeituraSomenteAdmin(caminhoBruto: string): boolean {
 // gestor de reservas). O professor usa so a Minha Agenda, que de proposito nao mostra quem reservou.
 // Alem do portal do gestor, cobre as listas e relatorios de reservas (trazem o nome de quem reservou):
 // so as telas de Reservas (equipe) usam; o professor nao abre essas telas e nao chama estas rotas.
-const LEITURAS_DA_EQUIPE = ["/reservas", "/export/reservas-pdf", "/export/reservas-dados"];
+const LEITURAS_DA_EQUIPE = ["/reservas", "/export/reservas-pdf", "/export/reservas-dados", "/export/quadro-reservas-semana-pdf"]; // [ESPACOS-LIVRES]
 export function ehLeituraDaEquipe(caminhoBruto: string): boolean {
   const caminho = normalizarCaminho(caminhoBruto);
   return LEITURAS_DA_EQUIPE.some((p) => caminho === p || caminho.startsWith(p + "/"));

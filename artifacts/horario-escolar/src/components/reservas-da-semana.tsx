@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, FileDown, Loader2, X } from "lucide-react";
 import { customFetch } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -57,6 +57,34 @@ export function useSemanaReservas(data: string) {
   return { semana, isLoading, isError, dias, total, aguardando };
 }
 
+// [ESPACOS-LIVRES] (24/10/2026) PDF do quadro da semana (reservas + espacos livres) para mandar no grupo
+function BotaoPdfSemana({ segunda }: { segunda: string }) {
+  const [gerando, setGerando] = useState(false);
+  const baixar = async () => {
+    setGerando(true);
+    try {
+      const blob = await customFetch<Blob>(`/api/export/quadro-reservas-semana-pdf?data=${segunda}`, { responseType: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `reservas_semana_${segunda}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      window.alert("Não foi possível gerar o PDF da semana. Tente de novo.");
+    } finally {
+      setGerando(false);
+    }
+  };
+  return (
+    <Button type="button" variant="outline" size="sm" className="h-7" onClick={baixar} disabled={gerando} title="Reservas e espaços livres da semana, para imprimir ou mandar no grupo">
+      {gerando ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <FileDown className="mr-1.5 h-3.5 w-3.5" />} PDF da semana
+    </Button>
+  );
+}
+
 export function ReservasDaSemana({ data, onEscolherDia, onFechar }: { data: string; onEscolherDia?: (iso: string) => void; onFechar?: () => void }) {
   const { semana, isLoading, isError, dias, total, aguardando } = useSemanaReservas(data);
 
@@ -74,7 +102,8 @@ export function ReservasDaSemana({ data, onEscolherDia, onFechar }: { data: stri
           </div>{/* [RESERVAS-SEMANA-VISIVEL] navega de semana em semana */}
         </div>
         {semana && (
-          <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <BotaoPdfSemana segunda={dias[0]!} />
             <Badge variant="secondary">{total} {total === 1 ? "reserva" : "reservas"}</Badge>
             {aguardando > 0 && <Badge className="border border-[#ead58b] bg-[#fff7d7] text-[#796116] hover:bg-[#fff7d7]">{aguardando} aguardando</Badge>}
             {onFechar && <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={onFechar} title="Fechar" aria-label="Fechar reservas da semana"><X className="h-4 w-4" /></Button>}
