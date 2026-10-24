@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, X } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { customFetch } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -67,7 +67,11 @@ export function ReservasDaSemana({ data, onEscolherDia, onFechar }: { data: stri
           <CardTitle className="flex items-center gap-2 font-heading text-lg font-bold">
             <CalendarDays className="h-5 w-5 text-primary" /> Reservas da semana
           </CardTitle>
-          <p className="mt-0.5 text-xs text-muted-foreground">{ddmm(dias[0]!)} a {ddmm(dias[4]!)} · segunda a sexta</p>
+          <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+            {onEscolherDia && <Button type="button" variant="ghost" size="icon" className="h-6 w-6" title="Semana anterior" aria-label="Semana anterior" onClick={() => onEscolherDia(somaDias(dias[0]!, -7))}><ChevronLeft className="h-3.5 w-3.5" /></Button>}
+            <span>{ddmm(dias[0]!)} a {ddmm(dias[4]!)} · segunda a sexta</span>
+            {onEscolherDia && <Button type="button" variant="ghost" size="icon" className="h-6 w-6" title="Próxima semana" aria-label="Próxima semana" onClick={() => onEscolherDia(somaDias(dias[0]!, 7))}><ChevronRight className="h-3.5 w-3.5" /></Button>}
+          </div>{/* [RESERVAS-SEMANA-VISIVEL] navega de semana em semana */}
         </div>
         {semana && (
           <div className="flex items-center gap-1.5">

@@ -66,6 +66,81 @@ function Passo({ n, titulo: t, children }: { n: number; titulo: string; children
 
 type ProfessorOpcao = { id: number; nome: string; ativo?: boolean | null };
 
+// [RESERVA-GESTOR-GRADE] (24/10/2026) Depois de escolher o professor, o gestor ve a grade da semana
+// dele (turma em cada aula). Clicar numa aula ja escolhe o proximo dia com essa aula, o periodo e a aula.
+const DIAS_GRADE = ["Seg", "Ter", "Qua", "Qui", "Sex"];
+function GradeDoProfessor({ aulas, horarios, dataSel, turnoSel, aulasSel, onEscolher }: {
+  aulas: Array<{ diaSemana: number; numeroAula: number; turno: string; turmaNome: string; disciplinaNome: string }>;
+  horarios: Array<{ turno: string; numeroAula: number; horaInicio: string }>;
+  dataSel: string; turnoSel: string | null; aulasSel: number[];
+  onEscolher: (diaSemana: number, turno: string, numeroAula: number) => void;
+}) {
+  const turnos = ORDEM_PERIODO.filter((t) => aulas.some((a) => a.turno === t));
+  if (!turnos.length) return <p className="text-sm text-muted-foreground">Este professor não tem aulas na grade oficial.</p>;
+  const diaSel = /^\d{4}-\d{2}-\d{2}$/.test(dataSel) ? diaSemanaDaData(dataSel) : -1;
+  return (
+    <div className="space-y-3">
+      {turnos.map((t) => {
+        const nums = [...new Set([...horarios.filter((h) => h.turno === t).map((h) => h.numeroAula), ...aulas.filter((a) => a.turno === t).map((a) => a.numeroAula)])].sort((x, y) => x - y);
+        return (
+          <div key={t} className="overflow-x-auto">
+            <p className="mb-1 text-xs font-semibold text-muted-foreground">{NOME_PERIODO[t] ?? t}</p>
+            <table className="w-full border-collapse text-[11px]">
+              <thead>
+                <tr>
+                  <th className="w-12 border bg-muted/50 px-1 py-0.5 text-left font-medium">Aula</th>
+                  {DIAS_GRADE.map((d) => <th key={d} className="border bg-muted/50 px-1 py-0.5 font-medium">{d}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {nums.map((n) => {
+                  const hora = horarios.find((h) => h.turno === t && h.numeroAula === n)?.horaInicio?.slice(0, 5) ?? "";
+                  return (
+                    <tr key={n}>
+                      <td className="border px-1 py-0.5 tabular-nums text-muted-foreground">{n}ª{hora ? <span className="block text-[10px]">{hora}</span> : null}</td>
+                      {DIAS_GRADE.map((_, d) => {
+                        const a = aulas.find((x) => x.turno === t && x.diaSemana === d && x.numeroAula === n);
+                        if (!a) return <td key={d} className="border bg-muted/20" />;
+                        const marcada = d === diaSel && turnoSel === t && aulasSel.includes(n);
+                        return (
+                          <td key={d} className="border p-0">
+                            <button
+                              type="button"
+                              onClick={() => onEscolher(d, t, n)}
+                              title={`${a.turmaNome} · ${a.disciplinaNome} — reservar nesta aula`}
+                              className={`block w-full px-1 py-1 text-center font-medium transition-colors ${marcada ? "bg-[#1565C0] text-white" : "bg-[#E3F2FD] text-[#0D47A1] hover:bg-[#BBDEFB]"}`}
+                            >
+                              {a.turmaNome}
+                            </button>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        );
+      })}
+      <p className="text-xs text-muted-foreground">Clique numa aula para reservar no próximo dia em que ela acontece, ou escolha a data no calendário abaixo.</p>
+    </div>
+  );
+}
+
+// proxima data (a partir de hoje, ou da semana da data ja escolhida) que cai no dia da semana pedido
+function proximaDataDoDia(diaSemana: number, base: string): string {
+  const hoje = new Date();
+  const hojeISO = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
+  const ref = /^\d{4}-\d{2}-\d{2}$/.test(base) && base >= hojeISO ? base : hojeISO;
+  const d = new Date(`${ref}T12:00:00Z`);
+  const dow = d.getUTCDay() === 0 ? 6 : d.getUTCDay() - 1; // 0 = segunda
+  d.setUTCDate(d.getUTCDate() - (dow > 4 ? dow - 7 : dow) + diaSemana); // segunda da semana de ref (fim de semana -> proxima)
+  let iso = d.toISOString().slice(0, 10);
+  if (iso < hojeISO) { d.setUTCDate(d.getUTCDate() + 7); iso = d.toISOString().slice(0, 10); }
+  return iso;
+}
+
 
 export function NovaReservaDialog({ modo = "professor", professores = [], aoCriar }: { modo?: "professor" | "gestor"; professores?: ProfessorOpcao[]; aoCriar?: () => void }) {
   const gestor = modo === "gestor";
@@ -295,6 +370,20 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">A reserva já nasce confirmada e o professor recebe um aviso. Só aparecem as aulas dele naquele dia.</p>
+              {professorSel > 0 && dadosHorario && (
+                <GradeDoProfessor
+                  aulas={dadosHorario.aulas ?? []}
+                  horarios={dadosHorario.horarios ?? []}
+                  dataSel={data}
+                  turnoSel={turno}
+                  aulasSel={aulasSel}
+                  onEscolher={(d, t, n) => {
+                    const iso = proximaDataDoDia(d, data);
+                    if (iso !== data || turno !== t) { setData(iso); setTurno(t); setAulasSel([n]); setItens([]); setEquip([]); return; }
+                    setAulasSel((l) => (l.includes(n) ? l.filter((x) => x !== n) : [...l, n]));
+                  }}
+                />
+              )}
             </Passo>
           )}
 
@@ -313,7 +402,7 @@ export function NovaReservaDialog({ modo = "professor", professores = [], aoCria
           {data && (
             <Passo n={2 + off} titulo="Período">
               {turnosDoDia.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Você não tem aula neste dia. A reserva é feita para as suas aulas: escolha outro dia.</p>
+                <p className="text-sm text-muted-foreground">{gestor ? "Este professor não tem aula neste dia. A reserva é feita para as aulas dele: escolha outro dia." : "Você não tem aula neste dia. A reserva é feita para as suas aulas: escolha outro dia."}</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {ORDEM_PERIODO.map((t) => {

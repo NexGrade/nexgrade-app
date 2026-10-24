@@ -333,7 +333,7 @@ export default function ReservasPage() {
   });
   // [CARDS-CLICAVEIS] filtro da agenda do dia (pelos cards) e detalhe da semana (card "Reservas da semana")
   const [filtroStatus, setFiltroStatus] = useState<"confirmada" | "pendente" | null>(null);
-  const [mostrarSemana, setMostrarSemana] = useState(false);
+  const [mostrarSemana, setMostrarSemana] = useState(true); // [RESERVAS-SEMANA-VISIVEL] (24/10) a semana ja abre visivel
   const semanaInfo = useSemanaReservas(selectedDate);
   // [BLOQUEIOS] bloqueios ativos do dia escolhido (aparecem no mapa de ocupacao)
   const bloqueiosDoDiaQuery = useQuery({
@@ -528,6 +528,9 @@ export default function ReservasPage() {
         <div className="flex items-center gap-2">
           <Input data-testid="input-filter-date" type="date" value={selectedDate} onChange={(event) => setSelectedDate(event.target.value)} className="h-9 w-auto bg-background" />
           <Button data-testid="button-today" variant="secondary" size="sm" onClick={() => setSelectedDate(today)}>Hoje</Button>
+          <Button data-testid="button-semana" variant={mostrarSemana ? "default" : "outline"} size="sm" onClick={alternarSemana}>
+            <CalendarDays className="mr-1.5 h-4 w-4" /> {mostrarSemana ? "Ocultar semana" : "Ver semana"}
+          </Button>{/* [RESERVAS-SEMANA-VISIVEL] */}
         </div>
       </div>
 
