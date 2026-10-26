@@ -15,6 +15,7 @@ import { CALENDARIOS_OFICIAIS, aplicarCalendarioOficial } from "../lib/calendari
 import { registrarAuditoria } from "../lib/audit";
 import { limparCacheAcessos, acessosPeloBanco } from "../lib/acesso";
 import { emailVerificado, normalizarEmail } from "../lib/identidade";
+import { situacaoArquivoRcoEscolas, solicitarArquivoRco, cancelarPedidoArquivoRco, conteudoArquivoRco } from "../lib/arquivo-rco"; // [ARQUIVO-RCO]
 
 const router = Router();
 
@@ -180,6 +181,33 @@ router.post("/escolas/:id/liberar-virada", async (req, res) => {
   const r = await liberarViradaAntes(escolaId, (await emailVerificado(req)) ?? null);
   await registrarAuditoria({ req, escolaId, entidade: "virada_ano", entidadeId: 0, acao: "alteracao", dadosAnteriores: null, dadosNovos: { liberadaAntes: true, anoPara: r.anoPara } }).catch(() => undefined);
   res.json({ ok: true, mensagem: `Virada para ${r.anoPara} liberada em ${escola.nome}.` });
+});
+
+// [ARQUIVO-RCO] (26/10/2026) a Nexus Core pede o arquivo de exportacao da Grade de Horario do RCO;
+// a escola envia pela tela "Arquivo do RCO" (routes/arquivo-rco.ts). Situacao de todas as escolas,
+// pedir / cancelar o pedido, baixar o que a escola enviou.
+router.get("/arquivos-rco", async (_req, res) => {
+  res.json(await situacaoArquivoRcoEscolas());
+});
+router.post("/escolas/:id/arquivo-rco/pedido", async (req, res) => {
+  const escolaId = String(req.params.id);
+  const escola = await db.select({ id: escolasTable.id, nome: escolasTable.nomeFantasia }).from(escolasTable).where(eq(escolasTable.id, escolaId)).then((r) => r[0]);
+  if (!escola) { res.status(404).json({ error: "Escola não encontrada." }); return; }
+  const mensagem = typeof req.body?.mensagem === "string" && req.body.mensagem.trim() ? req.body.mensagem.trim().slice(0, 500) : null;
+  await solicitarArquivoRco(escolaId, (await emailVerificado(req)) ?? null, mensagem);
+  await registrarAuditoria({ req, escolaId, entidade: "arquivo_rco", entidadeId: 0, acao: "alteracao", dadosAnteriores: null, dadosNovos: { pedido: true, mensagem } }).catch(() => undefined);
+  res.json({ ok: true, mensagem: `Pedido registrado. ${escola.nome} vê o aviso em "Arquivo do RCO" no menu.` });
+});
+router.delete("/escolas/:id/arquivo-rco/pedido", async (req, res) => {
+  await cancelarPedidoArquivoRco(String(req.params.id));
+  res.json({ ok: true });
+});
+router.get("/escolas/:id/arquivo-rco/baixar", async (req, res) => {
+  const c = await conteudoArquivoRco(String(req.params.id));
+  if (!c) { res.status(404).json({ error: "A escola ainda não enviou o arquivo do RCO." }); return; }
+  res.setHeader("Content-Type", "application/xml; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename="${c.nomeArquivo}"`);
+  res.send(c.xml);
 });
 
 export default router;

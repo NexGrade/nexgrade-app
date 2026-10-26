@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { SituacaoArquivoRco } from "@/lib/arquivo-rco"; // [ARQUIVO-RCO]
 import {
   useListEscolasMaster, useUpdateEscolaMaster, getListEscolasMasterQueryKey,
   useListPlanosMaster, useCreatePlano, useUpdatePlano, getListPlanosMasterQueryKey,
@@ -31,6 +32,7 @@ import {
   Building2, Users, GraduationCap, CalendarDays, Sparkles, ShieldCheck, Plus, Pencil, XCircle,
   Search, MapPin, Mail, Phone, KeyRound, // [MASTER-LAYOUT]
   LogIn, LifeBuoy, CalendarClock, // [MASTER-SUPORTE]
+  FileUp, // [ARQUIVO-RCO]
 } from "lucide-react";
 
 // RF-MASTER-01 a RF-MASTER-03: painel administrativo da plataforma —
@@ -162,6 +164,40 @@ function EscolasTable() {
   const comAcesso = new Set(eu?.pelobanco ? eu.escolas.map((x) => x.escolaId) : []);
   const [liberando, setLiberando] = useState<string | null>(null);
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+  // [ARQUIVO-RCO] pedir à escola o arquivo de exportação da Grade de Horário do RCO e baixar o que ela enviou
+  const { data: arquivosRco } = useQuery({
+    queryKey: ["/api/master/arquivos-rco"],
+    queryFn: () => customFetch<Record<string, { solicitado: { em: string; por: string | null; mensagem: string | null } | null; enviado: SituacaoArquivoRco["enviado"] }>>("/api/master/arquivos-rco", { responseType: "json" } as any),
+  });
+  async function pedirArquivoRco(id: string, nome: string) {
+    const mensagem = window.prompt(`Pedir a ${nome} o arquivo do RCO (Grade de Horário).\n\nMensagem para a escola (opcional):`, "");
+    if (mensagem === null) return;
+    try {
+      const r = await customFetch<{ mensagem?: string }>("/api/master/escolas/" + encodeURIComponent(id) + "/arquivo-rco/pedido", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mensagem }), responseType: "json",
+      } as any);
+      await queryClient.invalidateQueries({ queryKey: ["/api/master/arquivos-rco"] });
+      toast({ title: "Pedido enviado", description: r?.mensagem });
+    } catch (err) {
+      const e = err as { data?: { error?: string }; message?: string };
+      toast({ title: "Não foi possível pedir", description: e?.data?.error ?? e?.message, variant: "destructive" });
+    }
+  }
+  async function cancelarPedidoArquivoRco(id: string) {
+    await customFetch("/api/master/escolas/" + encodeURIComponent(id) + "/arquivo-rco/pedido", { method: "DELETE" } as any);
+    await queryClient.invalidateQueries({ queryKey: ["/api/master/arquivos-rco"] });
+  }
+  async function baixarArquivoRco(id: string, nomeArquivo: string) {
+    try {
+      const blob = await customFetch<Blob>("/api/master/escolas/" + encodeURIComponent(id) + "/arquivo-rco/baixar", { responseType: "blob" } as any);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url; a.download = nomeArquivo; a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast({ title: "Não foi possível baixar", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+    }
+  }
 
   async function liberarSuporte(id: string, nome: string) {
     if (!window.confirm("Liberar o seu acesso de suporte em " + nome + "?\n\nEle fica visível para a escola em Usuários, como \"Nexus Core (suporte)\", com cargo Coordenação. A escola pode remover quando quiser.")) return;
@@ -339,6 +375,28 @@ function EscolasTable() {
                   <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-xs" onClick={() => liberarVirada(e.id, e.nomeFantasia)} title="Liberar a virada do ano letivo antes do fim do ano">
                     <CalendarClock className="h-3.5 w-3.5" /> Liberar virada
                   </Button>{/* [VIRADA-ANO] */}
+                  {(() => { // [ARQUIVO-RCO]
+                    const a = arquivosRco?.[e.id];
+                    if (a?.solicitado) return (
+                      <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-xs text-amber-700" onClick={() => cancelarPedidoArquivoRco(e.id)}
+                        title={"Pedido em " + new Date(a.solicitado.em).toLocaleDateString("pt-BR") + ". Clique para cancelar o pedido."}>
+                        <FileUp className="h-3.5 w-3.5" /> Arquivo RCO pedido
+                      </Button>
+                    );
+                    return (
+                      <>
+                        {a?.enviado && (
+                          <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-xs text-emerald-700" onClick={() => baixarArquivoRco(e.id, a.enviado!.nomeArquivo)}
+                            title={"Enviado em " + new Date(a.enviado.enviadoEm).toLocaleString("pt-BR") + " · " + a.enviado.resumo.turmas + " turmas"}>
+                            <FileUp className="h-3.5 w-3.5" /> Baixar arquivo RCO ({new Date(a.enviado.enviadoEm).toLocaleDateString("pt-BR")})
+                          </Button>
+                        )}
+                        <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-xs" onClick={() => pedirArquivoRco(e.id, e.nomeFantasia)} title="Pedir à escola o arquivo de exportação da Grade de Horário do RCO">
+                          <FileUp className="h-3.5 w-3.5" /> {a?.enviado ? "Pedir de novo" : "Pedir arquivo do RCO"}
+                        </Button>
+                      </>
+                    );
+                  })()}
                   <Badge className={e.planoAtivo ? "bg-emerald-600 text-white hover:bg-emerald-600" : undefined} variant={e.planoAtivo ? undefined : "secondary"}>
                     {e.planoAtivo ? "Ativa" : "Suspensa"}
                   </Badge>

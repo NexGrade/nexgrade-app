@@ -9,8 +9,10 @@ import {
   Building2, FileText, Bell, Shield, History,
   Settings, Download, Sparkles, Upload, CreditCard, Library, ShieldCheck, Clock,
   SlidersHorizontal, Landmark, DoorOpen, Hash, CalendarClock,
+  FileUp, // [ARQUIVO-RCO]
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSituacaoArquivoRco } from "@/lib/arquivo-rco"; // [ARQUIVO-RCO]
 
 const navGroups = [
   // [FASE-B] Menu reorganizado na ordem em que a escola trabalha (28/09/2026).
@@ -59,6 +61,7 @@ const navGroups = [
     items: [
       { href: "/export", label: "Exportar Dados", icon: Download },
       { href: "/codigos-rco", label: "Códigos do RCO", icon: Hash }, // [CODIGOS-RCO-TELA]
+      { href: "/arquivo-rco", label: "Arquivo do RCO", icon: FileUp }, // [ARQUIVO-RCO]
       { href: "/importar", label: "Importar Dados", icon: Upload },
     ],
   },
@@ -112,6 +115,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         .filter((g) => g.items.length > 0)
     : gruposCompletos;
 
+  // [ARQUIVO-RCO] pedido em aberto da equipe NexGrade: o item do menu ganha o selo "Pedido"
+  const { data: situacaoArquivoRco } = useSituacaoArquivoRco(!ehGestorMenu);
+  const seloDoItem = (href: string, badge?: string) => (href === "/arquivo-rco" && situacaoArquivoRco?.solicitado ? "Pedido" : badge);
+
   const isActive = (href: string) =>
     location === href || (href !== "/dashboard" && location.startsWith(href));
 
@@ -145,9 +152,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   >
                     <item.icon className="w-4 h-4 shrink-0" />
                     <span className="flex-1">{item.label}</span>
-                    {"badge" in item && item.badge && (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#42A5F5]/15 text-[#1565C0] leading-none">
-                        {item.badge}
+                    {seloDoItem(item.href, "badge" in item ? (item.badge as string | undefined) : undefined) && (
+                      <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none",
+                        item.href === "/arquivo-rco" ? "bg-amber-100 text-amber-800" : "bg-[#42A5F5]/15 text-[#1565C0]")}>
+                        {seloDoItem(item.href, "badge" in item ? (item.badge as string | undefined) : undefined)}
                       </span>
                     )}
                   </Link>
