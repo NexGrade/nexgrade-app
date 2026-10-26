@@ -1,5 +1,6 @@
 import { useEhGestorReservas } from "@/lib/papeis"; // [CONSULTA-GESTOR]
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { mapaIntegralDosSlots, projetarAulasIntegral } from "@/lib/turno-integral"; // [TURNO-INTEGRAL-PROFESSOR]
 import { useSearch, Link, useLocation } from "wouter";
 import {
   useListHorarioSlots, useSetHorarioSlotsLote, getListHorarioSlotsQueryKey,
@@ -861,10 +862,18 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
   if (turmaId !== "all") queryParams.turmaId = Number(turmaId);
   if (professorId !== "all") queryParams.professorId = Number(professorId);
 
-  const { data: horariosBrutos, isLoading } = useListHorarios(queryParams);
+  const { data: horariosDaApi, isLoading } = useListHorarios(queryParams);
+  // [TURNO-INTEGRAL-PROFESSOR] na grade por professor, a aula da turma integral aparece no turno e
+  // na linha reais (manha/tarde); na grade da propria turma integral continua 1a..11a aula.
+  const { data: slotsEscolaParaIntegral } = useListHorarioSlots({} as any, { query: { queryKey: getListHorarioSlotsQueryKey({} as any) } });
+  const mapaIntegral = useMemo(() => mapaIntegralDosSlots((slotsEscolaParaIntegral ?? []) as any), [slotsEscolaParaIntegral]);
+  const horariosBrutos = useMemo(
+    () => (professorId !== "all" && turmaId === "all" ? projetarAulasIntegral(horariosDaApi as any, mapaIntegral) : horariosDaApi) as typeof horariosDaApi,
+    [horariosDaApi, mapaIntegral, professorId, turmaId],
+  );
   const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
 
-  const TURNO_ROTULO_AVISO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
+  const TURNO_ROTULO_AVISO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite", integral: "Integral" };
   const turmasDoTurno = (turmas ?? []).filter((t) => turno === "all" || t.turno === turno);
 
   const horarios = horariosBrutos?.filter((s) => turno === "all" || s.turma?.turno === turno);
@@ -1084,7 +1093,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
   function abrirDetalheNaCelula(dia: number, aula: number, turmaIdDaCelula: number) {
     const slots = getSlots(dia, aula, turmaIdDaCelula);
     if (slots.length === 0) return;
-    setCelulaClicada({ dia, aula });
+    setCelulaClicada({ dia, aula: (slots[0] as any).numeroAulaIntegral ?? aula }); // [TURNO-INTEGRAL-PROFESSOR] editar grava na linha do integral
     setDetalheTurmaId(turmaIdDaCelula);
     setDetalheSlots(slots.map((s) => ({
       id: s.id, disciplinaId: s.disciplinaId, professorId: s.professorId,
@@ -1158,6 +1167,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                 <SelectItem value="matutino">Matutino</SelectItem>
                 <SelectItem value="vespertino">Vespertino</SelectItem>
                 <SelectItem value="noturno">Noturno</SelectItem>
+                <SelectItem value="integral">Integral</SelectItem>
               </SelectContent>
             </Select>
           </div>

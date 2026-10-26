@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 
 const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
-const turnosMap: Record<string, string> = { matutino: "Matutino", vespertino: "Vespertino", noturno: "Noturno" };
+const turnosMap: Record<string, string> = { matutino: "Matutino", vespertino: "Vespertino", noturno: "Noturno", integral: "Integral" };
 
 // Mostra só o primeiro nome do professor nas células compactas da
 // grade (mesma convenção do sistema anterior) -- o nome completo continua nos

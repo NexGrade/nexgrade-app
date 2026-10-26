@@ -34,7 +34,7 @@ type Resposta = {
 };
 
 const CHAVE = ["codigos-rco"];
-const TURNO_LABEL: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
+const TURNO_LABEL: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite", integral: "Integral" };
 const ORIGEM_LABEL: Record<string, string> = {
   externo: "Código Externo cadastrado",
   sae: "pela tabela do SAE",

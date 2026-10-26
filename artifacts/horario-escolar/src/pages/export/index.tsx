@@ -33,6 +33,7 @@ const TURNOS = [
   { value: "matutino", label: "Matutino" },
   { value: "vespertino", label: "Vespertino" },
   { value: "noturno", label: "Noturno" },
+  { value: "integral", label: "Integral (grade por turma)" }, // [TURNO-INTEGRAL] o professor da integral sai na manhã/tarde
 ];
 
 // [NOVO] A grade em si nunca muda de uma semana pra outra (é um modelo
@@ -56,7 +57,8 @@ export default function ExportPage() {
   });
   const [seedEstado, setSeedEstado] = useState("PR");
   const [seedTurno, setSeedTurno] = useState("matutino");
-  const [seedAssinc, setSeedAssinc] = useState(true); // [RCO-ASSINCRONAS] [RCO-ASSINC-PADRAO] assincronas constam no RCO por padrao
+  const [seedAssinc, setSeedAssinc] = useState(false); // [RCO-SEM-ASSINC] (26/10/2026) RCO = PDF por turma: assincronas fora por padrao
+  const [loadingScript, setLoadingScript] = useState(false); // [RCO-SCRIPT]
   const [loadingSeed, setLoadingSeed] = useState(false);
   // [NOVO] Erro estruturado do backend (disciplinas sem codigo SAE ou
   // turmas sem nivel de ensino definido) -- mostrado na tela em vez de
@@ -134,6 +136,28 @@ export default function ExportPage() {
       });
     } finally {
       setBaixando((s) => ({ ...s, [chave]: false }));
+    }
+  };
+
+  // [RCO-SCRIPT] script para colar no Console (F12) da tela Grade de Horario do RCO: grava trio/dupla
+  const handleScriptRco = async () => {
+    setLoadingScript(true);
+    setSeedErro(null);
+    try {
+      const url = buildUrl("/api/export/rco-script", { turno: seedTurno });
+      const blob = await customFetch<Blob>(url, { responseType: "blob" });
+      const objUrl = URL.createObjectURL(blob);
+      handleDownload(objUrl, `rco-gravar-${seedTurno}-${new Date().toISOString().slice(0, 10)}.js`);
+      URL.revokeObjectURL(objUrl);
+    } catch (err) {
+      if (err instanceof ApiError && err.data && typeof err.data === "object") {
+        const data = err.data as { error?: string; disciplinasSemCodigo?: { nome: string; aulas: number }[]; turmasSemNivel?: string[]; corrigirEm?: string };
+        setSeedErro({ mensagem: data.error ?? "Não foi possível gerar o script.", disciplinas: data.disciplinasSemCodigo, turmas: data.turmasSemNivel, corrigirEm: data.corrigirEm });
+      } else {
+        toast({ title: "Erro ao gerar o script do RCO", variant: "destructive" });
+      }
+    } finally {
+      setLoadingScript(false);
     }
   };
 
@@ -462,7 +486,7 @@ export default function ExportPage() {
             <div className="flex items-end gap-4">
               <div className="space-y-1.5 w-40">
                 <Label>Estado</Label>
-                <Select value={seedEstado} onValueChange={(v) => { setSeedEstado(v); setSeedAssinc(true); }}>
+                <Select value={seedEstado} onValueChange={(v) => { setSeedEstado(v); setSeedAssinc(false); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {["SP","MG","RJ","BA","PR","RS","PE","CE","GO","AM"].map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
@@ -478,6 +502,7 @@ export default function ExportPage() {
                       <SelectItem value="matutino">Matutino</SelectItem>
                       <SelectItem value="vespertino">Vespertino</SelectItem>
                       <SelectItem value="noturno">Noturno</SelectItem>
+                      <SelectItem value="integral">Integral</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -486,14 +511,27 @@ export default function ExportPage() {
                 <Download className="w-4 h-4 mr-2" />
                 {loadingSeed ? "Gerando..." : `Baixar XML para o RCO (${seedEstado})`}
               </Button>
+              {seedEstado === "PR" && (
+                <Button variant="outline" onClick={handleScriptRco} disabled={loadingScript}>
+                  <Download className="w-4 h-4 mr-2" />
+                  {loadingScript ? "Gerando..." : "Script de gravação no RCO"}
+                </Button>
+              )}
             </div>
+            {seedEstado === "PR" && (
+              <p className="mt-3 text-xs text-muted-foreground">
+                <strong>Script de gravação</strong> (recomendado quando há trio ou dupla do IFA): o arquivo XML só grava uma disciplina por horário.
+                No RCO, abra Grade de Horário, escolha o Período Letivo e o Turno, aperte F12, aba Console, cole o conteúdo do script e aperte Enter.
+                Ele mostra a prévia de cada turma e só grava depois que você confirmar. Sem assíncronas (igual ao PDF por turma).
+              </p>
+            )}
             {seedEstado === "PR" && (
               <div className="mt-4 flex items-start gap-2.5">
                 <Checkbox id="seed-assinc" checked={seedAssinc} onCheckedChange={(c) => setSeedAssinc(c === true)} className="mt-0.5" />
                 <div className="space-y-0.5">
                   <Label htmlFor="seed-assinc" className="cursor-pointer">Incluir aulas assíncronas</Label>
                   <p className="text-xs text-muted-foreground">
-                    As aulas assíncronas e as híbridas (docência por trio) devem constar no RCO, por isso vêm marcadas. A assíncrona entra como uma linha a mais no horário da turma; desmarque só se o RCO recusar esse conflito.
+                    Desmarcado por padrão: o RCO fica igual ao PDF por turma. A assíncrona divide o horário com uma aula presencial da turma, e o RCO guarda só uma disciplina por horário no arquivo (a presencial se perdia).
                   </p>
                 </div>
               </div>

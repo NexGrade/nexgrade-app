@@ -6,6 +6,7 @@
 import { db, horariosTable, turmasTable } from "@workspace/db";
 import { and, eq, inArray } from "drizzle-orm";
 import type { getEscolaId } from "./escola-id";
+import { TURNO_INTEGRAL, carregarMapaIntegral, slotReal, type MapaIntegral } from "./turno-integral"; // [TURNO-INTEGRAL-PROFESSOR]
 
 type EscolaId = ReturnType<typeof getEscolaId>;
 
@@ -39,15 +40,17 @@ export async function turnosComAulaPorProfessor(
   const mapa = new Map<number, Set<string>>();
   if (professorIds.length === 0) return mapa;
   const linhas = await db
-    .select({ professorId: horariosTable.professorId, turno: turmasTable.turno })
+    .select({ professorId: horariosTable.professorId, turno: turmasTable.turno, numeroAula: horariosTable.numeroAula })
     .from(horariosTable)
     .innerJoin(turmasTable, eq(turmasTable.id, horariosTable.turmaId))
     .where(and(eq(horariosTable.escolaId, escolaId), inArray(horariosTable.professorId, professorIds)));
+  // [TURNO-INTEGRAL-PROFESSOR] aula de turma integral conta no turno real (manha ou tarde)
+  const mapaIntegral = linhas.some((l) => l.turno === TURNO_INTEGRAL) ? await carregarMapaIntegral(escolaId) : (new Map() as MapaIntegral);
   for (const l of linhas) {
     if (l.professorId == null || !l.turno) continue;
     let s = mapa.get(l.professorId);
     if (!s) { s = new Set<string>(); mapa.set(l.professorId, s); }
-    s.add(l.turno);
+    s.add(slotReal(l.turno, l.numeroAula, mapaIntegral).turno);
   }
   return mapa;
 }

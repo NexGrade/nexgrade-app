@@ -31,7 +31,7 @@ type Previa = {
   zera: { aulasOficiais: number; experimentos: number; disponibilidade: number; codigosSere: number };
 };
 
-const NOME_TURNO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
+const NOME_TURNO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite", integral: "Integral" };
 const dataBR = (iso: string | null) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : "");
 // 6E -> 6F; 1C TEC -> 1D TEC; se nao der, "6E (2)"
 function sugerirNome(nome: string, usados: Set<string>): string {

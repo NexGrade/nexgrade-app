@@ -85,3 +85,46 @@ export function slotReal(turnoDaTurma: string, numeroAula: number, mapa: MapaInt
   if (turnoDaTurma !== TURNO_INTEGRAL) return { turno: turnoDaTurma, numeroAula };
   return mapa.get(numeroAula) ?? { turno: TURNO_INTEGRAL, numeroAula };
 }
+
+/** Mapa do integral a partir de uma lista de horario_slots ja carregada (sem ir ao banco). */
+export function mapaIntegralDosSlots(slots: SlotTempo[]): MapaIntegral {
+  const integral = slots.filter((s) => s.turno === TURNO_INTEGRAL);
+  if (!integral.length) return new Map();
+  return calcularMapaIntegral(integral, slots.filter((s) => s.turno !== TURNO_INTEGRAL));
+}
+
+const ORDEM_ESPELHO: Record<string, number> = { matutino: 1, vespertino: 2, noturno: 3 };
+
+/** Id (negativo, nunca existe no banco) da turma "espelho" de uma turma integral num turno real. */
+export function idEspelho(turmaId: number, turno: string): number {
+  return -(turmaId * 10 + (ORDEM_ESPELHO[turno] ?? 9));
+}
+
+/**
+ * [TURNO-INTEGRAL-PROFESSOR] (26/10/2026) Para tudo que e do PROFESSOR (PDF por professor,
+ * ponto, HA): cada aula de turma integral passa a ser a aula REAL equivalente, numa turma
+ * "espelho" com o mesmo nome e o turno real (id negativo, ver idEspelho). Assim a Pratica de
+ * Formacao do professor na segunda 13:05 aparece na TARDE dele (3a linha = 15:00 do integral
+ * vira a 3a da tarde), sem cada tela precisar conhecer o integral. Aula sem equivalente fica
+ * como esta. A turma original continua na lista (para quem procura pelo id dela).
+ */
+export function projetarIntegral<
+  T extends { id: number; turno: string; nivelEnsino?: string | null },
+  A extends { turmaId: number; numeroAula: number },
+>(turmas: T[], aulas: A[], mapa: MapaIntegral): { turmas: T[]; aulas: A[] } {
+  const integrais = new Map(turmas.filter((t) => t.turno === TURNO_INTEGRAL).map((t) => [t.id, t]));
+  if (!integrais.size || !mapa.size) return { turmas, aulas };
+  const espelhos = new Map<number, T>();
+  const novas = aulas.map((a) => {
+    const t = integrais.get(a.turmaId);
+    const real = t ? mapa.get(a.numeroAula) : undefined;
+    if (!t || !real) return a;
+    const id = idEspelho(t.id, real.turno);
+    if (!espelhos.has(id)) {
+      const nivelEnsino = real.turno === "matutino" ? (t.nivelEnsino ?? "medio_tecnico") : (t.nivelEnsino ?? null);
+      espelhos.set(id, { ...t, id, turno: real.turno, nivelEnsino } as T);
+    }
+    return { ...a, turmaId: id, numeroAula: real.numeroAula };
+  });
+  return { turmas: [...turmas, ...espelhos.values()], aulas: novas };
+}
