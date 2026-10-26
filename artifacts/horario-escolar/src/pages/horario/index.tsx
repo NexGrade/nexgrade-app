@@ -564,6 +564,31 @@ function DialogAdicionarAula({
   const nomeProfVinculo = (did: number) =>
     [...new Set(vinculos.filter((v) => v.disciplinaId === did).map((v) => v.professorNome).filter(Boolean))].join(" + ");
 
+  // [AULA-MANUAL-APTOS] (26/10/2026, pedido da Simone) disciplina com busca; ao escolher a disciplina, a
+  // lista de professores mostra so os aptos: o do vinculo da turma e os habilitados na disciplina
+  // (cadastro do professor). "Mostrar todos" libera o resto.
+  const [todosProfessores, setTodosProfessores] = useState(false);
+  const opcoesDisciplina = [
+    ...(disciplinas ?? []).filter((d) => idsDaTurma.has(d.id))
+      .map((d) => ({ value: String(d.id), label: d.nome, sublabel: nomeProfVinculo(d.id) ? `da turma · ${nomeProfVinculo(d.id)}` : "da turma" })),
+    ...(disciplinas ?? []).filter((d) => !idsDaTurma.has(d.id)).map((d) => ({ value: String(d.id), label: d.nome })),
+  ];
+  const idsVinculo = new Set(vinculos.filter((v) => v.disciplinaId === Number(disciplinaId)).flatMap((v) => [v.professorId, v.professorApoioId]).filter((x): x is number => x != null));
+  const aptos = (professores ?? []).filter((p) => idsVinculo.has(p.id) || (p.disciplinaIds ?? []).includes(Number(disciplinaId)));
+  const semAptos = !!disciplinaId && aptos.length === 0;
+  const opcoesProfessor = (excluir?: string) => {
+    const escolhidos = new Set([professorId, professorApoioId].filter(Boolean)); // a aula em edicao continua aparecendo
+    const base = !disciplinaId || todosProfessores || semAptos ? (professores ?? []) : (professores ?? []).filter((p) => aptos.includes(p) || escolhidos.has(String(p.id)));
+    return [...base]
+      .filter((p) => String(p.id) !== excluir)
+      .sort((a, b) => Number(idsVinculo.has(b.id)) - Number(idsVinculo.has(a.id)) || a.nome.localeCompare(b.nome, "pt-BR"))
+      .map((p) => ({
+        value: String(p.id),
+        label: p.nome,
+        sublabel: idsVinculo.has(p.id) ? "vínculo da turma" : (p.disciplinaIds ?? []).includes(Number(disciplinaId)) ? "habilitado" : undefined,
+      }));
+  };
+
   function escolherDisciplina(v: string) {
     setDisciplinaId(v);
     const linhas = vinculos.filter((x) => x.disciplinaId === Number(v));
@@ -581,6 +606,7 @@ function DialogAdicionarAula({
     if (!open) return;
     setTurmaId(aulaExistente ? String(aulaExistente.turmaId) : (turmaIdFixa ? String(turmaIdFixa) : ""));
     setDiaSemana(diaSemanaFixo !== undefined ? String(diaSemanaFixo) : "0");
+    setTodosProfessores(false);
     setNumeroAula(numeroAulaFixo !== undefined ? String(numeroAulaFixo) : "1");
     if (aulaExistente) {
       setDisciplinaId(String(aulaExistente.disciplinaId));
@@ -665,19 +691,8 @@ function DialogAdicionarAula({
             </div>
             <div className="space-y-1.5">
               <Label>Disciplina *</Label>
-              <Select value={disciplinaId} onValueChange={escolherDisciplina}>
-                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                <SelectContent>
-                  {/* [AULA-MANUAL-PROF-VINCULO] disciplinas da turma primeiro, com o professor */}
-                  {disciplinas?.filter((d) => idsDaTurma.has(d.id)).map((d) => (
-                    <SelectItem key={d.id} value={String(d.id)}>
-                      {d.nome}{nomeProfVinculo(d.id) ? ` — ${nomeProfVinculo(d.id)}` : ""}
-                    </SelectItem>
-                  ))}
-                  {idsDaTurma.size > 0 && <SelectItem value="__sep" disabled>── outras disciplinas ──</SelectItem>}
-                  {disciplinas?.filter((d) => !idsDaTurma.has(d.id)).map((d) => <SelectItem key={d.id} value={String(d.id)}>{d.nome}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              {/* [AULA-MANUAL-PROF-VINCULO] [AULA-MANUAL-APTOS] disciplinas da turma primeiro, com busca */}
+              <SeletorBusca options={opcoesDisciplina} value={disciplinaId} onChange={escolherDisciplina} buscarPlaceholder="Buscar disciplina..." />
             </div>
             <div className="space-y-1.5">
               <Label>Dia da semana *</Label>
@@ -697,11 +712,29 @@ function DialogAdicionarAula({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Professor (titular) *</Label>
-            <Select value={professorId} onValueChange={setProfessorId}>
-              <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-              <SelectContent>{professores?.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}</SelectContent>
-            </Select>
+            <div className="flex items-center justify-between gap-2">
+              <Label>Professor (titular) *</Label>
+              {!!disciplinaId && !semAptos && (
+                <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+                  <Switch checked={todosProfessores} onCheckedChange={setTodosProfessores} className="scale-75" />
+                  Mostrar todos
+                </label>
+              )}
+            </div>
+            <SeletorBusca
+              options={opcoesProfessor()}
+              value={professorId}
+              onChange={setProfessorId}
+              placeholder={disciplinaId ? "Selecione..." : "Escolha a disciplina primeiro (ou selecione)"}
+              buscarPlaceholder="Buscar professor..."
+            />
+            {!!disciplinaId && (
+              <p className="text-xs text-muted-foreground">
+                {semAptos
+                  ? "Nenhum professor habilitado nesta disciplina: mostrando todos. Habilite em Professores."
+                  : todosProfessores ? "Mostrando todos os professores." : `${aptos.length} professor(es) apto(s): vínculo da turma ou habilitado na disciplina.`}
+              </p>
+            )}
           </div>
 
           <div className="flex items-center justify-between py-1 border-t pt-3">
@@ -715,10 +748,7 @@ function DialogAdicionarAula({
           {temApoio && (
             <div className="space-y-1.5">
               <Label>Professor de apoio *</Label>
-              <Select value={professorApoioId} onValueChange={setProfessorApoioId}>
-                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                <SelectContent>{professores?.filter((p) => String(p.id) !== professorId).map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}</SelectContent>
-              </Select>
+              <SeletorBusca options={opcoesProfessor(professorId)} value={professorApoioId} onChange={setProfessorApoioId} buscarPlaceholder="Buscar professor..." />
             </div>
           )}
 
