@@ -10,6 +10,7 @@ import { calcularHoraAtividadePorTurno, ehProfessorEstudio } from "../lib/hora-a
 import { montarMapaPrincipal, principalDe } from "../lib/professor-principal"; // [MESMA-PESSOA-HA]
 import { limitesLetivosPorTurno, PARES_TURNO } from "../lib/intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 import { casosPausaEntreTurnos } from "../lib/pausa-entre-turnos"; // [PAUSA-ENTRE-TURNOS]
+import { carregarMapaIntegral, slotReal } from "../lib/turno-integral"; // [TURNO-INTEGRAL]
 
 const router = Router();
 
@@ -66,6 +67,11 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
   ]);
 
   const turnoPorTurmaId = new Map(turmas.map((t) => [t.id, t.turno]));
+  // [TURNO-INTEGRAL] o que e do PROFESSOR (choque, janela, indisponivel, teto, HA) usa o
+  // horario real: aula da turma integral = horario equivalente do Matutino/Vespertino.
+  const mapaIntegral = await carregarMapaIntegral(escolaId);
+  const realDe = (s: { turmaId: number; numeroAula: number }) =>
+    slotReal(turnoPorTurmaId.get(s.turmaId) ?? "desconhecido", s.numeroAula, mapaIntegral);
 
   function configValor<T>(chave: string, padrao: T): T {
     const cfg = configs.find((c) => c.chave === chave);
@@ -149,8 +155,8 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
 
   const slotProfMap: Record<string, number[]> = {};
   slots.forEach(s => {
-    const turno = turnoPorTurmaId.get(s.turmaId) ?? "desconhecido";
-    const key = `${s.professorId}-${turno}-${s.diaSemana}-${s.numeroAula}`;
+    const real = realDe(s); // [TURNO-INTEGRAL]
+    const key = `${s.professorId}-${real.turno}-${s.diaSemana}-${real.numeroAula}`;
     if (!slotProfMap[key]) slotProfMap[key] = [];
     slotProfMap[key]!.push(s.id);
   });
@@ -224,11 +230,11 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
 
   const slotsProf: Record<string, Record<number, number[]>> = {};
   slots.forEach(s => {
-    const turno = turnoPorTurmaId.get(s.turmaId) ?? "desconhecido";
-    const chaveProfTurno = `${s.professorId}-${turno}`;
+    const real = realDe(s); // [TURNO-INTEGRAL]
+    const chaveProfTurno = `${s.professorId}-${real.turno}`;
     if (!slotsProf[chaveProfTurno]) slotsProf[chaveProfTurno] = {};
     if (!slotsProf[chaveProfTurno]![s.diaSemana]) slotsProf[chaveProfTurno]![s.diaSemana] = [];
-    slotsProf[chaveProfTurno]![s.diaSemana]!.push(s.numeroAula);
+    slotsProf[chaveProfTurno]![s.diaSemana]!.push(real.numeroAula);
   });
   // [FIX] Hora-Atividade institucional (disponibilidade marcada com
   // horaAtividadeObrigatoria) não contava como slot ocupado -- um
@@ -299,8 +305,8 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
       .map(d => `${d.professorId}-${d.turno ?? "null"}-${d.diaSemana}-${d.horarioSlot}`),
   );
   slots.forEach(s => {
-    const turno = turnoPorTurmaId.get(s.turmaId) ?? "desconhecido";
-    if (indisponibilidadeSet.has(`${s.professorId}-${turno}-${s.diaSemana}-${s.numeroAula}`)) {
+    const real = realDe(s); // [TURNO-INTEGRAL]
+    if (indisponibilidadeSet.has(`${s.professorId}-${real.turno}-${s.diaSemana}-${real.numeroAula}`)) {
       const prof = professores.find(p => p.id === s.professorId);
       const turma = turmas.find(t => t.id === s.turmaId);
       conflitos.push({
@@ -399,7 +405,7 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     // separada, com limite proprio de 25h/turno em acumulo de funcoes.
     const disc = disciplinas.find((d) => d.id === s.disciplinaId);
     if (disc?.semTurma) return;
-    const key = `${s.professorId}-${turma.turno}`;
+    const key = `${s.professorId}-${realDe(s).turno}`; // [TURNO-INTEGRAL]
     aulasPorProfTurno[key] = (aulasPorProfTurno[key] ?? 0) + 1;
   });
   const liberacoesTeto = configValor<LiberacoesTeto>(CHAVE_TETO_LIBERADO, {}); // [TETO-LIBERADO]
@@ -444,7 +450,8 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
       // categoria que nao recebe HA da mesma forma que professor regular.
       const disc = disciplinas.find((d) => d.id === s.disciplinaId);
       if (disc?.semTurma) return;
-      turnosComAula[turma.turno] = (turnosComAula[turma.turno] ?? 0) + 1;
+      const turnoReal = realDe(s).turno; // [TURNO-INTEGRAL]
+      turnosComAula[turnoReal] = (turnosComAula[turnoReal] ?? 0) + 1;
     });
 
     // [FIX] Antes usava um número FIXO (9 pra "20h", 18 pra "40h") com
@@ -528,9 +535,9 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
     const nomeDaTurma = new Map(turmas.map((t) => [t.id, t.nome]));
     const aulaEm = new Map<string, number[]>();
     for (const s of slots) {
-      const tu = turnoDaTurma.get(s.turmaId);
-      if (!tu || s.professorId == null) continue;
-      const k = `${s.professorId}|${tu}|${s.diaSemana}|${s.numeroAula}`;
+      if (!turnoDaTurma.get(s.turmaId) || s.professorId == null) continue;
+      const real = realDe(s); // [TURNO-INTEGRAL]
+      const k = `${s.professorId}|${real.turno}|${s.diaSemana}|${real.numeroAula}`;
       const lista = aulaEm.get(k);
       if (lista) lista.push(s.turmaId); else aulaEm.set(k, [s.turmaId]);
     }

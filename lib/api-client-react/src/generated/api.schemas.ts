@@ -735,6 +735,7 @@ export const EsquemaHorarioSlotTurno = {
   matutino: 'matutino',
   vespertino: 'vespertino',
   noturno: 'noturno',
+  integral: 'integral',
 } as const;
 
 export type EsquemaHorarioSlotNivelEnsino = typeof EsquemaHorarioSlotNivelEnsino[keyof typeof EsquemaHorarioSlotNivelEnsino] | null;
@@ -763,6 +764,7 @@ export const EsquemaHorarioSlotInputTurno = {
   matutino: 'matutino',
   vespertino: 'vespertino',
   noturno: 'noturno',
+  integral: 'integral',
 } as const;
 
 export type EsquemaHorarioSlotInputNivelEnsino = typeof EsquemaHorarioSlotInputNivelEnsino[keyof typeof EsquemaHorarioSlotInputNivelEnsino] | null;
@@ -790,6 +792,7 @@ export const EsquemaHorarioSlotLoteInputTurno = {
   matutino: 'matutino',
   vespertino: 'vespertino',
   noturno: 'noturno',
+  integral: 'integral',
 } as const;
 
 export type EsquemaHorarioSlotLoteInputNivelEnsino = typeof EsquemaHorarioSlotLoteInputNivelEnsino[keyof typeof EsquemaHorarioSlotLoteInputNivelEnsino] | null;
@@ -1559,6 +1562,7 @@ export const ListHorarioSlotsTurno = {
   matutino: 'matutino',
   vespertino: 'vespertino',
   noturno: 'noturno',
+  integral: 'integral',
 } as const;
 
 export type ListHorarioSlotsNivelEnsino = typeof ListHorarioSlotsNivelEnsino[keyof typeof ListHorarioSlotsNivelEnsino];

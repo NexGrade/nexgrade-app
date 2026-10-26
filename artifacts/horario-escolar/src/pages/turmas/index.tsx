@@ -33,7 +33,7 @@ import { CampoBusca } from "@/components/campo-busca";
 const turmaSchema = z.object({
   nome: z.string().min(1, "O nome é obrigatório"),
   serie: z.string().min(1, "A série é obrigatória"),
-  turno: z.enum(["matutino", "vespertino", "noturno"]),
+  turno: z.enum(["matutino", "vespertino", "noturno", "integral"]), // [TURNO-INTEGRAL]
   anoLetivo: z.coerce.number().min(2000).max(2100),
   disciplinaIds: z.array(z.number()).optional(),
 });
@@ -332,7 +332,7 @@ export default function TurmasList() {
     );
   };
 
-  const turnoLabels: Record<string, string> = { matutino: "Matutino", vespertino: "Vespertino", noturno: "Noturno" };
+  const turnoLabels: Record<string, string> = { matutino: "Matutino", vespertino: "Vespertino", noturno: "Noturno", integral: "Integral" };
 
   return (
     <div className="space-y-6">
@@ -673,6 +673,7 @@ function TurmaForm({ editingId, turmaAtual, onFechar, onCriada }: { editingId: n
                     <SelectItem value="matutino">Matutino</SelectItem>
                     <SelectItem value="vespertino">Vespertino</SelectItem>
                     <SelectItem value="noturno">Noturno</SelectItem>
+                    <SelectItem value="integral">Integral (manhã e tarde)</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />

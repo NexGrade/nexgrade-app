@@ -13,4 +13,5 @@ export const ListHorarioSlotsTurno = {
   matutino: 'matutino',
   vespertino: 'vespertino',
   noturno: 'noturno',
+  integral: 'integral',
 } as const;

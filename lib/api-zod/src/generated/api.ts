@@ -1385,7 +1385,7 @@ export const DeleteDisponibilidadeResponse = zod.void()
 
 
 export const ListHorarioSlotsQueryParams = zod.object({
-  "turno": zod.enum(['matutino', 'vespertino', 'noturno']).optional(),
+  "turno": zod.enum(['matutino', 'vespertino', 'noturno', 'integral']).optional(),
   "nivelEnsino": zod.enum(['fundamental', 'medio_tecnico']).optional()
 })
 
@@ -1394,7 +1394,7 @@ export const listHorarioSlotsResponseDuracaoMinutosDefault = 50;
 
 export const ListHorarioSlotsResponseItem = zod.object({
   "id": zod.number(),
-  "turno": zod.enum(['matutino', 'vespertino', 'noturno']),
+  "turno": zod.enum(['matutino', 'vespertino', 'noturno', 'integral']),
   "nivelEnsino": zod.enum(['fundamental', 'medio_tecnico']).nullish(),
   "numeroAula": zod.number().min(1),
   "horaInicio": zod.string().describe('Formato HH:MM ou HH:MM:SS'),
@@ -1407,7 +1407,7 @@ export const ListHorarioSlotsResponse = zod.array(ListHorarioSlotsResponseItem)
 export const setHorarioSlotBodyDuracaoMinutosDefault = 50;
 
 export const SetHorarioSlotBody = zod.object({
-  "turno": zod.enum(['matutino', 'vespertino', 'noturno']),
+  "turno": zod.enum(['matutino', 'vespertino', 'noturno', 'integral']),
   "nivelEnsino": zod.enum(['fundamental', 'medio_tecnico']).nullish(),
   "numeroAula": zod.number().min(1),
   "horaInicio": zod.string().describe('Formato HH:MM ou HH:MM:SS'),
@@ -1419,7 +1419,7 @@ export const setHorarioSlotResponseDuracaoMinutosDefault = 50;
 
 export const SetHorarioSlotResponse = zod.object({
   "id": zod.number(),
-  "turno": zod.enum(['matutino', 'vespertino', 'noturno']),
+  "turno": zod.enum(['matutino', 'vespertino', 'noturno', 'integral']),
   "nivelEnsino": zod.enum(['fundamental', 'medio_tecnico']).nullish(),
   "numeroAula": zod.number().min(1),
   "horaInicio": zod.string().describe('Formato HH:MM ou HH:MM:SS'),
@@ -1431,7 +1431,7 @@ export const SetHorarioSlotResponse = zod.object({
 export const setHorarioSlotsLoteBodySlotsItemDuracaoMinutosDefault = 50;
 
 export const SetHorarioSlotsLoteBody = zod.object({
-  "turno": zod.enum(['matutino', 'vespertino', 'noturno']),
+  "turno": zod.enum(['matutino', 'vespertino', 'noturno', 'integral']),
   "nivelEnsino": zod.enum(['fundamental', 'medio_tecnico']).nullish(),
   "slots": zod.array(zod.object({
   "numeroAula": zod.number().min(1),
@@ -1445,7 +1445,7 @@ export const setHorarioSlotsLoteResponseDuracaoMinutosDefault = 50;
 
 export const SetHorarioSlotsLoteResponseItem = zod.object({
   "id": zod.number(),
-  "turno": zod.enum(['matutino', 'vespertino', 'noturno']),
+  "turno": zod.enum(['matutino', 'vespertino', 'noturno', 'integral']),
   "nivelEnsino": zod.enum(['fundamental', 'medio_tecnico']).nullish(),
   "numeroAula": zod.number().min(1),
   "horaInicio": zod.string().describe('Formato HH:MM ou HH:MM:SS'),

@@ -35,7 +35,7 @@ const router = Router();
 const NivelEnsino = z.enum(["fundamental", "medio_tecnico"]).nullable().optional();
 
 const HorarioSlotInput = z.object({
-  turno: z.enum(["matutino", "vespertino", "noturno"]),
+  turno: z.enum(["matutino", "vespertino", "noturno", "integral"]), // [TURNO-INTEGRAL]
   nivelEnsino: NivelEnsino,
   numeroAula: z.number().int().min(1),
   horaInicio: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, "Formato esperado HH:MM"),
@@ -47,7 +47,7 @@ const HorarioSlotInput = z.object({
 // wizard de Horário/Esquema. Substitui os slots existentes SÓ daquela
 // combinação turno+nivelEnsino, nunca o turno inteiro.
 const HorarioSlotLoteInput = z.object({
-  turno: z.enum(["matutino", "vespertino", "noturno"]),
+  turno: z.enum(["matutino", "vespertino", "noturno", "integral"]), // [TURNO-INTEGRAL]
   nivelEnsino: NivelEnsino,
   slots: z.array(
     z.object({

@@ -933,7 +933,7 @@ paths:
           in: query
           schema:
             type: string
-            enum: [matutino, vespertino, noturno]
+            enum: [matutino, vespertino, noturno, integral]
         - name: nivelEnsino
           in: query
           schema:
@@ -2553,7 +2553,7 @@ components:
       required: [id, turno, numeroAula, horaInicio, duracaoMinutos]
       properties:
         id: { type: integer }
-        turno: { type: string, enum: [matutino, vespertino, noturno] }
+        turno: { type: string, enum: [matutino, vespertino, noturno, integral] }
         nivelEnsino: { type: string, enum: [fundamental, medio_tecnico], nullable: true }
         numeroAula: { type: integer, minimum: 1 }
         horaInicio: { type: string, description: "Formato HH:MM ou HH:MM:SS" }
@@ -2563,7 +2563,7 @@ components:
       type: object
       required: [turno, numeroAula, horaInicio]
       properties:
-        turno: { type: string, enum: [matutino, vespertino, noturno] }
+        turno: { type: string, enum: [matutino, vespertino, noturno, integral] }
         nivelEnsino: { type: string, enum: [fundamental, medio_tecnico], nullable: true }
         numeroAula: { type: integer, minimum: 1 }
         horaInicio: { type: string, description: "Formato HH:MM ou HH:MM:SS" }
@@ -2573,7 +2573,7 @@ components:
       type: object
       required: [turno, slots]
       properties:
-        turno: { type: string, enum: [matutino, vespertino, noturno] }
+        turno: { type: string, enum: [matutino, vespertino, noturno, integral] }
         nivelEnsino: { type: string, enum: [fundamental, medio_tecnico], nullable: true }
         slots:
           type: array

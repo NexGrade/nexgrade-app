@@ -6,9 +6,10 @@ import {
   escolasTable, horariosExperimentaisTable, codigosRcoDisciplinaTable, // [RCO-EXPORT-BANCO]
   calendarioEscolarTable, // [PONTO-DIARIO]
 } from "@workspace/db";
-import { and, eq, isNull, notInArray, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, notInArray, sql } from "drizzle-orm";
 import { GRADES_SEED_RCO } from "../lib/grades-seed-rco"; // [RCO-EXPORT-BANCO]
 import { resolverCoddisc } from "../lib/rco-codigos"; // [CODIGOS-RCO-TELA]
+import { gerarScriptRco, type TurmaRcoScript, type CelulaRco } from "../lib/rco-script"; // [RCO-SCRIPT]
 import { getEscolaId } from "../lib/escola-id";
 import { buscarReservasParaRelatorio, gerarPdfReservasPorProfessor } from "../lib/relatorio-reservas"; // [RELATORIO-RESERVAS]
 import { espacosLivresDaSemana, gerarPdfEspacosLivres } from "../lib/espacos-livres"; // [ESPACOS-LIVRES]
@@ -18,6 +19,7 @@ import { gerarPdfCargaProfessores, type RelatorioProfessor } from "../lib/pdf-ca
 import { gerarPdfCargaHoraria, type TurmaCargaHoraria } from "../lib/pdf-carga-horaria";
 import { calcularHAIdeal, type MarcaHACalculada } from "../lib/recalcular-ha";
 import { ehHAOutroTurno } from "../lib/ha-contraturno"; // [HA-OUTRO-TURNO]
+import { carregarMapaIntegral, mapaIntegralDosSlots, projetarIntegral } from "../lib/turno-integral"; // [TURNO-INTEGRAL-PROFESSOR]
 import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
 import { carregarAssSoTurma, carregarPeriodosExtrasFinais, podarLinhasExtras } from "../lib/assincrona-so-turma"; // [ASS-SO-TURMA]
 import { gerarPdfPontoDiario, type PontoDiario, type CelulaPonto, type LinhaPonto } from "../lib/pdf-ponto-diario"; // [PONTO-DIARIO]
@@ -280,7 +282,7 @@ async function montarPontoDiario(escolaId: string, dataISO: string, turnoFiltro:
   const diaSemana = dow - 1;
   const turnos = turnoFiltro && turnoFiltro !== "todos" ? [turnoFiltro] : ["matutino", "vespertino", "noturno"];
 
-  const [nomeEscola, turmas, professores, disciplinas, horarios, slotsEsquema, eventos] = await Promise.all([
+  const [nomeEscola, turmasDoBanco, professores, disciplinas, horariosDoBanco, slotsEsquema, eventos] = await Promise.all([
     buscarNomeEscola(escolaId),
     db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
@@ -289,6 +291,8 @@ async function montarPontoDiario(escolaId: string, dataISO: string, turnoFiltro:
     db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId)),
     db.select().from(calendarioEscolarTable).where(and(eq(calendarioEscolarTable.escolaId, escolaId), eq(calendarioEscolarTable.data, dataISO))),
   ]);
+  // [TURNO-INTEGRAL-PROFESSOR] aula da turma integral entra no turno real (manha/tarde) do ponto
+  const { turmas, aulas: horarios } = projetarIntegral(turmasDoBanco, horariosDoBanco, mapaIntegralDosSlots(slotsEsquema));
   const profIds = professores.map((p) => p.id);
   const disps = profIds.length
     ? (await db.select().from(disponibilidadeTable).where(eq(disponibilidadeTable.diaSemana, diaSemana))).filter((x) => profIds.includes(x.professorId))
@@ -366,26 +370,14 @@ router.get("/ponto-diario", async (req, res) => {
 // Dicionario e resolverCoddisc: lib/rco-codigos.ts (mesma regra da tela "Codigos do RCO").
 
 const DIA_SEMANA_CODIGO: Record<number, string> = { 0: "SEG", 1: "TER", 2: "QUA", 3: "QUI", 4: "SEX" };
+const TURNOS_RCO = ["matutino", "vespertino", "noturno", "integral"]; // [TURNO-INTEGRAL] o RCO tem turno Integral proprio
 
-router.get("/relatorio-seed", async (req, res) => {
-  const escolaId = getEscolaId(req);
-  const estado = (req.query.estado as string) ?? "PR";
-  const turno = req.query.turno as string | undefined;
-  const comAssincronas = req.query.assincronas !== "0"; // [RCO-ASSINC-PADRAO] assincronas (e hibridas) constam no RCO; ?assincronas=0 tira
-
-  if (estado !== "PR") {
-    res.status(400).json({ error: `Exportação no formato SERE só está implementada para o Paraná (PR) no momento.` });
-    return;
-  }
-  if (!turno || !["matutino", "vespertino", "noturno"].includes(turno)) {
-    res.status(400).json({ error: "Selecione um turno (matutino, vespertino ou noturno) antes de exportar." });
-    return;
-  }
-
+// [RCO-SCRIPT] (26/10/2026) Montagem dos registros do RCO, usada pelo arquivo (/relatorio-seed)
+// e pelo script de gravacao pela tela (/rco-script). Devolve { erro } (resposta 400) ou os registros.
+async function montarRegistrosRco(escolaId: string, turno: string, comAssincronas: boolean) {
   const [escola] = await db.select().from(escolasTable).where(eq(escolasTable.id, escolaId));
   if (!escola?.codigoInep) {
-    res.status(400).json({ error: "O Código INEP da escola ainda não foi cadastrado. Preencha em Configurações → Dados da Escola antes de exportar." });
-    return;
+    return { erro: { error: "O Código INEP da escola ainda não foi cadastrado. Preencha em Configurações → Dados da Escola antes de exportar." } };
   }
 
   const todas = await db
@@ -422,8 +414,7 @@ router.get("/relatorio-seed", async (req, res) => {
   const linhas = comAssincronas ? todas : todas.filter((l) => !l.assincrona);
 
   if (linhas.length === 0) {
-    res.status(400).json({ error: `Nenhuma aula encontrada para o turno "${turno}". A grade foi gerada e homologada?` });
-    return;
+    return { erro: { error: `Nenhuma aula encontrada para o turno "${turno}". A grade foi gerada e homologada?` } };
   }
 
   // 1) codigo da disciplina -- bloqueia ANTES de gerar (nunca manda XML parcial ou codigo chutado)
@@ -432,12 +423,11 @@ router.get("/relatorio-seed", async (req, res) => {
     if (resolverCoddisc(l) === null) semCodigo.set(l.disciplinaNome, (semCodigo.get(l.disciplinaNome) ?? 0) + 1);
   }
   if (semCodigo.size > 0) {
-    res.status(400).json({
+    return { erro: {
       error: "Algumas disciplinas ainda não têm o Código Externo do RCO cadastrado. Cadastre o código dessas disciplinas antes de exportar.",
       corrigirEm: "/codigos-rco", // [CODIGOS-RCO-TELA]
       disciplinasSemCodigo: [...semCodigo.entries()].sort((a, b) => b[1] - a[1]).map(([nome, aulas]) => ({ nome, aulas })),
-    });
-    return;
+    } };
   }
 
   // 2) parte do RCO (FGB/IF) e conferencia com a grade SEED da turma
@@ -462,22 +452,20 @@ router.get("/relatorio-seed", async (req, res) => {
     return { ...l, coddisc: cod, codTurma, turmaRco: parte ? `${l.turmaNome} (${parte})` : l.turmaNome };
   });
   if (foraDaGrade.size > 0) {
-    res.status(400).json({
+    return { erro: {
       error: "Algumas disciplinas não fazem parte da grade SEED da turma — o RCO vai recusar. Corrija a disciplina dessas aulas antes de exportar.",
       disciplinasSemCodigo: [...foraDaGrade.entries()].map(([nome, aulas]) => ({ nome, aulas })),
-    });
-    return;
+    } };
   }
 
   // 3) codigo SERE da turma
   const semSere = [...new Set(registros.filter((r) => r.codTurma == null).map((r) => r.turmaRco))];
   if (semSere.length > 0) {
-    res.status(400).json({
+    return { erro: {
       error: "Algumas turmas ainda não têm o código da turma no SERE cadastrado (o RCO recusa sem ele). Cadastre o código dessas turmas antes de exportar.",
       corrigirEm: "/codigos-rco", // [CODIGOS-RCO-TELA]
       turmasSemNivel: semSere,
-    });
-    return;
+    } };
   }
 
   // [FIX] matutino tem 2 esquemas de horario (Fundamental 5 aulas vs
@@ -508,13 +496,34 @@ router.get("/relatorio-seed", async (req, res) => {
   if (turno === "matutino") {
     const semNivel = new Set(registros.filter(l => !l.turmaNivelEnsino).map(l => l.turmaNome));
     if (semNivel.size > 0) {
-      res.status(400).json({
+      return { erro: {
         error: "Algumas turmas do matutino não têm o nível de ensino definido (Fundamental ou Médio/Técnico), necessário para saber o esquema de horário correto. Edite essas turmas antes de exportar.",
         turmasSemNivel: [...semNivel],
-      });
-      return;
+      } };
     }
   }
+
+  return { escola, registros, horarioPorSlot, chaveSlot, slots };
+}
+
+router.get("/relatorio-seed", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const estado = (req.query.estado as string) ?? "PR";
+  const turno = req.query.turno as string | undefined;
+  const comAssincronas = req.query.assincronas === "1"; // [RCO-SEM-ASSINC] (26/10/2026) a escola definiu RCO = PDF por turma, sem assincronas; ?assincronas=1 inclui
+
+  if (estado !== "PR") {
+    res.status(400).json({ error: `Exportação no formato SERE só está implementada para o Paraná (PR) no momento.` });
+    return;
+  }
+  if (!turno || !TURNOS_RCO.includes(turno)) {
+    res.status(400).json({ error: "Selecione um turno (matutino, vespertino, noturno ou integral) antes de exportar." });
+    return;
+  }
+
+  const montado = await montarRegistrosRco(escolaId, turno, comAssincronas);
+  if ("erro" in montado) { res.status(400).json(montado.erro); return; }
+  const { escola, registros, horarioPorSlot, chaveSlot } = montado;
 
   // CODPROF sequencial por arquivo (o RCO aceitou; o professor vem do vinculo no RCO)
   const codProfMap = new Map<number, number>();
@@ -533,7 +542,7 @@ router.get("/relatorio-seed", async (req, res) => {
   });
   registros.splice(0, registros.length, ...unicos);
 
-  const partes: string[] = [`<IMPORT_URANIA>`, `<CODESCOLA>${escola.codigoInep}</CODESCOLA>`, `<HORARIO>`];
+  const partes: string[] = [`<IMPORT_HORARIO>`, `<CODESCOLA>${escola.codigoInep}</CODESCOLA>`, `<HORARIO>`];
   for (const l of registros) {
     const chave = chaveSlot(l.numeroAula, turno === "matutino" ? l.turmaNivelEnsino : null);
     const [horaInicio, horaFim] = horarioPorSlot.get(chave) ?? ["00:00", "00:00"];
@@ -550,12 +559,89 @@ router.get("/relatorio-seed", async (req, res) => {
       `</REGISTRO>`,
     );
   }
-  partes.push(`</HORARIO>`, `</IMPORT_URANIA>`);
+  partes.push(`</HORARIO>`, `</IMPORT_HORARIO>`); // [RCO-RAIZ-NEUTRA] o RCO aceita IMPORT_HORARIO (testado 26/10/2026)
 
   const dataHoje = new Date().toISOString().slice(0, 10);
   res.setHeader("Content-Type", "application/xml");
   res.setHeader("Content-Disposition", `attachment; filename="RCO-${turno}-${dataHoje}.xml"`);
   res.send(partes.join("\r\n"));
+});
+
+// [RCO-SCRIPT] (26/10/2026) Script de gravacao da grade no RCO pela tela Incluir Horario (aceita
+// trio/dupla no mesmo horario, o arquivo nao). Mesmos registros do arquivo, SEM assincronas
+// (a escola definiu: RCO igual ao PDF por turma). Nome da disciplina: o nome do RCO
+// (codigos_rco_disciplina.nome_rco pelo Codigo Externo) e o do NexGrade como alternativa;
+// o script casa com a lista da turma no proprio RCO. Ver lib/rco-script.ts.
+const ROTULO_RCO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite", integral: "Integral" };
+const DIA_SCRIPT: Record<number, string> = { 0: "Seg", 1: "Ter", 2: "Qua", 3: "Qui", 4: "Sex" };
+router.get("/rco-script", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const turno = req.query.turno as string | undefined;
+  if (!turno || !TURNOS_RCO.includes(turno)) {
+    res.status(400).json({ error: "Selecione um turno (matutino, vespertino, noturno ou integral) antes de gerar o script." });
+    return;
+  }
+  const montado = await montarRegistrosRco(escolaId, turno, false);
+  if ("erro" in montado) { res.status(400).json(montado.erro); return; }
+  const { escola, registros, horarioPorSlot, chaveSlot, slots } = montado;
+
+  const coddiscs = [...new Set(registros.map((r) => r.coddisc))];
+  const nomesRco = coddiscs.length
+    ? await db.select({ codigoExterno: codigosRcoDisciplinaTable.codigoExterno, nomeRco: codigosRcoDisciplinaTable.nomeRco })
+        .from(codigosRcoDisciplinaTable).where(inArray(codigosRcoDisciplinaTable.codigoExterno, coddiscs))
+    : [];
+  const nomeRcoPorCod = new Map<number, string>();
+  for (const n of nomesRco) if (n.nomeRco && !nomeRcoPorCod.has(n.codigoExterno)) nomeRcoPorCod.set(n.codigoExterno, n.nomeRco);
+
+  const porTurmaRco = new Map<string, typeof registros>();
+  for (const r of registros) {
+    const k = String(r.codTurma);
+    if (!porTurmaRco.has(k)) porTurmaRco.set(k, []);
+    porTurmaRco.get(k)!.push(r);
+  }
+  const turmasScript: TurmaRcoScript[] = [...porTurmaRco.entries()].map(([codTurma, regs]) => {
+    const nivel = turno === "matutino" ? regs[0]!.turmaNivelEnsino : null;
+    // linhas = horarios letivos do esquema da turma + qualquer horario com aula (ex.: 7a aula da ASS)
+    const numeros = new Set<number>(regs.map((r) => r.numeroAula));
+    for (const s of slots) {
+      if (s.letivo === false) continue;
+      if (turno === "matutino" && s.nivelEnsino !== nivel) continue;
+      numeros.add(s.numeroAula);
+    }
+    const horas = [...numeros].sort((a, b) => a - b)
+      .map((n) => horarioPorSlot.get(chaveSlot(n, nivel)))
+      .filter((h): h is [string, string] => !!h);
+    const celulas = new Map<string, { dia: number; ini: string; nomes: string[][]; cods: Set<number> }>();
+    for (const r of regs) {
+      const ini = horarioPorSlot.get(chaveSlot(r.numeroAula, nivel))?.[0];
+      if (!ini) continue;
+      const k = `${r.diaSemana}|${ini}`;
+      if (!celulas.has(k)) celulas.set(k, { dia: r.diaSemana, ini, nomes: [], cods: new Set() });
+      const c = celulas.get(k)!;
+      if (c.cods.has(r.coddisc)) continue;
+      c.cods.add(r.coddisc);
+      c.nomes.push([...new Set([nomeRcoPorCod.get(r.coddisc), r.disciplinaNome].filter((x): x is string => !!x))]);
+    }
+    return {
+      codTurma,
+      turma: regs[0]!.turmaRco,
+      horas,
+      celulas: [...celulas.values()].sort((a, b) => a.dia - b.dia || a.ini.localeCompare(b.ini))
+        .map((c) => [DIA_SCRIPT[c.dia]!, c.ini, c.nomes] as CelulaRco),
+    };
+  }).sort((a, b) => a.turma.localeCompare(b.turma, "pt-BR"));
+
+  const agora = new Date();
+  const js = gerarScriptRco({
+    escola: escola.nomeFantasia ?? "",
+    turno,
+    rotuloRco: ROTULO_RCO[turno] ?? turno,
+    geradoEm: agora.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
+    turmas: turmasScript,
+  });
+  res.setHeader("Content-Type", "text/javascript; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename="rco-gravar-${turno}-${agora.toISOString().slice(0, 10)}.js"`);
+  res.send(js);
 });
 
 // ------------------------------------------------------------------
@@ -672,7 +758,7 @@ router.get("/grade-pdf/professor", async (req, res) => {
   // [NOVO] ?nomeExperimental=X -- mesma logica da rota /grade-pdf/turma,
   // ver comentario la.
   const nomeExperimental = req.query.nomeExperimental as string | undefined;
-  const [slotsBrutos, professoresTodos, disciplinas, turmas, disponibilidades] = await Promise.all([
+  const [slotsSemProjecao, professoresTodos, disciplinas, turmasDoBanco, disponibilidades, mapaIntegral] = await Promise.all([
     nomeExperimental
       ? db.select().from(horariosExperimentaisTable).where(and(
           eq(horariosExperimentaisTable.escolaId, escolaId),
@@ -684,7 +770,10 @@ router.get("/grade-pdf/professor", async (req, res) => {
     db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
     db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
     db.select().from(disponibilidadeTable),
+    carregarMapaIntegral(escolaId),
   ]);
+  // [TURNO-INTEGRAL-PROFESSOR] aula da turma integral vai para o turno/aula real do professor
+  const { turmas, aulas: slotsBrutos } = projetarIntegral(turmasDoBanco, slotsSemProjecao as Array<{ turmaId: number; disciplinaId: number; professorId: number; diaSemana: number; numeroAula: number; assincrona?: boolean | null }>, mapaIntegral);
   const slots = slotsBrutos as Array<{ turmaId: number; disciplinaId: number; professorId: number; diaSemana: number; numeroAula: number; assincrona?: boolean | null }>;
   // [REVEZAMENTO-TRIO] trio: (P) presencial / (S) suporte na semana do PDF
   const revezProf = await mapaRevezamento(turmas.map((t) => t.id), hojeBrasil(lerOffsetSemana(req)));

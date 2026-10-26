@@ -34,6 +34,7 @@ import {
 } from "@workspace/db";
 import { eq, inArray, sql } from "drizzle-orm";
 import { PARES_TURNO } from "./intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
+import { mapaIntegralDosSlots, projetarIntegral } from "./turno-integral"; // [TURNO-INTEGRAL-PROFESSOR]
 
 import { MOTIVO_HA_AUTO, MOTIVO_HA_AUTO_OUTRO_TURNO, ehHAMovel } from "./ha-contraturno"; // [HA-OUTRO-TURNO] [HA-IMPORTADA-MOVEL]
 import { montarMapaPrincipal, principalDe } from "./professor-principal"; // [MESMA-PESSOA-HA]
@@ -157,14 +158,15 @@ export async function calcularHAIdeal(
   escolaId: string,
   aulasOverride?: AulaParaCalculoHA[],
 ): Promise<MarcaHACalculada[]> {
-  const [professores, turmas, horariosReais, horarioSlots, disponibilidadesTodas] = await Promise.all([
+  const [professores, turmasDoBanco, horariosReais, horarioSlots, disponibilidadesTodas] = await Promise.all([
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
     db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
     aulasOverride ? Promise.resolve([]) : db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
     db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId)),
     db.select().from(disponibilidadeTable),
   ]);
-  const horarios: AulaParaCalculoHA[] = aulasOverride ?? horariosReais;
+  // [TURNO-INTEGRAL-PROFESSOR] aula da turma integral conta (e ocupa) no turno real do professor
+  const { turmas, aulas: horarios } = projetarIntegral(turmasDoBanco, aulasOverride ?? horariosReais, mapaIntegralDosSlots(horarioSlots));
 
   const profIdsDaEscola = new Set(professores.map((p) => p.id));
   const disponibilidades = disponibilidadesTodas.filter((d) => profIdsDaEscola.has(d.professorId));
