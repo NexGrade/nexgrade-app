@@ -51,7 +51,9 @@ const CORPO = String.raw`
   }
   if (tur.texto && norm(tur.texto) !== norm(DADOS.rotuloRco) &&
       !confirm("No RCO esta escolhido o turno \"" + tur.texto + "\", mas este script e do turno " + DADOS.rotuloRco + ". Continuar mesmo assim?")) return;
-  const qtdeTela = lerCampo(document, "qtdeAula").valor;
+  // "Quantidade de Aulas no Turno" da tela Grade de Horario e digitada pela pessoa e fica com o valor
+  // da ultima consulta (ex.: 11 do Integral com o turno Noite escolhido) -- nao serve. A turma vai
+  // com o numero de linhas do NexGrade.
   const BASE = { grupo: "A,B", codEstabelecimento: est.valor, codTurno: tur.valor, codPeriodoLetivo: per.valor };
   const faltam = DADOS.turmas.filter((t) => !nomeRco[t.codTurma]).map((t) => t.turma + " (" + t.codTurma + ")");
   if (faltam.length) console.log("Turmas do NexGrade que nao aparecem na lista do RCO deste turno: " + faltam.join(", "));
@@ -78,7 +80,7 @@ const CORPO = String.raw`
   const planos = []; const previa = []; let problemas = 0;
   for (const T of alvo) {
     const abrir = { ...BASE, descrTurma: nomeRco[T.codTurma] || "", codTurma: T.codTurma };
-    if (qtdeTela) abrir.qtdeAula = qtdeTela;
+    abrir.qtdeAula = String(T.horas.length);
     const tela = await post("carregarInterfaceIncluir", enc(abrir));
     const doc = new DOMParser().parseFromString(tela.html, "text/html");
     const s0 = doc.getElementsByName("dtos[0].codClassDiscSeg[0]")[0];
@@ -87,16 +89,14 @@ const CORPO = String.raw`
     const campo = (n) => lerCampo(doc, n).valor;
     const descrTurma = campo("descrTurma") || nomeRco[T.codTurma] || "";
     const dataInicio = campo("dataInicio");
-    // linhas da tela da turma no RCO (dtos[N].horaInicio): o Salvar manda qtdeAula = linhas da tela
-    const linhasTela = [...doc.querySelectorAll("[name]")].reduce((m, e) => { const x = /^dtos\[(\d+)\]\.horaInicio$/.exec(e.getAttribute("name") || ""); return x ? Math.max(m, Number(x[1]) + 1) : m; }, 0);
-    const qtdeAula = campo("qtdeAula") || qtdeTela || String(linhasTela || T.horas.length);
+    const qtdeAula = String(T.horas.length);
     const quer = {}; for (const [d, h, ds] of T.celulas) quer[d + "|" + h] = ds;
     const dados = { grupo: BASE.grupo, acao: "incluir", codTurmaHorario: campo("codTurmaHorario"), codEstabelecimento: campo("codEstabelecimento") || BASE.codEstabelecimento,
       codTurno: campo("codTurno") || BASE.codTurno, codPeriodoLetivo: campo("codPeriodoLetivo") || BASE.codPeriodoLetivo, codTurma: T.codTurma, qtdeAula,
       nomeCompletoEstab: campo("nomeCompletoEstab") || est.texto, descrTurno: campo("descrTurno") || tur.texto,
       codDescPeriodoLetivo: campo("codDescPeriodoLetivo") || per.texto, descrTurma, dataInicio };
     const erros = []; const aprox = [];
-    const linhas = Math.max(Number(qtdeAula) || 0, T.horas.length);
+    const linhas = T.horas.length;
     for (let r = 0; r < linhas; r++) {
       const [ini, fim] = T.horas[r] || ["", ""];
       dados["dtos[" + r + "].horaInicio"] = ini; dados["dtos[" + r + "].horaFim"] = fim;
