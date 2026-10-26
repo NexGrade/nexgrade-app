@@ -40,6 +40,7 @@ import { ehBloqueioParaMotor } from "../lib/bloqueio-real"; // [HA-FIXA]
 import { bloqueiosIntervaloEntreTurnos } from "../lib/intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 import { aulasFixasTable } from "@workspace/db"; // [AULA-FIXA-CADASTRO]
 import { validarCapacidadeProfessores, calcularCotaHaPorTurno } from "../lib/capacidade-professor";
+import { carregarMapaIntegral, slotReal, TURNO_INTEGRAL } from "../lib/turno-integral"; // [TURNO-INTEGRAL]
 
 const router = Router();
 
@@ -752,12 +753,15 @@ router.post("/", async (req, res) => {
   // colocado exatamente num horario marcado como indisponivel, sem
   // nenhum aviso, sobrepondo o bloqueio silenciosamente (bug
   // confirmado 2026-09-17: caso da Katia em 1MA EM/1MD MA).
+  // [TURNO-INTEGRAL] turma integral: a disponibilidade do professor e a do horario
+  // real equivalente (Matutino/Vespertino).
+  const real = slotReal(turma.turno, data.numeroAula, turma.turno === TURNO_INTEGRAL ? await carregarMapaIntegral(escolaId) : new Map());
   const bloqueio = await db.select().from(disponibilidadeTable)
     .where(and(
       eq(disponibilidadeTable.professorId, data.professorId),
-      eq(disponibilidadeTable.turno, turma.turno),
+      eq(disponibilidadeTable.turno, real.turno),
       eq(disponibilidadeTable.diaSemana, data.diaSemana),
-      eq(disponibilidadeTable.horarioSlot, data.numeroAula),
+      eq(disponibilidadeTable.horarioSlot, real.numeroAula),
       eq(disponibilidadeTable.disponivel, false),
     ))
     .then(r => r[0]);

@@ -13,4 +13,5 @@ export const EsquemaHorarioSlotTurno = {
   matutino: 'matutino',
   vespertino: 'vespertino',
   noturno: 'noturno',
+  integral: 'integral',
 } as const;

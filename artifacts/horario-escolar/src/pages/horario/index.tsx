@@ -183,7 +183,7 @@ export default function HorarioHubPage() {
 
 // ═══════════════════════════════════════════════ ABA: ESQUEMA ═══════════════════════════════════════════════
 
-type Turno = "matutino" | "vespertino" | "noturno";
+type Turno = "matutino" | "vespertino" | "noturno" | "integral"; // [TURNO-INTEGRAL]
 
 // [AUTO-NOME-CPSAT] Nome padrao do experimento CP-SAT: turno + data + hora,
 // recalculado toda vez que o dialogo abre ou o turno muda -- antes o campo
@@ -302,12 +302,13 @@ export function AbaEsquema() { // [FASE-C3] usada em Calendario e Turnos
   return (
     <div className="space-y-4 pt-2">
       <div className="flex gap-2">
-        {(["matutino", "vespertino", "noturno"] as Turno[]).map((t) => (
+        {(["matutino", "vespertino", "noturno", "integral"] as Turno[]).map((t) => (
           <Button key={t} variant={turno === t ? "default" : "outline"} size="sm" onClick={() => { setTurno(t); setStep(1); }}>
             {t.charAt(0).toUpperCase() + t.slice(1)}
           </Button>
         ))}
       </div>
+      {turno === "integral" && <EsquemaIntegral />}
       {turno === "matutino" && (
         <div className="flex gap-2">
           <Button variant={nivelEnsino === "fundamental" ? "default" : "outline"} size="sm" onClick={() => { setNivelEnsino("fundamental"); setStep(1); }}>
@@ -319,7 +320,7 @@ export function AbaEsquema() { // [FASE-C3] usada em Calendario e Turnos
         </div>
       )}
 
-      {isLoading ? (
+      {turno === "integral" ? null : isLoading ? (
         <Skeleton className="h-[400px] w-full" />
       ) : (
         <Card className="p-6">
@@ -405,6 +406,90 @@ export function AbaEsquema() { // [FASE-C3] usada em Calendario e Turnos
         </Card>
       )}
     </div>
+  );
+}
+
+// [TURNO-INTEGRAL] (26/10/2026) Esquema do turno Integral (manha + tarde, ex.: Formacao de
+// Docentes). Tem varios intervalos (manha e almoco), entao em vez do assistente de um
+// intervalo so, a escola confere aula por aula. Sugestao inicial = Matutino Medio/Tecnico
+// + Vespertino ja cadastrados; o horario de cada aula pode ser ajustado (no RCO do Mario
+// Braga a 3a da tarde do integral e 15:00, nao 14:45). O choque de professor usa o
+// horario real equivalente (lib/turno-integral.ts no servidor).
+function EsquemaIntegral() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const chave = { turno: "integral" as const };
+  const { data: existentes, isLoading } = useListHorarioSlots(chave, { query: { queryKey: getListHorarioSlotsQueryKey(chave) } });
+  const { data: manha } = useListHorarioSlots({ turno: "matutino", nivelEnsino: "medio_tecnico" }, { query: { queryKey: getListHorarioSlotsQueryKey({ turno: "matutino", nivelEnsino: "medio_tecnico" }) } });
+  const { data: tarde } = useListHorarioSlots({ turno: "vespertino" }, { query: { queryKey: getListHorarioSlotsQueryKey({ turno: "vespertino" }) } });
+  const salvarLote = useSetHorarioSlotsLote();
+  const [linhas, setLinhas] = useState<Array<{ horaInicio: string; duracaoMinutos: number }>>([]);
+  const [carregado, setCarregado] = useState(false);
+
+  useEffect(() => {
+    if (carregado || isLoading || !manha || !tarde) return;
+    const ordenar = (l: typeof manha) => [...(l ?? [])].filter((s) => s.numeroAula >= 1).sort((a, b) => a.numeroAula - b.numeroAula);
+    const base = existentes && existentes.length > 0 ? ordenar(existentes) : [...ordenar(manha), ...ordenar(tarde)];
+    setLinhas(base.map((s) => ({ horaInicio: s.horaInicio.slice(0, 5), duracaoMinutos: s.duracaoMinutos })));
+    setCarregado(true);
+  }, [carregado, isLoading, existentes, manha, tarde]);
+
+  const fim = (l: { horaInicio: string; duracaoMinutos: number }) => {
+    const m = paraMinutos(l.horaInicio) + l.duracaoMinutos;
+    return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+  };
+  const ordemErrada = linhas.some((l, i) => i > 0 && paraMinutos(l.horaInicio) < paraMinutos(linhas[i - 1]!.horaInicio) + linhas[i - 1]!.duracaoMinutos);
+
+  function salvar() {
+    salvarLote.mutate(
+      { data: { turno: "integral", slots: linhas.map((l, i) => ({ numeroAula: i + 1, horaInicio: l.horaInicio, duracaoMinutos: l.duracaoMinutos })) } },
+      {
+        onSuccess: () => {
+          toast({ title: "Esquema do Integral salvo!", description: `${linhas.length} aulas configuradas.` });
+          queryClient.invalidateQueries({ queryKey: getListHorarioSlotsQueryKey(chave) });
+        },
+        onError: () => toast({ title: "Erro ao salvar esquema", variant: "destructive" }),
+      },
+    );
+  }
+
+  if (isLoading || !carregado) return <Skeleton className="h-[300px] w-full" />;
+  return (
+    <Card className="p-6 space-y-4">
+      <div>
+        <p className="font-semibold">Integral (manhã e tarde)</p>
+        <p className="text-xs text-muted-foreground">
+          {existentes && existentes.length > 0
+            ? "Horários do turno Integral cadastrados. Ajuste o que precisar e salve."
+            : "Sugestão a partir do Matutino (Médio/Técnico) e do Vespertino. Confira com o horário da escola (no RCO) antes de salvar."}
+          {" "}O professor da turma integral não pode estar em outra turma no mesmo horário da manhã ou da tarde.
+        </p>
+      </div>
+      <div className="grid gap-2 max-w-md">
+        {linhas.map((l, i) => (
+          <div key={i} className="flex items-center gap-2 text-sm">
+            <span className="w-16 text-muted-foreground">{i + 1}ª aula</span>
+            <Input type="time" className="w-32" value={l.horaInicio} onChange={(e) => setLinhas(linhas.map((x, j) => (j === i ? { ...x, horaInicio: e.target.value } : x)))} />
+            <Input type="number" min={30} max={90} className="w-20" value={l.duracaoMinutos} onChange={(e) => setLinhas(linhas.map((x, j) => (j === i ? { ...x, duracaoMinutos: Number(e.target.value) } : x)))} />
+            <span className="text-xs text-muted-foreground">min · até {fim(l)}</span>
+            <Button variant="ghost" size="sm" onClick={() => setLinhas(linhas.filter((_, j) => j !== i))} title="Tirar esta aula">✕</Button>
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <Button variant="outline" size="sm" onClick={() => {
+          const ult = linhas[linhas.length - 1];
+          setLinhas([...linhas, { horaInicio: ult ? fim(ult) : "07:30", duracaoMinutos: ult?.duracaoMinutos ?? 50 }]);
+        }}>+ Aula</Button>
+      </div>
+      {ordemErrada && <p className="text-xs text-amber-600">Há aula começando antes do fim da anterior. Confira os horários.</p>}
+      {existentes && existentes.length > 0 && <p className="text-xs text-amber-600">Salvar substitui o esquema inteiro do Integral.</p>}
+      <div className="flex justify-end pt-2 border-t">
+        <Button onClick={salvar} disabled={salvarLote.isPending || linhas.length === 0 || ordemErrada}>
+          <Check className="h-4 w-4 mr-1" /> {salvarLote.isPending ? "Salvando..." : "Salvar esquema"}
+        </Button>
+      </div>
+    </Card>
   );
 }
 
