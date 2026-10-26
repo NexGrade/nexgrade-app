@@ -568,11 +568,29 @@ function DialogAdicionarAula({
   // lista de professores mostra so os aptos: o do vinculo da turma e os habilitados na disciplina
   // (cadastro do professor). "Mostrar todos" libera o resto.
   const [todosProfessores, setTodosProfessores] = useState(false);
-  const opcoesDisciplina = [
-    ...(disciplinas ?? []).filter((d) => idsDaTurma.has(d.id))
-      .map((d) => ({ value: String(d.id), label: d.nome, sublabel: nomeProfVinculo(d.id) ? `da turma · ${nomeProfVinculo(d.id)}` : "da turma" })),
-    ...(disciplinas ?? []).filter((d) => !idsDaTurma.has(d.id)).map((d) => ({ value: String(d.id), label: d.nome })),
-  ];
+  // [DISCIPLINAS-SEM-REPETIDAS] mesma disciplina cadastrada duas vezes (mesmo nome e mesmo codigo SAE)
+  // aparece uma vez so (a da turma, senao a primeira); mesmo nome com codigo diferente mostra o SAE
+  const chaveDisc = (d: { nome: string; codigoSae?: string | null }) =>
+    `${d.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/\s+/g, " ").trim()}|${d.codigoSae ?? ""}`;
+  const nomesRepetidos = new Set<string>();
+  {
+    const vistos = new Map<string, Set<string>>();
+    for (const d of disciplinas ?? []) {
+      const n = chaveDisc(d).split("|")[0]!;
+      if (!vistos.has(n)) vistos.set(n, new Set());
+      vistos.get(n)!.add(d.codigoSae ?? "");
+    }
+    for (const [n, cods] of vistos) if (cods.size > 1) nomesRepetidos.add(n);
+  }
+  const jaListadas = new Set<string>();
+  const ordenadas = [...(disciplinas ?? []).filter((d) => idsDaTurma.has(d.id)), ...(disciplinas ?? []).filter((d) => !idsDaTurma.has(d.id))]
+    .filter((d) => { const k = chaveDisc(d); if (jaListadas.has(k) && !(String(d.id) === disciplinaId)) return false; jaListadas.add(k); return true; });
+  const opcoesDisciplina = ordenadas.map((d) => {
+    const daTurma = idsDaTurma.has(d.id);
+    const sae = nomesRepetidos.has(chaveDisc(d).split("|")[0]!) && d.codigoSae ? `SAE ${d.codigoSae}` : "";
+    const turma = daTurma ? (nomeProfVinculo(d.id) ? `da turma · ${nomeProfVinculo(d.id)}` : "da turma") : "";
+    return { value: String(d.id), label: d.nome, sublabel: [turma, sae].filter(Boolean).join(" · ") || undefined };
+  });
   const idsVinculo = new Set(vinculos.filter((v) => v.disciplinaId === Number(disciplinaId)).flatMap((v) => [v.professorId, v.professorApoioId]).filter((x): x is number => x != null));
   const aptos = (professores ?? []).filter((p) => idsVinculo.has(p.id) || (p.disciplinaIds ?? []).includes(Number(disciplinaId)));
   const semAptos = !!disciplinaId && aptos.length === 0;
