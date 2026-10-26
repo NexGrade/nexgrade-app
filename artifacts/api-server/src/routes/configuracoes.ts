@@ -5,6 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 import { CHAVES_REGRA_REDE } from "../lib/regras-rede"; // [REGRAS-REDE]
+import { CHAVES_ARQUIVO_RCO } from "../lib/arquivo-rco"; // [ARQUIVO-RCO]
 
 const router = Router();
 
@@ -18,7 +19,7 @@ router.get("/", async (req, res) => {
   const rows = await db.select().from(configuracoesTable)
     .where(eq(configuracoesTable.escolaId, escolaId))
     .orderBy(configuracoesTable.chave);
-  res.json(rows);
+  res.json(rows.filter((r) => !CHAVES_ARQUIVO_RCO.has(r.chave))); // [ARQUIVO-RCO] arquivo do RCO tem rota propria (/arquivo-rco)
 });
 
 router.get("/:chave", async (req, res) => {
@@ -37,6 +38,11 @@ router.get("/:chave", async (req, res) => {
 router.put("/:chave", async (req, res) => {
   const escolaId = getEscolaId(req);
   const chave = req.params.chave;
+  // [ARQUIVO-RCO] pedido e envio do arquivo do RCO so pelas rotas proprias
+  if (CHAVES_ARQUIVO_RCO.has(chave)) {
+    res.status(403).json({ error: "Use a tela Arquivo do RCO." });
+    return;
+  }
   // [REGRAS-REDE] regra de geração da rede: igual para todas as escolas, não se grava por escola
   if (CHAVES_REGRA_REDE.has(chave)) {
     res.status(403).json({ error: "Esta é uma regra padrão da rede (igual para todas as escolas) e não pode ser alterada pela escola." });
