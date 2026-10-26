@@ -1,6 +1,6 @@
 // [HA-MOVEL-MELHORIA] (21/10/2026) Reposiciona a HA MOVEL (automatica ou importada de outro
 // sistema, ver ehHAMovel) de cada professor para os horarios que tiram janela, SEM mexer em aula.
-// Motivo: no Arlinda (grade do Urania), a manha tinha 11 janelas; o "Melhorar" mexia 25 aulas para
+// Motivo: no Arlinda (grade do sistema anterior), a manha tinha 11 janelas; o "Melhorar" mexia 25 aulas para
 // chegar a 3, mas so mudando a HA de lugar dava 0. O "Melhorar" agora tenta isto ANTES de mexer em aula.
 // Regras:
 //  - so move HA movel; HA fixa, probatorio e HA manual ficam onde estao (e ocupam o horario);

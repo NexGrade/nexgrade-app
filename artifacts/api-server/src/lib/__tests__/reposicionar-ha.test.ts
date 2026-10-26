@@ -6,7 +6,7 @@ const M = "matutino";
 const slots = slotsLetivosPorTurno([1, 2, 3, 4, 5, 6].map((n) => ({ turno: M, numeroAula: n, letivo: true }))
   .concat([1, 2, 3, 4, 5].map((n) => ({ turno: "vespertino", numeroAula: n, letivo: true }))));
 const aula = (dia: number, n: number, turno = M, professorId = 1): AulaPos => ({ professorId, turno, diaSemana: dia, numeroAula: n });
-const ha = (dia: number, n: number, motivo: string | null = "Importado do Urânia 21/10 (H.A.)", turno = M): DispLinha =>
+const ha = (dia: number, n: number, motivo: string | null = "Importado do sistema anterior 21/10 (H.A.)", turno = M): DispLinha =>
   ({ professorId: 1, turno, diaSemana: dia, horarioSlot: n, disponivel: true, horaAtividadeObrigatoria: true, motivo });
 const blq = (dia: number, n: number, motivo = "Atividade fora de sala (ocupado: FOR)"): DispLinha =>
   ({ professorId: 1, turno: M, diaSemana: dia, horarioSlot: n, disponivel: false, horaAtividadeObrigatoria: false, motivo });
@@ -26,7 +26,7 @@ describe("reposicionarHAMovel", () => {
   });
 
   it("nao mexe em HA fixa, probatorio nem manual", () => {
-    for (const motivo of ["HA fixa (definida manualmente)", "Importado do Urânia 21/10 (H.A.) - estagio probatorio", null]) {
+    for (const motivo of ["HA fixa (definida manualmente)", "Importado do sistema anterior 21/10 (H.A.) - estagio probatorio", null]) {
       expect(rodar([aula(0, 1), aula(0, 2), aula(0, 4)], [ha(0, 6, motivo)])).toHaveLength(0);
     }
   });
