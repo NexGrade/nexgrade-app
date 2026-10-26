@@ -7,6 +7,7 @@ packages:
 allowBuilds:
   '@clerk/shared': true
   esbuild: true
+  javascript-obfuscator: false # [RCO-SCRIPT-OFUSCADO] so usado no build; o script dele e so aviso
 
 autoInstallPeers: false
 

@@ -155,18 +155,26 @@ const CORPO = String.raw`
   console.log(res.join("\n")); alert(res.join("\n") + "\n\nConfira no Exibir Horario.");
 `;
 
+// [RCO-SCRIPT-OFUSCADO] (26/10/2026) o script vai para o navegador da escola (qualquer um le). No build
+// (artifacts/api-server/build.mjs) esta linha e trocada pelo programaDoNavegador() OFUSCADO
+// (javascript-obfuscator: sem comentarios, nomes e textos embaralhados). Em teste/dev fica o legivel.
+// Nao mude o texto da linha abaixo sem mudar o build.mjs.
+const OFUSCADO: string | null = null;
+
+/** O programa que roda no Console do RCO; le os dados de window.__NEXGRADE_DADOS. */
+export function programaDoNavegador(): string {
+  return ["(async () => {", "  const DADOS = window.__NEXGRADE_DADOS;", CORPO.replace(/^\n/, ""), "})();"].join("\n");
+}
+
 /** Texto do script (JavaScript para o Console do navegador). */
 export function gerarScriptRco(d: DadosScriptRco): string {
   const json = JSON.stringify(d).replace(/</g, "\\u003c");
   return [
-    `// NexGrade -> RCO: grava a grade do turno ${d.rotuloRco} de ${d.escola} (gerado em ${d.geradoEm}).`,
+    `// NexGrade -> RCO: turno ${d.rotuloRco} de ${d.escola} (gerado em ${d.geradoEm}).`,
     `// Como usar: RCO > Grade de Horario, escolha o Periodo Letivo e o Turno ${d.rotuloRco}; aperte F12, aba Console;`,
-    "// cole este texto inteiro e aperte Enter. O script pergunta as turmas, mostra a PREVIA e so grava se voce confirmar.",
-    "// Cada turma gravada tem a grade inteira substituida (igual ao Salvar da tela Incluir Horario).",
-    "(async () => {",
-    `  const DADOS = ${json};`,
-    CORPO.replace(/^\n/, ""),
-    "})();",
+    "// cole este texto inteiro e aperte Enter. Ele mostra a PREVIA e so grava se voce confirmar.",
+    `window.__NEXGRADE_DADOS = ${json};`,
+    OFUSCADO ?? programaDoNavegador(),
     "",
   ].join("\n");
 }
