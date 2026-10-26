@@ -428,7 +428,7 @@ export const GetTurmaHorarioParams = zod.object({
 export const getTurmaHorarioResponseDiaSemanaMin = 0;
 export const getTurmaHorarioResponseDiaSemanaMax = 4;
 
-export const getTurmaHorarioResponseNumeroAulaMax = 8;
+export const getTurmaHorarioResponseNumeroAulaMax = 12;
 
 
 
@@ -491,7 +491,7 @@ export const ListHorariosQueryParams = zod.object({
 export const listHorariosResponseDiaSemanaMin = 0;
 export const listHorariosResponseDiaSemanaMax = 4;
 
-export const listHorariosResponseNumeroAulaMax = 8;
+export const listHorariosResponseNumeroAulaMax = 12;
 
 
 
@@ -549,7 +549,7 @@ export const ListHorariosResponse = zod.array(ListHorariosResponseItem)
 export const createHorarioBodyDiaSemanaMin = 0;
 export const createHorarioBodyDiaSemanaMax = 4;
 
-export const createHorarioBodyNumeroAulaMax = 8;
+export const createHorarioBodyNumeroAulaMax = 12;
 
 
 
@@ -565,7 +565,7 @@ export const CreateHorarioBody = zod.object({
 export const createHorarioResponseDiaSemanaMin = 0;
 export const createHorarioResponseDiaSemanaMax = 4;
 
-export const createHorarioResponseNumeroAulaMax = 8;
+export const createHorarioResponseNumeroAulaMax = 12;
 
 
 
@@ -648,7 +648,7 @@ export const GerarHorarioBody = zod.object({
 export const gerarHorarioResponseHorarioItemDiaSemanaMin = 0;
 export const gerarHorarioResponseHorarioItemDiaSemanaMax = 4;
 
-export const gerarHorarioResponseHorarioItemNumeroAulaMax = 8;
+export const gerarHorarioResponseHorarioItemNumeroAulaMax = 12;
 
 
 
@@ -763,7 +763,7 @@ export const PromoverHorarioExperimentalParams = zod.object({
 export const promoverHorarioExperimentalResponseHorarioItemDiaSemanaMin = 0;
 export const promoverHorarioExperimentalResponseHorarioItemDiaSemanaMax = 4;
 
-export const promoverHorarioExperimentalResponseHorarioItemNumeroAulaMax = 8;
+export const promoverHorarioExperimentalResponseHorarioItemNumeroAulaMax = 12;
 
 
 
