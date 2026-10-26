@@ -34,7 +34,7 @@ export const CHAVE_TETO_LIBERADO = "seed_pr.teto_aulas_turno_liberado";
 type LiberacoesTeto = Record<string, { limite: number; em: string; por?: string | null }>;
 
 // [CONFLITO-ACEITO] (21/10/2026) conflito que a escola decidiu deixar como esta (ex.: pausa entre turnos que
-// o Urania sempre teve). Guardado em configuracoes: { "tipo|descricao": { em, por } }. A descricao traz
+// o sistema anterior sempre teve). Guardado em configuracoes: { "tipo|descricao": { em, por } }. A descricao traz
 // professor, dia e turmas: se a grade mudar, a descricao muda e o conflito volta a aparecer.
 export const CHAVE_CONFLITOS_ACEITOS = "conflitos.aceitos";
 type ConflitosAceitos = Record<string, { em: string; por?: string | null }>;

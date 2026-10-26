@@ -29,7 +29,7 @@ import { gerarPdfPontoDiario, type PontoDiario, type CelulaPonto, type LinhaPont
 // (Romario: 3a aula 20:35). No arquivo vai o horario do RCO mais proximo (ate 10 min).
 const RCO_NOTURNO: Array<[string, string]> = [["18:40", "19:30"], ["19:30", "20:20"], ["20:30", "21:20"], ["21:20", "22:10"], ["22:10", "23:00"]];
 // [RCO-NOTURNO-18H] (22/10/2026) escola cujo noturno comeca as 18:00 (Mario Braga: 18:00, 18:45, 19:35,
-// 20:35, 21:25, 22:10 -- o mesmo horario do Urania) vai com o horario REAL dela: o RCO dessa escola ja
+// 20:35, 21:25, 22:10 -- o mesmo horario do sistema anterior) vai com o horario REAL dela: o RCO dessa escola ja
 // tem esse horario (confirmado pela Simone em 22/10). Escola que comeca as 18:40 (Romario) continua com o
 // horario fixo do RCO acima, que ja foi importado com sucesso.
 export function noturnoComecaAs18(iniciosNoturno: string[]): boolean {
