@@ -2236,7 +2236,7 @@ components:
         professor:
           $ref: "#/components/schemas/Professor"
         diaSemana: { type: integer, minimum: 0, maximum: 4 }
-        numeroAula: { type: integer, minimum: 1, maximum: 8 }
+        numeroAula: { type: integer, minimum: 1, maximum: 12 }
         sala: { type: ["string", "null"] }
 
     HorarioSlotInput:
@@ -2247,7 +2247,7 @@ components:
         disciplinaId: { type: integer }
         professorId: { type: integer }
         diaSemana: { type: integer, minimum: 0, maximum: 4 }
-        numeroAula: { type: integer, minimum: 1, maximum: 8 }
+        numeroAula: { type: integer, minimum: 1, maximum: 12 }
         sala: { type: string }
 
     HorarioExperimental:
