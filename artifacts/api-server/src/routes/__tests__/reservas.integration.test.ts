@@ -298,6 +298,16 @@ describe.skipIf(!TEM_BANCO)("reservas: integracao com banco real", () => {
       expect((await chamar("POST", "/reservas/gestor/lote", { professorId: ids.prof[0]!, data: D5, turno: "matutino", itens: [{ salaId: ids.sala, numerosAula: [1] }], titulo: "x" }, como("professor"))).status).toBe(403);
       expect((await chamar("PATCH", `/recursos/${ids.recurso}`, { quantidadeTotal: 30 }, como("professor"))).status).toBe(403);
     });
+    it("professor e gestor nao baixam o script do RCO nem o arquivo do RCO enviado; coordenacao passa no filtro", async () => {
+      for (const cargo of ["professor", "reservas"]) {
+        expect((await chamar("GET", "/export/rco-script?turno=noturno", undefined, como(cargo))).status, cargo).toBe(403); // [RCO-SCRIPT-OFUSCADO]
+        expect((await chamar("GET", "/arquivo-rco/baixar", undefined, como(cargo))).status, cargo).toBe(403); // [ARQUIVO-RCO]
+        expect((await chamar("POST", "/arquivo-rco", undefined, como(cargo))).status, cargo).toBe(403);
+      }
+      // coordenacao passa no filtro (as rotas nao estao montadas neste app de teste: 404, nao 403)
+      expect((await chamar("GET", "/export/rco-script?turno=noturno", undefined, como("coordenacao"))).status).toBe(404);
+      expect((await chamar("GET", "/arquivo-rco/baixar", undefined, como("coordenacao"))).status).toBe(404);
+    });
     it("gestor de reservas consulta e bloqueia, mas nao muda o total de tablets", async () => {
       expect((await chamar("GET", `/reservas/gestor/semana?data=${D5}`, undefined, como("reservas"))).status).toBe(200);
       expect((await chamar("GET", "/reservas/bloqueios", undefined, como("reservas"))).status).toBe(200);

@@ -82,11 +82,7 @@ export default function ArquivoRcoPage() {
         <CardContent className="text-sm space-y-2">
           <ol className="list-decimal list-inside space-y-1.5">
             <li>No RCO, abra <strong>Grade de Horário</strong> e escolha o <strong>Período Letivo</strong> atual.</li>
-            <li>Use a opção de <strong>exportar</strong> da tela. O RCO baixa um arquivo <strong>.XML</strong>.</li>
-            <li>
-              Se a opção não aparecer: aperte <strong>F12</strong>, clique em <strong>Console</strong>, digite{" "}
-              <code className="rounded bg-muted px-1">baixarArquivo()</code> e aperte Enter. O arquivo baixa do mesmo jeito.
-            </li>
+            <li>Use a opção de <strong>exportar</strong> da tela. O RCO baixa um arquivo <strong>.XML</strong>. Se não encontrar a opção, fale com a equipe NexGrade.</li>
             <li>Não abra nem altere o arquivo antes de enviar.</li>
           </ol>
         </CardContent>

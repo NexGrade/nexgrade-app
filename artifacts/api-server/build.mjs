@@ -1,14 +1,46 @@
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { build as esbuild } from "esbuild";
+import { build as esbuild, transform } from "esbuild";
 import esbuildPluginPino from "esbuild-plugin-pino";
-import { rm } from "node:fs/promises";
+import { rm, readFile, writeFile } from "node:fs/promises";
+import os from "node:os";
+import { pathToFileURL } from "node:url";
+import JavaScriptObfuscator from "javascript-obfuscator";
 
 // Plugins (e.g. 'esbuild-plugin-pino') may use `require` to resolve dependencies
 globalThis.require = createRequire(import.meta.url);
 
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
+
+
+// [RCO-SCRIPT-OFUSCADO] (26/10/2026) o script de gravacao no RCO roda no navegador da escola (qualquer um
+// le). No build, a linha `const OFUSCADO: string | null = null;` de src/lib/rco-script.ts vira o
+// programa do navegador ofuscado. Em teste/dev continua o legivel.
+const MARCADOR_RCO = "const OFUSCADO: string | null = null;";
+const pluginOfuscarScriptRco = {
+  name: "ofuscar-script-rco",
+  setup(b) {
+    b.onLoad({ filter: /[\\/]src[\\/]lib[\\/]rco-script\.ts$/ }, async (args) => {
+      const fonte = await readFile(args.path, "utf8");
+      if (!fonte.includes(MARCADOR_RCO)) throw new Error("rco-script.ts: marcador do script ofuscado nao encontrado");
+      const js = (await transform(fonte, { loader: "ts", format: "esm" })).code;
+      const tmp = path.join(os.tmpdir(), `rco-script-${process.pid}-${Date.now()}.mjs`);
+      await writeFile(tmp, js);
+      let programa;
+      try { programa = (await import(pathToFileURL(tmp).href)).programaDoNavegador(); } finally { await rm(tmp, { force: true }); }
+      const ofuscado = JavaScriptObfuscator.obfuscate(programa, {
+        target: "browser", compact: true, simplify: true,
+        identifierNamesGenerator: "hexadecimal", renameGlobals: false,
+        stringArray: true, stringArrayEncoding: ["base64"], stringArrayThreshold: 1, rotateStringArray: true, shuffleStringArray: true,
+        splitStrings: true, splitStringsChunkLength: 6,
+        controlFlowFlattening: false, deadCodeInjection: false, selfDefending: false, debugProtection: false,
+        unicodeEscapeSequence: false,
+      }).getObfuscatedCode();
+      return { contents: fonte.replace(MARCADOR_RCO, `const OFUSCADO: string | null = ${JSON.stringify(ofuscado)};`), loader: "ts" };
+    });
+  },
+};
 
 async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
@@ -103,6 +135,7 @@ async function buildAll() {
     ],
     sourcemap: "linked",
     plugins: [
+      pluginOfuscarScriptRco, // [RCO-SCRIPT-OFUSCADO]
       // pino relies on workers to handle logging, instead of externalizing it we use a plugin to handle it
       esbuildPluginPino({ transports: ["pino-pretty"] })
     ],

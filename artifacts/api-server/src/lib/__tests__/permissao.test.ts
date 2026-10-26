@@ -13,12 +13,12 @@ describe("normalizarCaminho", () => {
 
 describe("ehLeituraSomenteAdmin", () => {
   it("bloqueia as consultas da coordenacao, em qualquer caixa", () => {
-    for (const c of ["/audit", "/Audit", "/AUDIT/", "/usuarios", "/Usuarios/", "/usuarios-acessos", "/USUARIOS-ACESSOS/membros", "/export/ponto", "/Export/Relatorio-Seed", "/codigos-rco", "/Codigos-RCO/", "/reservas/regras-professores", "/Reservas/Regras-Professores"]) {
+    for (const c of ["/audit", "/Audit", "/AUDIT/", "/usuarios", "/Usuarios/", "/usuarios-acessos", "/USUARIOS-ACESSOS/membros", "/export/ponto", "/Export/Relatorio-Seed", "/codigos-rco", "/Codigos-RCO/", "/reservas/regras-professores", "/Reservas/Regras-Professores", "/export/rco-script", "/Export/RCO-Script", "/arquivo-rco/baixar", "/Arquivo-RCO/Baixar/"]) {
       expect(ehLeituraSomenteAdmin(c), c).toBe(true);
     }
   });
   it("libera o que gestor e professor precisam", () => {
-    for (const c of ["/usuarios/me", "/reservas", "/horarios", "/escolas/me", "/export/reservas-pdf"]) {
+    for (const c of ["/usuarios/me", "/reservas", "/horarios", "/escolas/me", "/export/reservas-pdf", "/arquivo-rco", "/export/grade-pdf/turma"]) {
       expect(ehLeituraSomenteAdmin(c), c).toBe(false);
     }
   });

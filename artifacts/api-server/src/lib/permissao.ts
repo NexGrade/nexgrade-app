@@ -73,6 +73,8 @@ const LEITURAS_SOMENTE_ADMIN = [
   "/codigos-rco", // [CODIGOS-RCO-TELA]
   "/reservas/regras-professores", // [LEITURA-EQUIPE] prioridade e limite de cada professor: so a coordenacao
   "/virada-ano", // [VIRADA-ANO] previa da virada do ano letivo: so direcao, coordenacao e secretaria
+  "/export/rco-script", // [RCO-SCRIPT-OFUSCADO] script de gravacao no RCO: so direcao, coordenacao e secretaria
+  "/arquivo-rco/baixar", // [ARQUIVO-RCO] arquivo do RCO enviado (a situacao, GET /arquivo-rco, segue livre: selo do menu)
 ];
 export function ehLeituraSomenteAdmin(caminhoBruto: string): boolean {
   const caminho = normalizarCaminho(caminhoBruto);
