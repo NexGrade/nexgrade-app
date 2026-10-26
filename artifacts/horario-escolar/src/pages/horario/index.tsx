@@ -689,7 +689,7 @@ function DialogAdicionarAula({
             <div className="space-y-1.5">
               <Label>Número da aula *</Label>
               <Input
-                type="number" min={0} max={8} value={numeroAula}
+                type="number" min={0} max={12} value={numeroAula}
                 onChange={(e) => setNumeroAula(e.target.value)}
                 disabled={numeroAulaFixo !== undefined}
               />
@@ -971,7 +971,12 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
     return Math.max(5, ...aulaNums, ...haNums);
   };
 
-  const numRows = getMaxAulas();
+  // [TURNO-INTEGRAL] turma integral mostra todas as linhas do esquema (11 no Mario Braga) mesmo sem aula,
+  // para dar para clicar no "Vago" da tarde; e a hora de cada linha
+  const slotsIntegral = (slotsEscolaParaIntegral ?? []).filter((x: any) => x.turno === "integral" && x.numeroAula >= 1);
+  const linhasIntegral = slotsIntegral.length ? Math.max(...slotsIntegral.map((x: any) => x.numeroAula)) : 0;
+  const horaIntegral = (aula: number) => String(slotsIntegral.find((x: any) => x.numeroAula === aula)?.horaInicio ?? "").slice(0, 5);
+  const numRows = Math.max(getMaxAulas(), turmaId !== "all" && turnoEmUso === "integral" ? linhasIntegral : 0);
   const isTurmaSelected = turmaId !== "all";
   const isProfessorSelected = professorId !== "all";
 
@@ -1234,7 +1239,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
           <div className="space-y-4">
             {turmasDoTurno.map((t) => {
               const slotsDaTurma = (horarios ?? []).filter((s) => s.turmaId === t.id);
-              const maxAulaTurma = slotsDaTurma.length > 0 ? Math.max(...slotsDaTurma.map((s) => s.numeroAula), 5) : 5;
+              const maxAulaTurma = Math.max(5, ...slotsDaTurma.map((s) => s.numeroAula), t.turno === "integral" ? linhasIntegral : 0); // [TURNO-INTEGRAL]
               // [FIX] Turno noturno tem um slot informativo em
               // numeroAula=0 (18:00, antes do início oficial às
               // 18:45) -- ver criar-slot-1800-noite.ts e
@@ -1436,6 +1441,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                   <div key={aulaNum} className="grid grid-cols-6 border-b border-border last:border-0">
                     <div className={`p-4 flex items-center justify-center font-medium border-r border-border ${aulaDestaque(aulaNum) ? "bg-red-100 text-red-800" : "text-muted-foreground bg-muted/20"}`}>
                       {aulaNum}ª Aula
+                      {turnoEmUso === "integral" && horaIntegral(aulaNum) && <span className="ml-1 text-xs font-normal tabular-nums">{horaIntegral(aulaNum)}</span>}
                     </div>
                     {Array.from({ length: 5 }).map((_, colIndex) => {
                       const slotId = isTurmaSelected ? Number(turmaId) : undefined;
