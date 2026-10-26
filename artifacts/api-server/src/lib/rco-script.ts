@@ -20,7 +20,7 @@ export type DadosScriptRco = { escola: string; turno: string; rotuloRco: string;
 const CORPO = String.raw`
   const DIAS = ["Seg", "Ter", "Qua", "Qui", "Sex"];
   const URL_BASE = "/rcdig/manterHorario.do";
-  const norm = (s) => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase().replace(/\s+/g, " ").trim();
+  const norm = (s) => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/\s+/g, " ").trim();
   const enc = (o) => Object.entries(o).map(([k, v]) => encodeURIComponent(k) + "=" + encodeURIComponent(v).replace(/%20/g, "+")).join("&");
   const post = async (action, corpo) => {
     const r = await fetch(URL_BASE + "?action=" + action, { method: "POST", credentials: "same-origin",
@@ -69,6 +69,25 @@ const CORPO = String.raw`
   const achar = (valor, nomes) => {
     for (const n of nomes) { const v = valor[norm(n)]; if (v) return { v, nome: n }; }
     for (const n of nomes) { const k = Object.keys(valor).find((x) => compacto(x) === compacto(n)); if (k) return { v: valor[k], nome: k }; }
+    // nome abreviado do RCO: cada palavra do RCO e o comeco de uma palavra do NexGrade, na ordem, e as
+    // palavras do NexGrade que sobram sao so "de/da/do/para/e..." (ex.: "MAT BASICA ANOS INICIAIS" =
+    // "Matematica Basica para Anos Iniciais"; "TRABALHO PEDAG.NA EDUC.INFANTI" = "Trabalho Pedagogico na
+    // Educacao Infantil"). So vale se uma unica disciplina da turma casar.
+    const LIGA = new Set(["DE", "DA", "DO", "DAS", "DOS", "E", "PARA", "NA", "NO", "NAS", "NOS", "A", "O", "EM", "COM"]);
+    const palavras = (s) => norm(s).split(/[^A-Z0-9]+/).filter(Boolean);
+    const abreviado = (rco, nex) => {
+      const r = palavras(rco), x = palavras(nex);
+      let i = 0;
+      for (const w of x) {
+        if (i < r.length && w.startsWith(r[i])) { i++; continue; }
+        if (!LIGA.has(w)) return false;
+      }
+      return i === r.length && r.length > 0;
+    };
+    for (const n of nomes) {
+      const hits = Object.keys(valor).filter((k) => abreviado(k, n));
+      if (hits.length === 1) return { v: valor[hits[0]], nome: hits[0], aprox: n };
+    }
     for (const n of nomes) {
       const a = norm(n); if (a.length < 4) continue;
       const hits = Object.keys(valor).filter((k) => k.startsWith(a) || a.startsWith(k));
