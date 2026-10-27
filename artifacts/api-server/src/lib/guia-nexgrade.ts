@@ -63,7 +63,7 @@ ABA ESQUEMA DE AULAS POR TURNO (é aqui que se define o horário de cada aula)
 4. Clique em "Salvar esquema". Repita para cada turno/nível.
 
 TURNO INTEGRAL (turma de manhã e tarde, ex.: Formação de Docentes)
-- Botão "Integral" na mesma aba. O NexGrade sugere as aulas juntando a manhã (Médio/Técnico) e a tarde; ajuste aula por aula para ficar IGUAL ao RCO da escola (no Mário Braga a 9ª aula é 15:00, não 14:45, porque o intervalo da tarde do integral é depois da 2ª aula) e clique em Salvar.
+- Botão "Integral" na mesma aba. O NexGrade sugere as aulas juntando a manhã (Médio/Técnico) e a tarde; ajuste aula por aula para ficar IGUAL ao RCO da escola (por exemplo, em algumas escolas a 9ª aula começa às 15:00, não às 14:45, porque o intervalo da tarde do integral é depois da 2ª aula) e clique em Salvar.
 - Cada aula do integral fica ligada à aula da manhã ou da tarde que acontece no mesmo horário: o professor da turma integral não pode estar em outra turma nesse horário, e a disponibilidade dele continua sendo a da manhã/tarde (não precisa cadastrar nada novo).
 Observação: aulas fixas não ficam mais aqui — ficam na Disponibilidade de cada professor (botão "Modo fixar aula").`,
   },
@@ -366,7 +366,7 @@ COMO RODAR O SCRIPT NO RCO (no navegador, não no PowerShell)
     palavras: ["escola", "dados da escola", "cnpj", "inep", "nre", "configurações", "conformidade", "resolução 7200", "hora-atividade padrão", "assinatura", "plano", "boleto", "pix", "cobrança"],
     texto: `Menu Escola. Três abas:
 - Dados da Escola: Nome, CNPJ, Cidade, Estado, Modalidade, e-mail e WhatsApp de contato; Identificação oficial (Código INEP, NRE); Turnos ofertados; Resolução SEED-PR. Usados nos relatórios, na grade e na cobrança.
-- Configurações: padrões de geração (Aulas por dia, Reduzir janelas automaticamente, Fator pedagógico) e formato do relatório SEED. O link "Conformidade SEED-PR → Configurar" abre os parâmetros da Resolução SEED 7.200/2025 (Art. 11): aulas de regência e horas-atividade para 20h e 40h, teto de aulas por turno (noite e demais turnos), até quantas aulas a HA fica no mesmo turno e máximo de geminadas. São regras padrão da rede, iguais em todas as escolas (referência: Romário) e travadas: a escola só consulta; mudança (por exemplo, se a SEED mudar a proporção hora-aula/hora-atividade) é feita pela administração da plataforma e vale para todas.
+- Configurações: padrões de geração (Aulas por dia, Reduzir janelas automaticamente, Fator pedagógico) e formato do relatório SEED. O link "Conformidade SEED-PR → Configurar" abre os parâmetros da Resolução SEED 7.200/2025 (Art. 11): aulas de regência e horas-atividade para 20h e 40h, teto de aulas por turno (noite e demais turnos), até quantas aulas a HA fica no mesmo turno e máximo de geminadas. São regras padrão da rede, iguais em todas as escolas e travadas: a escola só consulta; mudança (por exemplo, se a SEED mudar a proporção hora-aula/hora-atividade) é feita pela administração da plataforma e vale para todas.
 - Assinatura: plano atual ("Ver planos") e contato de cobrança (e-mail e WhatsApp usados para boleto/PIX), que pode ser diferente do contato geral.`,
   },
 
