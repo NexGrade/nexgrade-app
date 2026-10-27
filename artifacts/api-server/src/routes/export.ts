@@ -10,6 +10,7 @@ import { and, eq, inArray, isNull, notInArray, sql } from "drizzle-orm";
 import { GRADES_SEED_RCO } from "../lib/grades-seed-rco"; // [RCO-EXPORT-BANCO]
 import { resolverCoddisc } from "../lib/rco-codigos"; // [CODIGOS-RCO-TELA]
 import { gerarScriptRco, type TurmaRcoScript, type CelulaRco } from "../lib/rco-script"; // [RCO-SCRIPT]
+import { turmasQuePrecisamDoScript } from "../lib/rco-turmas-script"; // [RCO-TURMAS-SCRIPT]
 import { getEscolaId } from "../lib/escola-id";
 import { buscarReservasParaRelatorio, gerarPdfReservasPorProfessor } from "../lib/relatorio-reservas"; // [RELATORIO-RESERVAS]
 import { espacosLivresDaSemana, gerarPdfEspacosLivres } from "../lib/espacos-livres"; // [ESPACOS-LIVRES]
@@ -574,6 +575,23 @@ router.get("/relatorio-seed", async (req, res) => {
 // o script casa com a lista da turma no proprio RCO. Ver lib/rco-script.ts.
 const ROTULO_RCO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite", integral: "Integral" };
 const DIA_SCRIPT: Record<number, string> = { 0: "Seg", 1: "Ter", 2: "Qua", 3: "Qui", 4: "Sex" };
+
+// [RCO-TURMAS-SCRIPT] turmas do turno que precisam do script (trio/dupla, mesmo codigo); o resto vai pelo XML
+router.get("/rco-script/turmas", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const turno = req.query.turno as string | undefined;
+  if (!turno || !TURNOS_RCO.includes(turno)) { res.status(400).json({ error: "Selecione um turno." }); return; }
+  const montado = await montarRegistrosRco(escolaId, turno, false);
+  if ("erro" in montado) { res.status(400).json(montado.erro); return; }
+  const { registros, horarioPorSlot, chaveSlot } = montado;
+  const turmas = turmasQuePrecisamDoScript(registros.map((r) => ({
+    codTurma: r.codTurma, turmaRco: r.turmaRco, diaSemana: r.diaSemana, coddisc: r.coddisc, disciplinaNome: r.disciplinaNome,
+    hora: horarioPorSlot.get(chaveSlot(r.numeroAula, turno === "matutino" ? r.turmaNivelEnsino : null))?.[0] ?? `${r.numeroAula}a`,
+  })));
+  const total = new Set(registros.map((r) => String(r.codTurma))).size;
+  res.json({ turno, totalTurmasRco: total, turmas });
+});
+
 router.get("/rco-script", async (req, res) => {
   const escolaId = getEscolaId(req);
   const turno = req.query.turno as string | undefined;
@@ -583,7 +601,18 @@ router.get("/rco-script", async (req, res) => {
   }
   const montado = await montarRegistrosRco(escolaId, turno, false);
   if ("erro" in montado) { res.status(400).json(montado.erro); return; }
-  const { escola, registros, horarioPorSlot, chaveSlot, slots } = montado;
+  const { escola, horarioPorSlot, chaveSlot, slots } = montado;
+  // [RCO-TURMAS-SCRIPT] ?apenas=multiplas: so as turmas que o XML nao grava certo (trio/dupla, mesmo codigo)
+  const soMultiplas = req.query.apenas === "multiplas";
+  const codsMultiplas = soMultiplas ? new Set(turmasQuePrecisamDoScript(montado.registros.map((r) => ({
+    codTurma: r.codTurma, turmaRco: r.turmaRco, diaSemana: r.diaSemana, coddisc: r.coddisc, disciplinaNome: r.disciplinaNome,
+    hora: horarioPorSlot.get(chaveSlot(r.numeroAula, turno === "matutino" ? r.turmaNivelEnsino : null))?.[0] ?? `${r.numeroAula}a`,
+  }))).map((t) => t.codTurma)) : null;
+  const registros = codsMultiplas ? montado.registros.filter((r) => codsMultiplas.has(String(r.codTurma))) : montado.registros;
+  if (codsMultiplas && !registros.length) {
+    res.status(400).json({ error: "Nenhuma turma deste turno precisa do script: todas podem ir pelo XML." });
+    return;
+  }
 
   const coddiscs = [...new Set(registros.map((r) => r.coddisc))];
   const nomesRco = coddiscs.length
@@ -640,7 +669,7 @@ router.get("/rco-script", async (req, res) => {
     turmas: turmasScript,
   });
   res.setHeader("Content-Type", "text/javascript; charset=utf-8");
-  res.setHeader("Content-Disposition", `attachment; filename="rco-gravar-${turno}-${agora.toISOString().slice(0, 10)}.js"`);
+  res.setHeader("Content-Disposition", `attachment; filename="rco-gravar-${turno}${soMultiplas ? "-trios" : ""}-${agora.toISOString().slice(0, 10)}.js"`);
   res.send(js);
 });
 
