@@ -842,6 +842,29 @@ function ehHATravada(motivo: string | null | undefined): boolean {
   const m = motivo ?? "";
   return m.startsWith("HA fixa") || /probat/i.test(m);
 }
+// [CHOQUE-NA-CELULA] (27/10/2026) Na grade do PROFESSOR, duas aulas no mesmo horario em
+// turmas diferentes (ex.: 11a aula do integral = 5a da tarde) apareciam como uma so: a celula
+// mostrava o primeiro slot e escondia o outro. Agora mostra todas, em vermelho, com "Choque".
+function turmasDistintas(slots: Array<{ turmaId: number }>): number {
+  return new Set(slots.map((s) => s.turmaId)).size;
+}
+function CelulaChoque({ slots, compacta, onAbrir }: {
+  slots: Array<any>; compacta?: boolean; onAbrir: (turmaId: number) => void;
+}) {
+  return (
+    <div className={`h-full w-full rounded${compacta ? "" : "-md"} border border-red-300 border-l-4 border-l-red-600 bg-red-50 ${compacta ? "p-1 text-[10px]" : "p-2 text-xs"} leading-tight flex flex-col gap-0.5`}
+      title="Choque de horário: o professor está em mais de uma turma neste horário">
+      <span className="font-bold uppercase tracking-wide text-red-700">Choque</span>
+      {slots.map((s) => (
+        <button key={s.id} type="button" onClick={(e) => { e.stopPropagation(); onAbrir(s.turmaId); }}
+          className="text-left truncate text-red-900 hover:underline">
+          {s.disciplina?.nome} · {s.turma?.nome}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function MenuCelula({ estado, rotulo, className, children, onEscolher }: {
   estado: EstadoCelulaEditavel;
   rotulo: string;
@@ -1395,6 +1418,13 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                           {Array.from({ length: 5 }).map((_, colIndex) => {
                             const slotsAqui = aulasDoTurno.filter((x) => x.diaSemana === colIndex && x.numeroAula === aulaNum);
                             const slot = slotsAqui[0];
+                            if (slot && turmasDistintas(slotsAqui) > 1) { // [CHOQUE-NA-CELULA]
+                              return (
+                                <div key={`${t}-${aulaNum}-${colIndex}-choque`} className="p-1 border-r border-border last:border-0 min-h-[52px] flex items-stretch">
+                                  <CelulaChoque compacta slots={slotsAqui} onAbrir={(tid) => abrirDetalheNaCelula(colIndex, aulaNum, tid)} />
+                                </div>
+                              );
+                            }
                             if (!slot) {
                               const disp = dispNoTurno(t, colIndex, aulaNum);
                               const ha = disp.find((d) => d.horaAtividadeObrigatoria);
@@ -1498,6 +1528,13 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                       // edição) pra também mostrar os dois professores juntos na exibição.
                       const slotsAqui = getSlots(colIndex, aulaNum, slotId).filter((s: any) => (isProfessorSelected && !isTurmaSelected) ? !s.assincronaSoTurma : (!s.assincrona || s.assincronaSoTurma)); // [ASSINC-FORA-DA-TURMA] [ASS-SO-TURMA] 7a aula: so na turma
                       const slot = slotsAqui[0];
+                      if (slot && isProfessorSelected && !isTurmaSelected && turmasDistintas(slotsAqui) > 1) { // [CHOQUE-NA-CELULA]
+                        return (
+                          <div key={`${aulaNum}-${colIndex}-choque`} className="p-2 border-r border-border last:border-0 min-h-[100px] flex">
+                            <CelulaChoque slots={slotsAqui} onAbrir={(tid) => abrirDetalheNaCelula(colIndex, aulaNum, tid)} />
+                          </div>
+                        );
+                      }
                       if (!slot) {
                         const temHA = isProfessorSelected && getHA(colIndex, aulaNum);
                         const atividade = isProfessorSelected && !temHA ? getAtividade(colIndex, aulaNum) : undefined; // [GRADE-ROTULO-ATIVIDADE]
