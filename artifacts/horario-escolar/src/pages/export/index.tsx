@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query"; // [RCO-TURMAS-SCRIPT]
 import { useListTurmas, useListProfessores, customFetch, ApiError } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -140,14 +141,25 @@ export default function ExportPage() {
   };
 
   // [RCO-SCRIPT] script para colar no Console (F12) da tela Grade de Horario do RCO: grava trio/dupla
-  const handleScriptRco = async () => {
+  // [RCO-TURMAS-SCRIPT] turmas do turno que precisam do script (trio/dupla, mesmo codigo); o resto vai pelo XML.
+  // Quem nao e da direcao/coordenacao/secretaria recebe 403: o aviso simplesmente nao aparece.
+  const { data: turmasScript } = useQuery({
+    queryKey: ["/api/export/rco-script/turmas", seedTurno],
+    enabled: seedEstado === "PR",
+    retry: false,
+    staleTime: 60 * 1000,
+    queryFn: () => customFetch<{ totalTurmasRco: number; turmas: Array<{ codTurma: string; turma: string; motivos: string[] }> }>(
+      buildUrl("/api/export/rco-script/turmas", { turno: seedTurno }), { responseType: "json" } as any),
+  });
+
+  const handleScriptRco = async (apenasMultiplas = false) => {
     setLoadingScript(true);
     setSeedErro(null);
     try {
-      const url = buildUrl("/api/export/rco-script", { turno: seedTurno });
+      const url = buildUrl("/api/export/rco-script", { turno: seedTurno, apenas: apenasMultiplas ? "multiplas" : undefined });
       const blob = await customFetch<Blob>(url, { responseType: "blob" });
       const objUrl = URL.createObjectURL(blob);
-      handleDownload(objUrl, `rco-gravar-${seedTurno}-${new Date().toISOString().slice(0, 10)}.js`);
+      handleDownload(objUrl, `rco-gravar-${seedTurno}${apenasMultiplas ? "-trios" : ""}-${new Date().toISOString().slice(0, 10)}.js`);
       URL.revokeObjectURL(objUrl);
     } catch (err) {
       if (err instanceof ApiError && err.data && typeof err.data === "object") {
@@ -512,17 +524,37 @@ export default function ExportPage() {
                 {loadingSeed ? "Gerando..." : `Baixar XML para o RCO (${seedEstado})`}
               </Button>
               {seedEstado === "PR" && (
-                <Button variant="outline" onClick={handleScriptRco} disabled={loadingScript}>
+                <Button variant="outline" onClick={() => handleScriptRco(false)} disabled={loadingScript}>
                   <Download className="w-4 h-4 mr-2" />
                   {loadingScript ? "Gerando..." : "Script de gravação no RCO"}
                 </Button>
               )}
             </div>
+            {seedEstado === "PR" && turmasScript && (
+              <div className={`mt-4 rounded-md border p-3 text-sm ${turmasScript.turmas.length ? "border-amber-300 bg-amber-50 text-amber-900" : "border-emerald-200 bg-emerald-50 text-emerald-900"}`}>
+                {turmasScript.turmas.length === 0 ? (
+                  <p>Neste turno nenhuma turma tem trio, dupla ou disciplinas com o mesmo código: <strong>só o XML</strong> já grava tudo certo no RCO.</p>
+                ) : (
+                  <div className="space-y-2">
+                    <p>
+                      <strong>{turmasScript.turmas.length} de {turmasScript.totalTurmasRco} turma(s) do RCO</strong> precisam do script (o XML grava só uma disciplina por horário).
+                      Faça nesta ordem: <strong>1)</strong> XML com todas as turmas (Incluir via Arquivo no RCO); <strong>2)</strong> script só destas turmas.
+                    </p>
+                    <ul className="list-disc list-inside space-y-0.5">
+                      {turmasScript.turmas.map((t) => <li key={t.codTurma}><strong>{t.turma}</strong>: {t.motivos.join("; ")}</li>)}
+                    </ul>
+                    <Button size="sm" onClick={() => handleScriptRco(true)} disabled={loadingScript} className="gap-1.5">
+                      <Download className="w-3.5 h-3.5" /> {loadingScript ? "Gerando..." : `Script só destas ${turmasScript.turmas.length} turma(s)`}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
             {seedEstado === "PR" && (
               <p className="mt-3 text-xs text-muted-foreground">
-                <strong>Script de gravação</strong> (recomendado quando há trio ou dupla do IFA): o arquivo XML só grava uma disciplina por horário.
-                No RCO, abra Grade de Horário, escolha o Período Letivo e o Turno, aperte F12, aba Console, cole o conteúdo do script e aperte Enter.
+                <strong>Script de gravação:</strong> no RCO, abra Grade de Horário, escolha o Período Letivo e o Turno, aperte F12, aba Console, cole o conteúdo do script e aperte Enter.
                 Ele mostra a prévia de cada turma e só grava depois que você confirmar. Sem assíncronas (igual ao PDF por turma).
+                O XML regrava a turma inteira: se usar os dois, o script vem <strong>depois</strong>.
               </p>
             )}
             {seedEstado === "PR" && (
