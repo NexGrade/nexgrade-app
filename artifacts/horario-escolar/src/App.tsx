@@ -130,7 +130,7 @@ const clerkAppearance = {
   options: {
     logoPlacement: "none" as const, // [LOGIN] logo ja aparece no cabecalho da pagina
     logoLinkUrl: basePath || "/",
-    logoImageUrl: `${window.location.origin}${basePath}/logo.svg`,
+    logoImageUrl: `${window.location.origin}${basePath}/logo.png`,
   },
   variables: {
     colorPrimary: "#2563EB",
@@ -201,7 +201,7 @@ function AuthShell({ subtitulo, aviso, children }: { subtitulo: string; aviso: A
         <div className="flex flex-col items-center px-4 py-8 sm:px-6">
           <div className="text-center mb-4">
             <div className="flex items-center justify-center gap-2 mb-1">
-              <img src="/logo.svg" alt="NexGrade" className="w-8 h-8 rounded-lg" />
+              <img src="/logo.png" alt="NexGrade" className="w-8 h-8 rounded-lg" />
               <h1 className="text-2xl font-bold text-slate-900 font-heading">NexGrade</h1>
             </div>
             <p className="text-slate-500 text-sm mt-1">{subtitulo}</p>
@@ -680,7 +680,7 @@ function GlobalTopBar() {
     <Show when="signed-in">
       <div className="h-14 shrink-0 flex items-center justify-between px-5 border-b border-border bg-card">
         <div className="flex items-center gap-2">
-          <img src="/logo.svg" alt="NexGrade" className="w-7 h-7 rounded-lg shrink-0 shadow-sm" />
+          <img src="/logo.png" alt="NexGrade" className="w-7 h-7 rounded-lg shrink-0 shadow-sm" />
           <div className="leading-none hidden sm:block">
             <span className="font-bold text-[15px] tracking-tight text-foreground font-heading">NexGrade</span>
             <span className="block text-[10px] text-muted-foreground font-medium tracking-wide -mt-0.5">by Nexus Core Tecnologia</span>
