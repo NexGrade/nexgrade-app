@@ -1,0 +1,558 @@
+{
+ "escola": "C.E. Heráclito Fontoura Sobral Pinto",
+ "fonte": "Noite: relatório 'mesa' do sistema anterior + disciplinas informadas pela Simone em 27/10/2026 (aula 1 = terça 18:30 só assíncronas; aulas 2-6 = as 5 aulas da noite)",
+ "dias": "0=Seg..4=Sex",
+ "aulas": [
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 0,
+   "aula": 2,
+   "cod": 6,
+   "prof": "Luciele",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 0,
+   "aula": 3,
+   "cod": 6,
+   "prof": "Luciele",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 0,
+   "aula": 4,
+   "cod": 29,
+   "prof": "Roosevelt",
+   "disc": "Sociologia"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 0,
+   "aula": 5,
+   "cod": 29,
+   "prof": "Roosevelt",
+   "disc": "Sociologia"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 0,
+   "aula": 6,
+   "cod": 3798,
+   "prof": "Miriam",
+   "disc": "Inglês"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 1,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Elizena",
+   "disc": "Língua Portuguesa"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 1,
+   "aula": 4,
+   "cod": 27,
+   "prof": "Patricia",
+   "disc": "Filosofia"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 1,
+   "aula": 5,
+   "cod": 27,
+   "prof": "Patricia",
+   "disc": "Filosofia"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 1,
+   "aula": 6,
+   "cod": 1,
+   "prof": "Elizena",
+   "disc": "Língua Portuguesa"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 2,
+   "aula": 2,
+   "cod": 4,
+   "prof": "Angelo",
+   "disc": "História"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 2,
+   "aula": 3,
+   "cod": 4,
+   "prof": "Angelo",
+   "disc": "História"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 2,
+   "aula": 4,
+   "cod": 1,
+   "prof": "Elizena",
+   "disc": "Língua Portuguesa"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 2,
+   "aula": 5,
+   "cod": 1,
+   "prof": "Elizena",
+   "disc": "Língua Portuguesa"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 2,
+   "aula": 6,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 3,
+   "aula": 2,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 3,
+   "aula": 3,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 3,
+   "aula": 4,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 3,
+   "aula": 5,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 3,
+   "aula": 6,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 4,
+   "aula": 2,
+   "cod": 3798,
+   "prof": "Miriam",
+   "disc": "Inglês"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 4,
+   "aula": 3,
+   "cod": 10,
+   "prof": "Josiane",
+   "disc": "Física"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 4,
+   "aula": 4,
+   "cod": 3482,
+   "prof": "Luciane",
+   "disc": "Educação Financeira"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 4,
+   "aula": 5,
+   "cod": 10,
+   "prof": "Josiane",
+   "disc": "Física"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 4,
+   "aula": 6,
+   "cod": 3482,
+   "prof": "Luciane",
+   "disc": "Educação Financeira"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 1,
+   "aula": 2,
+   "cod": 2997,
+   "prof": "Karem",
+   "disc": "Literatura e Produção de Texto"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 1,
+   "aula": 1,
+   "cod": 2997,
+   "prof": "Karem",
+   "disc": "Literatura e Produção de Texto",
+   "assincrona": true
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 1,
+   "aula": 2,
+   "cod": 6318,
+   "prof": "Patricia",
+   "disc": "Filosofia: Análise de Textos"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 1,
+   "aula": 1,
+   "cod": 6318,
+   "prof": "Patricia",
+   "disc": "Filosofia: Análise de Textos",
+   "assincrona": true
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 1,
+   "aula": 2,
+   "cod": 6319,
+   "prof": "Roosevelt",
+   "disc": "Sociologia: Governo e Cidadania"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "dia": 1,
+   "aula": 1,
+   "cod": 6319,
+   "prof": "Roosevelt",
+   "disc": "Sociologia: Governo e Cidadania",
+   "assincrona": true
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 0,
+   "aula": 2,
+   "cod": 3811,
+   "prof": "Angelo",
+   "disc": "História I"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 0,
+   "aula": 3,
+   "cod": 3807,
+   "prof": "Regyane",
+   "disc": "Geografia I"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 0,
+   "aula": 4,
+   "cod": 3811,
+   "prof": "Angelo",
+   "disc": "História I"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 0,
+   "aula": 5,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 0,
+   "aula": 6,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 1,
+   "aula": 2,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 1,
+   "aula": 3,
+   "cod": 6038,
+   "prof": "Karem",
+   "disc": "Rec. Português"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 1,
+   "aula": 4,
+   "cod": 1,
+   "prof": "Elizena",
+   "disc": "Língua Portuguesa"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 1,
+   "aula": 5,
+   "cod": 1,
+   "prof": "Elizena",
+   "disc": "Língua Portuguesa"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 1,
+   "aula": 6,
+   "cod": 6038,
+   "prof": "Karem",
+   "disc": "Rec. Português"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 2,
+   "aula": 2,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 2,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Elizena",
+   "disc": "Língua Portuguesa"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 2,
+   "aula": 4,
+   "cod": 6039,
+   "prof": "A. Marcos",
+   "disc": "Rec. Matemática"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 2,
+   "aula": 5,
+   "cod": 6039,
+   "prof": "A. Marcos",
+   "disc": "Rec. Matemática"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 2,
+   "aula": 6,
+   "cod": 1,
+   "prof": "Elizena",
+   "disc": "Língua Portuguesa"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 3,
+   "aula": 2,
+   "cod": 1909,
+   "prof": "Annie",
+   "disc": "Arte II"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 3,
+   "aula": 5,
+   "cod": 1909,
+   "prof": "Annie",
+   "disc": "Arte II"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 3,
+   "aula": 6,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 4,
+   "aula": 2,
+   "cod": 10,
+   "prof": "Josiane",
+   "disc": "Física"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 4,
+   "aula": 3,
+   "cod": 3808,
+   "prof": "Miriam",
+   "disc": "Inglês I"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 4,
+   "aula": 4,
+   "cod": 10,
+   "prof": "Josiane",
+   "disc": "Física"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 4,
+   "aula": 5,
+   "cod": 3482,
+   "prof": "Luciane",
+   "disc": "Educação Financeira"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 4,
+   "aula": 6,
+   "cod": 3808,
+   "prof": "Miriam",
+   "disc": "Inglês I"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 1,
+   "aula": 1,
+   "cod": 3780,
+   "prof": "Angelo",
+   "disc": "Projeto de Vida",
+   "assincrona": true
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 1,
+   "aula": 1,
+   "cod": 3482,
+   "prof": "Luciane",
+   "disc": "Educação Financeira",
+   "assincrona": true
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "dia": 1,
+   "aula": 1,
+   "cod": 3808,
+   "prof": "Miriam",
+   "disc": "Inglês I",
+   "assincrona": true
+  }
+ ],
+ "modalidades": [
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "cod": 2997,
+   "aulasAssincronas": 1,
+   "grupoTrio": "trio1"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "cod": 6318,
+   "aulasAssincronas": 1,
+   "grupoTrio": "trio1"
+  },
+  {
+   "turno": "noturno",
+   "turma": "2ºC",
+   "cod": 6319,
+   "aulasAssincronas": 1,
+   "grupoTrio": "trio1"
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "cod": 3780,
+   "aulasAssincronas": 1
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "cod": 3482,
+   "aulasAssincronas": 1
+  },
+  {
+   "turno": "noturno",
+   "turma": "3ºC",
+   "cod": 3808,
+   "aulasAssincronas": 1
+  }
+ ]
+}
