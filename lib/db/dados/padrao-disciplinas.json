@@ -1,0 +1,241 @@
+{
+ "descricao": "Padrao NexGrade de nome e sigla por Codigo Externo do RCO (28/10/2026). Siglas: as do catalogo SEED-PR do NexGrade (3 letras por palavra, com ponto; I/II/III separado por espaco); onde o catalogo nao tem, no mesmo estilo.",
+ "porCodigo": {
+  "1": {
+   "nome": "Língua Portuguesa",
+   "sigla": "LIN.POR"
+  },
+  "2": {
+   "nome": "Matemática",
+   "sigla": "MAT"
+  },
+  "3": {
+   "nome": "Geografia",
+   "sigla": "GEOG"
+  },
+  "4": {
+   "nome": "História",
+   "sigla": "HIS"
+  },
+  "5": {
+   "nome": "Ciências",
+   "sigla": "CIE"
+  },
+  "6": {
+   "nome": "Educação Física",
+   "sigla": "EDU.FIS"
+  },
+  "9": {
+   "nome": "Química",
+   "sigla": "QUI"
+  },
+  "10": {
+   "nome": "Física",
+   "sigla": "FISI"
+  },
+  "11": {
+   "nome": "Biologia",
+   "sigla": "BIOL"
+  },
+  "21": {
+   "nome": "Arte",
+   "sigla": "ART"
+  },
+  "22": {
+   "nome": "Arte Paranaense",
+   "sigla": "ART.PAR"
+  },
+  "27": {
+   "nome": "Filosofia",
+   "sigla": "FIL"
+  },
+  "29": {
+   "nome": "Sociologia",
+   "sigla": "SOC"
+  },
+  "33": {
+   "nome": "Ensino Religioso",
+   "sigla": "ENS.REL"
+  },
+  "36": {
+   "nome": "Geografia do Paraná",
+   "sigla": "GEO.PAR"
+  },
+  "37": {
+   "nome": "História do Paraná",
+   "sigla": "HIS.PAR"
+  },
+  "81": {
+   "nome": "Matemática II",
+   "sigla": "MAT II"
+  },
+  "103": {
+   "nome": "Aulas Especializadas de Treinamento Esportivo",
+   "sigla": "TRE.ESP"
+  },
+  "129": {
+   "nome": "Física II",
+   "sigla": "FIS II"
+  },
+  "136": {
+   "nome": "Biologia II",
+   "sigla": "BIO II"
+  },
+  "211": {
+   "nome": "Química I",
+   "sigla": "QUI I"
+  },
+  "789": {
+   "nome": "Noções de Direito",
+   "sigla": "NOC.DIR"
+  },
+  "829": {
+   "nome": "Administração Financeira e Orçamentária",
+   "sigla": "ADM.FIN"
+  },
+  "859": {
+   "nome": "Recursos Humanos",
+   "sigla": "REC.HUM"
+  },
+  "1909": {
+   "nome": "Arte II",
+   "sigla": "ART II"
+  },
+  "2500": {
+   "nome": "Princípios de Administração",
+   "sigla": "PRI.ADM"
+  },
+  "2595": {
+   "nome": "Robótica",
+   "sigla": "ROB"
+  },
+  "2997": {
+   "nome": "Literatura e Produção de Texto",
+   "sigla": "LIT.PRO"
+  },
+  "3482": {
+   "nome": "Educação Financeira",
+   "sigla": "EDU.FIN"
+  },
+  "3780": {
+   "nome": "Projeto de Vida",
+   "sigla": "PRO.VID"
+  },
+  "3798": {
+   "nome": "Língua Inglesa",
+   "sigla": "LIN.ING"
+  },
+  "3799": {
+   "nome": "Monitoria",
+   "sigla": "MON"
+  },
+  "3807": {
+   "nome": "Geografia I",
+   "sigla": "GEO I"
+  },
+  "3808": {
+   "nome": "Língua Inglesa I",
+   "sigla": "LIN.ING I"
+  },
+  "3811": {
+   "nome": "História I",
+   "sigla": "HIS I"
+  },
+  "3826": {
+   "nome": "Língua Espanhola",
+   "sigla": "LIN.ESP"
+  },
+  "3978": {
+   "nome": "Tecnologias e Ferramentas de Gestão",
+   "sigla": "TEC.FER"
+  },
+  "3979": {
+   "nome": "Liderança e Gestão de Pessoas",
+   "sigla": "LID.GES.PES"
+  },
+  "3981": {
+   "nome": "Controladoria e Finanças",
+   "sigla": "CON.FIN"
+  },
+  "4043": {
+   "nome": "Negociação e Vendas",
+   "sigla": "NEG.VEN"
+  },
+  "4052": {
+   "nome": "Sociologia I",
+   "sigla": "SOC I"
+  },
+  "4641": {
+   "nome": "Física III",
+   "sigla": "FIS III"
+  },
+  "5096": {
+   "nome": "Programação",
+   "sigla": "PROG"
+  },
+  "5294": {
+   "nome": "Redação e Leitura",
+   "sigla": "RED.LEI"
+  },
+  "6038": {
+   "nome": "Recomposição da Aprendizagem em Língua Portuguesa",
+   "sigla": "REC.APR.POR"
+  },
+  "6039": {
+   "nome": "Recomposição da Aprendizagem em Matemática",
+   "sigla": "REC.APR.MAT"
+  },
+  "6085": {
+   "nome": "Informática Empresarial",
+   "sigla": "INF.EMP"
+  },
+  "6088": {
+   "nome": "Estratégias de Marketing",
+   "sigla": "EST.MAR"
+  },
+  "6090": {
+   "nome": "Princípios Econômicos",
+   "sigla": "PRI.ECO"
+  },
+  "6254": {
+   "nome": "Educação Digital e Computação: Programação e IA",
+   "sigla": "EDU.DIG"
+  },
+  "6299": {
+   "nome": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "sigla": "REC.APR.POR"
+  },
+  "6301": {
+   "nome": "Técnicas Integradas",
+   "sigla": "TEC.INT"
+  },
+  "6318": {
+   "nome": "Filosofia: Análise de Textos Filosóficos",
+   "sigla": "FIL.ANA"
+  },
+  "6319": {
+   "nome": "Sociologia: Governo, Cidadania e Sociedade",
+   "sigla": "SOC.GOV"
+  },
+  "6322": {
+   "nome": "Física e Tecnociência",
+   "sigla": "FIS.TEC"
+  },
+  "6323": {
+   "nome": "Matemática: Resolução de Problemas",
+   "sigla": "MAT.RES"
+  },
+  "6324": {
+   "nome": "Química e Tecnociência",
+   "sigla": "QUI.TEC"
+  },
+  "6325": {
+   "nome": "Biologia: Sustentabilidade em Ação",
+   "sigla": "BIO.SUS"
+  },
+  "6503": {
+   "nome": "Finanças Empresariais",
+   "sigla": "FIN.EMP"
+  }
+ }
+}
