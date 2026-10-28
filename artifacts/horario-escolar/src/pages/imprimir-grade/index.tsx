@@ -1,6 +1,7 @@
 // [IMPRIMIR-GRADE] (28/10/2026) Tela so para imprimir a grade: um cartao por modelo de PDF,
 // com miniatura de como fica e um botao. Filtros comuns no topo (turno e semana).
 // Antes os PDFs da grade ficavam misturados em Exportar Dados com o RCO, o ponto e as reservas.
+// [MENU-UNICO] (28/10/2026) e o unico lugar dos PDFs da grade.
 import { useState } from "react";
 import { useListTurmas, useListProfessores, customFetch } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
