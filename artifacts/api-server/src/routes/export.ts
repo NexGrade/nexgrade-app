@@ -1085,6 +1085,60 @@ router.get("/grade-pdf/professor", async (req, res) => {
 });
 
 // ------------------------------------------------------------------
+// [PDF-POR-DISCIPLINA] (28/10/2026) PDF — Visão por Disciplina: um quadro por disciplina do
+// turno, com a turma e o professor em cada aula (onde e quando a disciplina acontece).
+// Exige ?turno. Mesma grade oficial dos outros PDFs; assincrona sai marcada (ASS).
+// ------------------------------------------------------------------
+router.get("/grade-pdf/disciplina", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const turno = req.query.turno as string | undefined;
+  if (!turno || !["matutino", "vespertino", "noturno"].includes(turno)) {
+    res.status(400).json({ error: "Escolha um turno (manhã, tarde ou noite) para o PDF por disciplina." });
+    return;
+  }
+  const disciplinaIdFiltro = req.query.disciplinaId ? Number(req.query.disciplinaId) : undefined;
+  const [aulas, professores, disciplinas, turmas] = await Promise.all([
+    db.select().from(horariosTable).where(and(eq(horariosTable.escolaId, escolaId), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`)),
+    db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
+    db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
+    db.select().from(turmasTable).where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.turno, turno))),
+  ]);
+  const turmaPorId = new Map(turmas.map((t) => [t.id, t]));
+  const doTurno = aulas.filter((a) => turmaPorId.has(a.turmaId) && (!disciplinaIdFiltro || a.disciplinaId === disciplinaIdFiltro));
+  const horariosPorAula = await buscarHorariosPorAula(escolaId, turno, null);
+  const blocos: BlocoGrade[] = [...new Set(doTurno.map((a) => a.disciplinaId))]
+    .map((id) => disciplinas.find((d) => d.id === id))
+    .filter((d): d is NonNullable<typeof d> => !!d)
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
+    .map((d) => {
+      const daDisc = doTurno.filter((a) => a.disciplinaId === d.id);
+      const porCelula = new Map<string, typeof daDisc>();
+      for (const a of daDisc) {
+        const k = `${a.diaSemana}-${a.numeroAula}`;
+        if (!porCelula.has(k)) porCelula.set(k, []);
+        porCelula.get(k)!.push(a);
+      }
+      return {
+        rotulo: `Disciplina: ${d.nome}`,
+        horariosPorAula,
+        slots: [...porCelula.values()].map((grupo) => {
+          const ord = [...grupo].sort((x, y) => turmaPorId.get(x.turmaId)!.nome.localeCompare(turmaPorId.get(y.turmaId)!.nome, "pt-BR", { numeric: true }));
+          return {
+            diaSemana: grupo[0]!.diaSemana,
+            numeroAula: grupo[0]!.numeroAula,
+            // cada turma com o seu professor: "8ºA JOSÉ R. / 9ºB ANA C."
+            linha1: [...new Set(ord.map((a) => `${turmaPorId.get(a.turmaId)!.nome}${a.assincrona ? " (ASS)" : ""} ${nomeCurto(professores.find((p) => p.id === a.professorId)?.nome ?? "?")}`))].join(" / "),
+          };
+        }),
+      };
+    });
+  const pdfBytes = await gerarPdfGradeCompacta(await buscarNomeEscola(escolaId), `Grade Horária por Disciplina - ${TURNO_ROTULO[turno] ?? turno}`, intervaloSemana(lerOffsetSemana(req)), blocos);
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="grade_por_disciplina_${turno}.pdf"`);
+  res.send(Buffer.from(pdfBytes));
+});
+
+// ------------------------------------------------------------------
 // PDF — Relatório de Carga Horária por Professor: resumo (não a grade
 // dia-a-dia) mostrando, por professor e por período, o total de aulas,
 // a Hora-Atividade institucional e a lista de turmas/disciplinas.

@@ -79,7 +79,7 @@ export default function ExportPage() {
   // comentário acima de SEMANA_ATUAL/SEMANA_PROXIMA.
   const [pdfOpts, setPdfOpts] = useState({ visao: "turma", entidadeId: "", turno: TURNO_TODOS, semana: SEMANA_ATUAL, modelo: "padrao" });
   // [PDF-MODELOS] outros modelos de impressao: precisam de um turno escolhido
-  const modeloPrecisaTurno = pdfOpts.modelo !== "padrao" && pdfOpts.turno === TURNO_TODOS;
+  const modeloPrecisaTurno = (pdfOpts.modelo !== "padrao" || pdfOpts.visao === "disciplina") && pdfOpts.turno === TURNO_TODOS; // [PDF-POR-DISCIPLINA] por disciplina tambem
   // [NOVO] Relatório de Carga Horária por Professor -- resumo (total de
   // aulas + HA institucional + turmas/disciplinas por período), não a
   // grade dia-a-dia.
@@ -327,11 +327,12 @@ export default function ExportPage() {
                 <SelectContent>
                   <SelectItem value="turma">Por Turma</SelectItem>
                   <SelectItem value="professor">Por Professor</SelectItem>
+                  <SelectItem value="disciplina">Por Disciplina</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             {/* [PDF-MODELOS] modelo de impressao */}
-            <div className="space-y-1.5">
+            {pdfOpts.visao !== "disciplina" && <div className="space-y-1.5">
               <Label>Modelo</Label>
               <Select value={pdfOpts.modelo} onValueChange={(v) => setPdfOpts((o) => ({ ...o, modelo: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -351,7 +352,8 @@ export default function ExportPage() {
                 </SelectContent>
               </Select>
               {modeloPrecisaTurno && <p className="text-xs text-amber-700">Escolha um turno para este modelo.</p>}
-            </div>
+            </div>}
+            {pdfOpts.visao === "disciplina" && modeloPrecisaTurno && <p className="text-xs text-amber-700">Escolha um turno: o PDF por disciplina sai um turno por vez.</p>}
             {/* [NOVO] Filtro de turno -- evita PDFs gigantes com
                 matutino/vespertino/noturno misturados sem ordem. */}
             <div className="space-y-1.5">
@@ -377,7 +379,7 @@ export default function ExportPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
+            {pdfOpts.visao !== "disciplina" && <div className="space-y-1.5">
               <Label>{pdfOpts.visao === "turma" ? "Turma (opcional)" : "Professor (opcional)"}</Label>
               <Select value={pdfOpts.entidadeId} onValueChange={(v) => setPdfOpts((o) => ({ ...o, entidadeId: v }))}>
                 <SelectTrigger>
@@ -392,12 +394,12 @@ export default function ExportPage() {
                     : professores.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
                 </SelectContent>
               </Select>
-            </div>
+            </div>}
             <Button
               className="w-full"
               disabled={baixando["pdf"] || modeloPrecisaTurno}
               onClick={() => {
-                const param = pdfOpts.visao === "turma" ? "turmaId" : "professorId";
+                const param = pdfOpts.visao === "turma" ? "turmaId" : pdfOpts.visao === "professor" ? "professorId" : "disciplinaId";
                 const turnoParaEnviar = pdfOpts.turno === TURNO_TODOS ? undefined : pdfOpts.turno;
                 const url = buildUrl(`/api/export/grade-pdf/${pdfOpts.visao}`, {
                   [param]: pdfOpts.entidadeId || undefined,
