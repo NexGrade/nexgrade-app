@@ -102,7 +102,7 @@ export default function CalendarioEscolarPage() {
 
   // [CALENDARIO-EDITAVEL]
   const papel = usePapelEfetivo();
-  const podeEditar = !papel.carregando && !papel.ehGestor && !papel.ehProfessor && !papel.semEscola;
+  const podeEditar = !papel.carregando && !papel.ehGestor && !papel.ehPedagogia && !papel.ehProfessor && !papel.semEscola; // [PEDAGOGIA]
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { data: oficiais = [] } = useQuery({

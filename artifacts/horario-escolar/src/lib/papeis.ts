@@ -16,7 +16,7 @@ export const PAPEL_MEMBRO = "org:member";
 export const PAPEL_RESERVAS = "org:reservas"; // so existe com plano pago do Clerk
 export const CARGO_RESERVAS = "reservas";
 
-export type CargoEscola = "direcao" | "coordenacao" | "secretaria" | "reservas" | "professor";
+export type CargoEscola = "direcao" | "coordenacao" | "secretaria" | "reservas" | "pedagogia" | "professor"; // [PEDAGOGIA]
 export type EscolaDoUsuario = { escolaId: string; nome: string; cargo: CargoEscola; rotuloCargo: string };
 export type Eu =
   | { pelobanco: false }
@@ -68,6 +68,8 @@ export type PapelEfetivo = {
   /** com a chave ligada: e-mail sem nenhuma escola liberada */
   semEscola: boolean;
   ehGestor: boolean;
+  /** [PEDAGOGIA] ponto, licencas, comunicados e relatorios, sem o menu completo (so com a chave do banco) */
+  ehPedagogia: boolean;
   /** so a Minha Agenda (professor, ou membro comum do Clerk) */
   ehProfessor: boolean;
 };
@@ -78,20 +80,34 @@ export function usePapelEfetivo(): PapelEfetivo {
   const { membership, isLoaded } = useOrganization();
   const eu = useEu();
 
-  if (isSignedIn && eu.isLoading) return { carregando: true, pelobanco: false, semEscola: false, ehGestor: false, ehProfessor: false };
+  if (isSignedIn && eu.isLoading) return { carregando: true, pelobanco: false, semEscola: false, ehGestor: false, ehPedagogia: false, ehProfessor: false };
   if (eu.data?.pelobanco) {
     const c = eu.data.cargo;
-    return { carregando: false, pelobanco: true, semEscola: !c, ehGestor: c === "reservas", ehProfessor: c === "professor" };
+    return { carregando: false, pelobanco: true, semEscola: !c, ehGestor: c === "reservas", ehPedagogia: c === "pedagogia", ehProfessor: c === "professor" };
   }
 
   // como antes: organizacoes do Clerk (tambem se /api/eu falhar)
-  const base = { pelobanco: false, semEscola: false };
+  const base = { pelobanco: false, semEscola: false, ehPedagogia: false };
   if (orgRole === PAPEL_RESERVAS) return { ...base, carregando: false, ehGestor: true, ehProfessor: false };
   if (orgRole !== PAPEL_MEMBRO) return { ...base, carregando: false, ehGestor: false, ehProfessor: false };
   if (!isLoaded) return { ...base, carregando: true, ehGestor: false, ehProfessor: false };
   const cargo = (membership?.publicMetadata as { cargo?: string } | undefined)?.cargo;
   const ehGestor = cargo === CARGO_RESERVAS;
   return { ...base, carregando: false, ehGestor, ehProfessor: !ehGestor };
+}
+
+// [PEDAGOGIA] telas que a pedagogia abre (o resto volta para a tela inicial dela)
+export const ROTAS_PEDAGOGIA = ["/pedagogia", "/relatorios-pedagogicos", "/imprimir-grade", "/horario", "/calendario", "/reservas", "/licencas", "/comunicados"];
+export const INICIO_PEDAGOGIA = "/relatorios-pedagogicos";
+
+export function useEhPedagogia(): boolean {
+  return usePapelEfetivo().ehPedagogia;
+}
+
+/** [PEDAGOGIA] gestor de reservas e pedagogia so consultam a grade e o calendario */
+export function useSomenteConsultaGrade(): boolean {
+  const p = usePapelEfetivo();
+  return p.ehGestor || p.ehPedagogia;
 }
 
 // [CONSULTA-GESTOR] true quando o usuario logado e gestor de reservas (so consulta a grade)

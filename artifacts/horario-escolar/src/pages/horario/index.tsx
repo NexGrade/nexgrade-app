@@ -1,4 +1,4 @@
-import { useEhGestorReservas } from "@/lib/papeis"; // [CONSULTA-GESTOR]
+import { useSomenteConsultaGrade } from "@/lib/papeis"; // [CONSULTA-GESTOR] [PEDAGOGIA]
 import { useState, useEffect, useMemo } from "react";
 import { mapaIntegralDosSlots, projetarAulasIntegral } from "@/lib/turno-integral"; // [TURNO-INTEGRAL-PROFESSOR]
 import { useSearch, Link, useLocation } from "wouter";
@@ -144,7 +144,7 @@ export default function HorarioHubPage() {
   const [aba, setAba] = useState<AbaKey>(abaInicial);
   // [CONFLITO-VAI-AO-PROBLEMA] clicar num conflito troca o ?tab= sem recarregar: a aba acompanha
   useEffect(() => { if (tabParam && ABAS.some((a) => a.key === tabParam)) setAba(tabParam as AbaKey); }, [tabParam, search]);
-  const somenteConsulta = useEhGestorReservas(); // [CONSULTA-GESTOR]
+  const somenteConsulta = useSomenteConsultaGrade(); // [CONSULTA-GESTOR] [PEDAGOGIA]
 
   return (
     <div className="space-y-6">

@@ -94,6 +94,21 @@ export function ehLeituraDaEquipe(caminhoBruto: string): boolean {
 }
 const MSG_LEITURA_EQUIPE = "Apenas a equipe da escola (coordenação ou gestor de reservas) pode consultar estes dados.";
 
+// [PEDAGOGIA] (28/10/2026) cargo Pedagogia: acompanha o dia a dia sem o menu completo.
+// Le os relatorios de ponto e carga horaria (que sao so da coordenacao) e altera so o que e dela:
+// licencas, comunicados e a area propria /pedagogia (ponto online, agenda). Nao mexe na grade,
+// no cadastro, nas reservas, nos usuarios nem no RCO.
+const LEITURAS_DA_PEDAGOGIA = ["/export/ponto", "/export/relatorio-carga-pdf", "/export/carga-horaria-pdf"];
+export function ehLeituraLiberadaPedagogia(caminhoBruto: string): boolean {
+  const caminho = normalizarCaminho(caminhoBruto);
+  return LEITURAS_DA_PEDAGOGIA.some((p) => caminho === p || caminho.startsWith(p + "/"));
+}
+const ALTERACOES_DA_PEDAGOGIA = ["/licencas", "/comunicados", "/pedagogia"];
+export function ehAlteracaoDaPedagogia(caminhoBruto: string): boolean {
+  const caminho = normalizarCaminho(caminhoBruto);
+  return ALTERACOES_DA_PEDAGOGIA.some((p) => caminho === p || caminho.startsWith(p + "/"));
+}
+
 // [ACESSOS-ESCOLA] Com ACESSOS_PELO_BANCO=1 a regra e a mesma, mas pelo CARGO do nosso
 // banco (lib/acesso.ts): direcao/coordenacao/secretaria = acesso total; reservas = so
 // reservas; professor = consultas e a propria agenda. Sem escola liberada, so /eu e /master.
@@ -109,7 +124,7 @@ function exigirPorCargo(req: Request, res: Response, next: NextFunction) {
   }
   const total = CARGOS_TOTAIS.has(a.cargo);
   if (METODOS_LEITURA.has(req.method)) {
-    if (ehLeituraSomenteAdmin(req.path) && !total) {
+    if (ehLeituraSomenteAdmin(req.path) && !total && !(a.cargo === "pedagogia" && ehLeituraLiberadaPedagogia(req.path))) { // [PEDAGOGIA]
       res.status(403).json({ error: "Apenas a direção, a coordenação ou a secretaria podem consultar estes dados." });
       return;
     }
@@ -121,6 +136,11 @@ function exigirPorCargo(req: Request, res: Response, next: NextFunction) {
   }
   if (PREFIXOS_LIBERADOS.some((p) => caminho === p || caminho.startsWith(p + "/"))) return next();
   if (total) return next();
+  if (a.cargo === "pedagogia") { // [PEDAGOGIA]
+    if (ehAlteracaoDaPedagogia(req.path)) return next();
+    res.status(403).json({ error: "Seu acesso (Pedagogia) permite alterar só o ponto, as licenças, os comunicados e a agenda." });
+    return;
+  }
   if (a.cargo === "reservas") {
     if (ehAlteracaoDeReservaPermitida(req.path)) return next();
     res.status(403).json({ error: "Seu acesso permite apenas administrar reservas." });

@@ -373,13 +373,14 @@ COMO GRAVAR
 
   usuarios_cargos: {
     titulo: "Usuários e cargos (quem acessa o sistema)",
-    palavras: ["usuário", "acesso", "convidar", "cargo", "permissão", "direção", "coordenação", "secretaria", "secretária", "gestor de reservas", "login"],
+    palavras: ["usuário", "acesso", "convidar", "cargo", "permissão", "direção", "coordenação", "secretaria", "secretária", "gestor de reservas", "pedagogia", "pedagogo", "login"],
     texto: `Menu Usuários — quem da equipe tem acesso nesta escola e com qual cargo. Não há limite de pessoas.
 1. Clique em "Novo Usuário".
 2. Informe Nome, E-mail e Cargo e clique em "Liberar acesso". Não sai e-mail de convite: avise a pessoa para entrar no endereço do sistema e criar a conta com esse mesmo e-mail (ou entrar, se já tiver conta). Até o primeiro acesso aparece "Ainda não entrou".
 Cargos:
 - Direção, Coordenação e Secretaria: acesso total (a secretaria costuma montar e gerar a grade).
 - Gestor de reservas: só a agenda de reservas (sem regras por professor; vê a grade e o calendário só para consulta).
+- Pedagogia: sem o menu completo. Abre Relatórios Pedagógicos (ponto do dia, controle de ponto, carga horária, listas de professores e disciplinas), Imprimir Grade, Licenças e Comunicados (pode alterar), e consulta o Horário, o Calendário e as Reservas (em que sala cada professor está). Não altera a grade, o cadastro, as reservas, os usuários nem o RCO.
 - Professor NÃO é cadastrado aqui: o acesso dele vem do e-mail em Professores (cargo Professor, só a Minha Agenda). Quem é da equipe e também professor fica com o cargo da equipe.
 - Para mudar o cargo, troque na lista (pede confirmação). Para tirar o acesso, use a lixeira (vale em até 1 minuto). Ninguém remove o próprio acesso, e a escola sempre fica com pelo menos uma pessoa de acesso total.
 - Acesso "Nexus Core (suporte)": aparece quando o suporte da Nexus Core foi liberado para ajudar a escola; a escola pode remover quando quiser. Tudo o que o suporte fizer fica no Histórico.`,
