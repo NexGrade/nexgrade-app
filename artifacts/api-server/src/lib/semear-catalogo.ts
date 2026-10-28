@@ -15,11 +15,17 @@ import { padronizarNomeDisciplina } from "./padronizar-nome-disciplina"; // [PAD
  * [SAE-DO-CATALOGO] (14/10/2026) disciplina nova vem com codigo SAE, Codigo Externo do RCO, sigla e sala do
  * catalogo mestre (disciplinas_catalogo) quando o nome bate. Antes vinha sem SAE e a
  * escola ficava sem codigo para o RCO.
+ *
+ * [CATALOGO-SOB-DEMANDA] (28/10/2026) A escola nova NAO recebe mais o catalogo inteiro
+ * (78 cursos e ~800 disciplinas que lotavam os menus). O catalogo fica so nos modelos do
+ * codigo; quando a escola marca um curso como ofertado, entra so aquele curso, com as
+ * matrizes e as disciplinas dele (opcao `chaves` + `ofertar`).
  */
 import { db, cursosTable, matrizesCurricularesTable, itensMatrizTable, disciplinasTable, disciplinasCatalogoTable } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
 import { MATRIZES_TECNICAS_SEED_PR_2026 } from "./matrizes-tecnicas-seed-pr";
 import { MATRIZES_OFICIAIS_SEED_PR } from "./matrizes-oficiais-seed-pr";
+import { SIGLA_PADRAO_POR_CODIGO } from "./sigla-padrao"; // [PADRAO-SIGLA]
 
 const EIXOS = new Set([
   "ambiente_saude", "controle_processos_industriais", "desenvolvimento_educacional_social", "gestao_negocios",
@@ -51,6 +57,11 @@ type CursoModelo = {
   series: { serieAno: string; itens: ItemModelo[] }[];
 };
 
+/** Chave estavel de um curso do catalogo: nome sem acento/caixa + forma de oferta. */
+export function chaveCurso(nome: string, formaOferta: string | null | undefined): string {
+  return `${chaveNome(nome)}|${formaOferta ?? ""}`;
+}
+
 function modelos(): CursoModelo[] {
   const lista: CursoModelo[] = [];
   for (const g of (MATRIZES_OFICIAIS_SEED_PR as any[])) {
@@ -70,7 +81,26 @@ export type ResultadoSemeadura = {
   matrizesExistentes: number; itensCriados: number; disciplinasCriadas: number;
 };
 
-export async function semearCatalogoEscola(escolaId: string): Promise<ResultadoSemeadura> {
+export type ModeloCursoResumo = {
+  chave: string; nome: string; nivel: string; codigoCurso: string | null; formaOferta: string | null; series: string[];
+};
+
+/** [CATALOGO-SOB-DEMANDA] Os cursos do catalogo oficial, sem gravar nada no banco. */
+export function listarModelosCatalogo(): ModeloCursoResumo[] {
+  return modelos().map((m) => ({
+    chave: chaveCurso(m.nome, m.formaOferta), nome: m.nome, nivel: m.nivel, codigoCurso: m.codigoCurso,
+    formaOferta: m.formaOferta, series: (m.series ?? []).map((s) => s.serieAno),
+  }));
+}
+
+export type OpcoesSemeadura = {
+  /** So os cursos com estas chaves (ver chaveCurso). Sem a opcao: o catalogo inteiro. */
+  chaves?: string[];
+  /** Cria (ou religa) os cursos ja como ofertados. */
+  ofertar?: boolean;
+};
+
+export async function semearCatalogoEscola(escolaId: string, opcoes: OpcoesSemeadura = {}): Promise<ResultadoSemeadura> {
   const r: ResultadoSemeadura = { cursosCriados: 0, cursosReaproveitados: 0, matrizesCriadas: 0, matrizesExistentes: 0, itensCriados: 0, disciplinasCriadas: 0 };
 
   const cursosExistentes = await db.select().from(cursosTable).where(eq(cursosTable.escolaId, escolaId));
@@ -94,16 +124,23 @@ export async function semearCatalogoEscola(escolaId: string): Promise<ResultadoS
   // (14/10/2026) SAE conferidos nas matrizes oficiais: Ciencias 301 (IN Conjunta 004/2022) e
   // Educacao Ambiental 310 (Plano de Curso Tec. Meio Ambiente 2023). Sem excecoes.
 
-  for (const m of modelos()) {
+  const filtro = opcoes.chaves ? new Set(opcoes.chaves) : null;
+  const lista = modelos().filter((m) => !filtro || filtro.has(chaveCurso(m.nome, m.formaOferta)));
+
+  for (const m of lista) {
     await db.transaction(async (tx) => {
-      const chave = `${chaveNome(m.nome)}|${m.formaOferta ?? ""}`;
+      const chave = chaveCurso(m.nome, m.formaOferta);
       let cursoId = cursoPorChave.get(chave);
       if (cursoId) {
         r.cursosReaproveitados++;
+        if (opcoes.ofertar) {
+          await tx.update(cursosTable).set({ ofertado: true } as any)
+            .where(and(eq(cursosTable.id, cursoId), eq(cursosTable.escolaId, escolaId)));
+        }
       } else {
         const [novo] = await tx.insert(cursosTable).values({
           escolaId, nome: m.nome, nivel: m.nivel, codigoCurso: m.codigoCurso,
-          eixoTecnologico: m.eixo as any, formaOferta: m.formaOferta as any, ofertado: false,
+          eixoTecnologico: m.eixo as any, formaOferta: m.formaOferta as any, ofertado: opcoes.ofertar === true,
         } as any).returning();
         cursoId = novo.id;
         cursoPorChave.set(chave, cursoId);
@@ -129,12 +166,13 @@ export async function semearCatalogoEscola(escolaId: string): Promise<ResultadoS
           let discId = discPorNome.get(k);
           if (!discId) {
             const cat = doCatalogo.get(k) ?? null; // [SAE-DO-CATALOGO]
+            const sigla = cat?.sigla || (cat?.codigoExternoRco != null ? SIGLA_PADRAO_POR_CODIGO[cat.codigoExternoRco] : undefined); // [PADRAO-SIGLA]
             const [nova] = await tx.insert(disciplinasTable).values({
               escolaId, nome: padronizarNomeDisciplina(it.nome), cargaSemanal: Number(it.cargaHorariaSemanal) || 2,
               categoriaCurricularPadrao: it.categoria as any,
               ...(cat?.codigoSae ? { codigoSae: cat.codigoSae } : {}),
               ...(cat?.codigoExternoRco != null ? { codigoExternoRco: cat.codigoExternoRco } : {}), // [CATALOGO-CODIGO-EXTERNO]
-              ...(cat?.sigla ? { sigla: cat.sigla } : {}),
+              ...(sigla ? { sigla } : {}),
               ...(cat?.tipoSalaExigido ? { tipoSalaExigido: cat.tipoSalaExigido } : {}),
             } as any).returning();
             discId = nova.id;

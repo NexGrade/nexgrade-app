@@ -1,16 +1,17 @@
-// [CATALOGO] Aba "Catalogo SEED-PR": todos os cursos da escola (inclusive os do
-// catalogo oficial), com a caixa "Ofertado" -- so os ofertados aparecem na aba
-// Cursos e na criacao de turmas. Importa o catalogo oficial com um clique.
+// [CATALOGO] Aba "Catalogo SEED-PR": os cursos do catalogo oficial (e os proprios da escola),
+// com a caixa "Ofertado" -- so os ofertados aparecem na aba Cursos e na criacao de turmas.
+// [CATALOGO-SOB-DEMANDA] (28/10/2026) o catalogo nao e mais importado inteiro: ao marcar um
+// curso, entram so ele, as matrizes e as disciplinas dele. Desmarcar so desliga (nada e apagado).
 import { useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useListCursos, getListCursosQueryKey, customFetch } from "@workspace/api-client-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getListCursosQueryKey, getListDisciplinasQueryKey, customFetch } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Search } from "lucide-react";
+import { Search } from "lucide-react";
 
 const NIVEIS = [
   { v: "todos", l: "Todos" },
@@ -29,51 +30,77 @@ function semAcento(s: string): string {
   return String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
+type ItemCatalogo = {
+  chave: string | null; // null = curso proprio da escola (fora do catalogo)
+  cursoId: number | null;
+  nome: string; nivel: string; codigoCurso: string | null; formaOferta: string | null;
+  ofertado: boolean; series?: string[];
+};
+const CHAVE_CATALOGO = ["/matrizes-oficiais/catalogo-cursos"];
+
 export default function CatalogoSeed() {
-  const { data: cursos, isLoading } = useListCursos();
+  const { data, isLoading } = useQuery({
+    queryKey: CHAVE_CATALOGO,
+    queryFn: () => customFetch<{ modelos: ItemCatalogo[]; proprios: ItemCatalogo[] }>("/api/matrizes-oficiais/catalogo-cursos", { responseType: "json" } as any),
+  });
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [busca, setBusca] = useState("");
   const [nivel, setNivel] = useState("todos");
   const [soOfertados, setSoOfertados] = useState(false);
-  const [importando, setImportando] = useState(false);
-  const [salvando, setSalvando] = useState<number | null>(null);
+  const [salvando, setSalvando] = useState<string | null>(null);
 
-  const todos = (cursos ?? []) as any[];
-  const totalOfertados = todos.filter((c) => c.ofertado !== false).length;
+  const todos = useMemo<ItemCatalogo[]>(
+    () => [...(data?.modelos ?? []), ...(data?.proprios ?? []).map((p) => ({ ...p, chave: null }))],
+    [data],
+  );
+  const totalOfertados = todos.filter((c) => c.ofertado).length;
   const lista = useMemo(() => {
     const b = semAcento(busca.trim());
     return todos
-      .filter((c) => (nivel === "todos" || c.nivel === nivel) && (!soOfertados || c.ofertado !== false) && (!b || semAcento(c.nome).includes(b)))
-      .sort((a, z) => Number(z.ofertado !== false) - Number(a.ofertado !== false) || String(a.nome).localeCompare(String(z.nome), "pt-BR"));
+      .filter((c) => (nivel === "todos" || c.nivel === nivel) && (!soOfertados || c.ofertado) && (!b || semAcento(c.nome).includes(b)))
+      .sort((a, z) => Number(z.ofertado) - Number(a.ofertado) || String(a.nome).localeCompare(String(z.nome), "pt-BR"));
   }, [todos, busca, nivel, soOfertados]);
 
-  async function importar() {
-    setImportando(true);
-    try {
-      const r = await customFetch<any>("/api/matrizes-oficiais/semear", { method: "POST", responseType: "json" } as any);
-      toast({
-        title: "Catálogo oficial importado",
-        description: `${r?.cursosCriados ?? 0} cursos, ${r?.matrizesCriadas ?? 0} matrizes e ${r?.disciplinasCriadas ?? 0} disciplinas novas. Marque os cursos que a escola oferece.`,
-      });
-      queryClient.invalidateQueries({ queryKey: getListCursosQueryKey() });
-    } catch (err: any) {
-      toast({ title: "Não foi possível importar", description: err?.data?.error ?? (err instanceof Error ? err.message : "Tente novamente."), variant: "destructive" });
-    } finally {
-      setImportando(false);
-    }
-  }
+  const idDe = (c: ItemCatalogo) => c.chave ?? `curso-${c.cursoId}`;
 
-  async function alternar(c: any) {
-    setSalvando(c.id);
+  async function alternar(c: ItemCatalogo) {
+    setSalvando(idDe(c));
     try {
-      await customFetch<any>(`/api/matrizes-oficiais/cursos/${c.id}/ofertado`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ofertado: c.ofertado === false }),
-        responseType: "json",
-      } as any);
-      await queryClient.invalidateQueries({ queryKey: getListCursosQueryKey() });
+      if (!c.ofertado && c.cursoId == null && c.chave) {
+        // primeira vez: traz o curso do catalogo com as matrizes e disciplinas dele
+        const r = await customFetch<any>("/api/matrizes-oficiais/catalogo-cursos/ofertar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chave: c.chave }),
+          responseType: "json",
+        } as any);
+        toast({
+          title: "Curso ofertado",
+          description: `${c.nome}: ${r?.matrizesCriadas ?? 0} matriz(es) e ${r?.disciplinasCriadas ?? 0} disciplina(s) nova(s).`,
+        });
+      } else if (!c.ofertado && c.chave) {
+        // ja existia desligado: religa e completa as series que faltarem
+        await customFetch<any>("/api/matrizes-oficiais/catalogo-cursos/ofertar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chave: c.chave }),
+          responseType: "json",
+        } as any);
+      } else {
+        await customFetch<any>(`/api/matrizes-oficiais/cursos/${c.cursoId}/ofertado`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ofertado: !c.ofertado }),
+          responseType: "json",
+        } as any);
+      }
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: CHAVE_CATALOGO }),
+        queryClient.invalidateQueries({ queryKey: getListCursosQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getListDisciplinasQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: ["/matrizes-oficiais/disciplinas-em-uso"] }),
+      ]);
     } catch (err: any) {
       toast({ title: "Não foi possível salvar", description: err?.data?.error ?? "Tente novamente.", variant: "destructive" });
     } finally {
@@ -83,18 +110,13 @@ export default function CatalogoSeed() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border bg-muted/30 p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
-        <div>
-          <p className="font-medium">Catálogo oficial SEED-PR</p>
-          <p className="text-sm text-muted-foreground">
-            Marque os cursos que a escola <strong>oferece</strong>. Só eles aparecem na aba Cursos e na criação de turmas.
-            {todos.length > 0 && <> · <strong>{totalOfertados}</strong> de {todos.length} cursos ofertados</>}
-          </p>
-        </div>
-        <Button onClick={importar} disabled={importando} variant={todos.length === 0 ? "default" : "outline"} className="shrink-0">
-          <Download className="h-4 w-4 mr-2" />
-          {importando ? "Importando..." : "Importar catálogo oficial SEED-PR"}
-        </Button>
+      <div className="rounded-lg border bg-muted/30 p-4">
+        <p className="font-medium">Catálogo oficial SEED-PR</p>
+        <p className="text-sm text-muted-foreground">
+          Marque os cursos que a escola <strong>oferece</strong>. Ao marcar, entram só o curso, as matrizes e as disciplinas dele.
+          Desmarcar apenas tira o curso da aba Cursos e da criação de turmas (nada é apagado).
+          {todos.length > 0 && <> · <strong>{totalOfertados}</strong> curso(s) ofertado(s)</>}
+        </p>
       </div>
 
       <div className="flex flex-col md:flex-row gap-2 md:items-center">
@@ -117,28 +139,28 @@ export default function CatalogoSeed() {
 
       {isLoading ? (
         <Skeleton className="h-64 w-full" />
-      ) : todos.length === 0 ? (
-        <div className="rounded-lg border p-10 text-center text-muted-foreground">
-          Nenhum curso ainda. Clique em <strong>Importar catálogo oficial SEED-PR</strong> para trazer todos os cursos e matrizes oficiais.
-        </div>
       ) : lista.length === 0 ? (
         <div className="rounded-lg border p-10 text-center text-muted-foreground">Nenhum curso encontrado com esses filtros.</div>
       ) : (
         <div className="rounded-lg border divide-y">
           {lista.map((c) => {
-            const ofertado = c.ofertado !== false;
+            const ofertado = c.ofertado;
+            const id = idDe(c);
             return (
-              <label key={c.id} className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/40 ${ofertado ? "" : "opacity-70"}`}>
-                <Checkbox checked={ofertado} disabled={salvando === c.id} onCheckedChange={() => alternar(c)} />
+              <label key={id} className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/40 ${ofertado ? "" : "opacity-70"}`}>
+                <Checkbox checked={ofertado} disabled={salvando !== null} onCheckedChange={() => alternar(c)} />
                 <div className="flex-1 min-w-0">
                   <div className={`text-sm ${ofertado ? "font-medium" : ""}`}>{c.nome}</div>
                   <div className="flex flex-wrap gap-1 mt-1">
                     <Badge variant="outline" className="text-[11px]">{NOME_NIVEL[c.nivel] ?? c.nivel}</Badge>
                     {c.formaOferta && <Badge variant="outline" className="text-[11px]">{NOME_FORMA[c.formaOferta] ?? c.formaOferta}</Badge>}
                     {c.codigoCurso && <Badge variant="outline" className="text-[11px]">código {c.codigoCurso}</Badge>}
+                    {c.chave === null && <Badge variant="secondary" className="text-[11px]">curso da escola</Badge>}
                   </div>
                 </div>
-                <span className={`text-xs font-medium ${ofertado ? "text-primary" : "text-muted-foreground"}`}>{ofertado ? "Ofertado" : "Não ofertado"}</span>
+                <span className={`text-xs font-medium ${ofertado ? "text-primary" : "text-muted-foreground"}`}>
+                  {salvando === id ? "Salvando..." : ofertado ? "Ofertado" : "Não ofertado"}
+                </span>
               </label>
             );
           })}
