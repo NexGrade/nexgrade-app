@@ -34,7 +34,7 @@ const MODELOS: Modelo[] = [
   { chave: "turma", titulo: "Por turma", descricao: "Uma turma por quadro, com a sigla da disciplina e o professor.", rota: "turma", filtro: "turma", aceitaTodos: true, miniatura: "turma" },
   { chave: "lado", titulo: "Turmas lado a lado", descricao: "5 turmas por página, em paisagem. Cada aula com o nome da disciplina e o professor.", rota: "turma", modelo: "lado-a-lado", aceitaTodos: false, miniatura: "lado" },
   { chave: "professor", titulo: "Por professor", descricao: "Um professor por quadro, com turma, disciplina, HA e horários bloqueados.", rota: "professor", filtro: "professor", aceitaTodos: true, miniatura: "professor" },
-  { chave: "compacto", titulo: "Professores compacto", descricao: "4 professores por linha: a turma em cada aula, HA em amarelo.", rota: "professor", modelo: "compacto", aceitaTodos: false, miniatura: "compacto" },
+  { chave: "compacto", titulo: "Professores compacto", descricao: "6 professores por linha: a turma em cada aula, HA em amarelo.", rota: "professor", modelo: "compacto", aceitaTodos: false, miniatura: "compacto" },
   { chave: "quadro", titulo: "Quadro geral de professores", descricao: "Uma linha por professor, com os dias e as aulas nas colunas. Para afixar na sala dos professores.", rota: "professor", modelo: "quadro", aceitaTodos: false, miniatura: "quadro" },
   { chave: "disciplina", titulo: "Por disciplina", descricao: "Um quadro por disciplina: em que turma, horário e com qual professor ela acontece.", rota: "disciplina", aceitaTodos: false, miniatura: "disciplina" },
 ];
@@ -52,12 +52,12 @@ function Miniatura({ tipo }: { tipo: Modelo["miniatura"] }) {
   return (
     <svg viewBox="0 0 120 80" className="w-full h-24 rounded border bg-white" aria-hidden>
       <rect x={0} y={0} width={120} height={10} fill={azul} />
-      {tipo === "turma" && <>{grade(10, 16, 100, 26, 5, 5)}{grade(10, 48, 100, 26, 5, 5)}</>}
+      {tipo === "turma" && <>{grade(4, 16, 54, 26, 5, 5)}{grade(62, 16, 54, 26, 5, 5)}{grade(4, 48, 54, 26, 5, 5)}{grade(62, 48, 54, 26, 5, 5)}</>}
       {tipo === "lado" && <>{[0, 1, 2, 3, 4].map((k) => <rect key={k} x={14 + k * 21} y={14} width={20} height={5} fill={azul} />)}{grade(14, 20, 105, 56, 5, 10)}<rect x={4} y={20} width={9} height={56} fill={claro} stroke={borda} strokeWidth={0.5} /></>}
-      {tipo === "professor" && <>{grade(10, 16, 100, 26, 5, 5, [7])}{grade(10, 48, 100, 26, 5, 5, [12])}</>}
-      {tipo === "compacto" && <>{[0, 1, 2, 3].map((k) => grade(4 + k * 29, 16, 26, 24, 5, 6, [k + 6]))}{[0, 1, 2, 3].map((k) => grade(4 + k * 29, 46, 26, 24, 5, 6, [k + 11]))}</>}
+      {tipo === "professor" && <>{grade(4, 16, 54, 26, 5, 5, [7])}{grade(62, 16, 54, 26, 5, 5, [3])}{grade(4, 48, 54, 26, 5, 5, [12])}{grade(62, 48, 54, 26, 5, 5, [18])}</>}
+      {tipo === "compacto" && <>{[0, 1, 2, 3, 4, 5].map((k) => grade(3 + k * 19.5, 16, 18, 24, 5, 6, [k + 6]))}{[0, 1, 2, 3, 4, 5].map((k) => grade(3 + k * 19.5, 46, 18, 24, 5, 6, [k + 11]))}</>}
       {tipo === "quadro" && <><rect x={4} y={14} width={22} height={62} fill={claro} stroke={borda} strokeWidth={0.5} />{grade(27, 14, 90, 62, 15, 12, [20, 47, 90])}</>}
-      {tipo === "disciplina" && <>{grade(10, 16, 100, 26, 5, 5)}{grade(10, 48, 100, 26, 5, 5)}<text x={10} y={15} fontSize={5} fill={azul}>Matemática</text></>}
+      {tipo === "disciplina" && <>{grade(4, 16, 54, 26, 5, 5)}{grade(62, 16, 54, 26, 5, 5)}{grade(4, 48, 54, 26, 5, 5)}{grade(62, 48, 54, 26, 5, 5)}<text x={4} y={15} fontSize={5} fill={azul}>Matemática</text><text x={62} y={15} fontSize={5} fill={azul}>Português</text></>}
     </svg>
   );
 }
@@ -98,7 +98,7 @@ export default function ImprimirGradePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2"><Printer className="w-6 h-6" /> Imprimir Grade</h1>
-        <p className="text-muted-foreground text-sm">Escolha o turno e a semana e baixe o modelo de PDF que precisar. Todos usam a grade oficial.</p>
+        <p className="text-muted-foreground text-sm">Escolha o turno e a semana e baixe o modelo de PDF que precisar. Todos usam a grade oficial e saem em folha deitada (paisagem).</p>
       </div>
 
       <Card>
