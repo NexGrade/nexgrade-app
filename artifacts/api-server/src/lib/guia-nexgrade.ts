@@ -327,41 +327,26 @@ Depois de importar professores, marque as disciplinas de cada um em Professores;
 - Relatório de Reservas: por professor, num período, com confirmadas, pendentes e canceladas — PDF ou Excel.
 - Relatório de Carga Horária: PDF por professor com total de aulas, HA institucional e turmas/disciplinas por período (é o resumo, não a grade dia a dia).
 - Carga Horária Cumprida × Exigida: PDF por turma com o cumprido no ano x o total exigido, para ver antes se alguma disciplina vai fechar o ano devendo aula.
-- Exportar para o RCO (XML) e Script de gravação no RCO: veja o assunto "rco" (passo a passo completo).`,
+- Exportar para o RCO (XML): veja o assunto "rco" (passo a passo completo).`,
   },
 
   rco: {
-    titulo: "Gravar a grade no RCO (arquivo XML e script de gravação)",
+    titulo: "Gravar a grade no RCO (arquivo XML)",
     palavras: ["rco", "registro de classe", "sere", "xml", "incluir via arquivo", "script", "console", "f12", "trio", "dupla", "ifa", "lançar no rco", "exportar para o rco", "gravar no rco", "grade no rco"],
     texto: `Menu Exportar Dados → cartão "Exportar para o RCO (XML)". Só direção, coordenação e secretaria. Faça por turno (Matutino, Vespertino, Noturno, Integral). Antes: Código INEP em Escola → Dados da Escola e códigos em Códigos do RCO (o sistema avisa o que falta e leva para a tela).
 
-DOIS CAMINHOS
-- XML ("Baixar XML para o RCO"): um arquivo com todas as turmas do turno. No RCO: Grade de Horário → Incluir via Arquivo. Limite do RCO: grava UMA disciplina por horário e substitui a grade inteira de cada turma.
-- Script ("Script de gravação no RCO"): grava pela tela Incluir Horário do próprio RCO, turma por turma, e aceita até 5 disciplinas no mesmo horário (trio/dupla do IFA) e disciplinas diferentes com o mesmo código (ex.: Prática de Formação Turma 01 e Turma 02).
-- O aviso abaixo dos botões diz, para o turno escolhido, quais turmas precisam do script (verde = só o XML basta; amarelo = lista as turmas e o motivo, com o botão "Script só destas turmas").
+COMO GRAVAR
+- XML ("Baixar XML para o RCO"): um arquivo com todas as turmas do turno. No RCO: Grade de Horário → escolha o Período Letivo e o turno certo → Incluir via Arquivo. Limite do RCO: grava UMA disciplina por horário e substitui a grade inteira de cada turma.
+- O aviso abaixo do botão diz, para o turno escolhido, se alguma turma tem mais de uma disciplina no mesmo horário (trio/dupla do IFA ou disciplinas diferentes com o mesmo código). Verde = só o XML basta. Amarelo = lista as turmas: importe o XML normalmente e avise o suporte NexGrade, que faz a gravação dessas turmas no RCO.
 - Assíncronas ficam fora por padrão (o RCO fica igual ao PDF por turma). A caixa "Incluir aulas assíncronas" só deve ser marcada se a escola pedir.
-
-ORDEM QUANDO USAR OS DOIS (recomendado)
-1. Baixar XML → RCO, Grade de Horário, turno certo → Incluir via Arquivo → todas as turmas entram.
-2. "Script só destas turmas" → rodar no RCO (abaixo) → as turmas com trio são regravadas certas.
-O XML regrava a turma inteira: se o script vier antes, o XML desfaz os trios.
-
-COMO RODAR O SCRIPT NO RCO (no navegador, não no PowerShell)
-1. No RCO: Grade de Horário, escolha o Período Letivo e o MESMO turno do script e espere a lista de turmas carregar.
-2. Aperte F12 → aba Console. Abra o arquivo baixado no Bloco de Notas, copie tudo (Ctrl+A, Ctrl+C), cole no Console e aperte Enter. Se o navegador pedir, digite "allow pasting", Enter, e cole de novo.
-3. O script pergunta as turmas: deixe TODAS (ou escreva os nomes separados por vírgula).
-4. Confira a PRÉVIA: não pode ter ERROS. "NOMES PARECIDOS (confira)" mostra disciplinas com nome abreviado no RCO (ex.: MAT BASICA ANOS INICIAIS) — confira se fazem sentido. Confirme.
-5. Cada turma deve aparecer como GRAVADO. Confira algumas no Exibir Horário (principalmente as de trio).
-- Se uma disciplina "não está na lista da turma no RCO": a turma no RCO não tem essa disciplina, ou o nome é muito diferente; a lista da turma aparece no Console. Nada é gravado enquanto houver erro.
-- Mudou uma aula no meio do ano? Corrija no NexGrade e rode o script só para as turmas que mudaram.
-- O script é embaralhado de propósito e só pode ser baixado pela equipe da escola.`,
+- Nenhum passo do RCO feito pela escola usa F12 ou Console: o que precisa disso é feito só pelo suporte NexGrade.`,
   },
 
   arquivo_rco: {
     titulo: "Arquivo do RCO (enviar à equipe NexGrade o cadastro oficial da escola)",
     palavras: ["arquivo do rco", "enviar arquivo", "exportação do rco", "pedido", "selo pedido", "cadastro oficial", "códigos sere", "matriz oficial"],
     texto: `Menu Relatórios e RCO → Arquivo do RCO. Quando a equipe NexGrade pede, o item do menu aparece com o selo amarelo "Pedido" e a tela mostra a mensagem.
-1. No RCO: Grade de Horário, escolha o Período Letivo atual e use a opção de exportar da tela — o RCO baixa um arquivo .XML (cadastro oficial: disciplinas com Código Externo, turmas com código SERE e a matriz de cada turma). Se não encontrar a opção, fale com a equipe NexGrade.
+1. O RCO não tem um botão para baixar este arquivo: ele é baixado junto com o suporte NexGrade (atendimento remoto ou na escola), com a secretaria ou a direção logada no RCO, na tela Grade de Horário com o Período Letivo atual. É um .XML com o cadastro oficial (disciplinas com Código Externo, turmas com código SERE e a matriz de cada turma).
 2. No NexGrade: "Escolher o arquivo .XML e enviar". O sistema confere se é o arquivo certo e mostra o resumo (turmas por turno, disciplinas, linhas de grade). O selo "Pedido" some.
 - Enviar NÃO muda nada no cadastro nem na grade: o arquivo fica guardado para a equipe NexGrade conferir códigos e cargas. Um envio novo substitui o anterior.
 - Só direção, coordenação e secretaria enviam e baixam o arquivo.`,
