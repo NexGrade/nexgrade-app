@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Shield, Mail, Search, Trash2, X, Loader2, Info } from "lucide-react";
 import { usePapelEfetivo } from "@/lib/papeis"; // [ACESSOS-ESCOLA]
 
-type Cargo = "direcao" | "coordenacao" | "secretaria" | "reservas" | "professor"; // [CARGO-SECRETARIA]
+type Cargo = "direcao" | "coordenacao" | "secretaria" | "reservas" | "pedagogia" | "professor"; // [CARGO-SECRETARIA] [PEDAGOGIA]
 type Acesso = {
   tipo: "membro" | "convite";
   id: string;
@@ -33,6 +33,7 @@ const CARGOS: Array<{ valor: Cargo; rotulo: string; descricao: string }> = [
   { valor: "coordenacao", rotulo: "Coordenação", descricao: "Acesso total ao sistema" },
   { valor: "secretaria", rotulo: "Secretaria", descricao: "Acesso total ao sistema (monta e gera a grade, exporta para o RCO)" },
   { valor: "reservas", rotulo: "Gestor de reservas", descricao: "Só a agenda de reservas (sem regras por professor e sem a grade)" },
+  { valor: "pedagogia", rotulo: "Pedagogia", descricao: "Ponto, licenças, comunicados e relatórios pedagógicos; consulta a grade e as reservas" }, // [PEDAGOGIA]
   { valor: "professor", rotulo: "Professor", descricao: "Só a Minha Agenda" },
 ];
 const COR_CARGO: Record<Cargo, string> = {
@@ -40,6 +41,7 @@ const COR_CARGO: Record<Cargo, string> = {
   coordenacao: "bg-blue-100 text-blue-800 border-blue-200",
   secretaria: "bg-blue-100 text-blue-800 border-blue-200",
   reservas: "bg-violet-100 text-violet-800 border-violet-200",
+  pedagogia: "bg-emerald-100 text-emerald-800 border-emerald-200", // [PEDAGOGIA]
   professor: "bg-slate-100 text-slate-700 border-slate-200",
 };
 const URL_BASE = "/api/usuarios-acessos";
@@ -59,7 +61,7 @@ export default function UsuariosPage() {
   // [ACESSOS-ESCOLA] com a chave ligada: equipe no nosso banco, sem convite por e-mail e sem
   // limite; professor nao entra aqui (o acesso dele vem do e-mail no cadastro de Professores)
   const { pelobanco } = usePapelEfetivo();
-  const cargosLista = pelobanco ? CARGOS.filter((c) => c.valor !== "professor") : CARGOS;
+  const cargosLista = pelobanco ? CARGOS.filter((c) => c.valor !== "professor") : CARGOS.filter((c) => c.valor !== "pedagogia"); // [PEDAGOGIA] so pelo nosso banco
 
   const { data: acessos, isLoading, isError, error } = useQuery({
     queryKey: CHAVE,
@@ -118,7 +120,7 @@ export default function UsuariosPage() {
       {pelobanco && (
         <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
           <Info className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>Aqui fica a equipe da escola (direção, coordenação, secretaria e gestor de reservas). <strong>Professores não precisam ser adicionados:</strong> com o e-mail no cadastro de Professores, eles já entram na Minha Agenda.</span>
+          <span>Aqui fica a equipe da escola (direção, coordenação, secretaria, pedagogia e gestor de reservas). <strong>Professores não precisam ser adicionados:</strong> com o e-mail no cadastro de Professores, eles já entram na Minha Agenda.</span>
         </div>
       )}
 

@@ -11,7 +11,7 @@ import { acessoDe, temAcessoTotal, limparCacheAcessos, ROTULO_CARGO, CARGOS_TOTA
 import { normalizarEmail } from "../lib/identidade";
 
 const router = Router();
-const CargoEquipe = z.enum(["direcao", "coordenacao", "secretaria", "reservas"]);
+const CargoEquipe = z.enum(["direcao", "coordenacao", "secretaria", "reservas", "pedagogia"]); // [PEDAGOGIA]
 const ENDERECO = "nexgrade.nexuscoretecnologia.com.br";
 const MSG_PROFESSOR = "Professor não precisa de convite: cadastre o e-mail dele em Professores e ele já consegue entrar.";
 const MSG_ULTIMO = "A escola precisa manter pelo menos uma pessoa da direção, da coordenação ou da secretaria.";

@@ -61,6 +61,30 @@ describe("com ACESSOS_PELO_BANCO=1", () => {
     expect(rodar(req({ path: "/Audit", cargo: "professor" }))).toMatchObject({ passou: false, status: 403 });
   });
 
+  it("pedagogia: le os relatorios de ponto e carga e altera so licencas, comunicados e /pedagogia [PEDAGOGIA]", () => {
+    for (const path of ["/export/ponto", "/export/relatorio-carga-pdf", "/Export/Carga-Horaria-Pdf", "/export/ponto-diario", "/horarios", "/professores", "/reservas"]) {
+      expect(rodar(req({ path, cargo: "pedagogia" })).passou, path).toBe(true);
+    }
+    for (const path of ["/audit", "/usuarios", "/usuarios-acessos", "/export/relatorio-seed", "/export/rco-script", "/codigos-rco", "/virada-ano", "/reservas/regras-professores"]) {
+      expect(rodar(req({ path, cargo: "pedagogia" })), path).toMatchObject({ passou: false, status: 403 });
+    }
+    for (const [method, path] of [["POST", "/licencas"], ["PATCH", "/licencas/3"], ["DELETE", "/comunicados/5"], ["POST", "/comunicados"], ["PUT", "/pedagogia/ponto"]]) {
+      expect(rodar(req({ method, path, cargo: "pedagogia" })).passou, `${method} ${path}`).toBe(true);
+    }
+    for (const [method, path] of [["POST", "/turmas"], ["POST", "/horarios"], ["POST", "/reservas"], ["PATCH", "/professores/2"], ["POST", "/usuarios-acessos"], ["DELETE", "/disciplinas/4"], ["POST", "/Pedagogiax"]]) {
+      expect(rodar(req({ method, path, cargo: "pedagogia" })), `${method} ${path}`).toMatchObject({ passou: false, status: 403 });
+    }
+  });
+  it("professor nao le os relatorios da pedagogia nem altera licencas e comunicados [PEDAGOGIA]", () => {
+    for (const path of ["/export/ponto", "/export/relatorio-carga-pdf", "/export/carga-horaria-pdf"]) {
+      expect(rodar(req({ path, cargo: "professor" })), path).toMatchObject({ passou: false, status: 403 });
+    }
+    for (const path of ["/licencas", "/comunicados", "/pedagogia/ponto"]) {
+      expect(rodar(req({ method: "POST", path, cargo: "professor" })), path).toMatchObject({ passou: false, status: 403 });
+      expect(rodar(req({ method: "POST", path, cargo: "reservas" })), path).toMatchObject({ passou: false, status: 403 });
+    }
+  });
+
   it("gestor de reservas so altera reservas (sem as regras por professor)", () => {
     expect(rodar(req({ method: "POST", path: "/reservas", cargo: "reservas" })).passou).toBe(true);
     expect(rodar(req({ method: "PUT", path: "/reservas/regras-professores/2", cargo: "reservas" }))).toMatchObject({ passou: false, status: 403 });

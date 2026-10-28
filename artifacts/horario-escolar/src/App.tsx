@@ -1,5 +1,5 @@
 import { clerkPtBR } from "@/lib/clerk-ptbr"; // [CLERK-PTBR]
-import { usePapelEfetivo, useAtivarEscolaDoMembro, useEu } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA] [ACESSOS-ESCOLA]
+import { usePapelEfetivo, useAtivarEscolaDoMembro, useEu, ROTAS_PEDAGOGIA, INICIO_PEDAGOGIA } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA] [ACESSOS-ESCOLA]
 import { trocarDeEscola, gravarEscolaAtiva } from "@/lib/escola-ativa"; // [ACESSOS-ESCOLA] [BOTAO-SAIR]
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // [ACESSOS-ESCOLA]
 import { useEffect, useRef, useState, lazy, Suspense } from "react";
@@ -288,9 +288,10 @@ function HomeRedirect() {
   // [PORTAL DO PROFESSOR] Membro comum da organizacao (nao admin) vai
   // direto pra agenda restrita dele -- so a coordenacao (admin) ve o
   // painel administrativo completo.
-  const { ehGestor, ehProfessor, carregando } = usePapelEfetivo(); // [GESTOR-METADATA] [ACESSOS-ESCOLA]
+  const { ehGestor, ehPedagogia, ehProfessor, carregando } = usePapelEfetivo(); // [GESTOR-METADATA] [ACESSOS-ESCOLA]
   if (carregando) return null;
   const destino = ehGestor ? "/reservas" // [PAPEL-RESERVAS]
+    : ehPedagogia ? INICIO_PEDAGOGIA // [PEDAGOGIA]
     : ehProfessor ? "/minha-agenda" : "/dashboard";
   return (
     <>
@@ -323,7 +324,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 // onboarding antes de acessar o restante do produto.
 function EscolaGate({ component: Component }: { component: React.ComponentType }) {
   const [rotaAtual] = useLocation(); // [PAPEL-RESERVAS]
-  const { ehGestor, ehProfessor, semEscola, carregando: carregandoPapel } = usePapelEfetivo(); // [GESTOR-METADATA] [ACESSOS-ESCOLA]
+  const { ehGestor, ehPedagogia, ehProfessor, semEscola, carregando: carregandoPapel } = usePapelEfetivo(); // [GESTOR-METADATA] [ACESSOS-ESCOLA] [PEDAGOGIA]
   const { aguardando: ativandoEscola, falhou: falhouAtivar } = useAtivarEscolaDoMembro(); // [ORG-AUTO]
   const { data, isLoading, isError, refetch } = useGetEscolaAtual({
     query: { queryKey: getGetEscolaAtualQueryKey() },
@@ -351,6 +352,8 @@ function EscolaGate({ component: Component }: { component: React.ComponentType }
   // professor (prioridade/limite) sao da coordenacao -- /reservas/regras volta tambem.
   if (ehGestor) { // [GESTOR-METADATA]
     if (rotaAtual !== "/reservas" && rotaAtual !== "/horario" && rotaAtual !== "/calendario") return <Redirect to="/reservas" />; // [CONSULTA-GESTOR] grade e calendario so consulta
+  } else if (ehPedagogia) { // [PEDAGOGIA] sem o menu completo
+    if (!ROTAS_PEDAGOGIA.includes(rotaAtual)) return <Redirect to={INICIO_PEDAGOGIA} />;
   } else if (ehProfessor) { // [ACESSOS-ESCOLA] professor (banco) ou membro comum (Clerk)
     return <Redirect to="/minha-agenda" />;
   }

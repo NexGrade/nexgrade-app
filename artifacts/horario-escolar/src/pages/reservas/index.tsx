@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { useEhGestorReservas } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA]
+import { useEhGestorReservas, useEhPedagogia } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA] [PEDAGOGIA]
 import { BotaoRelatorioReservas } from "@/components/relatorio-reservas"; // [RELATORIO-RESERVAS]
 import { MapaOcupacaoSalas } from "@/components/mapa-ocupacao-salas"; // [OCUPACAO-SALAS]
 import { NovaReservaDialog, type PreenchimentoReserva } from "@/components/nova-reserva-dialog"; // [RESERVA-GESTOR]
@@ -316,6 +316,7 @@ export default function ReservasPage() {
   const [editing, setEditing] = useState<Reserva | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const somenteConsulta = useEhPedagogia(); // [PEDAGOGIA] ve em que sala cada professor esta, sem alterar
 
   const reservationsQuery = useListReservas({ data: selectedDate }, {
     query: { queryKey: getListReservasQueryKey({ data: selectedDate }) },
@@ -511,10 +512,10 @@ export default function ReservasPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <BotaoRegrasPorProfessor />{/* [PAPEL-RESERVAS] */}
-          <BotaoBloqueios aoMudar={invalidateReservations} />{/* [BLOQUEIOS] gestor, coordenacao, direcao e secretaria */}
+          {!somenteConsulta && <BotaoRegrasPorProfessor />}{/* [PAPEL-RESERVAS] */}
+          {!somenteConsulta && <BotaoBloqueios aoMudar={invalidateReservations} />}{/* [BLOQUEIOS] gestor, coordenacao, direcao e secretaria */}
           <BotaoRelatorioReservas />{/* [RELATORIO-RESERVAS] */}
-          <NovaReservaDialog modo="gestor" professores={professores} aoCriar={invalidateReservations} />{/* [RESERVA-GESTOR] mesmo fluxo do app do professor, ja confirmada */}
+          {!somenteConsulta && <NovaReservaDialog modo="gestor" professores={professores} aoCriar={invalidateReservations} />}{/* [RESERVA-GESTOR] mesmo fluxo do app do professor, ja confirmada */}
         </div>
       </div>
 
@@ -625,12 +626,12 @@ export default function ReservasPage() {
                       {roomConflict && <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-destructive"><AlertTriangle className="h-3.5 w-3.5" /> Este espaço tem mais de uma solicitação nesta aula. Resolva antes de confirmar.</p>}
                       {reserva.observacoes && <p className="mt-2 text-xs text-muted-foreground">{reserva.observacoes}</p>}
                     </div>
-                    <div className="flex items-center gap-1 border-t border-border pt-3 lg:border-0 lg:pt-0">
+                    {!somenteConsulta && <div className="flex items-center gap-1 border-t border-border pt-3 lg:border-0 lg:pt-0">
                       {reserva.status === "pendente" && <Button data-testid={`button-confirm-reservation-${reserva.id}`} size="sm" onClick={() => changeStatus(reserva.id, "confirmada")} disabled={updateReserva.isPending}><Check className="mr-1.5 h-3.5 w-3.5" /> Confirmar</Button>}
                       {reserva.status !== "cancelada" && <Button data-testid={`button-cancel-reservation-${reserva.id}`} size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive" onClick={() => changeStatus(reserva.id, "cancelada")} disabled={updateReserva.isPending}><X className="h-4 w-4" /></Button>}
                       <Button data-testid={`button-edit-reservation-${reserva.id}`} size="icon" variant="ghost" onClick={() => openEdit(reserva)}><CalendarDays className="h-4 w-4" /></Button>
                       <Button data-testid={`button-delete-reservation-${reserva.id}`} size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive" onClick={() => removeReservation(reserva.id)} disabled={deleteReserva.isPending}><Trash2 className="h-4 w-4" /></Button>
-                    </div>
+                    </div>}
                   </div>
                 </CardContent>
               </Card>

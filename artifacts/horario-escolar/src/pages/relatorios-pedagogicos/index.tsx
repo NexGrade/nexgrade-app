@@ -9,6 +9,9 @@ import { Label } from "@/components/ui/label";
 import { ClipboardList, Download, FileText, Loader2, NotebookPen, TrendingUp } from "lucide-react";
 import { CardPontoDiario } from "@/components/ponto-diario"; // [PONTO-DIARIO]
 import { useBaixarArquivo, montarUrl, SEMANA_ATUAL, SEMANA_PROXIMA } from "@/hooks/use-baixar-arquivo";
+import { ListasPedagogicas } from "@/components/listas-pedagogicas"; // [PEDAGOGIA]
+import { Link } from "wouter";
+import { Printer } from "lucide-react";
 
 const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
@@ -35,7 +38,7 @@ export default function RelatoriosPedagogicosPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2"><NotebookPen className="w-6 h-6" /> Relatórios Pedagógicos</h1>
-        <p className="text-muted-foreground text-sm">Ponto dos professores e carga horária. Os PDFs da grade ficam em Imprimir Grade.</p>
+        <p className="text-muted-foreground text-sm">Ponto dos professores, carga horária e listas de professores e disciplinas.</p>
       </div>
 
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Ponto</h2>
@@ -133,6 +136,20 @@ export default function RelatoriosPedagogicosPage() {
             </div>
             <Botao chave="cumprida" texto="Baixar Cumprida × Exigida" onClick={() => baixar(
               montarUrl("/api/export/carga-horaria-pdf", { ano: anoCumprida }), `carga_horaria_${anoCumprida}.pdf`, "cumprida")} />
+          </CardContent>
+        </Card>
+      </div>
+
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Listas e grade</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <ListasPedagogicas />
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base"><Printer className="w-4 h-4" /> Grade do professor</CardTitle>
+            <CardDescription>Por professor, professores compacto ou quadro geral para a sala dos professores, em Imprimir Grade.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline" className="w-full"><Link href="/imprimir-grade"><Printer className="w-4 h-4 mr-2" />Abrir Imprimir Grade</Link></Button>
           </CardContent>
         </Card>
       </div>

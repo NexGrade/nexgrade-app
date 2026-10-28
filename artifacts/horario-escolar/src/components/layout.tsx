@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { UserButton } from "@clerk/react";
-import { useEhGestorReservas } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA]
+import { useEhGestorReservas, useEhPedagogia } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA] [PEDAGOGIA]
 import { useQueryClient } from "@tanstack/react-query";
 import { useMasterWhoami, useListComunicados, useMarcarComunicadoLido, getListComunicadosQueryKey } from "@workspace/api-client-react";
 import { NotificationBell } from "@/components/notification-bell";
@@ -86,6 +86,32 @@ const navGroups = [
   },
 ];
 
+// [PEDAGOGIA] (28/10/2026) menu da pedagogia: so o que ela acompanha
+const menuPedagogia = [
+  {
+    label: "Pedagogia",
+    items: [
+      { href: "/relatorios-pedagogicos", label: "Relatórios Pedagógicos", icon: NotebookPen },
+      { href: "/imprimir-grade", label: "Imprimir Grade", icon: Printer },
+    ],
+  },
+  {
+    label: "Dia a dia",
+    items: [
+      { href: "/licencas", label: "Licenças", icon: FileText },
+      { href: "/comunicados", label: "Comunicados", icon: Bell },
+      { href: "/reservas", label: "Reservas (consulta)", icon: DoorOpen },
+    ],
+  },
+  {
+    label: "Consulta",
+    items: [
+      { href: "/horario", label: "Horário", icon: Calendar },
+      { href: "/calendario", label: "Calendário", icon: CalendarDays },
+    ],
+  },
+];
+
 function NotificationBellAdmin() {
   const queryClient = useQueryClient();
   const { data: notificacoes } = useListComunicados(undefined, {
@@ -112,12 +138,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // aqui só é para não poluir o menu de quem não precisa dele.
   const { data: whoami } = useMasterWhoami();
   const ehGestorMenu = useEhGestorReservas(); // [PAPEL-RESERVAS] [GESTOR-METADATA]
+  const ehPedagogiaMenu = useEhPedagogia(); // [PEDAGOGIA]
 
   const gruposCompletos = whoami?.isMaster
     ? [...navGroups, { label: "Administração", items: [{ href: "/master", label: "Painel Master", icon: ShieldCheck }] }]
     : navGroups;
   // [PAPEL-RESERVAS] gestor de reservas ve so o item Reservas no menu
-  const grupos = ehGestorMenu
+  const grupos = ehPedagogiaMenu
+    ? menuPedagogia // [PEDAGOGIA] sem o menu completo
+    : ehGestorMenu
     ? navGroups
         .map((g) => ({ ...g, label: g.label === "1. Cadastro da escola" ? "Consulta" : g.label, items: g.items
           .filter((i) => i.href === "/horario" || i.href === "/reservas" || i.href === "/calendario") // [CONSULTA-GESTOR]
@@ -126,7 +155,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     : gruposCompletos;
 
   // [ARQUIVO-RCO] pedido em aberto da equipe NexGrade: o item do menu ganha o selo "Pedido"
-  const { data: situacaoArquivoRco } = useSituacaoArquivoRco(!ehGestorMenu);
+  const { data: situacaoArquivoRco } = useSituacaoArquivoRco(!ehGestorMenu && !ehPedagogiaMenu);
   const seloDoItem = (href: string, badge?: string) => (href === "/arquivo-rco" && situacaoArquivoRco?.solicitado ? "Pedido" : badge);
 
   const isActive = (href: string) =>

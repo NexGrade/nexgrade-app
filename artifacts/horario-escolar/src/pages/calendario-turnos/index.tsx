@@ -6,7 +6,7 @@ import { lazy, Suspense, useState } from "react";
 import { useSearch } from "wouter";
 import { CalendarDays, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEhGestorReservas } from "@/lib/papeis"; // [CALENDARIO-GESTOR]
+import { useSomenteConsultaGrade } from "@/lib/papeis"; // [CALENDARIO-GESTOR] [PEDAGOGIA]
 
 const CalendarioEscolarPage = lazy(() => import("@/pages/calendario/index"));
 const AbaEsquema = lazy(() => import("@/pages/horario/index").then((m) => ({ default: m.AbaEsquema })));
@@ -21,7 +21,7 @@ export default function CalendarioTurnosPage() {
   const search = useSearch();
   const tabParam = new URLSearchParams(search).get("tab");
   const inicial = (ABAS.some((a) => a.key === tabParam) ? tabParam : "calendario") as AbaKey;
-  const somenteConsulta = useEhGestorReservas(); // [CALENDARIO-GESTOR] gestor de reservas ve so o calendario letivo
+  const somenteConsulta = useSomenteConsultaGrade(); // [CALENDARIO-GESTOR] [PEDAGOGIA] gestor de reservas e pedagogia veem so o calendario letivo
   const [abaEscolhida, setAba] = useState<AbaKey>(inicial);
   const aba: AbaKey = somenteConsulta ? "calendario" : abaEscolhida; // [CALENDARIO-GESTOR] gestor so ve o calendario, mesmo que o papel chegue depois
 

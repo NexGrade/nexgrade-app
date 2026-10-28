@@ -14,8 +14,8 @@ export function acessosPeloBanco(): boolean {
   return process.env.ACESSOS_PELO_BANCO === "1";
 }
 
-export type Cargo = "direcao" | "coordenacao" | "secretaria" | "reservas" | "professor";
-export const CARGOS_EQUIPE = ["direcao", "coordenacao", "secretaria", "reservas"] as const;
+export type Cargo = "direcao" | "coordenacao" | "secretaria" | "reservas" | "pedagogia" | "professor"; // [PEDAGOGIA]
+export const CARGOS_EQUIPE = ["direcao", "coordenacao", "secretaria", "reservas", "pedagogia"] as const; // [PEDAGOGIA] le as reservas (em que sala o professor esta)
 /** cargos com acesso total ao sistema */
 export const CARGOS_TOTAIS: ReadonlySet<string> = new Set(["direcao", "coordenacao", "secretaria"]);
 export const ROTULO_CARGO: Record<Cargo, string> = {
@@ -23,6 +23,7 @@ export const ROTULO_CARGO: Record<Cargo, string> = {
   coordenacao: "Coordenação",
   secretaria: "Secretaria",
   reservas: "Gestor de reservas",
+  pedagogia: "Pedagogia", // [PEDAGOGIA]
   professor: "Professor",
 };
 
