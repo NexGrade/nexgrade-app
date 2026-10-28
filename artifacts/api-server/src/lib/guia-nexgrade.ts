@@ -323,7 +323,7 @@ Depois de importar professores, marque as disciplinas de cada um em Professores;
 - Grade Horária: grade completa ou de uma turma, em CSV (Excel) ou JSON.
 - Controle de Ponto: planilha com a carga horária dos professores (filtro de professor, mês e ano).
 - Ponto Diário: folha de ponto de UM dia. Escolha o dia e o turno (Manhã, Tarde, Noite ou Todos, um por página) e baixe em PDF ou Excel. Uma linha por professor que tem aula, hora-atividade (H.A.) ou atividade (FORM, COORD, ASS...) nesse dia, uma coluna por aula do turno com TURMA/SIGLA, e a coluna Situação com quadradinhos para marcar: Presente, Falta, Atestado ou Atraso. Traço = professor sem expediente nesse horário. Se o dia for feriado ou recesso no calendário, o relatório avisa no topo.
-- Grade em PDF: fica na tela Imprimir Grade (assunto "imprimir_grade"); o cartão daqui só leva para lá.
+- Grade em PDF: escolha Visão (por turma ou por professor), Turno, Semana e, se quiser, uma turma ou professor, e clique em "Baixar PDF". Logo abaixo, o botão "Outros formatos" abre a tela Imprimir Grade (turmas lado a lado, compacto, quadro geral, por disciplina; assunto "imprimir_grade").
 - Relatório de Reservas: por professor, num período, com confirmadas, pendentes e canceladas — PDF ou Excel.
 - Relatório de Carga Horária: PDF por professor com total de aulas, HA institucional e turmas/disciplinas por período (é o resumo, não a grade dia a dia).
 - Carga Horária Cumprida × Exigida: PDF por turma com o cumprido no ano x o total exigido, para ver antes se alguma disciplina vai fechar o ano devendo aula.
