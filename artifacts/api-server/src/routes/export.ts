@@ -18,6 +18,7 @@ import { buscarReservasParaRelatorio, gerarPdfReservasPorProfessor } from "../li
 import { espacosLivresDaSemana, gerarPdfEspacosLivres } from "../lib/espacos-livres"; // [ESPACOS-LIVRES]
 import { ehBloqueioReal } from "../lib/bloqueio-real";
 import { gerarPdfGradeCompacta, type BlocoGrade } from "../lib/pdf-grade";
+import { gerarPdfTurmasLadoALado, gerarPdfProfessoresCompacto, gerarPdfQuadroProfessores } from "../lib/pdf-grade-quadros"; // [PDF-MODELOS]
 import { gerarPdfCargaProfessores, type RelatorioProfessor } from "../lib/pdf-carga-professor";
 import { gerarPdfCargaHoraria, type TurmaCargaHoraria } from "../lib/pdf-carga-horaria";
 import { calcularHAIdeal, type MarcaHACalculada } from "../lib/recalcular-ha";
@@ -777,6 +778,9 @@ router.get("/grade-pdf/turma", async (req, res) => {
           // [ASSINCRONA-EXIBICAO] todas as siglas do horario (trio mostra as 3) + marca de assincrona
           linha1: [...new Set(grupo.map((s) => siglaOuFallback(disciplinas.find((d) => d.id === s.disciplinaId))))].join("/") + (grupo.some((s) => s.assincrona) ? " (ASS)" : ""),
           linha2: nomesProfessores,
+          // [PDF-MODELOS] nome inteiro da disciplina + professor, para o modelo "turmas lado a lado"
+          texto: [...new Set(grupo.map((s) => disciplinas.find((d) => d.id === s.disciplinaId)?.nome ?? "?"))].join(" / ")
+            + (grupo.some((s) => s.assincrona) ? " (ASS)" : "") + ` (${nomesProfessores})`,
         };
       });
     })(),
@@ -785,7 +789,13 @@ router.get("/grade-pdf/turma", async (req, res) => {
   const titulo = nomeExperimental
     ? `Prévia (Experimento "${nomeExperimental}") — Grade por Turma`
     : "Grade Horária por Turma";
-  const pdfBytes = await gerarPdfGradeCompacta(await buscarNomeEscola(escolaId), titulo, intervaloSemana(lerOffsetSemana(req)), blocos);
+  // [PDF-MODELOS] ?modelo=lado-a-lado: 5 turmas por pagina (paisagem), so com turno escolhido
+  const modeloTurma = req.query.modelo === "lado-a-lado" ? "lado-a-lado" : null;
+  if (modeloTurma && !turnoFiltro) { res.status(400).json({ error: "Escolha um turno para o modelo de turmas lado a lado." }); return; }
+  const pdfBytes = modeloTurma
+    ? await gerarPdfTurmasLadoALado(await buscarNomeEscola(escolaId), `${titulo} — ${TURNO_ROTULO[turnoFiltro!] ?? turnoFiltro}`, intervaloSemana(lerOffsetSemana(req)),
+        [...blocos].sort((a, b) => a.rotulo.localeCompare(b.rotulo, "pt-BR", { numeric: true })))
+    : await gerarPdfGradeCompacta(await buscarNomeEscola(escolaId), titulo, intervaloSemana(lerOffsetSemana(req)), blocos);
   res.setHeader("Content-Type", "application/pdf");
   const nomeArquivo = nomeExperimental
     ? `previa_${nomeExperimental.replace(/[^a-zA-Z0-9-_]/g, "_")}_por_turma.pdf`
@@ -1057,7 +1067,15 @@ router.get("/grade-pdf/professor", async (req, res) => {
   const tituloProf = nomeExperimental
     ? `Prévia (Experimento "${nomeExperimental}") — Grade por Professor`
     : "Grade Horária por Professor";
-  const pdfBytes = await gerarPdfGradeCompacta(await buscarNomeEscola(escolaId), tituloProf, intervaloSemana(lerOffsetSemana(req)), blocos);
+  // [PDF-MODELOS] ?modelo=compacto (4 por linha) ou ?modelo=quadro (uma linha por professor), so com turno escolhido
+  const modeloProf = req.query.modelo === "compacto" || req.query.modelo === "quadro" ? String(req.query.modelo) : null;
+  if (modeloProf && !turnoFiltroProf) { res.status(400).json({ error: "Escolha um turno para este modelo de PDF por professor." }); return; }
+  const tituloModelo = modeloProf ? `${tituloProf} — ${TURNO_ROTULO[turnoFiltroProf!] ?? turnoFiltroProf}` : tituloProf;
+  const pdfBytes = modeloProf === "compacto"
+    ? await gerarPdfProfessoresCompacto(await buscarNomeEscola(escolaId), tituloModelo, intervaloSemana(lerOffsetSemana(req)), blocos)
+    : modeloProf === "quadro"
+      ? await gerarPdfQuadroProfessores(await buscarNomeEscola(escolaId), tituloModelo, intervaloSemana(lerOffsetSemana(req)), blocos)
+      : await gerarPdfGradeCompacta(await buscarNomeEscola(escolaId), tituloProf, intervaloSemana(lerOffsetSemana(req)), blocos);
   res.setHeader("Content-Type", "application/pdf");
   const nomeArquivoProf = nomeExperimental
     ? `previa_${nomeExperimental.replace(/[^a-zA-Z0-9-_]/g, "_")}_por_professor.pdf`

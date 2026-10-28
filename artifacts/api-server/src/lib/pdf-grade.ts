@@ -17,6 +17,7 @@ type SlotGrade = {
   linha1: string;
   linha2?: string;
   destacado?: boolean;
+  texto?: string; // [PDF-MODELOS] texto completo da celula nos outros modelos ("Disciplina (Professor)")
 };
 
 type CelulaBloqueada = { diaSemana: number; numeroAula: number; rotulo?: string }; // [ROTULO-BLOQUEIO]

@@ -77,7 +77,9 @@ export default function ExportPage() {
   // [FIX] valor inicial agora é o sentinel TURNO_TODOS, não "".
   // [NOVO] "semana" controla a data impressa no cabeçalho -- ver
   // comentário acima de SEMANA_ATUAL/SEMANA_PROXIMA.
-  const [pdfOpts, setPdfOpts] = useState({ visao: "turma", entidadeId: "", turno: TURNO_TODOS, semana: SEMANA_ATUAL });
+  const [pdfOpts, setPdfOpts] = useState({ visao: "turma", entidadeId: "", turno: TURNO_TODOS, semana: SEMANA_ATUAL, modelo: "padrao" });
+  // [PDF-MODELOS] outros modelos de impressao: precisam de um turno escolhido
+  const modeloPrecisaTurno = pdfOpts.modelo !== "padrao" && pdfOpts.turno === TURNO_TODOS;
   // [NOVO] Relatório de Carga Horária por Professor -- resumo (total de
   // aulas + HA institucional + turmas/disciplinas por período), não a
   // grade dia-a-dia.
@@ -319,7 +321,7 @@ export default function ExportPage() {
               <Label>Visão</Label>
               <Select
                 value={pdfOpts.visao}
-                onValueChange={(v) => setPdfOpts((o) => ({ ...o, visao: v, entidadeId: "" }))}
+                onValueChange={(v) => setPdfOpts((o) => ({ ...o, visao: v, entidadeId: "", modelo: "padrao" }))}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -327,6 +329,28 @@ export default function ExportPage() {
                   <SelectItem value="professor">Por Professor</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            {/* [PDF-MODELOS] modelo de impressao */}
+            <div className="space-y-1.5">
+              <Label>Modelo</Label>
+              <Select value={pdfOpts.modelo} onValueChange={(v) => setPdfOpts((o) => ({ ...o, modelo: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {pdfOpts.visao === "turma" ? (
+                    <>
+                      <SelectItem value="padrao">Uma turma por quadro</SelectItem>
+                      <SelectItem value="lado-a-lado">Turmas lado a lado (5 por página, disciplina e professor)</SelectItem>
+                    </>
+                  ) : (
+                    <>
+                      <SelectItem value="padrao">Um professor por quadro</SelectItem>
+                      <SelectItem value="compacto">Compacto (4 professores por linha)</SelectItem>
+                      <SelectItem value="quadro">Quadro geral (um professor por linha)</SelectItem>
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
+              {modeloPrecisaTurno && <p className="text-xs text-amber-700">Escolha um turno para este modelo.</p>}
             </div>
             {/* [NOVO] Filtro de turno -- evita PDFs gigantes com
                 matutino/vespertino/noturno misturados sem ordem. */}
@@ -371,7 +395,7 @@ export default function ExportPage() {
             </div>
             <Button
               className="w-full"
-              disabled={baixando["pdf"]}
+              disabled={baixando["pdf"] || modeloPrecisaTurno}
               onClick={() => {
                 const param = pdfOpts.visao === "turma" ? "turmaId" : "professorId";
                 const turnoParaEnviar = pdfOpts.turno === TURNO_TODOS ? undefined : pdfOpts.turno;
@@ -379,10 +403,12 @@ export default function ExportPage() {
                   [param]: pdfOpts.entidadeId || undefined,
                   turno: turnoParaEnviar,
                   semana: pdfOpts.semana === SEMANA_PROXIMA ? SEMANA_PROXIMA : undefined,
+                  modelo: pdfOpts.modelo === "padrao" ? undefined : pdfOpts.modelo,
                 });
                 const sufixoTurno = turnoParaEnviar ? `_${turnoParaEnviar}` : "";
                 const sufixoSemana = pdfOpts.semana === SEMANA_PROXIMA ? "_proxima_semana" : "";
-                baixarArquivo(url, `grade_por_${pdfOpts.visao}${sufixoTurno}${sufixoSemana}.pdf`, "pdf");
+                const sufixoModelo = pdfOpts.modelo === "padrao" ? "" : `_${pdfOpts.modelo}`;
+                baixarArquivo(url, `grade_por_${pdfOpts.visao}${sufixoModelo}${sufixoTurno}${sufixoSemana}.pdf`, "pdf");
               }}
             >
               {baixando["pdf"] ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}{baixando["pdf"] ? "Gerando..." : "Baixar PDF"}
