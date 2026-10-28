@@ -69,14 +69,16 @@ const PERIODOS_PDF = [
 ];
 function BotaoPdfSemana({ segunda }: { segunda: string }) {
   const [gerando, setGerando] = useState<string | null>(null);
-  const baixar = async (turno: string) => {
-    setGerando(turno);
+  // [RESERVAS-POR-ESPACO] "espaco": um quadro por espaco/equipamento (turma, disciplina e professor)
+  const baixar = async (turno: string, modelo: "semana" | "espaco" = "semana") => {
+    setGerando(turno + modelo);
     try {
-      const blob = await customFetch<Blob>(`/api/export/quadro-reservas-semana-pdf?data=${segunda}&turno=${turno}`, { responseType: "blob" });
+      const rota = modelo === "espaco" ? "reservas-espaco-pdf" : "quadro-reservas-semana-pdf";
+      const blob = await customFetch<Blob>(`/api/export/${rota}?data=${segunda}&turno=${turno}`, { responseType: "blob" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `reservas_semana_${PERIODOS_PDF.find((p) => p.turno === turno)?.nome.toLowerCase().replace("ã", "a") ?? turno}_${segunda}.pdf`;
+      a.download = `reservas_${modelo === "espaco" ? "por_espaco" : "semana"}_${PERIODOS_PDF.find((p) => p.turno === turno)?.nome.toLowerCase().replace("ã", "a") ?? turno}_${segunda}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -95,8 +97,10 @@ function BotaoPdfSemana({ segunda }: { segunda: string }) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel className="text-xs">Período</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-xs">Quadro da semana (com livres)</DropdownMenuLabel>
         {PERIODOS_PDF.map((p) => <DropdownMenuItem key={p.turno} onSelect={() => void baixar(p.turno)}>{p.nome}</DropdownMenuItem>)}
+        <DropdownMenuLabel className="text-xs">Por espaço (turma, disciplina e professor)</DropdownMenuLabel>
+        {PERIODOS_PDF.map((p) => <DropdownMenuItem key={"e" + p.turno} onSelect={() => void baixar(p.turno, "espaco")}>{p.nome}</DropdownMenuItem>)}
       </DropdownMenuContent>
     </DropdownMenu>
   );

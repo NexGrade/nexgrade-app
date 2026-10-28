@@ -18,6 +18,7 @@ import { buscarReservasParaRelatorio, gerarPdfReservasPorProfessor } from "../li
 import { espacosLivresDaSemana, gerarPdfEspacosLivres } from "../lib/espacos-livres"; // [ESPACOS-LIVRES]
 import { ehBloqueioReal } from "../lib/bloqueio-real";
 import { gerarPdfGradeCompacta, type BlocoGrade } from "../lib/pdf-grade";
+import { dadosReservasPorEspaco } from "../lib/reservas-por-espaco"; // [RESERVAS-POR-ESPACO]
 import { gerarPdfTurmasLadoALado, gerarPdfProfessoresCompacto, gerarPdfQuadroProfessores } from "../lib/pdf-grade-quadros"; // [PDF-MODELOS]
 import { gerarPdfCargaProfessores, type RelatorioProfessor } from "../lib/pdf-carga-professor";
 import { gerarPdfCargaHoraria, type TurmaCargaHoraria } from "../lib/pdf-carga-horaria";
@@ -1312,6 +1313,23 @@ router.get("/reservas-pdf", async (req, res) => {
 });
 
 // [ESPACOS-LIVRES] (24/10/2026) quadro da semana (reservas + espacos livres) em PDF para o grupo dos professores
+// [RESERVAS-POR-ESPACO] (28/10/2026) PDF da semana com um quadro por espaco/equipamento reservado
+// (turma, disciplina e professor em cada aula), no periodo escolhido. Leitura da equipe (nome de professor).
+router.get("/reservas-espaco-pdf", async (req, res) => {
+  const q = req.query.data;
+  const turno = req.query.turno;
+  if (typeof q !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(q)) { res.status(400).json({ error: "Informe a data (AAAA-MM-DD)." }); return; }
+  if (typeof turno !== "string" || !["matutino", "vespertino", "noturno"].includes(turno)) { res.status(400).json({ error: "Escolha o período (manhã, tarde ou noite)." }); return; }
+  const escolaId = getEscolaId(req);
+  const { inicio, fim, blocos } = await dadosReservasPorEspaco(escolaId, q, turno);
+  const br = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
+  const pdfBytes = await gerarPdfGradeCompacta(await buscarNomeEscola(escolaId), `Reservas por espaço - ${TURNO_ROTULO[turno] ?? turno}`, `${br(inicio).slice(0, 5)} a ${br(fim)}`, blocos);
+  const nomeTurno: Record<string, string> = { matutino: "manha", vespertino: "tarde", noturno: "noite" };
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="reservas_por_espaco_${nomeTurno[turno]}_${inicio}.pdf"`);
+  res.send(Buffer.from(pdfBytes));
+});
+
 router.get("/quadro-reservas-semana-pdf", async (req, res) => {
   const q = req.query.data;
   if (typeof q !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(q)) {
