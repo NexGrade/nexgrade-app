@@ -8,6 +8,8 @@ import {
 } from "@workspace/db";
 import { and, eq, inArray, isNull, notInArray, sql } from "drizzle-orm";
 import { GRADES_SEED_RCO } from "../lib/grades-seed-rco"; // [RCO-EXPORT-BANCO]
+import { conteudoArquivoRco } from "../lib/arquivo-rco"; // [RCO-GRADE-DO-ARQUIVO]
+import { lerExportacaoRco, disciplinasPorTurma } from "../lib/rco-exportacao"; // [RCO-GRADE-DO-ARQUIVO]
 import { resolverCoddisc } from "../lib/rco-codigos"; // [CODIGOS-RCO-TELA]
 import { gerarScriptRco, type TurmaRcoScript, type CelulaRco } from "../lib/rco-script"; // [RCO-SCRIPT]
 import { turmasQuePrecisamDoScript } from "../lib/rco-turmas-script"; // [RCO-TURMAS-SCRIPT]
@@ -432,7 +434,17 @@ async function montarRegistrosRco(escolaId: string, turno: string, comAssincrona
   }
 
   // 2) parte do RCO (FGB/IF) e conferencia com a grade SEED da turma
-  const grade = (cod: number | null) => (cod != null && GRADES_SEED_RCO[String(cod)] ? new Set(GRADES_SEED_RCO[String(cod)]) : null);
+  // [RCO-GRADE-DO-ARQUIVO] (27/10/2026) turma fora da lista fixa (escola nova, ex.: Heraclito): usa a
+  // matriz do arquivo do RCO que a propria escola enviou (tela Arquivo do RCO). A lista fixa continua
+  // valendo primeiro, para nao mudar a exportacao das escolas que ja usam.
+  const arquivoRco = await conteudoArquivoRco(escolaId);
+  const lidoRco = arquivoRco ? lerExportacaoRco(arquivoRco.xml) : null;
+  const gradeDoArquivo = lidoRco ? disciplinasPorTurma(lidoRco) : {};
+  const grade = (cod: number | null) => {
+    if (cod == null) return null;
+    const lista = GRADES_SEED_RCO[String(cod)] ?? gradeDoArquivo[String(cod)];
+    return lista ? new Set(lista) : null;
+  };
   const foraDaGrade = new Map<string, number>();
   const registros = linhas.map((l) => {
     const cod = resolverCoddisc(l)!;
@@ -489,6 +501,24 @@ async function montarRegistrosRco(escolaId: string, turno: string, comAssincrona
       const fim = `${String(Math.floor(totalMin / 60) % 24).padStart(2, "0")}:${String(totalMin % 60).padStart(2, "0")}`;
       horarioPorSlot.set(chave, horarioRco(turno, inicio, fim, usarHorarioDaEscola)); // [RCO-HORARIO-NOTURNO] [RCO-NOTURNO-18H]
     }
+  }
+
+  // [RCO-SEM-HORARIO] (27/10/2026) aula sem horario no esquema do turno (escola nova sem Calendario e
+  // Turnos configurado) saia com 00:00 -- bloqueia em vez de gerar arquivo com hora errada.
+  const semHorario = new Set(registros
+    .filter((l) => !horarioPorSlot.has(chaveSlot(l.numeroAula, turno === "matutino" ? l.turmaNivelEnsino : null)))
+    .map((l) => `${l.numeroAula}ª aula${turno === "matutino" ? (l.turmaNivelEnsino === "fundamental" ? " (Fundamental)" : l.turmaNivelEnsino ? " (Médio/Técnico)" : "") : ""}`));
+  if (semHorario.size > 0 && slots.length === 0) {
+    return { erro: {
+      error: "O horário das aulas deste turno ainda não foi configurado. Preencha em Calendário e Turnos → Esquema de aulas por turno antes de exportar.",
+      corrigirEm: "/calendario",
+    } };
+  }
+  if (semHorario.size > 0 && (turno !== "matutino" || registros.every((l) => l.turmaNivelEnsino))) {
+    return { erro: {
+      error: "Algumas aulas não têm horário no esquema do turno (Calendário e Turnos). Complete o esquema antes de exportar: " + [...semHorario].sort().join(", ") + ".",
+      corrigirEm: "/calendario",
+    } };
   }
 
   // turmas sem nivelEnsino definido no matutino: nao da pra saber qual

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { lerExportacaoRco, resumirExportacaoRco } from "../rco-exportacao";
+import { lerExportacaoRco, resumirExportacaoRco, disciplinasPorTurma } from "../rco-exportacao";
 
 // [ARQUIVO-RCO] trecho no formato real do arquivo do RCO (Mario Braga, 26/10/2026)
 const XML = `<EXPORT_URANIA_INSERT>
@@ -61,5 +61,17 @@ describe("lerExportacaoRco", () => {
   it("recusa arquivo que nao e a exportacao do RCO", () => {
     expect(lerExportacaoRco("<IMPORT_HORARIO><HORARIO></HORARIO></IMPORT_HORARIO>")).toBeNull();
     expect(lerExportacaoRco("qualquer coisa")).toBeNull();
+  });
+});
+
+describe("disciplinasPorTurma", () => {
+  it("lista os Codigos Externos da matriz de cada turma, sem repetir", () => {
+    const e = { disciplinas: [], turmas: [], grades: [
+      { codTurma: 2634674, codDisciplina: 1, aulas: 4 },
+      { codTurma: 2634674, codDisciplina: 2, aulas: 4 },
+      { codTurma: 2634673, codDisciplina: 3807, aulas: 2 },
+      { codTurma: 2634674, codDisciplina: 1, aulas: 1 },
+    ] };
+    expect(disciplinasPorTurma(e)).toEqual({ "2634674": [1, 2], "2634673": [3807] });
   });
 });
