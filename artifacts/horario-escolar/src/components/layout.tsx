@@ -10,6 +10,7 @@ import {
   Settings, Download, Printer, Sparkles, Upload, CreditCard, Library, ShieldCheck, Clock,
   SlidersHorizontal, Landmark, DoorOpen, Hash, CalendarClock,
   FileUp, // [ARQUIVO-RCO]
+  NotebookPen, BarChart3, // [MENU-UNICO]
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSituacaoArquivoRco } from "@/lib/arquivo-rco"; // [ARQUIVO-RCO]
@@ -17,7 +18,7 @@ import { useSituacaoArquivoRco } from "@/lib/arquivo-rco"; // [ARQUIVO-RCO]
 const navGroups = [
   // [FASE-B] Menu reorganizado na ordem em que a escola trabalha (28/09/2026).
   // [MENU-ORDEM] (23/10/2026) Cadastro separado da montagem da grade; grupos
-  // renomeados (Inicio, Relatorios e RCO, Configuracoes). O filtro do gestor de
+  // renomeados (Inicio, Relatorios, RCO, Configuracoes). O filtro do gestor de
   // reservas (mais abaixo) usa o nome "1. Cadastro da escola".
   {
     label: "Início",
@@ -57,13 +58,19 @@ const navGroups = [
     ],
   },
   {
-    label: "Relatórios e RCO",
+    // [MENU-UNICO] (28/10/2026) cada relatorio num lugar so
+    label: "Relatórios",
     items: [
-      { href: "/imprimir-grade", label: "Imprimir Grade", icon: Printer }, // [IMPRIMIR-GRADE]
-      { href: "/export", label: "Exportar Dados", icon: Download },
+      { href: "/imprimir-grade", label: "Imprimir Grade", icon: Printer }, // [IMPRIMIR-GRADE] todos os PDFs da grade
+      { href: "/relatorios-pedagogicos", label: "Relatórios Pedagógicos", icon: NotebookPen }, // [MENU-UNICO] ponto e carga horaria
+    ],
+  },
+  {
+    label: "RCO",
+    items: [
+      { href: "/rco", label: "Exportar para o RCO", icon: BarChart3 }, // [MENU-UNICO] tela propria
       { href: "/codigos-rco", label: "Códigos do RCO", icon: Hash }, // [CODIGOS-RCO-TELA]
       { href: "/arquivo-rco", label: "Arquivo do RCO", icon: FileUp }, // [ARQUIVO-RCO]
-      { href: "/importar", label: "Importar Dados", icon: Upload },
     ],
   },
   {
@@ -71,6 +78,8 @@ const navGroups = [
     items: [
       { href: "/escola", label: "Escola", icon: Landmark }, // [FASE-C1] dados, configuracoes e assinatura
       { href: "/usuarios", label: "Usuários", icon: Shield },
+      { href: "/importar", label: "Importar planilhas", icon: Upload },
+      { href: "/export", label: "Exportar planilhas", icon: Download }, // [MENU-UNICO] so CSV/JSON
       { href: "/audit", label: "Histórico", icon: History },
       { href: "/virada-ano", label: "Virada do ano", icon: CalendarClock }, // [VIRADA-ANO]
     ],

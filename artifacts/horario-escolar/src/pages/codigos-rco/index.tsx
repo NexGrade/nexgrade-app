@@ -168,7 +168,7 @@ export default function CodigosRcoPage() {
           </p>
         </div>
         <Button variant="outline" asChild>
-          <Link href="/export"><Download className="mr-2 h-4 w-4" />Exportar para o RCO</Link>
+          <Link href="/rco"><Download className="mr-2 h-4 w-4" />Exportar para o RCO</Link>
         </Button>
       </div>
 

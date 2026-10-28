@@ -25,14 +25,14 @@ export const GUIA_NEXGRADE: Record<string, TopicoGuia> = {
 1. Escola → aba Dados da Escola: confira nome, CNPJ, INEP, NRE e turnos ofertados.
 2. Calendário e Turnos → aba Esquema de aulas por turno: configure os horários das aulas de cada turno, inclusive o Integral se a escola tiver turma de período integral (sem isso a Disponibilidade e a geração não funcionam para aquele turno). Na aba Calendário letivo, confira o calendário (escola nova já vem com o oficial SEED-PR; se estiver vazio, clique em "Usar o calendário oficial SEED-PR").
 3. Cursos e Disciplinas → aba Catálogo SEED-PR: importe o catálogo oficial e marque os cursos que a escola oferece. Confira as disciplinas na aba Disciplinas.
-4. Professores: cadastre cada professor com as disciplinas que ele pode lecionar (ou use Importar Dados).
+4. Professores: cadastre cada professor com as disciplinas que ele pode lecionar (ou use Configurações → Importar planilhas).
 5. Turmas: crie as turmas escolhendo curso e série/matriz; depois, na edição da turma, escolha o professor de cada disciplina.
 6. Disponibilidade: marque bloqueios e hora-atividade (HA) de cada professor, por turno.
 7. Salas: cadastre os espaços (salas, laboratórios, quadra).
 8. Horário → Modo Experimental: gere a grade (botão Turno inteiro), compare com "Simular promoção" e clique em "Promover para oficial".
 9. Usuários: libere o acesso da direção, coordenação, secretaria e gestor de reservas. Professores não precisam: entram com o e-mail do cadastro em Professores.
 10. Códigos do RCO e Arquivo do RCO: confira os códigos SERE das turmas e os Códigos Externos das disciplinas; se a equipe NexGrade pedir, envie o arquivo da Grade de Horário do RCO.
-11. Exportar Dados → Exportar para o RCO: grave a grade no RCO (veja o assunto "rco").`,
+11. RCO → Exportar para o RCO: grave a grade no RCO (veja o assunto "rco").`,
   },
 
   visao_geral: {
@@ -100,7 +100,7 @@ ABA DISCIPLINAS
 2. Preencha Nome Completo e Email (obrigatório — é o e-mail que o professor usa para entrar na Minha Agenda). Telefone é opcional. O e-mail cadastrado já libera o acesso do professor à Minha Agenda, sem convite: basta ele criar a conta com esse mesmo e-mail no endereço do sistema.
 3. Em Disciplinas, marque todas que ele pode lecionar (isso diz em quais disciplinas ele é habilitado; a ligação com as turmas é feita em Turmas).
 4. Clique em "Salvar Professor(a)".
-Muitos professores de uma vez: use Importar Dados (tipo Professores).
+Muitos professores de uma vez: use Configurações → Importar planilhas (tipo Professores).
 
 EDITAR / CONSULTAR (clique no professor na lista)
 - Status do Professor: professores inativos não recebem aulas no horário automático.
@@ -267,7 +267,7 @@ REGRAS POR PROFESSOR (botão "Regras por professor" — só direção/coordenaç
 QUEM FAZ O QUÊ
 - Gestor de reservas: cria, confirma e exclui reservas; não altera as regras por professor nem a grade.
 - Professor: pede reserva pela Minha Agenda ("Nova reserva"), vendo as aulas livres do espaço na data.
-- Relatório: Exportar Dados → Relatório de Reservas (PDF ou Excel, por professor, incluindo canceladas).
+- Relatório: na própria tela Reservas, botão de relatório (PDF ou Excel, por professor, incluindo canceladas).
 - PDF da semana (no quadro "Reservas da semana", botão "PDF da semana"): "Quadro da semana" = reservas e espaços livres por aula; "Por espaço" = um quadro por espaço e por equipamento reservado (laboratório, chromebooks...), com a turma, a disciplina e o professor em cada aula, em paisagem, para afixar na porta. Reserva aguardando confirmação sai em amarelo com "(aguard.)". Escolha o período (manhã, tarde ou noite).`,
   },
 
@@ -292,9 +292,9 @@ QUEM FAZ O QUÊ
   },
 
   importar: {
-    titulo: "Importar Dados (CSV)",
+    titulo: "Importar planilhas (CSV)",
     palavras: ["importar", "csv", "planilha", "excel", "carga em lote", "subir dados"],
-    texto: `Menu Importar Dados (Importação Inteligente) — professores, turmas e disciplinas via CSV.
+    texto: `Menu Configurações → Importar planilhas (Importação Inteligente) — professores, turmas e disciplinas via CSV.
 1. Em "Tipo de dado", escolha Professores, Turmas ou Disciplinas.
 2. Baixe o "Modelo" CSV. Colunas: Professores = nome;email;cpf;matricula;cargaHorariaTotal | Turmas = nome;serie;turno;anoLetivo | Disciplinas = nome;cargaSemanal;cor.
 3. Preencha no Excel e salve como CSV (separador ponto-e-vírgula; primeira linha é o cabeçalho; UTF-8 com ou sem BOM).
@@ -306,7 +306,7 @@ Depois de importar professores, marque as disciplinas de cada um em Professores;
   imprimir_grade: {
     titulo: "Imprimir Grade (PDFs da grade)",
     palavras: ["imprimir", "imprimir grade", "pdf", "grade em pdf", "quadro geral", "lado a lado", "compacto", "por disciplina", "mural", "sala dos professores"],
-    texto: `Menu Relatórios e RCO → Imprimir Grade. Escolha no topo o Turno e a Semana (a data que sai no cabeçalho) e clique em "Baixar PDF" no modelo que quiser. Todos usam a grade oficial e saem em folha deitada (paisagem); nos modelos de um por quadro, saem 2 quadros por linha.
+    texto: `Menu Relatórios → Imprimir Grade. É o único lugar dos PDFs da grade. Escolha no topo o Turno e a Semana (a data que sai no cabeçalho) e clique em "Baixar PDF" no modelo que quiser. Todos usam a grade oficial e saem em folha deitada (paisagem); nos modelos de um por quadro, saem 2 quadros por linha.
 - Por turma: uma turma por quadro (sigla da disciplina e professor). Aceita "Todos os turnos" e filtro de uma turma.
 - Turmas lado a lado: 5 turmas por página, em paisagem, cada aula com o nome da disciplina e o professor.
 - Por professor: um professor por quadro, com turma, disciplina, HA (amarelo), HA* (contraturno ou aulas de outro turno) e horários bloqueados. Aceita "Todos os turnos" e filtro de um professor.
@@ -317,23 +317,24 @@ Depois de importar professores, marque as disciplinas de cada um em Professores;
   },
 
   exportar: {
-    titulo: "Exportar Dados (PDFs, planilhas e relatórios)",
-    palavras: ["exportar", "pdf", "imprimir", "baixar grade", "relatório", "ponto", "controle de ponto", "carga horária", "excel"],
-    texto: `Menu Exportar Dados. Opções:
-- Grade Horária: grade completa ou de uma turma, em CSV (Excel) ou JSON.
-- Controle de Ponto: planilha com a carga horária dos professores (filtro de professor, mês e ano).
-- Ponto Diário: folha de ponto de UM dia. Escolha o dia e o turno (Manhã, Tarde, Noite ou Todos, um por página) e baixe em PDF ou Excel. Uma linha por professor que tem aula, hora-atividade (H.A.) ou atividade (FORM, COORD, ASS...) nesse dia, uma coluna por aula do turno com TURMA/SIGLA, e a coluna Situação com quadradinhos para marcar: Presente, Falta, Atestado ou Atraso. Traço = professor sem expediente nesse horário. Se o dia for feriado ou recesso no calendário, o relatório avisa no topo.
-- Grade em PDF: escolha Visão (por turma ou por professor), Turno, Semana e, se quiser, uma turma ou professor, e clique em "Baixar PDF". Logo abaixo, o botão "Outros formatos" abre a tela Imprimir Grade (turmas lado a lado, compacto, quadro geral, por disciplina; assunto "imprimir_grade").
-- Relatório de Reservas: por professor, num período, com confirmadas, pendentes e canceladas — PDF ou Excel.
-- Relatório de Carga Horária: PDF por professor com total de aulas, HA institucional e turmas/disciplinas por período (é o resumo, não a grade dia a dia).
-- Carga Horária Cumprida × Exigida: PDF por turma com o cumprido no ano x o total exigido, para ver antes se alguma disciplina vai fechar o ano devendo aula.
-- Exportar para o RCO (XML): veja o assunto "rco" (passo a passo completo).`,
+    titulo: "Onde ficam os relatórios (Relatórios Pedagógicos e Exportar planilhas)",
+    palavras: ["exportar", "pdf", "imprimir", "baixar grade", "relatório", "relatórios pedagógicos", "ponto", "ponto diário", "controle de ponto", "carga horária", "excel", "planilha", "csv"],
+    texto: `[MENU-UNICO] Cada relatório fica num lugar só:
+- PDFs da grade (por turma, por professor, lado a lado, compacto, quadro geral, por disciplina): Relatórios → Imprimir Grade (assunto "imprimir_grade").
+- Relatórios → Relatórios Pedagógicos:
+  - Ponto Diário: folha de ponto de UM dia. Escolha o dia e o turno (Manhã, Tarde, Noite ou Todos, um por página) e baixe em PDF ou Excel. Uma linha por professor que tem aula, hora-atividade (HA) ou atividade (FORM, COORD, ASS...) nesse dia, uma coluna por aula do turno com a TURMA, e a coluna Situação com quadradinhos P, F, AT, ATR e Observação. Se o dia for feriado ou recesso no calendário, o relatório avisa no topo.
+  - Controle de Ponto (mês): planilha com a carga horária dos professores (filtro de professor, mês e ano).
+  - Carga Horária por Professor: PDF com total de aulas, HA e turmas/disciplinas por turno (o resumo, não a grade do dia a dia).
+  - Carga Horária Cumprida × Exigida: PDF por turma com o cumprido no ano x o exigido.
+- Arquivo XML do RCO: RCO → Exportar para o RCO (assunto "rco").
+- Relatório de Reservas: na tela Reservas.
+- Configurações → Exportar planilhas: a grade completa ou de uma turma, em CSV (Excel) ou JSON. Configurações → Importar planilhas: professores, turmas e disciplinas por CSV.`,
   },
 
   rco: {
     titulo: "Gravar a grade no RCO (arquivo XML)",
     palavras: ["rco", "registro de classe", "sere", "xml", "incluir via arquivo", "script", "console", "f12", "trio", "dupla", "ifa", "lançar no rco", "exportar para o rco", "gravar no rco", "grade no rco"],
-    texto: `Menu Exportar Dados → cartão "Exportar para o RCO (XML)". Só direção, coordenação e secretaria. Faça por turno (Matutino, Vespertino, Noturno, Integral). Antes: Código INEP em Escola → Dados da Escola e códigos em Códigos do RCO (o sistema avisa o que falta e leva para a tela).
+    texto: `Menu RCO → Exportar para o RCO. Só direção, coordenação e secretaria. Faça por turno (Matutino, Vespertino, Noturno, Integral). Antes: Código INEP em Escola → Dados da Escola e códigos em Códigos do RCO (o sistema avisa o que falta e leva para a tela).
 
 COMO GRAVAR
 - XML ("Baixar XML para o RCO"): um arquivo com todas as turmas do turno. No RCO: Grade de Horário → escolha o Período Letivo e o turno certo → Incluir via Arquivo. Limite do RCO: grava UMA disciplina por horário e substitui a grade inteira de cada turma.
@@ -345,7 +346,7 @@ COMO GRAVAR
   arquivo_rco: {
     titulo: "Arquivo do RCO (enviar à equipe NexGrade o cadastro oficial da escola)",
     palavras: ["arquivo do rco", "enviar arquivo", "exportação do rco", "pedido", "selo pedido", "cadastro oficial", "códigos sere", "matriz oficial"],
-    texto: `Menu Relatórios e RCO → Arquivo do RCO. Quando a equipe NexGrade pede, o item do menu aparece com o selo amarelo "Pedido" e a tela mostra a mensagem.
+    texto: `Menu RCO → Arquivo do RCO. Quando a equipe NexGrade pede, o item do menu aparece com o selo amarelo "Pedido" e a tela mostra a mensagem.
 1. O RCO não tem um botão para baixar este arquivo: ele é baixado junto com o suporte NexGrade (atendimento remoto ou na escola), com a secretaria ou a direção logada no RCO, na tela Grade de Horário com o Período Letivo atual. É um .XML com o cadastro oficial (disciplinas com Código Externo, turmas com código SERE e a matriz de cada turma).
 2. No NexGrade: "Escolher o arquivo .XML e enviar". O sistema confere se é o arquivo certo e mostra o resumo (turmas por turno, disciplinas, linhas de grade). O selo "Pedido" some.
 - Enviar NÃO muda nada no cadastro nem na grade: o arquivo fica guardado para a equipe NexGrade conferir códigos e cargas. Um envio novo substitui o anterior.
@@ -355,7 +356,7 @@ COMO GRAVAR
   codigos_rco: {
     titulo: "Códigos do RCO (SERE das turmas e Código Externo das disciplinas)",
     palavras: ["códigos do rco", "codigo sere", "código externo", "sae", "parte if", "fgb", "turma no sere", "código da disciplina"],
-    texto: `Menu Relatórios e RCO → Códigos do RCO. Só direção, coordenação e secretaria.
+    texto: `Menu RCO → Códigos do RCO. Só direção, coordenação e secretaria.
 - Turmas: código da turma no SERE (o RCO recusa sem ele). 3º ano com duas turmas no RCO: código FGB (formação geral) e código da parte IF; cada disciplina vai para a parte certa automaticamente.
 - Disciplinas: Código Externo do RCO (é o que o RCO usa; não é o SAE). Disciplina própria da turma também precisa (ex.: Prática de Formação = 1269 nas duas turmas).
 - Os códigos SERE das turmas mudam todo ano: confira no começo do ano (o arquivo do RCO, em Arquivo do RCO, traz todos).`,
