@@ -1,0 +1,9 @@
+{
+ "escola": "C.E. Heráclito Fontoura Sobral Pinto",
+ "fonte": "3ºA, Educação Física com o Prof. Fábio (informado pela Simone em 28/10/2026), nos horários do sistema anterior: quarta, 5ª e 6ª aulas",
+ "dias": "0=Seg..4=Sex",
+ "aulas": [
+  { "turno": "matutino", "turma": "3ºA", "dia": 2, "aula": 5, "cod": 6, "prof": "Fábio", "disc": "Educação Física" },
+  { "turno": "matutino", "turma": "3ºA", "dia": 2, "aula": 6, "cod": 6, "prof": "Fábio", "disc": "Educação Física" }
+ ]
+}
