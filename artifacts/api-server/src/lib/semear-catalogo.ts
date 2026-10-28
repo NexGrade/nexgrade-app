@@ -25,7 +25,7 @@ import { db, cursosTable, matrizesCurricularesTable, itensMatrizTable, disciplin
 import { and, eq } from "drizzle-orm";
 import { MATRIZES_TECNICAS_SEED_PR_2026 } from "./matrizes-tecnicas-seed-pr";
 import { MATRIZES_OFICIAIS_SEED_PR } from "./matrizes-oficiais-seed-pr";
-import { SIGLA_PADRAO_POR_CODIGO } from "./sigla-padrao"; // [PADRAO-SIGLA]
+import { carregarSiglasReferencia, siglaParaDisciplina } from "./sigla-disciplina"; // [SIGLA-UNICA]
 import { carregarCoresReferencia, corParaDisciplina } from "./cor-disciplina"; // [CORES-DISCIPLINAS]
 
 const EIXOS = new Set([
@@ -133,6 +133,7 @@ export async function semearCatalogoEscola(escolaId: string, opcoes: OpcoesSemea
   // Educacao Ambiental 310 (Plano de Curso Tec. Meio Ambiente 2023). Sem excecoes.
 
   const cores = await carregarCoresReferencia(); // [CORES-DISCIPLINAS]
+  const siglas = await carregarSiglasReferencia(); // [SIGLA-UNICA]
   const filtro = opcoes.chaves ? new Set(opcoes.chaves) : null;
   const lista = modelos().filter((m) => !filtro || filtro.has(chaveCurso(m.nome, m.formaOferta)));
 
@@ -179,7 +180,7 @@ export async function semearCatalogoEscola(escolaId: string, opcoes: OpcoesSemea
             if (discId) discPorNome.set(k, discId);
           }
           if (!discId) {
-            const sigla = cat?.sigla || (cat?.codigoExternoRco != null ? SIGLA_PADRAO_POR_CODIGO[cat.codigoExternoRco] : undefined); // [PADRAO-SIGLA]
+            const sigla = siglaParaDisciplina(siglas, cat?.codigoExternoRco ?? null, padronizarNomeDisciplina(it.nome), cat?.sigla); // [SIGLA-UNICA]
             const [nova] = await tx.insert(disciplinasTable).values({
               escolaId, nome: padronizarNomeDisciplina(it.nome), cargaSemanal: Number(it.cargaHorariaSemanal) || 2,
               cor: corParaDisciplina(cores, cat?.codigoExternoRco ?? null, padronizarNomeDisciplina(it.nome)), // [CORES-DISCIPLINAS]

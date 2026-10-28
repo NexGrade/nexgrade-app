@@ -12,6 +12,7 @@ import {
 } from "@workspace/api-zod";
 import { getEscolaId } from "../lib/escola-id";
 import { registrarAuditoria } from "../lib/audit";
+import { carregarSiglasReferencia, siglaParaDisciplina } from "../lib/sigla-disciplina"; // [SIGLA-UNICA]
 
 const router = Router();
 
@@ -39,7 +40,7 @@ router.post("/", async (req, res) => {
     return;
   }
   const data = parsed.data as {
-    nome: string; cargaSemanal: number; cor?: string; codigoSae?: string;
+    nome: string; cargaSemanal: number; cor?: string; codigoSae?: string; sigla?: string;
     tipoSalaExigido?: string; categoriaCurricularPadrao?: string;
   };
   const count = await db
@@ -48,6 +49,8 @@ router.post("/", async (req, res) => {
     .where(eq(disciplinasTable.escolaId, escolaId))
     .then((r) => r.length);
   const cor = data.cor ?? CORES[count % CORES.length];
+  // [SIGLA-UNICA] antes a sigla digitada nao era gravada; agora vai no padrao NexGrade
+  const sigla = siglaParaDisciplina(await carregarSiglasReferencia(), null, data.nome, data.sigla);
   const [disciplina] = await db
     .insert(disciplinasTable)
     .values({
@@ -55,6 +58,7 @@ router.post("/", async (req, res) => {
       nome: data.nome,
       cargaSemanal: data.cargaSemanal,
       cor,
+      sigla,
       codigoSae: data.codigoSae,
       tipoSalaExigido: data.tipoSalaExigido,
       categoriaCurricularPadrao: data.categoriaCurricularPadrao as any,
