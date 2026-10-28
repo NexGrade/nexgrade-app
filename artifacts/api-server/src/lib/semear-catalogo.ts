@@ -110,6 +110,13 @@ export async function semearCatalogoEscola(escolaId: string, opcoes: OpcoesSemea
   const discExistentes = await db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId));
   const discPorNome = new Map<string, number>();
   for (const d of discExistentes) discPorNome.set(chaveNome(padronizarNomeDisciplina(d.nome)), d.id); // [PADRAO-NOME-DISCIPLINA]
+  // [CATALOGO-POR-CODIGO] (28/10/2026) nome diferente mas mesmo Codigo Externo do RCO = mesma disciplina
+  // (ex.: matriz "Rec. Aprend. Matematica" x escola "Recomposicao da Aprendizagem em Matematica", cod 6039).
+  const discPorCodigo = new Map<number, number>();
+  for (const d of discExistentes) {
+    const cod = (d as any).codigoExternoRco;
+    if (cod != null && !discPorCodigo.has(Number(cod))) discPorCodigo.set(Number(cod), d.id);
+  }
 
   // [SAE-DO-CATALOGO] nome -> dados do catalogo mestre; nome com SAEs diferentes no catalogo fica de fora
   const catalogo = await db.select().from(disciplinasCatalogoTable);
@@ -164,8 +171,12 @@ export async function semearCatalogoEscola(escolaId: string, opcoes: OpcoesSemea
         for (const it of itens) {
           const k = chaveNome(padronizarNomeDisciplina(it.nome)); // [PADRAO-NOME-DISCIPLINA]
           let discId = discPorNome.get(k);
+          const cat = doCatalogo.get(k) ?? null; // [SAE-DO-CATALOGO]
+          if (!discId && cat?.codigoExternoRco != null) { // [CATALOGO-POR-CODIGO]
+            discId = discPorCodigo.get(Number(cat.codigoExternoRco));
+            if (discId) discPorNome.set(k, discId);
+          }
           if (!discId) {
-            const cat = doCatalogo.get(k) ?? null; // [SAE-DO-CATALOGO]
             const sigla = cat?.sigla || (cat?.codigoExternoRco != null ? SIGLA_PADRAO_POR_CODIGO[cat.codigoExternoRco] : undefined); // [PADRAO-SIGLA]
             const [nova] = await tx.insert(disciplinasTable).values({
               escolaId, nome: padronizarNomeDisciplina(it.nome), cargaSemanal: Number(it.cargaHorariaSemanal) || 2,
@@ -177,6 +188,7 @@ export async function semearCatalogoEscola(escolaId: string, opcoes: OpcoesSemea
             } as any).returning();
             discId = nova.id;
             discPorNome.set(k, discId);
+            if (cat?.codigoExternoRco != null) discPorCodigo.set(Number(cat.codigoExternoRco), discId);
             r.disciplinasCriadas++;
           }
           linhas.push({
