@@ -6,6 +6,7 @@ import { eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 import { carregarCoresReferencia, corParaDisciplina } from "../lib/cor-disciplina"; // [CORES-DISCIPLINAS]
+import { carregarSiglasReferencia, siglaParaDisciplina } from "../lib/sigla-disciplina"; // [SIGLA-UNICA]
 
 // [NOVO] Catálogo mestre de disciplinas — compartilhado entre todas as
 // escolas (sem escolaId, ver schema/disciplinas-catalogo.ts). Permite
@@ -60,6 +61,7 @@ router.post("/adicionar-selecionadas", async (req, res) => {
   }
 
   const cores = await carregarCoresReferencia(); // [CORES-DISCIPLINAS]
+  const siglas = await carregarSiglasReferencia(); // [SIGLA-UNICA]
   const criadas = await db.insert(disciplinasTable).values(
     paraCriar.map(item => ({
       escolaId,
@@ -69,7 +71,7 @@ router.post("/adicionar-selecionadas", async (req, res) => {
       categoriaCurricularPadrao: item.categoriaCurricularPadrao,
       cargaSemanal: item.cargaSemanalSugerida,
       tipoSalaExigido: item.tipoSalaExigido,
-      sigla: item.sigla,
+      sigla: siglaParaDisciplina(siglas, (item as any).codigoExternoRco ?? null, padronizarNomeDisciplina(item.nome), item.sigla), // [SIGLA-UNICA]
       cor: corParaDisciplina(cores, (item as any).codigoExternoRco ?? null, padronizarNomeDisciplina(item.nome)), // [CORES-DISCIPLINAS]
     })),
   ).returning();
