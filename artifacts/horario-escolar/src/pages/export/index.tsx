@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query"; // [RCO-TURMAS-SCRIPT]
-import { useListTurmas, useListProfessores, customFetch, ApiError } from "@workspace/api-client-react";
+import { useListTurmas, useListProfessores, customFetch, ApiError, useMasterWhoami } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -142,6 +142,10 @@ export default function ExportPage() {
   // [RCO-SCRIPT] script para colar no Console (F12) da tela Grade de Horario do RCO: grava trio/dupla
   // [RCO-TURMAS-SCRIPT] turmas do turno que precisam do script (trio/dupla, mesmo codigo); o resto vai pelo XML.
   // Quem nao e da direcao/coordenacao/secretaria recebe 403: o aviso simplesmente nao aparece.
+  // [RCO-SCRIPT-SUPORTE] (28/10/2026) decisao: o que usa F12 (script de gravacao) e so para o suporte
+  // NexGrade (Master). A escola ve quais turmas precisam e e orientada a chamar o suporte.
+  const { data: whoami } = useMasterWhoami();
+  const suporte = !!whoami?.isMaster;
   const { data: turmasScript } = useQuery({
     queryKey: ["/api/export/rco-script/turmas", seedTurno],
     enabled: seedEstado === "PR",
@@ -451,7 +455,7 @@ export default function ExportPage() {
                 <Download className="w-4 h-4 mr-2" />
                 {loadingSeed ? "Gerando..." : `Baixar XML para o RCO (${seedEstado})`}
               </Button>
-              {seedEstado === "PR" && (
+              {seedEstado === "PR" && suporte && (
                 <Button variant="outline" onClick={() => handleScriptRco(false)} disabled={loadingScript}>
                   <Download className="w-4 h-4 mr-2" />
                   {loadingScript ? "Gerando..." : "Script de gravação no RCO"}
@@ -465,22 +469,26 @@ export default function ExportPage() {
                 ) : (
                   <div className="space-y-2">
                     <p>
-                      <strong>{turmasScript.turmas.length} de {turmasScript.totalTurmasRco} turma(s) do RCO</strong> precisam do script (o XML grava só uma disciplina por horário).
-                      Faça nesta ordem: <strong>1)</strong> XML com todas as turmas (Incluir via Arquivo no RCO); <strong>2)</strong> script só destas turmas.
+                      <strong>{turmasScript.turmas.length} de {turmasScript.totalTurmasRco} turma(s) do RCO</strong> têm mais de uma disciplina no mesmo horário (o XML grava só uma).
+                      {suporte
+                        ? <> Faça nesta ordem: <strong>1)</strong> XML com todas as turmas (Incluir via Arquivo no RCO); <strong>2)</strong> script só destas turmas.</>
+                        : <> Importe o XML normalmente e avise o <strong>suporte NexGrade</strong>: a gravação destas turmas no RCO é feita pela nossa equipe.</>}
                     </p>
                     <ul className="list-disc list-inside space-y-0.5">
                       {turmasScript.turmas.map((t) => <li key={t.codTurma}><strong>{t.turma}</strong>: {t.motivos.join("; ")}</li>)}
                     </ul>
-                    <Button size="sm" onClick={() => handleScriptRco(true)} disabled={loadingScript} className="gap-1.5">
-                      <Download className="w-3.5 h-3.5" /> {loadingScript ? "Gerando..." : `Script só destas ${turmasScript.turmas.length} turma(s)`}
-                    </Button>
+                    {suporte && (
+                      <Button size="sm" onClick={() => handleScriptRco(true)} disabled={loadingScript} className="gap-1.5">
+                        <Download className="w-3.5 h-3.5" /> {loadingScript ? "Gerando..." : `Script só destas ${turmasScript.turmas.length} turma(s)`}
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
             )}
-            {seedEstado === "PR" && (
+            {seedEstado === "PR" && suporte && (
               <p className="mt-3 text-xs text-muted-foreground">
-                <strong>Script de gravação:</strong> no RCO, abra Grade de Horário, escolha o Período Letivo e o Turno, aperte F12, aba Console, cole o conteúdo do script e aperte Enter.
+                <strong>Script de gravação (só suporte NexGrade):</strong> no RCO, abra Grade de Horário, escolha o Período Letivo e o Turno, aperte F12, aba Console, cole o conteúdo do script e aperte Enter.
                 Ele mostra a prévia de cada turma e só grava depois que você confirmar. Sem assíncronas (igual ao PDF por turma).
                 O XML regrava a turma inteira: se usar os dois, o script vem <strong>depois</strong>.
               </p>

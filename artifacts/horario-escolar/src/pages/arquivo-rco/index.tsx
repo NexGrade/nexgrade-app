@@ -76,13 +76,14 @@ export default function ArquivoRcoPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">1. Baixe o arquivo no RCO</CardTitle>
-          <CardDescription>Quem faz: a secretaria ou a direção, com o login do RCO.</CardDescription>
+          <CardTitle className="text-base">1. Baixe o arquivo no RCO com o suporte NexGrade</CardTitle>
+          <CardDescription>O RCO não tem um botão para isso: o arquivo é baixado junto com a nossa equipe.</CardDescription>
         </CardHeader>
         <CardContent className="text-sm space-y-2">
+          {/* [RCO-F12-SUPORTE] (28/10/2026) decisao: o que usa F12 no RCO e feito so pelo suporte NexGrade */}
           <ol className="list-decimal list-inside space-y-1.5">
-            <li>No RCO, abra <strong>Grade de Horário</strong> e escolha o <strong>Período Letivo</strong> atual.</li>
-            <li>Use a opção de <strong>exportar</strong> da tela. O RCO baixa um arquivo <strong>.XML</strong>. Se não encontrar a opção, fale com a equipe NexGrade.</li>
+            <li>Combine um atendimento com o <strong>suporte NexGrade</strong> (remoto ou na escola), com a secretaria ou a direção logada no RCO.</li>
+            <li>No RCO, abra <strong>Grade de Horário</strong> e escolha o <strong>Período Letivo</strong> atual. A nossa equipe baixa o arquivo <strong>.XML</strong>.</li>
             <li>Não abra nem altere o arquivo antes de enviar.</li>
           </ol>
         </CardContent>
