@@ -47,6 +47,8 @@ const EscolaPage = lazy(() => import("@/pages/escola/index")); // [FASE-C1]
 const ExportPage = lazy(() => import("@/pages/export/index"));
 const ImprimirGradePage = lazy(() => import("@/pages/imprimir-grade/index")); // [IMPRIMIR-GRADE]
 const RelatoriosPedagogicosPage = lazy(() => import("@/pages/relatorios-pedagogicos/index")); // [MENU-UNICO]
+const PresencaPage = lazy(() => import("@/pages/presenca/index")); // [PRESENCA-PEDAGOGIA]
+const OndeEstaPage = lazy(() => import("@/pages/onde-esta/index")); // [PRESENCA-PEDAGOGIA]
 const ExportarRcoPage = lazy(() => import("@/pages/rco/index")); // [MENU-UNICO]
 const CodigosRcoPage = lazy(() => import("@/pages/codigos-rco/index")); // [CODIGOS-RCO-TELA]
 const ArquivoRcoPage = lazy(() => import("@/pages/arquivo-rco/index")); // [ARQUIVO-RCO]
@@ -529,6 +531,8 @@ function Router() {
       <Route path="/export" component={() => <ProtectedRoute component={ExportPage} />} />
       <Route path="/imprimir-grade" component={() => <ProtectedRoute component={ImprimirGradePage} />} /> {/* [IMPRIMIR-GRADE] */}
       <Route path="/relatorios-pedagogicos" component={() => <ProtectedRoute component={RelatoriosPedagogicosPage} />} />{/* [MENU-UNICO] */}
+      <Route path="/presenca" component={() => <ProtectedRoute component={PresencaPage} />} />{/* [PRESENCA-PEDAGOGIA] */}
+      <Route path="/onde-esta" component={() => <ProtectedRoute component={OndeEstaPage} />} />{/* [PRESENCA-PEDAGOGIA] */}
       <Route path="/rco" component={() => <ProtectedRoute component={ExportarRcoPage} />} />{/* [MENU-UNICO] */}
       <Route path="/codigos-rco" component={() => <ProtectedRoute component={CodigosRcoPage} />} />{/* [CODIGOS-RCO-TELA] */}
       <Route path="/arquivo-rco" component={() => <ProtectedRoute component={ArquivoRcoPage} />} />{/* [ARQUIVO-RCO] */}

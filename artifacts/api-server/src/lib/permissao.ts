@@ -75,6 +75,7 @@ const LEITURAS_SOMENTE_ADMIN = [
   "/virada-ano", // [VIRADA-ANO] previa da virada do ano letivo: so direcao, coordenacao e secretaria
   "/export/rco-script", // [RCO-SCRIPT-OFUSCADO] script de gravacao no RCO: so direcao, coordenacao e secretaria
   "/arquivo-rco/baixar", // [ARQUIVO-RCO] arquivo do RCO enviado (a situacao, GET /arquivo-rco, segue livre: selo do menu)
+  "/pedagogia", // [PRESENCA-PEDAGOGIA] presenca dos professores e "onde esta agora": equipe gestora e pedagogia
 ];
 export function ehLeituraSomenteAdmin(caminhoBruto: string): boolean {
   const caminho = normalizarCaminho(caminhoBruto);
@@ -98,7 +99,7 @@ const MSG_LEITURA_EQUIPE = "Apenas a equipe da escola (coordenação ou gestor d
 // Le os relatorios de ponto e carga horaria (que sao so da coordenacao) e altera so o que e dela:
 // licencas, comunicados e a area propria /pedagogia (ponto online, agenda). Nao mexe na grade,
 // no cadastro, nas reservas, nos usuarios nem no RCO.
-const LEITURAS_DA_PEDAGOGIA = ["/export/ponto", "/export/relatorio-carga-pdf", "/export/carga-horaria-pdf"];
+const LEITURAS_DA_PEDAGOGIA = ["/export/ponto", "/export/relatorio-carga-pdf", "/export/carga-horaria-pdf", "/pedagogia"]; // [PRESENCA-PEDAGOGIA]
 export function ehLeituraLiberadaPedagogia(caminhoBruto: string): boolean {
   const caminho = normalizarCaminho(caminhoBruto);
   return LEITURAS_DA_PEDAGOGIA.some((p) => caminho === p || caminho.startsWith(p + "/"));

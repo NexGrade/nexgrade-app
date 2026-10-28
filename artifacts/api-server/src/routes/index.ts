@@ -33,6 +33,7 @@ import minhaAgendaRouter from "./minha-agenda";
 import viradaAnoRouter from "./virada-ano"; // [VIRADA-ANO]
 import codigosRcoRouter from "./codigos-rco"; // [CODIGOS-RCO-TELA]
 import arquivoRcoRouter from "./arquivo-rco"; // [ARQUIVO-RCO]
+import pedagogiaRouter from "./pedagogia"; // [PRESENCA-PEDAGOGIA]
 import { exigirAdminParaAlterar } from "../lib/permissao"; // [PERMISSAO-PAPEL]
 import { carregarAcesso } from "../lib/acesso"; // [ACESSOS-ESCOLA]
 import euRouter from "./eu"; // [ACESSOS-ESCOLA]
@@ -82,6 +83,7 @@ router.use("/minha-agenda", minhaAgendaRouter);
 router.use("/virada-ano", viradaAnoRouter); // [VIRADA-ANO]
 router.use("/codigos-rco", codigosRcoRouter); // [CODIGOS-RCO-TELA]
 router.use("/arquivo-rco", arquivoRcoRouter); // [ARQUIVO-RCO]
+router.use("/pedagogia", pedagogiaRouter); // [PRESENCA-PEDAGOGIA]
 
 export default router;
 

@@ -1,0 +1,138 @@
+// [PRESENCA-PEDAGOGIA] (28/10/2026) Regras puras da lista de presenca dos professores e da tela
+// "Onde esta agora" (sem banco; testadas em __tests__/presenca.test.ts). A rota (routes/pedagogia.ts)
+// carrega a grade oficial do dia, as reservas e as marcacoes e chama estas funcoes.
+export const STATUS = ["presente", "falta", "atraso", "substituido"] as const;
+export type Status = (typeof STATUS)[number];
+export const ROTULO_STATUS: Record<Status, string> = { presente: "Presente", falta: "Falta", atraso: "Atraso", substituido: "Substituído" };
+export const ROTULO_TURNO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
+export const TURNOS_DIA = ["matutino", "vespertino", "noturno"] as const;
+
+export type Marca = { status: Status; substitutoId: number | null; substitutoNome: string | null; observacao: string | null };
+export type AulaDoDia = {
+  numeroAula: number; hora: string; fim: string;
+  turmas: string; disciplinas: string; sala: string;
+  marca: Marca | null;
+};
+export type ProfessorDoDia = { professorId: number; nome: string; licenca: string | null; aulas: AulaDoDia[] };
+
+export type SlotEsquema = { turno: string; nivelEnsino: string | null; numeroAula: number; horaInicio: string; duracaoMinutos: number; letivo: boolean };
+
+/** "07:30:00" -> 450 */
+export function minutosDe(hora: string): number {
+  const [h, m] = String(hora).slice(0, 5).split(":").map(Number);
+  return (h ?? 0) * 60 + (m ?? 0);
+}
+export function hhmm(min: number): string {
+  return `${String(Math.floor(min / 60) % 24).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+}
+
+/** Slot do esquema que vale para a turma (no matutino o Fundamental e o Medio/Tecnico tem horarios proprios). */
+export function slotDaTurma(slots: SlotEsquema[], turno: string, nivelEnsino: string | null | undefined, numeroAula: number): SlotEsquema | undefined {
+  const doTurno = slots.filter((s) => s.turno === turno && s.numeroAula === numeroAula);
+  if (turno !== "matutino") return doTurno[0];
+  return doTurno.find((s) => s.nivelEnsino === (nivelEnsino ?? "medio_tecnico")) ?? doTurno.find((s) => !s.nivelEnsino) ?? doTurno[0];
+}
+
+/** Uma aula de verdade do professor no dia (ja com a turma integral projetada e sem as assincronas). */
+export type AulaGrade = { professorId: number; numeroAula: number; turno: string; nivelEnsino: string | null; turma: string; disciplina: string; sala: string };
+
+/** Junta as aulas do mesmo professor na mesma aula (co-docencia, turmas juntas) e ordena. */
+export function montarDia(
+  professores: Array<{ id: number; nome: string }>,
+  aulas: AulaGrade[],
+  slots: SlotEsquema[],
+  marcas: Map<string, Marca>,
+  licencas: Map<number, string>,
+  turno: string,
+): ProfessorDoDia[] {
+  const doTurno = aulas.filter((a) => a.turno === turno);
+  const saida: ProfessorDoDia[] = [];
+  for (const p of [...professores].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))) {
+    const minhas = doTurno.filter((a) => a.professorId === p.id);
+    if (!minhas.length) continue;
+    const porAula = new Map<number, AulaGrade[]>();
+    for (const a of minhas) porAula.set(a.numeroAula, [...(porAula.get(a.numeroAula) ?? []), a]);
+    const lista: AulaDoDia[] = [...porAula.entries()].sort((a, b) => a[0] - b[0]).map(([numeroAula, grupo]) => {
+      const s = slotDaTurma(slots, turno, grupo[0]!.nivelEnsino, numeroAula);
+      const ini = s ? minutosDe(s.horaInicio) : null;
+      const unicos = (xs: string[]) => [...new Set(xs.filter(Boolean))].join(" + ");
+      return {
+        numeroAula,
+        hora: ini != null ? hhmm(ini) : "",
+        fim: ini != null && s ? hhmm(ini + (s.duracaoMinutos ?? 50)) : "",
+        turmas: unicos(grupo.map((g) => g.turma)),
+        disciplinas: unicos(grupo.map((g) => g.disciplina)),
+        sala: unicos(grupo.map((g) => g.sala)),
+        marca: marcas.get(chaveMarca(p.id, numeroAula)) ?? null,
+      };
+    });
+    saida.push({ professorId: p.id, nome: p.nome, licenca: licencas.get(p.id) ?? null, aulas: lista });
+  }
+  return saida;
+}
+
+export function chaveMarca(professorId: number, numeroAula: number): string {
+  return `${professorId}|${numeroAula}`;
+}
+
+export type AgoraLinha = {
+  professorId: number; professor: string; turno: string; numeroAula: number; hora: string; fim: string;
+  turmas: string; disciplinas: string; sala: string; status: Status | null;
+};
+
+/**
+ * "Onde esta agora": a aula de cada professor que esta acontecendo no minuto `agoraMin`
+ * (inicio <= agora < fim) e, para quem nao esta em aula, a proxima aula do dia.
+ */
+export function ondeEstaAgora(
+  professores: Array<{ id: number; nome: string }>,
+  aulas: AulaGrade[],
+  slots: SlotEsquema[],
+  marcas: Map<string, Marca>,
+  agoraMin: number,
+): { emAula: AgoraLinha[]; proximas: AgoraLinha[]; livres: Array<{ professorId: number; professor: string }> } {
+  const emAula: AgoraLinha[] = [], proximas: AgoraLinha[] = [], livres: Array<{ professorId: number; professor: string }> = [];
+  for (const p of [...professores].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))) {
+    const minhas = aulas.filter((a) => a.professorId === p.id);
+    if (!minhas.length) continue;
+    const comHora = minhas.map((a) => {
+      const s = slotDaTurma(slots, a.turno, a.nivelEnsino, a.numeroAula);
+      return s ? { a, ini: minutosDe(s.horaInicio), fim: minutosDe(s.horaInicio) + (s.duracaoMinutos ?? 50) } : null;
+    }).filter((x): x is { a: AulaGrade; ini: number; fim: number } => !!x);
+    const linha = (grupo: Array<{ a: AulaGrade; ini: number; fim: number }>): AgoraLinha => {
+      const g0 = grupo[0]!;
+      const unicos = (xs: string[]) => [...new Set(xs.filter(Boolean))].join(" + ");
+      return {
+        professorId: p.id, professor: p.nome, turno: g0.a.turno, numeroAula: g0.a.numeroAula, hora: hhmm(g0.ini), fim: hhmm(g0.fim),
+        turmas: unicos(grupo.map((x) => x.a.turma)), disciplinas: unicos(grupo.map((x) => x.a.disciplina)), sala: unicos(grupo.map((x) => x.a.sala)),
+        status: marcas.get(`${g0.a.turno}|${chaveMarca(p.id, g0.a.numeroAula)}`)?.status ?? null,
+      };
+    };
+    const agora = comHora.filter((x) => x.ini <= agoraMin && agoraMin < x.fim);
+    if (agora.length) { emAula.push(linha(agora)); continue; }
+    const futuras = comHora.filter((x) => x.ini > agoraMin).sort((a, b) => a.ini - b.ini);
+    if (futuras.length) { const ini = futuras[0]!.ini; proximas.push(linha(futuras.filter((x) => x.ini === ini))); continue; }
+    livres.push({ professorId: p.id, professor: p.nome });
+  }
+  proximas.sort((a, b) => minutosDe(a.hora) - minutosDe(b.hora) || a.professor.localeCompare(b.professor, "pt-BR"));
+  return { emAula, proximas, livres };
+}
+
+export type RegistroMes = { professorId: number; status: Status; substitutoId: number | null };
+export type ResumoProfessorMes = { professorId: number; professor: string; presente: number; falta: number; atraso: number; substituido: number; substituiu: number; marcadas: number };
+
+/** Totais do mes por professor; "substituiu" = aulas que ele deu no lugar de outro. */
+export function resumirMes(registros: RegistroMes[], nomes: Map<number, string>): ResumoProfessorMes[] {
+  const r = new Map<number, ResumoProfessorMes>();
+  const de = (id: number) => {
+    if (!r.has(id)) r.set(id, { professorId: id, professor: nomes.get(id) ?? `#${id}`, presente: 0, falta: 0, atraso: 0, substituido: 0, substituiu: 0, marcadas: 0 });
+    return r.get(id)!;
+  };
+  for (const x of registros) {
+    const p = de(x.professorId);
+    p[x.status]++;
+    p.marcadas++;
+    if (x.status === "substituido" && x.substitutoId != null) de(x.substitutoId).substituiu++;
+  }
+  return [...r.values()].sort((a, b) => a.professor.localeCompare(b.professor, "pt-BR"));
+}
