@@ -14,6 +14,7 @@ import {
   customFetch, // [NOVA-ESCOLA-MASTER]
 } from "@workspace/api-client-react";
 import { useEu } from "@/lib/papeis"; // [MASTER-SUPORTE]
+import SimuladorProposta from "./simulador-proposta"; // [SIMULADOR-PROPOSTA]
 import { trocarDeEscola } from "@/lib/escola-ativa"; // [MASTER-SUPORTE]
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -58,12 +59,16 @@ export default function MasterPage() {
         <TabsList>
           <TabsTrigger value="escolas">Escolas</TabsTrigger>
           <TabsTrigger value="planos">Planos</TabsTrigger>
+          <TabsTrigger value="simulador">Simulador de proposta</TabsTrigger>
         </TabsList>
         <TabsContent value="escolas" className="mt-4">
           <EscolasTable />
         </TabsContent>
         <TabsContent value="planos" className="mt-4">
           <PlanosTable />
+        </TabsContent>
+        <TabsContent value="simulador" className="mt-4">
+          <SimuladorProposta />
         </TabsContent>
       </Tabs>
     </div>
