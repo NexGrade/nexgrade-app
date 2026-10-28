@@ -266,7 +266,8 @@ REGRAS POR PROFESSOR (botão "Regras por professor" — só direção/coordenaç
 QUEM FAZ O QUÊ
 - Gestor de reservas: cria, confirma e exclui reservas; não altera as regras por professor nem a grade.
 - Professor: pede reserva pela Minha Agenda ("Nova reserva"), vendo as aulas livres do espaço na data.
-- Relatório: Exportar Dados → Relatório de Reservas (PDF ou Excel, por professor, incluindo canceladas).`,
+- Relatório: Exportar Dados → Relatório de Reservas (PDF ou Excel, por professor, incluindo canceladas).
+- PDF da semana (no quadro "Reservas da semana", botão "PDF da semana"): "Quadro da semana" = reservas e espaços livres por aula; "Por espaço" = um quadro por espaço e por equipamento reservado (laboratório, chromebooks...), com a turma, a disciplina e o professor em cada aula, em paisagem, para afixar na porta. Reserva aguardando confirmação sai em amarelo com "(aguard.)". Escolha o período (manhã, tarde ou noite).`,
   },
 
   licencas: {

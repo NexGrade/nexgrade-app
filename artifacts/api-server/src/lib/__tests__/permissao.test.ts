@@ -45,7 +45,7 @@ describe("ehAlteracaoDeReservaPermitida (gestor de reservas)", () => {
 // [LEITURA-EQUIPE] consultas do portal do gestor (nomes de quem reservou, grade de qualquer professor)
 describe("ehLeituraDaEquipe", () => {
   it("cobre o portal do gestor, as listas e os relatorios de reservas, em qualquer caixa", () => {
-    for (const c of ["/reservas/gestor/semana", "/Reservas/Gestor/Horario", "/RESERVAS/GESTOR/", "/reservas/gestor", "/reservas", "/Reservas/", "/reservas/resumo", "/export/reservas-pdf", "/Export/Reservas-Dados", "/export/quadro-reservas-semana-pdf"]) {
+    for (const c of ["/reservas/gestor/semana", "/Reservas/Gestor/Horario", "/RESERVAS/GESTOR/", "/reservas/gestor", "/reservas", "/Reservas/", "/reservas/resumo", "/export/reservas-pdf", "/Export/Reservas-Dados", "/export/quadro-reservas-semana-pdf", "/export/reservas-espaco-pdf"]) {
       expect(ehLeituraDaEquipe(c), c).toBe(true);
     }
   });
