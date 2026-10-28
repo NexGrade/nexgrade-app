@@ -1,7 +1,7 @@
 // [NOVA-ESCOLA-MASTER] (15/10/2026) POST /api/master/escolas -- a Nexus Core cadastra uma
 // escola nova pelo Painel Master (decisao de 15/10: escola nova so por aqui).
 // A escola nasce como no antigo cadastro pela propria escola: plano Gratuito, 30 dias de
-// avaliacao e o catalogo oficial SEED-PR. Com ACESSOS_PELO_BANCO=1, o e-mail da direcao
+// avaliacao (o catalogo SEED-PR entra so com os cursos que ela ofertar). Com ACESSOS_PELO_BANCO=1, o e-mail da direcao
 // ja fica liberado (acessos_escola) e a pessoa entra no NexGrade com ele.
 // So o Master chega aqui (requireMaster em routes/master.ts).
 import { Router } from "express";
@@ -9,7 +9,6 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { db, escolasTable, planosTable, acessosEscolaTable } from "@workspace/db";
 import { eq, or, and, isNotNull } from "drizzle-orm";
-import { semearCatalogoEscola } from "../lib/semear-catalogo";
 import { liberarViradaAntes } from "../lib/virada-ano"; // [VIRADA-ANO]
 import { CALENDARIOS_OFICIAIS, aplicarCalendarioOficial } from "../lib/calendario-oficial"; // [CALENDARIO-OFICIAL]
 import { registrarAuditoria } from "../lib/audit";
@@ -101,14 +100,9 @@ router.post("/escolas", async (req, res) => {
   });
   limparCacheAcessos();
 
-  // catalogo oficial SEED-PR (cursos desligados ate a escola marcar quais oferta)
-  let catalogo = "Catálogo oficial SEED-PR carregado.";
-  try {
-    await semearCatalogoEscola(escolaId);
-  } catch (err) {
-    console.error("[nova-escola] falha ao semear o catalogo", escolaId, err);
-    catalogo = "ATENÇÃO: o catálogo oficial não foi carregado; abra Cursos e Disciplinas na escola e use \"Importar catálogo oficial SEED-PR\".";
-  }
+  // [CATALOGO-SOB-DEMANDA] (28/10/2026) o catalogo nao e mais copiado inteiro: a escola marca os
+  // cursos que oferta e so eles entram, com as matrizes e as disciplinas deles.
+  const catalogo = "Cursos: a escola marca os que oferta em Cursos e Disciplinas → Catálogo SEED-PR (entram só eles, com as matrizes e disciplinas).";
 
   // [CALENDARIO-OFICIAL] calendario letivo oficial SEED-PR do ano (a escola ajusta depois)
   const anoCal = new Date().getFullYear();

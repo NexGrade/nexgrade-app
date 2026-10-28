@@ -7,7 +7,6 @@ import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 import { limitadorCadastro } from "../middlewares/rateLimit";
 import { criarOuReaproveitarCustomer, criarSubscription } from "../lib/asaas";
-import { semearCatalogoEscola } from "../lib/semear-catalogo"; // [CATALOGO]
 
 const router = Router();
 
@@ -139,8 +138,8 @@ router.post("/", limitadorCadastro, async (req, res) => {
         planoId, planoAtivo: true, trialEndsAt,
       })
       .returning();
-    // [CATALOGO] escola nova nasce com o catalogo oficial SEED-PR (cursos desligados ate a escola marcar)
-    semearCatalogoEscola(escolaId).catch((err) => console.error("[catalogo] falha ao semear escola nova", escolaId, err));
+    // [CATALOGO-SOB-DEMANDA] (28/10/2026) escola nova nao recebe mais o catalogo inteiro: os cursos
+    // (com matrizes e disciplinas) entram quando ela marca o que oferta em Cursos e Disciplinas.
     res.status(201).json(created);
   }
 });

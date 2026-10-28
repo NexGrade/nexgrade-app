@@ -74,8 +74,9 @@ Observação: aulas fixas não ficam mais aqui — ficam na Disponibilidade de c
     texto: `Menu Cursos e Disciplinas. Tem três abas:
 
 ABA CATÁLOGO SEED-PR
-1. Clique em "Importar catálogo oficial SEED-PR" — traz todos os cursos, matrizes e disciplinas oficiais.
-2. Marque os cursos que a escola oferece (use "Buscar curso..." e o filtro "Só ofertados"). Só os cursos ofertados aparecem em Cursos e nas Turmas.
+1. A lista mostra todos os cursos do catálogo oficial (Fundamental, Médio e Técnicos). Use "Buscar curso..." e os filtros de nível.
+2. Marque os cursos que a escola oferece. Ao marcar, entram só aquele curso, as matrizes das séries e as disciplinas dele — o menu de disciplinas não fica lotado com o catálogo inteiro.
+3. Desmarcar tira o curso da aba Cursos e da criação de turmas, sem apagar nada; marcar de novo religa. Use "Só ofertados" para ver só o que a escola tem.
 
 ABA CURSOS E MATRIZ CURRICULAR
 - Clique num curso para expandir e ver as matrizes por série/ano.

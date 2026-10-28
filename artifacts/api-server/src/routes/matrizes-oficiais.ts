@@ -2,7 +2,7 @@ import { Router } from "express";
 import { ehPlanoPago } from "../lib/preco-plano"; // [PRECO-POR-TURMA]
 import { db } from "@workspace/db";
 import { escolasTable, planosTable, cursosTable } from "@workspace/db";
-import { semearCatalogoEscola } from "../lib/semear-catalogo"; // [CATALOGO]
+import { semearCatalogoEscola, listarModelosCatalogo, chaveCurso } from "../lib/semear-catalogo"; // [CATALOGO]
 import { and, eq, sql } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
 import { limitadorConsultaSensivel } from "../middlewares/rateLimit";
@@ -73,24 +73,49 @@ router.get("/gerais", limitadorConsultaSensivel, async (req, res) => {
   res.json(MATRIZES_OFICIAIS_SEED_PR);
 });
 
-// [CATALOGO] Importa o catalogo oficial completo para a escola (cursos, matrizes,
-// disciplinas e cargas). Seguro para repetir: nada existente e alterado.
-router.post("/semear", async (req, res) => {
+// [CATALOGO-SOB-DEMANDA] (28/10/2026) Cursos do catalogo oficial com a situacao na escola.
+// Nada e gravado: o catalogo fica nos modelos do codigo ate a escola ofertar um curso.
+// Cursos proprios da escola (fora do catalogo) vem em `proprios`.
+router.get("/catalogo-cursos", async (req, res) => {
   const escolaId = getEscolaId(req);
+  const cursos = await db.select().from(cursosTable).where(eq(cursosTable.escolaId, escolaId));
+  const porChave = new Map(cursos.map((c) => [chaveCurso(c.nome, (c as any).formaOferta), c] as const));
+  const usados = new Set<number>();
+  const modelos = listarModelosCatalogo().map((m) => {
+    const c = porChave.get(m.chave);
+    if (c) usados.add(c.id);
+    return { ...m, cursoId: c?.id ?? null, ofertado: c ? (c as any).ofertado !== false : false };
+  });
+  const proprios = cursos.filter((c) => !usados.has(c.id)).map((c) => ({
+    cursoId: c.id, nome: c.nome, nivel: c.nivel, codigoCurso: (c as any).codigoCurso ?? null,
+    formaOferta: (c as any).formaOferta ?? null, ofertado: (c as any).ofertado !== false,
+  }));
+  res.json({ modelos, proprios });
+});
+
+// [CATALOGO-SOB-DEMANDA] Oferta um curso do catalogo: cria o curso (ja ofertado) com as
+// matrizes e so as disciplinas dele. Se o curso ja existe, religa e completa as series que faltam.
+router.post("/catalogo-cursos/ofertar", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const chave = typeof req.body?.chave === "string" ? req.body.chave : "";
+  if (!listarModelosCatalogo().some((m) => m.chave === chave)) {
+    res.status(400).json({ error: "Curso não encontrado no catálogo oficial." });
+    return;
+  }
   if (!(await checarAcessoMatrizes(escolaId))) {
     res.status(403).json({ error: "Catálogo de matrizes oficiais disponível só durante o período de avaliação ou em planos pagos." });
     return;
   }
   try {
-    const resultado = await semearCatalogoEscola(escolaId);
+    const resultado = await semearCatalogoEscola(escolaId, { chaves: [chave], ofertar: true });
     await registrarAuditoria({
       req, escolaId, entidade: "matrizes-oficiais", entidadeId: 0,
-      acao: "alteracao", dadosAnteriores: null, dadosNovos: { tipo: "semear", ...resultado },
+      acao: "alteracao", dadosAnteriores: null, dadosNovos: { tipo: "ofertar-curso", chave, ...resultado },
     });
     res.json(resultado);
   } catch (err: any) {
-    console.error("[catalogo] falha ao semear", escolaId, err);
-    res.status(500).json({ error: "Não foi possível importar o catálogo. Tente novamente." });
+    console.error("[catalogo] falha ao ofertar curso", escolaId, chave, err);
+    res.status(500).json({ error: "Não foi possível trazer o curso do catálogo. Tente novamente." });
   }
 });
 
