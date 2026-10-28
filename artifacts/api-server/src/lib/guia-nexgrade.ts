@@ -301,6 +301,19 @@ QUEM FAZ O QUÊ
 Depois de importar professores, marque as disciplinas de cada um em Professores; depois de importar turmas, defina os professores em Turmas.`,
   },
 
+  imprimir_grade: {
+    titulo: "Imprimir Grade (PDFs da grade)",
+    palavras: ["imprimir", "imprimir grade", "pdf", "grade em pdf", "quadro geral", "lado a lado", "compacto", "por disciplina", "mural", "sala dos professores"],
+    texto: `Menu Relatórios e RCO → Imprimir Grade. Escolha no topo o Turno e a Semana (a data que sai no cabeçalho) e clique em "Baixar PDF" no modelo que quiser. Todos usam a grade oficial.
+- Por turma: uma turma por quadro (sigla da disciplina e professor). Aceita "Todos os turnos" e filtro de uma turma.
+- Turmas lado a lado: 5 turmas por página, em paisagem, cada aula com o nome da disciplina e o professor.
+- Por professor: um professor por quadro, com turma, disciplina, HA (amarelo), HA* (contraturno ou aulas de outro turno) e horários bloqueados. Aceita "Todos os turnos" e filtro de um professor.
+- Professores compacto: 4 professores por linha, com a turma em cada aula.
+- Quadro geral de professores: uma linha por professor e os dias com as aulas nas colunas, em paisagem (para afixar na sala dos professores).
+- Por disciplina: um quadro por disciplina, com a turma e o professor em cada aula.
+- Os modelos novos (lado a lado, compacto, quadro geral e por disciplina) pedem um turno. Turno Integral: use os modelos por turma; no PDF por professor, a aula da turma integral sai na manhã/tarde dele.`,
+  },
+
   exportar: {
     titulo: "Exportar Dados (PDFs, planilhas e relatórios)",
     palavras: ["exportar", "pdf", "imprimir", "baixar grade", "relatório", "ponto", "controle de ponto", "carga horária", "excel"],
@@ -308,8 +321,7 @@ Depois de importar professores, marque as disciplinas de cada um em Professores;
 - Grade Horária: grade completa ou de uma turma, em CSV (Excel) ou JSON.
 - Controle de Ponto: planilha com a carga horária dos professores (filtro de professor, mês e ano).
 - Ponto Diário: folha de ponto de UM dia. Escolha o dia e o turno (Manhã, Tarde, Noite ou Todos, um por página) e baixe em PDF ou Excel. Uma linha por professor que tem aula, hora-atividade (H.A.) ou atividade (FORM, COORD, ASS...) nesse dia, uma coluna por aula do turno com TURMA/SIGLA, e a coluna Situação com quadradinhos para marcar: Presente, Falta, Atestado ou Atraso. Traço = professor sem expediente nesse horário. Se o dia for feriado ou recesso no calendário, o relatório avisa no topo.
-- Grade em PDF: pronta para impressão. Escolha Visão (Por Turma ou Por Professor), Turno e Semana (atual ou que vem). HA em contraturno aparece como HA*. Turno "Integral (grade por turma)": PDF da turma integral com todas as linhas; no PDF por professor, a aula da turma integral sai na manhã/tarde dele.
-- Modelo do PDF (escolha um turno): Por Turma → "Turmas lado a lado" (5 turmas por página, em paisagem, cada aula com o nome da disciplina e o professor). Por Professor → "Compacto" (4 professores por linha, com a turma em cada aula, HA e horários bloqueados) ou "Quadro geral" (um professor por linha e os dias com as aulas nas colunas, em paisagem, para afixar na sala dos professores). Visão "Por Disciplina" (escolha um turno): um quadro por disciplina, com a turma e o professor em cada aula.
+- Grade em PDF: fica na tela Imprimir Grade (assunto "imprimir_grade"); o cartão daqui só leva para lá.
 - Relatório de Reservas: por professor, num período, com confirmadas, pendentes e canceladas — PDF ou Excel.
 - Relatório de Carga Horária: PDF por professor com total de aulas, HA institucional e turmas/disciplinas por período (é o resumo, não a grade dia a dia).
 - Carga Horária Cumprida × Exigida: PDF por turma com o cumprido no ano x o total exigido, para ver antes se alguma disciplina vai fechar o ano devendo aula.
