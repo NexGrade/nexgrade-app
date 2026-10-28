@@ -7,7 +7,7 @@ import { NotificationBell } from "@/components/notification-bell";
 import {
   LayoutDashboard, Users, BookOpen, GraduationCap, Calendar, CalendarDays,
   Building2, FileText, Bell, Shield, History,
-  Settings, Download, Sparkles, Upload, CreditCard, Library, ShieldCheck, Clock,
+  Settings, Download, Printer, Sparkles, Upload, CreditCard, Library, ShieldCheck, Clock,
   SlidersHorizontal, Landmark, DoorOpen, Hash, CalendarClock,
   FileUp, // [ARQUIVO-RCO]
 } from "lucide-react";
@@ -59,6 +59,7 @@ const navGroups = [
   {
     label: "Relatórios e RCO",
     items: [
+      { href: "/imprimir-grade", label: "Imprimir Grade", icon: Printer }, // [IMPRIMIR-GRADE]
       { href: "/export", label: "Exportar Dados", icon: Download },
       { href: "/codigos-rco", label: "Códigos do RCO", icon: Hash }, // [CODIGOS-RCO-TELA]
       { href: "/arquivo-rco", label: "Arquivo do RCO", icon: FileUp }, // [ARQUIVO-RCO]

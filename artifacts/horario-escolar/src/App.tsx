@@ -45,6 +45,7 @@ const DadosEscolaPage = lazy(() => import("@/pages/dados-escola/index"));
 const AssinaturaPage = lazy(() => import("@/pages/assinatura/index"));
 const EscolaPage = lazy(() => import("@/pages/escola/index")); // [FASE-C1]
 const ExportPage = lazy(() => import("@/pages/export/index"));
+const ImprimirGradePage = lazy(() => import("@/pages/imprimir-grade/index")); // [IMPRIMIR-GRADE]
 const CodigosRcoPage = lazy(() => import("@/pages/codigos-rco/index")); // [CODIGOS-RCO-TELA]
 const ArquivoRcoPage = lazy(() => import("@/pages/arquivo-rco/index")); // [ARQUIVO-RCO]
 const AssistentePage = lazy(() => import("@/pages/assistente/index"));
@@ -521,6 +522,7 @@ function Router() {
         <Route path="/configuracoes"><Redirect to="/escola?tab=configuracoes" /></Route>{/* [FASE-C1] */}
       <Route path="/configuracoes/seed-pr" component={() => <ProtectedRoute component={ConformidadeSeedPrPage} />} />
       <Route path="/export" component={() => <ProtectedRoute component={ExportPage} />} />
+      <Route path="/imprimir-grade" component={() => <ProtectedRoute component={ImprimirGradePage} />} /> {/* [IMPRIMIR-GRADE] */}
       <Route path="/codigos-rco" component={() => <ProtectedRoute component={CodigosRcoPage} />} />{/* [CODIGOS-RCO-TELA] */}
       <Route path="/arquivo-rco" component={() => <ProtectedRoute component={ArquivoRcoPage} />} />{/* [ARQUIVO-RCO] */}
       <Route path="/virada-ano" component={() => <ProtectedRoute component={ViradaAnoPage} />} />{/* [VIRADA-ANO] */}

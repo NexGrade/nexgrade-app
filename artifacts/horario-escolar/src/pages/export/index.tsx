@@ -77,7 +77,6 @@ export default function ExportPage() {
   // [FIX] valor inicial agora é o sentinel TURNO_TODOS, não "".
   // [NOVO] "semana" controla a data impressa no cabeçalho -- ver
   // comentário acima de SEMANA_ATUAL/SEMANA_PROXIMA.
-  const [pdfOpts, setPdfOpts] = useState({ visao: "turma", entidadeId: "", turno: TURNO_TODOS, semana: SEMANA_ATUAL });
   // [NOVO] Relatório de Carga Horária por Professor -- resumo (total de
   // aulas + HA institucional + turmas/disciplinas por período), não a
   // grade dia-a-dia.
@@ -306,87 +305,16 @@ export default function ExportPage() {
           </CardContent>
         </Card>
 
-        {/* Grade em PDF */}
+        {/* [IMPRIMIR-GRADE] os PDFs da grade foram para a tela propria "Imprimir Grade" */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <FileDown className="w-4 h-4" /> Grade em PDF
             </CardTitle>
-            <CardDescription>Gera um PDF pronto para impressão — visão por turma ou por professor, para conferência da equipe pedagógica antes de homologar.</CardDescription>
+            <CardDescription>Os PDFs da grade (por turma, por professor, turmas lado a lado, quadro geral, por disciplina) agora ficam na tela Imprimir Grade.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1.5">
-              <Label>Visão</Label>
-              <Select
-                value={pdfOpts.visao}
-                onValueChange={(v) => setPdfOpts((o) => ({ ...o, visao: v, entidadeId: "" }))}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="turma">Por Turma</SelectItem>
-                  <SelectItem value="professor">Por Professor</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {/* [NOVO] Filtro de turno -- evita PDFs gigantes com
-                matutino/vespertino/noturno misturados sem ordem. */}
-            <div className="space-y-1.5">
-              <Label>Turno</Label>
-              <Select value={pdfOpts.turno} onValueChange={(v) => setPdfOpts((o) => ({ ...o, turno: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {TURNOS.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            {/* [NOVO] Data impressa no cabeçalho do PDF -- não muda o
-                conteúdo da grade (que é sempre a mesma, recorrente), só
-                qual semana aparece escrita no topo. Útil quando o PDF é
-                preparado com antecedência pra semana seguinte. */}
-            <div className="space-y-1.5">
-              <Label>Semana (data no cabeçalho)</Label>
-              <Select value={pdfOpts.semana} onValueChange={(v) => setPdfOpts((o) => ({ ...o, semana: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={SEMANA_ATUAL}>Semana atual</SelectItem>
-                  <SelectItem value={SEMANA_PROXIMA}>Semana que vem</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>{pdfOpts.visao === "turma" ? "Turma (opcional)" : "Professor (opcional)"}</Label>
-              <Select value={pdfOpts.entidadeId} onValueChange={(v) => setPdfOpts((o) => ({ ...o, entidadeId: v }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder={pdfOpts.visao === "turma" ? "Todas as turmas (uma página cada)" : "Todos os professores (uma página cada)"} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">{pdfOpts.visao === "turma" ? "Todas as turmas" : "Todos os professores"}</SelectItem>
-                  {pdfOpts.visao === "turma"
-                    ? turmas
-                        .filter((t) => pdfOpts.turno === TURNO_TODOS || t.turno === pdfOpts.turno)
-                        .map((t) => <SelectItem key={t.id} value={String(t.id)}>{t.nome}</SelectItem>)
-                    : professores.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button
-              className="w-full"
-              disabled={baixando["pdf"]}
-              onClick={() => {
-                const param = pdfOpts.visao === "turma" ? "turmaId" : "professorId";
-                const turnoParaEnviar = pdfOpts.turno === TURNO_TODOS ? undefined : pdfOpts.turno;
-                const url = buildUrl(`/api/export/grade-pdf/${pdfOpts.visao}`, {
-                  [param]: pdfOpts.entidadeId || undefined,
-                  turno: turnoParaEnviar,
-                  semana: pdfOpts.semana === SEMANA_PROXIMA ? SEMANA_PROXIMA : undefined,
-                });
-                const sufixoTurno = turnoParaEnviar ? `_${turnoParaEnviar}` : "";
-                const sufixoSemana = pdfOpts.semana === SEMANA_PROXIMA ? "_proxima_semana" : "";
-                baixarArquivo(url, `grade_por_${pdfOpts.visao}${sufixoTurno}${sufixoSemana}.pdf`, "pdf");
-              }}
-            >
-              {baixando["pdf"] ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}{baixando["pdf"] ? "Gerando..." : "Baixar PDF"}
-            </Button>
+          <CardContent>
+            <Button asChild className="w-full"><Link href="/imprimir-grade"><FileDown className="w-4 h-4 mr-2" />Abrir Imprimir Grade</Link></Button>
           </CardContent>
         </Card>
 
