@@ -3,7 +3,7 @@
 // rota de PDF (BlocoGrade), so mudam o desenho:
 //   - turmasLadoALado: varias turmas por pagina (paisagem), dias em faixas, celula
 //     "Disciplina (Professor)";
-//   - professoresCompacto: 4 professores por linha (retrato), celula com a turma, HA e bloqueio;
+//   - professoresCompacto: 6 professores por linha (paisagem), celula com a turma, HA e bloqueio;
 //   - quadroProfessores: uma linha por professor (paisagem), colunas = dia x aula.
 // Funcoes puras sobre os blocos (testadas em __tests__/pdf-grade-quadros.test.ts).
 import { PDFDocument, StandardFonts, rgb, degrees, type PDFFont, type PDFPage } from "pdf-lib";
@@ -24,7 +24,6 @@ const PRETO = rgb(0.1, 0.1, 0.1);
 const AMARELO = rgb(1, 0.93, 0.6);
 const MARGEM = 24;
 const CAB = 40;
-const A4: [number, number] = [595.28, 841.89];
 const A4_PAISAGEM: [number, number] = [841.89, 595.28];
 
 type Contexto = { doc: PDFDocument; font: PDFFont; bold: PDFFont; escola: string; titulo: string; data: string };
@@ -159,19 +158,19 @@ function celulaProfessor(b: BlocoGrade, d: number, a: number): { t: string; cor:
   return { t: "", cor: null, vazio: true };
 }
 
-export async function gerarPdfProfessoresCompacto(escola: string, titulo: string, data: string, blocos: BlocoGrade[], colunas = 4): Promise<Uint8Array> {
+export async function gerarPdfProfessoresCompacto(escola: string, titulo: string, data: string, blocos: BlocoGrade[], colunas = 6): Promise<Uint8Array> {
   const c = await novoDoc(escola, titulo, data);
-  const [W, H] = A4;
+  const [W, H] = A4_PAISAGEM; // [PDF-PAISAGEM]
   const espaco = 8;
   const larg = (W - 2 * MARGEM - espaco * (colunas - 1)) / colunas;
   const colHor = 16, colDia = (larg - colHor) / 5, linhaH = 11, tituloH = 12;
   let p: PDFPage | null = null, y = 0;
-  if (!blocos.length) { novaPagina(c, A4).drawText("Nenhum dado encontrado.", { x: MARGEM, y: H - CAB - 30, size: 11, font: c.font, color: CINZA }); return c.doc.save(); }
+  if (!blocos.length) { novaPagina(c, A4_PAISAGEM).drawText("Nenhum dado encontrado.", { x: MARGEM, y: H - CAB - 30, size: 11, font: c.font, color: CINZA }); return c.doc.save(); }
   for (let i = 0; i < blocos.length; i += colunas) {
     const linha = blocos.slice(i, i + colunas);
     const aulas = aulasDosBlocos(linha);
     const altura = tituloH + linhaH * (aulas.length + 1) + 10;
-    if (!p || y - altura < MARGEM) { p = novaPagina(c, A4); y = H - CAB - 10; }
+    if (!p || y - altura < MARGEM) { p = novaPagina(c, A4_PAISAGEM); y = H - CAB - 10; }
     linha.forEach((b, k) => {
       const x0 = MARGEM + k * (larg + espaco);
       texto(p!, b.rotulo, c.bold, x0, y - tituloH, larg, tituloH, 7.5, AZUL_ESCURO);

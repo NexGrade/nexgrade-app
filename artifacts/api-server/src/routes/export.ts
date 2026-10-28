@@ -1067,7 +1067,7 @@ router.get("/grade-pdf/professor", async (req, res) => {
   const tituloProf = nomeExperimental
     ? `Prévia (Experimento "${nomeExperimental}") — Grade por Professor`
     : "Grade Horária por Professor";
-  // [PDF-MODELOS] ?modelo=compacto (4 por linha) ou ?modelo=quadro (uma linha por professor), so com turno escolhido
+  // [PDF-MODELOS] ?modelo=compacto (6 por linha) ou ?modelo=quadro (uma linha por professor), so com turno escolhido
   const modeloProf = req.query.modelo === "compacto" || req.query.modelo === "quadro" ? String(req.query.modelo) : null;
   if (modeloProf && !turnoFiltroProf) { res.status(400).json({ error: "Escolha um turno para este modelo de PDF por professor." }); return; }
   const tituloModelo = modeloProf ? `${tituloProf} — ${TURNO_ROTULO[turnoFiltroProf!] ?? turnoFiltroProf}` : tituloProf;

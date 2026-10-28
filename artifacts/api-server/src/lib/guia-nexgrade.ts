@@ -304,11 +304,11 @@ Depois de importar professores, marque as disciplinas de cada um em Professores;
   imprimir_grade: {
     titulo: "Imprimir Grade (PDFs da grade)",
     palavras: ["imprimir", "imprimir grade", "pdf", "grade em pdf", "quadro geral", "lado a lado", "compacto", "por disciplina", "mural", "sala dos professores"],
-    texto: `Menu Relatórios e RCO → Imprimir Grade. Escolha no topo o Turno e a Semana (a data que sai no cabeçalho) e clique em "Baixar PDF" no modelo que quiser. Todos usam a grade oficial.
+    texto: `Menu Relatórios e RCO → Imprimir Grade. Escolha no topo o Turno e a Semana (a data que sai no cabeçalho) e clique em "Baixar PDF" no modelo que quiser. Todos usam a grade oficial e saem em folha deitada (paisagem); nos modelos de um por quadro, saem 2 quadros por linha.
 - Por turma: uma turma por quadro (sigla da disciplina e professor). Aceita "Todos os turnos" e filtro de uma turma.
 - Turmas lado a lado: 5 turmas por página, em paisagem, cada aula com o nome da disciplina e o professor.
 - Por professor: um professor por quadro, com turma, disciplina, HA (amarelo), HA* (contraturno ou aulas de outro turno) e horários bloqueados. Aceita "Todos os turnos" e filtro de um professor.
-- Professores compacto: 4 professores por linha, com a turma em cada aula.
+- Professores compacto: 6 professores por linha, com a turma em cada aula.
 - Quadro geral de professores: uma linha por professor e os dias com as aulas nas colunas, em paisagem (para afixar na sala dos professores).
 - Por disciplina: um quadro por disciplina, com a turma e o professor em cada aula.
 - Os modelos novos (lado a lado, compacto, quadro geral e por disciplina) pedem um turno. Turno Integral: use os modelos por turma; no PDF por professor, a aula da turma integral sai na manhã/tarde dele.`,
