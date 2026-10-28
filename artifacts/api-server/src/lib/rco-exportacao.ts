@@ -78,3 +78,15 @@ export function resumirExportacaoRco(e: ExportacaoRco): ResumoExportacaoRco {
     cursos: new Set(e.turmas.map((t) => t.curso).filter(Boolean)).size,
   };
 }
+
+/** [RCO-GRADE-DO-ARQUIVO] (27/10/2026) Matriz de cada turma do arquivo do RCO: codigo SERE -> Codigos
+ *  Externos das disciplinas (sem repetir). Usada na exportacao para separar FGB x IF de escola que
+ *  nao esta na lista fixa (GRADES_SEED_RCO), como o Heraclito. */
+export function disciplinasPorTurma(e: ExportacaoRco): Record<string, number[]> {
+  const out: Record<string, number[]> = {};
+  for (const g of e.grades) {
+    const lista = (out[String(g.codTurma)] ??= []);
+    if (!lista.includes(g.codDisciplina)) lista.push(g.codDisciplina);
+  }
+  return out;
+}
