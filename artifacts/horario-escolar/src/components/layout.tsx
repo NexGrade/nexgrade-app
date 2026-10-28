@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react"; // [MENU-CELULAR]
 import { Link, useLocation } from "wouter";
 import { UserButton } from "@clerk/react";
 import { useEhGestorReservas, useEhPedagogia } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA] [PEDAGOGIA]
@@ -11,6 +12,7 @@ import {
   SlidersHorizontal, Landmark, DoorOpen, Hash, CalendarClock,
   FileUp, // [ARQUIVO-RCO]
   NotebookPen, BarChart3, // [MENU-UNICO]
+  Menu, X, ClipboardCheck, MapPin, // [MENU-CELULAR] [PRESENCA-PEDAGOGIA]
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSituacaoArquivoRco } from "@/lib/arquivo-rco"; // [ARQUIVO-RCO]
@@ -52,6 +54,8 @@ const navGroups = [
   {
     label: "Dia a dia",
     items: [
+      { href: "/presenca", label: "Presença dos professores", icon: ClipboardCheck }, // [PRESENCA-PEDAGOGIA]
+      { href: "/onde-esta", label: "Onde está agora", icon: MapPin }, // [PRESENCA-PEDAGOGIA]
       { href: "/reservas", label: "Reservas", icon: DoorOpen },
       { href: "/licencas", label: "Licenças", icon: FileText },
       { href: "/comunicados", label: "Comunicados", icon: Bell },
@@ -91,6 +95,8 @@ const menuPedagogia = [
   {
     label: "Pedagogia",
     items: [
+      { href: "/presenca", label: "Presença dos professores", icon: ClipboardCheck }, // [PRESENCA-PEDAGOGIA]
+      { href: "/onde-esta", label: "Onde está agora", icon: MapPin }, // [PRESENCA-PEDAGOGIA]
       { href: "/relatorios-pedagogicos", label: "Relatórios Pedagógicos", icon: NotebookPen },
       { href: "/imprimir-grade", label: "Imprimir Grade", icon: Printer },
     ],
@@ -158,6 +164,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { data: situacaoArquivoRco } = useSituacaoArquivoRco(!ehGestorMenu && !ehPedagogiaMenu);
   const seloDoItem = (href: string, badge?: string) => (href === "/arquivo-rco" && situacaoArquivoRco?.solicitado ? "Pedido" : badge);
 
+  // [MENU-CELULAR] menu do celular: fecha ao trocar de tela
+  const [menuAberto, setMenuAberto] = useState(false);
+  useEffect(() => { setMenuAberto(false); }, [location]);
+  const tituloAtual = grupos.flatMap((g) => g.items).find((i) => location === i.href || (i.href !== "/dashboard" && location.startsWith(i.href)))?.label ?? "NexGrade";
+
   const isActive = (href: string) =>
     location === href || (href !== "/dashboard" && location.startsWith(href));
 
@@ -170,7 +181,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     // faz este bloco preencher exatamente o espaco restante que o
     // container pai (flex-1) calculou para ele.
     <div className="h-full flex w-full bg-background overflow-hidden">
-      <aside className="w-64 border-r border-border bg-card flex flex-col">
+      {/* [MENU-CELULAR] (28/10/2026) no computador o menu fica ao lado; no celular abre pelo botao do topo */}
+      <aside className="hidden md:flex w-64 border-r border-border bg-card flex-col">
         <nav className="flex-1 py-4 px-3 pb-6 space-y-5 overflow-y-auto">
           {grupos.map((group) => (
             <div key={group.label}>
@@ -225,8 +237,76 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </nav>
       </aside>
+      {menuAberto && (
+        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMenuAberto(false)} />
+          <aside className="absolute left-0 top-0 bottom-0 w-72 max-w-[85vw] bg-card border-r border-border flex flex-col shadow-xl">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <span className="font-semibold text-sm">Menu</span>
+              <button type="button" className="p-2 -mr-2 rounded-md hover:bg-accent" onClick={() => setMenuAberto(false)} aria-label="Fechar menu"><X className="w-5 h-5" /></button>
+            </div>
+        <nav className="flex-1 py-4 px-3 pb-6 space-y-5 overflow-y-auto">
+          {grupos.map((group) => (
+            <div key={group.label}>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-3 mb-1">
+                {group.label}
+              </p>
+              <div className="space-y-0.5">
+                {group.items.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                      isActive(item.href)
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                    )}
+                  >
+                    <item.icon className="w-4 h-4 shrink-0" />
+                    <span className="flex-1">{item.label}</span>
+                    {seloDoItem(item.href, "badge" in item ? (item.badge as string | undefined) : undefined) && (
+                      <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none",
+                        item.href === "/arquivo-rco" ? "bg-amber-100 text-amber-800" : "bg-[#42A5F5]/15 text-[#1565C0]")}>
+                        {seloDoItem(item.href, "badge" in item ? (item.badge as string | undefined) : undefined)}
+                      </span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
+          <div className="pt-4 mt-2 border-t border-border space-y-1">
+            <div className="flex items-center gap-3 px-3 py-1 rounded-md text-sm font-medium text-muted-foreground">
+              <NotificationBellAdmin />
+              <span className="flex-1 whitespace-nowrap">Notificações</span>
+            </div>
+            <div className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground">
+              <span className="w-6 h-6 shrink-0 flex items-center justify-center">
+                <UserButton
+                  appearance={{
+                    elements: {
+                      rootBox: "w-6 h-6",
+                      userButtonBox: "w-6 h-6",
+                      userButtonTrigger: "w-6 h-6",
+                      userButtonAvatarBox: "w-6 h-6",
+                    },
+                  }}
+                />
+              </span>
+              <span className="flex-1 whitespace-nowrap">Minha conta</span>
+            </div>
+          </div>
+        </nav>
+          </aside>
+        </div>
+      )}
       <main className="flex-1 flex flex-col min-w-0">
-        <div className="flex-1 overflow-auto p-8">
+        <div className="md:hidden flex items-center gap-2 px-3 py-2 border-b border-border bg-card">
+          <button type="button" className="p-2 rounded-md hover:bg-accent" onClick={() => setMenuAberto(true)} aria-label="Abrir menu"><Menu className="w-5 h-5" /></button>
+          <span className="text-sm font-medium truncate">{tituloAtual}</span>
+        </div>
+        <div className="flex-1 overflow-auto p-4 md:p-8">
           <div className="max-w-6xl mx-auto">
             {children}
           </div>

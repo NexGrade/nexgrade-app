@@ -291,6 +291,21 @@ QUEM FAZ O QUÊ
 - Para apagar, use o botão de remover (pede confirmação).`,
   },
 
+  presenca_professores: { // [PRESENCA-PEDAGOGIA]
+    titulo: "Presença dos professores e Onde está agora",
+    palavras: ["presença", "presenca", "falta do professor", "faltou", "atraso", "substituição", "substituto", "lista de presença", "chamada dos professores", "onde está", "em que sala", "sala do professor", "pedagogia", "pedagogo", "faltas do mês"],
+    texto: `Menu Dia a dia (ou Pedagogia) → Presença dos professores. Funciona também no celular (o menu abre pelo botão ☰ no topo).
+1. Escolha o Dia e o turno (Manhã, Tarde ou Noite). Aparecem as aulas da grade oficial daquele dia, um cartão por professor, com horário, turma e sala.
+2. Em cada aula toque em P (presente), F (falta), A (atraso) ou S (substituído). Tocar de novo desmarca. Em S, escolha quem deu a aula (ou "Outra pessoa" e digite o nome). O balão abre a Observação (ex.: atestado).
+3. "Restantes = Presente" marca como presente todas as aulas que ainda estão em branco.
+4. Clique em Salvar (barra embaixo). Dá para voltar e corrigir depois, a qualquer momento.
+- PDF e Excel do dia: botões no topo da lista (salve antes) ou em Relatórios Pedagógicos → Presença do dia.
+- Faltas do mês por professor (PDF ou Excel): Relatórios Pedagógicos → Faltas do mês. Mostra presenças, faltas, atrasos, aulas substituídas e quantas aulas cada um deu no lugar de outro, e a lista das ocorrências.
+- Onde está agora: em que turma e sala cada professor está neste momento (a reserva de sala vale mais que a sala da grade) e a próxima aula de quem está livre. Atualiza sozinha a cada minuto.
+- Quem usa: direção, coordenação, secretaria e o cargo Pedagogia. O professor não vê essas telas.
+- Aulas assíncronas não entram na lista (não são presenciais).`,
+  },
+
   importar: {
     titulo: "Importar planilhas (CSV)",
     palavras: ["importar", "csv", "planilha", "excel", "carga em lote", "subir dados"],
@@ -380,7 +395,7 @@ COMO GRAVAR
 Cargos:
 - Direção, Coordenação e Secretaria: acesso total (a secretaria costuma montar e gerar a grade).
 - Gestor de reservas: só a agenda de reservas (sem regras por professor; vê a grade e o calendário só para consulta).
-- Pedagogia: sem o menu completo. Abre Relatórios Pedagógicos (ponto do dia, controle de ponto, carga horária, listas de professores e disciplinas), Imprimir Grade, Licenças e Comunicados (pode alterar), e consulta o Horário, o Calendário e as Reservas (em que sala cada professor está). Não altera a grade, o cadastro, as reservas, os usuários nem o RCO.
+- Pedagogia: sem o menu completo. Abre direto a Presença dos professores (marca e salva a lista do dia) e Onde está agora; também Relatórios Pedagógicos (ponto do dia, controle de ponto, carga horária, listas de professores e disciplinas), Imprimir Grade, Licenças e Comunicados (pode alterar), e consulta o Horário, o Calendário e as Reservas (em que sala cada professor está). Não altera a grade, o cadastro, as reservas, os usuários nem o RCO.
 - Professor NÃO é cadastrado aqui: o acesso dele vem do e-mail em Professores (cargo Professor, só a Minha Agenda). Quem é da equipe e também professor fica com o cargo da equipe.
 - Para mudar o cargo, troque na lista (pede confirmação). Para tirar o acesso, use a lixeira (vale em até 1 minuto). Ninguém remove o próprio acesso, e a escola sempre fica com pelo menos uma pessoa de acesso total.
 - Acesso "Nexus Core (suporte)": aparece quando o suporte da Nexus Core foi liberado para ajudar a escola; a escola pode remover quando quiser. Tudo o que o suporte fizer fica no Histórico.`,

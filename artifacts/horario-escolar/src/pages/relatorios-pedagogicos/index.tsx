@@ -11,7 +11,9 @@ import { CardPontoDiario } from "@/components/ponto-diario"; // [PONTO-DIARIO]
 import { useBaixarArquivo, montarUrl, SEMANA_ATUAL, SEMANA_PROXIMA } from "@/hooks/use-baixar-arquivo";
 import { ListasPedagogicas } from "@/components/listas-pedagogicas"; // [PEDAGOGIA]
 import { Link } from "wouter";
-import { Printer } from "lucide-react";
+import { Printer, ClipboardCheck, FileSpreadsheet } from "lucide-react";
+import { TURNOS, hojeLocal, turnoAgora, buscarPresenca, buscarMes, excelDoDia, excelDoMes, mensagemErro } from "@/lib/presenca"; // [PRESENCA-PEDAGOGIA]
+import { useToast } from "@/hooks/use-toast";
 
 const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
@@ -26,6 +28,25 @@ export default function RelatoriosPedagogicosPage() {
   const [cargaOpts, setCargaOpts] = useState({ professorId: "", semana: SEMANA_ATUAL });
   const [anoCumprida, setAnoCumprida] = useState(String(new Date().getFullYear()));
   const anos = [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1];
+  // [PRESENCA-PEDAGOGIA] relatorios da lista de presenca
+  const { toast } = useToast();
+  const [presDia, setPresDia] = useState({ data: hojeLocal(), turno: turnoAgora() });
+  const [presMes, setPresMes] = useState({ mes: String(new Date().getMonth() + 1), ano: String(new Date().getFullYear()) });
+  const [gerandoExcel, setGerandoExcel] = useState<string | null>(null);
+  const excel = async (qual: "dia" | "mes") => {
+    setGerandoExcel(qual);
+    try {
+      if (qual === "dia") excelDoDia(await buscarPresenca(presDia.data, presDia.turno));
+      else excelDoMes(await buscarMes(presMes.mes, presMes.ano));
+    } catch (e) {
+      toast({ title: "Não foi possível gerar a planilha", description: mensagemErro(e), variant: "destructive" });
+    } finally { setGerandoExcel(null); }
+  };
+  const BotaoExcel = ({ qual }: { qual: "dia" | "mes" }) => (
+    <Button variant="outline" className="w-full" disabled={gerandoExcel === qual} onClick={() => excel(qual)}>
+      {gerandoExcel === qual ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}Excel
+    </Button>
+  );
 
   const Botao = ({ chave, texto, onClick }: { chave: string; texto: string; onClick: () => void }) => (
     <Button className="w-full" disabled={baixando[chave]} onClick={onClick}>
@@ -38,10 +59,69 @@ export default function RelatoriosPedagogicosPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2"><NotebookPen className="w-6 h-6" /> Relatórios Pedagógicos</h1>
-        <p className="text-muted-foreground text-sm">Ponto dos professores, carga horária e listas de professores e disciplinas.</p>
+        <p className="text-muted-foreground text-sm">Presença e ponto dos professores, carga horária e listas de professores e disciplinas.</p>
       </div>
 
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Ponto</h2>
+      {/* [PRESENCA-PEDAGOGIA] lista de presenca marcada online */}
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Presença dos professores</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base"><ClipboardCheck className="w-4 h-4" /> Presença do dia</CardTitle>
+            <CardDescription>A lista do dia como foi marcada (situação de cada aula, substituto e observação). Para marcar, use <Link href="/presenca" className="underline">Presença dos professores</Link>.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Dia</Label>
+                <input type="date" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm" value={presDia.data} onChange={(e) => setPresDia((o) => ({ ...o, data: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Turno</Label>
+                <Select value={presDia.turno} onValueChange={(v) => setPresDia((o) => ({ ...o, turno: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{TURNOS.map((t) => <SelectItem key={t.valor} value={t.valor}>{t.rotulo}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Botao chave="pres-dia" texto="PDF" onClick={() => baixar(montarUrl("/api/pedagogia/presenca/pdf", { data: presDia.data, turno: presDia.turno }), `presenca_${presDia.data}_${presDia.turno}.pdf`, "pres-dia")} />
+              <BotaoExcel qual="dia" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base"><ClipboardCheck className="w-4 h-4" /> Faltas do mês por professor</CardTitle>
+            <CardDescription>Total de presenças, faltas, atrasos e substituições de cada professor no mês, e a lista das ocorrências.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Mês</Label>
+                <Select value={presMes.mes} onValueChange={(v) => setPresMes((o) => ({ ...o, mes: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{MESES.map((m, i) => <SelectItem key={i + 1} value={String(i + 1)}>{m}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Ano</Label>
+                <Select value={presMes.ano} onValueChange={(v) => setPresMes((o) => ({ ...o, ano: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{anos.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Botao chave="pres-mes" texto="PDF" onClick={() => baixar(montarUrl("/api/pedagogia/presenca/mes", { mes: presMes.mes, ano: presMes.ano, formato: "pdf" }), `faltas_professores_${presMes.mes}_${presMes.ano}.pdf`, "pres-mes")} />
+              <BotaoExcel qual="mes" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Ponto (folha para assinar)</h2>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CardPontoDiario />
 
