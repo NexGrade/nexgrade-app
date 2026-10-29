@@ -1,0 +1,7162 @@
+{
+ "escola": "C.E. Heráclito Fontoura Sobral Pinto",
+ "fonte": "Relatório de Turmas (Geral) do sistema anterior, manhã e tarde (PDFs de 26/10/2026)",
+ "dias": "0=Seg..4=Sex",
+ "aulas": [
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 0,
+   "aula": 1,
+   "cod": 2,
+   "prof": "José Raul",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 0,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Manoel",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 0,
+   "aula": 1,
+   "cod": 6,
+   "prof": "Paulo EF",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 0,
+   "aula": 1,
+   "cod": 4,
+   "prof": "Leonardo",
+   "disc": "História"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 0,
+   "aula": 1,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 0,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Manoel",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 0,
+   "aula": 2,
+   "cod": 4,
+   "prof": "Leonardo",
+   "disc": "História"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 0,
+   "aula": 2,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 0,
+   "aula": 2,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 0,
+   "aula": 2,
+   "cod": 6,
+   "prof": "Paulo EF",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 0,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Manoel",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 0,
+   "aula": 3,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 0,
+   "aula": 3,
+   "cod": 6039,
+   "prof": "REC 9 Mat1",
+   "disc": "MAT - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 0,
+   "aula": 3,
+   "cod": 6,
+   "prof": "Paulo EF",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 0,
+   "aula": 3,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 0,
+   "aula": 4,
+   "cod": 6254,
+   "prof": "Macir",
+   "disc": "Educação Digital - IA"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 0,
+   "aula": 4,
+   "cod": 4,
+   "prof": "Leonardo",
+   "disc": "História"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 0,
+   "aula": 4,
+   "cod": 3798,
+   "prof": "Danielly",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 0,
+   "aula": 4,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 0,
+   "aula": 4,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 0,
+   "aula": 5,
+   "cod": 2,
+   "prof": "José Raul",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 0,
+   "aula": 5,
+   "cod": 6254,
+   "prof": "Macir",
+   "disc": "Educação Digital - IA"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 0,
+   "aula": 5,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 0,
+   "aula": 5,
+   "cod": 4,
+   "prof": "Leonardo",
+   "disc": "História"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 0,
+   "aula": 5,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 1,
+   "aula": 1,
+   "cod": 4,
+   "prof": "Leonardo",
+   "disc": "História"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 1,
+   "aula": 1,
+   "cod": 2,
+   "prof": "José Raul",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 1,
+   "aula": 1,
+   "cod": 3,
+   "prof": "Mauricio",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 1,
+   "aula": 1,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 1,
+   "aula": 1,
+   "cod": 6299,
+   "prof": "Alessandra",
+   "disc": "LP - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 1,
+   "aula": 2,
+   "cod": 5,
+   "prof": "Elaine",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 1,
+   "aula": 2,
+   "cod": 21,
+   "prof": "Rosangela",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 1,
+   "aula": 2,
+   "cod": 6,
+   "prof": "Paulo EF",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 1,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 1,
+   "aula": 2,
+   "cod": 4,
+   "prof": "Leonardo",
+   "disc": "História"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 1,
+   "aula": 3,
+   "cod": 21,
+   "prof": "Rosangela",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 1,
+   "aula": 3,
+   "cod": 2,
+   "prof": "José Raul",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 1,
+   "aula": 3,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 1,
+   "aula": 3,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 1,
+   "aula": 3,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 1,
+   "aula": 4,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 1,
+   "aula": 4,
+   "cod": 5294,
+   "prof": "Elizangela",
+   "disc": "Redação e Leitura"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 1,
+   "aula": 4,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 1,
+   "aula": 4,
+   "cod": 3,
+   "prof": "Mauricio",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 1,
+   "aula": 4,
+   "cod": 6,
+   "prof": "Paulo EF",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 1,
+   "aula": 5,
+   "cod": 4,
+   "prof": "Leonardo",
+   "disc": "História"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 1,
+   "aula": 5,
+   "cod": 3798,
+   "prof": "Danielly",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 1,
+   "aula": 5,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 1,
+   "aula": 5,
+   "cod": 6,
+   "prof": "Paulo EF",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 1,
+   "aula": 5,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 2,
+   "aula": 1,
+   "cod": 2,
+   "prof": "José Raul",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 2,
+   "aula": 1,
+   "cod": 5,
+   "prof": "Elaine",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 2,
+   "aula": 1,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 2,
+   "aula": 1,
+   "cod": 6039,
+   "prof": "REC 9 Mat2",
+   "disc": "MAT - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 2,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 2,
+   "aula": 2,
+   "cod": 4,
+   "prof": "Leonardo",
+   "disc": "História"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 2,
+   "aula": 2,
+   "cod": 2,
+   "prof": "José Raul",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 2,
+   "aula": 2,
+   "cod": 4,
+   "prof": "Angelo",
+   "disc": "História"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 2,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 2,
+   "aula": 2,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 2,
+   "aula": 3,
+   "cod": 2,
+   "prof": "José Raul",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 2,
+   "aula": 3,
+   "cod": 4,
+   "prof": "Leonardo",
+   "disc": "História"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 2,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 2,
+   "aula": 3,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 2,
+   "aula": 3,
+   "cod": 3798,
+   "prof": "Danielly",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 2,
+   "aula": 4,
+   "cod": 3798,
+   "prof": "Danielly",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 2,
+   "aula": 4,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 2,
+   "aula": 4,
+   "cod": 6039,
+   "prof": "REC 9 Mat1",
+   "disc": "MAT - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 2,
+   "aula": 4,
+   "cod": 6299,
+   "prof": "Alessandra",
+   "disc": "LP - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 2,
+   "aula": 4,
+   "cod": 4,
+   "prof": "Leonardo",
+   "disc": "História"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 2,
+   "aula": 5,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 2,
+   "aula": 5,
+   "cod": 2,
+   "prof": "José Raul",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 2,
+   "aula": 5,
+   "cod": 6299,
+   "prof": "Alessandra",
+   "disc": "LP - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 2,
+   "aula": 5,
+   "cod": 3798,
+   "prof": "Danielly",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 2,
+   "aula": 5,
+   "cod": 6039,
+   "prof": "REC 9 Mat2",
+   "disc": "MAT - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 3,
+   "aula": 1,
+   "cod": 5,
+   "prof": "Elaine",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 3,
+   "aula": 1,
+   "cod": 6254,
+   "prof": "Macir",
+   "disc": "Educação Digital - IA"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 3,
+   "aula": 1,
+   "cod": 4,
+   "prof": "Angelo",
+   "disc": "História"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 3,
+   "aula": 1,
+   "cod": 3798,
+   "prof": "Danielly",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 3,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 3,
+   "aula": 2,
+   "cod": 6254,
+   "prof": "Macir",
+   "disc": "Educação Digital - IA"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 3,
+   "aula": 2,
+   "cod": 5294,
+   "prof": "Elizangela",
+   "disc": "Redação e Leitura"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 3,
+   "aula": 2,
+   "cod": 3,
+   "prof": "Mauricio",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 3,
+   "aula": 2,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 3,
+   "aula": 2,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 3,
+   "aula": 3,
+   "cod": 5,
+   "prof": "Elaine",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 3,
+   "aula": 3,
+   "cod": 3798,
+   "prof": "Danielly",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 3,
+   "aula": 3,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 3,
+   "aula": 3,
+   "cod": 3,
+   "prof": "Mauricio",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 3,
+   "aula": 3,
+   "cod": 6299,
+   "prof": "Alessandra",
+   "disc": "LP - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 3,
+   "aula": 4,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 3,
+   "aula": 4,
+   "cod": 5,
+   "prof": "Elaine",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 3,
+   "aula": 4,
+   "cod": 3,
+   "prof": "Mauricio",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 3,
+   "aula": 4,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 3,
+   "aula": 4,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 3,
+   "aula": 5,
+   "cod": 5294,
+   "prof": "Elizangela",
+   "disc": "Redação e Leitura"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 3,
+   "aula": 5,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 3,
+   "aula": 5,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 3,
+   "aula": 5,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 3,
+   "aula": 5,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 4,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Manoel",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 4,
+   "aula": 1,
+   "cod": 21,
+   "prof": "Rosangela",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 4,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 4,
+   "aula": 1,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 4,
+   "aula": 1,
+   "cod": 6039,
+   "prof": "REC 9 Mat2",
+   "disc": "MAT - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 4,
+   "aula": 2,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 4,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Manoel",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 4,
+   "aula": 2,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 4,
+   "aula": 2,
+   "cod": 6039,
+   "prof": "REC 9 Mat2",
+   "disc": "MAT - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 4,
+   "aula": 2,
+   "cod": 3798,
+   "prof": "Danielly",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 4,
+   "aula": 3,
+   "cod": 21,
+   "prof": "Rosangela",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 4,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Manoel",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 4,
+   "aula": 3,
+   "cod": 3798,
+   "prof": "Danielly",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 4,
+   "aula": 3,
+   "cod": 6299,
+   "prof": "Alessandra",
+   "disc": "LP - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 4,
+   "aula": 3,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 4,
+   "aula": 4,
+   "cod": 5294,
+   "prof": "Elizangela",
+   "disc": "Redação e Leitura"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 4,
+   "aula": 4,
+   "cod": 5,
+   "prof": "Elaine",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 4,
+   "aula": 4,
+   "cod": 6299,
+   "prof": "Alessandra",
+   "disc": "LP - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 4,
+   "aula": 4,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 4,
+   "aula": 4,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºA",
+   "dia": 4,
+   "aula": 5,
+   "cod": 3798,
+   "prof": "Danielly",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "8ºB",
+   "dia": 4,
+   "aula": 5,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºA",
+   "dia": 4,
+   "aula": 5,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºB",
+   "dia": 4,
+   "aula": 5,
+   "cod": 3,
+   "prof": "Mauricio",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºC",
+   "dia": 4,
+   "aula": 5,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 0,
+   "aula": 1,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 0,
+   "aula": 1,
+   "cod": 3798,
+   "prof": "Danielly",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 0,
+   "aula": 1,
+   "cod": 3,
+   "prof": "Mauricio",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 0,
+   "aula": 1,
+   "cod": 11,
+   "prof": "Elaine",
+   "disc": "Biologia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 0,
+   "aula": 1,
+   "cod": 4,
+   "prof": "Angelo",
+   "disc": "História"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 0,
+   "aula": 2,
+   "cod": 3798,
+   "prof": "Danielly",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 0,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Marli",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 0,
+   "aula": 2,
+   "cod": 3482,
+   "prof": "Luciane",
+   "disc": "Educação Financeira"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 0,
+   "aula": 2,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 0,
+   "aula": 2,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 0,
+   "aula": 3,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 0,
+   "aula": 3,
+   "cod": 37,
+   "prof": "Angelo",
+   "disc": "Historia Paranaense"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 0,
+   "aula": 3,
+   "cod": 3,
+   "prof": "Mauricio",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 0,
+   "aula": 3,
+   "cod": 6254,
+   "prof": "Macir",
+   "disc": "Educação Digital - IA"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 0,
+   "aula": 3,
+   "cod": 6318,
+   "prof": "Patricia",
+   "disc": "Filosofia - ATF"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 0,
+   "aula": 4,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 0,
+   "aula": 4,
+   "cod": 1,
+   "prof": "Marli",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 0,
+   "aula": 4,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 0,
+   "aula": 4,
+   "cod": 3,
+   "prof": "Mauricio",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 0,
+   "aula": 4,
+   "cod": 27,
+   "prof": "Patricia",
+   "disc": "Filosofia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 0,
+   "aula": 5,
+   "cod": 6,
+   "prof": "Paulo EF",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 0,
+   "aula": 5,
+   "cod": 3482,
+   "prof": "Luciane",
+   "disc": "Educação Financeira"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 0,
+   "aula": 5,
+   "cod": 11,
+   "prof": "Elaine",
+   "disc": "Biologia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 0,
+   "aula": 5,
+   "cod": 6323,
+   "prof": "Luiz Fernando",
+   "disc": "Mat - Res de problemas"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 0,
+   "aula": 5,
+   "cod": 10,
+   "prof": "Paulo Enzo",
+   "disc": "Física"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 0,
+   "aula": 6,
+   "cod": 6254,
+   "prof": "Macir",
+   "disc": "Educação Digital - IA"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 0,
+   "aula": 6,
+   "cod": 3798,
+   "prof": "Danielly",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 0,
+   "aula": 6,
+   "cod": 6323,
+   "prof": "Luiz Fernando",
+   "disc": "Mat - Res de problemas"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 0,
+   "aula": 6,
+   "cod": 10,
+   "prof": "Paulo Enzo",
+   "disc": "Física"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 1,
+   "aula": 1,
+   "cod": 6,
+   "prof": "Paulo EF",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 1,
+   "aula": 1,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 1,
+   "aula": 1,
+   "cod": 2,
+   "prof": "Carla",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 1,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Marli",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 1,
+   "aula": 1,
+   "cod": 3798,
+   "prof": "Denise",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 1,
+   "aula": 2,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 1,
+   "aula": 2,
+   "cod": 2,
+   "prof": "Carla",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 1,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Marli",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 1,
+   "aula": 2,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 1,
+   "aula": 2,
+   "cod": 3798,
+   "prof": "Denise",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 1,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Elizangela",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 1,
+   "aula": 3,
+   "cod": 3,
+   "prof": "Mauricio",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 1,
+   "aula": 3,
+   "cod": 37,
+   "prof": "Angelo",
+   "disc": "Historia Paranaense"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 1,
+   "aula": 3,
+   "cod": 2,
+   "prof": "Carla",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 1,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Danielly",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 1,
+   "aula": 4,
+   "cod": 4,
+   "prof": "Leonardo",
+   "disc": "História"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 1,
+   "aula": 4,
+   "cod": 37,
+   "prof": "Angelo",
+   "disc": "Historia Paranaense"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 1,
+   "aula": 4,
+   "cod": 22,
+   "prof": "Rosangela",
+   "disc": "Arte Paranaense"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 1,
+   "aula": 4,
+   "cod": 3482,
+   "prof": "Luciane",
+   "disc": "Educação Financeira"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 1,
+   "aula": 4,
+   "cod": 1,
+   "prof": "Danielly",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 1,
+   "aula": 5,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 1,
+   "aula": 5,
+   "cod": 22,
+   "prof": "Rosangela",
+   "disc": "Arte Paranaense"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 1,
+   "aula": 5,
+   "cod": 1,
+   "prof": "Marli",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 1,
+   "aula": 5,
+   "cod": 2,
+   "prof": "Carla",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 1,
+   "aula": 5,
+   "cod": 3482,
+   "prof": "Luciane",
+   "disc": "Educação Financeira"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 1,
+   "aula": 6,
+   "cod": 36,
+   "prof": "Andreia",
+   "disc": "Geografia Paranaense"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 1,
+   "aula": 6,
+   "cod": 2,
+   "prof": "Carla",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 1,
+   "aula": 6,
+   "cod": 3798,
+   "prof": "Danielly",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 1,
+   "aula": 6,
+   "cod": 3482,
+   "prof": "Luciane",
+   "disc": "Educação Financeira"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 2,
+   "aula": 1,
+   "cod": 4,
+   "prof": "Leonardo",
+   "disc": "História"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 2,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Marli",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 2,
+   "aula": 1,
+   "cod": 36,
+   "prof": "Melissa",
+   "disc": "Geografia Paranaense"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 2,
+   "aula": 1,
+   "cod": 6324,
+   "prof": "Caio",
+   "disc": "Quimica e tecnociencia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 2,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Danielly",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 2,
+   "aula": 2,
+   "cod": 6039,
+   "prof": "REC 9 Mat2",
+   "disc": "MAT - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 2,
+   "aula": 2,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 2,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Marli",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 2,
+   "aula": 2,
+   "cod": 6324,
+   "prof": "Caio",
+   "disc": "Quimica e tecnociencia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 2,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Danielly",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 2,
+   "aula": 3,
+   "cod": 6039,
+   "prof": "REC 9 Mat2",
+   "disc": "MAT - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 2,
+   "aula": 3,
+   "cod": 11,
+   "prof": "Elaine",
+   "disc": "Biologia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 2,
+   "aula": 3,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 2,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Marli",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 2,
+   "aula": 3,
+   "cod": 4,
+   "prof": "Angelo",
+   "disc": "História"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 2,
+   "aula": 4,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 2,
+   "aula": 4,
+   "cod": 1,
+   "prof": "Marli",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 2,
+   "aula": 4,
+   "cod": 11,
+   "prof": "Elaine",
+   "disc": "Biologia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 2,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Carla",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 2,
+   "aula": 4,
+   "cod": 2997,
+   "prof": "Robson",
+   "disc": "Literatura - PT"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 2,
+   "aula": 5,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 2,
+   "aula": 5,
+   "cod": 2,
+   "prof": "Carla",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 2,
+   "aula": 5,
+   "cod": 36,
+   "prof": "Melissa",
+   "disc": "Geografia Paranaense"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 2,
+   "aula": 5,
+   "cod": 11,
+   "prof": "Elaine",
+   "disc": "Biologia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 2,
+   "aula": 5,
+   "cod": 2997,
+   "prof": "Robson",
+   "disc": "Literatura - PT"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 2,
+   "aula": 6,
+   "cod": 3798,
+   "prof": "Danielly",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 2,
+   "aula": 6,
+   "cod": 2,
+   "prof": "Carla",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 2,
+   "aula": 6,
+   "cod": 1,
+   "prof": "Marli",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 2,
+   "aula": 6,
+   "cod": 2,
+   "prof": "Matematica",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 3,
+   "aula": 1,
+   "cod": 2,
+   "prof": "A. Marcos",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 3,
+   "aula": 1,
+   "cod": 2,
+   "prof": "Carla",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 3,
+   "aula": 1,
+   "cod": 9,
+   "prof": "André",
+   "disc": "Química"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 3,
+   "aula": 1,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 3,
+   "aula": 1,
+   "cod": 29,
+   "prof": "Julio",
+   "disc": "Sociologia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 3,
+   "aula": 2,
+   "cod": 3798,
+   "prof": "Danielly",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 3,
+   "aula": 2,
+   "cod": 9,
+   "prof": "André",
+   "disc": "Química"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 3,
+   "aula": 2,
+   "cod": 37,
+   "prof": "Angelo",
+   "disc": "Historia Paranaense"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 3,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Marli",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 3,
+   "aula": 2,
+   "cod": 29,
+   "prof": "Julio",
+   "disc": "Sociologia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 3,
+   "aula": 3,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 3,
+   "aula": 3,
+   "cod": 6254,
+   "prof": "Macir",
+   "disc": "Educação Digital - IA"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 3,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Marli",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 3,
+   "aula": 3,
+   "cod": 9,
+   "prof": "André",
+   "disc": "Química"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 3,
+   "aula": 3,
+   "cod": 6318,
+   "prof": "Patricia",
+   "disc": "Filosofia - ATF"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 3,
+   "aula": 4,
+   "cod": 6299,
+   "prof": "Caroline",
+   "disc": "LP - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 3,
+   "aula": 4,
+   "cod": 3482,
+   "prof": "Luciane",
+   "disc": "Educação Financeira"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 3,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Carla",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 3,
+   "aula": 4,
+   "cod": 9,
+   "prof": "André",
+   "disc": "Química"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 3,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Matematica",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 3,
+   "aula": 5,
+   "cod": 6299,
+   "prof": "Caroline",
+   "disc": "LP - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 3,
+   "aula": 5,
+   "cod": 2,
+   "prof": "Carla",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 3,
+   "aula": 5,
+   "cod": 9,
+   "prof": "André",
+   "disc": "Química"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 3,
+   "aula": 5,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 3,
+   "aula": 5,
+   "cod": 2,
+   "prof": "Matematica",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 3,
+   "aula": 6,
+   "cod": 9,
+   "prof": "André",
+   "disc": "Química"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 3,
+   "aula": 6,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 3,
+   "aula": 6,
+   "cod": 2,
+   "prof": "Carla",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 3,
+   "aula": 6,
+   "cod": 27,
+   "prof": "Patricia",
+   "disc": "Filosofia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 4,
+   "aula": 1,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 4,
+   "aula": 1,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 4,
+   "aula": 1,
+   "cod": 3798,
+   "prof": "Danielly",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 4,
+   "aula": 1,
+   "cod": 6325,
+   "prof": "Elaine",
+   "disc": "Bio - Sust. em ação"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 4,
+   "aula": 1,
+   "cod": 6319,
+   "prof": "Julio",
+   "disc": "Sociologia - GCS"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 4,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Elizangela",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 4,
+   "aula": 2,
+   "cod": 11,
+   "prof": "Elaine",
+   "disc": "Biologia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 4,
+   "aula": 2,
+   "cod": 22,
+   "prof": "Rosangela",
+   "disc": "Arte Paranaense"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 4,
+   "aula": 2,
+   "cod": 3,
+   "prof": "Mauricio",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 4,
+   "aula": 2,
+   "cod": 6,
+   "prof": "Jessica",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 4,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Elizangela",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 4,
+   "aula": 3,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 4,
+   "aula": 3,
+   "cod": 3482,
+   "prof": "Luciane",
+   "disc": "Educação Financeira"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 4,
+   "aula": 3,
+   "cod": 6325,
+   "prof": "Elaine",
+   "disc": "Bio - Sust. em ação"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 4,
+   "aula": 3,
+   "cod": 6319,
+   "prof": "Julio",
+   "disc": "Sociologia - GCS"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 4,
+   "aula": 4,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 4,
+   "aula": 4,
+   "cod": 3,
+   "prof": "Mauricio",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 4,
+   "aula": 4,
+   "cod": 6254,
+   "prof": "Macir",
+   "disc": "Educação Digital - IA"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 4,
+   "aula": 4,
+   "cod": 3798,
+   "prof": "Danielly",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 4,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Matematica",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "9ºD",
+   "dia": 4,
+   "aula": 5,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 4,
+   "aula": 5,
+   "cod": 36,
+   "prof": "Andreia",
+   "disc": "Geografia Paranaense"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 4,
+   "aula": 5,
+   "cod": 6254,
+   "prof": "Macir",
+   "disc": "Educação Digital - IA"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 4,
+   "aula": 5,
+   "cod": 3482,
+   "prof": "Luciane",
+   "disc": "Educação Financeira"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 4,
+   "aula": 5,
+   "cod": 6,
+   "prof": "Jessica",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºA",
+   "dia": 4,
+   "aula": 6,
+   "cod": 22,
+   "prof": "Rosangela",
+   "disc": "Arte Paranaense"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºB",
+   "dia": 4,
+   "aula": 6,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1ºC",
+   "dia": 4,
+   "aula": 6,
+   "cod": 6254,
+   "prof": "Macir",
+   "disc": "Educação Digital - IA"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºA",
+   "dia": 4,
+   "aula": 6,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 0,
+   "aula": 1,
+   "cod": 6322,
+   "prof": "Paulo Enzo",
+   "disc": "Fisica e Tec"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 0,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Elizena",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 0,
+   "aula": 1,
+   "cod": 2,
+   "prof": "Eduardo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 0,
+   "aula": 1,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 0,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Elizangela",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 0,
+   "aula": 2,
+   "cod": 6322,
+   "prof": "Paulo Enzo",
+   "disc": "Fisica e Tec"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 0,
+   "aula": 2,
+   "cod": 3780,
+   "prof": "Angelo",
+   "disc": "Projeto de Vida"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 0,
+   "aula": 2,
+   "cod": 2,
+   "prof": "Eduardo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 0,
+   "aula": 2,
+   "cod": 6085,
+   "prof": "Tania G",
+   "disc": "Informatica Empresarial"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 0,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Elizangela",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 0,
+   "aula": 3,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 0,
+   "aula": 3,
+   "cod": 10,
+   "prof": "Paulo Enzo",
+   "disc": "Física"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 0,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Elizena",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 0,
+   "aula": 3,
+   "cod": 6085,
+   "prof": "Tania G",
+   "disc": "Informatica Empresarial"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 0,
+   "aula": 3,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 0,
+   "aula": 4,
+   "cod": 3482,
+   "prof": "Luciane",
+   "disc": "Educação Financeira"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 0,
+   "aula": 4,
+   "cod": 1,
+   "prof": "Elizena",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 0,
+   "aula": 4,
+   "cod": 129,
+   "prof": "Paulo Enzo",
+   "disc": "Fís II (En. e Astronomia)"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 0,
+   "aula": 4,
+   "cod": 11,
+   "prof": "Elaine",
+   "disc": "Biologia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 0,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Eduardo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 0,
+   "aula": 5,
+   "cod": 27,
+   "prof": "Patricia",
+   "disc": "Filosofia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 0,
+   "aula": 5,
+   "cod": 1909,
+   "prof": "Annie",
+   "disc": "Arte II(MD e Pro Cria II)"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 0,
+   "aula": 5,
+   "cod": 1,
+   "prof": "Elizena",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 0,
+   "aula": 5,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 0,
+   "aula": 5,
+   "cod": 3978,
+   "prof": "Tania G",
+   "disc": "Tec. Fer de Gestão"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 0,
+   "aula": 6,
+   "cod": 1,
+   "prof": "Elizangela",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 0,
+   "aula": 6,
+   "cod": 2,
+   "prof": "Eduardo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 0,
+   "aula": 6,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 0,
+   "aula": 6,
+   "cod": 6254,
+   "prof": "Mauricio",
+   "disc": "Educação Digital - IA"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 0,
+   "aula": 6,
+   "cod": 3978,
+   "prof": "Tania G",
+   "disc": "Tec. Fer de Gestão"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 1,
+   "aula": 1,
+   "cod": 10,
+   "prof": "Paulo Enzo",
+   "disc": "Física"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 1,
+   "aula": 1,
+   "cod": 3811,
+   "prof": "Angelo",
+   "disc": "Hist I(Hist. Eco. Paraná)"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 1,
+   "aula": 1,
+   "cod": 6038,
+   "prof": "Ariane",
+   "disc": "LP - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 1,
+   "aula": 1,
+   "cod": 3798,
+   "prof": "Danielly",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 1,
+   "aula": 1,
+   "cod": 3981,
+   "prof": "Robston",
+   "disc": "Cont e Finanças"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 1,
+   "aula": 2,
+   "cod": 4,
+   "prof": "Angelo",
+   "disc": "História"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 1,
+   "aula": 2,
+   "cod": 3807,
+   "prof": "Mauricio",
+   "disc": "Geo I(Geopolítica)"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 1,
+   "aula": 2,
+   "cod": 6038,
+   "prof": "Ariane",
+   "disc": "LP - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 1,
+   "aula": 2,
+   "cod": 6090,
+   "prof": "Robston",
+   "disc": "Principios Economicos"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 1,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Elizangela",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 1,
+   "aula": 3,
+   "cod": 2595,
+   "prof": "Paulo Enzo",
+   "disc": "Robótica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 1,
+   "aula": 3,
+   "cod": 3808,
+   "prof": "Denise",
+   "disc": "Eng I(Tracking W.W.)"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 1,
+   "aula": 3,
+   "cod": 3780,
+   "prof": "Elaine",
+   "disc": "Projeto de Vida"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 1,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Marli",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 1,
+   "aula": 3,
+   "cod": 829,
+   "prof": "Robston",
+   "disc": "Adm Fin Orcamentária"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 1,
+   "aula": 4,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 1,
+   "aula": 4,
+   "cod": 6038,
+   "prof": "Ariane",
+   "disc": "LP - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 1,
+   "aula": 4,
+   "cod": 4641,
+   "prof": "Paulo Enzo",
+   "disc": "Fís III(Robótica II)"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 1,
+   "aula": 4,
+   "cod": 6301,
+   "prof": "Robston",
+   "disc": "Tecnicas Integradas"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 1,
+   "aula": 4,
+   "cod": 3979,
+   "prof": "Altair",
+   "disc": "Lid. Gestão"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 1,
+   "aula": 5,
+   "cod": 1,
+   "prof": "Elizangela",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 1,
+   "aula": 5,
+   "cod": 6038,
+   "prof": "Ariane",
+   "disc": "LP - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 1,
+   "aula": 5,
+   "cod": 136,
+   "prof": "Elaine",
+   "disc": "Bio II(Saúde e Bem Estar)"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 1,
+   "aula": 5,
+   "cod": 6503,
+   "prof": "Altair",
+   "disc": "Finanças Empresariais"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 1,
+   "aula": 5,
+   "cod": 4043,
+   "prof": "Robston",
+   "disc": "Negociação e vendas"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 1,
+   "aula": 6,
+   "cod": 1,
+   "prof": "Elizangela",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 1,
+   "aula": 6,
+   "cod": 3807,
+   "prof": "Mauricio",
+   "disc": "Geo I(Geopolítica)"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 1,
+   "aula": 6,
+   "cod": 10,
+   "prof": "Paulo Enzo",
+   "disc": "Física"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 1,
+   "aula": 6,
+   "cod": 6088,
+   "prof": "Robston",
+   "disc": "Estrategias de Marketing"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 1,
+   "aula": 6,
+   "cod": 3979,
+   "prof": "Altair",
+   "disc": "Lid. Gestão"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 2,
+   "aula": 1,
+   "cod": 4,
+   "prof": "Angelo",
+   "disc": "História"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 2,
+   "aula": 1,
+   "cod": 6039,
+   "prof": "Matematica",
+   "disc": "MAT - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 2,
+   "aula": 1,
+   "cod": 81,
+   "prof": "Jenifer",
+   "disc": "Matematica II"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 2,
+   "aula": 1,
+   "cod": 2,
+   "prof": "Eduardo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 2,
+   "aula": 1,
+   "cod": 859,
+   "prof": "Altair",
+   "disc": "Recursos Humanos"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 2,
+   "aula": 2,
+   "cod": 2,
+   "prof": "Matematica",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 2,
+   "aula": 2,
+   "cod": 2,
+   "prof": "Eduardo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 2,
+   "aula": 2,
+   "cod": 81,
+   "prof": "Jenifer",
+   "disc": "Matematica II"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 2,
+   "aula": 2,
+   "cod": 3,
+   "prof": "Melissa",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 2,
+   "aula": 2,
+   "cod": 3780,
+   "prof": "Elaine",
+   "disc": "Projeto de Vida"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 2,
+   "aula": 3,
+   "cod": 2,
+   "prof": "Matematica",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 2,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Elizena",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 2,
+   "aula": 3,
+   "cod": 211,
+   "prof": "Caio",
+   "disc": "Quím I(Tec Quim em Ação)"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 2,
+   "aula": 3,
+   "cod": 3,
+   "prof": "Melissa",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 2,
+   "aula": 3,
+   "cod": 3979,
+   "prof": "Altair",
+   "disc": "Lid. Gestão"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 2,
+   "aula": 4,
+   "cod": 5096,
+   "prof": "Jenifer",
+   "disc": "Programação"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 2,
+   "aula": 4,
+   "cod": 1,
+   "prof": "Elizena",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 2,
+   "aula": 4,
+   "cod": 211,
+   "prof": "Caio",
+   "disc": "Quím I(Tec Quim em Ação)"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 2,
+   "aula": 4,
+   "cod": 2500,
+   "prof": "Altair",
+   "disc": "Principios de ADM"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 2,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Eduardo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 2,
+   "aula": 5,
+   "cod": 5096,
+   "prof": "Jenifer",
+   "disc": "Programação"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 2,
+   "aula": 5,
+   "cod": 6,
+   "prof": "Fabio",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 2,
+   "aula": 5,
+   "cod": 1,
+   "prof": "Elizena",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 2,
+   "aula": 5,
+   "cod": 9,
+   "prof": "Caio",
+   "disc": "Química"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 2,
+   "aula": 5,
+   "cod": 789,
+   "prof": "Altair",
+   "disc": "Noção de Direito"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 2,
+   "aula": 6,
+   "cod": 3482,
+   "prof": "Luciane",
+   "disc": "Educação Financeira"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 2,
+   "aula": 6,
+   "cod": 6,
+   "prof": "Fabio",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 2,
+   "aula": 6,
+   "cod": 1,
+   "prof": "Elizena",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 2,
+   "aula": 6,
+   "cod": 9,
+   "prof": "Caio",
+   "disc": "Química"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 2,
+   "aula": 6,
+   "cod": 789,
+   "prof": "Altair",
+   "disc": "Noção de Direito"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 3,
+   "aula": 1,
+   "cod": 2595,
+   "prof": "Paulo Enzo",
+   "disc": "Robótica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 3,
+   "aula": 1,
+   "cod": 3808,
+   "prof": "Denise",
+   "disc": "Eng I(Tracking W.W.)"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 3,
+   "aula": 1,
+   "cod": 3482,
+   "prof": "Luciane",
+   "disc": "Educação Financeira"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 3,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Marli",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 3,
+   "aula": 1,
+   "cod": 4043,
+   "prof": "Robston",
+   "disc": "Negociação e vendas"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 3,
+   "aula": 2,
+   "cod": 27,
+   "prof": "Patricia",
+   "disc": "Filosofia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 3,
+   "aula": 2,
+   "cod": 3808,
+   "prof": "Denise",
+   "disc": "Eng I(Tracking W.W.)"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 3,
+   "aula": 2,
+   "cod": 2,
+   "prof": "Eduardo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 3,
+   "aula": 2,
+   "cod": 11,
+   "prof": "Elaine",
+   "disc": "Biologia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 3,
+   "aula": 2,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 3,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Elizangela",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 3,
+   "aula": 3,
+   "cod": 3811,
+   "prof": "Angelo",
+   "disc": "Hist I(Hist. Eco. Paraná)"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 3,
+   "aula": 3,
+   "cod": 4641,
+   "prof": "Paulo Enzo",
+   "disc": "Fís III(Robótica II)"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 3,
+   "aula": 3,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 3,
+   "aula": 3,
+   "cod": 2,
+   "prof": "Eduardo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 3,
+   "aula": 4,
+   "cod": 10,
+   "prof": "Paulo Enzo",
+   "disc": "Física"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 3,
+   "aula": 4,
+   "cod": 1909,
+   "prof": "Annie",
+   "disc": "Arte II(MD e Pro Cria II)"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 3,
+   "aula": 4,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 3,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Eduardo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 3,
+   "aula": 4,
+   "cod": 1,
+   "prof": "Elizangela",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 3,
+   "aula": 5,
+   "cod": 3798,
+   "prof": "Denise",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 3,
+   "aula": 5,
+   "cod": 10,
+   "prof": "Paulo Enzo",
+   "disc": "Física"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 3,
+   "aula": 5,
+   "cod": 136,
+   "prof": "Elaine",
+   "disc": "Bio II(Saúde e Bem Estar)"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 3,
+   "aula": 5,
+   "cod": 2,
+   "prof": "Eduardo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 3,
+   "aula": 5,
+   "cod": 3482,
+   "prof": "Julio",
+   "disc": "Educação Financeira"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 3,
+   "aula": 6,
+   "cod": 3798,
+   "prof": "Denise",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 3,
+   "aula": 6,
+   "cod": 3482,
+   "prof": "Luciane",
+   "disc": "Educação Financeira"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 3,
+   "aula": 6,
+   "cod": 129,
+   "prof": "Paulo Enzo",
+   "disc": "Fís II (En. e Astronomia)"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 3,
+   "aula": 6,
+   "cod": 3798,
+   "prof": "Danielly",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 3,
+   "aula": 6,
+   "cod": 2,
+   "prof": "Eduardo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 4,
+   "aula": 1,
+   "cod": 6,
+   "prof": "Jessica",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 4,
+   "aula": 1,
+   "cod": 2,
+   "prof": "Eduardo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 4,
+   "aula": 1,
+   "cod": 6039,
+   "prof": "Matematica",
+   "disc": "MAT - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 4,
+   "aula": 1,
+   "cod": 6503,
+   "prof": "Altair",
+   "disc": "Finanças Empresariais"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 4,
+   "aula": 1,
+   "cod": 829,
+   "prof": "Robston",
+   "disc": "Adm Fin Orcamentária"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 4,
+   "aula": 2,
+   "cod": 29,
+   "prof": "Julio",
+   "disc": "Sociologia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 4,
+   "aula": 2,
+   "cod": 2,
+   "prof": "Eduardo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 4,
+   "aula": 2,
+   "cod": 6039,
+   "prof": "Matematica",
+   "disc": "MAT - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 4,
+   "aula": 2,
+   "cod": 6088,
+   "prof": "Robston",
+   "disc": "Estrategias de Marketing"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 4,
+   "aula": 2,
+   "cod": 3979,
+   "prof": "Altair",
+   "disc": "Lid. Gestão"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 4,
+   "aula": 3,
+   "cod": 6,
+   "prof": "Jessica",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 4,
+   "aula": 3,
+   "cod": 6039,
+   "prof": "Matematica",
+   "disc": "MAT - Recomposição"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 4,
+   "aula": 3,
+   "cod": 2,
+   "prof": "Eduardo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 4,
+   "aula": 3,
+   "cod": 2500,
+   "prof": "Altair",
+   "disc": "Principios de ADM"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 4,
+   "aula": 3,
+   "cod": 3981,
+   "prof": "Robston",
+   "disc": "Cont e Finanças"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 4,
+   "aula": 4,
+   "cod": 29,
+   "prof": "Julio",
+   "disc": "Sociologia"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 4,
+   "aula": 4,
+   "cod": 3482,
+   "prof": "Luciane",
+   "disc": "Educação Financeira"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 4,
+   "aula": 4,
+   "cod": 10,
+   "prof": "Paulo Enzo",
+   "disc": "Física"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 4,
+   "aula": 4,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Fisica"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 4,
+   "aula": 4,
+   "cod": 859,
+   "prof": "Altair",
+   "disc": "Recursos Humanos"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 4,
+   "aula": 5,
+   "cod": 2,
+   "prof": "Matematica",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 4,
+   "aula": 5,
+   "cod": 4052,
+   "prof": "Julio",
+   "disc": "Soc I(Gov e Cidadania)"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 4,
+   "aula": 5,
+   "cod": 136,
+   "prof": "Elaine",
+   "disc": "Bio II(Saúde e Bem Estar)"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 4,
+   "aula": 5,
+   "cod": 859,
+   "prof": "Altair",
+   "disc": "Recursos Humanos"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 4,
+   "aula": 5,
+   "cod": 10,
+   "prof": "Paulo Enzo",
+   "disc": "Física"
+  },
+  {
+   "turno": "matutino",
+   "turma": "2ºB",
+   "dia": 4,
+   "aula": 6,
+   "cod": 2,
+   "prof": "Matematica",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºA",
+   "dia": 4,
+   "aula": 6,
+   "cod": 4052,
+   "prof": "Julio",
+   "disc": "Soc I(Gov e Cidadania)"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3ºB",
+   "dia": 4,
+   "aula": 6,
+   "cod": 3482,
+   "prof": "Luciane",
+   "disc": "Educação Financeira"
+  },
+  {
+   "turno": "matutino",
+   "turma": "1º Tec",
+   "dia": 4,
+   "aula": 6,
+   "cod": 859,
+   "prof": "Altair",
+   "disc": "Recursos Humanos"
+  },
+  {
+   "turno": "matutino",
+   "turma": "3º Tec",
+   "dia": 4,
+   "aula": 6,
+   "cod": 10,
+   "prof": "Paulo Enzo",
+   "disc": "Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 0,
+   "aula": 1,
+   "cod": 4,
+   "prof": "Leonardo",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 0,
+   "aula": 1,
+   "cod": 2,
+   "prof": "Jenifer B",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 0,
+   "aula": 1,
+   "cod": 6,
+   "prof": "Gisele",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 0,
+   "aula": 1,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 0,
+   "aula": 1,
+   "cod": 3798,
+   "prof": "Elisangela",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 0,
+   "aula": 1,
+   "cod": 2,
+   "prof": "Luiz F.",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 0,
+   "aula": 1,
+   "cod": 33,
+   "prof": "Angelo",
+   "disc": "Ensino Religioso"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 0,
+   "aula": 2,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 0,
+   "aula": 2,
+   "cod": 4,
+   "prof": "Leonardo",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 0,
+   "aula": 2,
+   "cod": 33,
+   "prof": "Angelo",
+   "disc": "Ensino Religioso"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 0,
+   "aula": 2,
+   "cod": 6,
+   "prof": "Gisele",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 0,
+   "aula": 2,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 0,
+   "aula": 2,
+   "cod": 2,
+   "prof": "Luiz F.",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 0,
+   "aula": 2,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 0,
+   "aula": 3,
+   "cod": 2,
+   "prof": "Jenifer B",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 0,
+   "aula": 3,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 0,
+   "aula": 3,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 0,
+   "aula": 3,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 0,
+   "aula": 3,
+   "cod": 3798,
+   "prof": "Elisangela",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 0,
+   "aula": 3,
+   "cod": 6,
+   "prof": "Gisele",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 0,
+   "aula": 3,
+   "cod": 2,
+   "prof": "Luiz F.",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 0,
+   "aula": 4,
+   "cod": 4,
+   "prof": "Leonardo",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 0,
+   "aula": 4,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 0,
+   "aula": 4,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 0,
+   "aula": 4,
+   "cod": 33,
+   "prof": "Angelo",
+   "disc": "Ensino Religioso"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 0,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Jenifer B",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 0,
+   "aula": 4,
+   "cod": 6,
+   "prof": "Gisele",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 0,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Luiz F.",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 0,
+   "aula": 5,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 0,
+   "aula": 5,
+   "cod": 4,
+   "prof": "Leonardo",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 0,
+   "aula": 5,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 0,
+   "aula": 5,
+   "cod": 2,
+   "prof": "Jenifer B",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 0,
+   "aula": 5,
+   "cod": 6,
+   "prof": "Gisele",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 0,
+   "aula": 5,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 0,
+   "aula": 5,
+   "cod": 3798,
+   "prof": "Elisangela",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 1,
+   "aula": 1,
+   "cod": 3798,
+   "prof": "Denise",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 1,
+   "aula": 1,
+   "cod": 21,
+   "prof": "Annie",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 1,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Karem",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 1,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 1,
+   "aula": 1,
+   "cod": 2,
+   "prof": "Jenifer B",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 1,
+   "aula": 1,
+   "cod": 21,
+   "prof": "Jaqueline",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 1,
+   "aula": 1,
+   "cod": 6,
+   "prof": "Gisele",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 1,
+   "aula": 2,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 1,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Karem",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 1,
+   "aula": 2,
+   "cod": 3798,
+   "prof": "Denise",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 1,
+   "aula": 2,
+   "cod": 2,
+   "prof": "Jenifer B",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 1,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 1,
+   "aula": 2,
+   "cod": 3798,
+   "prof": "Elisangela",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 1,
+   "aula": 2,
+   "cod": 21,
+   "prof": "Jaqueline",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 1,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Karem",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 1,
+   "aula": 3,
+   "cod": 3798,
+   "prof": "Denise",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 1,
+   "aula": 3,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 1,
+   "aula": 3,
+   "cod": 2,
+   "prof": "Jenifer B",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 1,
+   "aula": 3,
+   "cod": 21,
+   "prof": "Jaqueline",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 1,
+   "aula": 3,
+   "cod": 2,
+   "prof": "Luiz F.",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 1,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 1,
+   "aula": 4,
+   "cod": 1,
+   "prof": "Karem",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 1,
+   "aula": 4,
+   "cod": 6,
+   "prof": "Gisele",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 1,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Jenifer B",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 1,
+   "aula": 4,
+   "cod": 21,
+   "prof": "Jaqueline",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 1,
+   "aula": 4,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 1,
+   "aula": 4,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 1,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Luiz F.",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 1,
+   "aula": 5,
+   "cod": 6,
+   "prof": "Gisele",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 1,
+   "aula": 5,
+   "cod": 1,
+   "prof": "Karem",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 1,
+   "aula": 5,
+   "cod": 2,
+   "prof": "Jenifer B",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 1,
+   "aula": 5,
+   "cod": 3798,
+   "prof": "Denise",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 1,
+   "aula": 5,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 1,
+   "aula": 5,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 1,
+   "aula": 5,
+   "cod": 2,
+   "prof": "Luiz F.",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 2,
+   "aula": 1,
+   "cod": 2,
+   "prof": "Jenifer B",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 2,
+   "aula": 1,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 2,
+   "aula": 1,
+   "cod": 21,
+   "prof": "Jaqueline",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 2,
+   "aula": 1,
+   "cod": 6,
+   "prof": "Gisele",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 2,
+   "aula": 1,
+   "cod": 6039,
+   "prof": "Rec Mat3",
+   "disc": "Recomposição M"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 2,
+   "aula": 1,
+   "cod": 6299,
+   "prof": "Rec PORT2",
+   "disc": "Leitura Rec Ap LP"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 2,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 2,
+   "aula": 2,
+   "cod": 2,
+   "prof": "Jenifer B",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 2,
+   "aula": 2,
+   "cod": 33,
+   "prof": "Angelo",
+   "disc": "Ensino Religioso"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 2,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Karem",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 2,
+   "aula": 2,
+   "cod": 4,
+   "prof": "Giseli",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 2,
+   "aula": 2,
+   "cod": 6,
+   "prof": "Gisele",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 2,
+   "aula": 2,
+   "cod": 6299,
+   "prof": "Rec PORT2",
+   "disc": "Leitura Rec Ap LP"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 2,
+   "aula": 2,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 2,
+   "aula": 3,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 2,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Karem",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 2,
+   "aula": 3,
+   "cod": 21,
+   "prof": "Jaqueline",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 2,
+   "aula": 3,
+   "cod": 6299,
+   "prof": "Rec PORT2",
+   "disc": "Leitura Rec Ap LP"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 2,
+   "aula": 3,
+   "cod": 33,
+   "prof": "Angelo",
+   "disc": "Ensino Religioso"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 2,
+   "aula": 3,
+   "cod": 6039,
+   "prof": "Rec Mat4",
+   "disc": "Recomposição M"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 2,
+   "aula": 3,
+   "cod": 4,
+   "prof": "Giseli",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 2,
+   "aula": 4,
+   "cod": 33,
+   "prof": "Angelo",
+   "disc": "Ensino Religioso"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 2,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Jenifer B",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 2,
+   "aula": 4,
+   "cod": 4,
+   "prof": "Giseli",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 2,
+   "aula": 4,
+   "cod": 3798,
+   "prof": "Denise",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 2,
+   "aula": 4,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 2,
+   "aula": 4,
+   "cod": 6039,
+   "prof": "Rec Mat4",
+   "disc": "Recomposição M"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 2,
+   "aula": 4,
+   "cod": 6299,
+   "prof": "Rec PORT2",
+   "disc": "Leitura Rec Ap LP"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 2,
+   "aula": 5,
+   "cod": 3798,
+   "prof": "Denise",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 2,
+   "aula": 5,
+   "cod": 2,
+   "prof": "Jenifer B",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 2,
+   "aula": 5,
+   "cod": 6,
+   "prof": "Gisele",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 2,
+   "aula": 5,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 2,
+   "aula": 5,
+   "cod": 4,
+   "prof": "Giseli",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 2,
+   "aula": 5,
+   "cod": 2,
+   "prof": "Luiz F.",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 2,
+   "aula": 5,
+   "cod": 6299,
+   "prof": "Rec PORT2",
+   "disc": "Leitura Rec Ap LP"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 3,
+   "aula": 1,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 3,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Karem",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 3,
+   "aula": 1,
+   "cod": 2,
+   "prof": "Jenifer B",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 3,
+   "aula": 1,
+   "cod": 6039,
+   "prof": "Rec Mat2",
+   "disc": "Recomposição M"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 3,
+   "aula": 1,
+   "cod": 6299,
+   "prof": "Rec PORT3",
+   "disc": "Leitura Rec Ap LP"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 3,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 3,
+   "aula": 1,
+   "cod": 21,
+   "prof": "Jaqueline",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 3,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Karem",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 3,
+   "aula": 2,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 3,
+   "aula": 2,
+   "cod": 2,
+   "prof": "Jenifer B",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 3,
+   "aula": 2,
+   "cod": 6039,
+   "prof": "Rec Mat2",
+   "disc": "Recomposição M"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 3,
+   "aula": 2,
+   "cod": 6299,
+   "prof": "Rec PORT3",
+   "disc": "Leitura Rec Ap LP"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 3,
+   "aula": 2,
+   "cod": 33,
+   "prof": "Angelo",
+   "disc": "Ensino Religioso"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 3,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 3,
+   "aula": 3,
+   "cod": 6039,
+   "prof": "Rec Mat",
+   "disc": "Recomposição M"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 3,
+   "aula": 3,
+   "cod": 2,
+   "prof": "Jenifer B",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 3,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Karem",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 3,
+   "aula": 3,
+   "cod": 6299,
+   "prof": "Rec PORT2",
+   "disc": "Leitura Rec Ap LP"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 3,
+   "aula": 3,
+   "cod": 6039,
+   "prof": "Rec Mat3",
+   "disc": "Recomposição M"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 3,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 3,
+   "aula": 3,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 3,
+   "aula": 4,
+   "cod": 1,
+   "prof": "Karem",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 3,
+   "aula": 4,
+   "cod": 6299,
+   "prof": "Rec PORT1",
+   "disc": "Leitura Rec Ap LP"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 3,
+   "aula": 4,
+   "cod": 3798,
+   "prof": "Denise",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 3,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Jenifer B",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 3,
+   "aula": 4,
+   "cod": 4,
+   "prof": "Giseli",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 3,
+   "aula": 4,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 3,
+   "aula": 4,
+   "cod": 6039,
+   "prof": "Rec Mat5",
+   "disc": "Recomposição M"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 3,
+   "aula": 5,
+   "cod": 2,
+   "prof": "Jenifer B",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 3,
+   "aula": 5,
+   "cod": 3798,
+   "prof": "Denise",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 3,
+   "aula": 5,
+   "cod": 1,
+   "prof": "Karem",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 3,
+   "aula": 5,
+   "cod": 21,
+   "prof": "Jaqueline",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 3,
+   "aula": 5,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 3,
+   "aula": 5,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 3,
+   "aula": 5,
+   "cod": 6039,
+   "prof": "Rec Mat5",
+   "disc": "Recomposição M"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 4,
+   "aula": 1,
+   "cod": 6299,
+   "prof": "Rec PORT1",
+   "disc": "Leitura Rec Ap LP"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 4,
+   "aula": 1,
+   "cod": 6,
+   "prof": "Gisele",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 4,
+   "aula": 1,
+   "cod": 6039,
+   "prof": "Rec Mat1",
+   "disc": "Recomposição M"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 4,
+   "aula": 1,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 4,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 4,
+   "aula": 1,
+   "cod": 3798,
+   "prof": "Elisangela",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 4,
+   "aula": 1,
+   "cod": 4,
+   "prof": "Giseli",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 4,
+   "aula": 2,
+   "cod": 6299,
+   "prof": "Rec PORT1",
+   "disc": "Leitura Rec Ap LP"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 4,
+   "aula": 2,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 4,
+   "aula": 2,
+   "cod": 6039,
+   "prof": "Rec Mat1",
+   "disc": "Recomposição M"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 4,
+   "aula": 2,
+   "cod": 4,
+   "prof": "Giseli",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 4,
+   "aula": 2,
+   "cod": 21,
+   "prof": "Jaqueline",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 4,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 4,
+   "aula": 2,
+   "cod": 6,
+   "prof": "Gisele",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 4,
+   "aula": 3,
+   "cod": 6,
+   "prof": "Gisele",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 4,
+   "aula": 3,
+   "cod": 6039,
+   "prof": "Rec Mat1",
+   "disc": "Recomposição M"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 4,
+   "aula": 3,
+   "cod": 6299,
+   "prof": "Rec PORT1",
+   "disc": "Leitura Rec Ap LP"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 4,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 4,
+   "aula": 3,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 4,
+   "aula": 3,
+   "cod": 4,
+   "prof": "Giseli",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 4,
+   "aula": 3,
+   "cod": 3798,
+   "prof": "Elisangela",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 4,
+   "aula": 4,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 4,
+   "aula": 4,
+   "cod": 6039,
+   "prof": "Rec Mat1",
+   "disc": "Recomposição M"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 4,
+   "aula": 4,
+   "cod": 6299,
+   "prof": "Rec PORT1",
+   "disc": "Leitura Rec Ap LP"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 4,
+   "aula": 4,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 4,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Jenifer B",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 4,
+   "aula": 4,
+   "cod": 4,
+   "prof": "Giseli",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 4,
+   "aula": 4,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºA",
+   "dia": 4,
+   "aula": 5,
+   "cod": 6039,
+   "prof": "Rec Mat",
+   "disc": "Recomposição M"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºB",
+   "dia": 4,
+   "aula": 5,
+   "cod": 6299,
+   "prof": "Rec PORT1",
+   "disc": "Leitura Rec Ap LP"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºC",
+   "dia": 4,
+   "aula": 5,
+   "cod": 4,
+   "prof": "Giseli",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºD",
+   "dia": 4,
+   "aula": 5,
+   "cod": 5,
+   "prof": "Marlon",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºE",
+   "dia": 4,
+   "aula": 5,
+   "cod": 2,
+   "prof": "Jenifer B",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºF",
+   "dia": 4,
+   "aula": 5,
+   "cod": 21,
+   "prof": "Jaqueline",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "6ºG",
+   "dia": 4,
+   "aula": 5,
+   "cod": 1,
+   "prof": "Alessandra",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 0,
+   "aula": 1,
+   "cod": 3,
+   "prof": "Andressa",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 0,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Jenifer",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 0,
+   "aula": 1,
+   "cod": 2,
+   "prof": "Claudia",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 0,
+   "aula": 1,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 0,
+   "aula": 1,
+   "cod": 2,
+   "prof": "Paulo Enzo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 0,
+   "aula": 1,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 0,
+   "aula": 1,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 0,
+   "aula": 2,
+   "cod": 5294,
+   "prof": "Vanda",
+   "disc": "Redação e Leitura"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 0,
+   "aula": 2,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 0,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Jenifer",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 0,
+   "aula": 2,
+   "cod": 3,
+   "prof": "Andressa",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 0,
+   "aula": 2,
+   "cod": 2,
+   "prof": "Paulo Enzo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 0,
+   "aula": 2,
+   "cod": 3798,
+   "prof": "Elisangela",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 0,
+   "aula": 2,
+   "cod": 3798,
+   "prof": "Rebeca",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 0,
+   "aula": 3,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 0,
+   "aula": 3,
+   "cod": 2,
+   "prof": "Claudia",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 0,
+   "aula": 3,
+   "cod": 3,
+   "prof": "Andressa",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 0,
+   "aula": 3,
+   "cod": 33,
+   "prof": "Angelo",
+   "disc": "Ensino Religioso"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 0,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Jenifer",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 0,
+   "aula": 3,
+   "cod": 2,
+   "prof": "Paulo Enzo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 0,
+   "aula": 3,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 0,
+   "aula": 4,
+   "cod": 3798,
+   "prof": "Elisangela",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 0,
+   "aula": 4,
+   "cod": 3,
+   "prof": "Andressa",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 0,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Claudia",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 0,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Paulo Enzo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 0,
+   "aula": 4,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 0,
+   "aula": 4,
+   "cod": 1,
+   "prof": "Jenifer",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 0,
+   "aula": 4,
+   "cod": 3798,
+   "prof": "Rebeca",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 0,
+   "aula": 5,
+   "cod": 1,
+   "prof": "Jenifer",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 0,
+   "aula": 5,
+   "cod": 2,
+   "prof": "Claudia",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 0,
+   "aula": 5,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 0,
+   "aula": 5,
+   "cod": 2,
+   "prof": "Paulo Enzo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 0,
+   "aula": 5,
+   "cod": 3,
+   "prof": "Andressa",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 0,
+   "aula": 5,
+   "cod": 33,
+   "prof": "Luiz F.",
+   "disc": "Ensino Religioso"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 0,
+   "aula": 5,
+   "cod": 3,
+   "prof": "Jorge",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 1,
+   "aula": 1,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 1,
+   "aula": 1,
+   "cod": 3798,
+   "prof": "Elisangela",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 1,
+   "aula": 1,
+   "cod": 3,
+   "prof": "Andressa",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 1,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Jenifer",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 1,
+   "aula": 1,
+   "cod": 5294,
+   "prof": "Caroline",
+   "disc": "Redação e Leitura"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 1,
+   "aula": 1,
+   "cod": 4,
+   "prof": "Gabriel",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 1,
+   "aula": 1,
+   "cod": 2,
+   "prof": "Luiz F.",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 1,
+   "aula": 2,
+   "cod": 6,
+   "prof": "Gisele",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 1,
+   "aula": 2,
+   "cod": 3,
+   "prof": "Andressa",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 1,
+   "aula": 2,
+   "cod": 2,
+   "prof": "Claudia",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 1,
+   "aula": 2,
+   "cod": 2,
+   "prof": "Paulo Enzo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 1,
+   "aula": 2,
+   "cod": 4,
+   "prof": "Gabriel",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 1,
+   "aula": 2,
+   "cod": 5294,
+   "prof": "Caroline",
+   "disc": "Redação e Leitura"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 1,
+   "aula": 2,
+   "cod": 2,
+   "prof": "Luiz F.",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 1,
+   "aula": 3,
+   "cod": 3,
+   "prof": "Andressa",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 1,
+   "aula": 3,
+   "cod": 2,
+   "prof": "Claudia",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 1,
+   "aula": 3,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 1,
+   "aula": 3,
+   "cod": 3798,
+   "prof": "Elisangela",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 1,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Jenifer",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 1,
+   "aula": 3,
+   "cod": 4,
+   "prof": "Gabriel",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 1,
+   "aula": 3,
+   "cod": 4,
+   "prof": "Sidneya",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 1,
+   "aula": 4,
+   "cod": 3,
+   "prof": "Andressa",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 1,
+   "aula": 4,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 1,
+   "aula": 4,
+   "cod": 3798,
+   "prof": "Elisangela",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 1,
+   "aula": 4,
+   "cod": 4,
+   "prof": "Sidneya",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 1,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Paulo Enzo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 1,
+   "aula": 4,
+   "cod": 21,
+   "prof": "Rosangela",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 1,
+   "aula": 4,
+   "cod": 3,
+   "prof": "Jorge",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 1,
+   "aula": 5,
+   "cod": 21,
+   "prof": "Jaqueline",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 1,
+   "aula": 5,
+   "cod": 3,
+   "prof": "Andressa",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 1,
+   "aula": 5,
+   "cod": 4,
+   "prof": "Sidneya",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 1,
+   "aula": 5,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 1,
+   "aula": 5,
+   "cod": 4,
+   "prof": "Gabriel",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 1,
+   "aula": 5,
+   "cod": 21,
+   "prof": "Rosangela",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 1,
+   "aula": 5,
+   "cod": 5294,
+   "prof": "Caroline",
+   "disc": "Redação e Leitura"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 2,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Jenifer",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 2,
+   "aula": 1,
+   "cod": 4,
+   "prof": "Sidneya",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 2,
+   "aula": 1,
+   "cod": 33,
+   "prof": "Angelo",
+   "disc": "Ensino Religioso"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 2,
+   "aula": 1,
+   "cod": 5294,
+   "prof": "Caroline",
+   "disc": "Redação e Leitura"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 2,
+   "aula": 1,
+   "cod": 3,
+   "prof": "Andressa",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 2,
+   "aula": 1,
+   "cod": 6,
+   "prof": "Franciane",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 2,
+   "aula": 1,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 2,
+   "aula": 2,
+   "cod": 4,
+   "prof": "Sidneya",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 2,
+   "aula": 2,
+   "cod": 6,
+   "prof": "Franciane",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 2,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Jenifer",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 2,
+   "aula": 2,
+   "cod": 3,
+   "prof": "Andressa",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 2,
+   "aula": 2,
+   "cod": 21,
+   "prof": "Jaqueline",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 2,
+   "aula": 2,
+   "cod": 5294,
+   "prof": "Caroline",
+   "disc": "Redação e Leitura"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 2,
+   "aula": 2,
+   "cod": 6254,
+   "prof": "Macir",
+   "disc": "Educação Digital - IA"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 2,
+   "aula": 3,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 2,
+   "aula": 3,
+   "cod": 4,
+   "prof": "Sidneya",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 2,
+   "aula": 3,
+   "cod": 5294,
+   "prof": "Caroline",
+   "disc": "Redação e Leitura"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 2,
+   "aula": 3,
+   "cod": 6,
+   "prof": "Franciane",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 2,
+   "aula": 3,
+   "cod": 3,
+   "prof": "Andressa",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 2,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Jenifer",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 2,
+   "aula": 3,
+   "cod": 6254,
+   "prof": "Macir",
+   "disc": "Educação Digital - IA"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 2,
+   "aula": 4,
+   "cod": 4,
+   "prof": "Sidneya",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 2,
+   "aula": 4,
+   "cod": 5294,
+   "prof": "Caroline",
+   "disc": "Redação e Leitura"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 2,
+   "aula": 4,
+   "cod": 3,
+   "prof": "Andressa",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 2,
+   "aula": 4,
+   "cod": 21,
+   "prof": "Jaqueline",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 2,
+   "aula": 4,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 2,
+   "aula": 4,
+   "cod": 6,
+   "prof": "Franciane",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 2,
+   "aula": 4,
+   "cod": 1,
+   "prof": "Danielly",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 2,
+   "aula": 5,
+   "cod": 3798,
+   "prof": "Elisangela",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 2,
+   "aula": 5,
+   "cod": 21,
+   "prof": "Jaqueline",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 2,
+   "aula": 5,
+   "cod": 5294,
+   "prof": "Caroline",
+   "disc": "Redação e Leitura"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 2,
+   "aula": 5,
+   "cod": 3,
+   "prof": "Andressa",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 2,
+   "aula": 5,
+   "cod": 6,
+   "prof": "Franciane",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 2,
+   "aula": 5,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 2,
+   "aula": 5,
+   "cod": 4,
+   "prof": "Sidneya",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 3,
+   "aula": 1,
+   "cod": 2,
+   "prof": "Debora",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 3,
+   "aula": 1,
+   "cod": 33,
+   "prof": "Angelo",
+   "disc": "Ensino Religioso"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 3,
+   "aula": 1,
+   "cod": 4,
+   "prof": "Sidneya",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 3,
+   "aula": 1,
+   "cod": 3798,
+   "prof": "Elisangela",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 3,
+   "aula": 1,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 3,
+   "aula": 1,
+   "cod": 2,
+   "prof": "Paulo Enzo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 3,
+   "aula": 1,
+   "cod": 5294,
+   "prof": "Caroline",
+   "disc": "Redação e Leitura"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 3,
+   "aula": 2,
+   "cod": 2,
+   "prof": "Debora",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 3,
+   "aula": 2,
+   "cod": 21,
+   "prof": "Jaqueline",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 3,
+   "aula": 2,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 3,
+   "aula": 2,
+   "cod": 5294,
+   "prof": "Caroline",
+   "disc": "Redação e Leitura"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 3,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Jenifer",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 3,
+   "aula": 2,
+   "cod": 2,
+   "prof": "Paulo Enzo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 3,
+   "aula": 2,
+   "cod": 4,
+   "prof": "Sidneya",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 3,
+   "aula": 3,
+   "cod": 33,
+   "prof": "Angelo",
+   "disc": "Ensino Religioso"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 3,
+   "aula": 3,
+   "cod": 3798,
+   "prof": "Elisangela",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 3,
+   "aula": 3,
+   "cod": 21,
+   "prof": "Jaqueline",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 3,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Jenifer",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 3,
+   "aula": 3,
+   "cod": 5294,
+   "prof": "Caroline",
+   "disc": "Redação e Leitura"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 3,
+   "aula": 3,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 3,
+   "aula": 3,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 3,
+   "aula": 4,
+   "cod": 21,
+   "prof": "Jaqueline",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 3,
+   "aula": 4,
+   "cod": 1,
+   "prof": "Jenifer",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 3,
+   "aula": 4,
+   "cod": 3798,
+   "prof": "Elisangela",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 3,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Paulo Enzo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 3,
+   "aula": 4,
+   "cod": 33,
+   "prof": "Angelo",
+   "disc": "Ensino Religioso"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 3,
+   "aula": 4,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 3,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Luiz F.",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 3,
+   "aula": 5,
+   "cod": 5294,
+   "prof": "Vanda",
+   "disc": "Redação e Leitura"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 3,
+   "aula": 5,
+   "cod": 5294,
+   "prof": "Caroline",
+   "disc": "Redação e Leitura"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 3,
+   "aula": 5,
+   "cod": 1,
+   "prof": "Jenifer",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 3,
+   "aula": 5,
+   "cod": 4,
+   "prof": "Sidneya",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 3,
+   "aula": 5,
+   "cod": 2,
+   "prof": "Paulo Enzo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 3,
+   "aula": 5,
+   "cod": 3798,
+   "prof": "Elisangela",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 3,
+   "aula": 5,
+   "cod": 2,
+   "prof": "Luiz F.",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 4,
+   "aula": 1,
+   "cod": 2,
+   "prof": "Debora",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 4,
+   "aula": 1,
+   "cod": 2,
+   "prof": "Claudia",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 4,
+   "aula": 1,
+   "cod": 6,
+   "prof": "Franciane",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 4,
+   "aula": 1,
+   "cod": 2,
+   "prof": "Paulo Enzo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 4,
+   "aula": 1,
+   "cod": 21,
+   "prof": "Jaqueline",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 4,
+   "aula": 1,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 4,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Danielly",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 4,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Jenifer",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 4,
+   "aula": 2,
+   "cod": 6,
+   "prof": "Franciane",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 4,
+   "aula": 2,
+   "cod": 2,
+   "prof": "Claudia",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 4,
+   "aula": 2,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 4,
+   "aula": 2,
+   "cod": 3798,
+   "prof": "Elisangela",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 4,
+   "aula": 2,
+   "cod": 2,
+   "prof": "Paulo Enzo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 4,
+   "aula": 2,
+   "cod": 1,
+   "prof": "Danielly",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 4,
+   "aula": 3,
+   "cod": 2,
+   "prof": "Debora",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 4,
+   "aula": 3,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 4,
+   "aula": 3,
+   "cod": 21,
+   "prof": "Jaqueline",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 4,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Jenifer",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 4,
+   "aula": 3,
+   "cod": 6,
+   "prof": "Franciane",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 4,
+   "aula": 3,
+   "cod": 2,
+   "prof": "Paulo Enzo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 4,
+   "aula": 3,
+   "cod": 21,
+   "prof": "Rosangela",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 4,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Debora",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 4,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Claudia",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 4,
+   "aula": 4,
+   "cod": 6,
+   "prof": "Franciane",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 4,
+   "aula": 4,
+   "cod": 21,
+   "prof": "Jaqueline",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 4,
+   "aula": 4,
+   "cod": 2,
+   "prof": "Paulo Enzo",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 4,
+   "aula": 4,
+   "cod": 1,
+   "prof": "Jenifer",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 4,
+   "aula": 4,
+   "cod": 21,
+   "prof": "Rosangela",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºA",
+   "dia": 4,
+   "aula": 5,
+   "cod": 6,
+   "prof": "Gisele",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºB",
+   "dia": 4,
+   "aula": 5,
+   "cod": 1,
+   "prof": "Jenifer",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºC",
+   "dia": 4,
+   "aula": 5,
+   "cod": 2,
+   "prof": "Claudia",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºD",
+   "dia": 4,
+   "aula": 5,
+   "cod": 6,
+   "prof": "Franciane",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºE",
+   "dia": 4,
+   "aula": 5,
+   "cod": 3798,
+   "prof": "Elisangela",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "7ºF",
+   "dia": 4,
+   "aula": 5,
+   "cod": 3,
+   "prof": "Andreia",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºC",
+   "dia": 4,
+   "aula": 5,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 0,
+   "aula": 1,
+   "cod": 3798,
+   "prof": "Rebeca",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 0,
+   "aula": 2,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 0,
+   "aula": 3,
+   "cod": 3798,
+   "prof": "Rebeca",
+   "disc": "LEM - Inglês"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 0,
+   "aula": 4,
+   "cod": 3,
+   "prof": "Jorge",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 0,
+   "aula": 5,
+   "cod": 6,
+   "prof": "Valeria",
+   "disc": "Educação Física"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 1,
+   "aula": 1,
+   "cod": 4,
+   "prof": "Sidneya",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 1,
+   "aula": 2,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 1,
+   "aula": 3,
+   "cod": 5294,
+   "prof": "Caroline",
+   "disc": "Redação e Leitura"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 1,
+   "aula": 4,
+   "cod": 5294,
+   "prof": "Caroline",
+   "disc": "Redação e Leitura"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 1,
+   "aula": 5,
+   "cod": 3,
+   "prof": "Jorge",
+   "disc": "Geografia"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 2,
+   "aula": 1,
+   "cod": 1,
+   "prof": "Danielly",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 2,
+   "aula": 2,
+   "cod": 2,
+   "prof": "Luiz F.",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 2,
+   "aula": 3,
+   "cod": 2,
+   "prof": "Luiz F.",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 2,
+   "aula": 4,
+   "cod": 6254,
+   "prof": "Macir",
+   "disc": "Educação Digital - IA"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 2,
+   "aula": 5,
+   "cod": 6254,
+   "prof": "Macir",
+   "disc": "Educação Digital - IA"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 3,
+   "aula": 1,
+   "cod": 2,
+   "prof": "Luiz F.",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 3,
+   "aula": 2,
+   "cod": 2,
+   "prof": "Luiz F.",
+   "disc": "Matemática"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 3,
+   "aula": 3,
+   "cod": 4,
+   "prof": "Sidneya",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 3,
+   "aula": 4,
+   "cod": 4,
+   "prof": "Sidneya",
+   "disc": "História"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 3,
+   "aula": 5,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 4,
+   "aula": 1,
+   "cod": 21,
+   "prof": "Rosangela",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 4,
+   "aula": 2,
+   "cod": 21,
+   "prof": "Rosangela",
+   "disc": "Arte"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 4,
+   "aula": 3,
+   "cod": 1,
+   "prof": "Danielly",
+   "disc": "Lingua Portuguesa"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 4,
+   "aula": 4,
+   "cod": 5,
+   "prof": "Daniele",
+   "disc": "Ciências"
+  },
+  {
+   "turno": "vespertino",
+   "turma": "8ºD",
+   "dia": 4,
+   "aula": 5,
+   "cod": 1,
+   "prof": "Danielly",
+   "disc": "Lingua Portuguesa"
+  }
+ ]
+}
