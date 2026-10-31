@@ -13,7 +13,9 @@ import { lerExportacaoRco, disciplinasPorTurma } from "../lib/rco-exportacao"; /
 import { resolverCoddisc } from "../lib/rco-codigos"; // [CODIGOS-RCO-TELA]
 import { gerarScriptRco, type TurmaRcoScript, type CelulaRco } from "../lib/rco-script"; // [RCO-SCRIPT]
 import { turmasQuePrecisamDoScript } from "../lib/rco-turmas-script"; // [RCO-TURMAS-SCRIPT]
+import { chaveDoAtalho, trocarChaveDoAtalho, montarFavorito, origemValida } from "../lib/rco-atalho"; // [RCO-ATALHO]
 import { getEscolaId } from "../lib/escola-id";
+import { registrarAuditoria } from "../lib/audit"; // [RCO-ATALHO]
 import { buscarReservasParaRelatorio, gerarPdfReservasPorProfessor } from "../lib/relatorio-reservas"; // [RELATORIO-RESERVAS]
 import { espacosLivresDaSemana, gerarPdfEspacosLivres } from "../lib/espacos-livres"; // [ESPACOS-LIVRES]
 import { ehBloqueioReal } from "../lib/bloqueio-real";
@@ -379,7 +381,7 @@ const TURNOS_RCO = ["matutino", "vespertino", "noturno", "integral"]; // [TURNO-
 
 // [RCO-SCRIPT] (26/10/2026) Montagem dos registros do RCO, usada pelo arquivo (/relatorio-seed)
 // e pelo script de gravacao pela tela (/rco-script). Devolve { erro } (resposta 400) ou os registros.
-async function montarRegistrosRco(escolaId: string, turno: string, comAssincronas: boolean) {
+export async function montarRegistrosRco(escolaId: string, turno: string, comAssincronas: boolean) {
   const [escola] = await db.select().from(escolasTable).where(eq(escolasTable.id, escolaId));
   if (!escola?.codigoInep) {
     return { erro: { error: "O Código INEP da escola ainda não foi cadastrado. Preencha em Configurações → Dados da Escola antes de exportar." } };
@@ -423,15 +425,23 @@ async function montarRegistrosRco(escolaId: string, turno: string, comAssincrona
   }
 
   // 1) codigo da disciplina -- bloqueia ANTES de gerar (nunca manda XML parcial ou codigo chutado)
-  const semCodigo = new Map<string, number>();
+  // [RCO-SEM-CODIGO-TURMAS] (31/10/2026) diz tambem em que turmas a disciplina esta e abre a tela
+  // Codigos do RCO na aba Disciplinas, com essas disciplinas destacadas.
+  const semCodigo = new Map<string, { aulas: number; turmas: Set<string> }>();
   for (const l of linhas) {
-    if (resolverCoddisc(l) === null) semCodigo.set(l.disciplinaNome, (semCodigo.get(l.disciplinaNome) ?? 0) + 1);
+    if (resolverCoddisc(l) !== null) continue;
+    const s = semCodigo.get(l.disciplinaNome) ?? { aulas: 0, turmas: new Set<string>() };
+    s.aulas++;
+    s.turmas.add(l.turmaNome);
+    semCodigo.set(l.disciplinaNome, s);
   }
   if (semCodigo.size > 0) {
+    const nomes = [...semCodigo.keys()];
     return { erro: {
       error: "Algumas disciplinas ainda não têm o Código Externo do RCO cadastrado. Cadastre o código dessas disciplinas antes de exportar.",
-      corrigirEm: "/codigos-rco", // [CODIGOS-RCO-TELA]
-      disciplinasSemCodigo: [...semCodigo.entries()].sort((a, b) => b[1] - a[1]).map(([nome, aulas]) => ({ nome, aulas })),
+      corrigirEm: `/codigos-rco?aba=disciplinas&destacar=${encodeURIComponent(nomes.join("|"))}`, // [CODIGOS-RCO-TELA]
+      disciplinasSemCodigo: [...semCodigo.entries()].sort((a, b) => b[1].aulas - a[1].aulas)
+        .map(([nome, s]) => ({ nome, aulas: s.aulas, turmas: [...s.turmas].sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true })) })),
     } };
   }
 
@@ -601,8 +611,12 @@ router.get("/relatorio-seed", async (req, res) => {
 });
 
 // [RCO-SCRIPT] (26/10/2026) Script de gravacao da grade no RCO pela tela Incluir Horario (aceita
-// trio/dupla no mesmo horario, o arquivo nao). Mesmos registros do arquivo, SEM assincronas
-// (a escola definiu: RCO igual ao PDF por turma). Nome da disciplina: o nome do RCO
+// trio/dupla no mesmo horario, o arquivo nao). Mesmos registros do arquivo, COM as assincronas:
+// [RCO-SCRIPT-ASSINC] (31/10/2026) no RCO a assincrona (e a do trio/hibrida) fica na MESMA celula da
+// aula presencial, como mais uma disciplina do horario (tela Incluir Horario, ate 5 por horario; print
+// do RCO do Romario 1a serie Noite A). Antes o script tirava as assincronas e elas nunca chegavam ao RCO
+// (3NB/3NC do Mario Braga: parte da grade SEED da turma IF). O XML continua sem: nele a assincrona
+// apagaria a presencial do mesmo horario. Nome da disciplina: o nome do RCO
 // (codigos_rco_disciplina.nome_rco pelo Codigo Externo) e o do NexGrade como alternativa;
 // o script casa com a lista da turma no proprio RCO. Ver lib/rco-script.ts.
 const ROTULO_RCO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite", integral: "Integral" };
@@ -613,7 +627,7 @@ router.get("/rco-script/turmas", async (req, res) => {
   const escolaId = getEscolaId(req);
   const turno = req.query.turno as string | undefined;
   if (!turno || !TURNOS_RCO.includes(turno)) { res.status(400).json({ error: "Selecione um turno." }); return; }
-  const montado = await montarRegistrosRco(escolaId, turno, false);
+  const montado = await montarRegistrosRco(escolaId, turno, true); // [RCO-SCRIPT-ASSINC]
   if ("erro" in montado) { res.status(400).json(montado.erro); return; }
   const { registros, horarioPorSlot, chaveSlot } = montado;
   const turmas = turmasQuePrecisamDoScript(registros.map((r) => ({
@@ -624,26 +638,23 @@ router.get("/rco-script/turmas", async (req, res) => {
   res.json({ turno, totalTurmasRco: total, turmas });
 });
 
-router.get("/rco-script", async (req, res) => {
-  const escolaId = getEscolaId(req);
-  const turno = req.query.turno as string | undefined;
-  if (!turno || !TURNOS_RCO.includes(turno)) {
-    res.status(400).json({ error: "Selecione um turno (matutino, vespertino, noturno ou integral) antes de gerar o script." });
-    return;
+// [RCO-ATALHO] montagem do script de gravacao (tela e atalho do RCO): { erro } (resposta 400) ou o JavaScript
+export async function scriptRcoDaEscola(escolaId: string, turno: string, soMultiplas: boolean):
+  Promise<{ erro: Record<string, unknown> } | { js: string; arquivo: string }> {
+  if (!TURNOS_RCO.includes(turno)) {
+    return { erro: { error: "Selecione um turno (matutino, vespertino, noturno ou integral) antes de gerar o script." } };
   }
-  const montado = await montarRegistrosRco(escolaId, turno, false);
-  if ("erro" in montado) { res.status(400).json(montado.erro); return; }
+  const montado = await montarRegistrosRco(escolaId, turno, true); // [RCO-SCRIPT-ASSINC]
+  if ("erro" in montado) return { erro: (montado.erro ?? { error: "Não foi possível montar o script." }) as Record<string, unknown> };
   const { escola, horarioPorSlot, chaveSlot, slots } = montado;
-  // [RCO-TURMAS-SCRIPT] ?apenas=multiplas: so as turmas que o XML nao grava certo (trio/dupla, mesmo codigo)
-  const soMultiplas = req.query.apenas === "multiplas";
+  // [RCO-TURMAS-SCRIPT] soMultiplas: so as turmas que o XML nao grava certo (trio/dupla, mesmo codigo)
   const codsMultiplas = soMultiplas ? new Set(turmasQuePrecisamDoScript(montado.registros.map((r) => ({
     codTurma: r.codTurma, turmaRco: r.turmaRco, diaSemana: r.diaSemana, coddisc: r.coddisc, disciplinaNome: r.disciplinaNome,
     hora: horarioPorSlot.get(chaveSlot(r.numeroAula, turno === "matutino" ? r.turmaNivelEnsino : null))?.[0] ?? `${r.numeroAula}a`,
   }))).map((t) => t.codTurma)) : null;
   const registros = codsMultiplas ? montado.registros.filter((r) => codsMultiplas.has(String(r.codTurma))) : montado.registros;
   if (codsMultiplas && !registros.length) {
-    res.status(400).json({ error: "Nenhuma turma deste turno precisa do script: todas podem ir pelo XML." });
-    return;
+    return { erro: { error: "Nenhuma turma deste turno precisa do script: todas podem ir pelo XML." } };
   }
 
   const coddiscs = [...new Set(registros.map((r) => r.coddisc))];
@@ -700,9 +711,36 @@ router.get("/rco-script", async (req, res) => {
     geradoEm: agora.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
     turmas: turmasScript,
   });
+  return { js, arquivo: `rco-gravar-${turno}${soMultiplas ? "-trios" : ""}-${agora.toISOString().slice(0, 10)}.js` };
+}
+
+router.get("/rco-script", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const turno = typeof req.query.turno === "string" ? req.query.turno : "";
+  const r = await scriptRcoDaEscola(escolaId, turno, req.query.apenas === "multiplas");
+  if ("erro" in r) { res.status(400).json(r.erro); return; }
   res.setHeader("Content-Type", "text/javascript; charset=utf-8");
-  res.setHeader("Content-Disposition", `attachment; filename="rco-gravar-${turno}${soMultiplas ? "-trios" : ""}-${agora.toISOString().slice(0, 10)}.js"`);
-  res.send(js);
+  res.setHeader("Content-Disposition", `attachment; filename="${r.arquivo}"`);
+  res.send(r.js);
+});
+
+// [RCO-ATALHO] favorito "Gravar no RCO" (sem F12): chave da escola e o codigo do favorito. So direcao,
+// coordenacao e secretaria (prefixo /export/rco-script em lib/permissao.ts). ?origem = endereco do NexGrade.
+router.get("/rco-script/atalho", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const origem = typeof req.query.origem === "string" ? req.query.origem : "";
+  if (!origemValida(origem)) { res.status(400).json({ error: "Endereço do NexGrade inválido." }); return; }
+  const v = await chaveDoAtalho(escolaId);
+  res.json({ favorito: montarFavorito(origem, v.chave), criadaEm: v.criadaEm, ultimoUsoEm: v.ultimoUsoEm ?? null });
+});
+
+router.post("/rco-script/atalho/trocar", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const origem = typeof req.body?.origem === "string" ? req.body.origem : "";
+  if (!origemValida(origem)) { res.status(400).json({ error: "Endereço do NexGrade inválido." }); return; }
+  const v = await trocarChaveDoAtalho(escolaId);
+  await registrarAuditoria({ req, escolaId, entidade: "rco-atalho", entidadeId: 0, acao: "alteracao", dadosAnteriores: null, dadosNovos: { trocadaEm: v.criadaEm } });
+  res.json({ favorito: montarFavorito(origem, v.chave), criadaEm: v.criadaEm, ultimoUsoEm: null });
 });
 
 // ------------------------------------------------------------------

@@ -1,10 +1,10 @@
 // [CODIGOS-RCO-TELA] (14/10/2026) Codigos que o arquivo do RCO exige: codigo da turma no
 // SERE (e da parte IF, no 3o ano tecnico) e Codigo Externo da disciplina. Antes so dava
 // para cadastrar por script; a exportacao bloqueava e a escola nao tinha onde corrigir.
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { customFetch, ApiError } from "@workspace/api-client-react";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -88,6 +88,10 @@ export default function CodigosRcoPage() {
   const queryClient = useQueryClient();
   const [soPendentes, setSoPendentes] = useState(false);
   const [turno, setTurno] = useState<string>("todos");
+  // [RCO-SEM-CODIGO-TURMAS] (31/10/2026) vindo do erro da exportacao: ?aba=disciplinas&destacar=Nome1|Nome2
+  const parametros = new URLSearchParams(useSearch());
+  const abaPedida = parametros.get("aba");
+  const destacar = useMemo(() => new Set((parametros.get("destacar") ?? "").split("|").filter(Boolean)), [parametros.get("destacar")]);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: CHAVE,
@@ -144,6 +148,10 @@ export default function CodigosRcoPage() {
     .filter((t) => !soPendentes || t.pendente || t.repetidoCom.length > 0), [data, turno, soPendentes]);
   const disciplinas = useMemo(() => (data?.disciplinas ?? [])
     .filter((d) => !soPendentes || d.pendente), [data, soPendentes]);
+  useEffect(() => {
+    if (!data || destacar.size === 0) return;
+    document.querySelector("[data-destacada='sim']")?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [data, destacar]);
   const ORDEM_TURNO = ["matutino", "vespertino", "noturno"];
   const turnos = useMemo(() => [...new Set((data?.turmas ?? []).map((t) => t.turno))]
     .sort((a, b) => (ORDEM_TURNO.indexOf(a) + 99 * +(ORDEM_TURNO.indexOf(a) < 0)) - (ORDEM_TURNO.indexOf(b) + 99 * +(ORDEM_TURNO.indexOf(b) < 0))), [data]);
@@ -194,7 +202,7 @@ export default function CodigosRcoPage() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue={resumo.turmasPendentes === 0 && resumo.disciplinasPendentes > 0 ? "disciplinas" : "turmas"}>
+      <Tabs defaultValue={abaPedida === "disciplinas" || abaPedida === "turmas" ? abaPedida : resumo.turmasPendentes === 0 && resumo.disciplinasPendentes > 0 ? "disciplinas" : "turmas"}>
         <TabsList>
           <TabsTrigger value="turmas">Turmas{resumo.turmasPendentes > 0 ? ` (${resumo.turmasPendentes})` : ""}</TabsTrigger>
           <TabsTrigger value="disciplinas">Disciplinas{resumo.disciplinasPendentes > 0 ? ` (${resumo.disciplinasPendentes})` : ""}</TabsTrigger>
@@ -308,8 +316,12 @@ export default function CodigosRcoPage() {
                     </TableHeader>
                     <TableBody>
                       {disciplinas.map((d) => (
-                        <TableRow key={d.id}>
-                          <TableCell className="font-medium">{d.nome}</TableCell>
+                        <TableRow key={d.id} data-destacada={destacar.has(d.nome) ? "sim" : undefined}
+                          className={destacar.has(d.nome) ? "bg-amber-50 ring-2 ring-inset ring-amber-400 dark:bg-amber-950/30" : undefined}>
+                          <TableCell className="font-medium">
+                            {d.nome}
+                            {destacar.has(d.nome) && <div className="text-xs font-normal text-amber-700 dark:text-amber-400">bloqueou a exportação</div>}
+                          </TableCell>
                           <TableCell className="text-right tabular-nums">{d.aulas}</TableCell>
                           <TableCell>
                             <CampoCodigo rotulo={`Código SAE de ${d.nome}`} valor={d.codigoSae == null || !/^\d+$/.test(d.codigoSae) ? null : Number(d.codigoSae)}

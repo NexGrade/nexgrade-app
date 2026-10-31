@@ -24,6 +24,7 @@ export interface ItemMatrizOficial {
   nome: string;
   categoria: CategoriaMatrizOficial;
   cargaHorariaSemanal: number;
+  obrigatoria?: boolean; // [MATRIZ-FACULTATIVA]
 }
 
 export interface SerieMatrizOficial {
@@ -34,6 +35,6 @@ export interface SerieMatrizOficial {
 export interface MatrizOficialTemplate {
   id: string;
   label: string;
-  nivel: "fundamental" | "medio";
+  nivel: "fundamental" | "medio" | "normal_magisterio";
   series: SerieMatrizOficial[];
 }

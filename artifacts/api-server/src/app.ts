@@ -6,6 +6,7 @@ import { publishableKeyFromHost } from "@clerk/shared/keys";
 import router from "./routes";
 import healthRouter from "./routes/health";
 import asaasWebhookRouter from "./routes/asaas-webhook";
+import rcoAtalhoPublicoRouter from "./routes/rco-atalho-publico"; // [RCO-ATALHO]
 import { logger } from "./lib/logger";
 import { requireAuth } from "./middlewares/requireAuth";
 import { limitadorGeral } from "./middlewares/rateLimit";
@@ -95,6 +96,10 @@ app.use("/api", healthRouter);
 // sobre o corpo cru da requisição -- então o express.json() já
 // aplicado acima (linha ~70) funciona normalmente.
 app.use("/api/asaas/webhook", asaasWebhookRouter);
+
+// [RCO-ATALHO] também público: o favorito "Gravar no RCO" carrega o script dentro da tela do RCO,
+// onde não há sessão do NexGrade. Quem autoriza é a chave da escola no endereço (lib/rco-atalho.ts).
+app.use("/api/rco-atalho", rcoAtalhoPublicoRouter);
 
 // RNF-SEG-03: a partir daqui, toda rota de negócio exige sessão Clerk
 // válida. clerkMiddleware() sozinho não bloqueia requisição sem token —

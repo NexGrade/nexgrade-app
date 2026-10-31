@@ -30,7 +30,7 @@ export function turmasQuePrecisamDoScript(registros: RegistroParaAnalise[]): Tur
     const multiplas = [...celulas.entries()].filter(([, cods]) => cods.size > 1)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([k, cods]) => { const [d, h] = k.split("|"); return `${DIA[Number(d)] ?? d} ${h} (${cods.size} disciplinas)`; });
-    if (multiplas.length) motivos.push(`trio/dupla: ${multiplas.join(", ")}`);
+    if (multiplas.length) motivos.push(`mais de uma disciplina no horário (trio, híbrida ou assíncrona): ${multiplas.join(", ")}`);
     const nomesPorCodigo = new Map<number, Set<string>>();
     for (const r of regs) {
       if (!nomesPorCodigo.has(r.coddisc)) nomesPorCodigo.set(r.coddisc, new Set());
