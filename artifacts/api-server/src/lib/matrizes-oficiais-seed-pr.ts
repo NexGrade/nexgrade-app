@@ -27,6 +27,45 @@ export interface MatrizOficialTemplate {
   series: SerieMatrizOficial[];
 }
 
+// [MATRIZ-MEDIO-2026] base (FGB) do Ensino Medio 2026, igual nos dois itinerarios
+const FGB_MEDIO_2026_1A: ItemMatrizOficial[] = [
+  { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 4 },
+  { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2 },
+  { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2 },
+  { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2 },
+  { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 4 },
+  { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 2 },
+  { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 2 },
+  { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2 },
+  { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2 },
+  { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2 },
+];
+const FGB_MEDIO_2026_2A: ItemMatrizOficial[] = [
+  { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 4 },
+  { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2 },
+  { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2 },
+  { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2 },
+  { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 4 },
+  { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 2 },
+  { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2 },
+  { nome: "Filosofia", categoria: "FGB", cargaHorariaSemanal: 2 },
+  { nome: "História", categoria: "FGB", cargaHorariaSemanal: 2 },
+  { nome: "Sociologia", categoria: "FGB", cargaHorariaSemanal: 2 },
+];
+const FGB_MEDIO_2026_3A: ItemMatrizOficial[] = [
+  { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 4 },
+  { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2 },
+  { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 4 },
+  { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2 },
+];
+// parte do itinerario da 3a serie comum aos dois (no RCO a 3a tem turma da base + turma do itinerario)
+const IF_COMUM_MEDIO_2026_3A: ItemMatrizOficial[] = [
+  { nome: "Projeto de Vida", categoria: "IF", cargaHorariaSemanal: 1 },
+  { nome: "Educação Financeira", categoria: "IF", cargaHorariaSemanal: 2 },
+  { nome: "Recomposição da Aprendizagem em Língua Portuguesa", categoria: "IF", cargaHorariaSemanal: 2 },
+  { nome: "Recomposição da Aprendizagem em Matemática", categoria: "IF", cargaHorariaSemanal: 2 },
+];
+
 export const MATRIZES_OFICIAIS_SEED_PR: MatrizOficialTemplate[] = [
   {
     id: "fund_iniciais_tempo_parcial",
@@ -232,6 +271,88 @@ export const MATRIZES_OFICIAIS_SEED_PR: MatrizOficialTemplate[] = [
           { nome: "Ciências", categoria: "BNC", cargaHorariaSemanal: 3 },
           { nome: "Geografia", categoria: "BNC", cargaHorariaSemanal: 3 },
           { nome: "História", categoria: "BNC", cargaHorariaSemanal: 3 },
+        ],
+      },
+    ],
+  },
+  // [MATRIZ-MEDIO-2026] (31/10/2026) Ensino Medio 2026, tempo parcial diurno, pelo Urania/RCO do C.E. Iedo
+  // Nespolo (cursos 0200 = Linguagens e Ciencias Humanas, 0201 = Matematica e Ciencias da Natureza; 3a serie:
+  // base 0051 + parte do itinerario 2341/2343). 30 aulas por serie + Lingua Espanhola (4, matricula
+  // facultativa) na 1a e 2a. Nomes pelos codigos do RCO (lib/sigla-padrao.ts). As de 2025 continuam abaixo.
+  {
+    id: "medio_2026_tempo_parcial_diurno_lggchs",
+    label: "Ensino Médio 2026 - Tempo Parcial Diurno - Itinerário Linguagens e Ciências Humanas",
+    nivel: "medio",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          ...FGB_MEDIO_2026_1A,
+          { nome: "História do Paraná", categoria: "IF", cargaHorariaSemanal: 2 },
+          { nome: "Geografia do Paraná", categoria: "IF", cargaHorariaSemanal: 2 },
+          { nome: "Arte Paranaense", categoria: "IF", cargaHorariaSemanal: 2 },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4 },
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          ...FGB_MEDIO_2026_2A,
+          { nome: "Literatura e Produção de Texto", categoria: "IF", cargaHorariaSemanal: 2 },
+          { nome: "Filosofia: Análise de Textos Filosóficos", categoria: "IF", cargaHorariaSemanal: 2 },
+          { nome: "Sociologia: Governo, Cidadania e Sociedade", categoria: "IF", cargaHorariaSemanal: 2 },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4 },
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          ...FGB_MEDIO_2026_3A,
+          ...IF_COMUM_MEDIO_2026_3A,
+          { nome: "Geografia I", categoria: "IF", cargaHorariaSemanal: 2 },
+          { nome: "História I", categoria: "IF", cargaHorariaSemanal: 2 },
+          { nome: "Língua Inglesa I", categoria: "IF", cargaHorariaSemanal: 3 },
+          { nome: "Sociologia I", categoria: "IF", cargaHorariaSemanal: 2 },
+          { nome: "Arte II", categoria: "IF", cargaHorariaSemanal: 2 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "medio_2026_tempo_parcial_diurno_matcnt",
+    label: "Ensino Médio 2026 - Tempo Parcial Diurno - Itinerário Matemática e Ciências da Natureza",
+    nivel: "medio",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          ...FGB_MEDIO_2026_1A,
+          { nome: "Matemática: Resolução de Problemas", categoria: "IF", cargaHorariaSemanal: 2 },
+          { nome: "Biologia: Sustentabilidade em Ação", categoria: "IF", cargaHorariaSemanal: 2 },
+          { nome: "Química e Tecnociência", categoria: "IF", cargaHorariaSemanal: 2 },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4 },
+        ],
+      },
+      {
+        serieAno: "2ª Série",
+        itens: [
+          ...FGB_MEDIO_2026_2A,
+          { nome: "Programação", categoria: "IF", cargaHorariaSemanal: 2 },
+          { nome: "Física e Tecnociência", categoria: "IF", cargaHorariaSemanal: 2 },
+          { nome: "Robótica", categoria: "IF", cargaHorariaSemanal: 2 },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4 },
+        ],
+      },
+      {
+        serieAno: "3ª Série",
+        itens: [
+          ...FGB_MEDIO_2026_3A,
+          ...IF_COMUM_MEDIO_2026_3A,
+          { nome: "Matemática II", categoria: "IF", cargaHorariaSemanal: 2 },
+          { nome: "Biologia II", categoria: "IF", cargaHorariaSemanal: 3 },
+          { nome: "Química I", categoria: "IF", cargaHorariaSemanal: 2 },
+          { nome: "Física II", categoria: "IF", cargaHorariaSemanal: 2 },
+          { nome: "Física III", categoria: "IF", cargaHorariaSemanal: 2 },
         ],
       },
     ],
