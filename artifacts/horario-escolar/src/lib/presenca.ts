@@ -1,8 +1,7 @@
 // [PRESENCA-PEDAGOGIA] (28/10/2026) Tipos e chamadas da lista de presenca dos professores
-// (rotas /api/pedagogia/*) e as planilhas em Excel montadas aqui com xlsx.
-import * as XLSX from "xlsx";
+// (rotas /api/pedagogia/*) e as planilhas em Excel montadas aqui (formatação em lib/planilha).
 import { customFetch, ApiError } from "@workspace/api-client-react";
-import { salvarBlob } from "@/hooks/use-baixar-arquivo";
+import { baixarExcel, corDaSituacao, type Valor } from "@/lib/planilha";
 
 export type Status = "presente" | "falta" | "atraso" | "substituido";
 export const STATUS: Array<{ valor: Status; curto: string; rotulo: string; cor: string; corAtiva: string }> = [
@@ -61,23 +60,9 @@ export const salvarPresenca = (data: string, turno: string, marcas: MarcaEnvio[]
 export const buscarAgora = () => customFetch<Agora>("/api/pedagogia/agora");
 export const buscarMes = (mes: string, ano: string) => customFetch<ResumoMes>(`/api/pedagogia/presenca/mes?mes=${mes}&ano=${ano}`);
 
-function baixarPlanilha(abas: Array<{ nome: string; linhas: (string | number)[][]; larguras: number[] }>, arquivo: string) {
-  const wb = XLSX.utils.book_new();
-  for (const a of abas) {
-    const ws = XLSX.utils.aoa_to_sheet(a.linhas);
-    ws["!cols"] = a.larguras.map((wch) => ({ wch }));
-    XLSX.utils.book_append_sheet(wb, ws, a.nome.slice(0, 31));
-  }
-  const bytes = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-  salvarBlob(new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), arquivo);
-}
-
 export function excelDoDia(p: Presenca) {
   const nomes = new Map(p.substitutos.map((s) => [s.id, s.nome]));
-  const linhas: (string | number)[][] = [
-    [`Presença dos professores — ${p.rotuloTurno} — ${p.diaSemana}, ${p.dataBR}`], [],
-    ["Professor", "Aula", "Horário", "Turma", "Disciplina", "Sala", "Situação", "Substituto", "Observação"],
-  ];
+  const linhas: Valor[][] = [];
   for (const prof of p.professores) for (const a of prof.aulas) {
     const m = a.marca;
     linhas.push([
@@ -85,16 +70,48 @@ export function excelDoDia(p: Presenca) {
       m ? ROTULO_STATUS[m.status] : "", m?.status === "substituido" ? (m.substitutoId != null ? nomes.get(m.substitutoId) ?? "" : m.substitutoNome ?? "") : "", m?.observacao ?? "",
     ]);
   }
-  baixarPlanilha([{ nome: "Presença", linhas, larguras: [32, 6, 13, 14, 14, 16, 12, 24, 32] }], `presenca_${p.data}_${p.turno}.xlsx`);
+  return baixarExcel([{
+    nome: "Presença",
+    titulo: "Presença dos professores",
+    subtitulo: `${p.rotuloTurno} · ${p.diaSemana}, ${p.dataBR}`,
+    aviso: p.aviso,
+    colunas: [
+      { titulo: "Professor", largura: 32 }, { titulo: "Aula", largura: 7, tipo: "centro" }, { titulo: "Horário", largura: 13, tipo: "centro" },
+      { titulo: "Turma", largura: 14 }, { titulo: "Disciplina", largura: 16 }, { titulo: "Sala", largura: 16 },
+      { titulo: "Situação", largura: 13, tipo: "centro" }, { titulo: "Substituto", largura: 24 }, { titulo: "Observação", largura: 32 },
+    ],
+    linhas,
+    vazio: "Nenhum professor com aula neste turno.",
+    destaque: (v, c) => (c === 6 ? corDaSituacao(v) : undefined),
+  }], `presenca_${p.data}_${p.turno}.xlsx`);
 }
 
 export function excelDoMes(r: ResumoMes) {
-  const resumo: (string | number)[][] = [[r.titulo], [], ["Professor", "Presente", "Falta", "Atraso", "Substituído", "Substituiu", "Aulas marcadas"],
-    ...r.resumo.map((x) => [x.professor, x.presente, x.falta, x.atraso, x.substituido, x.substituiu, x.marcadas])];
-  const det: (string | number)[][] = [["Data", "Turno", "Aula", "Professor", "Situação", "Substituto", "Observação"],
-    ...r.detalhes.map((d) => [d.dataBR, d.turno, `${d.aula}ª`, d.professor, d.situacao, d.substituto, d.observacao])];
-  baixarPlanilha([
-    { nome: "Resumo", linhas: resumo, larguras: [34, 10, 8, 8, 12, 11, 14] },
-    { nome: "Ocorrências", linhas: det, larguras: [11, 8, 6, 32, 12, 26, 34] },
+  const resumo: Valor[][] = r.resumo.map((x) => [x.professor, x.presente, x.falta, x.atraso, x.substituido, x.substituiu, x.marcadas]);
+  if (resumo.length) resumo.push(["TOTAL", ...[1, 2, 3, 4, 5, 6].map((i) => resumo.reduce((s, l) => s + Number(l[i] ?? 0), 0))]);
+  const num = (titulo: string, largura: number) => ({ titulo, largura, tipo: "numero" as const });
+  return baixarExcel([
+    {
+      nome: "Resumo",
+      titulo: "Presença dos professores · resumo do mês",
+      subtitulo: r.titulo,
+      colunas: [{ titulo: "Professor", largura: 34 }, num("Presente", 10), num("Falta", 9), num("Atraso", 9), num("Substituído", 12), num("Substituiu", 11), num("Aulas marcadas", 12)],
+      linhas: resumo,
+      total: resumo.length > 0,
+      vazio: "Nenhuma presença marcada neste mês.",
+      destaque: (v, c) => (Number(v) > 0 ? ([undefined, "verde", "vermelho", "ambar", "azul"] as const)[c] : undefined),
+    },
+    {
+      nome: "Ocorrências",
+      titulo: "Presença dos professores · ocorrências do mês",
+      subtitulo: r.titulo,
+      colunas: [
+        { titulo: "Data", largura: 11, tipo: "centro" }, { titulo: "Turno", largura: 9, tipo: "centro" }, { titulo: "Aula", largura: 7, tipo: "centro" },
+        { titulo: "Professor", largura: 32 }, { titulo: "Situação", largura: 13, tipo: "centro" }, { titulo: "Substituto", largura: 26 }, { titulo: "Observação", largura: 34 },
+      ],
+      linhas: r.detalhes.map((d) => [d.dataBR, d.turno, `${d.aula}ª`, d.professor, d.situacao, d.substituto, d.observacao]),
+      vazio: "Nenhuma ocorrência neste mês.",
+      destaque: (v, c) => (c === 4 ? corDaSituacao(v) : undefined),
+    },
   ], `faltas_professores_${r.mes}_${r.ano}.xlsx`);
 }

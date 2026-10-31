@@ -11,6 +11,7 @@
 import { db, horariosTable, turmasTable, horarioSlotsTable } from "@workspace/db";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { carregarAssSoTurma } from "./assincrona-so-turma";
+import { carregarMapaIntegral, slotReal, TURNO_INTEGRAL } from "./turno-integral";
 
 export const PAUSA_MIN_TURNOS = (): number => Number(process.env.HA_PAUSA_ENTRE_TURNOS_MIN ?? "60");
 
@@ -42,11 +43,15 @@ async function itensDaEscola(escolaId: string, professorIds?: number[]): Promise
   const condH = [eq(horariosTable.escolaId, escolaId), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`];
   if (professorIds) condH.push(inArray(horariosTable.professorId, professorIds.length ? professorIds : [-1]));
   const aulas = await db.select().from(horariosTable).where(and(...condH));
+  // [INTEGRAL-NO-MOTOR] (31/10/2026) aula da turma integral entra no horario real (manha ou tarde): antes a
+  // 5a da 1ME (= 5a da manha) e a 6a da manha de outra turma viravam "turnos diferentes, 0 min de pausa"
+  const mapaIntegral = turmas.some((t) => t.turno === TURNO_INTEGRAL) ? await carregarMapaIntegral(escolaId) : new Map();
   const itens: Item[] = [];
   for (const h of aulas) {
     const t = turmaMap.get(h.turmaId);
     if (!t || ehAssSoTurma(h, t)) continue; // a 7a aula (so da turma) nao ocupa o professor
-    itens.push({ professorId: h.professorId, turno: t.turno, dia: h.diaSemana, aula: h.numeroAula, tipo: "aula", turmaId: h.turmaId });
+    const real = slotReal(t.turno, h.numeroAula, mapaIntegral);
+    itens.push({ professorId: h.professorId, turno: real.turno, dia: h.diaSemana, aula: real.numeroAula, tipo: "aula", turmaId: h.turmaId });
   }
   // [PAUSA-SO-AULA] HA nao entra: pode ficar colada numa aula do outro turno.
   return itens;

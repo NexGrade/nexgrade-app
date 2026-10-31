@@ -40,7 +40,7 @@ import { ehBloqueioParaMotor } from "../lib/bloqueio-real"; // [HA-FIXA]
 import { bloqueiosIntervaloEntreTurnos } from "../lib/intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 import { aulasFixasTable } from "@workspace/db"; // [AULA-FIXA-CADASTRO]
 import { validarCapacidadeProfessores, calcularCotaHaPorTurno } from "../lib/capacidade-professor";
-import { carregarMapaIntegral, slotReal, TURNO_INTEGRAL } from "../lib/turno-integral"; // [TURNO-INTEGRAL]
+import { carregarMapaIntegral, slotReal, TURNO_INTEGRAL, carregarAulasIntegraisNoTurno, mapaIntegralDosSlots } from "../lib/turno-integral"; // [TURNO-INTEGRAL] [INTEGRAL-NO-MOTOR]
 
 const router = Router();
 
@@ -157,10 +157,19 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
       const chaveTurnoDisp = d.turno ?? "null";
       indisponivelProf[`${d.professorId}-${chaveTurnoDisp}-${d.diaSemana}-${d.horarioSlot}`] = true;
     });
+  // [INTEGRAL-NO-MOTOR] turma integral: disponibilidade e choque do professor pelo horario real
+  // (aula do integral = aula da manha/tarde no mesmo tempo); turma comum segue como antes
+  const turnoDaTurmaId = new Map((await db.select({ id: turmasTable.id, turno: turmasTable.turno }).from(turmasTable)
+    .where(eq(turmasTable.escolaId, escolaId))).map((t) => [t.id, t.turno]));
+  const temIntegral = [...turnoDaTurmaId.values()].includes(TURNO_INTEGRAL);
+  const mapaIntegral = temIntegral ? await carregarMapaIntegral(escolaId) : new Map();
+  const realDaTurma = (aula: number) => slotReal(turma.turno, aula, mapaIntegral);
+
   function indisponivelComTurno(professorId: number, dia: number, aula: number): boolean {
+    const real = realDaTurma(aula);
     return !!(
-      indisponivelProf[`${professorId}-${turma.turno}-${dia}-${aula}`]
-      || indisponivelProf[`${professorId}-null-${dia}-${aula}`]
+      indisponivelProf[`${professorId}-${real.turno}-${dia}-${real.numeroAula}`]
+      || indisponivelProf[`${professorId}-null-${dia}-${real.numeroAula}`]
     );
   }
 
@@ -201,7 +210,17 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
   baseSlots
     .filter(s => s.turmaId !== turmaId)
     .forEach(s => {
-      ocupadoProf[`${s.professorId}-${s.diaSemana}-${s.numeroAula}`] = true;
+      const turnoOutra = turnoDaTurmaId.get(s.turmaId) ?? "";
+      if (turma.turno !== TURNO_INTEGRAL && turnoOutra !== TURNO_INTEGRAL) {
+        ocupadoProf[`${s.professorId}-${s.diaSemana}-${s.numeroAula}`] = true;
+        return;
+      }
+      // [INTEGRAL-NO-MOTOR] uma das duas e integral: ocupa as aulas desta turma no mesmo horario real
+      const real = slotReal(turnoOutra, s.numeroAula, mapaIntegral);
+      for (const aula of AULAS_VALIDAS_TURMA) {
+        const r = realDaTurma(aula);
+        if (r.turno === real.turno && r.numeroAula === real.numeroAula) ocupadoProf[`${s.professorId}-${s.diaSemana}-${aula}`] = true;
+      }
     });
 
   const aulasPorProfessorDia: Record<number, number[]> = {};
@@ -1353,6 +1372,12 @@ router.post("/corrigir-professor", async (req, res) => {
 
   const turnoPorTurmaId = new Map(turmasDaEscola.map((t) => [t.id, t.turno]));
   const slotsDoProf = todosSlotsDaEscola.filter((s) => s.professorId === professorId);
+  // [INTEGRAL-NO-MOTOR] ocupacao e disponibilidade pelo horario real: aula da turma integral = aula da manha/tarde
+  const mapaIntegral = mapaIntegralDosSlots(horarioSlotsTodos);
+  const real = (turno: string, dia: number, aula: number) => {
+    const r = slotReal(turno, aula, mapaIntegral);
+    return `${r.turno}-${dia}-${r.numeroAula}`;
+  };
 
   const indisponivelSet = new Set(
     disponibilidades.filter(ehBloqueioParaMotor).map((d) => `${d.turno ?? "null"}-${d.diaSemana}-${d.horarioSlot}`),
@@ -1360,7 +1385,7 @@ router.post("/corrigir-professor", async (req, res) => {
 
   const conflitantes = slotsDoProf.filter((s) => {
     const turno = turnoPorTurmaId.get(s.turmaId) ?? "desconhecido";
-    return indisponivelSet.has(`${turno}-${s.diaSemana}-${s.numeroAula}`);
+    return indisponivelSet.has(real(turno, s.diaSemana, s.numeroAula));
   });
 
   if (conflitantes.length === 0) {
@@ -1375,7 +1400,7 @@ router.post("/corrigir-professor", async (req, res) => {
   const naoResolvidas: Array<{ turmaId: number; turmaNome: string; disciplinaId: number; dia: number; aula: number; motivo: string }> = [];
 
   const ocupadoProfAtual = new Set(
-    todosSlotsDaEscola.map((s) => `${s.professorId}-${turnoPorTurmaId.get(s.turmaId) ?? "desconhecido"}-${s.diaSemana}-${s.numeroAula}`),
+    todosSlotsDaEscola.map((s) => `${s.professorId}-${real(turnoPorTurmaId.get(s.turmaId) ?? "desconhecido", s.diaSemana, s.numeroAula)}`),
   );
   const ocupadoTurmaAtual = new Set(todosSlotsDaEscola.map((s) => `${s.turmaId}-${s.diaSemana}-${s.numeroAula}`));
 
@@ -1393,11 +1418,11 @@ router.post("/corrigir-professor", async (req, res) => {
     for (const dia of DIAS) {
       for (const aula of aulasDoTurno) {
         if (dia === slot.diaSemana && aula === slot.numeroAula) continue;
-        const chaveProf = `${professorId}-${turno}-${dia}-${aula}`;
+        const chaveProf = `${professorId}-${real(turno, dia, aula)}`;
         const chaveTurma = `${slot.turmaId}-${dia}-${aula}`;
         if (ocupadoProfAtual.has(chaveProf)) continue;
         if (ocupadoTurmaAtual.has(chaveTurma)) continue;
-        if (indisponivelSet.has(`${turno}-${dia}-${aula}`)) continue;
+        if (indisponivelSet.has(real(turno, dia, aula))) continue;
         destino = { dia, aula };
         break;
       }
@@ -1417,8 +1442,8 @@ router.post("/corrigir-professor", async (req, res) => {
       .set({ diaSemana: destino.dia, numeroAula: destino.aula })
       .where(eq(horariosTable.id, slot.id));
 
-    ocupadoProfAtual.delete(`${professorId}-${turno}-${slot.diaSemana}-${slot.numeroAula}`);
-    ocupadoProfAtual.add(`${professorId}-${turno}-${destino.dia}-${destino.aula}`);
+    ocupadoProfAtual.delete(`${professorId}-${real(turno, slot.diaSemana, slot.numeroAula)}`);
+    ocupadoProfAtual.add(`${professorId}-${real(turno, destino.dia, destino.aula)}`);
     ocupadoTurmaAtual.delete(`${slot.turmaId}-${slot.diaSemana}-${slot.numeroAula}`);
     ocupadoTurmaAtual.add(`${slot.turmaId}-${destino.dia}-${destino.aula}`);
 
@@ -2024,7 +2049,16 @@ async function runCpsatGeneracaoUnica(
     }));
   console.log(`[INTERVALO-ENTRE-TURNOS] turno=${turno} bloqueios=${bloqueiosIntervaloTurnos.length}`);
 
-  const bloqueiosProfessor = [...bloqueiosDisponibilidade, ...bloqueiosOutrasTurmas, ...bloqueiosPeriodoNaoLetivo, ...bloqueiosIntervaloTurnos];
+  // [INTEGRAL-NO-MOTOR] aulas dos professores na turma integral que caem neste turno (horario real):
+  // a busca acima so olha turmas DESTE turno, e a integral tem turno proprio (ver lib/turno-integral.ts)
+  const bloqueiosIntegral = (await carregarAulasIntegraisNoTurno(escolaId, turno, [...professorIdsUsados])).map((a) => ({
+    professor: professorMap.get(a.professorId)?.nome ?? `Professor #${a.professorId}`,
+    dia: a.diaSemana,
+    aula: a.numeroAula,
+  }));
+  if (bloqueiosIntegral.length) console.log(`[INTEGRAL-NO-MOTOR] turno=${turno} bloqueios=${bloqueiosIntegral.length}`);
+
+  const bloqueiosProfessor = [...bloqueiosDisponibilidade, ...bloqueiosOutrasTurmas, ...bloqueiosIntegral, ...bloqueiosPeriodoNaoLetivo, ...bloqueiosIntervaloTurnos];
 
   const aulasPorDia = horarioSlotsTurno.length > 0
     ? Math.max(...horarioSlotsTurno.map((s) => s.numeroAula))

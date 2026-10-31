@@ -1,8 +1,8 @@
 // [RELATORIO-RESERVAS] (2026-10-01) Relatorio de reservas por professor (todas,
 // inclusive canceladas). PDF gerado no backend (/api/export/reservas-pdf); Excel
-// montado aqui com xlsx a partir de /api/export/reservas-dados (mesmas linhas do PDF).
+// montado aqui a partir de /api/export/reservas-dados (mesmas linhas do PDF; formatação em lib/planilha).
 import { useState } from "react";
-import * as XLSX from "xlsx";
+import { baixarExcel as gerarExcel, type Destaque, type Valor } from "@/lib/planilha";
 import { customFetch } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,19 +77,19 @@ export function BotaoRelatorioReservas() {
     setGerando("xlsx");
     try {
       const linhas = await customFetch<LinhaReserva[]>("/api/export/reservas-dados?" + qs, { responseType: "json" });
-      const detalhe = linhas.map((r) => ({
-        Professor: r.professor,
-        Data: dataBR(r.data),
-        Dia: diaDaData(r.data),
-        Aula: r.numeroAula + "ª",
-        Turno: r.turno ? ROTULO_TURNO[r.turno] ?? r.turno : "",
-        Sala: r.sala,
-        "Título": r.titulo,
-        Status: ROTULO_STATUS[r.status] ?? r.status,
-        Prioridade: r.prioridade,
-        "Observações": r.observacoes ?? "",
-        "Criada em": r.criadaEm ? new Date(r.criadaEm).toLocaleString("pt-BR") : "",
-      }));
+      const detalhe = linhas.map((r) => [
+        r.professor,
+        dataBR(r.data),
+        diaDaData(r.data),
+        r.numeroAula + "ª",
+        r.turno ? ROTULO_TURNO[r.turno] ?? r.turno : "",
+        r.sala,
+        r.titulo,
+        ROTULO_STATUS[r.status] ?? r.status,
+        r.prioridade,
+        r.observacoes ?? "",
+        r.criadaEm ? new Date(r.criadaEm).toLocaleString("pt-BR") : "",
+      ]);
 
       const porProf = new Map<string, { Professor: string; Total: number; Confirmadas: number; Pendentes: number; Canceladas: number }>();
       for (const r of linhas) {
@@ -110,14 +110,35 @@ export function BotaoRelatorioReservas() {
         Canceladas: resumo.reduce((s, g) => s + g.Canceladas, 0),
       });
 
-      const wb = XLSX.utils.book_new();
-      const ws1 = XLSX.utils.json_to_sheet(detalhe.length ? detalhe : [{ Professor: "Nenhuma reserva no período" }]);
-      ws1["!cols"] = [28, 11, 6, 6, 8, 24, 40, 12, 10, 30, 18].map((w) => ({ wch: w }));
-      const ws2 = XLSX.utils.json_to_sheet(resumo);
-      ws2["!cols"] = [28, 8, 12, 10, 11].map((w) => ({ wch: w }));
-      XLSX.utils.book_append_sheet(wb, ws1, "Reservas");
-      XLSX.utils.book_append_sheet(wb, ws2, "Resumo por professor");
-      XLSX.writeFile(wb, "reservas_por_professor" + sufixo + ".xlsx");
+      const periodo = "De " + dataBR(inicio) + " a " + dataBR(fim);
+      const centro = (titulo: string, largura: number) => ({ titulo, largura, tipo: "centro" as const });
+      const num = (titulo: string, largura: number) => ({ titulo, largura, tipo: "numero" as const });
+      // cancelada: a linha toda em cinza; pendente: só o status em âmbar
+      const corStatus = (v: Valor): Destaque | undefined => (v === "Confirmada" ? "verde" : v === "Pendente" ? "ambar" : v === "Cancelada" ? "cinza" : undefined);
+      await gerarExcel([
+        {
+          nome: "Reservas",
+          titulo: "Reservas por professor",
+          subtitulo: periodo + " · confirmadas, pendentes e canceladas",
+          colunas: [
+            { titulo: "Professor", largura: 28 }, centro("Data", 11), centro("Dia", 6), centro("Aula", 6), centro("Turno", 8),
+            { titulo: "Sala", largura: 24 }, { titulo: "Título", largura: 36 }, centro("Status", 12), num("Prioridade", 10),
+            { titulo: "Observações", largura: 30 }, centro("Criada em", 17),
+          ],
+          linhas: detalhe,
+          vazio: "Nenhuma reserva no período.",
+          destaque: (v, c, l) => (c === 7 ? corStatus(v) : l[7] === "Cancelada" ? "cinza" : undefined),
+        },
+        {
+          nome: "Resumo por professor",
+          titulo: "Reservas por professor · resumo",
+          subtitulo: periodo,
+          colunas: [{ titulo: "Professor", largura: 28 }, num("Total", 8), num("Confirmadas", 12), num("Pendentes", 11), num("Canceladas", 11)],
+          linhas: resumo.map((g) => [g.Professor, g.Total, g.Confirmadas, g.Pendentes, g.Canceladas]),
+          total: true,
+          destaque: (v, c) => (c === 3 && Number(v) > 0 ? "ambar" : undefined),
+        },
+      ], "reservas_por_professor" + sufixo + ".xlsx");
       toast({ title: "Excel gerado", description: linhas.length + " reserva(s) no período." });
     } catch (err) { falhou(err); } finally { setGerando(null); }
   };

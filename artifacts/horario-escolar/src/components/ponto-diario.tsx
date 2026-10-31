@@ -1,7 +1,7 @@
 // [PONTO-DIARIO] (15/10/2026) Ponto de um dia: escolhe a data e o turno e baixa em PDF
-// (gerado no servidor) ou em Excel (montado aqui com xlsx a partir de ?formato=json).
+// (gerado no servidor) ou em Excel (montado aqui a partir de ?formato=json; formatação em lib/planilha).
 import { useState } from "react";
-import * as XLSX from "xlsx";
+import { baixarExcel as gerarExcel, type Destaque } from "@/lib/planilha";
 import { customFetch, ApiError } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -61,23 +61,26 @@ export function CardPontoDiario() {
     setGerando("xlsx");
     try {
       const p = await customFetch<Ponto>(url("json"));
-      const wb = XLSX.utils.book_new();
-      for (const t of p.turnos) {
-        const cab = ["Professor", ...t.colunas.map((c) => `${c.numeroAula}ª aula (${c.hora})`), "Situação (Presente / Falta / Atestado / Atraso)"];
-        const linhas = t.linhas.map((l) => [l.professor, ...l.celulas.map((c) => (c.tipo === "indisponivel" ? "-----" : c.texto)), ""]);
-        const aoa: (string | number)[][] = [
-          [p.escola],
-          [`Ponto diário · ${t.rotulo} · ${p.diaSemana}, ${p.dataBR}`],
-          ...(p.aviso ? [[p.aviso]] : []),
-          [],
-          cab,
-          ...(linhas.length ? linhas : [["Nenhum professor com aula ou hora-atividade neste turno."]]),
-        ];
-        const ws = XLSX.utils.aoa_to_sheet(aoa);
-        ws["!cols"] = [{ wch: 28 }, ...t.colunas.map(() => ({ wch: 18 })), { wch: 40 }];
-        XLSX.utils.book_append_sheet(wb, ws, t.rotulo);
-      }
-      XLSX.writeFile(wb, `ponto_diario_${data}_${turno}.xlsx`);
+      // HA em azul, atividades em âmbar, horário fora do professor em cinza; linhas altas para assinar
+      const COR: Partial<Record<Celula["tipo"], Destaque>> = { ha: "azul", atividade: "ambar", indisponivel: "cinza" };
+      await gerarExcel(p.turnos.map((t) => ({
+        nome: t.rotulo,
+        titulo: "Ponto diário",
+        subtitulo: `${t.rotulo} · ${p.diaSemana}, ${p.dataBR}`,
+        aviso: p.aviso,
+        colunas: [
+          { titulo: "Professor", largura: 28 },
+          ...t.colunas.map((c) => ({ titulo: `${c.numeroAula}ª aula\n${c.hora}`, largura: 16, tipo: "centro" as const })),
+          { titulo: "Situação\n(Presente / Falta / Atestado / Atraso)", largura: 34 },
+        ],
+        linhas: t.linhas.map((l) => [l.professor, ...l.celulas.map((c) => (c.tipo === "indisponivel" ? "-----" : c.texto)), ""]),
+        vazio: "Nenhum professor com aula ou hora-atividade neste turno.",
+        alturaLinha: 28,
+        destaque: (_v, c, _l, i) => {
+          const cel = c > 0 ? t.linhas[i]?.celulas[c - 1] : undefined;
+          return cel ? COR[cel.tipo] : undefined;
+        },
+      })), `ponto_diario_${data}_${turno}.xlsx`, p.escola);
     } catch (e) { erro(e); } finally { setGerando(null); }
   };
 

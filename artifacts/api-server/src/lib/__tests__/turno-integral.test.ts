@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 
-vi.mock("@workspace/db", () => ({ db: {}, horarioSlotsTable: {} }));
+vi.mock("@workspace/db", () => ({ db: {}, horarioSlotsTable: {}, horariosTable: {}, turmasTable: {} }));
 
-import { calcularMapaIntegral, slotReal, mapaIntegralDosSlots, projetarIntegral, idEspelho } from "../turno-integral";
+import { calcularMapaIntegral, slotReal, mapaIntegralDosSlots, projetarIntegral, idEspelho, aulasIntegraisNoTurno } from "../turno-integral";
 
 // [TURNO-INTEGRAL] esquemas reais do Mario Braga (26/10/2026): matutino Medio/Tecnico
 // 07:30 ... 11:55, vespertino 13:05, 13:55, 14:45, 15:50, 16:40; integral no RCO
@@ -43,6 +43,20 @@ describe("turno integral", () => {
   it("turma comum continua no proprio turno", () => {
     expect(slotReal("vespertino", 3, mapa)).toEqual({ turno: "vespertino", numeroAula: 3 });
     expect(slotReal("integral", 9, mapa)).toEqual({ turno: "vespertino", numeroAula: 3 });
+  });
+
+  // [INTEGRAL-NO-MOTOR] caso real do Mario Braga (29/10/2026): Biologia na 1ME ter 3a aula
+  // e a MELHORIA-matutino pondo o mesmo professor numa turma da manha nesse horario
+  it("aulas da integral entram como ocupadas no turno real, com o numero da aula do turno", () => {
+    const aulas = [
+      { turmaId: 380, professorId: 5, diaSemana: 1, numeroAula: 3 }, // ter 3a integral = 3a da manha
+      { turmaId: 380, professorId: 5, diaSemana: 0, numeroAula: 9 }, // seg 9a integral = 3a da tarde
+      { turmaId: 12, professorId: 5, diaSemana: 1, numeroAula: 3 }, // turma comum: fica de fora
+    ];
+    const integrais = new Set([380]);
+    expect(aulasIntegraisNoTurno(aulas, integrais, mapa, "matutino")).toEqual([{ turmaId: 380, professorId: 5, diaSemana: 1, numeroAula: 3 }]);
+    expect(aulasIntegraisNoTurno(aulas, integrais, mapa, "vespertino")).toEqual([{ turmaId: 380, professorId: 5, diaSemana: 0, numeroAula: 3 }]);
+    expect(aulasIntegraisNoTurno(aulas, integrais, mapa, "noturno")).toEqual([]);
   });
 });
 

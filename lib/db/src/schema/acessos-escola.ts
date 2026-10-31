@@ -5,7 +5,8 @@
 // Plano completo: claude/plano-acessos-escola.md (projeto NexGrade).
 import { pgTable, text, serial, timestamp, boolean, index, uniqueIndex } from "drizzle-orm/pg-core";
 
-export const CARGOS_ACESSO = ["direcao", "coordenacao", "secretaria", "reservas"] as const;
+// no banco real, a trava CHECK do cargo tem esta mesma lista (migracoes-manuais/20261030-cargo-pedagogia.cjs)
+export const CARGOS_ACESSO = ["direcao", "coordenacao", "secretaria", "reservas", "pedagogia"] as const;
 export type CargoAcesso = (typeof CARGOS_ACESSO)[number];
 
 export const acessosEscolaTable = pgTable(

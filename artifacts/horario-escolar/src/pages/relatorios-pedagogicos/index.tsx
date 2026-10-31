@@ -36,8 +36,8 @@ export default function RelatoriosPedagogicosPage() {
   const excel = async (qual: "dia" | "mes") => {
     setGerandoExcel(qual);
     try {
-      if (qual === "dia") excelDoDia(await buscarPresenca(presDia.data, presDia.turno));
-      else excelDoMes(await buscarMes(presMes.mes, presMes.ano));
+      if (qual === "dia") await excelDoDia(await buscarPresenca(presDia.data, presDia.turno));
+      else await excelDoMes(await buscarMes(presMes.mes, presMes.ano));
     } catch (e) {
       toast({ title: "Não foi possível gerar a planilha", description: mensagemErro(e), variant: "destructive" });
     } finally { setGerandoExcel(null); }
