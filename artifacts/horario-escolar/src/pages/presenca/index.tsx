@@ -146,7 +146,7 @@ export default function PresencaPage() {
                 onClick={() => baixar(montarUrl("/api/pedagogia/presenca/pdf", { data, turno }), `presenca_${data}_${turno}.pdf`, "pdf-dia")}>
                 {baixando["pdf-dia"] ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <FileDown className="w-4 h-4 mr-1" />} PDF
               </Button>
-              <Button size="sm" variant="outline" disabled={pendentes.size > 0} onClick={() => p && excelDoDia(p)}
+              <Button size="sm" variant="outline" disabled={pendentes.size > 0} onClick={() => p && excelDoDia(p).catch((e) => toast({ title: "Não foi possível gerar a planilha", description: mensagemErro(e), variant: "destructive" }))}
                 title={pendentes.size ? "Salve antes de gerar o relatório" : undefined}>
                 <FileSpreadsheet className="w-4 h-4 mr-1" /> Excel
               </Button>

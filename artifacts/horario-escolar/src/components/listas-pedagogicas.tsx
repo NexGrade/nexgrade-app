@@ -1,7 +1,7 @@
 // [PEDAGOGIA] (28/10/2026) Listas para a pedagogia, em Excel: professores (com as aulas por turno)
 // e disciplinas (com as turmas e os professores). Montadas aqui com os dados da grade oficial.
 import { useState } from "react";
-import * as XLSX from "xlsx";
+import { baixarExcel, type Coluna } from "@/lib/planilha";
 import { useListProfessores, useListDisciplinas, useListTurmas, useListHorarios } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,13 +16,20 @@ const TURNOS = [
 ];
 const ordenar = (a: string, b: string) => a.localeCompare(b, "pt-BR", { numeric: true });
 
-function salvarPlanilha(linhas: Record<string, string | number>[], aba: string, arquivo: string) {
-  const ws = XLSX.utils.json_to_sheet(linhas);
+// colunas tiradas das chaves da primeira linha; largura pelo maior texto (até 60, depois quebra a linha)
+function salvarPlanilha(linhas: Record<string, string | number>[], aba: string, titulo: string, arquivo: string) {
   const cab = linhas[0] ? Object.keys(linhas[0]) : [];
-  ws["!cols"] = cab.map((c) => ({ wch: Math.min(60, Math.max(c.length, ...linhas.map((l) => String(l[c] ?? "").length)) + 2) }));
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, aba);
-  XLSX.writeFile(wb, arquivo);
+  const colunas: Coluna[] = cab.map((c) => ({
+    titulo: c,
+    largura: Math.min(60, Math.max(c.length, ...linhas.map((l) => String(l[c] ?? "").length)) + 2),
+    tipo: typeof linhas[0]?.[c] === "number" ? "numero" : "texto",
+  }));
+  const hoje = new Date().toLocaleDateString("pt-BR");
+  return baixarExcel([{
+    nome: aba, titulo, subtitulo: `Pela grade oficial em ${hoje} · ${linhas.length} registro(s)`, colunas,
+    linhas: linhas.map((l) => cab.map((c) => l[c])),
+    destaque: (v) => (v === "Inativo" ? "cinza" : undefined),
+  }], arquivo);
 }
 
 export function ListasPedagogicas() {
@@ -55,7 +62,7 @@ export function ListasPedagogicas() {
         "Total de aulas": aulas.length,
       };
     });
-    salvarPlanilha(linhas, "Professores", `lista_professores_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    return salvarPlanilha(linhas, "Professores", "Lista de professores", `lista_professores_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   const listaDisciplinas = () => {
@@ -71,17 +78,17 @@ export function ListasPedagogicas() {
         Professores: [...new Set(aulas.map((h) => nomeProf.get(h.professorId) ?? ""))].filter(Boolean).sort(ordenar).join(", "),
       };
     });
-    salvarPlanilha(linhas, "Disciplinas", `lista_disciplinas_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    return salvarPlanilha(linhas, "Disciplinas", "Lista de disciplinas", `lista_disciplinas_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
-  const gerar = (chave: string, fn: () => void) => {
+  const gerar = async (chave: string, fn: () => Promise<void>) => {
     setGerando(chave);
-    try { fn(); } catch (e) {
+    try { await fn(); } catch (e) {
       toast({ title: "Não foi possível gerar a planilha", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
     } finally { setGerando(null); }
   };
 
-  const Botao = ({ chave, texto, fn }: { chave: string; texto: string; fn: () => void }) => (
+  const Botao = ({ chave, texto, fn }: { chave: string; texto: string; fn: () => Promise<void> }) => (
     <Button className="w-full" disabled={carregando || gerando !== null} onClick={() => gerar(chave, fn)}>
       {carregando || gerando === chave ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}
       {carregando ? "Carregando..." : texto}
