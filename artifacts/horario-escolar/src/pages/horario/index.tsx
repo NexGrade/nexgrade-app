@@ -230,6 +230,7 @@ export function AbaEsquema() { // [FASE-C3] usada em Calendario e Turnos
   const [nivelEnsino, setNivelEnsino] = useState<"fundamental" | "medio_tecnico">("fundamental");
   const [step, setStep] = useState(1);
   const [modoAvancado, setModoAvancado] = useState(false);
+  const [modo, setModo] = useState<"assistente" | "aulas">("assistente"); // [ESQUEMA-AULA-POR-AULA]
   const [form, setForm] = useState({
     qtdAulas: 5, // fundamental e o nivelEnsino padrao inicial (5 aulas)
     duracao: 50,
@@ -321,7 +322,25 @@ export function AbaEsquema() { // [FASE-C3] usada em Calendario e Turnos
         </div>
       )}
 
-      {turno === "integral" ? null : isLoading ? (
+      {turno !== "integral" && (
+        <div className="flex gap-2">{/* [ESQUEMA-AULA-POR-AULA] */}
+          <Button variant={modo === "assistente" ? "secondary" : "ghost"} size="sm" onClick={() => setModo("assistente")}>Assistente (horário padrão)</Button>
+          <Button variant={modo === "aulas" ? "secondary" : "ghost"} size="sm" onClick={() => setModo("aulas")}><Clock className="h-3.5 w-3.5 mr-1" /> Editar aula por aula</Button>
+        </div>
+      )}
+
+      {turno !== "integral" && modo === "aulas" && !isLoading && (
+        <EditorAulaPorAula
+          key={`${turno}-${turno === "matutino" ? nivelEnsino : ""}`}
+          turno={turno}
+          nivelEnsino={turno === "matutino" ? nivelEnsino : undefined}
+          titulo={`${turno.charAt(0).toUpperCase() + turno.slice(1)}${turno === "matutino" ? (nivelEnsino === "medio_tecnico" ? " (Médio/Técnico)" : " (Fundamental)") : ""}`}
+          ajudaSemEsquema="Sem horários salvos: a lista abaixo é a sugestão do assistente. Ajuste cada aula e salve."
+          sugestao={slotsPreview.map((s) => ({ horaInicio: s.horaInicio, duracaoMinutos: s.duracaoMinutos }))}
+        />
+      )}
+
+      {turno === "integral" || modo === "aulas" ? null : isLoading ? (
         <Skeleton className="h-[400px] w-full" />
       ) : (
         <Card className="p-6">
@@ -417,23 +436,46 @@ export function AbaEsquema() { // [FASE-C3] usada em Calendario e Turnos
 // Braga a 3a da tarde do integral e 15:00, nao 14:45). O choque de professor usa o
 // horario real equivalente (lib/turno-integral.ts no servidor).
 function EsquemaIntegral() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const chave = { turno: "integral" as const };
-  const { data: existentes, isLoading } = useListHorarioSlots(chave, { query: { queryKey: getListHorarioSlotsQueryKey(chave) } });
   const { data: manha } = useListHorarioSlots({ turno: "matutino", nivelEnsino: "medio_tecnico" }, { query: { queryKey: getListHorarioSlotsQueryKey({ turno: "matutino", nivelEnsino: "medio_tecnico" }) } });
   const { data: tarde } = useListHorarioSlots({ turno: "vespertino" }, { query: { queryKey: getListHorarioSlotsQueryKey({ turno: "vespertino" }) } });
+  if (!manha || !tarde) return <Skeleton className="h-[300px] w-full" />;
+  const ordenar = (l: typeof manha) => [...(l ?? [])].filter((s) => s.numeroAula >= 1).sort((a, b) => a.numeroAula - b.numeroAula);
+  return (
+    <EditorAulaPorAula
+      turno="integral"
+      titulo="Integral (manhã e tarde)"
+      ajudaSemEsquema="Sugestão a partir do Matutino (Médio/Técnico) e do Vespertino. Confira com o horário da escola (no RCO) antes de salvar."
+      ajudaExtra="O professor da turma integral não pode estar em outra turma no mesmo horário da manhã ou da tarde."
+      sugestao={[...ordenar(manha), ...ordenar(tarde)].map((s) => ({ horaInicio: s.horaInicio.slice(0, 5), duracaoMinutos: s.duracaoMinutos }))}
+    />
+  );
+}
+
+// [ESQUEMA-AULA-POR-AULA] (31/10/2026) Editor aula por aula, para qualquer turno (antes so o Integral tinha):
+// a escola acerta o horario de uma aula que nao segue o padrao do assistente (ex.: Iedo, 10:15 depois de um
+// intervalo de 15 min). Sem esquema salvo, parte da `sugestao` (o que o assistente calculou).
+function EditorAulaPorAula({ turno, nivelEnsino, titulo, ajudaSemEsquema, ajudaExtra, sugestao }: {
+  turno: Turno;
+  nivelEnsino?: "fundamental" | "medio_tecnico";
+  titulo: string;
+  ajudaSemEsquema: string;
+  ajudaExtra?: string;
+  sugestao: Array<{ horaInicio: string; duracaoMinutos: number }>;
+}) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const chave = { turno, nivelEnsino: turno === "matutino" ? nivelEnsino : undefined };
+  const { data: existentes, isLoading } = useListHorarioSlots(chave, { query: { queryKey: getListHorarioSlotsQueryKey(chave) } });
   const salvarLote = useSetHorarioSlotsLote();
   const [linhas, setLinhas] = useState<Array<{ horaInicio: string; duracaoMinutos: number }>>([]);
   const [carregado, setCarregado] = useState(false);
 
   useEffect(() => {
-    if (carregado || isLoading || !manha || !tarde) return;
-    const ordenar = (l: typeof manha) => [...(l ?? [])].filter((s) => s.numeroAula >= 1).sort((a, b) => a.numeroAula - b.numeroAula);
-    const base = existentes && existentes.length > 0 ? ordenar(existentes) : [...ordenar(manha), ...ordenar(tarde)];
-    setLinhas(base.map((s) => ({ horaInicio: s.horaInicio.slice(0, 5), duracaoMinutos: s.duracaoMinutos })));
+    if (carregado || isLoading) return;
+    const salvos = [...(existentes ?? [])].filter((s) => s.numeroAula >= 1).sort((a, b) => a.numeroAula - b.numeroAula);
+    setLinhas(salvos.length > 0 ? salvos.map((s) => ({ horaInicio: s.horaInicio.slice(0, 5), duracaoMinutos: s.duracaoMinutos })) : sugestao);
     setCarregado(true);
-  }, [carregado, isLoading, existentes, manha, tarde]);
+  }, [carregado, isLoading, existentes, sugestao]);
 
   const fim = (l: { horaInicio: string; duracaoMinutos: number }) => {
     const m = paraMinutos(l.horaInicio) + l.duracaoMinutos;
@@ -443,11 +485,12 @@ function EsquemaIntegral() {
 
   function salvar() {
     salvarLote.mutate(
-      { data: { turno: "integral", slots: linhas.map((l, i) => ({ numeroAula: i + 1, horaInicio: l.horaInicio, duracaoMinutos: l.duracaoMinutos })) } },
+      { data: { ...chave, slots: linhas.map((l, i) => ({ numeroAula: i + 1, horaInicio: l.horaInicio, duracaoMinutos: l.duracaoMinutos })) } },
       {
         onSuccess: () => {
-          toast({ title: "Esquema do Integral salvo!", description: `${linhas.length} aulas configuradas.` });
+          toast({ title: "Esquema salvo!", description: `${titulo}: ${linhas.length} aulas configuradas.` });
           queryClient.invalidateQueries({ queryKey: getListHorarioSlotsQueryKey(chave) });
+          queryClient.invalidateQueries({ queryKey: getListHorarioSlotsQueryKey({} as any) });
         },
         onError: () => toast({ title: "Erro ao salvar esquema", variant: "destructive" }),
       },
@@ -455,15 +498,14 @@ function EsquemaIntegral() {
   }
 
   if (isLoading || !carregado) return <Skeleton className="h-[300px] w-full" />;
+  const temEsquema = !!existentes?.some((s) => s.numeroAula >= 1);
   return (
     <Card className="p-6 space-y-4">
       <div>
-        <p className="font-semibold">Integral (manhã e tarde)</p>
+        <p className="font-semibold">{titulo}</p>
         <p className="text-xs text-muted-foreground">
-          {existentes && existentes.length > 0
-            ? "Horários do turno Integral cadastrados. Ajuste o que precisar e salve."
-            : "Sugestão a partir do Matutino (Médio/Técnico) e do Vespertino. Confira com o horário da escola (no RCO) antes de salvar."}
-          {" "}O professor da turma integral não pode estar em outra turma no mesmo horário da manhã ou da tarde.
+          {temEsquema ? "Horários cadastrados. Ajuste o que precisar (início e duração de cada aula) e salve." : ajudaSemEsquema}
+          {ajudaExtra ? ` ${ajudaExtra}` : ""}
         </p>
       </div>
       <div className="grid gap-2 max-w-md">
@@ -484,7 +526,7 @@ function EsquemaIntegral() {
         }}>+ Aula</Button>
       </div>
       {ordemErrada && <p className="text-xs text-amber-600">Há aula começando antes do fim da anterior. Confira os horários.</p>}
-      {existentes && existentes.length > 0 && <p className="text-xs text-amber-600">Salvar substitui o esquema inteiro do Integral.</p>}
+      {temEsquema && <p className="text-xs text-amber-600">Salvar substitui os horários deste turno (as aulas da grade continuam nos mesmos números: 1ª, 2ª...).</p>}
       <div className="flex justify-end pt-2 border-t">
         <Button onClick={salvar} disabled={salvarLote.isPending || linhas.length === 0 || ordemErrada}>
           <Check className="h-4 w-4 mr-1" /> {salvarLote.isPending ? "Salvando..." : "Salvar esquema"}
