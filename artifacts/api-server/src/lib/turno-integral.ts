@@ -9,7 +9,7 @@
 // disponibilidade, HA, teto de aulas por turno) usa esse horario real -- assim o
 // professor da 1ME nao pode estar ao mesmo tempo numa turma da manha ou da tarde, e a
 // disponibilidade dele continua sendo a do Matutino/Vespertino, sem cadastro novo.
-import { db, horarioSlotsTable } from "@workspace/db";
+import { db, horarioSlotsTable, horariosTable, turmasTable } from "@workspace/db";
 import { and, eq, inArray } from "drizzle-orm";
 
 export const TURNO_INTEGRAL = "integral";
@@ -91,6 +91,40 @@ export function mapaIntegralDosSlots(slots: SlotTempo[]): MapaIntegral {
   const integral = slots.filter((s) => s.turno === TURNO_INTEGRAL);
   if (!integral.length) return new Map();
   return calcularMapaIntegral(integral, slots.filter((s) => s.turno !== TURNO_INTEGRAL));
+}
+
+// [INTEGRAL-NO-MOTOR] (30/10/2026) Ao gerar/melhorar a grade de um turno (CP-SAT), so as aulas das
+// turmas DESTE turno entravam como horario ocupado do professor; a turma integral tem turno proprio
+// e ficava de fora. No Mario Braga (29/10) a MELHORIA-matutino pos o professor de Biologia numa turma
+// da manha na ter 3a aula, a mesma hora da aula dele na 1ME DOC. Agora as aulas da integral que caem
+// no turno entram como ocupadas, ja com o numero da aula do turno real.
+type AulaDoProfessor = { turmaId: number; professorId: number; diaSemana: number; numeroAula: number };
+
+/** Aulas de turma integral que caem no `turno`, com o numero da aula desse turno. Funcao pura (testada). */
+export function aulasIntegraisNoTurno<A extends AulaDoProfessor>(aulas: A[], turmasIntegrais: Set<number>, mapa: MapaIntegral, turno: string): A[] {
+  const r: A[] = [];
+  for (const a of aulas) {
+    if (!turmasIntegrais.has(a.turmaId)) continue;
+    const real = mapa.get(a.numeroAula);
+    if (real && real.turno === turno) r.push({ ...a, numeroAula: real.numeroAula });
+  }
+  return r;
+}
+
+/** Le do banco as aulas destes professores em turmas integrais que caem no `turno` (horario real). */
+export async function carregarAulasIntegraisNoTurno(escolaId: string, turno: string, professorIds: number[]): Promise<AulaDoProfessor[]> {
+  if (!professorIds.length || turno === TURNO_INTEGRAL) return [];
+  const integrais = (await db.select({ id: turmasTable.id }).from(turmasTable).where(and(
+    eq(turmasTable.escolaId, escolaId), eq(turmasTable.turno, TURNO_INTEGRAL), eq(turmasTable.fantasma, false),
+  ))).map((t) => t.id);
+  if (!integrais.length) return [];
+  const mapa = await carregarMapaIntegral(escolaId);
+  const aulas = await db.select({
+    turmaId: horariosTable.turmaId, professorId: horariosTable.professorId, diaSemana: horariosTable.diaSemana, numeroAula: horariosTable.numeroAula,
+  }).from(horariosTable).where(and(
+    eq(horariosTable.escolaId, escolaId), inArray(horariosTable.turmaId, integrais), inArray(horariosTable.professorId, professorIds),
+  ));
+  return aulasIntegraisNoTurno(aulas, new Set(integrais), mapa, turno);
 }
 
 const ORDEM_ESPELHO: Record<string, number> = { matutino: 1, vespertino: 2, noturno: 3 };
