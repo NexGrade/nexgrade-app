@@ -132,13 +132,18 @@ router.post("/lote", async (req, res) => {
   // no topo do arquivo sobre o slot informativo (ex.: 18:00 no
   // noturno). O wizard nunca envia 0, então excluir 0 do DELETE garante
   // que salvar o esquema normal nunca apaga esse slot por acidente.
-  await db.delete(horarioSlotsTable)
-    .where(and(
-      eq(horarioSlotsTable.escolaId, escolaId),
-      eq(horarioSlotsTable.turno, parsed.data.turno),
-      condicaoNivelEnsino(parsed.data.nivelEnsino),
-      gte(horarioSlotsTable.numeroAula, 1),
-    ));
+  const doTurno = and(
+    eq(horarioSlotsTable.escolaId, escolaId),
+    eq(horarioSlotsTable.turno, parsed.data.turno),
+    condicaoNivelEnsino(parsed.data.nivelEnsino),
+    gte(horarioSlotsTable.numeroAula, 1),
+  );
+  // [ESQUEMA-AULA-POR-AULA] (31/10/2026) a aula marcada como nao letiva (ex.: entrada do noturno as 18:00)
+  // continua nao letiva depois de salvar o esquema (antes o apaga-e-recria voltava todas para letivas)
+  const naoLetivas = new Set((await db.select().from(horarioSlotsTable).where(doTurno))
+    .filter((s) => s.letivo === false).map((s) => s.numeroAula));
+
+  await db.delete(horarioSlotsTable).where(doTurno);
 
   const resultado = await db.insert(horarioSlotsTable)
     .values(parsed.data.slots.map(slot => ({
@@ -146,6 +151,7 @@ router.post("/lote", async (req, res) => {
       turno: parsed.data.turno,
       nivelEnsino: parsed.data.nivelEnsino ?? null,
       ...slot,
+      ...(naoLetivas.has(slot.numeroAula) ? { letivo: false } : {}),
     })))
     .returning();
 
