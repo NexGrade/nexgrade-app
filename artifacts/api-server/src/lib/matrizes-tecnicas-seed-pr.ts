@@ -4348,5 +4348,62 @@ export const MATRIZES_TECNICAS_SEED_PR_2026: MatrizTecnicaTemplate[] = [
         ],
       }
     ],
+  },
+  // [MATRIZ-3A-RCO] (31/10/2026) 3ª série técnica integrada como está no RCO em 2026 (turmas que entraram
+  // antes da IN 001/2026): o RCO divide a turma em BASE (curso SERE 0016, comum aos técnicos: 14 aulas, FGB)
+  // e ITINERÁRIO (curso SERE próprio, IFA). Na escola fica uma matriz só; a categoria diz para qual turma do
+  // RCO cada disciplina vai (FGB -> código SERE da turma, IFA -> código SERE da parte IF).
+  // Fonte: grade SEED do arquivo do RCO do Mário Braga (3MA ADM = 0016 + 1624; 3MB DES = 0016 + 1623).
+  {
+    codigo: "1624",
+    curso: "Técnico em Administração Integrado ao Ensino Médio - 3ª Série (RCO 0016 + 1624)",
+    eixo: "gestao_negocios",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Projeto de Vida", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Administração Financeira e Orçamentária", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Controladoria e Finanças", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Liderança e Gestão de Pessoas", categoria: "IFA", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Negociação e Vendas", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Noções de Direito", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Recursos Humanos", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Tecnologias e Ferramentas de Gestão", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true }
+        ],
+      }
+    ],
+  },
+  {
+    codigo: "1623",
+    curso: "Técnico em Desenvolvimento de Sistemas Integrado ao Ensino Médio - 3ª Série (RCO 0016 + 1623)",
+    eixo: "informacao_comunicacao",
+    formaOferta: "integrada",
+    series: [
+      {
+        serieAno: "3ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Física", categoria: "FGB", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Educação Financeira", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Projeto de Vida", categoria: "FGB", cargaHorariaSemanal: 1, obrigatoria: true },
+          { nome: "Análise e Projeto de Sistemas", categoria: "IFA", cargaHorariaSemanal: 3, obrigatoria: true },
+          { nome: "Banco de Dados", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Ciências de Dados", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Computação Gráfica", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Programação Back-End II", categoria: "IFA", cargaHorariaSemanal: 4, obrigatoria: true },
+          { nome: "Programação Mobile", categoria: "IFA", cargaHorariaSemanal: 2, obrigatoria: true },
+          { nome: "Programação no Desenvolvimento de Sistemas", categoria: "IFA", cargaHorariaSemanal: 4, obrigatoria: true }
+        ],
+      }
+    ],
   }
 ];

@@ -10,6 +10,9 @@
 export const DICIONARIO_CODDISC_PENDENTE: Record<string, number> = {
   "Ensino Religioso": 33,
   "Educação Ambiental": 89,
+  // [MATRIZ-3A-RCO] (31/10/2026) do arquivo do RCO do Mario Braga (sem SAE no SERE)
+  "Língua Espanhola": 3826,
+  "Prática de Formação": 1269,
 };
 
 export type OrigemCoddisc = "externo" | "sae" | "dicionario";

@@ -18,7 +18,7 @@ describe("turmasQuePrecisamDoScript", () => {
     ];
     expect(turmasQuePrecisamDoScript(regs)).toEqual([
       { codTurma: "2729930", turma: "1ME DOC", motivos: ["mesmo código 1269: Prática de Formação (Est. Supe) - Turma 01 / Prática de Formação (Est. Supe) - Turma 02"] },
-      { codTurma: "2692280", turma: "2NC", motivos: ["trio/dupla: Seg 19:35 (3 disciplinas)"] },
+      { codTurma: "2692280", turma: "2NC", motivos: ["mais de uma disciplina no horário (trio, híbrida ou assíncrona): Seg 19:35 (3 disciplinas)"] },
     ]);
   });
 });

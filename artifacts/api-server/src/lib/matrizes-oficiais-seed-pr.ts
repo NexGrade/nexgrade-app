@@ -13,6 +13,8 @@ export interface ItemMatrizOficial {
   nome: string;
   categoria: CategoriaMatrizOficial;
   cargaHorariaSemanal: number;
+  /** [MATRIZ-FACULTATIVA] (31/10/2026) false = matricula facultativa (Lingua Espanhola). Sem o campo: obrigatoria. */
+  obrigatoria?: boolean;
 }
 
 export interface SerieMatrizOficial {
@@ -23,7 +25,7 @@ export interface SerieMatrizOficial {
 export interface MatrizOficialTemplate {
   id: string;
   label: string;
-  nivel: "fundamental" | "medio";
+  nivel: "fundamental" | "medio" | "normal_magisterio";
   series: SerieMatrizOficial[];
 }
 
@@ -152,6 +154,8 @@ export const MATRIZES_OFICIAIS_SEED_PR: MatrizOficialTemplate[] = [
     // reais 2026 do Mário Braga, do Arlinda e do Romário (antes: matriz 2025, 30h,
     // com Projeto de Vida, Tecnologia e Inovação e Educação Financeira).
     // Nomes conforme o SAE/RCO (Ed. Digital = SAE 6507; Leitura e Recomposição LP no fundamental = código 6299).
+    // [MATRIZ-FACULTATIVA] (31/10/2026) Língua Espanhola (RCO 3826, 4 aulas, matrícula facultativa) em todas
+    // as séries, como na grade SEED do RCO do Mário Braga (curso 4060: 25 aulas + 4 de Espanhol).
     series: [
       {
         serieAno: "6º Ano",
@@ -167,6 +171,7 @@ export const MATRIZES_OFICIAIS_SEED_PR: MatrizOficialTemplate[] = [
           { nome: "Ensino Religioso", categoria: "BNC", cargaHorariaSemanal: 1 },
           { nome: "Leitura e Recomposição da Aprendizagem em Língua Portuguesa", categoria: "PD", cargaHorariaSemanal: 2 },
           { nome: "Rec. Aprend. Matemática", categoria: "PD", cargaHorariaSemanal: 2 },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
         ],
       },
       {
@@ -182,6 +187,7 @@ export const MATRIZES_OFICIAIS_SEED_PR: MatrizOficialTemplate[] = [
           { nome: "História", categoria: "BNC", cargaHorariaSemanal: 2 },
           { nome: "Ensino Religioso", categoria: "BNC", cargaHorariaSemanal: 1 },
           { nome: "Redação e Leitura", categoria: "PD", cargaHorariaSemanal: 2 },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
         ],
       },
       {
@@ -197,6 +203,7 @@ export const MATRIZES_OFICIAIS_SEED_PR: MatrizOficialTemplate[] = [
           { nome: "História", categoria: "BNC", cargaHorariaSemanal: 3 },
           { nome: "Redação e Leitura", categoria: "PD", cargaHorariaSemanal: 2 },
           { nome: "Educação Digital e Computação: Programação e IA", categoria: "PD", cargaHorariaSemanal: 2 },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
         ],
       },
       {
@@ -212,6 +219,7 @@ export const MATRIZES_OFICIAIS_SEED_PR: MatrizOficialTemplate[] = [
           { nome: "História", categoria: "BNC", cargaHorariaSemanal: 2 },
           { nome: "Leitura e Recomposição da Aprendizagem em Língua Portuguesa", categoria: "PD", cargaHorariaSemanal: 2 },
           { nome: "Rec. Aprend. Matemática", categoria: "PD", cargaHorariaSemanal: 2 },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
         ],
       },
     ],
@@ -291,7 +299,7 @@ export const MATRIZES_OFICIAIS_SEED_PR: MatrizOficialTemplate[] = [
           { nome: "História do Paraná", categoria: "IF", cargaHorariaSemanal: 2 },
           { nome: "Geografia do Paraná", categoria: "IF", cargaHorariaSemanal: 2 },
           { nome: "Arte Paranaense", categoria: "IF", cargaHorariaSemanal: 2 },
-          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4 },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
         ],
       },
       {
@@ -301,7 +309,7 @@ export const MATRIZES_OFICIAIS_SEED_PR: MatrizOficialTemplate[] = [
           { nome: "Literatura e Produção de Texto", categoria: "IF", cargaHorariaSemanal: 2 },
           { nome: "Filosofia: Análise de Textos Filosóficos", categoria: "IF", cargaHorariaSemanal: 2 },
           { nome: "Sociologia: Governo, Cidadania e Sociedade", categoria: "IF", cargaHorariaSemanal: 2 },
-          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4 },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
         ],
       },
       {
@@ -330,7 +338,7 @@ export const MATRIZES_OFICIAIS_SEED_PR: MatrizOficialTemplate[] = [
           { nome: "Matemática: Resolução de Problemas", categoria: "IF", cargaHorariaSemanal: 2 },
           { nome: "Biologia: Sustentabilidade em Ação", categoria: "IF", cargaHorariaSemanal: 2 },
           { nome: "Química e Tecnociência", categoria: "IF", cargaHorariaSemanal: 2 },
-          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4 },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
         ],
       },
       {
@@ -340,7 +348,7 @@ export const MATRIZES_OFICIAIS_SEED_PR: MatrizOficialTemplate[] = [
           { nome: "Programação", categoria: "IF", cargaHorariaSemanal: 2 },
           { nome: "Física e Tecnociência", categoria: "IF", cargaHorariaSemanal: 2 },
           { nome: "Robótica", categoria: "IF", cargaHorariaSemanal: 2 },
-          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4 },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
         ],
       },
       {
@@ -1201,6 +1209,38 @@ export const MATRIZES_OFICIAIS_SEED_PR: MatrizOficialTemplate[] = [
           { nome: "Oratória", categoria: "IF", cargaHorariaSemanal: 2 },
           { nome: "Geopolítica", categoria: "IF", cargaHorariaSemanal: 2 },
           { nome: "Filosofia e Sociedade Moderna", categoria: "IF", cargaHorariaSemanal: 2 },
+        ],
+      },
+    ],
+  },
+  {
+    // [MATRIZ-DOCENTES] (31/10/2026) Formação de Docentes (Normal, integrado, curso SERE 2500), 1ª série,
+    // pela grade SEED do RCO do Mário Braga (turma 1ME DOC, integral): 35 aulas + Língua Espanhola (4,
+    // facultativa). Só a 1ª série: as demais ainda não apareceram em arquivo do RCO de escola nossa.
+    // Categoria: o RCO não divide a 1ª série em base e itinerário; tudo FGB, como a escola cadastrou.
+    id: "formacao_docentes_1a",
+    label: "Formação de Docentes da Educação Infantil e dos Anos Iniciais do Ensino Fundamental, na Modalidade Normal, em Nível Médio",
+    nivel: "normal_magisterio",
+    series: [
+      {
+        serieAno: "1ª Série",
+        itens: [
+          { nome: "Língua Portuguesa", categoria: "FGB", cargaHorariaSemanal: 2 },
+          { nome: "Língua Inglesa", categoria: "FGB", cargaHorariaSemanal: 2 },
+          { nome: "Arte", categoria: "FGB", cargaHorariaSemanal: 2 },
+          { nome: "Educação Física", categoria: "FGB", cargaHorariaSemanal: 2 },
+          { nome: "Matemática", categoria: "FGB", cargaHorariaSemanal: 3 },
+          { nome: "Educação Digital e Computação: Programação e IA", categoria: "FGB", cargaHorariaSemanal: 1 },
+          { nome: "Biologia", categoria: "FGB", cargaHorariaSemanal: 2 },
+          { nome: "Química", categoria: "FGB", cargaHorariaSemanal: 2 },
+          { nome: "Geografia", categoria: "FGB", cargaHorariaSemanal: 2 },
+          { nome: "Matemática Básica para Anos Iniciais", categoria: "FGB", cargaHorariaSemanal: 3 },
+          { nome: "Organização do Trabalho Pedagógico", categoria: "FGB", cargaHorariaSemanal: 2 },
+          { nome: "Desenvolvimento Humano e Socioemocional", categoria: "FGB", cargaHorariaSemanal: 2 },
+          { nome: "Educação Inclusiva e Diversidade", categoria: "FGB", cargaHorariaSemanal: 3 },
+          { nome: "Trabalho Pedagógico na Educação Infantil", categoria: "FGB", cargaHorariaSemanal: 2 },
+          { nome: "Prática de Formação", categoria: "FGB", cargaHorariaSemanal: 5 },
+          { nome: "Língua Espanhola", categoria: "PD", cargaHorariaSemanal: 4, obrigatoria: false },
         ],
       },
     ],
