@@ -1,7 +1,7 @@
 import { clerkPtBR } from "@/lib/clerk-ptbr"; // [CLERK-PTBR]
 import { usePapelEfetivo, useAtivarEscolaDoMembro, useEu, ROTAS_PEDAGOGIA, INICIO_PEDAGOGIA } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA] [ACESSOS-ESCOLA]
 import { trocarDeEscola, gravarEscolaAtiva } from "@/lib/escola-ativa"; // [ACESSOS-ESCOLA] [BOTAO-SAIR]
-import { useSituacaoAcesso, TelaBloqueio } from "@/lib/situacao-acesso"; // [TRAVA-AVALIACAO]
+import { useSituacaoAcesso, TelaBloqueio, CONTATO_NEXUS, linkWhatsApp } from "@/lib/situacao-acesso"; // [TRAVA-AVALIACAO] [WHATSAPP-NEXUS]
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // [ACESSOS-ESCOLA]
 import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect, useLocation, useSearch } from "wouter";
@@ -248,7 +248,9 @@ function AuthShell({ subtitulo, aviso, children }: { subtitulo: string; aviso: A
         <p>NexGrade by Nexus Core Tecnologia</p>
         <p>
           Precisa de ajuda?{" "}
-          <a href="mailto:contato@nexuscoretecnologia.com.br" className="underline hover:text-slate-600">Fale com o suporte</a>
+          <a href={linkWhatsApp("Olá! Preciso de ajuda para entrar no NexGrade.")} target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-600">WhatsApp {CONTATO_NEXUS.whatsappRotulo}</a>{/* [WHATSAPP-NEXUS] */}
+          {" · "}
+          <a href="mailto:contato@nexuscoretecnologia.com.br" className="underline hover:text-slate-600">e-mail do suporte</a>
         </p>
       </footer>
     </div>
