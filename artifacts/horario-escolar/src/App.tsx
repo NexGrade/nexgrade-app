@@ -619,15 +619,16 @@ function SeletorEscola() {
   if (eu.escolas.length === 1) {
     const e = eu.escolas[0];
     return (
-      <div className="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-1.5 text-sm text-slate-700">
-        <span className="font-medium">{e.nome}</span>
-        <span className="hidden text-xs text-slate-500 sm:inline">· {e.rotuloCargo}</span>
+      // [CABECALHO-DESTAQUE] (31/10/2026) a escola em destaque e o cargo num selo azul
+      <div className="flex min-w-0 items-center gap-2 text-sm">
+        <span className="truncate font-semibold text-slate-900">{e.nome}</span>
+        <span className="hidden shrink-0 rounded-full bg-[#E3F2FD] px-2 py-0.5 text-[11px] font-medium text-[#0D47A1] sm:inline">{e.rotuloCargo}</span>
       </div>
     );
   }
   return (
     <Select value={eu.escolaAtual ?? undefined} onValueChange={(id) => { if (id !== eu.escolaAtual) trocarDeEscola(id, basePath); else navegar("/"); }}>
-      <SelectTrigger className="h-9 w-[min(320px,60vw)] text-sm" aria-label="Escola">
+      <SelectTrigger className="h-9 w-[min(340px,55vw)] text-sm font-medium" aria-label="Escola">
         <SelectValue placeholder="Escolha a escola" />
       </SelectTrigger>
       <SelectContent>
@@ -694,13 +695,36 @@ function GlobalTopBar() {
   const noMaster = rota === "/master" || rota.startsWith("/master/");
   return (
     <Show when="signed-in">
-      <div className="h-14 shrink-0 flex items-center justify-between px-5 border-b border-border bg-card">
-        <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="NexGrade" className="w-7 h-7 rounded-lg shrink-0 shadow-sm" />
-          <div className="leading-none hidden sm:block">
-            <span className="font-bold text-[15px] tracking-tight text-foreground font-heading">NexGrade</span>
-            <span className="block text-[10px] text-muted-foreground font-medium tracking-wide -mt-0.5">by Nexus Core Tecnologia</span>
+      {/* [CABECALHO-DESTAQUE] (31/10/2026) linha azul embaixo; a escola atual fica ao lado da marca */}
+      <div className="h-16 shrink-0 flex items-center justify-between gap-3 px-3 sm:px-5 border-b-2 border-primary bg-card">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <img src="/logo.png" alt="NexGrade" className="w-8 h-8 rounded-lg shrink-0 shadow-sm" />
+          <div className="leading-none hidden sm:block shrink-0">
+            <span className="font-bold text-base tracking-tight text-foreground font-heading">NexGrade</span>
+            <span className="block text-[10px] text-muted-foreground font-medium tracking-wide mt-0.5">by Nexus Core Tecnologia</span>
           </div>{/* [MARCA-UNICA] a marca aparece so aqui; o menu lateral nao repete */}
+          <span className="hidden sm:block h-8 w-px shrink-0 bg-border" aria-hidden />
+          {pelobanco ? <SeletorEscola /> : isLoading ? null : (
+          <OrganizationSwitcher
+            hidePersonal
+            appearance={{
+              // [NOVO] colorMutedForeground mais escuro que o padrao do tema
+              // (#64748b, definido em clerkAppearance acima) -- so aqui, sem
+              // afetar o SignIn/SignUp nem outros componentes do Clerk. O
+              // Clerk usa essa cor pro texto de organizacoes NAO selecionadas
+              // dentro do popover do seletor, que ficava com contraste baixo
+              // demais pra leitura confortavel.
+              variables: {
+                colorMutedForeground: "#475569",
+              },
+              elements: {
+                rootBox: "flex items-center",
+                organizationSwitcherTrigger: "px-3 py-1.5 rounded-md border border-slate-200 text-sm text-slate-700 hover:bg-slate-50",
+                organizationPreviewMainIdentifier: { color: "#334155", fontWeight: 500 }, // [LOGIN] contraste: o nome da escola ficava quase invisivel
+              },
+            }}
+          />
+          )}
         </div>
         {/* [FIX] Props afterCreateOrganizationUrl/afterSelectOrganizationUrl/
             afterLeaveOrganizationUrl removidas -- elas navegam atraves do
@@ -708,7 +732,7 @@ function GlobalTopBar() {
             que nao avisa nem o Wouter nem o React da mudanca de rota. A
             navegacao apos trocar de organizacao agora e feita via reload
             completo pelo OrgSwitchWatcher (ver comentario acima). */}
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
         {/* [MASTER-SUPORTE] so para a Nexus Core: ir e voltar do Painel Master */}
         {whoami?.isMaster && (noMaster ? (
           // [MASTER-VOLTAR] (17/10/2026) era so um selo sem clique: agora volta ao sistema da escola
@@ -730,27 +754,6 @@ function GlobalTopBar() {
             <ShieldCheck className="h-4 w-4" /><span className="hidden sm:inline">Painel Master</span>
           </button>
         ))}
-        {pelobanco ? <SeletorEscola /> : isLoading ? null : (
-        <OrganizationSwitcher
-          hidePersonal
-          appearance={{
-            // [NOVO] colorMutedForeground mais escuro que o padrao do tema
-            // (#64748b, definido em clerkAppearance acima) -- so aqui, sem
-            // afetar o SignIn/SignUp nem outros componentes do Clerk. O
-            // Clerk usa essa cor pro texto de organizacoes NAO selecionadas
-            // dentro do popover do seletor, que ficava com contraste baixo
-            // demais pra leitura confortavel.
-            variables: {
-              colorMutedForeground: "#475569",
-            },
-            elements: {
-              rootBox: "flex items-center",
-              organizationSwitcherTrigger: "px-3 py-1.5 rounded-md border border-slate-200 text-sm text-slate-700 hover:bg-slate-50",
-              organizationPreviewMainIdentifier: { color: "#334155", fontWeight: 500 }, // [LOGIN] contraste: o nome da escola ficava quase invisivel
-            },
-          }}
-        />
-        )}
         <BotaoSair />
         </div>
       </div>

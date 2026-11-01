@@ -219,8 +219,12 @@ router.get("/grade", async (req, res) => {
     ];
   });
   if (formato === "json") {
-    const data = rows.map(r => ({
+    // [PLANILHAS-FORMATADAS] (31/10/2026) a tela monta o Excel formatado com estes dados;
+    // diaSemana, numeroAula e turno so foram acrescentados (os campos antigos continuam)
+    const data = rows.map((r, i) => ({
       turma: r[0], dia: r[1], aula: r[2], disciplina: r[3], professor: r[4], sala: r[5],
+      diaSemana: slots[i]!.diaSemana, numeroAula: slots[i]!.numeroAula,
+      turno: turmas.find(t => t.id === slots[i]!.turmaId)?.turno ?? "",
     }));
     res.json(data);
     return;
@@ -248,11 +252,17 @@ router.get("/ponto", async (req, res) => {
     groupedByProf[s.professorId]!.push(s);
   });
   const rows: string[][] = [];
+  // [PLANILHAS-FORMATADAS] (31/10/2026) ?formato=json: a tela monta o Excel formatado
+  const linhasJson: Array<{ professor: string; email: string; diaSemana: number; dia: string; aula: number; disciplina: string; turma: string; turno: string }> = [];
   for (const [profId, profSlots] of Object.entries(groupedByProf)) {
     const prof = profMap.get(Number(profId));
     profSlots.forEach(s => {
       const disc = disciplinas.find(d => d.id === s.disciplinaId);
       const turma = turmas.find(t => t.id === s.turmaId);
+      linhasJson.push({
+        professor: prof?.nome ?? "", email: prof?.email ?? "", diaSemana: s.diaSemana, dia: DIAS[s.diaSemana] ?? "",
+        aula: s.numeroAula, disciplina: disc?.nome ?? "", turma: turma?.nome ?? "", turno: turma?.turno ?? "",
+      });
       rows.push([
         prof?.nome ?? "",
         prof?.email ?? "",
@@ -264,6 +274,10 @@ router.get("/ponto", async (req, res) => {
         String(ano),
       ]);
     });
+  }
+  if (req.query.formato === "json") {
+    res.json({ mes, ano, linhas: linhasJson });
+    return;
   }
   const csv = toCSV(
     ["Professor", "E-mail", "Dia", "Aula", "Disciplina", "Turma", "Mês", "Ano"],
