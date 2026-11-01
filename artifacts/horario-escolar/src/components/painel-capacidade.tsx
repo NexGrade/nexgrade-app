@@ -47,6 +47,9 @@ export function PainelCapacidade({ turno }: { turno?: string } = {}) {
 
   const erros = data.problemas.filter((p) => p.nivel === "erro");
   const avisos = data.problemas.filter((p) => p.nivel === "aviso");
+  // [DIAGNOSTICO-GERACAO] (01/11/2026) "a grade nao fecha" = mais aulas que horarios livres: o motor recusa a grade
+  // inteira (simulacoes de 01/11). Antes o painel dizia que dava para gerar e so a HA ficaria incompleta.
+  const naoFecha = erros.filter((p) => /não fecha|nao fecha/.test(p.mensagem));
 
   return (
     <div className="space-y-2">
@@ -61,7 +64,9 @@ export function PainelCapacidade({ turno }: { turno?: string } = {}) {
         <div className="space-y-1.5 rounded-md border border-red-200 bg-red-50 p-2.5 text-xs text-red-800">
           <div className="flex items-center gap-1.5 font-semibold">
             <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-red-600" />
-            {turno ? `${erros.length} professor(es) com HA faltando` : `${erros.length} professor(es) sem horário suficiente`}
+            {naoFecha.length
+              ? `${naoFecha.length} professor(es) com mais aulas do que horários livres`
+              : turno ? `${erros.length} professor(es) com HA faltando` : `${erros.length} professor(es) sem horário suficiente`}
           </div>
           <ul className="list-disc space-y-0.5 pl-5">
             {erros.map((p, i) => (
@@ -71,7 +76,9 @@ export function PainelCapacidade({ turno }: { turno?: string } = {}) {
             ))}
           </ul>
           <p className="text-red-700">
-            A grade pode ser gerada, mas a hora-atividade desses professores vai ficar incompleta. Resolva liberando horários ou ajustando a carga.
+            {naoFecha.length
+              ? "Com isso não existe grade: o motor vai recusar. Libere horários desses professores (Disponibilidade) ou ajuste a carga antes de gerar."
+              : "A grade pode ser gerada, mas a hora-atividade desses professores vai ficar incompleta. Resolva liberando horários ou ajustando a carga."}
           </p>
         </div>
       )}

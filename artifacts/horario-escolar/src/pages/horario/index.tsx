@@ -32,6 +32,7 @@ import { SeletorBusca } from "@/components/seletor-busca";
 import { PainelCapacidade } from "@/components/painel-capacidade";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"; // [EDITAR-CELULA-GRADE]
 import { ProgressoGeracao, type EtapaGeracao, type ProgressoGeracaoDados, type ProgressoMotor } from "@/components/progresso-geracao"; // [PROGRESSO-GERACAO]
+import { DiagnosticoGeracaoDialog, diagnosticoDe, type DiagnosticoGeracao } from "@/components/diagnostico-geracao"; // [DIAGNOSTICO-GERACAO]
 import {
   Check, ArrowRight, ArrowLeft, Lock, ChevronDown, ChevronRight, Plus,
   Calendar, ListChecks, AlertTriangle, FlaskConical,
@@ -2118,6 +2119,7 @@ function AbaExperimental() {
   // preciso pra reduzir janelas. Sempre grava como experimento.
   const [openGerarCpsat, setOpenGerarCpsat] = useState(false);
   const [gerandoCpsat, setGerandoCpsat] = useState(false);
+  const [diagnostico, setDiagnostico] = useState<DiagnosticoGeracao | null>(null); // [DIAGNOSTICO-GERACAO] quadro "Por que não gerou"
   const [progressoCpsat, setProgressoCpsat] = useState<ProgressoGeracaoDados | null>(null); // [PROGRESSO-GERACAO] um job CP-SAT por vez
   // [PARAR-MOTOR] job em andamento (qualquer das tres geracoes) e pedido de parada em curso
   const [jobIdProgresso, setJobIdProgresso] = useState<string | null>(null);
@@ -2234,6 +2236,7 @@ function AbaExperimental() {
     setJobIdProgresso(jobId); setParandoCpsat(false); // [PARAR-MOTOR]
     try {
       const statusResult = await pollarStatusCpsat(jobId, setProgressoCpsat);
+      setDiagnostico(diagnosticoDe(statusResult)); // [DIAGNOSTICO-GERACAO] o que esta errado e como corrigir
       if (statusResult.jobStatus === "error") {
         throw new Error(statusResult.mensagem || statusResult.detalhe || statusResult.error || "Erro ao gerar a grade.");
       }
@@ -2351,6 +2354,7 @@ function AbaExperimental() {
     setJobIdProgresso(jobId); setParandoCpsat(false); // [PARAR-MOTOR]
     try {
       const statusResult = await pollarStatusCpsat(jobId, setProgressoCpsat);
+      setDiagnostico(diagnosticoDe(statusResult)); // [DIAGNOSTICO-GERACAO] o que esta errado e como corrigir
       if (statusResult.jobStatus === "error") {
         throw new Error(statusResult.mensagem || statusResult.detalhe || statusResult.error || "Erro ao gerar a grade.");
       }
@@ -2450,6 +2454,7 @@ function AbaExperimental() {
     setJobIdProgresso(jobId); setParandoCpsat(false); // [PARAR-MOTOR]
     try {
       const statusResult = await pollarStatusCpsat(jobId, setProgressoCpsat);
+      setDiagnostico(diagnosticoDe(statusResult)); // [DIAGNOSTICO-GERACAO] o que esta errado e como corrigir
       if (statusResult.jobStatus === "error") {
         throw new Error(statusResult.mensagem || statusResult.detalhe || statusResult.error || "Erro ao gerar a grade.");
       }
@@ -2488,8 +2493,25 @@ function AbaExperimental() {
     }
   };
 
+  // [DIAGNOSTICO-GERACAO] (01/11/2026) professor com mais aulas do que horarios livres no turno: o motor vai recusar
+  // a grade (simulacoes de 01/11: ~1 min perdido e a escola so via "Nao existe grade"). Avisa ANTES e deixa escolher.
+  // Nao bloqueia: a conta da capacidade nao desconta assincronas, trio e codocencia.
+  const confirmarCapacidadeAntes = async (turno: string): Promise<boolean> => {
+    try {
+      const cap = await customFetch<{ problemas: Array<{ professor: string; nivel: string; mensagem: string }> }>(
+        `/api/horarios/capacidade?turno=${encodeURIComponent(turno)}`, { responseType: "json" });
+      const naoFecha = cap.problemas.filter((p) => p.nivel === "erro" && /não fecha|nao fecha/.test(p.mensagem));
+      if (!naoFecha.length) return true;
+      const lista = naoFecha.slice(0, 8).map((p) => `• ${p.professor}: ${p.mensagem}`).join("\n");
+      return confirm(`${naoFecha.length} professor(es) têm mais aulas do que horários livres neste turno:\n\n${lista}${naoFecha.length > 8 ? `\n• ... e mais ${naoFecha.length - 8}` : ""}\n\nCom isso o motor deve responder que não existe grade. Corrija antes (Disponibilidade ou carga), ou clique OK para tentar mesmo assim.`);
+    } catch {
+      return true; // sem a conta, segue como antes
+    }
+  };
+
   const handleGerarCpsat = async () => {
     if (!cpsatForm.nomeExperimental.trim()) { toast({ title: "Informe o nome do experimento", variant: "destructive" }); return; }
+    if (!(await confirmarCapacidadeAntes(cpsatForm.turno))) return; // [DIAGNOSTICO-GERACAO]
     setGerandoCpsat(true);
     try {
       // [NOVO] Rota assincrona: devolve um jobId na hora (202) em vez
@@ -2612,11 +2634,14 @@ function AbaExperimental() {
       });
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
       toast({ title: `Experimento gerado! ${result.slotsGerados} aulas criadas.${result.conflitos.length ? ` ${result.conflitos.length} aviso(s).` : ""}` });
+      setDiagnostico(diagnosticoDe(result)); // [DIAGNOSTICO-GERACAO] por que cada aula nao coube
       setOpenGerar(false);
       setNomeExpandido(gerarForm.nomeExperimental);
       setTurmaExpandidaId(Number(gerarForm.turmaId));
-    } catch {
-      toast({ title: "Erro ao gerar experimento", variant: "destructive" });
+    } catch (err) {
+      // [DIAGNOSTICO-GERACAO] antes so "Erro ao gerar experimento", sem o motivo (ex.: turma com aula fixa ou trio)
+      setDiagnostico(diagnosticoDe(err));
+      toast({ title: "Erro ao gerar experimento", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
     } finally {
       setGerando(false);
     }
@@ -2642,8 +2667,12 @@ function AbaExperimental() {
           r?.haReposicionadas ? `${r.haReposicionadas} HA mudaram de lugar para tirar janela.` : "", // [HA-MOVEL-MELHORIA]
         ].filter(Boolean).join(" "),
       });
-    } catch {
-      toast({ title: "Erro ao promover", variant: "destructive" });
+      // [HA-FALHOU-AVISA] promoveu, mas a HA nao foi recalculada
+      if (r?.avisoHA) toast({ title: "Atenção: a hora-atividade não foi recalculada", description: String(r.avisoHA), variant: "destructive" });
+    } catch (err) {
+      // [DIAGNOSTICO-GERACAO] antes so "Erro ao promover": agora diz quais aulas estao fora do esquema
+      setDiagnostico(diagnosticoDe(err));
+      toast({ title: "Erro ao promover", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
     } finally {
       setPromovendo(null);
     }
@@ -2784,6 +2813,7 @@ function AbaExperimental() {
 
   return (
     <div className="space-y-4 pt-2">
+      <DiagnosticoGeracaoDialog diagnostico={diagnostico} onClose={() => setDiagnostico(null)} /> {/* [DIAGNOSTICO-GERACAO] */}
       <div className="flex items-center justify-between">
         <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 text-sm text-purple-800 flex-1 mr-4">
           <p className="font-medium mb-1">Como funciona o Modo Experimental?</p>

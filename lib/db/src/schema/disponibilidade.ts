@@ -1,4 +1,4 @@
-import { pgTable, serial, timestamp, integer, boolean, text } from "drizzle-orm/pg-core";
+import { pgTable, serial, timestamp, integer, boolean, text, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { professoresTable } from "./professores";
@@ -25,7 +25,11 @@ export const disponibilidadeTable = pgTable("disponibilidade_professores", {
   // (art. 11, §4º) quando ele tem até 19 aulas nesse turno.
   horaAtividadeObrigatoria: boolean("hora_atividade_obrigatoria").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  // [DISP-UNICA] (01/11/2026) existia so no banco real (lib/db/_arquivo/adicionar-constraint-unicidade.cjs);
+  // o recalculo da HA grava com ON CONFLICT nestas colunas e falhava em banco novo (CI, local, ambiente novo).
+  unique("disponibilidade_professores_unica").on(t.professorId, t.diaSemana, t.horarioSlot, t.turno),
+]);
 
 export const insertDisponibilidadeSchema = createInsertSchema(disponibilidadeTable).omit({ id: true, createdAt: true });
 export type InsertDisponibilidade = z.infer<typeof insertDisponibilidadeSchema>;

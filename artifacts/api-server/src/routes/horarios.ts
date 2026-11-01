@@ -42,6 +42,7 @@ import { bloqueiosIntervaloEntreTurnos } from "../lib/intervalo-entre-turnos"; /
 import { aulasFixasTable } from "@workspace/db"; // [AULA-FIXA-CADASTRO]
 import { validarCapacidadeProfessores, calcularCotaHaPorTurno } from "../lib/capacidade-professor";
 import { carregarMapaIntegral, slotReal, TURNO_INTEGRAL, carregarAulasIntegraisNoTurno, mapaIntegralDosSlots } from "../lib/turno-integral"; // [TURNO-INTEGRAL] [INTEGRAL-NO-MOTOR]
+import { diagnosticarGeracao, diagnosticarViolacoesPromocao } from "../lib/diagnostico-geracao"; // [DIAGNOSTICO-GERACAO]
 
 const router = Router();
 
@@ -421,7 +422,23 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
     }
 
     if (alocadas < cargaSemanal) {
-      conflitos.push(`Apenas ${alocadas}/${cargaSemanal} aulas alocadas para "${disc.nome}"`);
+      // [DIAGNOSTICO-GERACAO] (01/11/2026) diz POR QUE nao coube: nos horarios livres da turma, o que impediu o professor
+      let emOutraTurma = 0, bloqueado = 0, limite = 0, livresTurma = 0;
+      const prof = profsParaDisc[0]!;
+      for (const dia of DIAS) for (const aula of AULAS) {
+        if (ocupadoSlot[`${dia}-${aula}`]) continue;
+        livresTurma++;
+        if (ocupadoProf[`${prof.id}-${dia}-${aula}`]) emOutraTurma++;
+        else if (indisponivelComTurno(prof.id, dia, aula)) bloqueado++;
+        else limite++;
+      }
+      const motivos = [
+        emOutraTurma ? `em ${emOutraTurma} o professor já dá aula em outra turma` : "",
+        bloqueado ? `em ${bloqueado} está bloqueado (indisponível ou HA fixa)` : "",
+        limite ? `em ${limite} bateria o limite de aulas por dia ou a regra de aulas seguidas` : "",
+      ].filter(Boolean).join("; ");
+      conflitos.push(`Apenas ${alocadas}/${cargaSemanal} aulas alocadas para "${disc.nome}" (${prof.nome})`
+        + (livresTurma ? `: dos ${livresTurma} horários livres da turma, ${motivos}.` : ": a turma não tem mais horário livre."));
       if (!profApoio) {
         faltantes.push({ disciplinaId: td.disciplinaId, profsParaDisc, profApoio, faltam: cargaSemanal - alocadas, maxGeminadas });
       }
@@ -669,9 +686,10 @@ router.post("/gerar", async (req, res) => {
         console.error("[HA] Falha ao recalcular hora-atividade apos geracao direta:", errHA);
       }
     }
-    res.json(result);
+    res.json({ ...result, diagnostico: diagnosticarGeracao(200, result as Record<string, unknown>) }); // [DIAGNOSTICO-GERACAO]
   } catch (err) {
-    res.status(400).json({ error: err instanceof Error ? err.message : "Erro ao gerar horário" });
+    const error = err instanceof Error ? err.message : "Erro ao gerar horário";
+    res.status(400).json({ error, diagnostico: diagnosticarGeracao(400, { error }) }); // [DIAGNOSTICO-GERACAO]
   }
 });
 
@@ -1003,15 +1021,23 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     return validos && validos.size > 0 && !validos.has(s.numeroAula);
   });
   if (violacoes.length > 0) {
+    // [DIAGNOSTICO-GERACAO] com o nome da turma e da disciplina (antes so ids, e a tela mostrava "Erro ao promover")
+    const discsViol = await db.select({ id: disciplinasTable.id, nome: disciplinasTable.nome }).from(disciplinasTable)
+      .where(inArray(disciplinasTable.id, [...new Set(violacoes.map((s) => s.disciplinaId))]));
+    const nomeDisc = new Map(discsViol.map((d) => [d.id, d.nome]));
+    const lista = violacoes.map(s => ({
+      turmaId: s.turmaId,
+      disciplinaId: s.disciplinaId,
+      turma: turmaPromMap.get(s.turmaId)?.nome ?? `Turma #${s.turmaId}`,
+      disciplina: nomeDisc.get(s.disciplinaId) ?? `Disciplina #${s.disciplinaId}`,
+      diaSemana: s.diaSemana,
+      numeroAula: s.numeroAula,
+      periodosValidos: [...(periodosPorTurma.get(s.turmaId) ?? [])].sort((a, b) => a - b),
+    }));
     res.status(422).json({
       error: "Não é possível promover: o experimento contém slots com períodos inválidos para o esquema atual da turma.",
-      violacoes: violacoes.map(s => ({
-        turmaId: s.turmaId,
-        disciplinaId: s.disciplinaId,
-        diaSemana: s.diaSemana,
-        numeroAula: s.numeroAula,
-        periodosValidos: [...(periodosPorTurma.get(s.turmaId) ?? [])].sort((a, b) => a - b),
-      })),
+      violacoes: lista,
+      diagnostico: diagnosticarViolacoesPromocao(lista),
     });
     return;
   }
@@ -1111,10 +1137,13 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     return gravados;
   });
 
+  // [HA-FALHOU-AVISA] (01/11/2026) a falha do recalculo so ia para o log e a escola ficava sem a HA nova sem saber
+  let avisoHA: string | undefined;
   try {
     await recalcularHoraAtividade(escolaId);
   } catch (err) {
     console.error("[HA] Falha ao recalcular hora-atividade apos promover:", err);
+    avisoHA = "A grade foi promovida, mas a hora-atividade NÃO foi recalculada. Avise o suporte do NexGrade antes de usar a HA desta grade.";
   }
   // [HA-SO-QUEM-MUDOU] devolve a HA de antes a quem nao teve aula mexida
   try {
@@ -1134,7 +1163,7 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     console.error("[HA-SO-QUEM-MUDOU] Falha ao devolver a HA de quem nao mudou:", err);
   }
 
-  res.json({ slotsGerados: inserted.length, conflitos: [], horario: [], backupId, avisoBackup, professoresComAulaMexida: profsMudaram.size, haReposicionadas });
+  res.json({ slotsGerados: inserted.length, conflitos: [], horario: [], backupId, avisoBackup, avisoHA, professoresComAulaMexida: profsMudaram.size, haReposicionadas });
 });
 
 // [BACKUP-GRADE] cópias da grade oficial guardadas antes de promover (mais nova primeiro)
@@ -1671,7 +1700,16 @@ async function runCpsatGeneration(
       definirFaseGeracao("Médio/Técnico"); // [PROGRESSO-GERACAO]
       const resultadoMedio = await runCpsatGeneracaoUnica(escolaId, undefined, undefined, idsMedioTecnico, nomeExperimental, tempoLimitePorEtapa, signal);
       if (resultadoMedio.httpStatus < 200 || resultadoMedio.httpStatus >= 300) {
-        return { httpStatus: resultadoMedio.httpStatus, body: { etapa: "medio_tecnico", fundamentalJaGerado: true, ...resultadoMedio.body } };
+        // [EXPERIMENTO-PELA-METADE] (01/11/2026) o Fundamental ja estava gravado no experimento e podia ser
+        // promovido como se fosse a grade do turno inteiro. Agora a parte gravada sai: a geracao falhou inteira.
+        if (!pararFoiPedido()) {
+          await db.delete(horariosExperimentaisTable).where(and(
+            eq(horariosExperimentaisTable.escolaId, escolaId),
+            eq(horariosExperimentaisTable.nome, nomeExperimental),
+            inArray(horariosExperimentaisTable.turmaId, idsFundamental),
+          ));
+        }
+        return { httpStatus: resultadoMedio.httpStatus, body: { etapa: "medio_tecnico", experimentoDescartado: !pararFoiPedido(), ...resultadoMedio.body } };
       }
       definirFaseGeracao(undefined); // [PROGRESSO-GERACAO]
       const bodyFund = resultadoFundamental.body as Record<string, any>;
@@ -1692,6 +1730,9 @@ async function runCpsatGeneration(
           totalSlots: (bodyFund.totalSlots ?? 0) + (bodyMedio.totalSlots ?? 0),
           naoMapeadas: (bodyFund.naoMapeadas ?? 0) + (bodyMedio.naoMapeadas ?? 0),
           semProfessorResolvido: (bodyFund.semProfessorResolvido ?? 0) + (bodyMedio.semProfessorResolvido ?? 0),
+          // [DIAGNOSTICO-GERACAO] as listas tambem (antes so a soma chegava: nao dava para dizer QUAL vinculo)
+          detalheSemProfessorResolvido: [...(bodyFund.detalheSemProfessorResolvido ?? []), ...(bodyMedio.detalheSemProfessorResolvido ?? [])],
+          detalheNaoMapeadas: [...(bodyFund.detalheNaoMapeadas ?? []), ...(bodyMedio.detalheNaoMapeadas ?? [])],
           mensagem: `Grade gerada como experimento "${nomeExperimental}" (Fundamental e Medio/Tecnico resolvidos em duas etapas). Revise e use POST /experimentais/${nomeExperimental}/promover para aplicar como oficial.`,
         },
       };
@@ -2199,6 +2240,7 @@ async function runCpsatGeneracaoUnica(
         viavel: boolean;
         tempoResolucaoS: number;
         mensagem?: string;
+        causasInviabilidade?: string[]; // [DIAGNOSTICO-GERACAO] frases do motor (diagnostico_inviabilidade.py)
         aulas: Array<{ turma: string; codigoSae: string; disciplina: string; professor: string; dia: number; aula: number }>;
       }
     | undefined;
@@ -2396,12 +2438,19 @@ async function runCpsatGeneracaoUnica(
   }
 
   if (!resultado.viavel) {
+    // [DIAGNOSTICO-GERACAO] (01/11/2026) UNKNOWN = o motor parou no tempo limite sem achar grade: NAO e prova de
+    // que a grade e impossivel (antes saia como INVIAVEL e a escola ia mexer em dados certos). E a lista
+    // completa de causas segue junto (antes so as 5 primeiras, dentro do texto da mensagem).
+    const tempoEsgotado = resultado.status === "UNKNOWN";
     return {
       httpStatus: 422,
       body: {
-        error: "INVIAVEL",
+        error: tempoEsgotado ? "TEMPO_ESGOTADO" : "INVIAVEL",
         status: resultado.status,
-        mensagem: resultado.mensagem ?? "Nao existe grade possivel com os dados atuais.",
+        mensagem: tempoEsgotado
+          ? "O motor não terminou dentro do tempo limite. Isso não quer dizer que a grade é impossível: tente com mais tempo."
+          : (resultado.mensagem ?? "Nao existe grade possivel com os dados atuais."),
+        causasInviabilidade: resultado.causasInviabilidade ?? [],
       },
     };
   }
@@ -2501,7 +2550,7 @@ router.post("/gerar-cpsat", async (req, res) => {
   }
   const { turno, turmaId, turmaIds, nomeExperimental, tempoLimiteS } = parsed.data;
   const resultado = await runCpsatGeneration(escolaId, turno, turmaId, turmaIds, nomeExperimental, tempoLimiteS);
-  res.status(resultado.httpStatus).json(resultado.body);
+  res.status(resultado.httpStatus).json({ ...resultado.body, diagnostico: diagnosticarGeracao(resultado.httpStatus, resultado.body) }); // [DIAGNOSTICO-GERACAO]
 });
 
 interface CpsatJob {
@@ -2660,7 +2709,11 @@ router.get("/gerar-cpsat-status/:jobId", (req, res) => {
     res.json({ jobStatus: "running", etapas: job.etapas ?? [], motor: job.progresso?.motor ?? null, agoraMs: Date.now() }); // [PROGRESSO-GERACAO] [PROGRESSO-MOTOR]
     return;
   }
-  res.status(200).json({ jobStatus: job.status, httpStatusOriginal: job.httpStatus, ...job.body, etapas: job.etapas ?? [], motor: job.progresso?.motor ?? null, agoraMs: Date.now() }); // [PROGRESSO-MOTOR]
+  res.status(200).json({
+    jobStatus: job.status, httpStatusOriginal: job.httpStatus, ...job.body,
+    diagnostico: diagnosticarGeracao(job.httpStatus ?? (job.status === "done" ? 200 : 500), job.body), // [DIAGNOSTICO-GERACAO]
+    etapas: job.etapas ?? [], motor: job.progresso?.motor ?? null, agoraMs: Date.now(), // [PROGRESSO-MOTOR]
+  });
 });
 
 router.post("/gerar-cpsat-cancelar/:jobId", (req, res) => {
