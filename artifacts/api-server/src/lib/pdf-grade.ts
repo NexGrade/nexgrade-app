@@ -1,6 +1,7 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 
 const DIAS_CURTOS = ["Seg", "Ter", "Qua", "Qui", "Sex"];
+const DIAS_LONGOS = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
 
 const AZUL_PRINCIPAL = rgb(0x15 / 255, 0x65 / 255, 0xc0 / 255);
 const AZUL_ESCURO = rgb(0x0d / 255, 0x47 / 255, 0xa1 / 255);
@@ -30,8 +31,13 @@ type BlocoGrade = {
 };
 
 // [PDF-PAISAGEM] (28/10/2026) todos os PDFs da grade em paisagem, 2 quadros por linha (pedido da Simone)
+// [PDF-RETRATO] (01/11/2026) opcao em retrato: um quadro por linha, na largura da folha, celulas e letras maiores
 const LARGURA = 841.89;
 const ALTURA = 595.28;
+export type OrientacaoPdf = "paisagem" | "retrato";
+type Medidas = { linha: number; cab: number; fonte: number; diasLongos: boolean };
+const MEDIDAS_PAISAGEM: Medidas = { linha: 15, cab: 16, fonte: 1, diasLongos: false };
+const MEDIDAS_RETRATO: Medidas = { linha: 21, cab: 18, fonte: 1.3, diasLongos: true };
 const ESPACO_COLUNAS = 16;
 const MARGEM = 30;
 const ALTURA_CABECALHO_PAGINA = 46;
@@ -45,11 +51,12 @@ function truncar(texto: string, max: number): string {
 }
 
 function desenharCabecalhoPagina(page: PDFPage, fontBold: PDFFont, font: PDFFont, nomeEscola: string, tituloDocumento: string, intervaloData: string) {
-  page.drawRectangle({ x: 0, y: ALTURA - ALTURA_CABECALHO_PAGINA, width: LARGURA, height: ALTURA_CABECALHO_PAGINA, color: AZUL_ESCURO });
-  page.drawText(sanitizarTextoPdf(nomeEscola), { x: MARGEM, y: ALTURA - 20, size: 12, font: fontBold, color: BRANCO });
-  page.drawText(sanitizarTextoPdf(tituloDocumento), { x: MARGEM, y: ALTURA - 36, size: 9, font, color: rgb(0.85, 0.9, 1) });
+  const { width: W, height: H } = page.getSize(); // [PDF-RETRATO]
+  page.drawRectangle({ x: 0, y: H - ALTURA_CABECALHO_PAGINA, width: W, height: ALTURA_CABECALHO_PAGINA, color: AZUL_ESCURO });
+  page.drawText(sanitizarTextoPdf(nomeEscola), { x: MARGEM, y: H - 20, size: 12, font: fontBold, color: BRANCO });
+  page.drawText(sanitizarTextoPdf(tituloDocumento), { x: MARGEM, y: H - 36, size: 9, font, color: rgb(0.85, 0.9, 1) });
   const larguraData = fontBold.widthOfTextAtSize(intervaloData, 10);
-  page.drawText(intervaloData, { x: LARGURA - MARGEM - larguraData, y: ALTURA - 27, size: 10, font: fontBold, color: BRANCO });
+  page.drawText(intervaloData, { x: W - MARGEM - larguraData, y: H - 27, size: 10, font: fontBold, color: BRANCO });
 }
 
 function desenharPontilhado(page: PDFPage, x: number, y: number, largura: number, altura: number) {
@@ -80,13 +87,14 @@ function desenharBloco(
   yTopo: number,
   larguraDisponivel: number,
   x0: number = MARGEM,
+  m: Medidas = MEDIDAS_PAISAGEM,
 ): number {
-  const alturaLinhaCabecalho = 16;
-  const alturaLinhaDado = 15;
-  const colAulaLargura = bloco.horariosPorAula ? 40 : 32;
+  const alturaLinhaCabecalho = m.cab;
+  const alturaLinhaDado = m.linha;
+  const colAulaLargura = (bloco.horariosPorAula ? 40 : 32) * (m.fonte > 1 ? 1.15 : 1);
   const colDiaLargura = (larguraDisponivel - colAulaLargura) / 5;
 
-  page.drawText(bloco.rotulo, { x: x0, y: yTopo, size: 9.5, font: fontBold, color: AZUL_ESCURO });
+  page.drawText(bloco.rotulo, { x: x0, y: yTopo, size: m.fonte > 1 ? 11.5 : 9.5, font: fontBold, color: AZUL_ESCURO });
   let y = yTopo - 6;
 
   const aulasNumeros = bloco.horariosPorAula
@@ -94,12 +102,12 @@ function desenharBloco(
     : [...new Set(bloco.slots.map((s) => s.numeroAula))].sort((a, b) => a - b);
 
   page.drawRectangle({ x: x0, y: y - alturaLinhaCabecalho, width: colAulaLargura, height: alturaLinhaCabecalho, color: AZUL_PRINCIPAL });
-  page.drawText("Hor", { x: x0 + 5, y: y - alturaLinhaCabecalho / 2 - 3, size: 7.5, font: fontBold, color: BRANCO });
-  DIAS_CURTOS.forEach((dia, i) => {
+  page.drawText("Hor", { x: x0 + 5, y: y - alturaLinhaCabecalho / 2 - 3, size: 7.5 * m.fonte, font: fontBold, color: BRANCO });
+  (m.diasLongos ? DIAS_LONGOS : DIAS_CURTOS).forEach((dia, i) => {
     const x = x0 + colAulaLargura + i * colDiaLargura;
     page.drawRectangle({ x, y: y - alturaLinhaCabecalho, width: colDiaLargura, height: alturaLinhaCabecalho, color: AZUL_PRINCIPAL });
-    const larguraTexto = fontBold.widthOfTextAtSize(dia, 8);
-    page.drawText(dia, { x: x + colDiaLargura / 2 - larguraTexto / 2, y: y - alturaLinhaCabecalho / 2 - 3, size: 8, font: fontBold, color: BRANCO });
+    const larguraTexto = fontBold.widthOfTextAtSize(dia, 8 * m.fonte);
+    page.drawText(dia, { x: x + colDiaLargura / 2 - larguraTexto / 2, y: y - alturaLinhaCabecalho / 2 - 3, size: 8 * m.fonte, font: fontBold, color: BRANCO });
   });
   y -= alturaLinhaCabecalho;
 
@@ -110,8 +118,8 @@ function desenharBloco(
     page.drawRectangle({ x: x0, y: yLinha, width: colAulaLargura, height: alturaLinhaDado, color: corFundoLinha, borderColor: CINZA_BORDA, borderWidth: 0.4 });
     const horaReal = bloco.horariosPorAula?.[numeroAula];
     const rotuloAula = horaReal ?? String(numeroAula);
-    const larguraRotulo = font.widthOfTextAtSize(rotuloAula, 7.5);
-    page.drawText(rotuloAula, { x: x0 + colAulaLargura / 2 - larguraRotulo / 2, y: yLinha + alturaLinhaDado / 2 - 3, size: 7.5, font, color: AZUL_ESCURO });
+    const larguraRotulo = font.widthOfTextAtSize(rotuloAula, 7.5 * m.fonte);
+    page.drawText(rotuloAula, { x: x0 + colAulaLargura / 2 - larguraRotulo / 2, y: yLinha + alturaLinhaDado / 2 - 3, size: 7.5 * m.fonte, font, color: AZUL_ESCURO });
 
     DIAS_CURTOS.forEach((_, diaSemana) => {
       const x = x0 + colAulaLargura + diaSemana * colDiaLargura;
@@ -120,14 +128,14 @@ function desenharBloco(
       page.drawRectangle({ x, y: yLinha, width: colDiaLargura, height: alturaLinhaDado, color: corFundo, borderColor: CINZA_BORDA, borderWidth: 0.4 });
       if (slot) {
         // [PDF-CABE-NA-CELULA] mede a largura real: 1 linha se couber; senao 2 linhas e fonte menor; so entao reticencias
-        desenharTextoNaCelula(page, slot.linha2 ? [slot.linha1, slot.linha2] : [slot.linha1], slot.linha2 ? font : fontBold, x, yLinha, colDiaLargura - 6, alturaLinhaDado, slot.linha2 ? 6.5 : 7);
+        desenharTextoNaCelula(page, slot.linha2 ? [slot.linha1, slot.linha2] : [slot.linha1], slot.linha2 ? font : fontBold, x, yLinha, colDiaLargura - 6, alturaLinhaDado, (slot.linha2 ? 6.5 : 7) * m.fonte);
       } else {
         const bloqueada = bloco.celulasBloqueadas?.find(
           (c) => c.diaSemana === diaSemana && c.numeroAula === numeroAula,
         );
         // [ROTULO-BLOQUEIO] atividade com nome (PAEE, COORD, LAB...) sai escrita, como no sistema anterior;
         // bloqueio sem nome continua com a hachura pontilhada.
-        if (bloqueada?.rotulo) desenharTextoNaCelula(page, [sanitizarTextoPdf(bloqueada.rotulo)], font, x, yLinha, colDiaLargura - 6, alturaLinhaDado, 7);
+        if (bloqueada?.rotulo) desenharTextoNaCelula(page, [sanitizarTextoPdf(bloqueada.rotulo)], font, x, yLinha, colDiaLargura - 6, alturaLinhaDado, 7 * m.fonte);
         else if (bloqueada) desenharPontilhado(page, x, yLinha, colDiaLargura, alturaLinhaDado);
       }
     });
@@ -174,6 +182,7 @@ export async function gerarPdfGradeCompacta(
   tituloDocumento: string,
   intervaloData: string,
   blocos: BlocoGrade[],
+  orientacao: OrientacaoPdf = "paisagem",
 ): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.create();
   pdfDoc.setTitle(`NexGrade — ${tituloDocumento}`);
@@ -181,17 +190,22 @@ export async function gerarPdfGradeCompacta(
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  const larguraDisponivel = (LARGURA - 2 * MARGEM - ESPACO_COLUNAS) / 2;
+  // [PDF-RETRATO] retrato: folha em pe, um quadro por linha na largura toda
+  const retrato = orientacao === "retrato";
+  const [W, H] = retrato ? [ALTURA, LARGURA] : [LARGURA, ALTURA];
+  const porLinha = retrato ? 1 : 2;
+  const m = retrato ? MEDIDAS_RETRATO : MEDIDAS_PAISAGEM;
+  const larguraDisponivel = (W - 2 * MARGEM - (porLinha - 1) * ESPACO_COLUNAS) / porLinha;
   let page: PDFPage | null = null;
   let yCursor = 0;
 
   function novaPagina() {
-    page = pdfDoc.addPage([LARGURA, ALTURA]);
+    page = pdfDoc.addPage([W, H]);
     desenharCabecalhoPagina(page, fontBold, font, nomeEscola, tituloDocumento, intervaloData);
     page.drawText("Gerado pelo NexGrade — conferir antes de homologar oficialmente", {
       x: MARGEM, y: 10, size: 6.5, font, color: CINZA_ESCURO,
     });
-    yCursor = ALTURA - ALTURA_CABECALHO_PAGINA - 16;
+    yCursor = H - ALTURA_CABECALHO_PAGINA - (retrato ? 22 : 16);
   }
 
   if (blocos.length === 0) {
@@ -200,14 +214,14 @@ export async function gerarPdfGradeCompacta(
     return pdfDoc.save();
   }
 
-  // dois quadros lado a lado; a linha tem a altura do maior
-  for (let i = 0; i < blocos.length; i += 2) {
-    const par = blocos.slice(i, i + 2);
-    const altura = Math.max(...par.map((b) => alturaDoBloco(b, 15, 16)));
+  // paisagem: dois quadros lado a lado (a linha tem a altura do maior); retrato: um por linha
+  for (let i = 0; i < blocos.length; i += porLinha) {
+    const par = blocos.slice(i, i + porLinha);
+    const altura = Math.max(...par.map((b) => alturaDoBloco(b, m.linha, m.cab))) + (retrato ? 10 : 0);
     if (!page || yCursor - altura < MARGEM + ALTURA_RODAPE) {
       novaPagina();
     }
-    par.forEach((b, k) => desenharBloco(page!, font, fontBold, b, yCursor, larguraDisponivel, MARGEM + k * (larguraDisponivel + ESPACO_COLUNAS)));
+    par.forEach((b, k) => desenharBloco(page!, font, fontBold, b, yCursor, larguraDisponivel, MARGEM + k * (larguraDisponivel + ESPACO_COLUNAS), m));
     yCursor -= altura;
   }
 
