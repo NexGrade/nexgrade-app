@@ -83,7 +83,8 @@ function CampoCodigo({ valor, onSalvar, placeholder, rotulo, opcional }: {
   );
 }
 
-export default function CodigosRcoPage() {
+// [CODIGOS-NA-CURSOS] (31/10/2026) a tela virou aba de Cursos e Disciplinas (embutida: sem o titulo grande)
+export default function CodigosRcoPage({ embutida = false }: { embutida?: boolean }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [soPendentes, setSoPendentes] = useState(false);
@@ -169,7 +170,7 @@ export default function CodigosRcoPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Códigos do RCO</h1>
+          {!embutida && <h1 className="text-3xl font-bold tracking-tight">Códigos do RCO</h1>}
           <p className="text-muted-foreground mt-1 max-w-2xl">
             O arquivo da grade para o RCO precisa do código de cada turma no SERE e do Código Externo de cada disciplina.
             Digite o código e saia do campo para salvar. Deixe vazio para apagar.

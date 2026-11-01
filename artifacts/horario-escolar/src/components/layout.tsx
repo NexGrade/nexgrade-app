@@ -9,7 +9,7 @@ import {
   LayoutDashboard, Users, BookOpen, GraduationCap, Calendar, CalendarDays,
   Building2, FileText, Bell, Shield, History,
   Settings, Printer, Sparkles, Upload, CreditCard, Library, Clock,
-  SlidersHorizontal, Landmark, DoorOpen, Hash, CalendarClock,
+  SlidersHorizontal, Landmark, DoorOpen, CalendarClock,
   FileUp, // [ARQUIVO-RCO]
   NotebookPen, BarChart3, // [MENU-UNICO]
   Menu, X, ClipboardCheck, // [MENU-CELULAR] [PRESENCA-PEDAGOGIA]
@@ -60,27 +60,26 @@ const navGroups = [
     label: "1. Cadastro da escola",
     items: [
       { href: "/calendario", label: "Calendário e Turnos", icon: CalendarDays }, // [FASE-C3]
-      { href: "/cursos", label: "Cursos e Disciplinas", icon: Library }, // [FASE-C2] cursos, matrizes e disciplinas
+      { href: "/cursos", label: "Cursos e Disciplinas", icon: Library }, // [FASE-C2] cursos, matrizes e disciplinas [CODIGOS-NA-CURSOS] e codigos do RCO
       { href: "/professores", label: "Professores", icon: Users },
       { href: "/turmas", label: "Turmas", icon: GraduationCap },
+      // Cada escola configura suas proprias regras (maximo de aulas geminadas,
+      // limites por disciplina/turma e por professor) que o gerador usa.
+      { href: "/regras-distribuicao", label: "Regras de Distribuição", icon: SlidersHorizontal }, // [MENU-GRADE] (31/10/2026) parte do cadastro
     ],
   },
   {
     label: "2. Grade de Horário", // [MENU-GRADE] (31/10/2026) antes "Montagem da grade"
     items: [
       { href: "/disponibilidade", label: "Disponibilidade", icon: Clock },
-      // Cada escola configura suas proprias regras (maximo de aulas geminadas,
-      // limites por disciplina/turma e por professor) que o gerador usa.
-      { href: "/regras-distribuicao", label: "Regras de Distribuição", icon: SlidersHorizontal },
       { href: "/horario", label: "Gerar Grade", icon: Calendar }, // [MENU-ORGANIZADO] gerar e ajustar a grade [MENU-GRADE] (31/10/2026) antes "Horario"
       { href: "/imprimir-grade", label: "Imprimir Grade", icon: Printer }, // [IMPRIMIR-GRADE] PDFs e planilha da grade [MENU-GRADE]
     ],
   },
   {
-    // [MENU-ORGANIZADO] codigos primeiro: sem eles a exportacao fica incompleta
+    // [CODIGOS-NA-CURSOS] (31/10/2026) Codigos do RCO virou aba de Cursos e Disciplinas
     label: "3. Enviar ao RCO",
     items: [
-      { href: "/codigos-rco", label: "Códigos do RCO", icon: Hash }, // [CODIGOS-RCO-TELA]
       { href: "/rco", label: "Exportar para o RCO", icon: BarChart3 }, // [MENU-UNICO] tela propria
       { href: "/arquivo-rco", label: "Arquivo do RCO", icon: FileUp }, // [ARQUIVO-RCO]
     ],

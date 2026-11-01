@@ -439,7 +439,7 @@ export async function montarRegistrosRco(escolaId: string, turno: string, comAss
     const nomes = [...semCodigo.keys()];
     return { erro: {
       error: "Algumas disciplinas ainda não têm o Código Externo do RCO cadastrado. Cadastre o código dessas disciplinas antes de exportar.",
-      corrigirEm: `/codigos-rco?aba=disciplinas&destacar=${encodeURIComponent(nomes.join("|"))}`, // [CODIGOS-RCO-TELA]
+      corrigirEm: `/cursos?tab=codigos-rco&aba=disciplinas&destacar=${encodeURIComponent(nomes.join("|"))}`, // [CODIGOS-RCO-TELA]
       disciplinasSemCodigo: [...semCodigo.entries()].sort((a, b) => b[1].aulas - a[1].aulas)
         .map(([nome, s]) => ({ nome, aulas: s.aulas, turmas: [...s.turmas].sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true })) })),
     } };
