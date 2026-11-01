@@ -15,6 +15,7 @@ import { registrarAuditoria } from "../lib/audit";
 import { limparCacheAcessos, acessosPeloBanco } from "../lib/acesso";
 import { emailVerificado, normalizarEmail } from "../lib/identidade";
 import { situacaoArquivoRcoEscolas, solicitarArquivoRco, cancelarPedidoArquivoRco, conteudoArquivoRco } from "../lib/arquivo-rco"; // [ARQUIVO-RCO]
+import { previaImportacaoRco, aplicarImportacaoRco, ErroImportacaoRco } from "../lib/importar-turmas-rco"; // [IMPORTAR-TURMAS-RCO]
 
 const router = Router();
 
@@ -202,6 +203,53 @@ router.get("/escolas/:id/arquivo-rco/baixar", async (req, res) => {
   res.setHeader("Content-Type", "application/xml; charset=utf-8");
   res.setHeader("Content-Disposition", `attachment; filename="${c.nomeArquivo}"`);
   res.send(c.xml);
+});
+
+// [IMPORTAR-TURMAS-RCO] (31/10/2026) criar as turmas (e ligar/criar as disciplinas) a partir do arquivo do RCO
+// que a escola enviou -- o que antes era lib/db/importar-turmas-do-rco.cjs no terminal. Prévia nao grava;
+// aplicar grava numa transacao (recalcula a prévia la dentro) e registra auditoria.
+const ImportarRcoInput = z.object({
+  ano: z.coerce.number().int().min(2020).max(2100).default(() => new Date().getFullYear()),
+  comEspanhola: z.preprocess((v) => v === true || v === "1" || v === "true", z.boolean()).default(false),
+});
+async function escolaOu404(escolaId: string, res: import("express").Response) {
+  const escola = await db.select({ id: escolasTable.id, nome: escolasTable.nomeFantasia }).from(escolasTable).where(eq(escolasTable.id, escolaId)).then((r) => r[0]);
+  if (!escola) res.status(404).json({ error: "Escola não encontrada." });
+  return escola;
+}
+router.get("/escolas/:id/arquivo-rco/importar-turmas", async (req, res) => {
+  const escolaId = String(req.params.id);
+  if (!(await escolaOu404(escolaId, res))) return;
+  const opcoes = ImportarRcoInput.safeParse(req.query);
+  if (!opcoes.success) { res.status(400).json({ error: "Opções inválidas." }); return; }
+  try {
+    res.json(await previaImportacaoRco(escolaId, opcoes.data));
+  } catch (err) {
+    if (err instanceof ErroImportacaoRco) { res.status(err.status).json({ error: err.message }); return; }
+    throw err;
+  }
+});
+router.post("/escolas/:id/arquivo-rco/importar-turmas", async (req, res) => {
+  const escolaId = String(req.params.id);
+  const escola = await escolaOu404(escolaId, res);
+  if (!escola) return;
+  const opcoes = ImportarRcoInput.safeParse(req.body ?? {});
+  if (!opcoes.success) { res.status(400).json({ error: "Opções inválidas." }); return; }
+  try {
+    const r = await aplicarImportacaoRco(escolaId, opcoes.data);
+    await registrarAuditoria({
+      req, escolaId, entidade: "importar_turmas_rco", entidadeId: 0, acao: "criacao",
+      dadosAnteriores: null, dadosNovos: { ...opcoes.data, ...r },
+    }).catch(() => undefined);
+    res.json({
+      ok: true, ...r,
+      mensagem: `${escola.nome}: ${r.turmas.length} turma(s) criada(s), ${r.disciplinasNovas.length} disciplina(s) nova(s), ` +
+        `${r.codigosGravados.length} Código(s) Externo(s) gravado(s). Turmas da escola agora: ${r.turmasDaEscolaAgora}.`,
+    });
+  } catch (err) {
+    if (err instanceof ErroImportacaoRco) { res.status(err.status).json({ error: err.message }); return; }
+    throw err;
+  }
 });
 
 export default router;

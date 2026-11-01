@@ -15,6 +15,7 @@ import {
 } from "@workspace/api-client-react";
 import { useEu } from "@/lib/papeis"; // [MASTER-SUPORTE]
 import SimuladorProposta from "./simulador-proposta"; // [SIMULADOR-PROPOSTA]
+import { ImportarTurmasRcoDialog } from "./importar-turmas-rco"; // [IMPORTAR-TURMAS-RCO]
 import { trocarDeEscola } from "@/lib/escola-ativa"; // [MASTER-SUPORTE]
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -34,6 +35,7 @@ import {
   Search, MapPin, Mail, Phone, KeyRound, // [MASTER-LAYOUT]
   LogIn, LifeBuoy, CalendarClock, // [MASTER-SUPORTE]
   FileUp, // [ARQUIVO-RCO]
+  ListPlus, // [IMPORTAR-TURMAS-RCO]
 } from "lucide-react";
 
 // RF-MASTER-01 a RF-MASTER-03: painel administrativo da plataforma —
@@ -163,6 +165,7 @@ function EscolasTable() {
   const [escolaEditandoContato, setEscolaEditandoContato] = useState<string | null>(null);
   const [busca, setBusca] = useState(""); // [MASTER-LAYOUT]
   const [novaAberta, setNovaAberta] = useState(false); // [NOVA-ESCOLA-MASTER]
+  const [importandoRco, setImportandoRco] = useState<{ id: string; nome: string } | null>(null); // [IMPORTAR-TURMAS-RCO]
   // [MASTER-SUPORTE] escolas em que a Nexus Core ja tem acesso (visivel em Usuarios da escola)
   const { data: eu } = useEu();
   const pelobanco = !!eu?.pelobanco;
@@ -337,6 +340,7 @@ function EscolasTable() {
       </div>
 
       <NovaEscolaDialog aberto={novaAberta} onOpenChange={setNovaAberta} />
+      {importandoRco && <ImportarTurmasRcoDialog escola={importandoRco} onOpenChange={(v) => { if (!v) setImportandoRco(null); }} />}
 
       {lista.length === 0 && (
         <Card>
@@ -394,6 +398,12 @@ function EscolasTable() {
                           <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-xs text-emerald-700" onClick={() => baixarArquivoRco(e.id, a.enviado!.nomeArquivo)}
                             title={"Enviado em " + new Date(a.enviado.enviadoEm).toLocaleString("pt-BR") + " · " + a.enviado.resumo.turmas + " turmas"}>
                             <FileUp className="h-3.5 w-3.5" /> Baixar arquivo RCO ({new Date(a.enviado.enviadoEm).toLocaleDateString("pt-BR")})
+                          </Button>
+                        )}
+                        {a?.enviado && ( // [IMPORTAR-TURMAS-RCO]
+                          <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-xs text-[#0D47A1]" onClick={() => setImportandoRco({ id: e.id, nome: e.nomeFantasia })}
+                            title="Criar as turmas e disciplinas da escola a partir do arquivo do RCO (mostra a prévia antes de gravar)">
+                            <ListPlus className="h-3.5 w-3.5" /> Importar turmas do arquivo do RCO
                           </Button>
                         )}
                         <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-xs" onClick={() => pedirArquivoRco(e.id, e.nomeFantasia)} title="Pedir à escola o arquivo de exportação da Grade de Horário do RCO">
