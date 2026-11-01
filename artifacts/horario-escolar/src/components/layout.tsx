@@ -33,8 +33,8 @@ const secaoGestorReservas: GrupoMenu = {
   label: "Gestor de reservas",
   icone: DoorOpen, // [MENU-DESTAQUE]
   items: [
+    { href: "/reservas", label: "Reservas", icon: DoorOpen }, // [MENU-ORDEM-USO] (01/11/2026) o do dia a dia primeiro
     { href: "/salas", label: "Salas", icon: Building2 }, // [GESTOR-SALAS] o gestor cadastra e edita as salas
-    { href: "/reservas", label: "Reservas", icon: DoorOpen },
     { href: "/horario", label: "Consultar grade", icon: Calendar }, // [CONSULTA-GESTOR]
   ],
 };
@@ -44,9 +44,9 @@ const secaoPedagogia: GrupoMenu = {
   icone: ClipboardCheck, // [MENU-DESTAQUE]
   items: [
     { href: "/presenca", label: "Presença dos professores", icon: ClipboardCheck }, // [PRESENCA-PEDAGOGIA]
+    { href: "/licencas", label: "Licenças", icon: FileText }, // [MENU-ORDEM-USO]
     { href: "/comunicados", label: "Comunicados", icon: Bell },
     { href: "/relatorios-pedagogicos", label: "Relatórios Pedagógicos", icon: NotebookPen }, // [MENU-UNICO] ponto e carga horaria
-    { href: "/licencas", label: "Licenças", icon: FileText },
   ],
 };
 
@@ -112,8 +112,8 @@ const navGroups: GrupoMenu[] = [
       { href: "/escola", label: "Escola", icon: Landmark }, // [FASE-C1] dados, configuracoes e assinatura
       { href: "/usuarios", label: "Usuários", icon: Shield },
       { href: "/importar", label: "Importar planilhas", icon: Upload },
-      { href: "/audit", label: "Histórico", icon: History },
       { href: "/virada-ano", label: "Virada do ano", icon: CalendarClock }, // [VIRADA-ANO]
+      { href: "/audit", label: "Histórico", icon: History }, // [MENU-ORDEM-USO] consulta, por ultimo
     ],
   },
 ];

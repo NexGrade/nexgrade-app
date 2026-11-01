@@ -1060,16 +1060,21 @@ router.get("/grade-pdf/professor", async (req, res) => {
         const cel = aulasDoProf.find((x) => x.diaSemana === s.diaSemana && x.numeroAula === s.numeroAula);
         if (cel) cel.linha2 = `${cel.linha2 ?? ""} (ASS)`;
       }
-      const celulasComPS = new Set<string>(); // [FIX-PS-DUPLICADO] professor com 2 disciplinas do trio no mesmo horario: 1 marca so
+      // [FIX-PS-DUPLICADO] professor com 2 disciplinas do trio no mesmo horario: 1 marca so.
+      // [FIX-PS-PRESENCIAL] (01/11/2026) e (P) se QUALQUER uma delas for a presencial da semana
+      // (antes valia a primeira: Vanessa na 2NC saia (S) na semana do ROB, e o trio ficava sem (P)).
+      const presencialNaCelula = new Map<string, boolean>();
       for (const s of slotsDoProfNesseTurno) { // [REVEZAMENTO-TRIO]
         if (s.assincrona) continue;
         const r = revezProf.get(`${s.turmaId}|${s.disciplinaId}|${s.professorId}`);
-        const cel = r && aulasDoProf.find((x) => x.diaSemana === s.diaSemana && x.numeroAula === s.numeroAula);
+        if (!r) continue;
         const chaveCel = `${s.diaSemana}-${s.numeroAula}`;
-        if (r && cel && !celulasComPS.has(chaveCel)) {
-          celulasComPS.add(chaveCel);
-          cel.linha2 = `${cel.linha2 ?? ""} ${r.presencial ? "(P)" : "(S)"}`;
-        }
+        presencialNaCelula.set(chaveCel, (presencialNaCelula.get(chaveCel) ?? false) || r.presencial);
+      }
+      for (const [chaveCel, presencial] of presencialNaCelula) {
+        const [dia, aula] = chaveCel.split("-").map(Number);
+        const cel = aulasDoProf.find((x) => x.diaSemana === dia && x.numeroAula === aula);
+        if (cel) cel.linha2 = `${cel.linha2 ?? ""} ${presencial ? "(P)" : "(S)"}`;
       }
 
       // [NOVO] Dia/horario em que o professor esta bloqueado
