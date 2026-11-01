@@ -291,6 +291,17 @@ export default function ProfessorEditar() {
                             buscarPlaceholder="Buscar disciplina por nome..."
                           />
                         </FormControl>
+                        {/* [DISCIPLINAS-NO-FORM] (01/11/2026) lista que ficava no fim do quadro Carga Horaria */}
+                        {disciplinasUnicas.length > 0 && (
+                          <div className="space-y-1.5 pt-2">
+                            <p className="text-sm font-medium text-muted-foreground">Disciplinas que leciona ({disciplinasUnicas.length})</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {disciplinasUnicas.map((d) => (
+                                <Badge key={d.id} variant="outline" className="whitespace-normal text-left h-auto py-1">{d.nome}</Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
@@ -480,16 +491,6 @@ export default function ProfessorEditar() {
                     </div>
                   </div>
 
-                  {disciplinasUnicas.length > 0 && (
-                    <div className="space-y-1.5 pt-3 border-t">
-                      <h4 className="text-sm font-medium text-muted-foreground">Disciplinas que leciona</h4>
-                      <div className="flex flex-wrap gap-1.5">
-                        {disciplinasUnicas.map((d) => (
-                          <Badge key={d.id} variant="outline" className="whitespace-normal text-left h-auto py-1">{d.nome}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">Sem dados de carga horária disponível.</p>
