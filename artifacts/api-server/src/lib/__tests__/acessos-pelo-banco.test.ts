@@ -61,6 +61,14 @@ describe("com ACESSOS_PELO_BANCO=1", () => {
     expect(rodar(req({ path: "/Audit", cargo: "professor" }))).toMatchObject({ passou: false, status: 403 });
   });
 
+  it("regras de distribuicao: so a equipe gestora altera [LIMITE-DISCIPLINA]", () => {
+    for (const cargo of ["professor", "pedagogia", "reservas"]) {
+      expect(rodar(req({ method: "PUT", path: "/regras-distribuicao/por-disciplina", cargo })), cargo).toMatchObject({ passou: false, status: 403 });
+      expect(rodar(req({ method: "DELETE", path: "/regras-distribuicao/excecao/1/2", cargo })), cargo).toMatchObject({ passou: false, status: 403 });
+    }
+    expect(rodar(req({ method: "PUT", path: "/regras-distribuicao/por-disciplina", cargo: "secretaria" })).passou).toBe(true);
+  });
+
   it("pedagogia: le os relatorios de ponto e carga e altera so licencas, comunicados e /pedagogia [PEDAGOGIA]", () => {
     for (const path of ["/export/ponto", "/export/relatorio-carga-pdf", "/Export/Carga-Horaria-Pdf", "/export/ponto-diario", "/horarios", "/professores", "/reservas"]) {
       expect(rodar(req({ path, cargo: "pedagogia" })).passou, path).toBe(true);

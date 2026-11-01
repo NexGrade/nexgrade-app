@@ -29,6 +29,7 @@ import { randomUUID } from "node:crypto";
 import { recalcularHoraAtividade } from "../lib/recalcular-ha";
 import { simularPromocao } from "../lib/simular-promocao"; // [SIMULAR-PROMOCAO]
 import { opcoesFecharJanela } from "../lib/fechar-janela"; // [FECHAR-JANELA]
+import { carregarLimitesPorDisciplina, limiteAulasDia } from "../lib/limite-disciplina"; // [LIMITE-DISCIPLINA]
 import { REGRAS_REDE } from "../lib/regras-rede"; // [REGRAS-REDE]
 import { CHAVE_TETO_LIBERADO } from "./conflitos"; // [TETO-AUTORIZADO]
 import { salvarBackupGrade, listarBackupsGrade, restaurarBackupGrade } from "../lib/backup-grade"; // [BACKUP-GRADE]
@@ -134,6 +135,7 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
   // [REGRAS-REDE] regra da rede: ignora o que a escola tiver gravado (configGeminadas/configComplementarPadrao)
   void configGeminadas; void configComplementarPadrao;
   const maxGeminadasPadrao = DEFAULT_MAX_GEMINADAS;
+  const limitesPorDisciplina = await carregarLimitesPorDisciplina(escolaId); // [LIMITE-DISCIPLINA]
   const maxComplementarPadrao: number | undefined = REGRAS_REDE.maxAulasComplementarPadrao;
 
   function limiteDiarioProfessor(professorId: number): number {
@@ -255,7 +257,7 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
   }
 
   function maxGeminadasEfetivo(td: typeof turmaDiscs[number]): number {
-    return td.maxAulasConsecutivasDia ?? maxGeminadasPadrao;
+    return limiteAulasDia(td, limitesPorDisciplina, maxGeminadasPadrao); // [LIMITE-DISCIPLINA]
   }
 
   const discOrdenadas = [...turmaDiscsAlvo].sort((a, b) => {
@@ -1800,6 +1802,7 @@ async function runCpsatGeneracaoUnica(
   }
 
   const maxGeminadasPadraoCpsat = REGRAS_REDE.maxAulasGeminadasPadrao; // [REGRAS-REDE] igual em todas as escolas (Romário: 3)
+  const limitesPorDisciplinaCpsat = await carregarLimitesPorDisciplina(escolaId); // [LIMITE-DISCIPLINA]
 
   const maxAulaPorNivelEnsino = new Map<string, number>();
   for (const slot of horarioSlotsTurno) {
@@ -1877,7 +1880,7 @@ async function runCpsatGeneracaoUnica(
         turma: turma.nome,
         nome: disc?.nome ?? `Disciplina #${td.disciplinaId}`,
         professor: prof.nome,
-        maxAulasDia: td.maxAulasConsecutivasDia ?? maxGeminadasPadraoCpsat,
+        maxAulasDia: limiteAulasDia(td, limitesPorDisciplinaCpsat, maxGeminadasPadraoCpsat), // [LIMITE-DISCIPLINA]
         ultimaAulaTurma: maxAulaPorNivelEnsino.get(turma.nivelEnsino ?? "__sem_nivel__") ?? maxAulaGlobalFallback,
       };
       chaveParaIds.set(`${turma.nome}||${codigoSaeChave}`, { turmaId: td.turmaId, disciplinaId: td.disciplinaId });
