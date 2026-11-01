@@ -86,6 +86,18 @@ export function slotReal(turnoDaTurma: string, numeroAula: number, mapa: MapaInt
   return mapa.get(numeroAula) ?? { turno: TURNO_INTEGRAL, numeroAula };
 }
 
+/**
+ * [INTEGRAL-NA-OCUPACAO] (01/11/2026) Turno e numero de aula REAIS de uma aula, pela turma (turma integral vira
+ * manha/tarde). Para contar janela e para dizer onde o professor esta ocupado (simulacao, HA no buraco, fechar
+ * janela). Antes essas contas usavam o turno da turma: a aula da 1ME DOC (integral) nao ocupava a manha, a
+ * simulacao contava janela onde havia aula e a HA podia ir para cima dela (Mario Braga, 01/11: 16 das 18
+ * "janelas" da manha eram aulas da 1ME DOC). `null` quando a turma nao e conhecida.
+ */
+export function posicaoReal(turmaId: number, numeroAula: number, turnoDaTurma: Map<number, string | null>, mapa: MapaIntegral): SlotReal | null {
+  const t = turnoDaTurma.get(turmaId);
+  return t ? slotReal(t, numeroAula, mapa) : null;
+}
+
 /** Mapa do integral a partir de uma lista de horario_slots ja carregada (sem ir ao banco). */
 export function mapaIntegralDosSlots(slots: SlotTempo[]): MapaIntegral {
   const integral = slots.filter((s) => s.turno === TURNO_INTEGRAL);

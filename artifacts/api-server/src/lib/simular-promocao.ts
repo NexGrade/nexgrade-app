@@ -10,6 +10,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { calcularHAIdeal, type AulaParaCalculoHA, type MarcaHACalculada } from "./recalcular-ha";
 import { reposicionarHAMovel, slotsLetivosPorTurno, type AulaPos } from "./reposicionar-ha";
 import { MOTIVO_HA_AUTO } from "./ha-contraturno"; // [HA-BURACO-QUEM-MUDOU]
+import { mapaIntegralDosSlots, posicaoReal } from "./turno-integral"; // [INTEGRAL-NA-OCUPACAO]
 
 const DIAS = ["Seg", "Ter", "Qua", "Qui", "Sex"];
 
@@ -78,7 +79,10 @@ export async function simularPromocao(
   const nomeProf = new Map(profs.map((p) => [p.id, p.nome]));
   const profIds = new Set(profs.map((p) => p.id));
   const turnoDe = new Map(turmas.map((t) => [t.id, t.turno]));
-  const turnos = [...new Set(exp.map((e) => turnoDe.get(e.turmaId)).filter((t): t is string => !!t))];
+  // [INTEGRAL-NA-OCUPACAO] aula de turma integral conta no turno e na aula REAIS (manha/tarde)
+  const mapaInt = mapaIntegralDosSlots(slots);
+  const real = (a: { turmaId: number; numeroAula: number }) => posicaoReal(a.turmaId, a.numeroAula, turnoDe, mapaInt);
+  const turnos = [...new Set(exp.map((e) => real(e)?.turno).filter((t): t is string => !!t))];
 
   // mesma regra do promover: apaga so os pares turma+professor do experimento
   const pares = new Set(exp.map((e) => `${e.turmaId}|${e.professorId}`));
@@ -102,8 +106,8 @@ export async function simularPromocao(
       if (!porDia.get(k)!.has(a) || tipo === "aula") porDia.get(k)!.set(a, tipo);
     };
     for (const a of aulas) {
-      const t = turnoDe.get(a.turmaId);
-      if (t && turnos.includes(t)) marca(a.professorId, t, a.diaSemana, a.numeroAula, "aula");
+      const r = real(a); // [INTEGRAL-NA-OCUPACAO]
+      if (r && turnos.includes(r.turno)) marca(a.professorId, r.turno, a.diaSemana, r.numeroAula, "aula");
     }
     for (const m of ha) if (turnos.includes(m.turno)) marca(m.professorId, m.turno, m.diaSemana, m.horarioSlot, m.outroTurno ? "HA*" : "HA");
 
@@ -156,8 +160,8 @@ export async function simularPromocao(
   }
   // [HA-MOVEL-MELHORIA] quem nao teve aula mexida: a HA movel vai para onde tira janela (igual a promocao)
   const aulasSimPos: AulaPos[] = aulasSimuladas.flatMap((a) => {
-    const t = turnoDe.get(a.turmaId);
-    return t ? [{ professorId: a.professorId, turno: t, diaSemana: a.diaSemana, numeroAula: a.numeroAula }] : [];
+    const r = real(a); // [INTEGRAL-NA-OCUPACAO] a HA nunca vai para cima de aula da turma integral
+    return r ? [{ professorId: a.professorId, turno: r.turno, diaSemana: a.diaSemana, numeroAula: r.numeroAula }] : [];
   });
   const dispEscola = disp.filter((d) => profIds.has(d.professorId));
   const movHA = reposicionarHAMovel({
