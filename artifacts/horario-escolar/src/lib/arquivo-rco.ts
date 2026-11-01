@@ -9,6 +9,8 @@ export type ResumoArquivoRco = {
 export type SituacaoArquivoRco = {
   solicitado: { em: string; mensagem: string | null } | null;
   enviado: { nomeArquivo: string; enviadoEm: string; enviadoPor: string | null; resumo: ResumoArquivoRco; tamanho: number } | null;
+  /** [IMPORTAR-TURMAS-RCO] turmas cadastradas a partir do arquivo pela equipe NexGrade */
+  importado?: { em: string; turmas: number; disciplinasNovas: number } | null;
 };
 export const CHAVE_ARQUIVO_RCO = ["/api/arquivo-rco"] as const;
 

@@ -13,7 +13,7 @@ const LIMITE = "5mb";
 
 router.get("/", async (req, res) => {
   const s = await situacaoArquivoRco(getEscolaId(req));
-  res.json({ solicitado: s.solicitado ? { em: s.solicitado.em, mensagem: s.solicitado.mensagem } : null, enviado: s.enviado });
+  res.json({ solicitado: s.solicitado ? { em: s.solicitado.em, mensagem: s.solicitado.mensagem } : null, enviado: s.enviado, importado: s.importado });
 });
 
 // corpo = o XML cru (Content-Type application/xml ou text/xml ou text/plain); ?nome=<nome do arquivo>
