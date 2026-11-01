@@ -120,7 +120,7 @@ export function QuadroSemanaReservas({ modo, data, onMudarData, onReservar }: {
           <table className="w-full min-w-[640px] border-collapse text-xs">
             <thead>
               <tr className="bg-[#0D47A1] text-white">
-                <th className="w-14 px-2 py-2 text-left font-semibold">Aula</th>
+                <th className="sticky left-0 z-10 w-14 bg-[#0D47A1] px-2 py-2 text-left font-semibold">Aula</th>{/* [CELULAR-RESERVAS] coluna fixa ao rolar */}
                 {quadro.dias.map((d, i) => (
                   <th key={d} className={`px-2 py-2 text-center font-semibold ${d === hoje ? "bg-[#1565C0]" : ""}`}>
                     {DIAS[i]}<span className="block text-[10px] font-normal opacity-80">{ddmm(d)}</span>
@@ -131,7 +131,7 @@ export function QuadroSemanaReservas({ modo, data, onMudarData, onReservar }: {
             <tbody>
               {turno.aulas.map((a) => (
                 <tr key={a.numeroAula} className="border-t align-top">
-                  <td className="px-2 py-1.5 font-mono font-bold text-[#1565C0]">{a.numeroAula}ª<span className="block font-sans text-[10px] font-normal text-muted-foreground">{a.horaInicio}</span></td>
+                  <td className="sticky left-0 z-10 bg-card px-2 py-1.5 font-mono font-bold text-[#1565C0]">{a.numeroAula}ª<span className="block font-sans text-[10px] font-normal text-muted-foreground">{a.horaInicio}</span></td>
                   {quadro.dias.map((dia, d) => {
                     const passado = dia < hoje;
                     const livresTodos = a.livres[d] ?? [];
@@ -161,7 +161,7 @@ export function QuadroSemanaReservas({ modo, data, onMudarData, onReservar }: {
                             : espaco ? <p className="font-medium text-emerald-700">Livre</p>
                             : livres.length === quadro.espacos.length ? <p className="font-medium text-emerald-700">Livres: todos</p>
                             : <p className="text-emerald-700" title={livres.map((id) => nomeDe.get(id)).join(", ")}>Livres: {livres.map((id) => nomeDe.get(id)).join(", ")}</p>}
-                          {podeReservar && <p className="hidden items-center gap-0.5 font-semibold text-[#1565C0] group-hover:flex"><Plus className="h-3 w-3" /> Reservar</p>}
+                          {podeReservar && <p className="flex items-center gap-0.5 font-semibold text-[#1565C0] md:hidden md:group-hover:flex"><Plus className="h-3 w-3" /> Reservar</p>}{/* [CELULAR-RESERVAS] no celular sempre visivel (nao ha mouse) */}
                         </div>
                       </td>
                     );

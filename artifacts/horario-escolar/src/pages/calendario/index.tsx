@@ -188,7 +188,7 @@ export default function CalendarioEscolarPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">{/* [CELULAR-CALENDARIO] quebra no celular */}
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Calendário Escolar</h1>
           <p className="text-muted-foreground mt-1">Feriados, recessos e trimestres letivos oficiais (SEED-PR).</p>
@@ -270,7 +270,7 @@ export default function CalendarioEscolarPage() {
       )}
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-3 mb-3 rounded-t-xl bg-gradient-to-r from-sky-50 via-white to-violet-50 border-b">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0 pb-3 mb-3 rounded-t-xl bg-gradient-to-r from-sky-50 via-white to-violet-50 border-b">
           <CardTitle className="text-lg flex items-center gap-2">
             <CalendarDays className="w-5 h-5 text-[#1565C0]" />
             {MESES[mesAtual]} de {ano}
@@ -380,32 +380,40 @@ export default function CalendarioEscolarPage() {
                 <p className="text-muted-foreground text-center py-4 text-sm">Nenhum evento cadastrado para {MESES[mesAtual]}.</p>
               )}
 
-              {podeEditar && (
+              {/* [CELULAR-CALENDARIO] (01/11/2026) a lista de datas do mes aparece tambem para quem so consulta:
+                  no celular os nomes ficam cortados nos quadrinhos e o nome inteiro so aparecia passando o mouse */}
+              {(podeEditar || eventosDoMesLista.length > 0) && (
                 <div className="mt-5 border-t pt-4 space-y-2">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-semibold">Datas de {MESES[mesAtual]}</p>
-                    <Button size="sm" onClick={() => novoEvento()}>
-                      <Plus className="w-4 h-4 mr-1" /> Adicionar data
-                    </Button>
+                    {podeEditar && (
+                      <Button size="sm" onClick={() => novoEvento()}>
+                        <Plus className="w-4 h-4 mr-1" /> Adicionar data
+                      </Button>
+                    )}
                   </div>
                   {eventosDoMesLista.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma data neste mês.</p>}
                   {eventosDoMesLista.map((ev) => {
                     const tipo = TIPO_LABELS[ev.tipo] ?? { label: ev.tipo, color: "bg-gray-100 text-gray-700", dot: "bg-gray-400" };
                     return (
-                      <div key={ev.id} className="flex items-center gap-3 rounded-md border px-3 py-2 text-sm">
+                      <div key={ev.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border px-3 py-2 text-sm">
                         <span className="font-mono w-12 shrink-0">{formatarData(ev.data)}</span>
                         <span className={`text-xs px-2 py-0.5 rounded ${tipo.color}`}>{tipo.label}</span>
-                        <span className="flex-1 truncate">{ev.descricao}</span>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" title="Editar" onClick={() => setEditEvento({ id: ev.id, data: ev.data, tipo: ev.tipo, descricao: ev.descricao })}>
-                          <Pencil className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-red-600" title="Remover" onClick={() => setApagarEvento(ev)}>
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                        <span className="flex-1 min-w-[10rem] break-words">{ev.descricao}</span>
+                        {podeEditar && (
+                          <>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" title="Editar" onClick={() => setEditEvento({ id: ev.id, data: ev.data, tipo: ev.tipo, descricao: ev.descricao })}>
+                              <Pencil className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-red-600" title="Remover" onClick={() => setApagarEvento(ev)}>
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </>
+                        )}
                       </div>
                     );
                   })}
-                  <p className="text-xs text-muted-foreground">Dica: clique num dia do calendário para adicionar uma data nele (recesso, feriado municipal, reposição).</p>
+                  {podeEditar && <p className="text-xs text-muted-foreground">Dica: clique num dia do calendário para adicionar uma data nele (recesso, feriado municipal, reposição).</p>}
                 </div>
               )}
             </>

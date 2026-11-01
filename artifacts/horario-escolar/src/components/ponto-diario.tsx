@@ -112,7 +112,7 @@ export function CardPontoDiario() {
             </Select>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{/* [CELULAR-PEDAGOGIA] (01/11/2026) os dois botoes nao cabiam lado a lado no celular */}
           <Button disabled={!data || fimDeSemana || gerando !== null} onClick={baixarPdf}>
             {gerando === "pdf" ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileDown className="w-4 h-4 mr-2" />}{gerando === "pdf" ? "Gerando..." : "Baixar PDF"}
           </Button>

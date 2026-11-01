@@ -154,7 +154,7 @@ export function BotaoRelatorioReservas() {
             <DialogTitle>Relatório de reservas por professor</DialogTitle>
             <DialogDescription>Inclui todas as reservas do período: confirmadas, pendentes e canceladas.</DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="rel-inicio">De</Label>
               <Input id="rel-inicio" type="date" value={inicio} onChange={(e) => setInicio(e.target.value)} />

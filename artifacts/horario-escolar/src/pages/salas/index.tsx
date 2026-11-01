@@ -123,7 +123,7 @@ export default function SalasList() {
           <DialogTrigger asChild>
             <Button onClick={handleOpenCreate}><Plus className="mr-2 h-4 w-4" />Nova Sala</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[90dvh] overflow-y-auto">{/* [CELULAR-DIALOGO] (01/11/2026) rola quando o teclado do celular sobe */}
             <DialogHeader>
               <DialogTitle>{editingId ? "Editar Sala" : "Nova Sala"}</DialogTitle>
               <DialogDescription>

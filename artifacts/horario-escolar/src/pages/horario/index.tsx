@@ -1371,18 +1371,19 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
                     <span className="text-sm font-semibold">{t.nome}</span>
                     <span className="text-xs text-muted-foreground">{slotsDaTurma.length} aula(s)</span>
                   </div>
+                  {/* [CELULAR-GRADE] (01/11/2026) coluna das aulas fixa ao rolar para o lado e grade mais estreita no celular */}
                   <div className="overflow-x-auto">
-                    <div className="min-w-[700px]">
-                      <div className="grid grid-cols-6 border-b border-border bg-muted/20">
-                        <div className="p-2 text-xs font-medium text-muted-foreground text-center border-r border-border">Aula</div>
+                    <div className="min-w-[560px] md:min-w-[700px]">
+                      <div className="grid grid-cols-[3rem_repeat(5,minmax(0,1fr))] md:grid-cols-6 border-b border-border bg-muted/20">
+                        <div className="sticky left-0 z-10 bg-muted p-2 text-xs font-medium text-muted-foreground text-center border-r border-border">Aula</div>
                         {diasSemana.map((dia, iDia) => (
                           <div key={dia} className={`p-2 text-xs font-semibold text-center border-r border-border last:border-0 ${diaDestaque(iDia) ? "bg-red-100 text-red-800" : ""}`}>{dia}</div>
                         ))}
                       </div>
                       {numerosAula.map((aulaNum) => {
                         return (
-                          <div key={aulaNum} className="grid grid-cols-6 border-b border-border last:border-0">
-                            <div className={`p-1.5 flex items-center justify-center text-xs font-medium border-r border-border ${aulaDestaque(aulaNum) ? "bg-red-100 text-red-800" : "text-muted-foreground bg-muted/10"}`}>
+                          <div key={aulaNum} className="grid grid-cols-[3rem_repeat(5,minmax(0,1fr))] md:grid-cols-6 border-b border-border last:border-0">
+                            <div className={`sticky left-0 z-10 p-1.5 flex items-center justify-center text-xs font-medium border-r border-border ${aulaDestaque(aulaNum) ? "bg-red-100 text-red-800" : "text-muted-foreground bg-muted"}`}>
                               {aulaNum === 0 ? "18:00" : `${aulaNum}ª`}
                             </div>
                             {Array.from({ length: 5 }).map((_, colIndex) => {
@@ -1547,20 +1548,21 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
         </Card>
       ) : (
         <Card className="overflow-hidden">
+          {/* [CELULAR-GRADE] (01/11/2026) coluna das aulas fixa ao rolar para o lado e grade mais estreita no celular */}
           <div className="overflow-x-auto">
-            <div className="min-w-[800px]">
-              <div className="grid grid-cols-6 border-b border-border bg-muted/50">
-                <div className="p-4 font-medium text-muted-foreground text-center border-r border-border">Aula</div>
+            <div className="min-w-[620px] md:min-w-[800px]">
+              <div className="grid grid-cols-[3rem_repeat(5,minmax(0,1fr))] md:grid-cols-6 border-b border-border bg-muted/50">
+                <div className="sticky left-0 z-10 bg-muted p-2 md:p-4 font-medium text-muted-foreground text-center border-r border-border">Aula</div>
                 {diasSemana.map((dia, iDia) => (
-                  <div key={dia} className={`p-4 font-semibold text-center border-r border-border last:border-0 ${diaDestaque(iDia) ? "bg-red-100 text-red-800" : ""}`}>{dia}</div>
+                  <div key={dia} className={`p-2 md:p-4 font-semibold text-center border-r border-border last:border-0 ${diaDestaque(iDia) ? "bg-red-100 text-red-800" : ""}`}>{dia}</div>
                 ))}
               </div>
               {Array.from({ length: numRows }).map((_, rowIndex) => {
                 const aulaNum = rowIndex + 1;
                 return (
-                  <div key={aulaNum} className="grid grid-cols-6 border-b border-border last:border-0">
-                    <div className={`p-4 flex items-center justify-center font-medium border-r border-border ${aulaDestaque(aulaNum) ? "bg-red-100 text-red-800" : "text-muted-foreground bg-muted/20"}`}>
-                      {aulaNum}ª Aula
+                  <div key={aulaNum} className="grid grid-cols-[3rem_repeat(5,minmax(0,1fr))] md:grid-cols-6 border-b border-border last:border-0">
+                    <div className={`sticky left-0 z-10 p-1 md:p-4 flex flex-col md:flex-row items-center justify-center font-medium border-r border-border ${aulaDestaque(aulaNum) ? "bg-red-100 text-red-800" : "text-muted-foreground bg-muted"}`}>
+                      {aulaNum}ª<span className="hidden md:inline">&nbsp;Aula</span>
                       {turnoEmUso === "integral" && horaIntegral(aulaNum) && <span className="ml-1 text-xs font-normal tabular-nums">{horaIntegral(aulaNum)}</span>}
                     </div>
                     {Array.from({ length: 5 }).map((_, colIndex) => {

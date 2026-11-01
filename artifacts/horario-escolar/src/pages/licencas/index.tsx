@@ -88,7 +88,7 @@ export default function LicencasList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-center gap-3">{/* [CELULAR-PEDAGOGIA] (01/11/2026) titulo e botao quebram no celular */}
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Licenças</h1>
           <p className="text-muted-foreground">Gerencie afastamentos e licenças de professores.</p>
@@ -97,7 +97,7 @@ export default function LicencasList() {
           <DialogTrigger asChild>
             <Button onClick={handleOpenCreate}><Plus className="mr-2 h-4 w-4" />Nova Licença</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[90dvh] overflow-y-auto">{/* [CELULAR-DIALOGO] (01/11/2026) rola quando o teclado do celular sobe */}
             <DialogHeader>
               <DialogTitle>Nova Licença</DialogTitle>
               <DialogDescription>Registre um afastamento de professor.</DialogDescription>
@@ -131,7 +131,7 @@ export default function LicencasList() {
                     </FormItem>
                   )}
                 />
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="dataInicio"
@@ -200,9 +200,9 @@ export default function LicencasList() {
         <div className="grid gap-4">
           {licencasFiltradas.map((licenca) => (
             <Card key={licenca.id}>
-              <CardContent className="pt-6 flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
+              <CardContent className="pt-6 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-semibold">{nomeProfessor(licenca.professorId)}</h3>
                     <Badge variant="outline">{licenca.tipo}</Badge>
                   </div>

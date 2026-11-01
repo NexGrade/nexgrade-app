@@ -182,10 +182,10 @@ export default function PresencaPage() {
                 const obs = obsAberta.has(k) || !!m?.observacao;
                 return (
                   <div key={a.numeroAula} className={cn("px-4 py-3 space-y-2", alterada && "bg-primary/5")}>
-                    <div className="flex items-start gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start">{/* [CELULAR-PEDAGOGIA] (01/11/2026) no celular os botoes vao para baixo do texto da aula */}
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium">{a.numeroAula}ª aula{a.hora && <span className="text-muted-foreground font-normal"><span className="hidden sm:inline"> · </span><br className="sm:hidden" />{a.hora}–{a.fim}</span>}</div>
-                        <div className="text-xs text-muted-foreground truncate">{a.turmas}{a.disciplinas && ` · ${a.disciplinas}`}{a.sala && ` · ${a.sala}`}</div>
+                        <div className="text-xs text-muted-foreground break-words sm:truncate">{a.turmas}{a.disciplinas && ` · ${a.disciplinas}`}{a.sala && ` · ${a.sala}`}</div>
                       </div>
                       <div className="flex gap-1.5 shrink-0">
                         {STATUS.map((s) => (
