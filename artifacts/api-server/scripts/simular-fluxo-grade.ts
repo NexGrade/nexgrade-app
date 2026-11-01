@@ -86,7 +86,7 @@ async function main() {
     // ---------- 1) a mudanca do cenario ----------
     let tempoLimiteS: number | undefined;
     switch (CENARIO) {
-      case "base": case "promover-fora-do-periodo": case "heuristico-turma": break;
+      case "base": case "promover-fora-do-periodo": case "heuristico-turma": case "conferir-promocao": break;
       case "bloqueio-2-dias": await bloquear([0, 1], slots); etapa("mudanca", `${prof.nome} (#${prof.id}, ${prof.aulas} aulas) indisponivel seg e ter`); break;
       case "professor-todo-bloqueado": await bloquear([0, 1, 2, 3, 4], slots); etapa("mudanca", `${prof.nome} (#${prof.id}, ${prof.aulas} aulas) indisponivel a semana toda`); break;
       case "fixa-em-bloqueio": {
@@ -149,6 +149,26 @@ async function main() {
       etapa("simulacao", { http: sim.status, ...resumir(sim.body) });
       const prom = await chamar("POST", `/horarios/experimentais/${encodeURIComponent(NOME)}/promover`, {});
       etapa("promover", { http: prom.status, ...resumir(prom.body) });
+      // conferir-promocao: o que a simulacao previu (janelas com a HA no lugar) bate com a oficial DEPOIS de promover?
+      // Um experimento "neutro" (1 aula identica a oficial) faz a simulacao contar a oficial de hoje com a HA gravada.
+      if (CENARIO === "conferir-promocao" && prom.status === 200 && sim.status === 200) {
+        const [h] = await q(`select h.* from horarios h join turmas t on t.id=h.turma_id where h.escola_id=$1 and t.turno=$2 order by h.id limit 1`, [ESCOLA, TURNO]);
+        await q(`insert into horarios_experimentais (escola_id, nome, turma_id, disciplina_id, professor_id, dia_semana, numero_aula)
+          values ($1, 'Sim-neutro', $2, $3, $4, $5, $6)`, [ESCOLA, h.turma_id, h.disciplina_id, h.professor_id, h.dia_semana, h.numero_aula]);
+        const real = (await chamar("GET", `/horarios/experimentais/Sim-neutro/simulacao`)).body;
+        const previsto = sim.body.experimento, depois = real.oficialHoje;
+        const porProf = (d: any[]) => new Map(d.map((x) => [`${x.professorNome}|${x.dia}`, x.janelas]));
+        const a = porProf(previsto.detalhe), b = porProf(depois.detalhe);
+        const diferentes = [...new Set([...a.keys(), ...b.keys()])].filter((k) => (a.get(k) ?? 0) !== (b.get(k) ?? 0))
+          .map((k) => `${k}: previsto ${a.get(k) ?? 0}, real ${b.get(k) ?? 0}`);
+        const [{ ha }] = await q(`select count(*)::int ha from disponibilidade_professores d join professores p on p.id=d.professor_id
+          where p.escola_id=$1 and d.hora_atividade_obrigatoria and d.turno=$2`, [ESCOLA, TURNO]);
+        etapa("conferencia", {
+          janelasPrevistasNaSimulacao: previsto.janelas, janelasReaisDepoisDePromover: depois.janelas,
+          diasComJanelaPrevisto: previsto.diasComConflito, diasComJanelaReal: depois.diasComConflito,
+          professorDiaDiferentes: diferentes.length, amostra: diferentes.slice(0, 15), haNoTurnoDepois: ha,
+        });
+      }
     }
   } catch (e) {
     etapa("ERRO_DO_ROTEIRO", e instanceof Error ? e.stack : String(e));
