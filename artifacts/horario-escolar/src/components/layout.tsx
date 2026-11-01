@@ -13,13 +13,25 @@ import {
   FileUp, // [ARQUIVO-RCO]
   NotebookPen, BarChart3, // [MENU-UNICO]
   Menu, X, ClipboardCheck, // [MENU-CELULAR] [PRESENCA-PEDAGOGIA]
+  Home, Wand2, Search, // [MENU-DESTAQUE]
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSituacaoArquivoRco } from "@/lib/arquivo-rco"; // [ARQUIVO-RCO]
 
+type Icone = React.ComponentType<{ className?: string }>;
+// [MENU-DESTAQUE] numero = etapa (1, 2, 3) no titulo; icone = demais secoes; principal = Gerar Grade (fundo azul, sem selo)
+type GrupoMenu = {
+  label: string;
+  numero?: number;
+  icone?: Icone;
+  principal?: boolean;
+  items: Array<{ href: string; label: string; icon: Icone; badge?: string; principal?: boolean }>;
+};
+
 // [MENU-CARGOS] (31/10/2026) secoes de cada cargo: as mesmas no menu completo e no menu do proprio cargo
-const secaoGestorReservas = {
+const secaoGestorReservas: GrupoMenu = {
   label: "Gestor de reservas",
+  icone: DoorOpen, // [MENU-DESTAQUE]
   items: [
     { href: "/salas", label: "Salas", icon: Building2 }, // [GESTOR-SALAS] o gestor cadastra e edita as salas
     { href: "/reservas", label: "Reservas", icon: DoorOpen },
@@ -27,8 +39,9 @@ const secaoGestorReservas = {
   ],
 };
 
-const secaoPedagogia = {
+const secaoPedagogia: GrupoMenu = {
   label: "Pedagogia",
+  icone: ClipboardCheck, // [MENU-DESTAQUE]
   items: [
     { href: "/presenca", label: "Presença dos professores", icon: ClipboardCheck }, // [PRESENCA-PEDAGOGIA]
     { href: "/comunicados", label: "Comunicados", icon: Bell },
@@ -37,7 +50,7 @@ const secaoPedagogia = {
   ],
 };
 
-const navGroups = [
+const navGroups: GrupoMenu[] = [
   // [FASE-B] Menu reorganizado na ordem em que a escola trabalha (28/09/2026).
   // [MENU-ORDEM] (23/10/2026) Cadastro separado da montagem da grade; grupos
   // renomeados (Inicio, Relatorios, RCO, Configuracoes).
@@ -47,8 +60,10 @@ const navGroups = [
   // Pedagogicos nas secoes do gestor de reservas e da pedagogia; sem "Onde esta agora";
   // a planilha da grade foi para Imprimir Grade.
   // [MENU-GRADE] (31/10/2026) "Grade de Horario" com Imprimir Grade; a secao Relatorios acabou.
+  // [MENU-DESTAQUE] (31/10/2026) titulos com numero (etapas) ou icone; Gerar Grade em destaque.
   {
     label: "Início",
+    icone: Home,
     items: [
       { href: "/dashboard", label: "Visão Geral", icon: LayoutDashboard },
       { href: "/assistente", label: "Assistente de IA", icon: Sparkles, badge: "IA" },
@@ -57,7 +72,8 @@ const navGroups = [
   {
     // Ordem do cadastro de uma escola nova: professores ANTES de turmas,
     // porque na edicao da turma se escolhe o professor de cada disciplina.
-    label: "1. Cadastro da escola",
+    label: "Cadastro da escola",
+    numero: 1,
     items: [
       { href: "/calendario", label: "Calendário e Turnos", icon: CalendarDays }, // [FASE-C3]
       { href: "/cursos", label: "Cursos e Disciplinas", icon: Library }, // [FASE-C2] cursos, matrizes e disciplinas [CODIGOS-NA-CURSOS] e codigos do RCO
@@ -69,16 +85,19 @@ const navGroups = [
     ],
   },
   {
-    label: "2. Grade de Horário", // [MENU-GRADE] (31/10/2026) antes "Montagem da grade"
+    label: "Grade de Horário", // [MENU-GRADE] (31/10/2026) antes "Montagem da grade"
+    numero: 2,
+    principal: true, // [MENU-DESTAQUE] a etapa mais importante do sistema
     items: [
       { href: "/disponibilidade", label: "Disponibilidade", icon: Clock },
-      { href: "/horario", label: "Gerar Grade", icon: Calendar }, // [MENU-ORGANIZADO] gerar e ajustar a grade [MENU-GRADE] (31/10/2026) antes "Horario"
+      { href: "/horario", label: "Gerar Grade", icon: Wand2, principal: true }, // [MENU-ORGANIZADO] gerar e ajustar a grade [MENU-GRADE] (31/10/2026) antes "Horario"
       { href: "/imprimir-grade", label: "Imprimir Grade", icon: Printer }, // [IMPRIMIR-GRADE] PDFs e planilha da grade [MENU-GRADE]
     ],
   },
   {
     // [CODIGOS-NA-CURSOS] (31/10/2026) Codigos do RCO virou aba de Cursos e Disciplinas
-    label: "3. Enviar ao RCO",
+    label: "Enviar ao RCO",
+    numero: 3,
     items: [
       { href: "/rco", label: "Exportar para o RCO", icon: BarChart3 }, // [MENU-UNICO] tela propria
       { href: "/arquivo-rco", label: "Arquivo do RCO", icon: FileUp }, // [ARQUIVO-RCO]
@@ -88,6 +107,7 @@ const navGroups = [
   secaoPedagogia,
   {
     label: "Configurações",
+    icone: Settings,
     items: [
       { href: "/escola", label: "Escola", icon: Landmark }, // [FASE-C1] dados, configuracoes e assinatura
       { href: "/usuarios", label: "Usuários", icon: Shield },
@@ -99,10 +119,11 @@ const navGroups = [
 ];
 
 // [PEDAGOGIA] (28/10/2026) menu da pedagogia: so o que ela acompanha
-const menuPedagogia = [
+const menuPedagogia: GrupoMenu[] = [
   secaoPedagogia, // [MENU-CARGOS]
   {
     label: "Consulta",
+    icone: Search,
     items: [
       { href: "/horario", label: "Horário", icon: Calendar },
       { href: "/calendario", label: "Calendário", icon: CalendarDays },
@@ -112,9 +133,7 @@ const menuPedagogia = [
 
 // [MENU-ORGANIZADO] (31/10/2026) menu do gestor de reservas: antes era um recorte do menu
 // completo, espalhado em tres secoes. As rotas liberadas ficam no EscolaGate (App.tsx).
-const menuGestorReservas = [secaoGestorReservas]; // [MENU-CARGOS]
-
-type GrupoMenu = { label: string; items: Array<{ href: string; label: string; icon: React.ComponentType<{ className?: string }>; badge?: string }> };
+const menuGestorReservas: GrupoMenu[] = [secaoGestorReservas]; // [MENU-CARGOS]
 
 function NotificationBellAdmin() {
   const queryClient = useQueryClient();
@@ -137,10 +156,19 @@ function NotificationBellAdmin() {
 // [MENU-ORGANIZADO] (31/10/2026) o mesmo menu no computador e no celular
 function MenuLateral({ grupos, isActive, seloDoItem }: { grupos: GrupoMenu[]; isActive: (href: string) => boolean; seloDoItem: (href: string, badge?: string) => string | undefined }) {
   return (
-    <nav className="flex-1 py-4 px-3 pb-6 space-y-5 overflow-y-auto">
-      {grupos.map((group) => (
-        <div key={group.label}>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-3 mb-1">
+    <nav className="flex-1 py-4 px-3 pb-6 overflow-y-auto">
+      {grupos.map((group, gi) => (
+        <div key={group.label} className={cn(gi > 0 && "mt-4 pt-4 border-t border-border")}>
+          {/* [MENU-DESTAQUE] titulo da secao: numero da etapa ou icone, em letra legivel */}
+          <p className="flex items-center gap-2 px-3 mb-1.5 text-[13px] font-semibold text-foreground">
+            {group.numero ? (
+              <span className={cn("w-5 h-5 shrink-0 rounded-full flex items-center justify-center text-[11px] font-bold",
+                group.principal ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary")}>
+                {group.numero}
+              </span>
+            ) : group.icone ? (
+              <group.icone className="w-4 h-4 shrink-0 text-primary" />
+            ) : null}
             {group.label}
           </p>
           <div className="space-y-0.5">
@@ -150,7 +178,10 @@ function MenuLateral({ grupos, isActive, seloDoItem }: { grupos: GrupoMenu[]; is
                 href={item.href}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                  isActive(item.href)
+                  item.principal // [MENU-DESTAQUE] Gerar Grade sempre em azul
+                    ? cn("my-1 py-2.5 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90",
+                        isActive(item.href) && "ring-2 ring-primary/30 ring-offset-1 ring-offset-card")
+                    : isActive(item.href)
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-accent hover:text-foreground",
                 )}
