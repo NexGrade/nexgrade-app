@@ -18,7 +18,7 @@ const CONFIG_DEFAULTS = {
   "horario.aulaspordia": "5",
   "horario.reduzirjanelas": "true",
   "horario.fatorpedagogico": "false",
-  "seed.estado": "SP",
+  "seed.estado": "PR",
   "seed.versao": "2025",
 };
 

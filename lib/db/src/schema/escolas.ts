@@ -41,7 +41,7 @@ export const escolasTable = pgTable("escolas", {
   nomeFantasia: text("nome_fantasia").notNull(),
   cnpj: text("cnpj"),
   cidade: text("cidade"),
-  estado: text("estado").notNull().default("SP"),
+  estado: text("estado").notNull().default("PR"),
   modalidade: text("modalidade").notNull().default("regular"),
   // [NOVO] Identificação oficial da escola perante o MEC/SEED --
   // usados em relatórios oficiais e para diferenciar escolas com nome

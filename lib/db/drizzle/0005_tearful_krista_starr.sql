@@ -1,0 +1,1 @@
+ALTER TABLE "escolas" ALTER COLUMN "estado" SET DEFAULT 'PR';

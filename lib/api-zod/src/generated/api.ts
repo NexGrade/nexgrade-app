@@ -1617,7 +1617,7 @@ export const GetEscolaAtualResponse = zod.object({
 
 export const cadastrarEscolaBodyNomeFantasiaMin = 2;
 
-export const cadastrarEscolaBodyEstadoDefault = `SP`;
+export const cadastrarEscolaBodyEstadoDefault = `PR`;
 export const cadastrarEscolaBodyModalidadeDefault = `regular`;
 
 export const CadastrarEscolaBody = zod.object({
