@@ -1,6 +1,7 @@
 /**
- * [INTEGRAL-NA-OCUPACAO] (01/11/2026) So le: HA gravada em cima de aula da turma integral (no horario real) e janelas da
- * manha contando a integral. Uso (pasta artifacts/api-server):
+ * [INTEGRAL-NA-OCUPACAO] (01/11/2026) So le: HA gravada em cima de aula (a da turma integral no horario real) e as
+ * janelas do turno. Como na simulacao e em Conflitos: aula (inclusive assincrona) e HA ocupam; atividade
+ * "(ocupado: ...)" entre elas nao conta como janela. Uso (pasta artifacts/api-server):
  *   DATABASE_URL=... npx tsx scripts/conferir-ha-na-integral.ts [--escola=ID] [--turno=matutino]
  */
 const arg = (n: string) => process.argv.find((a) => a.startsWith(`--${n}=`))?.slice(n.length + 3);
@@ -11,7 +12,7 @@ const q = async (s: string, p: unknown[] = []) => (await pool.query(s, p)).rows 
 const turmas = await q(`select id, turno from turmas where escola_id=$1`, [E]);
 const turnoDe = new Map<number, string | null>(turmas.map((t) => [t.id, t.turno]));
 const mapa = mapaIntegralDosSlots(await q(`select turno, nivel_ensino "nivelEnsino", numero_aula "numeroAula", hora_inicio::text "horaInicio", duracao_minutos "duracaoMinutos", letivo from horario_slots where escola_id=$1`, [E]));
-const aulas = (await q(`select h.professor_id p, h.turma_id, h.dia_semana d, h.numero_aula a, t.nome turma, t.turno tt from horarios h join turmas t on t.id=h.turma_id where h.escola_id=$1 and coalesce(h.assincrona,false)=false`, [E]))
+const aulas = (await q(`select h.professor_id p, h.turma_id, h.dia_semana d, h.numero_aula a, t.nome turma, t.turno tt from horarios h join turmas t on t.id=h.turma_id where h.escola_id=$1`, [E]))
   .map((x) => ({ ...x, r: posicaoReal(x.turma_id, x.a, turnoDe, mapa) })).filter((x) => x.r?.turno === T);
 const ha = await q(`select d.professor_id p, d.dia_semana d, d.horario_slot a, d.motivo from disponibilidade_professores d join professores pr on pr.id=d.professor_id where pr.escola_id=$1 and d.turno=$2 and d.hora_atividade_obrigatoria`, [E, T]);
 const aulaEm = new Map(aulas.map((x) => [`${x.p}|${x.d}|${x.r!.numeroAula}`, x]));
