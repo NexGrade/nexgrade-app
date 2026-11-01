@@ -97,7 +97,7 @@ const navGroups: GrupoMenu[] = [
   },
   {
     // [CODIGOS-NA-CURSOS] (31/10/2026) Codigos do RCO virou aba de Cursos e Disciplinas
-    label: "Enviar para o RCO",
+    label: "RCO",
     numero: 3,
     items: [
       { href: "/rco", label: "Exportar para o RCO", icon: BarChart3 }, // [MENU-UNICO] tela propria
