@@ -29,7 +29,7 @@ export const GUIA_NEXGRADE: Record<string, TopicoGuia> = {
 5. Turmas: crie as turmas escolhendo curso e série/matriz; depois, na edição da turma, escolha o professor de cada disciplina.
 6. Disponibilidade: marque bloqueios e hora-atividade (HA) de cada professor, por turno.
 7. Salas (menu Gestor de reservas → Salas): cadastre os espaços (salas, laboratórios, quadra).
-8. Horário → Modo Experimental: gere a grade (botão Turno inteiro), compare com "Simular promoção" e clique em "Promover para oficial".
+8. Gerar Grade (tela Horário) → Modo Experimental: gere a grade (botão Turno inteiro), compare com "Simular promoção" e clique em "Promover para oficial".
 9. Usuários: libere o acesso da direção, coordenação, secretaria e gestor de reservas. Professores não precisam: entram com o e-mail do cadastro em Professores.
 10. Códigos do RCO e Arquivo do RCO: confira os códigos SERE das turmas e os Códigos Externos das disciplinas; se a equipe NexGrade pedir, envie o arquivo da Grade de Horário do RCO.
 11. 3. Enviar ao RCO → Exportar para o RCO: grave a grade no RCO (veja o assunto "rco").`,
@@ -182,7 +182,7 @@ Os espaços cadastrados aqui são os que aparecem em Reservas.`,
   gerar_grade: {
     titulo: "Gerar a grade horária (Turma, Turno parcial, Turno inteiro, Modo Experimental e promover)",
     palavras: ["gerar", "gerar horário", "gerar grade", "cp-sat", "experimental", "promover", "oficial", "prévia", "melhorar grade", "janelas", "refazer horário", "turno parcial", "turma", "turno inteiro", "parar", "cancelar", "andamento", "simular promoção"],
-    texto: `A grade é gerada no menu Horário → aba Modo Experimental. Toda geração vira um EXPERIMENTO: nada muda na grade oficial até você clicar em "Promover para oficial".
+    texto: `A grade é gerada no menu Gerar Grade (tela Horário) → aba Modo Experimental. Toda geração vira um EXPERIMENTO: nada muda na grade oficial até você clicar em "Promover para oficial".
 
 QUAL BOTÃO USAR (Turma, Turno parcial ou Turno inteiro)
 O NexGrade recalcula só as turmas escolhidas. As aulas das outras turmas ficam paradas e contam como horário ocupado para os professores delas (ninguém fica em dois lugares). Ao promover, só as turmas do experimento são trocadas.
@@ -224,7 +224,7 @@ O Assistente de IA não gera grade — ele só explica o caminho.`,
   grade_conflitos: {
     titulo: "Grade oficial e Conflitos (ver, filtrar, aula manual, HA e bloqueios pela grade)",
     palavras: ["grade", "ver horário", "filtrar", "aula manual", "adicionar aula", "excluir aula", "conflito", "conflitos", "vago", "livre", "indisponível", "turnos lado a lado", "trocar ha", "bloquear"],
-    texto: `Menu Horário → aba Grade.
+    texto: `Menu Gerar Grade (tela Horário) → aba Grade. A pedagogia abre a mesma tela em Consulta → Horário e o gestor de reservas em Consultar grade.
 - Filtre por Turno (Matutino, Vespertino, Noturno ou Integral), por Turma ou por Professor (botão "Limpar" volta ao início). Selecione uma turma, um professor ou um turno para ver a grade.
 - Turma integral: a grade mostra todas as aulas do esquema Integral (ex.: 11), com a hora de cada linha, mesmo vazias.
 - Na grade do PROFESSOR, a aula da turma integral aparece no turno real (manhã ou tarde) e na linha correspondente; por isso a hora pode diferir um pouco da grade da turma (ex.: 15:00 no integral = 3ª aula da tarde, 14:45).

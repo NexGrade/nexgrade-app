@@ -72,7 +72,7 @@ const navGroups = [
       // Cada escola configura suas proprias regras (maximo de aulas geminadas,
       // limites por disciplina/turma e por professor) que o gerador usa.
       { href: "/regras-distribuicao", label: "Regras de Distribuição", icon: SlidersHorizontal },
-      { href: "/horario", label: "Horário", icon: Calendar }, // [MENU-ORGANIZADO] gerar e ajustar a grade
+      { href: "/horario", label: "Gerar Grade", icon: Calendar }, // [MENU-ORGANIZADO] gerar e ajustar a grade [MENU-GRADE] (31/10/2026) antes "Horario"
       { href: "/imprimir-grade", label: "Imprimir Grade", icon: Printer }, // [IMPRIMIR-GRADE] PDFs e planilha da grade [MENU-GRADE]
     ],
   },
