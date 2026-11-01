@@ -21,7 +21,7 @@ export const GUIA_NEXGRADE: Record<string, TopicoGuia> = {
   primeiros_passos: {
     titulo: "Primeiros passos — montar uma escola nova",
     palavras: ["começar", "inicio", "escola nova", "ordem", "configurar", "implantação", "primeira vez", "onboarding"],
-    texto: `Ordem recomendada (é a mesma ordem do menu "Montagem da escola"):
+    texto: `Ordem recomendada (é a mesma ordem do menu: "1. Cadastro da escola" e depois "2. Grade de Horário"):
 1. Escola → aba Dados da Escola: confira nome, CNPJ, INEP, NRE e turnos ofertados.
 2. Calendário e Turnos → aba Esquema de aulas por turno: configure os horários das aulas de cada turno, inclusive o Integral se a escola tiver turma de período integral (sem isso a Disponibilidade e a geração não funcionam para aquele turno). Na aba Calendário letivo, confira o calendário (escola nova já vem com o oficial SEED-PR; se estiver vazio, clique em "Usar o calendário oficial SEED-PR").
 3. Cursos e Disciplinas → aba Catálogo SEED-PR: importe o catálogo oficial e marque os cursos que a escola oferece. Confira as disciplinas na aba Disciplinas.
@@ -29,7 +29,7 @@ export const GUIA_NEXGRADE: Record<string, TopicoGuia> = {
 5. Turmas: crie as turmas escolhendo curso e série/matriz; depois, na edição da turma, escolha o professor de cada disciplina.
 6. Disponibilidade: marque bloqueios e hora-atividade (HA) de cada professor, por turno.
 7. Salas (menu Gestor de reservas → Salas): cadastre os espaços (salas, laboratórios, quadra).
-8. Horário → Modo Experimental: gere a grade (botão Turno inteiro), compare com "Simular promoção" e clique em "Promover para oficial".
+8. Gerar Grade (tela Horário) → Modo Experimental: gere a grade (botão Turno inteiro), compare com "Simular promoção" e clique em "Promover para oficial".
 9. Usuários: libere o acesso da direção, coordenação, secretaria e gestor de reservas. Professores não precisam: entram com o e-mail do cadastro em Professores.
 10. Códigos do RCO e Arquivo do RCO: confira os códigos SERE das turmas e os Códigos Externos das disciplinas; se a equipe NexGrade pedir, envie o arquivo da Grade de Horário do RCO.
 11. 3. Enviar ao RCO → Exportar para o RCO: grave a grade no RCO (veja o assunto "rco").`,
@@ -182,7 +182,7 @@ Os espaços cadastrados aqui são os que aparecem em Reservas.`,
   gerar_grade: {
     titulo: "Gerar a grade horária (Turma, Turno parcial, Turno inteiro, Modo Experimental e promover)",
     palavras: ["gerar", "gerar horário", "gerar grade", "cp-sat", "experimental", "promover", "oficial", "prévia", "melhorar grade", "janelas", "refazer horário", "turno parcial", "turma", "turno inteiro", "parar", "cancelar", "andamento", "simular promoção"],
-    texto: `A grade é gerada no menu Horário → aba Modo Experimental. Toda geração vira um EXPERIMENTO: nada muda na grade oficial até você clicar em "Promover para oficial".
+    texto: `A grade é gerada no menu Gerar Grade (tela Horário) → aba Modo Experimental. Toda geração vira um EXPERIMENTO: nada muda na grade oficial até você clicar em "Promover para oficial".
 
 QUAL BOTÃO USAR (Turma, Turno parcial ou Turno inteiro)
 O NexGrade recalcula só as turmas escolhidas. As aulas das outras turmas ficam paradas e contam como horário ocupado para os professores delas (ninguém fica em dois lugares). Ao promover, só as turmas do experimento são trocadas.
@@ -224,7 +224,7 @@ O Assistente de IA não gera grade — ele só explica o caminho.`,
   grade_conflitos: {
     titulo: "Grade oficial e Conflitos (ver, filtrar, aula manual, HA e bloqueios pela grade)",
     palavras: ["grade", "ver horário", "filtrar", "aula manual", "adicionar aula", "excluir aula", "conflito", "conflitos", "vago", "livre", "indisponível", "turnos lado a lado", "trocar ha", "bloquear"],
-    texto: `Menu Horário → aba Grade.
+    texto: `Menu Gerar Grade (tela Horário) → aba Grade. A pedagogia abre a mesma tela em Consulta → Horário e o gestor de reservas em Consultar grade.
 - Filtre por Turno (Matutino, Vespertino, Noturno ou Integral), por Turma ou por Professor (botão "Limpar" volta ao início). Selecione uma turma, um professor ou um turno para ver a grade.
 - Turma integral: a grade mostra todas as aulas do esquema Integral (ex.: 11), com a hora de cada linha, mesmo vazias.
 - Na grade do PROFESSOR, a aula da turma integral aparece no turno real (manhã ou tarde) e na linha correspondente; por isso a hora pode diferir um pouco da grade da turma (ex.: 15:00 no integral = 3ª aula da tarde, 14:45).
@@ -320,7 +320,7 @@ Depois de importar professores, marque as disciplinas de cada um em Professores;
   imprimir_grade: {
     titulo: "Imprimir Grade (PDFs da grade)",
     palavras: ["imprimir", "imprimir grade", "pdf", "grade em pdf", "quadro geral", "lado a lado", "compacto", "por disciplina", "mural", "sala dos professores"],
-    texto: `Menu Relatórios → Imprimir Grade. É o único lugar dos PDFs da grade. Escolha no topo o Turno e a Semana (a data que sai no cabeçalho) e clique em "Baixar PDF" no modelo que quiser. Todos usam a grade oficial e saem em folha deitada (paisagem); nos modelos de um por quadro, saem 2 quadros por linha.
+    texto: `Menu Grade de Horário → Imprimir Grade. É o único lugar dos PDFs da grade. Escolha no topo o Turno e a Semana (a data que sai no cabeçalho) e clique em "Baixar PDF" no modelo que quiser. Todos usam a grade oficial e saem em folha deitada (paisagem); nos modelos de um por quadro, saem 2 quadros por linha.
 - Por turma: uma turma por quadro (sigla da disciplina e professor). Aceita "Todos os turnos" e filtro de uma turma.
 - Turmas lado a lado: 5 turmas por página, em paisagem, cada aula com o nome da disciplina e o professor.
 - Por professor: um professor por quadro, com turma, disciplina, HA (amarelo), HA* (contraturno ou aulas de outro turno) e horários bloqueados. Aceita "Todos os turnos" e filtro de um professor.
@@ -334,7 +334,7 @@ Depois de importar professores, marque as disciplinas de cada um em Professores;
     titulo: "Onde ficam os relatórios (Relatórios Pedagógicos e planilha da grade)",
     palavras: ["exportar", "pdf", "imprimir", "baixar grade", "relatório", "relatórios pedagógicos", "ponto", "ponto diário", "controle de ponto", "carga horária", "excel", "planilha", "csv"],
     texto: `[MENU-UNICO] Cada relatório fica num lugar só:
-- PDFs da grade (por turma, por professor, lado a lado, compacto, quadro geral, por disciplina): Relatórios → Imprimir Grade (assunto "imprimir_grade").
+- PDFs da grade (por turma, por professor, lado a lado, compacto, quadro geral, por disciplina): Grade de Horário → Imprimir Grade (assunto "imprimir_grade").
 - Pedagogia → Relatórios Pedagógicos:
   - Ponto Diário: folha de ponto de UM dia. Escolha o dia e o turno (Manhã, Tarde, Noite ou Todos, um por página) e baixe em PDF ou Excel. Uma linha por professor que tem aula, hora-atividade (HA) ou atividade (FORM, COORD, ASS...) nesse dia, uma coluna por aula do turno com a TURMA, e a coluna Situação com quadradinhos P, F, AT, ATR e Observação. Se o dia for feriado ou recesso no calendário, o relatório avisa no topo.
   - Controle de Ponto (mês): planilha com a carga horária dos professores (filtro de professor, mês e ano).
@@ -342,7 +342,7 @@ Depois de importar professores, marque as disciplinas de cada um em Professores;
   - Carga Horária Cumprida × Exigida: PDF por turma com o cumprido no ano x o exigido.
 - Arquivo XML do RCO: 3. Enviar ao RCO → Exportar para o RCO (assunto "rco").
 - Relatório de Reservas: na tela Reservas.
-- Planilha da grade (CSV para o Excel, completa ou de uma turma): no fim da tela Relatórios → Imprimir Grade. Configurações → Importar planilhas: professores, turmas e disciplinas por CSV.`,
+- Planilha da grade (CSV para o Excel, completa ou de uma turma): no fim da tela Grade de Horário → Imprimir Grade. Configurações → Importar planilhas: professores, turmas e disciplinas por CSV.`,
   },
 
   rco: {

@@ -46,6 +46,7 @@ const navGroups = [
   // [MENU-CARGOS] (31/10/2026) Salas, Reservas, Presenca, Comunicados, Licencas e Relatorios
   // Pedagogicos nas secoes do gestor de reservas e da pedagogia; sem "Onde esta agora";
   // a planilha da grade foi para Imprimir Grade.
+  // [MENU-GRADE] (31/10/2026) "Grade de Horario" com Imprimir Grade; a secao Relatorios acabou.
   {
     label: "Início",
     items: [
@@ -65,13 +66,14 @@ const navGroups = [
     ],
   },
   {
-    label: "2. Montagem da grade",
+    label: "2. Grade de Horário", // [MENU-GRADE] (31/10/2026) antes "Montagem da grade"
     items: [
       { href: "/disponibilidade", label: "Disponibilidade", icon: Clock },
       // Cada escola configura suas proprias regras (maximo de aulas geminadas,
       // limites por disciplina/turma e por professor) que o gerador usa.
       { href: "/regras-distribuicao", label: "Regras de Distribuição", icon: SlidersHorizontal },
-      { href: "/horario", label: "Horário", icon: Calendar }, // [MENU-ORGANIZADO] gerar e ajustar a grade
+      { href: "/horario", label: "Gerar Grade", icon: Calendar }, // [MENU-ORGANIZADO] gerar e ajustar a grade [MENU-GRADE] (31/10/2026) antes "Horario"
+      { href: "/imprimir-grade", label: "Imprimir Grade", icon: Printer }, // [IMPRIMIR-GRADE] PDFs e planilha da grade [MENU-GRADE]
     ],
   },
   {
@@ -85,13 +87,6 @@ const navGroups = [
   },
   secaoGestorReservas,
   secaoPedagogia,
-  {
-    // [MENU-UNICO] (28/10/2026) cada relatorio num lugar so
-    label: "Relatórios",
-    items: [
-      { href: "/imprimir-grade", label: "Imprimir Grade", icon: Printer }, // [IMPRIMIR-GRADE] PDFs e planilha da grade
-    ],
-  },
   {
     label: "Configurações",
     items: [
