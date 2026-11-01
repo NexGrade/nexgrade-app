@@ -22,11 +22,24 @@ console.log(`HA no turno ${T}: ${ha.length}; HA em cima de aula: ${choques.lengt
 for (const h of choques) { const a = aulaEm.get(`${h.p}|${h.d}|${h.a}`)!; console.log(`  ${nomes.get(h.p)} dia ${h.d} aula ${h.a}: aula na ${a.turma} (${a.tt}) e HA "${(h.motivo ?? "").slice(0, 50)}"`); }
 // janelas (aula + HA ocupam; atividade "(ocupado:" entre elas nao conta)
 const ativ = new Set((await q(`select d.professor_id p, d.dia_semana d, d.horario_slot a from disponibilidade_professores d join professores pr on pr.id=d.professor_id where pr.escola_id=$1 and d.turno=$2 and not d.hora_atividade_obrigatoria and d.motivo like '%(ocupado:%'`, [E, T])).map((x) => `${x.p}|${x.d}|${x.a}`));
-let janelas = 0;
+const DIAS = ["Seg", "Ter", "Qua", "Qui", "Sex"];
+const outras = await q(`select d.professor_id p, d.dia_semana d, d.horario_slot a, d.disponivel, d.motivo from disponibilidade_professores d join professores pr on pr.id=d.professor_id
+  where pr.escola_id=$1 and d.turno=$2 and not d.hora_atividade_obrigatoria`, [E, T]);
+const linhas: string[] = [];
 for (const p of new Set(aulas.map((x) => x.p))) for (const d of [0, 1, 2, 3, 4]) {
   const oc = new Set([...aulas.filter((x) => x.p === p && x.d === d).map((x) => x.r!.numeroAula), ...ha.filter((h) => h.p === p && h.d === d).map((h) => h.a)]);
   if (oc.size < 2) continue; const n = [...oc].sort((x, y) => x - y);
-  for (let a = n[0]! + 1; a < n[n.length - 1]!; a++) if (!oc.has(a) && !ativ.has(`${p}|${d}|${a}`)) janelas++;
+  for (let a = n[0]! + 1; a < n[n.length - 1]!; a++) {
+    if (oc.has(a) || ativ.has(`${p}|${d}|${a}`)) continue;
+    // [CONFERIR-LISTA] (01/11/2026) cada janela com o dia do professor: de onde ela veio
+    const dia = n.map((s) => {
+      const au = aulas.filter((x) => x.p === p && x.d === d && x.r!.numeroAula === s);
+      return au.length ? `${s}a ${au.map((x) => `${x.turma}${x.tt === "integral" ? " (integral)" : ""}`).join("+")}` : `${s}a HA`;
+    }).join(", ");
+    const marca = outras.filter((x) => x.p === p && x.d === d && x.a === a).map((x) => `${x.disponivel ? "livre" : "bloqueio"} "${(x.motivo ?? "").slice(0, 40)}"`).join(" | ");
+    linhas.push(`  ${nomes.get(p)} ${DIAS[d]} ${a}a${marca ? ` [${marca}]` : ""} | dia: ${dia}`);
+  }
 }
-console.log(`janelas no turno ${T} (contando a integral): ${janelas}`);
+console.log(`janelas no turno ${T} (contando a integral): ${linhas.length}`);
+linhas.forEach((l) => console.log(l));
 await pool.end();
