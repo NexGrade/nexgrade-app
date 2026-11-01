@@ -40,7 +40,7 @@ import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZ
 import { ehBloqueioParaMotor } from "../lib/bloqueio-real"; // [HA-FIXA]
 import { bloqueiosIntervaloEntreTurnos } from "../lib/intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 import { aulasFixasTable } from "@workspace/db"; // [AULA-FIXA-CADASTRO]
-import { validarCapacidadeProfessores, calcularCotaHaPorTurno } from "../lib/capacidade-professor";
+import { validarCapacidadeProfessores, calcularCotaHaPorTurno, capacidadeDoProfessor } from "../lib/capacidade-professor";
 import { carregarMapaIntegral, slotReal, TURNO_INTEGRAL, carregarAulasIntegraisNoTurno, mapaIntegralDosSlots } from "../lib/turno-integral"; // [TURNO-INTEGRAL] [INTEGRAL-NO-MOTOR]
 import { diagnosticarGeracao, diagnosticarViolacoesPromocao } from "../lib/diagnostico-geracao"; // [DIAGNOSTICO-GERACAO]
 
@@ -887,6 +887,18 @@ router.get("/capacidade", async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: "Erro ao validar capacidade.", detalhe: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// [CONTA-NA-HORA] (01/11/2026) a conta de um professor, turno a turno, para a tela de Disponibilidade
+router.get("/capacidade/professor/:id", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const professorId = Number(req.params.id);
+  if (!Number.isInteger(professorId) || professorId <= 0) { res.status(400).json({ error: "Professor inválido" }); return; }
+  try {
+    res.json({ professorId, turnos: await capacidadeDoProfessor(escolaId, professorId) });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao calcular a capacidade do professor.", detalhe: err instanceof Error ? err.message : String(err) });
   }
 });
 
