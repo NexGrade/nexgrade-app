@@ -32,8 +32,8 @@ const CARGOS: Array<{ valor: Cargo; rotulo: string; descricao: string }> = [
   { valor: "direcao", rotulo: "Direção", descricao: "Acesso total ao sistema" },
   { valor: "coordenacao", rotulo: "Coordenação", descricao: "Acesso total ao sistema" },
   { valor: "secretaria", rotulo: "Secretaria", descricao: "Acesso total ao sistema (monta e gera a grade, exporta para o RCO)" },
-  { valor: "reservas", rotulo: "Gestor de reservas", descricao: "Só a agenda de reservas (sem regras por professor e sem a grade)" },
-  { valor: "pedagogia", rotulo: "Pedagogia", descricao: "Ponto, licenças, comunicados e relatórios pedagógicos; consulta a grade e as reservas" }, // [PEDAGOGIA]
+  { valor: "reservas", rotulo: "Gestor de reservas", descricao: "Salas, agenda de reservas e consulta da grade (sem regras por professor)" },
+  { valor: "pedagogia", rotulo: "Pedagogia", descricao: "Presença, comunicados, relatórios pedagógicos e licenças; consulta a grade e o calendário" }, // [PEDAGOGIA]
   { valor: "professor", rotulo: "Professor", descricao: "Só a Minha Agenda" },
 ];
 const COR_CARGO: Record<Cargo, string> = {

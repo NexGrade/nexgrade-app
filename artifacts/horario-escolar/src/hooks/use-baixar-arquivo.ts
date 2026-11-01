@@ -1,4 +1,4 @@
-// [MENU-UNICO] (28/10/2026) Download autenticado usado por Exportar planilhas, Relatórios
+// [MENU-UNICO] (28/10/2026) Download autenticado usado por Imprimir Grade (planilha), Relatórios
 // Pedagógicos e Exportar para o RCO. Um <a href="/api/..."> não leva o token do Clerk, então
 // o arquivo vem por customFetch como blob e só depois vira link. Cada botão tem a sua chave
 // ("Gerando..." só no botão clicado).

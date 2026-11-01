@@ -21,8 +21,6 @@ export type Presenca = {
 };
 export type MarcaEnvio = { professorId: number; numeroAula: number; status: Status | null; substitutoId?: number | null; substitutoNome?: string | null; observacao?: string | null };
 
-export type AgoraLinha = { professorId: number; professor: string; turno: string; numeroAula: number; hora: string; fim: string; turmas: string; disciplinas: string; sala: string; status: Status | null };
-export type Agora = { data: string; dataBR?: string; diaSemana?: string; hora: string; aviso: string | null; emAula: AgoraLinha[]; proximas: AgoraLinha[]; livres: Array<{ professorId: number; professor: string }> };
 
 export type ResumoMes = {
   mes: number; ano: number; titulo: string; semTabela: boolean;
@@ -57,7 +55,6 @@ export const salvarPresenca = (data: string, turno: string, marcas: MarcaEnvio[]
   customFetch<{ ok: boolean; gravadas: number; apagadas: number }>("/api/pedagogia/presenca", {
     method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data, turno, marcas }),
   });
-export const buscarAgora = () => customFetch<Agora>("/api/pedagogia/agora");
 export const buscarMes = (mes: string, ano: string) => customFetch<ResumoMes>(`/api/pedagogia/presenca/mes?mes=${mes}&ano=${ano}`);
 
 export function excelDoDia(p: Presenca) {

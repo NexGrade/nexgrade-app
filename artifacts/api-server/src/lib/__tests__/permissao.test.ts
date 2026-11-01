@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ehAlteracaoDeReservaPermitida, ehLeituraDaEquipe, ehLeituraSomenteAdmin, normalizarCaminho } from "../permissao";
+import { ehAlteracaoDeReservaPermitida, ehAlteracaoDoGestorReservas, ehLeituraDaEquipe, ehLeituraSomenteAdmin, normalizarCaminho } from "../permissao";
 
 // O Express casa rotas sem diferenciar maiusculas e minusculas. O filtro de permissao precisa fazer
 // o mesmo, senao "/Audit" (leitura) ou "/reservas/Regras-Professores" (gestor de reservas) escapam.
@@ -38,6 +38,20 @@ describe("ehAlteracaoDeReservaPermitida (gestor de reservas)", () => {
   it("nao permite alterar outras areas", () => {
     for (const c of ["/turmas", "/professores/1", "/horarios"]) {
       expect(ehAlteracaoDeReservaPermitida(c), c).toBe(false);
+    }
+  });
+});
+
+// [GESTOR-SALAS] o gestor de reservas tambem cadastra e edita as salas
+describe("ehAlteracaoDoGestorReservas", () => {
+  it("permite reservas e salas, em qualquer caixa", () => {
+    for (const c of ["/reservas", "/reservas/12/status", "/salas", "/Salas/3", "/SALAS/3/"]) {
+      expect(ehAlteracaoDoGestorReservas(c), c).toBe(true);
+    }
+  });
+  it("continua sem regras por professor e sem outras areas", () => {
+    for (const c of ["/reservas/regras-professores", "/Reservas/Regras-Professores/3", "/salas-extra", "/turmas", "/professores/1", "/horarios", "/recursos/1"]) {
+      expect(ehAlteracaoDoGestorReservas(c), c).toBe(false);
     }
   });
 });

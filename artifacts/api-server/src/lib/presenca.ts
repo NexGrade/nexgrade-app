@@ -75,49 +75,6 @@ export function chaveMarca(professorId: number, numeroAula: number): string {
   return `${professorId}|${numeroAula}`;
 }
 
-export type AgoraLinha = {
-  professorId: number; professor: string; turno: string; numeroAula: number; hora: string; fim: string;
-  turmas: string; disciplinas: string; sala: string; status: Status | null;
-};
-
-/**
- * "Onde esta agora": a aula de cada professor que esta acontecendo no minuto `agoraMin`
- * (inicio <= agora < fim) e, para quem nao esta em aula, a proxima aula do dia.
- */
-export function ondeEstaAgora(
-  professores: Array<{ id: number; nome: string }>,
-  aulas: AulaGrade[],
-  slots: SlotEsquema[],
-  marcas: Map<string, Marca>,
-  agoraMin: number,
-): { emAula: AgoraLinha[]; proximas: AgoraLinha[]; livres: Array<{ professorId: number; professor: string }> } {
-  const emAula: AgoraLinha[] = [], proximas: AgoraLinha[] = [], livres: Array<{ professorId: number; professor: string }> = [];
-  for (const p of [...professores].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))) {
-    const minhas = aulas.filter((a) => a.professorId === p.id);
-    if (!minhas.length) continue;
-    const comHora = minhas.map((a) => {
-      const s = slotDaTurma(slots, a.turno, a.nivelEnsino, a.numeroAula);
-      return s ? { a, ini: minutosDe(s.horaInicio), fim: minutosDe(s.horaInicio) + (s.duracaoMinutos ?? 50) } : null;
-    }).filter((x): x is { a: AulaGrade; ini: number; fim: number } => !!x);
-    const linha = (grupo: Array<{ a: AulaGrade; ini: number; fim: number }>): AgoraLinha => {
-      const g0 = grupo[0]!;
-      const unicos = (xs: string[]) => [...new Set(xs.filter(Boolean))].join(" + ");
-      return {
-        professorId: p.id, professor: p.nome, turno: g0.a.turno, numeroAula: g0.a.numeroAula, hora: hhmm(g0.ini), fim: hhmm(g0.fim),
-        turmas: unicos(grupo.map((x) => x.a.turma)), disciplinas: unicos(grupo.map((x) => x.a.disciplina)), sala: unicos(grupo.map((x) => x.a.sala)),
-        status: marcas.get(`${g0.a.turno}|${chaveMarca(p.id, g0.a.numeroAula)}`)?.status ?? null,
-      };
-    };
-    const agora = comHora.filter((x) => x.ini <= agoraMin && agoraMin < x.fim);
-    if (agora.length) { emAula.push(linha(agora)); continue; }
-    const futuras = comHora.filter((x) => x.ini > agoraMin).sort((a, b) => a.ini - b.ini);
-    if (futuras.length) { const ini = futuras[0]!.ini; proximas.push(linha(futuras.filter((x) => x.ini === ini))); continue; }
-    livres.push({ professorId: p.id, professor: p.nome });
-  }
-  proximas.sort((a, b) => minutosDe(a.hora) - minutosDe(b.hora) || a.professor.localeCompare(b.professor, "pt-BR"));
-  return { emAula, proximas, livres };
-}
-
 export type RegistroMes = { professorId: number; status: Status; substitutoId: number | null };
 export type ResumoProfessorMes = { professorId: number; professor: string; presente: number; falta: number; atraso: number; substituido: number; substituiu: number; marcadas: number };
 

@@ -2,14 +2,16 @@
 // com miniatura de como fica e um botao. Filtros comuns no topo (turno e semana).
 // Antes os PDFs da grade ficavam misturados em Exportar Dados com o RCO, o ponto e as reservas.
 // [MENU-UNICO] (28/10/2026) e o unico lugar dos PDFs da grade.
+// [MENU-CARGOS] (31/10/2026) a planilha da grade (antes em Exportar planilhas) fica no fim desta tela.
 import { useState } from "react";
 import { useListTurmas, useListProfessores, customFetch } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Download, Loader2, Printer } from "lucide-react";
+import { Download, Loader2, Printer, Table } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useBaixarArquivo, montarUrl } from "@/hooks/use-baixar-arquivo"; // [MENU-CARGOS]
 
 const TODOS = "todos";
 const TURNOS = [
@@ -60,6 +62,38 @@ function Miniatura({ tipo }: { tipo: Modelo["miniatura"] }) {
       {tipo === "quadro" && <><rect x={4} y={14} width={22} height={62} fill={claro} stroke={borda} strokeWidth={0.5} />{grade(27, 14, 90, 62, 15, 12, [20, 47, 90])}</>}
       {tipo === "disciplina" && <>{grade(4, 16, 54, 26, 5, 5)}{grade(62, 16, 54, 26, 5, 5)}{grade(4, 48, 54, 26, 5, 5)}{grade(62, 48, 54, 26, 5, 5)}<text x={4} y={15} fontSize={5} fill={azul}>Matemática</text><text x={62} y={15} fontSize={5} fill={azul}>Português</text></>}
     </svg>
+  );
+}
+
+// [MENU-CARGOS] grade completa ou de uma turma em CSV, que abre no Excel
+function PlanilhaDaGrade({ turmas }: { turmas: Array<{ id: number; nome: string }> }) {
+  const { baixar, baixando } = useBaixarArquivo();
+  const [turmaId, setTurmaId] = useState(TODOS);
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2"><Table className="w-4 h-4" /> Planilha da grade (Excel)</CardTitle>
+        <CardDescription>A grade oficial em planilha (CSV, abre no Excel), completa ou de uma turma.</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="space-y-1.5 sm:w-72">
+          <Label>Turma</Label>
+          <Select value={turmaId} onValueChange={setTurmaId}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value={TODOS}>Todas as turmas</SelectItem>
+              {turmas.map((t) => <SelectItem key={t.id} value={String(t.id)}>{t.nome}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <Button variant="outline" disabled={baixando["grade"]} onClick={() => baixar(
+          montarUrl("/api/export/grade", { turmaId: turmaId === TODOS ? undefined : turmaId, formato: "csv" }),
+          "grade_horaria.csv", "grade")}>
+          {baixando["grade"] ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+          {baixando["grade"] ? "Gerando..." : "Baixar planilha"}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -159,6 +193,8 @@ export default function ImprimirGradePage() {
           );
         })}
       </div>
+
+      <PlanilhaDaGrade turmas={turmas} />
     </div>
   );
 }

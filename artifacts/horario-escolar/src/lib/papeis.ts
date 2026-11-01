@@ -97,7 +97,7 @@ export function usePapelEfetivo(): PapelEfetivo {
 }
 
 // [PEDAGOGIA] telas que a pedagogia abre (o resto volta para a tela inicial dela)
-export const ROTAS_PEDAGOGIA = ["/presenca", "/onde-esta", "/pedagogia", "/relatorios-pedagogicos", "/imprimir-grade", "/horario", "/calendario", "/reservas", "/licencas", "/comunicados"];
+export const ROTAS_PEDAGOGIA = ["/presenca", "/pedagogia", "/relatorios-pedagogicos", "/imprimir-grade", "/horario", "/calendario", "/reservas", "/licencas", "/comunicados"];
 export const INICIO_PEDAGOGIA = "/presenca"; // [PRESENCA-PEDAGOGIA] a pedagogia abre direto na lista do dia
 
 export function useEhPedagogia(): boolean {
