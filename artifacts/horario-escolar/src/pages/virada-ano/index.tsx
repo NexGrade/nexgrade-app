@@ -198,7 +198,7 @@ export default function ViradaAnoPage() {
               <li><Link href="/professores" className="font-medium text-primary hover:underline">Professores</Link>: cadastrar quem chegou.</li>
               <li><Link href="/turmas?filtro=sem-professor" className="font-medium text-primary hover:underline">Turmas sem professor</Link>: escolher o professor das disciplinas que ficaram vazias.</li>
               <li><Link href="/disponibilidade" className="font-medium text-primary hover:underline">Disponibilidade</Link>: lançar os bloqueios de {resumoMostrado.anoPara}.</li>
-              <li><Link href="/codigos-rco" className="font-medium text-primary hover:underline">Códigos do RCO</Link>: códigos SERE das turmas de {resumoMostrado.anoPara}.</li>
+              <li><Link href="/cursos?tab=codigos-rco" className="font-medium text-primary hover:underline">Códigos do RCO</Link>: códigos SERE das turmas de {resumoMostrado.anoPara}.</li>
               <li><Link href="/horario" className="font-medium text-primary hover:underline">Horário → Modo Experimental</Link>: gerar o turno inteiro, conferir e promover.</li>
             </ol>
           </CardContent>

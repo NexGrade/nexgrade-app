@@ -31,7 +31,7 @@ export const GUIA_NEXGRADE: Record<string, TopicoGuia> = {
 7. Salas (menu Gestor de reservas → Salas): cadastre os espaços (salas, laboratórios, quadra).
 8. Gerar Grade (tela Horário) → Modo Experimental: gere a grade (botão Turno inteiro), compare com "Simular promoção" e clique em "Promover para oficial".
 9. Usuários: libere o acesso da direção, coordenação, secretaria e gestor de reservas. Professores não precisam: entram com o e-mail do cadastro em Professores.
-10. Códigos do RCO e Arquivo do RCO: confira os códigos SERE das turmas e os Códigos Externos das disciplinas; se a equipe NexGrade pedir, envie o arquivo da Grade de Horário do RCO.
+10. Cursos e Disciplinas → aba Códigos do RCO, e 3. Enviar ao RCO → Arquivo do RCO: confira os códigos SERE das turmas e os Códigos Externos das disciplinas; se a equipe NexGrade pedir, envie o arquivo da Grade de Horário do RCO.
 11. 3. Enviar ao RCO → Exportar para o RCO: grave a grade no RCO (veja o assunto "rco").`,
   },
 
@@ -71,7 +71,7 @@ Observação: aulas fixas não ficam mais aqui — ficam na Disponibilidade de c
   cursos_disciplinas: {
     titulo: "Cursos e Disciplinas (catálogo SEED-PR, cursos, matrizes e disciplinas)",
     palavras: ["curso", "matriz", "matriz curricular", "disciplina", "catálogo", "seed", "carga horária", "série", "sigla", "cor", "sae", "técnico"],
-    texto: `Menu Cursos e Disciplinas. Tem três abas:
+    texto: `Menu Cursos e Disciplinas. Tem quatro abas: Cursos e Matriz Curricular, Disciplinas, Catálogo SEED-PR e Códigos do RCO (assunto "codigos_rco").
 
 ABA CATÁLOGO SEED-PR
 1. A lista mostra todos os cursos do catálogo oficial (Fundamental, Médio e Técnicos). Use "Buscar curso..." e os filtros de nível.
@@ -122,7 +122,7 @@ LISTA
 1. Menu Turmas → "Nova Turma".
 2. Em "Curso e Matriz Curricular (recomendado)": escolha Nível, Curso e Série/Matriz — as disciplinas e cargas da matriz entram automaticamente. (Sem matriz, marque as disciplinas à mão em "Disciplinas da Turma (manual)".)
 3. Informe Nome da Turma (ex.: 1º Ano A), Turno e Ano Letivo e salve. Turno "Integral (manhã e tarde)" é para turma de período integral; antes, salve o esquema Integral em Calendário e Turnos.
-4. Código da turma no SERE (para o RCO) e Código SERE da parte IF (só 3º ano com duas turmas no RCO): também dá para preencher depois, em Códigos do RCO.
+4. Código da turma no SERE (para o RCO) e Código SERE da parte IF (só 3º ano com duas turmas no RCO): também dá para preencher depois, em Cursos e Disciplinas → aba Códigos do RCO.
 
 DEFINIR OS PROFESSORES (abrir a turma para editar)
 - Na seção "Professores, co-docência e trio", escolha o professor de cada disciplina. Os "Habilitados nesta disciplina" aparecem primeiro. Tudo grava na hora.
@@ -171,7 +171,7 @@ Os espaços cadastrados aqui são os que aparecem em Reservas.`,
   regras_distribuicao: {
     titulo: "Regras de Distribuição (limites usados na geração)",
     palavras: ["regras", "geminadas", "aulas seguidas", "limite por dia", "máximo por dia", "distribuição"],
-    texto: `Menu Regras de Distribuição — mostra como o gerador aplica cada regra, em camadas.
+    texto: `Menu 1. Cadastro da escola → Regras de Distribuição — mostra como o gerador aplica cada regra, em camadas.
 - "Máximo de aulas geminadas (padrão da rede)": 3, igual em todas as escolas (regra travada, a escola não altera). Vale para toda disciplina/turma sem limite próprio.
 - Por turma/disciplina: defina o "máx. geminadas/dia" de cada disciplina.
 - Por professor: "Adicionar regra" → Professor, Turma (opcional — vazio vale para qualquer turma) e Máx./dia.
@@ -348,7 +348,7 @@ Depois de importar professores, marque as disciplinas de cada um em Professores;
   rco: {
     titulo: "Gravar a grade no RCO (arquivo XML)",
     palavras: ["rco", "registro de classe", "sere", "xml", "incluir via arquivo", "script", "console", "f12", "trio", "dupla", "ifa", "lançar no rco", "exportar para o rco", "gravar no rco", "grade no rco"],
-    texto: `Menu 3. Enviar ao RCO → Exportar para o RCO. Só direção, coordenação e secretaria. Faça por turno (Matutino, Vespertino, Noturno, Integral). Antes: Código INEP em Escola → Dados da Escola e códigos em Códigos do RCO (o sistema avisa o que falta e leva para a tela).
+    texto: `Menu 3. Enviar ao RCO → Exportar para o RCO. Só direção, coordenação e secretaria. Faça por turno (Matutino, Vespertino, Noturno, Integral). Antes: Código INEP em Escola → Dados da Escola e códigos em Cursos e Disciplinas → aba Códigos do RCO (o sistema avisa o que falta e leva para a tela).
 
 COMO GRAVAR
 - XML ("Baixar XML para o RCO"): um arquivo com todas as turmas do turno. No RCO: Grade de Horário → escolha o Período Letivo e o turno certo → Incluir via Arquivo. Limite do RCO: grava UMA disciplina por horário e substitui a grade inteira de cada turma.
@@ -370,7 +370,7 @@ COMO GRAVAR
   codigos_rco: {
     titulo: "Códigos do RCO (SERE das turmas e Código Externo das disciplinas)",
     palavras: ["códigos do rco", "codigo sere", "código externo", "sae", "parte if", "fgb", "turma no sere", "código da disciplina"],
-    texto: `Menu 3. Enviar ao RCO → Códigos do RCO. Só direção, coordenação e secretaria.
+    texto: `Menu Cursos e Disciplinas → aba Códigos do RCO. Só direção, coordenação e secretaria.
 - Turmas: código da turma no SERE (o RCO recusa sem ele). 3º ano com duas turmas no RCO: código FGB (formação geral) e código da parte IF; cada disciplina vai para a parte certa automaticamente.
 - Disciplinas: Código Externo do RCO (é o que o RCO usa; não é o SAE). Disciplina própria da turma também precisa (ex.: Prática de Formação = 1269 nas duas turmas).
 - Os códigos SERE das turmas mudam todo ano: confira no começo do ano (o arquivo do RCO, em Arquivo do RCO, traz todos).`,
@@ -427,7 +427,7 @@ Cargos:
 ROTEIRO DO COMEÇO DO ANO (depois que a SEED cria as turmas no SERE/RCO)
 1. Virada do ano (acima).
 2. Arquivo do RCO: a secretaria baixa no RCO e envia (os códigos SERE das turmas mudam todo ano).
-3. Códigos do RCO: atualizar o código SERE de cada turma (e da parte IF) e o Código Externo das disciplinas novas.
+3. Cursos e Disciplinas → aba Códigos do RCO: atualizar o código SERE de cada turma (e da parte IF) e o Código Externo das disciplinas novas.
 4. Conferir as disciplinas e cargas de cada turma com a matriz oficial.
 5. Esquemas de aula (inclusive Integral), professores, vínculos, disponibilidade e aulas fixas (trios, assíncronas, Prática).
 6. Gerar no Modo Experimental, resolver Conflitos, conferir os PDFs e promover.

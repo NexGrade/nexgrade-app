@@ -3,7 +3,7 @@ import { usePapelEfetivo, useAtivarEscolaDoMembro, useEu, ROTAS_PEDAGOGIA, INICI
 import { trocarDeEscola, gravarEscolaAtiva } from "@/lib/escola-ativa"; // [ACESSOS-ESCOLA] [BOTAO-SAIR]
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // [ACESSOS-ESCOLA]
 import { useEffect, useRef, useState, lazy, Suspense } from "react";
-import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
+import { Switch, Route, Router as WouterRouter, Redirect, useLocation, useSearch } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { ClerkProvider, SignIn, SignUp, Show, useAuth, useUser, useClerk, SignOutButton, OrganizationSwitcher } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
@@ -48,7 +48,6 @@ const ImprimirGradePage = lazy(() => import("@/pages/imprimir-grade/index")); //
 const RelatoriosPedagogicosPage = lazy(() => import("@/pages/relatorios-pedagogicos/index")); // [MENU-UNICO]
 const PresencaPage = lazy(() => import("@/pages/presenca/index")); // [PRESENCA-PEDAGOGIA]
 const ExportarRcoPage = lazy(() => import("@/pages/rco/index")); // [MENU-UNICO]
-const CodigosRcoPage = lazy(() => import("@/pages/codigos-rco/index")); // [CODIGOS-RCO-TELA]
 const ArquivoRcoPage = lazy(() => import("@/pages/arquivo-rco/index")); // [ARQUIVO-RCO]
 const AssistentePage = lazy(() => import("@/pages/assistente/index"));
 const ImportarPage = lazy(() => import("@/pages/importar/index"));
@@ -499,6 +498,12 @@ function MasterRouteConteudo() {
   );
 }
 
+// [CODIGOS-NA-CURSOS] (31/10/2026) Codigos do RCO virou aba de Cursos e Disciplinas; mantem ?aba= e ?destacar=
+function RedirecionarCodigosRco() {
+  const search = useSearch();
+  return <Redirect to={`/cursos?tab=codigos-rco${search ? `&${search}` : ""}`} />;
+}
+
 function Router() {
   return (
     <Switch>
@@ -532,7 +537,7 @@ function Router() {
       <Route path="/presenca" component={() => <ProtectedRoute component={PresencaPage} />} />{/* [PRESENCA-PEDAGOGIA] */}
       <Route path="/onde-esta"><Redirect to="/presenca" /></Route>{/* [MENU-CARGOS] tela excluida em 31/10/2026 */}
       <Route path="/rco" component={() => <ProtectedRoute component={ExportarRcoPage} />} />{/* [MENU-UNICO] */}
-      <Route path="/codigos-rco" component={() => <ProtectedRoute component={CodigosRcoPage} />} />{/* [CODIGOS-RCO-TELA] */}
+      <Route path="/codigos-rco" component={RedirecionarCodigosRco} />{/* [CODIGOS-NA-CURSOS] virou aba de Cursos e Disciplinas */}
       <Route path="/arquivo-rco" component={() => <ProtectedRoute component={ArquivoRcoPage} />} />{/* [ARQUIVO-RCO] */}
       <Route path="/virada-ano" component={() => <ProtectedRoute component={ViradaAnoPage} />} />{/* [VIRADA-ANO] */}
       <Route path="/assistente" component={() => <ProtectedRoute component={AssistentePage} />} />

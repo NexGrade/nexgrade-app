@@ -2,19 +2,23 @@
 // matriz curricular de cada curso e montada a partir das disciplinas). Reaproveita
 // as telas existentes em abas (carregadas sob demanda). /disciplinas redireciona
 // para /cursos?tab=disciplinas (ver App.tsx).
+// [CODIGOS-NA-CURSOS] (31/10/2026) Codigos do RCO virou a 4a aba; /codigos-rco redireciona para
+// /cursos?tab=codigos-rco mantendo ?aba= e ?destacar= (vindos do erro da exportacao).
 import { lazy, Suspense, useState } from "react";
 import { useSearch } from "wouter";
-import { Library, BookOpen, ListChecks } from "lucide-react";
+import { Library, BookOpen, ListChecks, Hash } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const CursosList = lazy(() => import("@/pages/cursos/index"));
 const DisciplinasList = lazy(() => import("@/pages/disciplinas/index"));
 const CatalogoSeed = lazy(() => import("./catalogo")); // [CATALOGO]
+const CodigosRco = lazy(() => import("@/pages/codigos-rco/index")); // [CODIGOS-NA-CURSOS]
 
 const ABAS = [
   { key: "cursos", label: "Cursos e Matriz Curricular", icon: Library },
   { key: "disciplinas", label: "Disciplinas", icon: BookOpen },
   { key: "catalogo", label: "Catálogo SEED-PR", icon: ListChecks },
+  { key: "codigos-rco", label: "Códigos do RCO", icon: Hash }, // [CODIGOS-NA-CURSOS]
 ] as const;
 type AbaKey = (typeof ABAS)[number]["key"];
 
@@ -33,7 +37,7 @@ export default function CursosDisciplinasPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Cursos e Disciplinas</h1>
-        <p className="text-muted-foreground">Cursos, matrizes curriculares por série e o catálogo de disciplinas.</p>
+        <p className="text-muted-foreground">Cursos, matrizes curriculares por série, o catálogo de disciplinas e os códigos do RCO.</p>
       </div>
 
       <div className="flex items-center gap-1 border-b border-border overflow-x-auto">
@@ -57,6 +61,7 @@ export default function CursosDisciplinasPage() {
         {aba === "cursos" && <CursosList />}
         {aba === "disciplinas" && <DisciplinasList />}
         {aba === "catalogo" && <CatalogoSeed />}
+        {aba === "codigos-rco" && <CodigosRco embutida />}
       </Suspense>
     </div>
   );

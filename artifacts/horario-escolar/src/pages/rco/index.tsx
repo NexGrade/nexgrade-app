@@ -99,7 +99,7 @@ export default function ExportarRcoPage() {
         <h1 className="text-2xl font-bold flex items-center gap-2"><BarChart3 className="w-6 h-6" /> Exportar para o RCO</h1>
         <p className="text-muted-foreground text-sm">Arquivo XML da grade para importar no RCO, por turno. Antes, confira os códigos em Códigos do RCO.</p>
         <div className="flex flex-wrap gap-2 mt-3">
-          <Button asChild size="sm" variant="outline"><Link href="/codigos-rco"><Hash className="w-4 h-4 mr-1.5" />Códigos do RCO</Link></Button>
+          <Button asChild size="sm" variant="outline"><Link href="/cursos?tab=codigos-rco"><Hash className="w-4 h-4 mr-1.5" />Códigos do RCO</Link></Button>
           <Button asChild size="sm" variant="outline"><Link href="/arquivo-rco"><FileUp className="w-4 h-4 mr-1.5" />Arquivo do RCO</Link></Button>
         </div>
       </div>
