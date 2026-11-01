@@ -52,6 +52,9 @@ export interface ResultadoSimulacao {
   haMovidas: HAMovida[];
   /** experimento (depois de promover) comparado com a oficial de HOJE */
   veredito: "melhor" | "empate" | "pior";
+  /** [PDF-HA-DA-SIMULACAO] HA de cada professor, em TODOS os turnos, como a promocao vai gravar (para o PDF do
+   * experimento). Fica fora da resposta da rota /simulacao. */
+  haDepoisPromover: MarcaHACalculada[];
 }
 
 // [FECHAR-JANELA] expOverride: linhas do experimento com trocas feitas em memória (para avaliar uma troca sem gravar)
@@ -250,5 +253,14 @@ export async function simularPromocao(
     aulasMovidas,
     haMovidas,
     veredito: resExp.janelas < resOficialHoje.janelas ? "melhor" : resExp.janelas === resOficialHoje.janelas ? "empate" : "pior",
+    // [PDF-HA-DA-SIMULACAO] (01/11/2026) nos turnos do experimento, a HA acima (com a HA no buraco); fora deles, igual a
+    // promocao: quem teve aula mexida fica com a HA recalculada e quem nao teve, com a HA de hoje.
+    haDepoisPromover: [
+      ...haDepois,
+      ...haSimulada.filter((m) => !turnos.includes(m.turno) && mudou.has(m.professorId)),
+      ...dispEscola
+        .filter((d) => d.horaAtividadeObrigatoria && d.turno && !turnos.includes(d.turno) && !mudou.has(d.professorId))
+        .map((d) => ({ professorId: d.professorId, turno: d.turno!, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, outroTurno: /outro turno|HA\*/i.test(d.motivo ?? "") })),
+    ],
   };
 }
