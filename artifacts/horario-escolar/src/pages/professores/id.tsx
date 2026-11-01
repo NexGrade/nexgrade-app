@@ -379,15 +379,17 @@ export default function ProfessorEditar() {
           )}
         </div>
 
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6">
           {/* [CARGA-COMPACTA] (01/11/2026) quadro mais baixo, na altura do formulario ao lado: turno e HA
               lado a lado e a distribuicao por dia numa linha so */}
-          <Card>
+          {/* [CARGA-MESMA-ALTURA] (01/11/2026) o quadro estica ate a altura do formulario ao lado;
+              turno e HA um embaixo do outro, porque lado a lado a coluna estreita quebrava o texto */}
+          <Card className="flex-1 flex flex-col">
             <CardHeader className="pb-3">
               <CardTitle>Carga Horária</CardTitle>
               <CardDescription>Total de aulas semanais que o professor tem na escola.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1 flex flex-col">
               {isLoadingCarga ? (
                 <div className="space-y-2">
                   <Skeleton className="h-8 w-full" />
@@ -395,7 +397,7 @@ export default function ProfessorEditar() {
                   <Skeleton className="h-8 w-full" />
                 </div>
               ) : cargaData ? (
-                <div className="space-y-4">
+                <div className="flex-1 flex flex-col gap-4">
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Total Semanal</span>
                     <span className="text-2xl font-bold">{cargaData.totalAulas} aulas</span>
@@ -425,8 +427,7 @@ export default function ProfessorEditar() {
                     </p>
                   )}
 
-                  <div className="grid grid-cols-2 gap-4 pt-3 border-t">
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 pt-3 border-t">
                     <h4 className="text-sm font-medium text-muted-foreground">Por Turno</h4>
                     <div className="space-y-1">
                       {Object.entries(cargaData.porTurno ?? {}).map(([turno, aulas]) => (
@@ -438,13 +439,12 @@ export default function ProfessorEditar() {
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <h4 className="text-sm font-medium text-muted-foreground">HA obrigatória</h4>
-                    <div className="flex items-center justify-between text-sm" title="Necessária (institucional)">
-                      <span className="text-muted-foreground">Necessária</span>
-                      <span className="font-medium">{cargaData.haInstitucionalTotal ?? 0} aula(s)</span>
+                  <div className="space-y-2 pt-3 border-t">
+                    <div className="flex items-baseline justify-between" title="Necessária (institucional)">
+                      <h4 className="text-sm font-medium text-muted-foreground">HA obrigatória</h4>
+                      <span className="text-sm font-medium">{cargaData.haInstitucionalTotal ?? 0} aula(s)</span>
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       {/* [HA-CONTRATURNO-ASTERISCO] antes so listava turnos com HA necessaria
                           (= turnos com aula), escondendo a HA alocada em contraturno */}
                       {Array.from(new Set([
@@ -455,23 +455,32 @@ export default function ProfessorEditar() {
                         const alocada = (cargaData.haAlocadaPorTurno ?? {})[turno] ?? 0;
                         const contraturno = !(((cargaData.porTurno ?? {})[turno] ?? 0) > 0);
                         if (alocada === 0 && necessaria === 0) return null;
+                        const completa = !contraturno && alocada >= necessaria;
                         return (
-                          <div key={turno} className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span className="capitalize">
-                              {turno}
-                              {contraturno && (
-                                <span className="ml-1 normal-case font-semibold text-amber-700" title="Hora-atividade em contraturno (turno sem aula)">HA* (contraturno)</span>
-                              )}
-                            </span>
-                            <span>{contraturno ? `${alocada} alocada(s)` : `${alocada} / ${necessaria} alocada(s)`}</span>
+                          <div key={turno} className="space-y-1">
+                            <div className="flex items-center justify-between gap-2 text-sm">
+                              <span className="capitalize">
+                                {turno}
+                                {contraturno && (
+                                  <span className="ml-1 normal-case text-xs font-semibold text-amber-700" title="Hora-atividade em contraturno (turno sem aula)">HA* (contraturno)</span>
+                                )}
+                              </span>
+                              <span className={`whitespace-nowrap text-xs ${completa ? "text-green-700" : "text-muted-foreground"}`}>
+                                {contraturno ? `${alocada} alocada(s)` : `${alocada} de ${necessaria} alocada(s)`}
+                              </span>
+                            </div>
+                            {!contraturno && necessaria > 0 && (
+                              <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
+                                <div className={`h-full transition-all ${completa ? "bg-green-600" : "bg-amber-500"}`} style={{ width: `${Math.min(100, (alocada / necessaria) * 100)}%` }} />
+                              </div>
+                            )}
                           </div>
                         );
                       })}
                     </div>
                   </div>
-                  </div>
 
-                  <div className="space-y-2 pt-3 border-t">
+                  <div className="space-y-2 pt-3 border-t mt-auto">
                     <h4 className="text-sm font-medium text-muted-foreground">Distribuição por dia</h4>
                     {/* [FIX] `cargaData.porDia` vem do backend com chaves de NOME do dia ("Segunda", "Terça"...),
                         não por índice numérico. */}
