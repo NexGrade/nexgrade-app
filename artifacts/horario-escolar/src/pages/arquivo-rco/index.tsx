@@ -29,7 +29,7 @@ export default function ArquivoRcoPage() {
         responseType: "json",
       } as any);
       await queryClient.invalidateQueries({ queryKey: CHAVE_ARQUIVO_RCO });
-      toast({ title: "Arquivo enviado", description: "Obrigado! A equipe NexGrade já pode usar os dados." });
+      toast({ title: "Arquivo enviado", description: "Obrigado! A equipe NexGrade vai conferir e usar os dados no cadastro da escola." });
     } catch (err) {
       const msg = err instanceof ApiError && (err.data as { error?: string } | undefined)?.error;
       toast({ title: "Não foi possível enviar", description: msg || (err instanceof Error ? err.message : undefined), variant: "destructive" });
@@ -100,7 +100,16 @@ export default function ArquivoRcoPage() {
             type="file"
             accept=".xml,.XML,application/xml,text/xml"
             className="hidden"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) void enviar(f); }}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (!f) return;
+              // [ARQUIVO-RCO-CONFIRMAR] (01/11/2026) um clique no arquivo errado apagava o envio certo
+              if (data?.enviado && !window.confirm(`Já existe um arquivo enviado em ${dataHora(data.enviado.enviadoEm)} (${data.enviado.nomeArquivo}). Enviar "${f.name}" no lugar dele?`)) {
+                e.target.value = "";
+                return;
+              }
+              void enviar(f);
+            }}
           />
           <Button onClick={() => entrada.current?.click()} disabled={enviando} className="gap-2">
             {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
@@ -117,6 +126,10 @@ export default function ArquivoRcoPage() {
                 {data.enviado.nomeArquivo}: {data.enviado.resumo.turmas} turmas
                 ({Object.entries(data.enviado.resumo.turmasPorTurno).map(([t, n]) => `${n} ${ROTULO_TURNO[t] ?? t}`).join(", ")}),{" "}
                 {data.enviado.resumo.disciplinas} disciplinas e {data.enviado.resumo.linhasGrade} linhas de grade.
+              </p>
+              {/* [ARQUIVO-RCO-SITUACAO] (01/11/2026) o que acontece depois do envio */}
+              <p className="text-emerald-800">
+                Recebido. A equipe NexGrade vai conferir o arquivo e usar os dados no cadastro da escola (turmas, disciplinas e códigos do RCO). Você não precisa fazer mais nada.
               </p>
               <Button size="sm" variant="outline" className="gap-1.5" onClick={baixar}>
                 <Download className="h-3.5 w-3.5" /> Baixar o arquivo enviado
