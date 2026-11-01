@@ -141,7 +141,9 @@ export async function gerarPdfAgendaProfessor(d: DadosAgendaPdf): Promise<Uint8A
           const xd = x0 + colHora + dia * colDia;
           const pad = 2;
           const cx = xd + pad, cy = y + pad, cw = colDia - 2 * pad, ch = altLinha - 2 * pad;
-          const aula = d.aulas.find((a) => a.turno === turno && a.diaSemana === dia && a.numeroAula === h.numeroAula);
+          // [FIX-PS-PRESENCIAL] (01/11/2026) 2 disciplinas do trio no mesmo horario: mostra a presencial da semana
+          const doHorario = d.aulas.filter((a) => a.turno === turno && a.diaSemana === dia && a.numeroAula === h.numeroAula);
+          const aula = doHorario.find((a) => a.extra === "(P)") ?? doHorario[0];
           const ha = d.has.find((x) => x.turno === turno && x.diaSemana === dia && x.numeroAula === h.numeroAula);
           const sa = semAulaDia.get(dia);
           if (aula) {
