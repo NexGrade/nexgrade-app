@@ -25,6 +25,7 @@ import { gerarPdfTurmasLadoALado, gerarPdfProfessoresCompacto, gerarPdfQuadroPro
 import { gerarPdfCargaProfessores, type RelatorioProfessor } from "../lib/pdf-carga-professor";
 import { gerarPdfCargaHoraria, type TurmaCargaHoraria } from "../lib/pdf-carga-horaria";
 import { calcularHAIdeal, type MarcaHACalculada } from "../lib/recalcular-ha";
+import { simularPromocao } from "../lib/simular-promocao"; // [PDF-HA-DA-SIMULACAO]
 import { ehHAOutroTurno } from "../lib/ha-contraturno"; // [HA-OUTRO-TURNO]
 import { carregarMapaIntegral, mapaIntegralDosSlots, projetarIntegral } from "../lib/turno-integral"; // [TURNO-INTEGRAL-PROFESSOR]
 import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
@@ -925,7 +926,11 @@ router.get("/grade-pdf/professor", async (req, res) => {
       ...slotsOficiaisForaDoEscopo,
     ];
     semanaCompletaProf = overrideCompleto;
-    haSimulada.push(...(await calcularHAIdeal(escolaId, overrideCompleto)));
+    // [PDF-HA-DA-SIMULACAO] (01/11/2026) a HA da previa e a mesma da simulacao e da promocao: quem nao teve aula mexida
+    // fica com a de hoje, quem teve fica com a recalculada, e a HA movel vai para o buraco. Antes o PDF recalculava a
+    // HA de todos do zero (sem o buraco): a HA saia em outro lugar e aparecia janela que a simulacao dizia fechada.
+    const sim = await simularPromocao(escolaId, nomeExperimental);
+    haSimulada.push(...(sim ? sim.haDepoisPromover : await calcularHAIdeal(escolaId, overrideCompleto)));
   }
   // [HA-CONTRATURNO-ASTERISCO] turnos em que cada professor tem pelo menos uma
   // aula na semana. HA num turno fora desse conjunto e HA de contraturno (mesma

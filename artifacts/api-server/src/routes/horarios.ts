@@ -970,7 +970,8 @@ router.get("/experimentais/:nome/simulacao", async (req, res) => {
   try {
     const r = await simularPromocao(escolaId, req.params.nome);
     if (!r) { res.status(404).json({ error: "Horário experimental não encontrado" }); return; }
-    res.json(r);
+    const { haDepoisPromover: _soParaOPdf, ...resposta } = r; // [PDF-HA-DA-SIMULACAO]
+    res.json(resposta);
   } catch (err) {
     res.status(500).json({ error: "Erro ao simular a promoção.", detalhe: err instanceof Error ? err.message : String(err) });
   }
