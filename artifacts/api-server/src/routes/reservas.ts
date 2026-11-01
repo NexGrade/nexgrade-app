@@ -43,16 +43,6 @@ import { bloqueioDaSala, rotuloMotivo } from "../lib/bloqueios"; // [BLOQUEIOS]
 
 const router = Router();
 const diasSemana = [0, 1, 2, 3, 4] as const;
-const salaTypeValues = [
-  "sala_aula",
-  "laboratorio",
-  "quadra",
-  "informatica",
-  "auditorio",
-  "biblioteca",
-  "sala_arte",
-  "outro",
-] as const;
 
 export type ReservaData = typeof reservasTable.$inferSelect;
 
@@ -116,9 +106,7 @@ export async function publicReserva(reserva: ReservaData) {
       ? {
           id: sala.id,
           nome: sala.nome,
-          tipo: salaTypeValues.includes(sala.tipo as (typeof salaTypeValues)[number])
-            ? sala.tipo
-            : "outro",
+          tipo: sala.tipo, // [TIPO-LIVRE] antes virava "outro" fora da lista antiga de tipos
           capacidade: sala.capacidade,
           ativa: sala.ativa,
           observacoes: sala.observacoes,

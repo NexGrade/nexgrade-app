@@ -377,6 +377,21 @@ describe.skipIf(!TEM_BANCO)("reservas: integracao com banco real", () => {
     });
   });
 
+  // [TIPO-LIVRE] (01/11/2026) a resposta das reservas validava com a lista antiga de tipos de sala,
+  // entao o tipo digitado pela escola saia como "outro"
+  describe("sala com tipo digitado pela escola", () => {
+    const D7 = segundaDaqui(109);
+    it("reserva e lista a sala normalmente, com o tipo como foi cadastrado", async () => {
+      const [maker] = await db.insert(salasTable).values({ escolaId: E, nome: "Sala Maker", tipo: "Espaço Maker" }).returning();
+      const r = await lote(ids.prof[2]!, D7, [1], maker!.id);
+      expect(r.status).toBe(201);
+      const lista = await chamar("GET", `/reservas?data=${D7}&salaId=${maker!.id}`);
+      expect(lista.status).toBe(200);
+      expect(lista.body).toHaveLength(1);
+      expect(lista.body[0].sala.tipo).toBe("Espaço Maker");
+    });
+  });
+
   describe("rollout seguro: deploy antes da migracao", () => {
     it("sem a tabela de bloqueios, reservar e consultar nao quebram e criar bloqueio avisa (503)", async () => {
       await db.execute(sql`alter table bloqueios rename to bloqueios_off`);
