@@ -337,12 +337,12 @@ Depois de importar professores, marque as disciplinas de cada um em Professores;
 - PDFs da grade (por turma, por professor, lado a lado, compacto, quadro geral, por disciplina): Grade de Horário → Imprimir Grade (assunto "imprimir_grade").
 - Pedagogia → Relatórios Pedagógicos:
   - Ponto Diário: folha de ponto de UM dia. Escolha o dia e o turno (Manhã, Tarde, Noite ou Todos, um por página) e baixe em PDF ou Excel. Uma linha por professor que tem aula, hora-atividade (HA) ou atividade (FORM, COORD, ASS...) nesse dia, uma coluna por aula do turno com a TURMA, e a coluna Situação com quadradinhos P, F, AT, ATR e Observação. Se o dia for feriado ou recesso no calendário, o relatório avisa no topo.
-  - Controle de Ponto (mês): planilha com a carga horária dos professores (filtro de professor, mês e ano).
+  - Controle de Ponto (mês): Excel formatado com o resumo de aulas por semana de cada professor e a lista das aulas (filtro de professor, mês e ano).
   - Carga Horária por Professor: PDF com total de aulas, HA e turmas/disciplinas por turno (o resumo, não a grade do dia a dia).
   - Carga Horária Cumprida × Exigida: PDF por turma com o cumprido no ano x o exigido.
 - Arquivo XML do RCO: 3. Enviar ao RCO → Exportar para o RCO (assunto "rco").
 - Relatório de Reservas: na tela Reservas.
-- Planilha da grade (CSV para o Excel, completa ou de uma turma): no fim da tela Grade de Horário → Imprimir Grade. Configurações → Importar planilhas: professores, turmas e disciplinas por CSV.`,
+- Planilha da grade (Excel formatado, completa ou de uma turma: a lista de todas as aulas e uma aba com o quadro de cada turma): no fim da tela Grade de Horário → Imprimir Grade. Configurações → Importar planilhas: professores, turmas e disciplinas por CSV.`,
   },
 
   rco: {

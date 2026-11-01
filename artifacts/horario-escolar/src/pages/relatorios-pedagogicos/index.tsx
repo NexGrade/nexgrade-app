@@ -14,18 +14,20 @@ import { Link } from "wouter";
 import { Printer, ClipboardCheck, FileSpreadsheet } from "lucide-react";
 import { TURNOS, hojeLocal, turnoAgora, buscarPresenca, buscarMes, excelDoDia, excelDoMes, mensagemErro } from "@/lib/presenca"; // [PRESENCA-PEDAGOGIA]
 import { useToast } from "@/hooks/use-toast";
+import { excelDoPonto } from "@/lib/planilhas-grade"; // [PLANILHAS-FORMATADAS]
 
+const TODOS_PROF = "todos"; // [PLANILHAS-FORMATADAS] o Select nao aceita valor vazio
 const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
 export default function RelatoriosPedagogicosPage() {
   const { data: professores = [] } = useListProfessores();
   const { baixar, baixando } = useBaixarArquivo();
   const [pontoOpts, setPontoOpts] = useState({
-    professorId: "",
+    professorId: TODOS_PROF,
     mes: String(new Date().getMonth() + 1),
     ano: String(new Date().getFullYear()),
   });
-  const [cargaOpts, setCargaOpts] = useState({ professorId: "", semana: SEMANA_ATUAL });
+  const [cargaOpts, setCargaOpts] = useState({ professorId: TODOS_PROF, semana: SEMANA_ATUAL });
   const [anoCumprida, setAnoCumprida] = useState(String(new Date().getFullYear()));
   const anos = [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1];
   // [PRESENCA-PEDAGOGIA] relatorios da lista de presenca
@@ -38,6 +40,15 @@ export default function RelatoriosPedagogicosPage() {
     try {
       if (qual === "dia") await excelDoDia(await buscarPresenca(presDia.data, presDia.turno));
       else await excelDoMes(await buscarMes(presMes.mes, presMes.ano));
+    } catch (e) {
+      toast({ title: "Não foi possível gerar a planilha", description: mensagemErro(e), variant: "destructive" });
+    } finally { setGerandoExcel(null); }
+  };
+  // [PLANILHAS-FORMATADAS] (31/10/2026) Controle de Ponto em Excel formatado (antes CSV)
+  const baixarPonto = async () => {
+    setGerandoExcel("ponto");
+    try {
+      await excelDoPonto(pontoOpts.mes, pontoOpts.ano, pontoOpts.professorId === TODOS_PROF ? undefined : pontoOpts.professorId);
     } catch (e) {
       toast({ title: "Não foi possível gerar a planilha", description: mensagemErro(e), variant: "destructive" });
     } finally { setGerandoExcel(null); }
@@ -136,7 +147,7 @@ export default function RelatoriosPedagogicosPage() {
               <Select value={pontoOpts.professorId} onValueChange={(v) => setPontoOpts((o) => ({ ...o, professorId: v }))}>
                 <SelectTrigger><SelectValue placeholder="Todos os professores" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os professores</SelectItem>
+                  <SelectItem value={TODOS_PROF}>Todos os professores</SelectItem>
                   {professores.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -157,9 +168,10 @@ export default function RelatoriosPedagogicosPage() {
                 </Select>
               </div>
             </div>
-            <Botao chave="ponto" texto="Baixar Controle de Ponto" onClick={() => baixar(
-              montarUrl("/api/export/ponto", { professorId: pontoOpts.professorId || undefined, mes: pontoOpts.mes, ano: pontoOpts.ano }),
-              `ponto_professores_${pontoOpts.mes}_${pontoOpts.ano}.csv`, "ponto")} />
+            <Button className="w-full" disabled={gerandoExcel === "ponto"} onClick={() => void baixarPonto()}>
+              {gerandoExcel === "ponto" ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}
+              {gerandoExcel === "ponto" ? "Gerando..." : "Baixar Controle de Ponto (Excel)"}
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -177,7 +189,7 @@ export default function RelatoriosPedagogicosPage() {
               <Select value={cargaOpts.professorId} onValueChange={(v) => setCargaOpts((o) => ({ ...o, professorId: v }))}>
                 <SelectTrigger><SelectValue placeholder="Todos os professores" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os professores</SelectItem>
+                  <SelectItem value={TODOS_PROF}>Todos os professores</SelectItem>
                   {professores.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -193,9 +205,9 @@ export default function RelatoriosPedagogicosPage() {
               </Select>
             </div>
             <Botao chave="carga" texto="Baixar Carga Horária" onClick={() => {
-              const nome = cargaOpts.professorId ? `_${professores.find((p) => String(p.id) === cargaOpts.professorId)?.nome ?? cargaOpts.professorId}` : "";
+              const nome = cargaOpts.professorId !== TODOS_PROF ? `_${professores.find((p) => String(p.id) === cargaOpts.professorId)?.nome ?? cargaOpts.professorId}` : "";
               baixar(
-                montarUrl("/api/export/relatorio-carga-pdf", { professorId: cargaOpts.professorId || undefined, semana: cargaOpts.semana === SEMANA_PROXIMA ? SEMANA_PROXIMA : undefined }),
+                montarUrl("/api/export/relatorio-carga-pdf", { professorId: cargaOpts.professorId === TODOS_PROF ? undefined : cargaOpts.professorId, semana: cargaOpts.semana === SEMANA_PROXIMA ? SEMANA_PROXIMA : undefined }),
                 `relatorio_carga_professores${nome}${cargaOpts.semana === SEMANA_PROXIMA ? "_proxima_semana" : ""}.pdf`, "carga");
             }} />
           </CardContent>

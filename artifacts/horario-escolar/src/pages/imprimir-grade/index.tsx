@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Download, Loader2, Printer, Table } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useBaixarArquivo, montarUrl } from "@/hooks/use-baixar-arquivo"; // [MENU-CARGOS]
+import { excelDaGrade } from "@/lib/planilhas-grade"; // [PLANILHAS-FORMATADAS]
 
 const TODOS = "todos";
 const TURNOS = [
@@ -65,15 +65,27 @@ function Miniatura({ tipo }: { tipo: Modelo["miniatura"] }) {
   );
 }
 
-// [MENU-CARGOS] grade completa ou de uma turma em CSV, que abre no Excel
+// [MENU-CARGOS] grade completa ou de uma turma em planilha
+// [PLANILHAS-FORMATADAS] (31/10/2026) Excel formatado (antes CSV): lista de aulas e um quadro por turma
 function PlanilhaDaGrade({ turmas }: { turmas: Array<{ id: number; nome: string }> }) {
-  const { baixar, baixando } = useBaixarArquivo();
+  const { toast } = useToast();
+  const [gerando, setGerando] = useState(false);
   const [turmaId, setTurmaId] = useState(TODOS);
+  const baixar = async () => {
+    setGerando(true);
+    try {
+      await excelDaGrade(turmaId === TODOS ? undefined : turmaId);
+    } catch (err) {
+      toast({ title: "Não foi possível gerar a planilha", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+    } finally {
+      setGerando(false);
+    }
+  };
   return (
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2"><Table className="w-4 h-4" /> Planilha da grade (Excel)</CardTitle>
-        <CardDescription>A grade oficial em planilha (CSV, abre no Excel), completa ou de uma turma.</CardDescription>
+        <CardDescription>A grade oficial em Excel, completa ou de uma turma: a lista de todas as aulas e o quadro de cada turma.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="space-y-1.5 sm:w-72">
@@ -86,11 +98,9 @@ function PlanilhaDaGrade({ turmas }: { turmas: Array<{ id: number; nome: string 
             </SelectContent>
           </Select>
         </div>
-        <Button variant="outline" disabled={baixando["grade"]} onClick={() => baixar(
-          montarUrl("/api/export/grade", { turmaId: turmaId === TODOS ? undefined : turmaId, formato: "csv" }),
-          "grade_horaria.csv", "grade")}>
-          {baixando["grade"] ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
-          {baixando["grade"] ? "Gerando..." : "Baixar planilha"}
+        <Button variant="outline" disabled={gerando} onClick={() => void baixar()}>
+          {gerando ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+          {gerando ? "Gerando..." : "Baixar planilha"}
         </Button>
       </CardContent>
     </Card>
