@@ -197,7 +197,7 @@ export default function ProfessorEditar() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-5xl mx-auto">{/* [PROFESSOR-QUADROS-LADO] mais largo para os 3 quadros */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Editar Professor(a)</h1>
         <p className="text-muted-foreground">Atualize os dados e disciplinas de {professor?.nome}.</p>
@@ -498,111 +498,115 @@ export default function ProfessorEditar() {
               )}
             </CardContent>
           </Card>
-
-          {/* Disponibilidade agora vive só na página dedicada
-             (/disponibilidade), turno-aware e com horários reais —
-             evita manter duas implementações divergentes da mesma
-             funcionalidade. */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <CalendarClock className="w-4 h-4 text-[#1565C0]" />
-                Disponibilidade Semanal
-              </CardTitle>
-              <CardDescription>
-                Gerencie os dias e horários em que {professor?.nome ?? "este professor"} não pode dar aula.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link href={`/disponibilidade?professorId=${professorId}`}>
-                <Button variant="outline" className="w-full justify-between">
-                  Gerenciar disponibilidade
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* [NOVO] Correção cirúrgica -- resolve só as aulas deste
-              professor que estão em conflito com a disponibilidade
-              atual, movendo cada uma pro primeiro horário livre válido
-              na mesma turma. É a opção recomendada primeiro: muito
-              menor risco que "Regenerar Horário" (que refaz a turma
-              inteira do zero). */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Wrench className="w-4 h-4 text-[#1565C0]" />
-                Corrigir Conflitos (recomendado)
-              </CardTitle>
-              <CardDescription>
-                Move só as aulas de {professor?.nome ?? "este professor"} que ficaram em conflito com a disponibilidade atual — sem regenerar a turma inteira nem mexer em aulas que já estavam certas.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                className="w-full justify-between"
-                onClick={handleCorrigirConflitos}
-                disabled={corrigindo}
-              >
-                <span className="whitespace-normal text-left">{corrigindo ? "Corrigindo..." : "Corrigir conflitos deste professor"}</span>
-                <Wrench className={`w-4 h-4 ${corrigindo ? "animate-pulse" : ""}`} />
-              </Button>
-              {resultadoCorrecao && !resultadoCorrecao.mensagem && (
-                <div className="mt-3 space-y-2">
-                  {resultadoCorrecao.movidas.length > 0 && (
-                    <div className="text-xs text-green-700 bg-green-50 border border-green-200 rounded-md p-2.5 space-y-1">
-                      <p className="font-medium flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> {resultadoCorrecao.movidas.length} aula(s) movida(s):</p>
-                      {resultadoCorrecao.movidas.map((m, i) => (
-                        <p key={i}>• {m.turmaNome}: {diasSemana[m.de.dia]} {m.de.aula}ª → {diasSemana[m.para.dia]} {m.para.aula}ª</p>
-                      ))}
-                    </div>
-                  )}
-                  {resultadoCorrecao.naoResolvidas.length > 0 && (
-                    <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-2.5 space-y-1">
-                      <p className="font-medium flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> {resultadoCorrecao.naoResolvidas.length} sem solução automática — precisa de ajuste manual:</p>
-                      {resultadoCorrecao.naoResolvidas.map((n, i) => (
-                        <p key={i}>• {n.turmaNome}: {diasSemana[n.dia]} {n.aula}ª — {n.motivo}</p>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* [FIX] Antes gravava direto na grade oficial. Agora só gera
-              uma PRÉVIA (experimento) das turmas em que este professor
-              está envolvido -- útil depois de atualizar a
-              disponibilidade dele/dela, sem precisar regenerar o
-              turno inteiro nem ir turma por turma manualmente, mas
-              sempre com chance de revisar antes de aplicar. */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <RefreshCw className="w-4 h-4 text-[#1565C0]" />
-                Regenerar Horário (prévia)
-              </CardTitle>
-              <CardDescription>
-                Gera uma prévia (experimento) só das turmas em que {professor?.nome ?? "este professor"} dá aula (ou está vinculado por disciplina) — sem mexer nas demais turmas da escola, e sem alterar a grade oficial até você revisar e promover.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                variant="outline"
-                className="w-full justify-between"
-                onClick={handleRegenerarTurmasDoProfessor}
-                disabled={regenerando}
-              >
-                <span className="whitespace-normal text-left">{regenerando ? "Gerando prévia..." : "Gerar prévia das turmas deste professor"}</span>
-                <RefreshCw className={`w-4 h-4 ${regenerando ? "animate-spin" : ""}`} />
-              </Button>
-              <p className="text-xs text-muted-foreground mt-2">
-                Não altera a grade oficial sozinho — a prévia fica em Horário → Modo Experimental até você decidir promover.
-              </p>
-            </CardContent>
-          </Card>
         </div>
+      </div>
+
+      {/* [PROFESSOR-QUADROS-LADO] (01/11/2026) disponibilidade, corrigir conflitos e regenerar lado a lado,
+          abaixo do cadastro (antes empilhados na coluna da direita, deixando um vazio embaixo do formulario) */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        {/* Disponibilidade agora vive só na página dedicada
+           (/disponibilidade), turno-aware e com horários reais —
+           evita manter duas implementações divergentes da mesma
+           funcionalidade. */}
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <CalendarClock className="w-4 h-4 text-[#1565C0]" />
+              Disponibilidade Semanal
+            </CardTitle>
+            <CardDescription>
+              Gerencie os dias e horários em que {professor?.nome ?? "este professor"} não pode dar aula.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="mt-auto">
+            <Link href={`/disponibilidade?professorId=${professorId}`}>
+              <Button variant="outline" className="w-full justify-between">
+                Gerenciar disponibilidade
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        {/* [NOVO] Correção cirúrgica -- resolve só as aulas deste
+            professor que estão em conflito com a disponibilidade
+            atual, movendo cada uma pro primeiro horário livre válido
+            na mesma turma. É a opção recomendada primeiro: muito
+            menor risco que "Regenerar Horário" (que refaz a turma
+            inteira do zero). */}
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Wrench className="w-4 h-4 text-[#1565C0]" />
+              Corrigir Conflitos (recomendado)
+            </CardTitle>
+            <CardDescription>
+              Move só as aulas de {professor?.nome ?? "este professor"} que ficaram em conflito com a disponibilidade atual — sem regenerar a turma inteira nem mexer em aulas que já estavam certas.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="mt-auto">
+            <Button
+              className="w-full justify-between"
+              onClick={handleCorrigirConflitos}
+              disabled={corrigindo}
+            >
+              <span className="whitespace-normal text-left">{corrigindo ? "Corrigindo..." : "Corrigir conflitos deste professor"}</span>
+              <Wrench className={`w-4 h-4 ${corrigindo ? "animate-pulse" : ""}`} />
+            </Button>
+            {resultadoCorrecao && !resultadoCorrecao.mensagem && (
+              <div className="mt-3 space-y-2">
+                {resultadoCorrecao.movidas.length > 0 && (
+                  <div className="text-xs text-green-700 bg-green-50 border border-green-200 rounded-md p-2.5 space-y-1">
+                    <p className="font-medium flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> {resultadoCorrecao.movidas.length} aula(s) movida(s):</p>
+                    {resultadoCorrecao.movidas.map((m, i) => (
+                      <p key={i}>• {m.turmaNome}: {diasSemana[m.de.dia]} {m.de.aula}ª → {diasSemana[m.para.dia]} {m.para.aula}ª</p>
+                    ))}
+                  </div>
+                )}
+                {resultadoCorrecao.naoResolvidas.length > 0 && (
+                  <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-2.5 space-y-1">
+                    <p className="font-medium flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> {resultadoCorrecao.naoResolvidas.length} sem solução automática — precisa de ajuste manual:</p>
+                    {resultadoCorrecao.naoResolvidas.map((n, i) => (
+                      <p key={i}>• {n.turmaNome}: {diasSemana[n.dia]} {n.aula}ª — {n.motivo}</p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* [FIX] Antes gravava direto na grade oficial. Agora só gera
+            uma PRÉVIA (experimento) das turmas em que este professor
+            está envolvido -- útil depois de atualizar a
+            disponibilidade dele/dela, sem precisar regenerar o
+            turno inteiro nem ir turma por turma manualmente, mas
+            sempre com chance de revisar antes de aplicar. */}
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <RefreshCw className="w-4 h-4 text-[#1565C0]" />
+              Regenerar Horário (prévia)
+            </CardTitle>
+            <CardDescription>
+              Gera uma prévia (experimento) só das turmas em que {professor?.nome ?? "este professor"} dá aula (ou está vinculado por disciplina) — sem mexer nas demais turmas da escola, e sem alterar a grade oficial até você revisar e promover.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="mt-auto">
+            <Button
+              variant="outline"
+              className="w-full justify-between"
+              onClick={handleRegenerarTurmasDoProfessor}
+              disabled={regenerando}
+            >
+              <span className="whitespace-normal text-left">{regenerando ? "Gerando prévia..." : "Gerar prévia das turmas deste professor"}</span>
+              <RefreshCw className={`w-4 h-4 ${regenerando ? "animate-spin" : ""}`} />
+            </Button>
+            <p className="text-xs text-muted-foreground mt-2">
+              Não altera a grade oficial sozinho — a prévia fica em Horário → Modo Experimental até você decidir promover.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
