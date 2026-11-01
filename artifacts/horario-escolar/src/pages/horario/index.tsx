@@ -35,7 +35,7 @@ import { ProgressoGeracao, type EtapaGeracao, type ProgressoGeracaoDados, type P
 import {
   Check, ArrowRight, ArrowLeft, Lock, ChevronDown, ChevronRight, Plus,
   Calendar, ListChecks, AlertTriangle, FlaskConical,
-  CheckCircle2, RefreshCw, ChevronUp, ArrowUpCircle, Trash2, Clock, Info, X, Sparkles, Download, RotateCcw,
+  CheckCircle2, RefreshCw, ChevronUp, ArrowUpCircle, Loader2, Trash2, Clock, Info, X, Sparkles, Download, RotateCcw,
   Wand2,
 } from "lucide-react";
 
@@ -2090,6 +2090,7 @@ function AbaExperimental() {
 
   const [openGerar, setOpenGerar] = useState(false);
   const [gerando, setGerando] = useState(false);
+  const [promovendo, setPromovendo] = useState<string | null>(null); // [PROMOVER-PROCESSANDO] nome do experimento sendo promovido
   const [nomeExpandido, setNomeExpandido] = useState<string | null>(null);
   const [turmaExpandidaId, setTurmaExpandidaId] = useState<number | null>(null);
   const [gerarForm, setGerarForm] = useState({
@@ -2628,6 +2629,7 @@ function AbaExperimental() {
       ? `ATENÇÃO: a simulação recomenda NÃO promover (${simAviso.experimento.janelas} janela(s) de professor depois de promover, contra ${(simAviso.oficialHoje ?? simAviso.oficial).janelas} na oficial de hoje).\n\n`
       : "";
     if (!confirm(`${aviso}Promover "${nome}" para horário oficial? Isso substituirá o horário atual de ${qtdTurmas} turma(s) envolvida(s).\n\nAntes de trocar, o sistema guarda uma cópia da grade oficial atual (aulas e HA). Se precisar, use "Voltar à grade anterior".`)) return;
+    setPromovendo(nome);
     try {
       const r: any = await promover({ nome: encodeURIComponent(nome) }); // [NOME-EXPERIMENTO] espaço no fim do nome sumia do endereço
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
@@ -2642,6 +2644,8 @@ function AbaExperimental() {
       });
     } catch {
       toast({ title: "Erro ao promover", variant: "destructive" });
+    } finally {
+      setPromovendo(null);
     }
   };
 
@@ -2975,8 +2979,11 @@ function AbaExperimental() {
                           : "border-green-300 text-green-700 hover:bg-green-50 gap-1.5"}
                         title={simDe(nome)?.veredito === "pior" ? "A simulação recomenda não promover: a grade oficial tem menos janelas" : undefined}
                         onClick={() => handlePromover(nome)}
+                        disabled={promovendo !== null}
                       >
-                        <ArrowUpCircle className="w-3.5 h-3.5" />Promover para oficial
+                        {promovendo === nome
+                          ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Promovendo...</>
+                          : <><ArrowUpCircle className="w-3.5 h-3.5" />Promover para oficial</>}
                       </Button>
                       <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDelete(nome)}>
                         <Trash2 className="w-3.5 h-3.5" />
