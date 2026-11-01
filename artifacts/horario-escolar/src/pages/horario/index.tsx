@@ -2149,7 +2149,7 @@ function AbaExperimental() {
   const [cpsatForm, setCpsatForm] = useState({
     turno: "matutino",
     nomeExperimental: nomeCpsatAuto("matutino"),
-    tempoLimiteS: 120,
+    tempoLimiteS: 300, // [TEMPO-TOTAL] agora e a espera total (antes 120 por etapa davam 4-5 min)
   });
   // [NOVO] Mesmo motor CP-SAT, mas por turma única (antes só existia
   // por turno inteiro) -- espelha o par "Turma / Turno inteiro" que já
@@ -3482,9 +3482,12 @@ function AbaExperimental() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Tempo limite (segundos)</Label>
-              <Input type="number" min={30} max={600} value={cpsatForm.tempoLimiteS} onChange={(e) => setCpsatForm((f) => ({ ...f, tempoLimiteS: Number(e.target.value) || 120 }))} />
-              <p className="text-xs text-muted-foreground">Padrão: 120 segundos. Turnos com muitas turmas podem precisar de mais tempo; se a geração não terminar, use de 300 a 600 segundos.</p>
+              <Label>Tempo total (segundos)</Label>
+              <Input type="number" min={60} max={900} value={cpsatForm.tempoLimiteS} onChange={(e) => setCpsatForm((f) => ({ ...f, tempoLimiteS: Number(e.target.value) || 300 }))} />
+              <p className="text-xs text-muted-foreground">{/* [TEMPO-TOTAL] */}
+                Quanto a geração pode durar, do começo ao fim ({Math.round(cpsatForm.tempoLimiteS / 60 * 10) / 10} min). Padrão: 300 segundos.
+                Com mais tempo o motor costuma achar uma grade com menos janelas; se aparecer "o motor não terminou a tempo", aumente (até 900).
+              </p>
             </div>
           </div>
           <div className="space-y-4 py-2">

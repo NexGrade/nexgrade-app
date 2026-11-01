@@ -26,7 +26,11 @@ export function ehHAMovel(motivo: string | null | undefined): boolean {
   const m = motivo ?? "";
   if (m.startsWith(MOTIVO_HA_AUTO)) return true;
   if (/probat/i.test(m) || m.startsWith("HA fixa")) return false;
-  return /^Importado do .+ \(H\.A\.\)\s*$/i.test(m);
+  // [HA-IMPORTADA-FORMATOS] (01/11/2026) a importacao do Urania (Mario Braga, 02-06/11) grava "(HA)" e "(HA*)", sem
+  // pontos; so "(H.A.)" (Arlinda) era aceito e 206 HA do matutino ficavam presas, deixando janelas que uma HA movida
+  // fecharia (11 de 16 na simulacao de 01/11). A propria importacao (lib/db/atualizar-mario-braga-urania-0211.cjs)
+  // ja tratava essas HA como moveis.
+  return /^Importado do .+ \((H\.A\.|HA\*?)\)\s*$/i.test(m);
 }
 export function ehHAOutroTurno(motivo: string | null | undefined): boolean {
   return (motivo ?? "").includes("HA de outro turno");

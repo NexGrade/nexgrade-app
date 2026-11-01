@@ -10,7 +10,8 @@
  *   DATABASE_URL=postgresql://postgres@localhost:5432/nexgrade_sim DATABASE_SSL=disable \
  *   CPSAT_SERVICE_URL=http://127.0.0.1:8001 npx tsx scripts/simular-fluxo-grade.ts --cenario=base [--turno=matutino]
  * Cenarios: base, bloqueio-2-dias, professor-todo-bloqueado, fixa-em-bloqueio, carga-estourada,
- *           vinculo-sem-professor, tempo-curto, promover-fora-do-periodo, heuristico-turma
+ *           vinculo-sem-professor, tempo-curto, promover-fora-do-periodo, heuristico-turma,
+ *           conferir-promocao (compara a simulacao com a oficial depois de promover), melhorar [--tempo=300]
  */
 import express from "express";
 import type { AddressInfo } from "node:net";
@@ -86,7 +87,7 @@ async function main() {
     // ---------- 1) a mudanca do cenario ----------
     let tempoLimiteS: number | undefined;
     switch (CENARIO) {
-      case "base": case "promover-fora-do-periodo": case "heuristico-turma": break;
+      case "base": case "promover-fora-do-periodo": case "heuristico-turma": case "conferir-promocao": case "melhorar": break;
       case "bloqueio-2-dias": await bloquear([0, 1], slots); etapa("mudanca", `${prof.nome} (#${prof.id}, ${prof.aulas} aulas) indisponivel seg e ter`); break;
       case "professor-todo-bloqueado": await bloquear([0, 1, 2, 3, 4], slots); etapa("mudanca", `${prof.nome} (#${prof.id}, ${prof.aulas} aulas) indisponivel a semana toda`); break;
       case "fixa-em-bloqueio": {
@@ -124,7 +125,10 @@ async function main() {
       etapa("gerar", { rota: `POST /horarios/gerar (heuristico, turma ${t.nome})`, http: r.status, ...resumir(r.body) });
     } else {
       const inicio = Date.now();
-      const r = await chamar("POST", "/horarios/gerar-cpsat-async", { turno: TURNO, nomeExperimental: NOME, ...(tempoLimiteS ? { tempoLimiteS } : {}) });
+      // melhorar: parte da grade OFICIAL e so troca aulas de lugar (POST /melhorar-grade-async), mesmo acompanhamento
+      const r = CENARIO === "melhorar"
+        ? await chamar("POST", "/horarios/melhorar-grade-async", { turno: TURNO, nomeExperimental: NOME, tempoLimiteS: Number(arg("tempo") ?? 300) })
+        : await chamar("POST", "/horarios/gerar-cpsat-async", { turno: TURNO, nomeExperimental: NOME, ...(tempoLimiteS ? { tempoLimiteS } : {}) });
       if (r.status !== 202) etapa("gerar", { http: r.status, ...resumir(r.body) });
       else {
         let st: any;
@@ -149,6 +153,26 @@ async function main() {
       etapa("simulacao", { http: sim.status, ...resumir(sim.body) });
       const prom = await chamar("POST", `/horarios/experimentais/${encodeURIComponent(NOME)}/promover`, {});
       etapa("promover", { http: prom.status, ...resumir(prom.body) });
+      // conferir-promocao: o que a simulacao previu (janelas com a HA no lugar) bate com a oficial DEPOIS de promover?
+      // Um experimento "neutro" (1 aula identica a oficial) faz a simulacao contar a oficial de hoje com a HA gravada.
+      if ((CENARIO === "conferir-promocao" || CENARIO === "melhorar") && prom.status === 200 && sim.status === 200) {
+        const [h] = await q(`select h.* from horarios h join turmas t on t.id=h.turma_id where h.escola_id=$1 and t.turno=$2 order by h.id limit 1`, [ESCOLA, TURNO]);
+        await q(`insert into horarios_experimentais (escola_id, nome, turma_id, disciplina_id, professor_id, dia_semana, numero_aula)
+          values ($1, 'Sim-neutro', $2, $3, $4, $5, $6)`, [ESCOLA, h.turma_id, h.disciplina_id, h.professor_id, h.dia_semana, h.numero_aula]);
+        const real = (await chamar("GET", `/horarios/experimentais/Sim-neutro/simulacao`)).body;
+        const previsto = sim.body.experimento, depois = real.oficialHoje;
+        const porProf = (d: any[]) => new Map(d.map((x) => [`${x.professorNome}|${x.dia}`, x.janelas]));
+        const a = porProf(previsto.detalhe), b = porProf(depois.detalhe);
+        const diferentes = [...new Set([...a.keys(), ...b.keys()])].filter((k) => (a.get(k) ?? 0) !== (b.get(k) ?? 0))
+          .map((k) => `${k}: previsto ${a.get(k) ?? 0}, real ${b.get(k) ?? 0}`);
+        const [{ ha }] = await q(`select count(*)::int ha from disponibilidade_professores d join professores p on p.id=d.professor_id
+          where p.escola_id=$1 and d.hora_atividade_obrigatoria and d.turno=$2`, [ESCOLA, TURNO]);
+        etapa("conferencia", {
+          janelasPrevistasNaSimulacao: previsto.janelas, janelasReaisDepoisDePromover: depois.janelas,
+          diasComJanelaPrevisto: previsto.diasComConflito, diasComJanelaReal: depois.diasComConflito,
+          professorDiaDiferentes: diferentes.length, amostra: diferentes.slice(0, 15), haNoTurnoDepois: ha,
+        });
+      }
     }
   } catch (e) {
     etapa("ERRO_DO_ROTEIRO", e instanceof Error ? e.stack : String(e));

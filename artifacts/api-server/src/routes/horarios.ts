@@ -43,6 +43,7 @@ import { aulasFixasTable } from "@workspace/db"; // [AULA-FIXA-CADASTRO]
 import { validarCapacidadeProfessores, calcularCotaHaPorTurno, capacidadeDoProfessor } from "../lib/capacidade-professor";
 import { carregarMapaIntegral, slotReal, TURNO_INTEGRAL, carregarAulasIntegraisNoTurno, mapaIntegralDosSlots } from "../lib/turno-integral"; // [TURNO-INTEGRAL] [INTEGRAL-NO-MOTOR]
 import { diagnosticarGeracao, diagnosticarViolacoesPromocao } from "../lib/diagnostico-geracao"; // [DIAGNOSTICO-GERACAO]
+import { tempoDoMotor, TEMPO_TOTAL_PADRAO_S, TEMPO_MINIMO_CHAMADA_S } from "../lib/tempo-geracao"; // [TEMPO-TOTAL]
 
 const router = Router();
 
@@ -1175,6 +1176,45 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     console.error("[HA-SO-QUEM-MUDOU] Falha ao devolver a HA de quem nao mudou:", err);
   }
 
+  // [HA-BURACO-QUEM-MUDOU] (01/11/2026) quem teve aula mexida: depois do recalculo, a HA movel tambem vai para onde
+  // tira janela (mesma regra e mesma passada do simulador, lib/simular-promocao.ts). Antes so quem NAO mudou passava
+  // por isso, e o recalculo mantinha a HA importada onde estava, deixando janelas que uma HA movida fecharia.
+  try {
+    const mudaram = [...profsMudaram];
+    const turnosExp = [...new Set(turmasProm.map((t) => t.turno).filter((t): t is string => !!t))];
+    if (mudaram.length && turnosExp.length && !avisoHA) {
+      const turmasEscola = await db.select({ id: turmasTable.id, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
+      const turnoDaTurma = new Map(turmasEscola.map((t) => [t.id, t.turno]));
+      const oficialDepois = await db.select().from(horariosTable)
+        .where(and(eq(horariosTable.escolaId, escolaId), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`));
+      const aulasDepois: AulaPos[] = oficialDepois.flatMap((h) => {
+        const t = turnoDaTurma.get(h.turmaId);
+        return t && h.professorId != null ? [{ professorId: h.professorId, turno: t, diaSemana: h.diaSemana, numeroAula: h.numeroAula }] : [];
+      });
+      const dispMudaram = await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, mudaram));
+      const slotsEscola = await db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId));
+      const movs = reposicionarHAMovel({ aulas: aulasDepois, disp: dispMudaram, slotsLetivos: slotsLetivosPorTurno(slotsEscola), turnos: turnosExp, professores: mudaram });
+      if (movs.length) {
+        await db.transaction(async (tx) => {
+          // 1) tira do lugar (posicao provisoria unica) para uma HA poder ir para onde outra acabou de sair
+          for (const m of movs) await tx.update(disponibilidadeTable).set({ horarioSlot: -m.linha.id }).where(eq(disponibilidadeTable.id, m.linha.id));
+          for (const m of movs) {
+            // linha "livre" sem HA no destino ocuparia a mesma chave unica: sai antes
+            await tx.delete(disponibilidadeTable).where(and(
+              eq(disponibilidadeTable.professorId, m.linha.professorId), eq(disponibilidadeTable.diaSemana, m.diaSemana),
+              eq(disponibilidadeTable.horarioSlot, m.horarioSlot), sql`COALESCE(${disponibilidadeTable.turno}, '') = ${m.linha.turno ?? ""}`,
+              eq(disponibilidadeTable.horaAtividadeObrigatoria, false), eq(disponibilidadeTable.disponivel, true),
+            ));
+            await tx.update(disponibilidadeTable).set({ diaSemana: m.diaSemana, horarioSlot: m.horarioSlot }).where(eq(disponibilidadeTable.id, m.linha.id));
+          }
+        });
+        haReposicionadas += movs.length;
+      }
+    }
+  } catch (err) {
+    console.error("[HA-BURACO-QUEM-MUDOU] Falha ao levar a HA de quem mudou para os buracos; a HA do recalculo fica:", err);
+  }
+
   res.json({ slotsGerados: inserted.length, conflitos: [], horario: [], backupId, avisoBackup, avisoHA, professoresComAulaMexida: profsMudaram.size, haReposicionadas });
 });
 
@@ -1664,9 +1704,15 @@ async function runCpsatGeneration(
   turmaId: number | undefined,
   turmaIdsSelecionados: number[] | undefined,
   nomeExperimental: string,
-  tempoLimiteS: number | undefined,
+  tempoLimiteInformado: number | undefined,
   signal?: AbortSignal,
 ): Promise<{ httpStatus: number; body: Record<string, unknown> }> {
+  // [TEMPO-TOTAL] (01/11/2026) o tempo da tela vale para a geracao INTEIRA (antes era por etapa: 120s na tela davam
+  // 4-5 min de espera). Cada chamada ao motor recebe a sua parte (ver tempoDoMotor); o plano B usa o que sobrou.
+  // turma unica e turno parcial nao mandam tempo: ficam com os ~140s de antes (120 + trocas finais)
+  const turnoInteiro = turmaId == null && turmaIdsSelecionados == null && turnoInformado != null;
+  const tempoLimiteS = tempoLimiteInformado ?? (turnoInteiro ? TEMPO_TOTAL_PADRAO_S : 140);
+  const inicioTotal = Date.now();
   if (turmaId == null && turmaIdsSelecionados == null && turnoInformado != null) {
     const turmasDoTurnoParaCheck = await db.select({ id: turmasTable.id, nivelEnsino: turmasTable.nivelEnsino })
       .from(turmasTable)
@@ -1693,13 +1739,10 @@ async function runCpsatGeneration(
       console.error(`[CPSAT-COORDENACAO] Falhou, caindo no fallback sem coordenacao. httpStatus=${resultadoCoordenado.httpStatus} corpo=${JSON.stringify(resultadoCoordenado.body)}`);
       // [FALLBACK] Rota coordenada falhou (ex.: servico fora do ar) --
       // recai no metodo antigo, duas fases separadas sem coordenacao.
-      // [FIX-TEMPO-DIVIDIDO] O tempo limite configurado pelo usuario
-      // e aplicado em CADA etapa (Fundamental e Medio/Tecnico rodam
-      // sequencialmente) -- sem dividir, "600s" configurado na tela
-      // podia significar ate 1200s de espera real (600 + 600), o
-      // dobro do esperado. Divide pela metade aqui para que o tempo
-      // configurado corresponda ao tempo total de espera de verdade.
-      const tempoLimitePorEtapa = tempoLimiteS != null ? Math.max(30, Math.floor(tempoLimiteS / 2)) : undefined;
+      // [FIX-TEMPO-DIVIDIDO] [TEMPO-TOTAL] as duas etapas dividem o tempo que SOBROU depois da tentativa conjunta
+      // (antes dividiam o tempo inteiro, somado ao que a tentativa conjunta ja tinha gasto).
+      const restanteS = tempoLimiteS - (Date.now() - inicioTotal) / 1000;
+      const tempoLimitePorEtapa = Math.max(TEMPO_MINIMO_CHAMADA_S, Math.floor(restanteS / 2));
       marcarEtapa("fallback", "A geração conjunta não fechou; tentando em duas partes (Fundamental, depois Médio/Técnico)"); // [PROGRESSO-GERACAO]
       definirFaseGeracao("Fundamental");
       const resultadoFundamental = await runCpsatGeneracaoUnica(escolaId, undefined, undefined, idsFundamental, nomeExperimental, tempoLimitePorEtapa, signal);
@@ -2120,9 +2163,11 @@ async function runCpsatGeneracaoUnica(
     ? Math.max(...horarioSlotsTurno.map((s) => s.numeroAula))
     : 6;
 
-  const tempoCoordenacaoS = Number(process.env.CPSAT_TEMPO_COORDENACAO_S ?? "120");
-  const tempoFaseS = tempoLimiteS ?? 300;
-  const tempoFase3S = 60;
+  // [TEMPO-TOTAL] tempoLimiteS aqui e o orcamento desta chamada ao motor; tempoDoMotor divide entre as etapas
+  const tempos = tempoDoMotor(tempoLimiteS ?? TEMPO_TOTAL_PADRAO_S, !!usarCoordenacao, Number(process.env.CPSAT_TEMPO_COORDENACAO_S ?? "120"));
+  const tempoCoordenacaoS = tempos.tempoCoordenacaoS;
+  const tempoFaseS = tempos.tempoFaseS;
+  const tempoFase3S = 60; // o motor recebe, mas nao usa (pipeline_coordenada.py)
 
   const payload = {
     turno,
@@ -2130,7 +2175,7 @@ async function runCpsatGeneracaoUnica(
     turmas: turmasDoTurno.map((t) => ({ nome: t.nome, turno: t.turno, nivelEnsino: t.nivelEnsino })),
     disciplinasTurma: disciplinasMotor, // [TRIO-MESMO-PROFESSOR]
     bloqueiosProfessor,
-    tempoLimiteS: tempoLimiteS ?? 120,
+    tempoLimiteS: tempos.tempoLimiteS,
     ...(usarCoordenacao ? {
       nTentativas: Number(process.env.CPSAT_COORDENACAO_N_TENTATIVAS ?? "1"),
       tempoCoordenacaoS,
@@ -2363,12 +2408,10 @@ async function runCpsatGeneracaoUnica(
   let ultimoErroCpsat: unknown = null;
   for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_CPSAT; tentativa++) {
     marcarEtapa("calculo", modoMelhoria ? "Melhorando a grade (trocando aulas de lugar)" : tentativa === 1 ? "Calculando a grade" : "Calculando a grade (2ª tentativa, a conexão caiu)", // [PROGRESSO-GERACAO]
-      usarCoordenacao ? `Professores que dão aula no Fundamental e no Médio são acertados primeiro, até ${tempoCoordenacaoS + tempoFaseS * 2 + tempoFase3S}s` : `Tempo limite: ${tempoLimiteS ?? 120}s`);
+      usarCoordenacao ? `Professores que dão aula no Fundamental e no Médio são acertados primeiro; tempo total até ${tempos.esperaMaximaS - 90}s` : `Tempo total: até ${tempos.esperaMaximaS - 60}s`); // [TEMPO-TOTAL]
     const pararAcompanhamento = acompanharMotor(CPSAT_SERVICE_URL, CPSAT_TOKEN ? { "X-NexGrade-Token": CPSAT_TOKEN } : {}); // [PROGRESSO-MOTOR]
     try {
-      const timeoutMs = usarCoordenacao
-        ? (tempoCoordenacaoS + tempoFaseS * 2 + tempoFase3S + 60) * 1000
-        : ((tempoLimiteS ?? 120) + 30) * 1000;
+      const timeoutMs = tempos.esperaMaximaS * 1000; // [TEMPO-TOTAL]
       // [FIX-AXIOS] Trocado fetch nativo (undici) por axios -- suspeita de
       // que o undici trava/falha silenciosamente com corpos de requisicao
       // medios/grandes (60KB+) na rede interna do Render, mesmo dentro do
