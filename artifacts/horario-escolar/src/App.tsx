@@ -14,7 +14,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Layout } from "@/components/layout";
-import { Sparkles, Clock, Lock, CalendarDays, Library, DoorOpen, Download, FileUp, History, ShieldCheck, LogOut, Mail, UserPlus, Building2, ArrowLeft } from "lucide-react"; // [LOGIN] [BOTAO-SAIR] [MASTER-VOLTAR]
+import { Sparkles, Lock, CalendarDays, DoorOpen, FileUp, ShieldCheck, LogOut, Mail, UserPlus, Building2, ArrowLeft, ClipboardCheck, Printer, Smartphone } from "lucide-react"; // [LOGIN] [BOTAO-SAIR] [MASTER-VOLTAR] [LOGIN-RECURSOS]
 
 // [FIX] Divisão do pacote JS (code-splitting) -- antes, todas as ~24
 // telas eram importadas de forma estática aqui no topo, o que fazia o
@@ -178,18 +178,17 @@ const clerkAppearance = {
 };
 
 // [LOGIN] Beneficios mostrados ao lado do formulario (so o que o NexGrade tem hoje).
+// [LOGIN-RECURSOS] (01/11/2026) lista atualizada com o que o sistema faz hoje (antes falava em CSV e
+// "arquivo para o sistema oficial" e nao mostrava presenca, RCO, celular e pedagogia)
 const BENEFICIOS = [
-  { icon: Sparkles, titulo: "Geração automática da grade", texto: "Monta combinações de horários respeitando as regras da escola." },
-  { icon: Clock, titulo: "Disponibilidade dos professores", texto: "Considera horários disponíveis, bloqueios e limites de cada professor." },
-  { icon: Lock, titulo: "Aulas fixas e em conjunto", texto: "Fixe aulas e organize disciplinas que precisam acontecer juntas." },
-  { icon: CalendarDays, titulo: "Turnos e calendário letivo", texto: "Matutino, vespertino e noturno, com calendário da escola." },
-  { icon: Library, titulo: "Matrizes curriculares oficiais", texto: "Cursos e matrizes já cadastrados para começar mais rápido." },
-  { icon: DoorOpen, titulo: "Reservas de salas", texto: "Agenda de reservas com regras de prioridade por professor." },
-  { icon: Download, titulo: "Importação e exportação", texto: "Importe dados existentes e exporte a grade em PDF e CSV (Excel)." },
-  { icon: FileUp, titulo: "Arquivo para o sistema oficial", texto: "Gera o arquivo da grade no formato aceito pelo sistema oficial da rede, pronto para importar, sem retrabalho." },
-  { icon: History, titulo: "Histórico de alterações", texto: "Acompanhe quem alterou o quê e quando na grade da escola." },
-  { icon: Sparkles, titulo: "Assistente de IA", texto: "Tire dúvidas e receba ajuda na montagem da grade." },
-  { icon: ShieldCheck, titulo: "Acesso por cargo", texto: "Direção, coordenação, gestor de reservas e professores, cada um com o seu acesso." },
+  { icon: Sparkles, titulo: "Geração automática da grade", texto: "Monta a grade respeitando as regras da escola, a disponibilidade e a hora-atividade dos professores." },
+  { icon: Lock, titulo: "Aulas fixas, trio e assíncronas", texto: "As regras da SEED-PR já previstas: aulas travadas, docência por trio e aulas assíncronas." },
+  { icon: CalendarDays, titulo: "Turnos, calendário e matrizes oficiais", texto: "Calendário letivo da SEED-PR e cursos com as matrizes já cadastrados para começar rápido." },
+  { icon: FileUp, titulo: "Grava a grade no RCO", texto: "Pelo arquivo ou pelo atalho “Gravar no RCO”, sem digitar a grade de novo." },
+  { icon: ClipboardCheck, titulo: "Presença dos professores", texto: "Lista do dia no celular, faltas do mês e folha de ponto para assinar." },
+  { icon: DoorOpen, titulo: "Reservas de salas e equipamentos", texto: "Agenda de reservas com regras por professor e controle de tablets e laboratórios." },
+  { icon: Printer, titulo: "Relatórios em PDF e Excel", texto: "Grade por turma, por professor e quadro geral, além de planilhas prontas para imprimir." },
+  { icon: Smartphone, titulo: "Cada um com o seu acesso, até no celular", texto: "Direção, coordenação, secretaria, pedagogia, gestor de reservas e professor." },
 ];
 
 // [LOGIN] Moldura comum do login/cadastro: formulario a esquerda, beneficios a direita
