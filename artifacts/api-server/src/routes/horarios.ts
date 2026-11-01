@@ -1176,6 +1176,45 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     console.error("[HA-SO-QUEM-MUDOU] Falha ao devolver a HA de quem nao mudou:", err);
   }
 
+  // [HA-BURACO-QUEM-MUDOU] (01/11/2026) quem teve aula mexida: depois do recalculo, a HA movel tambem vai para onde
+  // tira janela (mesma regra e mesma passada do simulador, lib/simular-promocao.ts). Antes so quem NAO mudou passava
+  // por isso, e o recalculo mantinha a HA importada onde estava, deixando janelas que uma HA movida fecharia.
+  try {
+    const mudaram = [...profsMudaram];
+    const turnosExp = [...new Set(turmasProm.map((t) => t.turno).filter((t): t is string => !!t))];
+    if (mudaram.length && turnosExp.length && !avisoHA) {
+      const turmasEscola = await db.select({ id: turmasTable.id, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
+      const turnoDaTurma = new Map(turmasEscola.map((t) => [t.id, t.turno]));
+      const oficialDepois = await db.select().from(horariosTable)
+        .where(and(eq(horariosTable.escolaId, escolaId), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`));
+      const aulasDepois: AulaPos[] = oficialDepois.flatMap((h) => {
+        const t = turnoDaTurma.get(h.turmaId);
+        return t && h.professorId != null ? [{ professorId: h.professorId, turno: t, diaSemana: h.diaSemana, numeroAula: h.numeroAula }] : [];
+      });
+      const dispMudaram = await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, mudaram));
+      const slotsEscola = await db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId));
+      const movs = reposicionarHAMovel({ aulas: aulasDepois, disp: dispMudaram, slotsLetivos: slotsLetivosPorTurno(slotsEscola), turnos: turnosExp, professores: mudaram });
+      if (movs.length) {
+        await db.transaction(async (tx) => {
+          // 1) tira do lugar (posicao provisoria unica) para uma HA poder ir para onde outra acabou de sair
+          for (const m of movs) await tx.update(disponibilidadeTable).set({ horarioSlot: -m.linha.id }).where(eq(disponibilidadeTable.id, m.linha.id));
+          for (const m of movs) {
+            // linha "livre" sem HA no destino ocuparia a mesma chave unica: sai antes
+            await tx.delete(disponibilidadeTable).where(and(
+              eq(disponibilidadeTable.professorId, m.linha.professorId), eq(disponibilidadeTable.diaSemana, m.diaSemana),
+              eq(disponibilidadeTable.horarioSlot, m.horarioSlot), sql`COALESCE(${disponibilidadeTable.turno}, '') = ${m.linha.turno ?? ""}`,
+              eq(disponibilidadeTable.horaAtividadeObrigatoria, false), eq(disponibilidadeTable.disponivel, true),
+            ));
+            await tx.update(disponibilidadeTable).set({ diaSemana: m.diaSemana, horarioSlot: m.horarioSlot }).where(eq(disponibilidadeTable.id, m.linha.id));
+          }
+        });
+        haReposicionadas += movs.length;
+      }
+    }
+  } catch (err) {
+    console.error("[HA-BURACO-QUEM-MUDOU] Falha ao levar a HA de quem mudou para os buracos; a HA do recalculo fica:", err);
+  }
+
   res.json({ slotsGerados: inserted.length, conflitos: [], horario: [], backupId, avisoBackup, avisoHA, professoresComAulaMexida: profsMudaram.size, haReposicionadas });
 });
 

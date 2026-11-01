@@ -9,6 +9,7 @@ import { db, professoresTable, turmasTable, horariosTable, horariosExperimentais
 import { and, eq, inArray } from "drizzle-orm";
 import { calcularHAIdeal, type AulaParaCalculoHA, type MarcaHACalculada } from "./recalcular-ha";
 import { reposicionarHAMovel, slotsLetivosPorTurno, type AulaPos } from "./reposicionar-ha";
+import { MOTIVO_HA_AUTO } from "./ha-contraturno"; // [HA-BURACO-QUEM-MUDOU]
 
 const DIAS = ["Seg", "Ter", "Qua", "Qui", "Sex"];
 
@@ -170,8 +171,27 @@ export async function simularPromocao(
       const mv = novoLugar.get(d);
       return { professorId: d.professorId, turno: d.turno!, diaSemana: mv ? mv.diaSemana : d.diaSemana, horarioSlot: mv ? mv.horarioSlot : d.horarioSlot, outroTurno: /outro turno|HA\*/i.test(d.motivo ?? "") };
     });
+  // [HA-BURACO-QUEM-MUDOU] (01/11/2026) quem teve aula mexida: depois do recalculo, a HA movel tambem vai para onde
+  // tira janela (igual a promocao). Antes so quem NAO mudou passava por isso, e o recalculo mantinha a HA importada
+  // onde estava: sobravam janelas que uma HA movida fecharia (Bruno Carvalho, simulacao de 01/11).
+  const haRecalculada = haSimulada.filter((m) => turnos.includes(m.turno) && mudou.has(m.professorId));
+  const linhaHoje = new Map(dispEscola.filter((d) => d.horaAtividadeObrigatoria).map((d) => [`${d.professorId}|${d.turno}|${d.diaSemana}|${d.horarioSlot}`, d]));
+  const haRecalcLinhas = haRecalculada.map((m) => ({
+    professorId: m.professorId, turno: m.turno, diaSemana: m.diaSemana, horarioSlot: m.horarioSlot,
+    disponivel: true, horaAtividadeObrigatoria: true, marca: m,
+    // a HA que ja existia fica com o motivo dela (manual/fixa continuam presas); a nova e automatica
+    motivo: linhaHoje.get(`${m.professorId}|${m.turno}|${m.diaSemana}|${m.horarioSlot}`)?.motivo ?? MOTIVO_HA_AUTO,
+  }));
+  const movRecalc = reposicionarHAMovel({
+    aulas: aulasSimPos, slotsLetivos: slotsLetivosPorTurno(slots), turnos, professores: [...mudou],
+    disp: [...dispEscola.filter((d) => mudou.has(d.professorId) && !d.horaAtividadeObrigatoria), ...haRecalcLinhas],
+  });
+  const lugarRecalc = new Map(movRecalc.map((mv) => [mv.linha, mv]));
   const haDepois = [
-    ...haSimulada.filter((m) => turnos.includes(m.turno) && mudou.has(m.professorId)),
+    ...haRecalcLinhas.map((l) => {
+      const mv = lugarRecalc.get(l);
+      return mv ? { ...l.marca, diaSemana: mv.diaSemana, horarioSlot: mv.horarioSlot } : l.marca;
+    }),
     ...haHojeReposta,
   ];
   const resExp = contar(aulasSimuladas, haDepois);

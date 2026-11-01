@@ -25,8 +25,16 @@ describe("reposicionarHAMovel", () => {
     expect(r[0]).toMatchObject({ diaSemana: 0, horarioSlot: 2 });
   });
 
+  it("HA importada do Urania, gravada como (HA) e (HA*), tambem e movel", () => { // [HA-IMPORTADA-FORMATOS]
+    for (const motivo of ["Importado do sistema anterior 02-06/11 (HA)", "Importado do sistema anterior 05-09/10 (HA*)"]) {
+      const r = rodar([aula(0, 1), aula(0, 2), aula(0, 4)], [ha(0, 6, motivo)]);
+      expect(r, motivo).toHaveLength(1);
+      expect(r[0]).toMatchObject({ diaSemana: 0, horarioSlot: 3 });
+    }
+  });
+
   it("nao mexe em HA fixa, probatorio nem manual", () => {
-    for (const motivo of ["HA fixa (definida manualmente)", "Importado do sistema anterior 21/10 (H.A.) - estagio probatorio", null]) {
+    for (const motivo of ["HA fixa (definida manualmente)", "Importado do sistema anterior 21/10 (H.A.) - estagio probatorio", "Importado do sistema anterior 02-06/11 (HA) - estagio probatorio", "HA manual (definida na tela)", null]) {
       expect(rodar([aula(0, 1), aula(0, 2), aula(0, 4)], [ha(0, 6, motivo)])).toHaveLength(0);
     }
   });
