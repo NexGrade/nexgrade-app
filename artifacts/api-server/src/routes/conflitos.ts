@@ -5,6 +5,7 @@ import { eq, inArray, and, isNull } from "drizzle-orm";
 import { getEscolaId } from "../lib/escola-id";
 import { getAuth } from "@clerk/express";
 import { REGRAS_REDE } from "../lib/regras-rede"; // [REGRAS-REDE]
+import { CHAVE_LIMITE_DISCIPLINA, lerLimites, limiteAulasDia } from "../lib/limite-disciplina"; // [LIMITE-DISCIPLINA]
 import { z } from "zod";
 import { calcularHoraAtividadePorTurno, ehProfessorEstudio } from "../lib/hora-atividade";
 import { montarMapaPrincipal, principalDe } from "../lib/professor-principal"; // [MESMA-PESSOA-HA]
@@ -81,6 +82,7 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
   const tetoAulasTurno = REGRAS_REDE.tetoAulasTurno;
   const horaAtividadeMesmoTurnoAte = REGRAS_REDE.horaAtividadeMesmoTurnoAte;
   const maxAulasGeminadasPadrao = REGRAS_REDE.maxAulasGeminadasPadrao;
+  const limitesPorDisciplina = lerLimites(configs.find((c) => c.chave === CHAVE_LIMITE_DISCIPLINA)?.valor); // [LIMITE-DISCIPLINA]
   // [FIX] padrao20h/padrao40h removidos -- não são mais usados agora que
   // a exigência de HA é calculada proporcionalmente às aulas reais de
   // cada professor, não por um regime fixo não confirmado (ver seção 11
@@ -373,7 +375,7 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
   Object.entries(consecutivasPorTurmaDiscDia).forEach(([key, aulas]) => {
     const [turmaId, disciplinaId, dia] = key.split("-").map(Number);
     const td = turmaDiscs.find((t) => t.turmaId === turmaId && t.disciplinaId === disciplinaId);
-    const limite = td?.maxAulasConsecutivasDia ?? maxAulasGeminadasPadrao;
+    const limite = limiteAulasDia({ disciplinaId, maxAulasConsecutivasDia: td?.maxAulasConsecutivasDia }, limitesPorDisciplina, maxAulasGeminadasPadrao); // [LIMITE-DISCIPLINA]
     const ordenado = [...aulas].sort((a, b) => a - b);
     let maiorSequencia = 1;
     let atual = 1;
