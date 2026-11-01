@@ -24,6 +24,7 @@ import { AceitarConflito } from "@/components/aceitar-conflito"; // [CONFLITO-AC
 import { SeletorBusca } from "@/components/seletor-busca";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"; // [AULA-FIXA-DISP]
+import { ContaProfessor } from "@/components/conta-professor"; // [CONTA-NA-HORA]
 
 const DIAS = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
 const DIAS_ABREV = ["SEG", "TER", "QUA", "QUI", "SEX"];
@@ -246,6 +247,19 @@ export default function DisponibilidadePage() {
   const totalHA = Object.values(matriz).filter((v) => v === "ha_obrigatoria" || v === "ha_fixa").length; // [HA-FIXA]
   const totalAtividades = Object.values(matriz).filter((v) => v === "atividade").length; // [ATIVIDADE-FORA-DE-SALA]
   const rotuloSeAtividade = (m: CelulaState, r: Record<string, string>, key: string) => (m[key] === "atividade" ? r[key] ?? "" : "");
+  // [CONTA-NA-HORA] horarios de aula que os cliques ainda nao salvos liberaram (+) ou bloquearam (-) neste turno.
+  // Bloqueio real = "bloqueado" e "atividade" (HA e HA fixa nao tiram horario de aula, mesma regra do servidor).
+  const deltaLivres = useMemo(() => {
+    const letivas = new Set(slotsOrdenados.filter((s: any) => s.letivo !== false).map((s) => s.numeroAula));
+    const bloqueia = (e: CelulaEstado | undefined) => e === "bloqueado" || e === "atividade";
+    let delta = 0;
+    for (const key of new Set([...Object.keys(matriz), ...Object.keys(original)])) {
+      if (!letivas.has(Number(key.split("-")[1]))) continue;
+      delta += (bloqueia(original[key]) ? 1 : 0) - (bloqueia(matriz[key]) ? 1 : 0);
+    }
+    return delta;
+  }, [matriz, original, slotsOrdenados]);
+
   const hasChanges = JSON.stringify(matriz) !== JSON.stringify(original) ||
     Object.keys(matriz).some((k) => rotuloSeAtividade(matriz, rotulos, k) !== rotuloSeAtividade(original, rotulosOriginais, k));
 
@@ -395,6 +409,7 @@ export default function DisponibilidadePage() {
       setOriginal({ ...matriz });
       setRotulosOriginais({ ...rotulos }); // [ATIVIDADE-FORA-DE-SALA]
       queryClient.invalidateQueries({ queryKey: getListDisponibilidadeQueryKey({ professorId: professorIdNum }) });
+      queryClient.invalidateQueries({ queryKey: ["/api/horarios/capacidade"] }); // [CONTA-NA-HORA] refaz a conta com o que foi salvo
       toast({
         title: `✅ Disponibilidade de ${professorSelecionado?.nome ?? "professor"} salva!`,
         description: `${itens.length} alteração(ões) aplicada(s) no turno ${TURNOS.find((t) => t.value === turno)?.label}.`,
@@ -456,6 +471,7 @@ export default function DisponibilidadePage() {
           </span>
         </div>
       )}{/* [HA-POR-TURNO-NA-TELA] */}
+      {professorIdNum && <ContaProfessor professorId={professorIdNum} turno={turno} deltaLivres={deltaLivres} />}{/* [CONTA-NA-HORA] */}
 
       <div className="flex flex-wrap items-center gap-4">
         <SeletorBusca

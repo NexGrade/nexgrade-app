@@ -17,6 +17,14 @@ describe("ehLeituraSomenteAdmin", () => {
       expect(ehLeituraSomenteAdmin(c), c).toBe(true);
     }
   });
+  it("capacidade dos professores (geral e de um professor) e so da coordenacao", () => { // [CONTA-NA-HORA]
+    for (const c of ["/horarios/capacidade", "/Horarios/Capacidade/", "/horarios/capacidade/professor/12"]) {
+      expect(ehLeituraSomenteAdmin(c), c).toBe(true);
+    }
+    for (const c of ["/horarios", "/horarios/experimentais", "/horarios/capacidades-extra"]) {
+      expect(ehLeituraSomenteAdmin(c), c).toBe(false);
+    }
+  });
   it("libera o que gestor e professor precisam", () => {
     for (const c of ["/usuarios/me", "/reservas", "/horarios", "/escolas/me", "/export/reservas-pdf", "/arquivo-rco", "/export/grade-pdf/turma"]) {
       expect(ehLeituraSomenteAdmin(c), c).toBe(false);

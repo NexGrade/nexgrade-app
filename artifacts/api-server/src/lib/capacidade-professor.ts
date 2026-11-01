@@ -17,13 +17,22 @@ import { montarMapaPrincipal, ehSecundario, principalDe } from "./professor-prin
 export interface ProblemaCapacidade {
   professorId: number;
   professor: string;
-  nivel: "erro" | "aviso";
+  nivel: "erro" | "aviso" | "ok"; // "ok" so com a opcao incluirOk
   mensagem: string;
   aulasPorTurno: Record<string, number>;
   aulasTotal: number;
   haExigida: number;
   livresPorTurno: Record<string, number>;
+  // [CONTA-NA-HORA] com turnoFiltro: a conta desse turno
+  turno?: string;
+  livresComHA?: number;
 }
+
+export type OpcoesCapacidade = {
+  professorId?: number; // so este professor
+  incluirOk?: boolean; // com turnoFiltro, devolve tambem o turno em que cabe (nivel "ok"), com os numeros
+  dados?: Awaited<ReturnType<typeof calcularCargaPorProfessor>>; // ja carregados (evita ler o banco de novo)
+};
 
 export interface CargaProfessor {
   professorId: number;
@@ -121,8 +130,8 @@ export async function calcularCotaHaPorTurno(escolaId: string, turno: string): P
 
 // [CAPACIDADE-POR-TURNO] (16/10/2026) com `turnoFiltro`, so os professores com aula nesse turno, e a conta
 // (aulas + HA desse turno x horarios livres desse turno) so desse turno -- e o que a tela de gerar mostra.
-export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro?: string): Promise<ProblemaCapacidade[]> {
-  const { cargas, slots, disp, principal } = await calcularCargaPorProfessor(escolaId);
+export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro?: string, opcoes: OpcoesCapacidade = {}): Promise<ProblemaCapacidade[]> {
+  const { cargas, slots, disp, principal } = opcoes.dados ?? await calcularCargaPorProfessor(escolaId);
   const porTurnoHA = aulasParaHA(cargas, principal); // [MESMA-PESSOA-HA]
   const aulas = new Map(cargas.map((c) => [c.professorId, c.aulasPorTurno]));
   const profMap = new Map(cargas.map((c) => [c.professorId, { nome: c.professor }]));
@@ -145,6 +154,7 @@ export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro
   for (const [pid, porTurno] of aulas) {
     const p = profMap.get(pid);
     if (!p) continue;
+    if (opcoes.professorId != null && pid !== opcoes.professorId) continue; // [CONTA-NA-HORA]
     const bloqueados = new Map<string, Set<string>>();
     for (const d of disp) {
       if (d.professorId !== pid || !ehBloqueioReal(d)) continue;
@@ -187,8 +197,11 @@ export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro
       const livresT = livres[turnoFiltro] ?? 0;
       const livresComHA = livresT + (livresSoHA[turnoFiltro] ?? 0);
       const nomeT = ({ matutino: "manhã", vespertino: "tarde", noturno: "noite" } as Record<string, string>)[turnoFiltro] ?? turnoFiltro;
-      const baseT = { ...base, aulasTotal: aulasT, haExigida: haT };
-      if (aulasT > livresT) {
+      const baseT = { ...base, aulasTotal: aulasT, haExigida: haT, turno: turnoFiltro, livresComHA }; // [CONTA-NA-HORA]
+      if (aulasT <= livresT && aulasT + haT <= livresComHA) {
+        // [CONTA-NA-HORA] cabe: so entra com incluirOk (tela de Disponibilidade mostra a conta mesmo quando esta certa)
+        if (opcoes.incluirOk) problemas.push({ ...baseT, nivel: "ok", mensagem: `${aulasT} aula(s) + ${haT} HA na ${nomeT} e ${livresComHA} horário(s) livre(s): cabe, com ${livresComHA - aulasT - haT} de folga.` });
+      } else if (aulasT > livresT) {
         problemas.push({ ...baseT, nivel: "erro", mensagem: `${aulasT} aula(s) na ${nomeT}, mas só ${livresT} horário(s) livre(s) nesse turno: a grade não fecha. Libere ${aulasT - livresT} horário(s) ou reduza a carga.` });
       } else if (aulasT + haT > livresComHA) {
         // [CAPACIDADE-HA-OUTRO-TURNO] o que nao cabe vai para outro turno como HA* -- se houver espaco la.
@@ -231,4 +244,17 @@ export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro
     }
   }
   return problemas.sort((a, b) => (a.nivel === b.nivel ? a.professor.localeCompare(b.professor) : a.nivel === "erro" ? -1 : 1));
+}
+
+// [CONTA-NA-HORA] (01/11/2026) A conta de UM professor, turno a turno (so os turnos em que ele da aula), para a tela
+// de Disponibilidade mostrar a cada bloqueio se ele ainda cabe. Mesma regra da tela de gerar; le o banco uma vez.
+export async function capacidadeDoProfessor(escolaId: string, professorId: number): Promise<ProblemaCapacidade[]> {
+  const dados = await calcularCargaPorProfessor(escolaId);
+  const carga = dados.cargas.find((c) => c.professorId === professorId);
+  if (!carga) return [];
+  const ordem = ["matutino", "vespertino", "noturno"];
+  const turnos = Object.entries(carga.aulasPorTurno).filter(([, n]) => n > 0).map(([t]) => t)
+    .sort((a, b) => ordem.indexOf(a) - ordem.indexOf(b));
+  const porTurno = await Promise.all(turnos.map((t) => validarCapacidadeProfessores(escolaId, t, { professorId, incluirOk: true, dados })));
+  return porTurno.flat();
 }
