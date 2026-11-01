@@ -224,7 +224,7 @@ function AuthShell({ subtitulo, aviso, children }: { subtitulo: string; aviso: A
         <aside className="hidden lg:block border-l border-slate-100 bg-slate-50 px-8 py-8">
           <h2 className="text-lg font-bold text-slate-900 font-heading">O que o NexGrade resolve</h2>
           <p className="mt-1 text-sm text-slate-500 leading-relaxed">
-            Uma plataforma para montar e acompanhar a grade horária da escola, com regras reais de turmas, turnos e professores.
+            A plataforma que organiza a operação pedagógica do início ao fim.{/* [LOGIN-FRASE] (01/11/2026) mesma frase do site */}
           </p>
           <div className="mt-5 grid grid-cols-2 gap-3">
             {BENEFICIOS.map((b) => (
