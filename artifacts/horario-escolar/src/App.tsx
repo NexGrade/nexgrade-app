@@ -1,6 +1,7 @@
 import { clerkPtBR } from "@/lib/clerk-ptbr"; // [CLERK-PTBR]
 import { usePapelEfetivo, useAtivarEscolaDoMembro, useEu, ROTAS_PEDAGOGIA, INICIO_PEDAGOGIA } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA] [ACESSOS-ESCOLA]
 import { trocarDeEscola, gravarEscolaAtiva } from "@/lib/escola-ativa"; // [ACESSOS-ESCOLA] [BOTAO-SAIR]
+import { useSituacaoAcesso, TelaBloqueio } from "@/lib/situacao-acesso"; // [TRAVA-AVALIACAO]
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // [ACESSOS-ESCOLA]
 import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect, useLocation, useSearch } from "wouter";
@@ -328,12 +329,15 @@ function EscolaGate({ component: Component }: { component: React.ComponentType }
   const { data, isLoading, isError, refetch } = useGetEscolaAtual({
     query: { queryKey: getGetEscolaAtualQueryKey() },
   });
+  const situacao = useSituacaoAcesso(); // [TRAVA-AVALIACAO]
 
   if (falhouAtivar) return <ErroCarregarEscola onTentar={() => window.location.reload()} />; // [ORG-AUTO]
   if (semEscola) return <SemAcessoEscola />; // [ACESSOS-ESCOLA]
+  // [TRAVA-AVALIACAO] fim da avaliacao sem assinatura ou escola suspensa: so a tela de aviso (a Nexus Core entra)
+  if (situacao.data?.bloqueada && !situacao.data.master) return <TelaBloqueio situacao={situacao.data} />;
   if (isError) return <ErroCarregarEscola onTentar={() => { void refetch(); }} />; // [ERRO-ESCOLA]
 
-  if (isLoading || carregandoPapel || ativandoEscola) {
+  if (isLoading || carregandoPapel || ativandoEscola || situacao.isLoading) {
     return (
       <div className="p-6 space-y-4">
         <Skeleton className="h-10 w-1/3" />
@@ -386,9 +390,11 @@ function ProfessorConteudo({ component: Component }: { component: React.Componen
   const { data, isLoading, isError, refetch } = useGetEscolaAtual({
     query: { queryKey: getGetEscolaAtualQueryKey() },
   });
+  const situacao = useSituacaoAcesso(); // [TRAVA-AVALIACAO] o professor tambem fica bloqueado
   if (semEscola) return <SemAcessoEscola />; // [ACESSOS-ESCOLA]
+  if (situacao.data?.bloqueada && !situacao.data.master) return <TelaBloqueio situacao={situacao.data} />; // [TRAVA-AVALIACAO]
   if (isError) return <ErroCarregarEscola onTentar={() => { void refetch(); }} />; // [ERRO-ESCOLA]
-  if (isLoading) {
+  if (isLoading || situacao.isLoading) {
     return (
       <div className="p-6 space-y-4">
         <Skeleton className="h-10 w-1/3" />

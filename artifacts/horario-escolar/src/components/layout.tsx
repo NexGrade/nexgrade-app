@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSituacaoArquivoRco } from "@/lib/arquivo-rco"; // [ARQUIVO-RCO]
+import { useSituacaoAcesso, AvisoFimAvaliacao } from "@/lib/situacao-acesso"; // [TRAVA-AVALIACAO]
 
 type Icone = React.ComponentType<{ className?: string }>;
 // [MENU-DESTAQUE] numero = etapa (1, 2, 3) no titulo; icone = demais secoes; principal = Gerar Grade (fundo azul, sem selo)
@@ -238,6 +239,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   // [ARQUIVO-RCO] pedido em aberto da equipe NexGrade: o item do menu ganha o selo "Pedido"
   const { data: situacaoArquivoRco } = useSituacaoArquivoRco(!ehGestorMenu && !ehPedagogiaMenu);
+  const { data: situacaoAcesso } = useSituacaoAcesso(); // [TRAVA-AVALIACAO] aviso dos ultimos dias da avaliacao
   const seloDoItem = (href: string, badge?: string) => (href === "/arquivo-rco" && situacaoArquivoRco?.solicitado ? "Pedido" : badge);
 
   // [MENU-CELULAR] menu do celular: fecha ao trocar de tela
@@ -280,6 +282,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
         <div className="flex-1 overflow-auto p-4 md:p-8">
           <div className="max-w-6xl mx-auto">
+            {!ehGestorMenu && !ehPedagogiaMenu && <AvisoFimAvaliacao situacao={situacaoAcesso} />}{/* [TRAVA-AVALIACAO] direcao, coordenacao e secretaria */}
             {children}
           </div>
         </div>
