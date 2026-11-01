@@ -114,7 +114,7 @@ router.post("/", limitadorCadastro, async (req, res) => {
     const [updated] = await db
       .update(escolasTable)
       .set({
-        nomeFantasia, cnpj, cidade, estado: estado ?? "SP", modalidade: modalidade ?? "regular",
+        nomeFantasia, cnpj, cidade, estado: estado ?? "PR", modalidade: modalidade ?? "regular",
         emailContato: emailContato ?? existing.emailContato,
         telefoneContato: telefoneContato ?? existing.telefoneContato,
         emailCobranca: emailCobranca ?? existing.emailCobranca,
@@ -133,7 +133,7 @@ router.post("/", limitadorCadastro, async (req, res) => {
     const [created] = await db
       .insert(escolasTable)
       .values({
-        id: escolaId, nomeFantasia, cnpj, cidade, estado: estado ?? "SP", modalidade: modalidade ?? "regular",
+        id: escolaId, nomeFantasia, cnpj, cidade, estado: estado ?? "PR", modalidade: modalidade ?? "regular",
         emailContato, telefoneContato, emailCobranca, codigoInep, nre, turnosOfertados, resolucaoSeedPr,
         planoId, planoAtivo: true, trialEndsAt,
       })

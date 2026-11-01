@@ -2777,7 +2777,7 @@ components:
         nomeFantasia: { type: string, minLength: 2 }
         cnpj: { type: string }
         cidade: { type: string }
-        estado: { type: string, default: "SP" }
+        estado: { type: string, default: "PR" }
         modalidade: { type: string, enum: [regular, tecnica, eja, normal_magisterio], default: regular }
         emailContato: { type: string, format: email }
         telefoneContato: { type: string }
