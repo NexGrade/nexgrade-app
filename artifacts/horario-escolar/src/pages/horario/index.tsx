@@ -2728,13 +2728,21 @@ function AbaExperimental() {
     return partes.join(" · ");
   };
   const simDe = (nome: string) => { const s = simulacoes[nome]; return s && s !== "carregando" && !("erro" in s) ? s : null; };
-  const simularPromocao = async (nome: string) => {
-    setSimulacoes((s) => ({ ...s, [nome]: "carregando" }));
+  // [FECHAR-JANELA-SEGUIDO] (01/11/2026) depois de uma troca a simulacao e refeita SEM fechar o quadro: o resultado anterior
+  // fica na tela com "Atualizando..." ate o novo chegar (antes o quadro sumia e era preciso simular de novo a cada janela)
+  const [atualizandoSim, setAtualizandoSim] = useState<Record<string, boolean>>({});
+  const simularPromocao = async (nome: string, manterAberto = false) => {
+    const temAnterior = manterAberto && !!simDe(nome);
+    if (temAnterior) setAtualizandoSim((a) => ({ ...a, [nome]: true }));
+    else setSimulacoes((s) => ({ ...s, [nome]: "carregando" }));
     try {
       const r = await customFetch<ResultadoSim>(`/api/horarios/experimentais/${encodeURIComponent(nome)}/simulacao`, { responseType: "json" });
       setSimulacoes((s) => ({ ...s, [nome]: r }));
     } catch {
-      setSimulacoes((s) => ({ ...s, [nome]: { erro: "Não foi possível simular agora. Tente de novo." } }));
+      if (!temAnterior) setSimulacoes((s) => ({ ...s, [nome]: { erro: "Não foi possível simular agora. Tente de novo." } }));
+      else toast({ title: "Não foi possível atualizar a simulação", description: "A troca foi feita. Clique em Simular promoção para ver os números novos.", variant: "destructive" });
+    } finally {
+      if (temAnterior) setAtualizandoSim((a) => ({ ...a, [nome]: false }));
     }
   };
 
@@ -2765,7 +2773,7 @@ function AbaExperimental() {
       toast({ title: "Troca feita no experimento", description: `A grade oficial não mudou. Janelas do experimento: ${o.janelasDepois}.` });
       setTrocas({});
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
-      await simularPromocao(nome);
+      await simularPromocao(nome, true); // [FECHAR-JANELA-SEGUIDO] o quadro continua aberto para a proxima janela
     } catch {
       toast({ title: "Não foi possível fazer a troca", description: "O experimento pode ter mudado. Clique em Fechar esta janela de novo.", variant: "destructive" });
       setTrocas((t) => { const n = { ...t }; delete n[k]; return n; });
@@ -3047,7 +3055,12 @@ function AbaExperimental() {
                       <div className={`mb-3 rounded-md border p-4 text-sm ${cor}`}>
                         <div className="flex items-start justify-between gap-2">
                           <div className="font-semibold text-base">{titulo}</div>
-                          <button type="button" className="opacity-60 hover:opacity-100" title="Fechar" onClick={() => setSimulacoes((s) => { const n = { ...s }; delete n[nome]; return n; })}><X className="w-4 h-4" /></button>
+                          <div className="flex items-center gap-2">
+                            {atualizandoSim[nome] && ( /* [FECHAR-JANELA-SEGUIDO] */
+                              <span className="flex items-center gap-1 text-xs font-normal opacity-80"><Loader2 className="w-3.5 h-3.5 animate-spin" />Atualizando a simulação...</span>
+                            )}
+                            <button type="button" className="opacity-60 hover:opacity-100" title="Fechar" onClick={() => setSimulacoes((s) => { const n = { ...s }; delete n[nome]; return n; })}><X className="w-4 h-4" /></button>
+                          </div>
                         </div>
                         <p className="mt-1 text-xs opacity-80">
                           <strong>Janela</strong> é um horário vago entre duas atividades do mesmo professor no mesmo turno
@@ -3096,7 +3109,7 @@ function AbaExperimental() {
                                     {d.professorId != null && d.diaSemana != null && (() => {
                                       const t = trocas[chaveTroca(nome, d)];
                                       if (!t) return (
-                                        <Button variant="outline" size="sm" className="mt-1 h-7 text-xs gap-1" onClick={() => buscarTrocas(nome, d)}
+                                        <Button variant="outline" size="sm" className="mt-1 h-7 text-xs gap-1" disabled={!!atualizandoSim[nome]} onClick={() => buscarTrocas(nome, d)}
                                           title="Procura trocas de aula só neste experimento (a oficial não muda)">
                                           <Wand2 className="w-3.5 h-3.5" /> Fechar esta janela
                                         </Button>
@@ -3113,7 +3126,7 @@ function AbaExperimental() {
                                               <div key={o.ids.join(",")} className="rounded border bg-white p-2 text-xs">
                                                 <div className="font-medium">Turma {o.turma} · o experimento fica com {o.janelasDepois} janela(s) (hoje {t.janelasAntes})</div>
                                                 <ul className="mt-1 list-disc pl-4">{o.passos.map((p, i) => <li key={i}>{p}</li>)}</ul>
-                                                <Button size="sm" className="mt-1 h-7 text-xs" disabled={aplicandoTroca != null} onClick={() => aplicarTroca(nome, d, o)}>
+                                                <Button size="sm" className="mt-1 h-7 text-xs" disabled={aplicandoTroca != null || !!atualizandoSim[nome]} onClick={() => aplicarTroca(nome, d, o)}>
                                                   {aplicando ? "Trocando…" : "Fazer esta troca"}
                                                 </Button>
                                               </div>

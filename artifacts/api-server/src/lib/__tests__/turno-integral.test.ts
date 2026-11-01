@@ -2,7 +2,8 @@ import { describe, it, expect, vi } from "vitest";
 
 vi.mock("@workspace/db", () => ({ db: {}, horarioSlotsTable: {}, horariosTable: {}, turmasTable: {} }));
 
-import { calcularMapaIntegral, slotReal, mapaIntegralDosSlots, projetarIntegral, idEspelho, aulasIntegraisNoTurno } from "../turno-integral";
+import { calcularMapaIntegral, slotReal, mapaIntegralDosSlots, projetarIntegral, idEspelho, aulasIntegraisNoTurno, posicaoReal } from "../turno-integral";
+import { reposicionarHAMovel, type DispLinha } from "../reposicionar-ha";
 
 // [TURNO-INTEGRAL] esquemas reais do Mario Braga (26/10/2026): matutino Medio/Tecnico
 // 07:30 ... 11:55, vespertino 13:05, 13:55, 14:45, 15:50, 16:40; integral no RCO
@@ -93,5 +94,31 @@ describe("projetarIntegral (visao do professor)", () => {
     const aulas = [{ turmaId: 8, numeroAula: 1 }];
     const r = projetarIntegral([turmas[1]!], aulas, mapa);
     expect(r.aulas).toBe(aulas);
+  });
+});
+
+// [INTEGRAL-NA-OCUPACAO] (01/11/2026) Mario Braga: 16 das 18 "janelas" da manha eram aulas da 1ME DOC (integral),
+// e a HA podia ir para cima delas (Dorival: ter 5a, 1ME DOC Geografia)
+describe("aula da turma integral ocupa o professor no horario real", () => {
+  const mapa = calcularMapaIntegral(integral, outros);
+  const turnoDaTurma = new Map<number, string | null>([[10, "matutino"], [99, "integral"]]);
+
+  it("posicaoReal: integral vira manha ou tarde; turma comum fica igual; turma desconhecida, null", () => {
+    expect(posicaoReal(99, 5, turnoDaTurma, mapa)).toEqual({ turno: "matutino", numeroAula: 5 });
+    expect(posicaoReal(99, 7, turnoDaTurma, mapa)).toEqual({ turno: "vespertino", numeroAula: 1 });
+    expect(posicaoReal(10, 3, turnoDaTurma, mapa)).toEqual({ turno: "matutino", numeroAula: 3 });
+    expect(posicaoReal(12345, 3, turnoDaTurma, mapa)).toBeNull();
+  });
+
+  it("a HA nao vai para o horario em que o professor da aula na integral", () => {
+    // ter: aula 1 e 6 na turma da manha, aula 5 na integral (1ME DOC); HA movel na seg 6
+    const aulas = [{ turmaId: 10, d: 1, a: 1 }, { turmaId: 10, d: 1, a: 6 }, { turmaId: 99, d: 1, a: 5 }, { turmaId: 10, d: 0, a: 1 }];
+    const pos = aulas.flatMap((x) => {
+      const r = posicaoReal(x.turmaId, x.a, turnoDaTurma, mapa);
+      return r ? [{ professorId: 1, turno: r.turno, diaSemana: x.d, numeroAula: r.numeroAula }] : [];
+    });
+    const ha: DispLinha = { professorId: 1, turno: "matutino", diaSemana: 0, horarioSlot: 6, disponivel: true, horaAtividadeObrigatoria: true, motivo: "Importado do sistema anterior 05-09/10 (HA)" };
+    const movs = reposicionarHAMovel({ aulas: pos, disp: [ha], slotsLetivos: new Map([["matutino", [1, 2, 3, 4, 5, 6]]]), turnos: ["matutino"], professores: [1] });
+    expect(movs.every((m) => !(m.diaSemana === 1 && m.horarioSlot === 5))).toBe(true);
   });
 });

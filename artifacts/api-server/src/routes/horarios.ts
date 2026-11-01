@@ -41,7 +41,7 @@ import { ehBloqueioParaMotor } from "../lib/bloqueio-real"; // [HA-FIXA]
 import { bloqueiosIntervaloEntreTurnos } from "../lib/intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 import { aulasFixasTable } from "@workspace/db"; // [AULA-FIXA-CADASTRO]
 import { validarCapacidadeProfessores, calcularCotaHaPorTurno, capacidadeDoProfessor } from "../lib/capacidade-professor";
-import { carregarMapaIntegral, slotReal, TURNO_INTEGRAL, carregarAulasIntegraisNoTurno, mapaIntegralDosSlots } from "../lib/turno-integral"; // [TURNO-INTEGRAL] [INTEGRAL-NO-MOTOR]
+import { carregarMapaIntegral, slotReal, TURNO_INTEGRAL, carregarAulasIntegraisNoTurno, mapaIntegralDosSlots, posicaoReal } from "../lib/turno-integral"; // [TURNO-INTEGRAL] [INTEGRAL-NO-MOTOR]
 import { diagnosticarGeracao, diagnosticarViolacoesPromocao } from "../lib/diagnostico-geracao"; // [DIAGNOSTICO-GERACAO]
 import { tempoDoMotor, TEMPO_TOTAL_PADRAO_S, TEMPO_MINIMO_CHAMADA_S } from "../lib/tempo-geracao"; // [TEMPO-TOTAL]
 
@@ -891,6 +891,21 @@ router.get("/capacidade", async (req, res) => {
   }
 });
 
+// [INTEGRAL-NA-OCUPACAO] (01/11/2026) onde cada aula ocupa o professor de verdade (turma integral -> manha/tarde),
+// para a HA nunca ir para cima de aula da integral e para os turnos do experimento incluirem os reais.
+async function ocupacaoReal(escolaId: string) {
+  const [turmasEscola, slotsEscola] = await Promise.all([
+    db.select({ id: turmasTable.id, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
+    db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId)),
+  ]);
+  const turnoDaTurma = new Map(turmasEscola.map((t) => [t.id, t.turno]));
+  const mapa = mapaIntegralDosSlots(slotsEscola);
+  const posicao = (h: { turmaId: number; numeroAula: number }) => posicaoReal(h.turmaId, h.numeroAula, turnoDaTurma, mapa);
+  const turnosDe = (rows: Array<{ turmaId: number; numeroAula: number }>) =>
+    [...new Set(rows.map((r) => posicao(r)?.turno).filter((t): t is string => !!t && t !== TURNO_INTEGRAL))];
+  return { turnoDaTurma, slotsEscola, posicao, turnosDe };
+}
+
 // [CONTA-NA-HORA] (01/11/2026) a conta de um professor, turno a turno, para a tela de Disponibilidade
 router.get("/capacidade/professor/:id", async (req, res) => {
   const escolaId = getEscolaId(req);
@@ -1118,16 +1133,14 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
   let haMantida = haMantidaHoje;
   let haReposicionadas = 0;
   try {
-    const turnosExp = [...new Set(turmasProm.map((t) => t.turno).filter((t): t is string => !!t))];
+    const { slotsEscola, posicao, turnosDe } = await ocupacaoReal(escolaId); // [INTEGRAL-NA-OCUPACAO]
+    const turnosExp = turnosDe(expSlots);
     if (profsMantem.length && turnosExp.length) {
-      const turmasEscola = await db.select({ id: turmasTable.id, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
-      const turnoDaTurma = new Map(turmasEscola.map((t) => [t.id, t.turno]));
       const aulasDepois: AulaPos[] = [...oficialAntes.filter((h) => !paresSet.has(`${h.turmaId}|${h.professorId}`)), ...expSlots].flatMap((h) => {
-        const t = turnoDaTurma.get(h.turmaId);
-        return t ? [{ professorId: h.professorId, turno: t, diaSemana: h.diaSemana, numeroAula: h.numeroAula }] : [];
+        const r = posicao(h);
+        return r ? [{ professorId: h.professorId, turno: r.turno, diaSemana: h.diaSemana, numeroAula: r.numeroAula }] : [];
       });
       const dispMantem = await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, profsMantem));
-      const slotsEscola = await db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId));
       const movs = reposicionarHAMovel({ aulas: aulasDepois, disp: dispMantem, slotsLetivos: slotsLetivosPorTurno(slotsEscola), turnos: turnosExp, professores: profsMantem });
       const novo = new Map(movs.map((m) => [m.linha.id, m]));
       haMantida = haMantidaHoje.map((h) => { const m = novo.get(h.id); return m ? { ...h, diaSemana: m.diaSemana, horarioSlot: m.horarioSlot } : h; });
@@ -1181,18 +1194,16 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
   // por isso, e o recalculo mantinha a HA importada onde estava, deixando janelas que uma HA movida fecharia.
   try {
     const mudaram = [...profsMudaram];
-    const turnosExp = [...new Set(turmasProm.map((t) => t.turno).filter((t): t is string => !!t))];
+    const { slotsEscola, posicao, turnosDe } = await ocupacaoReal(escolaId); // [INTEGRAL-NA-OCUPACAO]
+    const turnosExp = turnosDe(expSlots);
     if (mudaram.length && turnosExp.length && !avisoHA) {
-      const turmasEscola = await db.select({ id: turmasTable.id, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
-      const turnoDaTurma = new Map(turmasEscola.map((t) => [t.id, t.turno]));
       const oficialDepois = await db.select().from(horariosTable)
         .where(and(eq(horariosTable.escolaId, escolaId), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`));
       const aulasDepois: AulaPos[] = oficialDepois.flatMap((h) => {
-        const t = turnoDaTurma.get(h.turmaId);
-        return t && h.professorId != null ? [{ professorId: h.professorId, turno: t, diaSemana: h.diaSemana, numeroAula: h.numeroAula }] : [];
+        const r = posicao(h);
+        return r && h.professorId != null ? [{ professorId: h.professorId, turno: r.turno, diaSemana: h.diaSemana, numeroAula: r.numeroAula }] : [];
       });
       const dispMudaram = await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, mudaram));
-      const slotsEscola = await db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId));
       const movs = reposicionarHAMovel({ aulas: aulasDepois, disp: dispMudaram, slotsLetivos: slotsLetivosPorTurno(slotsEscola), turnos: turnosExp, professores: mudaram });
       if (movs.length) {
         await db.transaction(async (tx) => {
@@ -2346,14 +2357,12 @@ async function runCpsatGeneracaoUnica(
     try {
       if (haHoje.length) {
         const profsT = [...professorIdsUsados];
-        const turmasEsc = await db.select({ id: turmasTable.id, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
-        const turnoT = new Map(turmasEsc.map((t) => [t.id, t.turno]));
+        const { slotsEscola: slotsEsc, posicao } = await ocupacaoReal(escolaId); // [INTEGRAL-NA-OCUPACAO]
         const aulasProfs = await db.select().from(horariosTable).where(and(
           eq(horariosTable.escolaId, escolaId), inArray(horariosTable.professorId, profsT), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`));
         const dispProfs = await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, profsT));
-        const slotsEsc = await db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId));
         const movs = reposicionarHAMovel({
-          aulas: aulasProfs.flatMap((h) => { const t = turnoT.get(h.turmaId); return t ? [{ professorId: h.professorId, turno: t, diaSemana: h.diaSemana, numeroAula: h.numeroAula }] : []; }),
+          aulas: aulasProfs.flatMap((h) => { const r = posicao(h); return r ? [{ professorId: h.professorId, turno: r.turno, diaSemana: h.diaSemana, numeroAula: r.numeroAula }] : []; }),
           disp: dispProfs, slotsLetivos: slotsLetivosPorTurno(slotsEsc), turnos: [turno], professores: profsT,
         });
         novoLugarHA = new Map(movs.map((m) => [m.linha.id, { diaSemana: m.diaSemana, horarioSlot: m.horarioSlot }]));

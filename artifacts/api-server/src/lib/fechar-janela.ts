@@ -11,11 +11,12 @@
 //  - não cria "pausa entre turnos" (última da manhã + 1ª da tarde no mesmo dia).
 // Primeiro um filtro rápido (aulas + HA que não se move); as melhores vão para a simulação completa
 // (mesma conta do botão "Simular promoção", com a HA recalculada) e só ficam as que baixam as janelas.
-import { db, horariosTable, horariosExperimentaisTable, turmasTable, disponibilidadeTable, professoresTable, disciplinasTable } from "@workspace/db";
+import { db, horariosTable, horariosExperimentaisTable, turmasTable, disponibilidadeTable, professoresTable, disciplinasTable, horarioSlotsTable } from "@workspace/db";
 import { and, eq, inArray } from "drizzle-orm";
 import { ehHAMovel } from "./ha-contraturno";
 import { limitesLetivosPorTurno } from "./intervalo-entre-turnos";
 import { simularPromocao } from "./simular-promocao";
+import { mapaIntegralDosSlots, posicaoReal, TURNO_INTEGRAL } from "./turno-integral"; // [INTEGRAL-NA-OCUPACAO]
 
 const DIAS = ["Seg", "Ter", "Qua", "Qui", "Sex"];
 const RE_ATIVIDADE = /\(ocupado:\s*[^)]+\)/;
@@ -61,9 +62,17 @@ export async function opcoesFecharJanela(
   // grade como fica depois de promover (mesma regra do promover), só o turno pedido
   const pares = new Set(exp.map((e) => `${e.turmaId}|${e.professorId}`));
   type Aula = { id: number | null; professorId: number; turmaId: number; disciplinaId: number; dia: number; aula: number; turno: string };
+  // [INTEGRAL-NA-OCUPACAO] (01/11/2026) aula da turma integral ocupa o professor no turno e na aula REAIS (manha/tarde).
+  // Aqui ela fica fixa (id null): mover exigiria a numeracao do integral, e a troca so mexe no turno pedido.
+  const mapaInt = mapaIntegralDosSlots(await db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId)));
+  const naPosicaoReal = (id: number | null, h: { professorId: number; turmaId: number; disciplinaId: number; diaSemana: number; numeroAula: number }): Aula => {
+    const r = posicaoReal(h.turmaId, h.numeroAula, turnoDe, mapaInt);
+    const integral = turnoDe.get(h.turmaId) === TURNO_INTEGRAL;
+    return { id: integral ? null : id, professorId: h.professorId, turmaId: h.turmaId, disciplinaId: h.disciplinaId, dia: h.diaSemana, aula: r?.numeroAula ?? h.numeroAula, turno: r?.turno ?? "" };
+  };
   const aulasTodas: Aula[] = [
-    ...oficial.filter((h) => !pares.has(`${h.turmaId}|${h.professorId}`)).map((h) => ({ id: null, professorId: h.professorId, turmaId: h.turmaId, disciplinaId: h.disciplinaId, dia: h.diaSemana, aula: h.numeroAula, turno: turnoDe.get(h.turmaId) ?? "" })),
-    ...exp.map((e) => ({ id: e.id, professorId: e.professorId, turmaId: e.turmaId, disciplinaId: e.disciplinaId, dia: e.diaSemana, aula: e.numeroAula, turno: turnoDe.get(e.turmaId) ?? "" })),
+    ...oficial.filter((h) => !pares.has(`${h.turmaId}|${h.professorId}`)).map((h) => naPosicaoReal(null, h)),
+    ...exp.map((e) => naPosicaoReal(e.id, e)),
   ];
   const aulasTurno = aulasTodas.filter((a) => a.turno === turno);
 
