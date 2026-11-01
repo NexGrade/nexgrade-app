@@ -2,6 +2,7 @@ import { Router, type Request } from "express";
 import { db } from "@workspace/db";
 import { escolasTable, asaasWebhookEventosTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { limparCacheSituacao } from "../lib/situacao-escola"; // [TRAVA-AVALIACAO]
 
 // RF-BILLING-ASAAS: recebe eventos de COBRANÇA do Asaas (não existe
 // webhook nativo de assinatura -- ver eventos-para-assinaturas na doc
@@ -95,6 +96,7 @@ router.post("/", async (req: Request, res) => {
               .set({ planoAtivo: true, asaasStatusAssinatura: "em_dia", updatedAt: new Date() })
               .where(eq(escolasTable.id, escola.id));
             console.log(`Escola ${escola.id}: cobrança confirmada -- planoAtivo=true.`);
+            limparCacheSituacao(escola.id); // [TRAVA-AVALIACAO] pagamento libera na hora
             break;
 
           // Cobrança vencida sem pagamento -- não desativa
@@ -115,6 +117,7 @@ router.post("/", async (req: Request, res) => {
               .set({ planoAtivo: false, asaasStatusAssinatura: "cancelada", updatedAt: new Date() })
               .where(eq(escolasTable.id, escola.id));
             console.log(`Escola ${escola.id}: cobrança removida -- planoAtivo=false.`);
+            limparCacheSituacao(escola.id); // [TRAVA-AVALIACAO]
             break;
 
           default:

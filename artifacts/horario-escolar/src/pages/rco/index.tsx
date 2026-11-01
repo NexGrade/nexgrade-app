@@ -97,7 +97,7 @@ export default function ExportarRcoPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2"><BarChart3 className="w-6 h-6" /> Exportar para o RCO</h1>
-        <p className="text-muted-foreground text-sm">Arquivo XML da grade para importar no RCO, por turno. Antes, confira os códigos em Códigos do RCO.</p>
+        <p className="text-muted-foreground text-sm">Leve a grade do NexGrade para o RCO, um turno de cada vez. Antes, confira se os códigos estão completos em Códigos do RCO.</p>{/* [RCO-TEXTO-SIMPLES] (01/11/2026) sem termos tecnicos */}
         <div className="flex flex-wrap gap-2 mt-3">
           <Button asChild size="sm" variant="outline"><Link href="/cursos?tab=codigos-rco"><Hash className="w-4 h-4 mr-1.5" />Códigos do RCO</Link></Button>
           <Button asChild size="sm" variant="outline"><Link href="/arquivo-rco"><FileUp className="w-4 h-4 mr-1.5" />Arquivo do RCO</Link></Button>
@@ -108,12 +108,12 @@ export default function ExportarRcoPage() {
         <Card className="lg:col-span-2 border-2 border-[#1565C0] bg-[#1565C0]/5 shadow-md">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <BarChart3 className="w-4 h-4" /> Exportar para o RCO (XML)
+              <BarChart3 className="w-4 h-4" /> Baixar o arquivo da grade para o RCO
             </CardTitle>
-            <CardDescription>Gera o arquivo XML da grade no formato que o RCO importa (SEED-PR). Antes de exportar, confira se o Código INEP da escola (em Dados da Escola) e os códigos SERE das turmas estão cadastrados. O envio ao RCO é feito pela escola, manualmente.</CardDescription>
+            <CardDescription>O NexGrade monta um arquivo com a grade do turno escolhido, pronto para o RCO. Depois, no RCO, abra <strong>Grade de Horário</strong>, escolha o turno e use <strong>Incluir via Arquivo</strong> com esse arquivo. Se faltar algum código da escola ou das turmas, o NexGrade avisa e mostra onde corrigir.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-end gap-4">
+            <div className="flex flex-wrap items-end gap-4">
               <div className="space-y-1.5 w-40">
                 <Label>Estado</Label>
                 <Select value={seedEstado} onValueChange={(v) => { setSeedEstado(v); setSeedAssinc(false); }}>
@@ -129,9 +129,9 @@ export default function ExportarRcoPage() {
                   <Select value={seedTurno} onValueChange={setSeedTurno}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="matutino">Matutino</SelectItem>
-                      <SelectItem value="vespertino">Vespertino</SelectItem>
-                      <SelectItem value="noturno">Noturno</SelectItem>
+                      <SelectItem value="matutino">Manhã</SelectItem>
+                      <SelectItem value="vespertino">Tarde</SelectItem>
+                      <SelectItem value="noturno">Noite</SelectItem>
                       <SelectItem value="integral">Integral</SelectItem>
                     </SelectContent>
                   </Select>
@@ -139,53 +139,55 @@ export default function ExportarRcoPage() {
               )}
               <Button onClick={handleSeedDownload} disabled={loadingSeed}>
                 <Download className="w-4 h-4 mr-2" />
-                {loadingSeed ? "Gerando..." : `Baixar XML para o RCO (${seedEstado})`}
+                {loadingSeed ? "Gerando..." : "Baixar o arquivo da grade"}
               </Button>
-              {seedEstado === "PR" && (
-                <Button variant="outline" onClick={() => handleScriptRco(false)} disabled={loadingScript}>
-                  <Download className="w-4 h-4 mr-2" />
-                  {loadingScript ? "Gerando..." : "Script para o Console (F12)"}
-                </Button>
-              )}
             </div>
             {seedEstado === "PR" && turmasScript && (
               <div className={`mt-4 rounded-md border p-3 text-sm ${turmasScript.turmas.length ? "border-amber-300 bg-amber-50 text-amber-900" : "border-emerald-200 bg-emerald-50 text-emerald-900"}`}>
                 {turmasScript.turmas.length === 0 ? (
-                  <p>Neste turno nenhuma turma tem trio, híbrida, assíncrona junto com outra aula ou disciplinas com o mesmo código: <strong>só o XML</strong> já grava tudo certo no RCO.</p>
+                  <p>Neste turno o arquivo já leva <strong>tudo certo</strong> para o RCO: nenhuma turma tem duas disciplinas no mesmo horário.</p>
                 ) : (
                   <div className="space-y-2">
                     <p>
-                      <strong>{turmasScript.turmas.length} de {turmasScript.totalTurmasRco} turma(s) do RCO</strong> têm mais de uma disciplina no mesmo horário — trio, híbrida ou assíncrona junto com a aula presencial (o XML grava só uma).
-                      {" "}O jeito mais fácil é o <strong>atalho do RCO</strong> (abaixo): ele grava todas as turmas do turno, sem XML.
-                      Ou, nesta ordem: <strong>1)</strong> XML com todas as turmas (Incluir via Arquivo no RCO); <strong>2)</strong> script só destas turmas.
+                      <strong>{turmasScript.turmas.length} de {turmasScript.totalTurmasRco} turma(s)</strong> têm duas ou mais disciplinas no mesmo horário (aulas do trio, ou aula assíncrona junto com a presencial). O arquivo leva só uma disciplina por horário.
+                      {" "}Para gravar essas turmas certinho, use o atalho <strong>Gravar no RCO</strong>, logo abaixo: ele grava todas as turmas do turno, sem precisar do arquivo.
                     </p>
                     <ul className="list-disc list-inside space-y-0.5">
                       {turmasScript.turmas.map((t) => <li key={t.codTurma}><strong>{t.turma}</strong>: {t.motivos.join("; ")}</li>)}
                     </ul>
-                    <Button size="sm" variant="outline" onClick={() => handleScriptRco(true)} disabled={loadingScript} className="gap-1.5">
-                      <Download className="w-3.5 h-3.5" /> {loadingScript ? "Gerando..." : `Script (F12) só destas ${turmasScript.turmas.length} turma(s)`}
-                    </Button>
                   </div>
                 )}
               </div>
             )}
             {seedEstado === "PR" && (
+              // [RCO-TEXTO-SIMPLES] o que e do suporte fica recolhido (decisao de 28/10: F12 e com o suporte NexGrade)
+              <details className="mt-4 rounded-md border bg-background/60 p-3">
+                <summary className="cursor-pointer text-sm font-medium text-muted-foreground">Opções do suporte NexGrade</summary>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button size="sm" variant="outline" onClick={() => handleScriptRco(false)} disabled={loadingScript} className="gap-1.5">
+                    <Download className="w-3.5 h-3.5" /> {loadingScript ? "Gerando..." : "Script para o Console (F12)"}
+                  </Button>
+                  {turmasScript && turmasScript.turmas.length > 0 && (
+                    <Button size="sm" variant="outline" onClick={() => handleScriptRco(true)} disabled={loadingScript} className="gap-1.5">
+                      <Download className="w-3.5 h-3.5" /> {loadingScript ? "Gerando..." : `Script (F12) só destas ${turmasScript.turmas.length} turma(s)`}
+                    </Button>
+                  )}
+                </div>
               <p className="mt-3 text-xs text-muted-foreground">
                 <strong>Script para o Console (F12):</strong> no RCO, abra Grade de Horário, escolha o Período Letivo e o Turno, aperte F12, aba Console, cole o conteúdo do script e aperte Enter.
                 Ele mostra a prévia de cada turma e só grava depois que você confirmar. Leva as assíncronas na mesma célula da aula presencial, como o RCO registra.
-                O XML regrava a turma inteira: se usar os dois, o script vem <strong>depois</strong>.
+                O arquivo regrava a turma inteira: se usar os dois, o script vem <strong>depois</strong>.
               </p>
-            )}
-            {seedEstado === "PR" && (
               <div className="mt-4 flex items-start gap-2.5">
                 <Checkbox id="seed-assinc" checked={seedAssinc} onCheckedChange={(c) => setSeedAssinc(c === true)} className="mt-0.5" />
                 <div className="space-y-0.5">
                   <Label htmlFor="seed-assinc" className="cursor-pointer">Incluir aulas assíncronas</Label>
                   <p className="text-xs text-muted-foreground">
-                    Desmarcado por padrão. A assíncrona divide o horário com uma aula presencial da turma, e o RCO guarda só uma disciplina por horário no arquivo (a presencial se perdia). As assíncronas vão para o RCO pelo script de gravação, junto com a presencial.
+                    Deixe desmarcado. No arquivo o RCO guarda só uma disciplina por horário, e a assíncrona apagaria a aula presencial do mesmo horário. As assíncronas vão para o RCO pelo atalho Gravar no RCO, junto com a presencial.
                   </p>
                 </div>
               </div>
+              </details>
             )}
             {seedErro && (
               <div className="mt-4 rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm">
@@ -262,10 +264,10 @@ function AtalhoRco() {
   return (
     <Card className="lg:col-span-2">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base"><Bookmark className="w-4 h-4" /> Atalho de gravação no RCO (sem F12)</CardTitle>
+        <CardTitle className="flex items-center gap-2 text-base"><Bookmark className="w-4 h-4" /> Ou grave direto no RCO com o atalho</CardTitle>
         <CardDescription>
-          Grava a grade de todas as turmas do turno direto no RCO, inclusive trio, híbrida e assíncronas, sem abrir o Console.
-          Ele mostra a prévia de cada turma e só grava depois que você confirmar.
+          Grava a grade de todas as turmas do turno direto no RCO, inclusive as aulas do trio e as assíncronas, sem precisar do arquivo.
+          Antes de gravar, ele mostra como vai ficar cada turma e só grava depois que você confirmar.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 text-sm">

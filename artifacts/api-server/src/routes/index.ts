@@ -37,12 +37,23 @@ import pedagogiaRouter from "./pedagogia"; // [PRESENCA-PEDAGOGIA]
 import { exigirAdminParaAlterar } from "../lib/permissao"; // [PERMISSAO-PAPEL]
 import { carregarAcesso } from "../lib/acesso"; // [ACESSOS-ESCOLA]
 import euRouter from "./eu"; // [ACESSOS-ESCOLA]
+import { exigirEscolaLiberada, situacaoAcessoDaEscola } from "../lib/situacao-escola"; // [TRAVA-AVALIACAO]
+import { isMaster } from "../middlewares/requireMaster"; // [TRAVA-AVALIACAO]
+import { getEscolaId } from "../lib/escola-id"; // [TRAVA-AVALIACAO]
 
 const router: IRouter = Router();
 
 // [ACESSOS-ESCOLA] com ACESSOS_PELO_BANCO=1, descobre escola e cargo no nosso banco
 // (antes do filtro de permissao, que passa a usar o cargo); desligado, nao faz nada
 router.use(carregarAcesso);
+
+// [TRAVA-AVALIACAO] (01/11/2026) fim dos 30 dias de cortesia sem assinatura (ou escola suspensa):
+// a escola fica bloqueada (403 ESCOLA_BLOQUEADA); ver lib/situacao-escola.ts
+router.get("/situacao-acesso", async (req, res) => {
+  const s = await situacaoAcessoDaEscola(getEscolaId(req));
+  res.json({ ...s, master: isMaster(req) });
+});
+router.use(exigirEscolaLiberada);
 
 // [PERMISSAO-PAPEL] alteracoes so para a coordenacao (org:admin); ver lib/permissao.ts
 router.use(exigirAdminParaAlterar);

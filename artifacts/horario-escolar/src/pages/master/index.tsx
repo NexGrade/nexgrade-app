@@ -354,7 +354,14 @@ function EscolasTable() {
         const ex = e as typeof e & {
           emailContato?: string | null; telefoneContato?: string | null; isenta?: boolean;
           asaasStatusAssinatura?: string | null; asaasProximoVencimento?: string | null; asaasSubscriptionId?: string | null;
+          trialEndsAt?: string | null;
         };
+        // [TRAVA-AVALIACAO] mesma regra do servidor (lib/situacao-escola.ts): sem isencao e sem assinatura
+        // em dia, a escola fica bloqueada quando acaba a avaliacao
+        const assinaturaEmDia = !!ex.asaasSubscriptionId && (ex.asaasStatusAssinatura === "em_dia" || ex.asaasStatusAssinatura === "atrasada");
+        const fimAvaliacao = ex.trialEndsAt ? new Date(ex.trialEndsAt) : null;
+        const avaliacaoEncerrada = !ex.isenta && e.planoAtivo && !assinaturaEmDia && !!fimAvaliacao && fimAvaliacao.getTime() <= Date.now();
+        const emAvaliacao = !ex.isenta && e.planoAtivo && !assinaturaEmDia && !!fimAvaliacao && fimAvaliacao.getTime() > Date.now();
         const badge = badgeAssinatura(ex.asaasStatusAssinatura);
         // [ISENTA-ASAAS] isenta so tira o bloqueio no NexGrade; uma assinatura que ainda existe
         // no Asaas continua cobrando. Cancelada/sem assinatura nao tem vencimento nem botao.
@@ -416,6 +423,8 @@ function EscolasTable() {
                     {e.planoAtivo ? "Ativa" : "Suspensa"}
                   </Badge>
                   {ex.isenta && <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-800">Isenta de cobrança</Badge>}
+                  {avaliacaoEncerrada && <Badge variant="destructive" title="Sem assinatura e sem isenção: a escola vê a tela de bloqueio">Bloqueada: avaliação encerrada em {fimAvaliacao!.toLocaleDateString("pt-BR")}</Badge>}
+                  {emAvaliacao && <Badge variant="outline" className="border-sky-300 bg-sky-50 text-sky-800">Avaliação até {fimAvaliacao!.toLocaleDateString("pt-BR")}</Badge>}
                   <Badge className={"className" in badge ? badge.className : undefined} variant={"variant" in badge ? badge.variant : undefined}>
                     {badge.label}
                   </Badge>

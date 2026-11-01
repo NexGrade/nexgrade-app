@@ -10,6 +10,7 @@ import { z } from "zod";
 import { isMaster, requireMaster } from "../middlewares/requireMaster";
 import { registrarAuditoria } from "../lib/audit";
 import { cancelarSubscription } from "../lib/asaas";
+import { limparCacheSituacao } from "../lib/situacao-escola"; // [TRAVA-AVALIACAO]
 import novaEscolaRouter from "./master-nova-escola"; // [NOVA-ESCOLA-MASTER]
 
 // RF-MASTER-01 a RF-MASTER-03: cadastro/ativação de escolas, gestão de
@@ -98,6 +99,7 @@ router.patch("/escolas/:id", async (req, res) => {
   }
 
   const [escola] = await db.update(escolasTable).set(parsed.data).where(eq(escolasTable.id, id)).returning();
+  limparCacheSituacao(id); // [TRAVA-AVALIACAO] isencao, plano ou avaliacao valem na hora
 
   // Auditoria fica registrada sob a própria escola afetada — visível
   // tanto pro Master quanto pela tela de auditoria da escola.
@@ -138,6 +140,7 @@ router.post("/escolas/:id/cancelar-assinatura-asaas", async (req, res) => {
     .set({ planoAtivo: false, asaasStatusAssinatura: "cancelada", updatedAt: new Date() })
     .where(eq(escolasTable.id, id))
     .returning();
+  limparCacheSituacao(id); // [TRAVA-AVALIACAO]
 
   await registrarAuditoria({
     req, escolaId: id, entidade: "escolas", entidadeId: 0,
