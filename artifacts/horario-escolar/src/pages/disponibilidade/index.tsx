@@ -354,14 +354,23 @@ export default function DisponibilidadePage() {
     });
   };
 
+  // [LIBERAR-MANTEM-HA] (01/11/2026) "Liberar" tira bloqueio e atividade, mas a HA fica (como no COORD do dia).
+  // Antes liberava tudo: um "Liberar" + Salvar apagou as 7 HA de um professor da Demonstracao sem aviso.
   const liberarDia = (dia: number) => {
-    setMatriz((prev) => {
-      const next = { ...prev };
-      slotsOrdenados.forEach((slot) => {
-        next[cellKey(dia, slot.numeroAula)] = "disponivel";
-      });
-      return next;
+    const pulados: string[] = [];
+    const liberar: string[] = [];
+    slotsOrdenados.forEach((slot) => {
+      const key = cellKey(dia, slot.numeroAula);
+      if (matriz[key] === "ha_obrigatoria" || matriz[key] === "ha_fixa") pulados.push(`${slot.numeroAula}ª`);
+      else liberar.push(key);
     });
+    setMatriz((prev) => { const next = { ...prev }; for (const k of liberar) next[k] = "disponivel"; return next; });
+    if (pulados.length) {
+      toast({
+        title: `${DIAS[dia]}: bloqueios liberados; a HA ficou`,
+        description: `Continuam HA: ${pulados.join(", ")}. Para tirar uma HA, clique no horário dela. Clique em Salvar para gravar.`,
+      });
+    }
   };
 
   const resetar = () => { setMatriz({ ...original }); setRotulos({ ...rotulosOriginais }); };
@@ -395,10 +404,13 @@ export default function DisponibilidadePage() {
         // manteria a marca antiga no banco (o motivo omitido nao e alterado).
         // [ATIVIDADE-FORA-DE-SALA] atividade grava o rotulo; ao sair de uma atividade o
         // motivo e limpo explicitamente (senao o "(ocupado: X)" antigo ficaria no banco).
+        // [LIVRE-SEM-MOTIVO] (01/11/2026) horario que vira livre fica sem texto, e bloqueio novo ganha texto proprio:
+        // antes o texto antigo ficava ("livre" escrito "Importado do sistema anterior (HA)"), e so a atividade era limpa.
         motivo: estadoAtual === "ha_fixa" ? "HA fixa (definida manualmente)" : estadoAtual === "ha_obrigatoria" ? "HA manual (definida na tela)"
           : estadoAtual === "atividade" ? `Atividade fora de sala (ocupado: ${rotulos[key]})`
-          : estadoOriginal === "atividade" ? (estadoAtual === "bloqueado" ? "Bloqueio (definido na tela)" : "")
-          : undefined,
+          : estadoAtual === "disponivel" ? ""
+          : estadoOriginal === "bloqueado" ? undefined // continua bloqueio: mantem o texto dele
+          : "Bloqueio (definido na tela)",
       });
     });
 
