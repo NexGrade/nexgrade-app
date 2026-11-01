@@ -3,12 +3,12 @@ import { Link, useLocation } from "wouter";
 import { UserButton } from "@clerk/react";
 import { useEhGestorReservas, useEhPedagogia } from "@/lib/papeis"; // [PAPEL-RESERVAS] [GESTOR-METADATA] [PEDAGOGIA]
 import { useQueryClient } from "@tanstack/react-query";
-import { useMasterWhoami, useListComunicados, useMarcarComunicadoLido, getListComunicadosQueryKey } from "@workspace/api-client-react";
+import { useListComunicados, useMarcarComunicadoLido, getListComunicadosQueryKey } from "@workspace/api-client-react";
 import { NotificationBell } from "@/components/notification-bell";
 import {
   LayoutDashboard, Users, BookOpen, GraduationCap, Calendar, CalendarDays,
   Building2, FileText, Bell, Shield, History,
-  Settings, Download, Printer, Sparkles, Upload, CreditCard, Library, ShieldCheck, Clock,
+  Settings, Download, Printer, Sparkles, Upload, CreditCard, Library, Clock,
   SlidersHorizontal, Landmark, DoorOpen, Hash, CalendarClock,
   FileUp, // [ARQUIVO-RCO]
   NotebookPen, BarChart3, // [MENU-UNICO]
@@ -20,13 +20,13 @@ import { useSituacaoArquivoRco } from "@/lib/arquivo-rco"; // [ARQUIVO-RCO]
 const navGroups = [
   // [FASE-B] Menu reorganizado na ordem em que a escola trabalha (28/09/2026).
   // [MENU-ORDEM] (23/10/2026) Cadastro separado da montagem da grade; grupos
-  // renomeados (Inicio, Relatorios, RCO, Configuracoes). O filtro do gestor de
-  // reservas (mais abaixo) usa o nome "1. Cadastro da escola".
+  // renomeados (Inicio, Relatorios, RCO, Configuracoes).
+  // [MENU-ORGANIZADO] (31/10/2026) Horario na montagem da grade, RCO como passo 3
+  // (codigos primeiro), Exportar planilhas em Relatorios, Painel Master so no topo.
   {
     label: "Início",
     items: [
       { href: "/dashboard", label: "Visão Geral", icon: LayoutDashboard },
-      { href: "/horario", label: "Horário", icon: Calendar },
       { href: "/assistente", label: "Assistente de IA", icon: Sparkles, badge: "IA" },
     ],
   },
@@ -49,6 +49,16 @@ const navGroups = [
       // Cada escola configura suas proprias regras (maximo de aulas geminadas,
       // limites por disciplina/turma e por professor) que o gerador usa.
       { href: "/regras-distribuicao", label: "Regras de Distribuição", icon: SlidersHorizontal },
+      { href: "/horario", label: "Horário", icon: Calendar }, // [MENU-ORGANIZADO] gerar e ajustar a grade
+    ],
+  },
+  {
+    // [MENU-ORGANIZADO] codigos primeiro: sem eles a exportacao fica incompleta
+    label: "3. Enviar ao RCO",
+    items: [
+      { href: "/codigos-rco", label: "Códigos do RCO", icon: Hash }, // [CODIGOS-RCO-TELA]
+      { href: "/rco", label: "Exportar para o RCO", icon: BarChart3 }, // [MENU-UNICO] tela propria
+      { href: "/arquivo-rco", label: "Arquivo do RCO", icon: FileUp }, // [ARQUIVO-RCO]
     ],
   },
   {
@@ -67,14 +77,7 @@ const navGroups = [
     items: [
       { href: "/imprimir-grade", label: "Imprimir Grade", icon: Printer }, // [IMPRIMIR-GRADE] todos os PDFs da grade
       { href: "/relatorios-pedagogicos", label: "Relatórios Pedagógicos", icon: NotebookPen }, // [MENU-UNICO] ponto e carga horaria
-    ],
-  },
-  {
-    label: "RCO",
-    items: [
-      { href: "/rco", label: "Exportar para o RCO", icon: BarChart3 }, // [MENU-UNICO] tela propria
-      { href: "/codigos-rco", label: "Códigos do RCO", icon: Hash }, // [CODIGOS-RCO-TELA]
-      { href: "/arquivo-rco", label: "Arquivo do RCO", icon: FileUp }, // [ARQUIVO-RCO]
+      { href: "/export", label: "Exportar planilhas", icon: Download }, // [MENU-UNICO] so CSV/JSON [MENU-ORGANIZADO]
     ],
   },
   {
@@ -83,7 +86,6 @@ const navGroups = [
       { href: "/escola", label: "Escola", icon: Landmark }, // [FASE-C1] dados, configuracoes e assinatura
       { href: "/usuarios", label: "Usuários", icon: Shield },
       { href: "/importar", label: "Importar planilhas", icon: Upload },
-      { href: "/export", label: "Exportar planilhas", icon: Download }, // [MENU-UNICO] so CSV/JSON
       { href: "/audit", label: "Histórico", icon: History },
       { href: "/virada-ano", label: "Virada do ano", icon: CalendarClock }, // [VIRADA-ANO]
     ],
@@ -118,6 +120,26 @@ const menuPedagogia = [
   },
 ];
 
+// [MENU-ORGANIZADO] (31/10/2026) menu do gestor de reservas: antes era um recorte do menu
+// completo, espalhado em tres secoes. As rotas liberadas continuam no EscolaGate (App.tsx).
+const menuGestorReservas = [
+  {
+    label: "Reservas",
+    items: [
+      { href: "/reservas", label: "Reservas", icon: DoorOpen },
+    ],
+  },
+  {
+    label: "Consulta",
+    items: [
+      { href: "/horario", label: "Horário", icon: Calendar }, // [CONSULTA-GESTOR]
+      { href: "/calendario", label: "Calendário", icon: CalendarDays }, // [CALENDARIO-GESTOR] so a aba do calendario letivo, somente leitura
+    ],
+  },
+];
+
+type GrupoMenu = { label: string; items: Array<{ href: string; label: string; icon: React.ComponentType<{ className?: string }>; badge?: string }> };
+
 function NotificationBellAdmin() {
   const queryClient = useQueryClient();
   const { data: notificacoes } = useListComunicados(undefined, {
@@ -136,29 +158,76 @@ function NotificationBellAdmin() {
   );
 }
 
+// [MENU-ORGANIZADO] (31/10/2026) o mesmo menu no computador e no celular
+function MenuLateral({ grupos, isActive, seloDoItem }: { grupos: GrupoMenu[]; isActive: (href: string) => boolean; seloDoItem: (href: string, badge?: string) => string | undefined }) {
+  return (
+    <nav className="flex-1 py-4 px-3 pb-6 space-y-5 overflow-y-auto">
+      {grupos.map((group) => (
+        <div key={group.label}>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-3 mb-1">
+            {group.label}
+          </p>
+          <div className="space-y-0.5">
+            {group.items.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  isActive(item.href)
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                )}
+              >
+                <item.icon className="w-4 h-4 shrink-0" />
+                <span className="flex-1">{item.label}</span>
+                {seloDoItem(item.href, item.badge) && (
+                  <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none",
+                    item.href === "/arquivo-rco" ? "bg-amber-100 text-amber-800" : "bg-[#42A5F5]/15 text-[#1565C0]")}>
+                    {seloDoItem(item.href, item.badge)}
+                  </span>
+                )}
+              </Link>
+            ))}
+          </div>
+        </div>
+      ))}
+      <div className="pt-4 mt-2 border-t border-border space-y-1">
+        <div className="flex items-center gap-3 px-3 py-1 rounded-md text-sm font-medium text-muted-foreground">
+          <NotificationBellAdmin />
+          <span className="flex-1 whitespace-nowrap">Notificações</span>
+        </div>
+        <div className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground">
+          <span className="w-6 h-6 shrink-0 flex items-center justify-center">
+            <UserButton
+              appearance={{
+                elements: {
+                  rootBox: "w-6 h-6",
+                  userButtonBox: "w-6 h-6",
+                  userButtonTrigger: "w-6 h-6",
+                  userButtonAvatarBox: "w-6 h-6",
+                },
+              }}
+            />
+          </span>
+          <span className="flex-1 whitespace-nowrap">Minha conta</span>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
-  // RF-MASTER: o link só aparece pra quem de fato é administrador da
-  // plataforma — a checagem real de acesso continua sendo feita no
-  // backend (requireMaster) e na rota (MasterGate em App.tsx); isto
-  // aqui só é para não poluir o menu de quem não precisa dele.
-  const { data: whoami } = useMasterWhoami();
+  // [MENU-ORGANIZADO] o Painel Master fica so no botao do topo (GlobalTopBar em App.tsx)
   const ehGestorMenu = useEhGestorReservas(); // [PAPEL-RESERVAS] [GESTOR-METADATA]
   const ehPedagogiaMenu = useEhPedagogia(); // [PEDAGOGIA]
 
-  const gruposCompletos = whoami?.isMaster
-    ? [...navGroups, { label: "Administração", items: [{ href: "/master", label: "Painel Master", icon: ShieldCheck }] }]
-    : navGroups;
-  // [PAPEL-RESERVAS] gestor de reservas ve so o item Reservas no menu
-  const grupos = ehPedagogiaMenu
+  const grupos: GrupoMenu[] = ehPedagogiaMenu
     ? menuPedagogia // [PEDAGOGIA] sem o menu completo
     : ehGestorMenu
-    ? navGroups
-        .map((g) => ({ ...g, label: g.label === "1. Cadastro da escola" ? "Consulta" : g.label, items: g.items
-          .filter((i) => i.href === "/horario" || i.href === "/reservas" || i.href === "/calendario") // [CONSULTA-GESTOR]
-          .map((i) => (i.href === "/calendario" ? { ...i, label: "Calendário" } : i)) })) // [CALENDARIO-GESTOR] so a aba do calendario letivo, somente leitura
-        .filter((g) => g.items.length > 0)
-    : gruposCompletos;
+    ? menuGestorReservas // [PAPEL-RESERVAS]
+    : navGroups;
 
   // [ARQUIVO-RCO] pedido em aberto da equipe NexGrade: o item do menu ganha o selo "Pedido"
   const { data: situacaoArquivoRco } = useSituacaoArquivoRco(!ehGestorMenu && !ehPedagogiaMenu);
@@ -183,59 +252,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="h-full flex w-full bg-background overflow-hidden">
       {/* [MENU-CELULAR] (28/10/2026) no computador o menu fica ao lado; no celular abre pelo botao do topo */}
       <aside className="hidden md:flex w-64 border-r border-border bg-card flex-col">
-        <nav className="flex-1 py-4 px-3 pb-6 space-y-5 overflow-y-auto">
-          {grupos.map((group) => (
-            <div key={group.label}>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-3 mb-1">
-                {group.label}
-              </p>
-              <div className="space-y-0.5">
-                {group.items.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                      isActive(item.href)
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                    )}
-                  >
-                    <item.icon className="w-4 h-4 shrink-0" />
-                    <span className="flex-1">{item.label}</span>
-                    {seloDoItem(item.href, "badge" in item ? (item.badge as string | undefined) : undefined) && (
-                      <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none",
-                        item.href === "/arquivo-rco" ? "bg-amber-100 text-amber-800" : "bg-[#42A5F5]/15 text-[#1565C0]")}>
-                        {seloDoItem(item.href, "badge" in item ? (item.badge as string | undefined) : undefined)}
-                      </span>
-                    )}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
-          <div className="pt-4 mt-2 border-t border-border space-y-1">
-            <div className="flex items-center gap-3 px-3 py-1 rounded-md text-sm font-medium text-muted-foreground">
-              <NotificationBellAdmin />
-              <span className="flex-1 whitespace-nowrap">Notificações</span>
-            </div>
-            <div className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground">
-              <span className="w-6 h-6 shrink-0 flex items-center justify-center">
-                <UserButton
-                  appearance={{
-                    elements: {
-                      rootBox: "w-6 h-6",
-                      userButtonBox: "w-6 h-6",
-                      userButtonTrigger: "w-6 h-6",
-                      userButtonAvatarBox: "w-6 h-6",
-                    },
-                  }}
-                />
-              </span>
-              <span className="flex-1 whitespace-nowrap">Minha conta</span>
-            </div>
-          </div>
-        </nav>
+        <MenuLateral grupos={grupos} isActive={isActive} seloDoItem={seloDoItem} />
       </aside>
       {menuAberto && (
         <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true">
@@ -245,59 +262,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <span className="font-semibold text-sm">Menu</span>
               <button type="button" className="p-2 -mr-2 rounded-md hover:bg-accent" onClick={() => setMenuAberto(false)} aria-label="Fechar menu"><X className="w-5 h-5" /></button>
             </div>
-        <nav className="flex-1 py-4 px-3 pb-6 space-y-5 overflow-y-auto">
-          {grupos.map((group) => (
-            <div key={group.label}>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-3 mb-1">
-                {group.label}
-              </p>
-              <div className="space-y-0.5">
-                {group.items.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                      isActive(item.href)
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                    )}
-                  >
-                    <item.icon className="w-4 h-4 shrink-0" />
-                    <span className="flex-1">{item.label}</span>
-                    {seloDoItem(item.href, "badge" in item ? (item.badge as string | undefined) : undefined) && (
-                      <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none",
-                        item.href === "/arquivo-rco" ? "bg-amber-100 text-amber-800" : "bg-[#42A5F5]/15 text-[#1565C0]")}>
-                        {seloDoItem(item.href, "badge" in item ? (item.badge as string | undefined) : undefined)}
-                      </span>
-                    )}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
-          <div className="pt-4 mt-2 border-t border-border space-y-1">
-            <div className="flex items-center gap-3 px-3 py-1 rounded-md text-sm font-medium text-muted-foreground">
-              <NotificationBellAdmin />
-              <span className="flex-1 whitespace-nowrap">Notificações</span>
-            </div>
-            <div className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground">
-              <span className="w-6 h-6 shrink-0 flex items-center justify-center">
-                <UserButton
-                  appearance={{
-                    elements: {
-                      rootBox: "w-6 h-6",
-                      userButtonBox: "w-6 h-6",
-                      userButtonTrigger: "w-6 h-6",
-                      userButtonAvatarBox: "w-6 h-6",
-                    },
-                  }}
-                />
-              </span>
-              <span className="flex-1 whitespace-nowrap">Minha conta</span>
-            </div>
-          </div>
-        </nav>
+        <MenuLateral grupos={grupos} isActive={isActive} seloDoItem={seloDoItem} />
           </aside>
         </div>
       )}
