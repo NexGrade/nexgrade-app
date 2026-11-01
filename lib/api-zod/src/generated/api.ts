@@ -831,10 +831,14 @@ export const DeleteHorarioExperimentalParams = zod.object({
 export const DeleteHorarioExperimentalResponse = zod.void()
 
 
+export const listSalasResponseTipoMax = 60;
+
+
+
 export const ListSalasResponseItem = zod.object({
   "id": zod.number(),
   "nome": zod.string(),
-  "tipo": zod.enum(['sala_aula', 'laboratorio', 'quadra', 'informatica', 'auditorio', 'biblioteca', 'sala_arte', 'outro']),
+  "tipo": zod.string().min(1).max(listSalasResponseTipoMax),
   "capacidade": zod.number(),
   "ativa": zod.boolean(),
   "observacoes": zod.string().nullish()
@@ -843,19 +847,25 @@ export const ListSalasResponse = zod.array(ListSalasResponseItem)
 
 
 
+export const createSalaBodyTipoMax = 60;
+
 
 
 export const CreateSalaBody = zod.object({
   "nome": zod.string().min(1),
-  "tipo": zod.enum(['sala_aula', 'laboratorio', 'quadra', 'informatica', 'auditorio', 'biblioteca', 'sala_arte', 'outro']).optional(),
+  "tipo": zod.string().min(1).max(createSalaBodyTipoMax).optional(),
   "capacidade": zod.number().optional(),
   "observacoes": zod.string().optional()
 })
 
+export const createSalaResponseTipoMax = 60;
+
+
+
 export const CreateSalaResponse = zod.object({
   "id": zod.number(),
   "nome": zod.string(),
-  "tipo": zod.enum(['sala_aula', 'laboratorio', 'quadra', 'informatica', 'auditorio', 'biblioteca', 'sala_arte', 'outro']),
+  "tipo": zod.string().min(1).max(createSalaResponseTipoMax),
   "capacidade": zod.number(),
   "ativa": zod.boolean(),
   "observacoes": zod.string().nullish()
@@ -874,10 +884,14 @@ export const UpdateSalaBody = zod.object({
   "observacoes": zod.string().optional()
 })
 
+export const updateSalaResponseTipoMax = 60;
+
+
+
 export const UpdateSalaResponse = zod.object({
   "id": zod.number(),
   "nome": zod.string(),
-  "tipo": zod.enum(['sala_aula', 'laboratorio', 'quadra', 'informatica', 'auditorio', 'biblioteca', 'sala_arte', 'outro']),
+  "tipo": zod.string().min(1).max(updateSalaResponseTipoMax),
   "capacidade": zod.number(),
   "ativa": zod.boolean(),
   "observacoes": zod.string().nullish()
@@ -904,6 +918,8 @@ export const listReservasResponseDiaSemanaMax = 4;
 
 export const listReservasResponsePrioridadeAplicadaMax = 5;
 
+export const listReservasResponseSalaTipoMax = 60;
+
 
 
 export const ListReservasResponseItem = zod.object({
@@ -921,7 +937,7 @@ export const ListReservasResponseItem = zod.object({
   "sala": zod.object({
   "id": zod.number(),
   "nome": zod.string(),
-  "tipo": zod.enum(['sala_aula', 'laboratorio', 'quadra', 'informatica', 'auditorio', 'biblioteca', 'sala_arte', 'outro']),
+  "tipo": zod.string().min(1).max(listReservasResponseSalaTipoMax),
   "capacidade": zod.number(),
   "ativa": zod.boolean(),
   "observacoes": zod.string().nullish()
@@ -964,6 +980,8 @@ export const createReservaResponseDiaSemanaMax = 4;
 
 export const createReservaResponsePrioridadeAplicadaMax = 5;
 
+export const createReservaResponseSalaTipoMax = 60;
+
 
 
 export const CreateReservaResponse = zod.object({
@@ -981,7 +999,7 @@ export const CreateReservaResponse = zod.object({
   "sala": zod.object({
   "id": zod.number(),
   "nome": zod.string(),
-  "tipo": zod.enum(['sala_aula', 'laboratorio', 'quadra', 'informatica', 'auditorio', 'biblioteca', 'sala_arte', 'outro']),
+  "tipo": zod.string().min(1).max(createReservaResponseSalaTipoMax),
   "capacidade": zod.number(),
   "ativa": zod.boolean(),
   "observacoes": zod.string().nullish()
@@ -1098,6 +1116,8 @@ export const updateReservaResponseDiaSemanaMax = 4;
 
 export const updateReservaResponsePrioridadeAplicadaMax = 5;
 
+export const updateReservaResponseSalaTipoMax = 60;
+
 
 
 export const UpdateReservaResponse = zod.object({
@@ -1115,7 +1135,7 @@ export const UpdateReservaResponse = zod.object({
   "sala": zod.object({
   "id": zod.number(),
   "nome": zod.string(),
-  "tipo": zod.enum(['sala_aula', 'laboratorio', 'quadra', 'informatica', 'auditorio', 'biblioteca', 'sala_arte', 'outro']),
+  "tipo": zod.string().min(1).max(updateReservaResponseSalaTipoMax),
   "capacidade": zod.number(),
   "ativa": zod.boolean(),
   "observacoes": zod.string().nullish()
@@ -1245,6 +1265,8 @@ export const createMinhaReservaResponseDiaSemanaMax = 4;
 
 export const createMinhaReservaResponsePrioridadeAplicadaMax = 5;
 
+export const createMinhaReservaResponseSalaTipoMax = 60;
+
 
 
 export const CreateMinhaReservaResponse = zod.object({
@@ -1262,7 +1284,7 @@ export const CreateMinhaReservaResponse = zod.object({
   "sala": zod.object({
   "id": zod.number(),
   "nome": zod.string(),
-  "tipo": zod.enum(['sala_aula', 'laboratorio', 'quadra', 'informatica', 'auditorio', 'biblioteca', 'sala_arte', 'outro']),
+  "tipo": zod.string().min(1).max(createMinhaReservaResponseSalaTipoMax),
   "capacidade": zod.number(),
   "ativa": zod.boolean(),
   "observacoes": zod.string().nullish()

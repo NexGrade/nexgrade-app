@@ -17,7 +17,7 @@ export interface HorarioSlotInput {
   diaSemana: number;
   /**
      * @minimum 1
-     * @maximum 8
+     * @maximum 12
      */
   numeroAula: number;
   sala?: string;

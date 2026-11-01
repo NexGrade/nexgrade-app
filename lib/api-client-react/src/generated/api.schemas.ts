@@ -315,7 +315,7 @@ export interface HorarioSlot {
   diaSemana: number;
   /**
      * @minimum 1
-     * @maximum 8
+     * @maximum 12
      */
   numeroAula: number;
   /** @nullable */
@@ -333,7 +333,7 @@ export interface HorarioSlotInput {
   diaSemana: number;
   /**
      * @minimum 1
-     * @maximum 8
+     * @maximum 12
      */
   numeroAula: number;
   sala?: string;
@@ -383,48 +383,28 @@ export interface GerarHorarioResult {
   horario?: HorarioSlot[];
 }
 
-export type SalaTipo = typeof SalaTipo[keyof typeof SalaTipo];
-
-
-export const SalaTipo = {
-  sala_aula: 'sala_aula',
-  laboratorio: 'laboratorio',
-  quadra: 'quadra',
-  informatica: 'informatica',
-  auditorio: 'auditorio',
-  biblioteca: 'biblioteca',
-  sala_arte: 'sala_arte',
-  outro: 'outro',
-} as const;
-
 export interface Sala {
   id: number;
   nome: string;
-  tipo: SalaTipo;
+  /**
+     * @minLength 1
+     * @maxLength 60
+     */
+  tipo: string;
   capacidade: number;
   ativa: boolean;
   /** @nullable */
   observacoes?: string | null;
 }
 
-export type SalaInputTipo = typeof SalaInputTipo[keyof typeof SalaInputTipo];
-
-
-export const SalaInputTipo = {
-  sala_aula: 'sala_aula',
-  laboratorio: 'laboratorio',
-  quadra: 'quadra',
-  informatica: 'informatica',
-  auditorio: 'auditorio',
-  biblioteca: 'biblioteca',
-  sala_arte: 'sala_arte',
-  outro: 'outro',
-} as const;
-
 export interface SalaInput {
   /** @minLength 1 */
   nome: string;
-  tipo?: SalaInputTipo;
+  /**
+     * @minLength 1
+     * @maxLength 60
+     */
+  tipo?: string;
   capacidade?: number;
   observacoes?: string;
 }

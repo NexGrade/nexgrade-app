@@ -141,8 +141,6 @@ export * from './reservaStatus';
 export * from './reservaUpdate';
 export * from './sala';
 export * from './salaInput';
-export * from './salaInputTipo';
-export * from './salaTipo';
 export * from './salaUpdate';
 export * from './stats';
 export * from './trimestreLetivo';

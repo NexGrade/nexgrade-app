@@ -5,12 +5,15 @@
  * GradeEscolar â€” Sistema Completo de GestÃ£o de HorÃ¡rios Escolares
  * OpenAPI spec version: 0.2.0
  */
-import type { SalaTipo } from './salaTipo';
 
 export interface Sala {
   id: number;
   nome: string;
-  tipo: SalaTipo;
+  /**
+     * @minLength 1
+     * @maxLength 60
+     */
+  tipo: string;
   capacidade: number;
   ativa: boolean;
   /** @nullable */
