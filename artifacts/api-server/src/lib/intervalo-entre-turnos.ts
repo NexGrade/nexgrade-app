@@ -15,6 +15,7 @@
 import { db, horariosTable, turmasTable, horarioSlotsTable } from "@workspace/db";
 import { and, eq, inArray } from "drizzle-orm";
 import type { getEscolaId } from "./escola-id";
+import { carregarAulasIntegraisNoTurno } from "./turno-integral"; // [INTERVALO-INTEGRAL]
 
 type EscolaId = ReturnType<typeof getEscolaId>;
 
@@ -47,21 +48,19 @@ export async function limitesLetivosPorTurno(escolaId: EscolaId): Promise<Map<st
 
 export type BloqueioIntervalo = { professorId: number; dia: number; aula: number; motivo: string };
 
-/**
- * Horarios proibidos pela regra para o turno que vai ser gerado, com base nas
- * aulas OFICIAIS dos turnos vizinhos (mesmo criterio dos bloqueios de outras turmas).
- */
-export async function bloqueiosIntervaloEntreTurnos(
-  escolaId: EscolaId,
+/** Aula oficial de um professor ja no horario REAL (turma integral convertida para manha/tarde). */
+export type AulaReal = { professorId: number | null; turno: string; diaSemana: number; numeroAula: number };
+
+/** Calculo da regra sem banco (testado): bloqueios do `turno` a gerar a partir das aulas dos turnos vizinhos. */
+export function calcularBloqueiosIntervalo(
   turno: string,
-  professorIds: number[],
-): Promise<BloqueioIntervalo[]> {
-  if (professorIds.length === 0) return [];
-  const limites = await limitesLetivosPorTurno(escolaId);
+  limites: Map<string, LimitesTurno>,
+  aulasVizinhas: AulaReal[],
+  pares: ReadonlyArray<readonly [string, string]> = PARES_TURNO,
+): BloqueioIntervalo[] {
   const resultado: BloqueioIntervalo[] = [];
   const vistos = new Set<string>();
-
-  for (const [ant, seg] of PARES_TURNO) {
+  for (const [ant, seg] of pares) {
     const lAnt = limites.get(ant);
     const lSeg = limites.get(seg);
     if (!lAnt || !lSeg) continue;
@@ -77,25 +76,50 @@ export async function bloqueiosIntervaloEntreTurnos(
       continue;
     }
 
-    const ocupados = await db
-      .select({ professorId: horariosTable.professorId, dia: horariosTable.diaSemana })
-      .from(horariosTable)
-      .innerJoin(turmasTable, eq(turmasTable.id, horariosTable.turmaId))
-      .where(and(
-        eq(horariosTable.escolaId, escolaId),
-        eq(turmasTable.turno, turnoVizinho),
-        eq(turmasTable.fantasma, false),
-        eq(horariosTable.numeroAula, aulaVizinha),
-        inArray(horariosTable.professorId, professorIds),
-      ));
-
-    for (const o of ocupados) {
-      if (o.professorId == null) continue;
-      const k = `${o.professorId}|${o.dia}|${aulaBloquear}`;
+    for (const a of aulasVizinhas) {
+      if (a.professorId == null || a.turno !== turnoVizinho || a.numeroAula !== aulaVizinha) continue;
+      const k = `${a.professorId}|${a.diaSemana}|${aulaBloquear}`;
       if (vistos.has(k)) continue;
       vistos.add(k);
-      resultado.push({ professorId: o.professorId, dia: o.dia, aula: aulaBloquear, motivo: `intervalo ${ant}->${seg}` });
+      resultado.push({ professorId: a.professorId, dia: a.diaSemana, aula: aulaBloquear, motivo: `intervalo ${ant}->${seg}` });
     }
   }
   return resultado;
+}
+
+/**
+ * Horarios proibidos pela regra para o turno que vai ser gerado, com base nas
+ * aulas OFICIAIS dos turnos vizinhos (mesmo criterio dos bloqueios de outras turmas).
+ */
+export async function bloqueiosIntervaloEntreTurnos(
+  escolaId: EscolaId,
+  turno: string,
+  professorIds: number[],
+): Promise<BloqueioIntervalo[]> {
+  if (professorIds.length === 0) return [];
+  const vizinhos = new Set<string>();
+  for (const [ant, seg] of PARES_TURNO) {
+    if (turno === ant) vizinhos.add(seg);
+    else if (turno === seg) vizinhos.add(ant);
+  }
+  if (vizinhos.size === 0) return [];
+  const limites = await limitesLetivosPorTurno(escolaId);
+
+  const aulas: AulaReal[] = await db
+    .select({ professorId: horariosTable.professorId, turno: turmasTable.turno, diaSemana: horariosTable.diaSemana, numeroAula: horariosTable.numeroAula })
+    .from(horariosTable)
+    .innerJoin(turmasTable, eq(turmasTable.id, horariosTable.turmaId))
+    .where(and(
+      eq(horariosTable.escolaId, escolaId),
+      inArray(turmasTable.turno, [...vizinhos]),
+      eq(turmasTable.fantasma, false),
+      inArray(horariosTable.professorId, professorIds),
+    ));
+  // [INTERVALO-INTEGRAL] (01/11/2026) aula da turma integral que cai no turno vizinho conta, no horario real
+  // dela (como ja fazem Conflitos e o recalculo da HA). Antes so as turmas do proprio turno vizinho contavam.
+  // Gerar a propria turma integral continua sem esta regra (a numeracao dela nao e a de manha/tarde).
+  for (const t of vizinhos) {
+    for (const a of await carregarAulasIntegraisNoTurno(escolaId, t, professorIds)) aulas.push({ ...a, turno: t });
+  }
+  return calcularBloqueiosIntervalo(turno, limites, aulas);
 }

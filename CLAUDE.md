@@ -3,7 +3,7 @@
 Sistema SaaS de gestão de horários escolares (grade, professores, turmas, salas e **reservas**). Monorepo pnpm: `artifacts/api-server` (Express + Drizzle), `artifacts/horario-escolar` (React), `lib/db` (esquema e migrações). Idioma de tudo que o usuário vê e de commits/PRs: **português do Brasil**.
 
 ## Leia antes de mexer
-1. `docs/passagem-2026-10-31.md` — estado mais recente: o que está no ar, banco (migrações manuais aplicadas), pendências. A de `2026-10-17` continua valendo para Reservas e permissões.
+1. `docs/passagem-2026-11-01.md` — estado mais recente e pendências; complementa a de `2026-10-31` (o que está no ar, migrações manuais aplicadas). A de `2026-10-17` continua valendo para Reservas e permissões.
 2. `replit.md` — arquitetura, convenções e armadilhas (gotchas).
 3. `docs/README.md` — índice dos demais documentos.
 
