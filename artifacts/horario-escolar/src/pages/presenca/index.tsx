@@ -95,7 +95,6 @@ export default function PresencaPage() {
       toast({ title: "Presença salva", description: `${marcas.length} aula(s) atualizada(s).` });
       setPendentes(new Map());
       await qc.invalidateQueries({ queryKey: ["presenca", data, turno] });
-      qc.invalidateQueries({ queryKey: ["onde-esta"] });
     } catch (e) {
       toast({ title: "Não foi possível salvar", description: mensagemErro(e), variant: "destructive" });
     } finally { setSalvando(false); }

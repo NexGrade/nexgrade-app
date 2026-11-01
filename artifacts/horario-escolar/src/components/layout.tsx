@@ -8,21 +8,44 @@ import { NotificationBell } from "@/components/notification-bell";
 import {
   LayoutDashboard, Users, BookOpen, GraduationCap, Calendar, CalendarDays,
   Building2, FileText, Bell, Shield, History,
-  Settings, Download, Printer, Sparkles, Upload, CreditCard, Library, Clock,
+  Settings, Printer, Sparkles, Upload, CreditCard, Library, Clock,
   SlidersHorizontal, Landmark, DoorOpen, Hash, CalendarClock,
   FileUp, // [ARQUIVO-RCO]
   NotebookPen, BarChart3, // [MENU-UNICO]
-  Menu, X, ClipboardCheck, MapPin, // [MENU-CELULAR] [PRESENCA-PEDAGOGIA]
+  Menu, X, ClipboardCheck, // [MENU-CELULAR] [PRESENCA-PEDAGOGIA]
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSituacaoArquivoRco } from "@/lib/arquivo-rco"; // [ARQUIVO-RCO]
+
+// [MENU-CARGOS] (31/10/2026) secoes de cada cargo: as mesmas no menu completo e no menu do proprio cargo
+const secaoGestorReservas = {
+  label: "Gestor de reservas",
+  items: [
+    { href: "/salas", label: "Salas", icon: Building2 }, // [GESTOR-SALAS] o gestor cadastra e edita as salas
+    { href: "/reservas", label: "Reservas", icon: DoorOpen },
+    { href: "/horario", label: "Consultar grade", icon: Calendar }, // [CONSULTA-GESTOR]
+  ],
+};
+
+const secaoPedagogia = {
+  label: "Pedagogia",
+  items: [
+    { href: "/presenca", label: "Presença dos professores", icon: ClipboardCheck }, // [PRESENCA-PEDAGOGIA]
+    { href: "/comunicados", label: "Comunicados", icon: Bell },
+    { href: "/relatorios-pedagogicos", label: "Relatórios Pedagógicos", icon: NotebookPen }, // [MENU-UNICO] ponto e carga horaria
+    { href: "/licencas", label: "Licenças", icon: FileText },
+  ],
+};
 
 const navGroups = [
   // [FASE-B] Menu reorganizado na ordem em que a escola trabalha (28/09/2026).
   // [MENU-ORDEM] (23/10/2026) Cadastro separado da montagem da grade; grupos
   // renomeados (Inicio, Relatorios, RCO, Configuracoes).
   // [MENU-ORGANIZADO] (31/10/2026) Horario na montagem da grade, RCO como passo 3
-  // (codigos primeiro), Exportar planilhas em Relatorios, Painel Master so no topo.
+  // (codigos primeiro), Painel Master so no topo.
+  // [MENU-CARGOS] (31/10/2026) Salas, Reservas, Presenca, Comunicados, Licencas e Relatorios
+  // Pedagogicos nas secoes do gestor de reservas e da pedagogia; sem "Onde esta agora";
+  // a planilha da grade foi para Imprimir Grade.
   {
     label: "Início",
     items: [
@@ -39,7 +62,6 @@ const navGroups = [
       { href: "/cursos", label: "Cursos e Disciplinas", icon: Library }, // [FASE-C2] cursos, matrizes e disciplinas
       { href: "/professores", label: "Professores", icon: Users },
       { href: "/turmas", label: "Turmas", icon: GraduationCap },
-      { href: "/salas", label: "Salas", icon: Building2 },
     ],
   },
   {
@@ -61,23 +83,13 @@ const navGroups = [
       { href: "/arquivo-rco", label: "Arquivo do RCO", icon: FileUp }, // [ARQUIVO-RCO]
     ],
   },
-  {
-    label: "Dia a dia",
-    items: [
-      { href: "/presenca", label: "Presença dos professores", icon: ClipboardCheck }, // [PRESENCA-PEDAGOGIA]
-      { href: "/onde-esta", label: "Onde está agora", icon: MapPin }, // [PRESENCA-PEDAGOGIA]
-      { href: "/reservas", label: "Reservas", icon: DoorOpen },
-      { href: "/licencas", label: "Licenças", icon: FileText },
-      { href: "/comunicados", label: "Comunicados", icon: Bell },
-    ],
-  },
+  secaoGestorReservas,
+  secaoPedagogia,
   {
     // [MENU-UNICO] (28/10/2026) cada relatorio num lugar so
     label: "Relatórios",
     items: [
-      { href: "/imprimir-grade", label: "Imprimir Grade", icon: Printer }, // [IMPRIMIR-GRADE] todos os PDFs da grade
-      { href: "/relatorios-pedagogicos", label: "Relatórios Pedagógicos", icon: NotebookPen }, // [MENU-UNICO] ponto e carga horaria
-      { href: "/export", label: "Exportar planilhas", icon: Download }, // [MENU-UNICO] so CSV/JSON [MENU-ORGANIZADO]
+      { href: "/imprimir-grade", label: "Imprimir Grade", icon: Printer }, // [IMPRIMIR-GRADE] PDFs e planilha da grade
     ],
   },
   {
@@ -94,23 +106,7 @@ const navGroups = [
 
 // [PEDAGOGIA] (28/10/2026) menu da pedagogia: so o que ela acompanha
 const menuPedagogia = [
-  {
-    label: "Pedagogia",
-    items: [
-      { href: "/presenca", label: "Presença dos professores", icon: ClipboardCheck }, // [PRESENCA-PEDAGOGIA]
-      { href: "/onde-esta", label: "Onde está agora", icon: MapPin }, // [PRESENCA-PEDAGOGIA]
-      { href: "/relatorios-pedagogicos", label: "Relatórios Pedagógicos", icon: NotebookPen },
-      { href: "/imprimir-grade", label: "Imprimir Grade", icon: Printer },
-    ],
-  },
-  {
-    label: "Dia a dia",
-    items: [
-      { href: "/licencas", label: "Licenças", icon: FileText },
-      { href: "/comunicados", label: "Comunicados", icon: Bell },
-      { href: "/reservas", label: "Reservas (consulta)", icon: DoorOpen },
-    ],
-  },
+  secaoPedagogia, // [MENU-CARGOS]
   {
     label: "Consulta",
     items: [
@@ -121,22 +117,8 @@ const menuPedagogia = [
 ];
 
 // [MENU-ORGANIZADO] (31/10/2026) menu do gestor de reservas: antes era um recorte do menu
-// completo, espalhado em tres secoes. As rotas liberadas continuam no EscolaGate (App.tsx).
-const menuGestorReservas = [
-  {
-    label: "Reservas",
-    items: [
-      { href: "/reservas", label: "Reservas", icon: DoorOpen },
-    ],
-  },
-  {
-    label: "Consulta",
-    items: [
-      { href: "/horario", label: "Horário", icon: Calendar }, // [CONSULTA-GESTOR]
-      { href: "/calendario", label: "Calendário", icon: CalendarDays }, // [CALENDARIO-GESTOR] so a aba do calendario letivo, somente leitura
-    ],
-  },
-];
+// completo, espalhado em tres secoes. As rotas liberadas ficam no EscolaGate (App.tsx).
+const menuGestorReservas = [secaoGestorReservas]; // [MENU-CARGOS]
 
 type GrupoMenu = { label: string; items: Array<{ href: string; label: string; icon: React.ComponentType<{ className?: string }>; badge?: string }> };
 

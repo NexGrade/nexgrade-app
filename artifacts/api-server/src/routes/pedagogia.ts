@@ -3,7 +3,6 @@
 //  PUT  /pedagogia/presenca                                  salva as marcacoes (status null = desmarcar)
 //  GET  /pedagogia/presenca/pdf?data=&turno=                 presenca do dia em PDF
 //  GET  /pedagogia/presenca/mes?mes=&ano=[&formato=pdf]      faltas do mes por professor (JSON ou PDF)
-//  GET  /pedagogia/agora[?data=&hora=HH:MM]                  em que aula e sala cada professor esta agora
 // Leitura: so direcao, coordenacao, secretaria e pedagogia (lib/permissao.ts). Alteracao: as mesmas.
 // Sem a migracao 0004 (tabela presencas_professores) a lista abre sem marcacoes e o Salvar avisa.
 import { Router, type Request } from "express";
@@ -19,7 +18,7 @@ import { getAuth } from "@clerk/express";
 import { projetarIntegral, mapaIntegralDosSlots } from "../lib/turno-integral";
 import { carregarAssSoTurma } from "../lib/assincrona-so-turma";
 import {
-  STATUS, ROTULO_STATUS, ROTULO_TURNO, TURNOS_DIA, montarDia, ondeEstaAgora, resumirMes, chaveMarca, minutosDe,
+  STATUS, ROTULO_STATUS, ROTULO_TURNO, TURNOS_DIA, montarDia, resumirMes, chaveMarca,
   type AulaGrade, type Marca, type SlotEsquema, type Status,
 } from "../lib/presenca";
 import { gerarPdfTabela } from "../lib/pdf-tabela";
@@ -32,12 +31,6 @@ const ROTULO_LICENCA: Record<string, string> = { medica: "Licença médica", mat
 function semTabela(e: unknown): boolean {
   const c = (e as { code?: string; cause?: { code?: string } })?.code ?? (e as { cause?: { code?: string } })?.cause?.code;
   return c === "42P01";
-}
-
-function hojeSP(): { data: string; minutos: number } {
-  const partes = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date());
-  const v = (t: string) => partes.find((p) => p.type === t)?.value ?? "00";
-  return { data: `${v("year")}-${v("month")}-${v("day")}`, minutos: Number(v("hour")) * 60 + Number(v("minute")) };
 }
 
 async function nomeEscola(escolaId: string): Promise<string> {
@@ -270,19 +263,6 @@ router.get("/presenca/mes", async (req, res) => {
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", `attachment; filename="faltas_professores_${mes}_${ano}.pdf"`);
   res.send(Buffer.from(bytes));
-});
-
-router.get("/agora", async (req, res) => {
-  const escolaId = getEscolaId(req);
-  const agora = hojeSP();
-  const data = typeof req.query.data === "string" && req.query.data ? req.query.data : agora.data;
-  const minutos = typeof req.query.hora === "string" && /^\d{1,2}:\d{2}$/.test(req.query.hora) ? minutosDe(req.query.hora) : agora.minutos;
-  const dia = await carregarDia(escolaId, data);
-  if ("erro" in dia) { res.json({ data, hora: `${String(Math.floor(minutos / 60)).padStart(2, "0")}:${String(minutos % 60).padStart(2, "0")}`, aviso: dia.erro, emAula: [], proximas: [], livres: [] }); return; }
-  const { marcas } = await carregarMarcas(escolaId, data);
-  const mapa = new Map(marcas.map((m) => [`${m.turno}|${chaveMarca(m.professorId, m.numeroAula)}`, marcaDe(m)]));
-  const r = ondeEstaAgora(dia.professores, dia.aulas, dia.slots, mapa, minutos);
-  res.json({ data, dataBR: dia.dataBR, diaSemana: dia.diaSemana, hora: `${String(Math.floor(minutos / 60)).padStart(2, "0")}:${String(minutos % 60).padStart(2, "0")}`, aviso: dia.aviso, ...r });
 });
 
 export default router;

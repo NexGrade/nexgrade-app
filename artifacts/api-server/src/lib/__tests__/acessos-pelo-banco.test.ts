@@ -87,21 +87,27 @@ describe("com ACESSOS_PELO_BANCO=1", () => {
 
   it("presenca dos professores: pedagogia e equipe gestora leem e salvam; professor e reservas nao [PRESENCA-PEDAGOGIA]", () => {
     for (const cargo of ["pedagogia", "direcao", "coordenacao", "secretaria"]) {
-      for (const path of ["/pedagogia/presenca", "/pedagogia/presenca/pdf", "/pedagogia/presenca/mes", "/pedagogia/agora", "/Pedagogia/Agora"]) {
+      for (const path of ["/pedagogia/presenca", "/pedagogia/presenca/pdf", "/pedagogia/presenca/mes", "/Pedagogia/Presenca"]) {
         expect(rodar(req({ path, cargo })).passou, `${cargo} GET ${path}`).toBe(true);
       }
       expect(rodar(req({ method: "PUT", path: "/pedagogia/presenca", cargo })).passou, `${cargo} PUT`).toBe(true);
     }
     for (const cargo of ["professor", "reservas"]) {
-      for (const path of ["/pedagogia/presenca", "/pedagogia/presenca/mes", "/pedagogia/agora"]) {
+      for (const path of ["/pedagogia/presenca", "/pedagogia/presenca/mes", "/Pedagogia/Presenca"]) {
         expect(rodar(req({ path, cargo })), `${cargo} GET ${path}`).toMatchObject({ passou: false, status: 403 });
       }
       expect(rodar(req({ method: "PUT", path: "/pedagogia/presenca", cargo })), `${cargo} PUT`).toMatchObject({ passou: false, status: 403 });
     }
   });
 
-  it("gestor de reservas so altera reservas (sem as regras por professor)", () => {
+  it("gestor de reservas so altera reservas e salas (sem as regras por professor)", () => {
     expect(rodar(req({ method: "POST", path: "/reservas", cargo: "reservas" })).passou).toBe(true);
+    for (const [method, path] of [["POST", "/salas"], ["PATCH", "/Salas/3"], ["DELETE", "/salas/3"]]) { // [GESTOR-SALAS]
+      expect(rodar(req({ method, path, cargo: "reservas" })).passou, `${method} ${path}`).toBe(true);
+      expect(rodar(req({ method, path, cargo: "pedagogia" })), `pedagogia ${method} ${path}`).toMatchObject({ passou: false, status: 403 });
+      expect(rodar(req({ method, path, cargo: "professor" })), `professor ${method} ${path}`).toMatchObject({ passou: false, status: 403 });
+    }
+    expect(rodar(req({ method: "POST", path: "/turmas", cargo: "reservas" }))).toMatchObject({ passou: false, status: 403 });
     expect(rodar(req({ method: "PUT", path: "/reservas/regras-professores/2", cargo: "reservas" }))).toMatchObject({ passou: false, status: 403 });
     expect(rodar(req({ method: "POST", path: "/horarios", cargo: "reservas" }))).toMatchObject({ passou: false, status: 403 });
   });

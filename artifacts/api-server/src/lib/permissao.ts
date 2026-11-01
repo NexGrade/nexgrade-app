@@ -39,6 +39,12 @@ export function ehAlteracaoDeReservaPermitida(caminhoBruto: string): boolean {
   return caminho === "/reservas" || caminho === "/reservas/" || caminho.startsWith("/reservas/");
 }
 
+// [GESTOR-SALAS] (31/10/2026) o gestor de reservas tambem cadastra e edita as salas (decisao da dona)
+export function ehAlteracaoDoGestorReservas(caminhoBruto: string): boolean {
+  const caminho = normalizarCaminho(caminhoBruto);
+  return ehAlteracaoDeReservaPermitida(caminho) || caminho === "/salas" || caminho.startsWith("/salas/");
+}
+
 // [GESTOR-METADATA] plano Hobby do Clerk so tem 2 papeis: o gestor de reservas e
 // org:member com publicMetadata.cargo = "reservas" na membership (so o backend grava).
 // Cache curto para nao consultar o Clerk a cada alteracao de reserva.
@@ -112,7 +118,7 @@ export function ehAlteracaoDaPedagogia(caminhoBruto: string): boolean {
 
 // [ACESSOS-ESCOLA] Com ACESSOS_PELO_BANCO=1 a regra e a mesma, mas pelo CARGO do nosso
 // banco (lib/acesso.ts): direcao/coordenacao/secretaria = acesso total; reservas = so
-// reservas; professor = consultas e a propria agenda. Sem escola liberada, so /eu e /master.
+// reservas e salas; professor = consultas e a propria agenda. Sem escola liberada, so /eu e /master.
 const LIVRES_SEM_ESCOLA = ["/eu", "/master"];
 function exigirPorCargo(req: Request, res: Response, next: NextFunction) {
   const caminho = normalizarCaminho(req.path);
@@ -143,8 +149,8 @@ function exigirPorCargo(req: Request, res: Response, next: NextFunction) {
     return;
   }
   if (a.cargo === "reservas") {
-    if (ehAlteracaoDeReservaPermitida(req.path)) return next();
-    res.status(403).json({ error: "Seu acesso permite apenas administrar reservas." });
+    if (ehAlteracaoDoGestorReservas(req.path)) return next(); // [GESTOR-SALAS]
+    res.status(403).json({ error: "Seu acesso permite apenas administrar reservas e salas." });
     return;
   }
   res.status(403).json({ error: "Apenas a direção, a coordenação ou a secretaria podem alterar estes dados." });
@@ -183,12 +189,12 @@ export function exigirAdminParaAlterar(req: Request, res: Response, next: NextFu
   if (!orgId) return next();
   if (orgRole === PAPEL_ADMIN) return next();
   if (orgRole === PAPEL_RESERVAS) { // [PAPEL-RESERVAS]
-    if (ehAlteracaoDeReservaPermitida(req.path)) return next();
-    res.status(403).json({ error: "Seu acesso permite apenas administrar reservas." });
+    if (ehAlteracaoDoGestorReservas(req.path)) return next(); // [GESTOR-SALAS]
+    res.status(403).json({ error: "Seu acesso permite apenas administrar reservas e salas." });
     return;
   }
-  // [GESTOR-METADATA] org:member com cargo "reservas" na membership: so reservas
-  if (orgRole === "org:member" && ehAlteracaoDeReservaPermitida(req.path)) {
+  // [GESTOR-METADATA] org:member com cargo "reservas" na membership: so reservas e salas
+  if (orgRole === "org:member" && ehAlteracaoDoGestorReservas(req.path)) { // [GESTOR-SALAS]
     ehGestorReservasPorMetadata(orgId, userId)
       .then((ok) => {
         if (ok) return next();

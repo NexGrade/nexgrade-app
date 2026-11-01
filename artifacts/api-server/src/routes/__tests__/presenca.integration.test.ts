@@ -111,13 +111,6 @@ describe.skipIf(!TEM_BANCO)("presenca dos professores: integracao com banco real
     expect(Buffer.from(dia.body).subarray(0, 4).toString()).toBe("%PDF");
   });
 
-  it("onde esta agora: aula das 07:35 e a proxima", async () => {
-    const r = await chamar("GET", `/pedagogia/agora?data=${DIA}&hora=07:35`);
-    expect(r.status).toBe(200);
-    expect(r.body.emAula).toEqual([expect.objectContaining({ professor: "Bruna", sala: "Sala 3", status: "substituido" })]);
-    expect(r.body.proximas).toEqual([expect.objectContaining({ professor: "Ana", hora: "08:20", sala: "Laboratório" })]);
-  });
-
   it("professor e gestor de reservas nao leem nem gravam a presenca", async () => {
     for (const cargo of ["professor", "reservas"]) {
       expect((await chamar("GET", `/pedagogia/presenca?data=${DIA}&turno=matutino`, undefined, cargo)).status).toBe(403);
@@ -134,7 +127,6 @@ describe.skipIf(!TEM_BANCO)("presenca dos professores: integracao com banco real
       expect(r.body.professores).toHaveLength(2);
       const s = await chamar("PUT", "/pedagogia/presenca", { data: DIA, turno: "matutino", marcas: [{ professorId: ids.prof[0]!, numeroAula: 1, status: "falta" }] });
       expect(s.status).toBe(503);
-      expect((await chamar("GET", `/pedagogia/agora?data=${DIA}&hora=07:35`)).status).toBe(200);
     } finally {
       await db.execute(sql`alter table presencas_off rename to presencas_professores`);
     }

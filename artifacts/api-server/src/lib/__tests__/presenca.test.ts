@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { montarDia, ondeEstaAgora, resumirMes, slotDaTurma, chaveMarca, type AulaGrade, type SlotEsquema } from "../presenca";
+import { montarDia, resumirMes, slotDaTurma, chaveMarca, type AulaGrade, type SlotEsquema } from "../presenca";
 
 const slots: SlotEsquema[] = [
   { turno: "matutino", nivelEnsino: "medio_tecnico", numeroAula: 1, horaInicio: "07:30:00", duracaoMinutos: 50, letivo: true },
@@ -27,16 +27,6 @@ describe("presenca dos professores [PRESENCA-PEDAGOGIA]", () => {
       expect.objectContaining({ numeroAula: 1, hora: "07:30", turmas: "2ºA", marca: null }),
       expect.objectContaining({ numeroAula: 2, hora: "08:20", turmas: "1ºA + 1ºB", sala: "Lab", marca: expect.objectContaining({ status: "falta", observacao: "atestado" }) }),
     ]);
-  });
-
-  it("onde esta agora: aula em andamento, proxima aula e quem ja terminou", () => {
-    const aulas = [aula(1, 1, "2ºA", { sala: "Sala 3" }), aula(2, 2, "1ºB"), aula(3, 1, "6ºA", { nivelEnsino: "fundamental" })];
-    const marcas = new Map([["matutino|" + chaveMarca(1, 1), { status: "atraso" as const, substitutoId: null, substitutoNome: null, observacao: null }]]);
-    const r = ondeEstaAgora(profs, aulas, slots, marcas, 7 * 60 + 35); // 07:35
-    expect(r.emAula).toEqual([expect.objectContaining({ professor: "Bruna", turmas: "2ºA", sala: "Sala 3", hora: "07:30", fim: "08:20", status: "atraso" })]);
-    expect(r.proximas.map((x) => [x.professor, x.hora])).toEqual([["Carlos", "07:40"], ["Ana", "08:20"]]);
-    const depois = ondeEstaAgora(profs, aulas, slots, new Map(), 12 * 60);
-    expect(depois.livres.map((x) => x.professor)).toEqual(["Ana", "Bruna", "Carlos"]);
   });
 
   it("resume o mes por professor e conta quem substituiu", () => {

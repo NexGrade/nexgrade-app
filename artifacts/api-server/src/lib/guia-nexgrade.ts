@@ -28,11 +28,11 @@ export const GUIA_NEXGRADE: Record<string, TopicoGuia> = {
 4. Professores: cadastre cada professor com as disciplinas que ele pode lecionar (ou use Configurações → Importar planilhas).
 5. Turmas: crie as turmas escolhendo curso e série/matriz; depois, na edição da turma, escolha o professor de cada disciplina.
 6. Disponibilidade: marque bloqueios e hora-atividade (HA) de cada professor, por turno.
-7. Salas: cadastre os espaços (salas, laboratórios, quadra).
+7. Salas (menu Gestor de reservas → Salas): cadastre os espaços (salas, laboratórios, quadra).
 8. Horário → Modo Experimental: gere a grade (botão Turno inteiro), compare com "Simular promoção" e clique em "Promover para oficial".
 9. Usuários: libere o acesso da direção, coordenação, secretaria e gestor de reservas. Professores não precisam: entram com o e-mail do cadastro em Professores.
 10. Códigos do RCO e Arquivo do RCO: confira os códigos SERE das turmas e os Códigos Externos das disciplinas; se a equipe NexGrade pedir, envie o arquivo da Grade de Horário do RCO.
-11. RCO → Exportar para o RCO: grave a grade no RCO (veja o assunto "rco").`,
+11. 3. Enviar ao RCO → Exportar para o RCO: grave a grade no RCO (veja o assunto "rco").`,
   },
 
   visao_geral: {
@@ -161,7 +161,7 @@ Depois de mudar a disponibilidade de alguém com grade pronta, use Professores �
   salas: {
     titulo: "Salas e espaços",
     palavras: ["sala", "espaço", "laboratório", "quadra", "auditório", "biblioteca", "capacidade"],
-    texto: `Menu Salas → "Nova Sala".
+    texto: `Menu Gestor de reservas → Salas → "Nova Sala". Direção, coordenação, secretaria e o gestor de reservas cadastram e editam.
 1. Informe Nome da Sala (ex.: Sala 12) e Capacidade.
 2. Em Tipo, escolha: Sala de aula, Laboratório, Laboratório de Informática, Quadra poliesportiva, Auditório, Biblioteca, Sala de arte — ou "Outro tipo (digitar)..." (ex.: Sala Maker, Ateliê).
 3. Salve. Para editar ou remover, use os botões da sala na lista.
@@ -265,7 +265,7 @@ REGRAS POR PROFESSOR (botão "Regras por professor" — só direção/coordenaç
 - O contador considera reservas pendentes e confirmadas da semana atual. O limite vale para todos, inclusive prioridade máxima.
 
 QUEM FAZ O QUÊ
-- Gestor de reservas: cria, confirma e exclui reservas; não altera as regras por professor nem a grade.
+- Gestor de reservas: cria, confirma e exclui reservas e cadastra/edita as salas; não altera as regras por professor nem a grade.
 - Professor: pede reserva pela Minha Agenda ("Nova reserva"), vendo as aulas livres do espaço na data.
 - Relatório: na própria tela Reservas, botão de relatório (PDF ou Excel, por professor, incluindo canceladas).
 - PDF da semana (no quadro "Reservas da semana", botão "PDF da semana"): "Quadro da semana" = reservas e espaços livres por aula; "Por espaço" = um quadro por espaço e por equipamento reservado (laboratório, chromebooks...), com a turma, a disciplina e o professor em cada aula, em paisagem, para afixar na porta. Reserva aguardando confirmação sai em amarelo com "(aguard.)". Escolha o período (manhã, tarde ou noite).`,
@@ -292,16 +292,15 @@ QUEM FAZ O QUÊ
   },
 
   presenca_professores: { // [PRESENCA-PEDAGOGIA]
-    titulo: "Presença dos professores e Onde está agora",
-    palavras: ["presença", "presenca", "falta do professor", "faltou", "atraso", "substituição", "substituto", "lista de presença", "chamada dos professores", "onde está", "em que sala", "sala do professor", "pedagogia", "pedagogo", "faltas do mês"],
-    texto: `Menu Dia a dia (ou Pedagogia) → Presença dos professores. Funciona também no celular (o menu abre pelo botão ☰ no topo).
+    titulo: "Presença dos professores",
+    palavras: ["presença", "presenca", "falta do professor", "faltou", "atraso", "substituição", "substituto", "lista de presença", "chamada dos professores", "pedagogia", "pedagogo", "faltas do mês"],
+    texto: `Menu Pedagogia → Presença dos professores. Funciona também no celular (o menu abre pelo botão ☰ no topo).
 1. Escolha o Dia e o turno (Manhã, Tarde ou Noite). Aparecem as aulas da grade oficial daquele dia, um cartão por professor, com horário, turma e sala.
 2. Em cada aula toque em P (presente), F (falta), A (atraso) ou S (substituído). Tocar de novo desmarca. Em S, escolha quem deu a aula (ou "Outra pessoa" e digite o nome). O balão abre a Observação (ex.: atestado).
 3. "Restantes = Presente" marca como presente todas as aulas que ainda estão em branco.
 4. Clique em Salvar (barra embaixo). Dá para voltar e corrigir depois, a qualquer momento.
 - PDF e Excel do dia: botões no topo da lista (salve antes) ou em Relatórios Pedagógicos → Presença do dia.
 - Faltas do mês por professor (PDF ou Excel): Relatórios Pedagógicos → Faltas do mês. Mostra presenças, faltas, atrasos, aulas substituídas e quantas aulas cada um deu no lugar de outro, e a lista das ocorrências.
-- Onde está agora: em que turma e sala cada professor está neste momento (a reserva de sala vale mais que a sala da grade) e a próxima aula de quem está livre. Atualiza sozinha a cada minuto.
 - Quem usa: direção, coordenação, secretaria e o cargo Pedagogia. O professor não vê essas telas.
 - Aulas assíncronas não entram na lista (não são presenciais).`,
   },
@@ -332,24 +331,24 @@ Depois de importar professores, marque as disciplinas de cada um em Professores;
   },
 
   exportar: {
-    titulo: "Onde ficam os relatórios (Relatórios Pedagógicos e Exportar planilhas)",
+    titulo: "Onde ficam os relatórios (Relatórios Pedagógicos e planilha da grade)",
     palavras: ["exportar", "pdf", "imprimir", "baixar grade", "relatório", "relatórios pedagógicos", "ponto", "ponto diário", "controle de ponto", "carga horária", "excel", "planilha", "csv"],
     texto: `[MENU-UNICO] Cada relatório fica num lugar só:
 - PDFs da grade (por turma, por professor, lado a lado, compacto, quadro geral, por disciplina): Relatórios → Imprimir Grade (assunto "imprimir_grade").
-- Relatórios → Relatórios Pedagógicos:
+- Pedagogia → Relatórios Pedagógicos:
   - Ponto Diário: folha de ponto de UM dia. Escolha o dia e o turno (Manhã, Tarde, Noite ou Todos, um por página) e baixe em PDF ou Excel. Uma linha por professor que tem aula, hora-atividade (HA) ou atividade (FORM, COORD, ASS...) nesse dia, uma coluna por aula do turno com a TURMA, e a coluna Situação com quadradinhos P, F, AT, ATR e Observação. Se o dia for feriado ou recesso no calendário, o relatório avisa no topo.
   - Controle de Ponto (mês): planilha com a carga horária dos professores (filtro de professor, mês e ano).
   - Carga Horária por Professor: PDF com total de aulas, HA e turmas/disciplinas por turno (o resumo, não a grade do dia a dia).
   - Carga Horária Cumprida × Exigida: PDF por turma com o cumprido no ano x o exigido.
-- Arquivo XML do RCO: RCO → Exportar para o RCO (assunto "rco").
+- Arquivo XML do RCO: 3. Enviar ao RCO → Exportar para o RCO (assunto "rco").
 - Relatório de Reservas: na tela Reservas.
-- Configurações → Exportar planilhas: a grade completa ou de uma turma, em CSV (Excel) ou JSON. Configurações → Importar planilhas: professores, turmas e disciplinas por CSV.`,
+- Planilha da grade (CSV para o Excel, completa ou de uma turma): no fim da tela Relatórios → Imprimir Grade. Configurações → Importar planilhas: professores, turmas e disciplinas por CSV.`,
   },
 
   rco: {
     titulo: "Gravar a grade no RCO (arquivo XML)",
     palavras: ["rco", "registro de classe", "sere", "xml", "incluir via arquivo", "script", "console", "f12", "trio", "dupla", "ifa", "lançar no rco", "exportar para o rco", "gravar no rco", "grade no rco"],
-    texto: `Menu RCO → Exportar para o RCO. Só direção, coordenação e secretaria. Faça por turno (Matutino, Vespertino, Noturno, Integral). Antes: Código INEP em Escola → Dados da Escola e códigos em Códigos do RCO (o sistema avisa o que falta e leva para a tela).
+    texto: `Menu 3. Enviar ao RCO → Exportar para o RCO. Só direção, coordenação e secretaria. Faça por turno (Matutino, Vespertino, Noturno, Integral). Antes: Código INEP em Escola → Dados da Escola e códigos em Códigos do RCO (o sistema avisa o que falta e leva para a tela).
 
 COMO GRAVAR
 - XML ("Baixar XML para o RCO"): um arquivo com todas as turmas do turno. No RCO: Grade de Horário → escolha o Período Letivo e o turno certo → Incluir via Arquivo. Limite do RCO: grava UMA disciplina por horário e substitui a grade inteira de cada turma.
@@ -361,7 +360,7 @@ COMO GRAVAR
   arquivo_rco: {
     titulo: "Arquivo do RCO (enviar à equipe NexGrade o cadastro oficial da escola)",
     palavras: ["arquivo do rco", "enviar arquivo", "exportação do rco", "pedido", "selo pedido", "cadastro oficial", "códigos sere", "matriz oficial"],
-    texto: `Menu RCO → Arquivo do RCO. Quando a equipe NexGrade pede, o item do menu aparece com o selo amarelo "Pedido" e a tela mostra a mensagem.
+    texto: `Menu 3. Enviar ao RCO → Arquivo do RCO. Quando a equipe NexGrade pede, o item do menu aparece com o selo amarelo "Pedido" e a tela mostra a mensagem.
 1. O RCO não tem um botão para baixar este arquivo: ele é baixado junto com o suporte NexGrade (atendimento remoto ou na escola), com a secretaria ou a direção logada no RCO, na tela Grade de Horário com o Período Letivo atual. É um .XML com o cadastro oficial (disciplinas com Código Externo, turmas com código SERE e a matriz de cada turma).
 2. No NexGrade: "Escolher o arquivo .XML e enviar". O sistema confere se é o arquivo certo e mostra o resumo (turmas por turno, disciplinas, linhas de grade). O selo "Pedido" some.
 - Enviar NÃO muda nada no cadastro nem na grade: o arquivo fica guardado para a equipe NexGrade conferir códigos e cargas. Um envio novo substitui o anterior.
@@ -371,7 +370,7 @@ COMO GRAVAR
   codigos_rco: {
     titulo: "Códigos do RCO (SERE das turmas e Código Externo das disciplinas)",
     palavras: ["códigos do rco", "codigo sere", "código externo", "sae", "parte if", "fgb", "turma no sere", "código da disciplina"],
-    texto: `Menu RCO → Códigos do RCO. Só direção, coordenação e secretaria.
+    texto: `Menu 3. Enviar ao RCO → Códigos do RCO. Só direção, coordenação e secretaria.
 - Turmas: código da turma no SERE (o RCO recusa sem ele). 3º ano com duas turmas no RCO: código FGB (formação geral) e código da parte IF; cada disciplina vai para a parte certa automaticamente.
 - Disciplinas: Código Externo do RCO (é o que o RCO usa; não é o SAE). Disciplina própria da turma também precisa (ex.: Prática de Formação = 1269 nas duas turmas).
 - Os códigos SERE das turmas mudam todo ano: confira no começo do ano (o arquivo do RCO, em Arquivo do RCO, traz todos).`,
@@ -394,8 +393,8 @@ COMO GRAVAR
 2. Informe Nome, E-mail e Cargo e clique em "Liberar acesso". Não sai e-mail de convite: avise a pessoa para entrar no endereço do sistema e criar a conta com esse mesmo e-mail (ou entrar, se já tiver conta). Até o primeiro acesso aparece "Ainda não entrou".
 Cargos:
 - Direção, Coordenação e Secretaria: acesso total (a secretaria costuma montar e gerar a grade).
-- Gestor de reservas: só a agenda de reservas (sem regras por professor; vê a grade e o calendário só para consulta).
-- Pedagogia: sem o menu completo. Abre direto a Presença dos professores (marca e salva a lista do dia) e Onde está agora; também Relatórios Pedagógicos (ponto do dia, controle de ponto, carga horária, listas de professores e disciplinas), Imprimir Grade, Licenças e Comunicados (pode alterar), e consulta o Horário, o Calendário e as Reservas (em que sala cada professor está). Não altera a grade, o cadastro, as reservas, os usuários nem o RCO.
+- Gestor de reservas: menu Gestor de reservas com Salas (cadastra e edita), Reservas (sem regras por professor) e Consultar grade (só consulta).
+- Pedagogia: sem o menu completo. Abre direto a Presença dos professores (marca e salva a lista do dia); também Comunicados, Relatórios Pedagógicos (ponto do dia, controle de ponto, carga horária, listas de professores e disciplinas) e Licenças (pode alterar), e consulta o Horário e o Calendário. Não altera a grade, o cadastro, as reservas, os usuários nem o RCO.
 - Professor NÃO é cadastrado aqui: o acesso dele vem do e-mail em Professores (cargo Professor, só a Minha Agenda). Quem é da equipe e também professor fica com o cargo da equipe.
 - Para mudar o cargo, troque na lista (pede confirmação). Para tirar o acesso, use a lixeira (vale em até 1 minuto). Ninguém remove o próprio acesso, e a escola sempre fica com pelo menos uma pessoa de acesso total.
 - Acesso "Nexus Core (suporte)": aparece quando o suporte da Nexus Core foi liberado para ajudar a escola; a escola pode remover quando quiser. Tudo o que o suporte fizer fica no Histórico.`,

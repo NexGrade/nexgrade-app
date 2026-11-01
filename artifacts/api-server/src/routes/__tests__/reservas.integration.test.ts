@@ -20,6 +20,7 @@ import bloqueiosRouter from "../bloqueios";
 import recursosRouter from "../recursos";
 import reservasGestorRouter from "../reservas-gestor";
 import reservasRouter from "../reservas";
+import salasRouter from "../salas"; // [GESTOR-SALAS]
 
 // [BLINDAGEM] (17/10/2026) Testes de integracao das reservas com um Postgres de verdade (as rotas reais, o filtro de
 // permissao real e as migracoes reais). Cobrem o que so tinha sido testado com scripts avulsos:
@@ -84,6 +85,7 @@ describe.skipIf(!TEM_BANCO)("reservas: integracao com banco real", () => {
     app.use("/reservas/bloqueios", bloqueiosRouter);
     app.use("/recursos", recursosRouter);
     app.use("/reservas", reservasRouter); // [RESUMO-EQUIPAMENTOS] quadros do dia
+    app.use("/salas", salasRouter); // [GESTOR-SALAS]
     server = app.listen(0);
     porta = (server.address() as AddressInfo).port;
 
@@ -315,6 +317,19 @@ describe.skipIf(!TEM_BANCO)("reservas: integracao com banco real", () => {
       expect(b.status).toBe(201);
       expect((await chamar("DELETE", `/reservas/bloqueios/${b.body.id}`, undefined, como("reservas"))).status).toBe(200);
       expect((await chamar("PATCH", `/recursos/${ids.recurso}`, { quantidadeTotal: 30 }, como("reservas"))).status).toBe(403);
+    });
+    // [GESTOR-SALAS] (31/10/2026) o gestor de reservas cadastra, edita e exclui salas; professor e pedagogia nao
+    it("gestor de reservas cadastra, edita e exclui sala; professor e pedagogia nao", async () => {
+      for (const cargo of ["professor", "pedagogia"]) {
+        expect((await chamar("POST", "/salas", { nome: "Sala do teste", tipo: "sala_aula" }, como(cargo))).status, cargo).toBe(403);
+        expect((await chamar("PATCH", `/salas/${ids.sala2}`, { capacidade: 20 }, como(cargo))).status, cargo).toBe(403);
+        expect((await chamar("DELETE", `/salas/${ids.sala2}`, undefined, como(cargo))).status, cargo).toBe(403);
+      }
+      const nova = await chamar("POST", "/salas", { nome: "Sala do gestor", tipo: "sala_aula" }, como("reservas"));
+      expect(nova.status).toBe(201);
+      expect((await chamar("PATCH", `/Salas/${nova.body.id}`, { capacidade: 20 }, como("reservas"))).status).toBe(200);
+      expect((await chamar("DELETE", `/salas/${nova.body.id}`, undefined, como("reservas"))).status).toBe(204);
+      expect((await chamar("GET", "/salas", undefined, como("reservas"))).status).toBe(200);
     });
     it("coordenacao muda o total de tablets e faz tudo que o gestor faz", async () => {
       expect((await chamar("PATCH", `/recursos/${ids.recurso}`, { quantidadeTotal: 30 }, como("coordenacao"))).status).toBe(200);

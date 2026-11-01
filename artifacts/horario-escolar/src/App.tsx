@@ -44,11 +44,9 @@ const ConformidadeSeedPrPage = lazy(() => import("@/pages/configuracoes/seed-pr"
 const DadosEscolaPage = lazy(() => import("@/pages/dados-escola/index"));
 const AssinaturaPage = lazy(() => import("@/pages/assinatura/index"));
 const EscolaPage = lazy(() => import("@/pages/escola/index")); // [FASE-C1]
-const ExportPage = lazy(() => import("@/pages/export/index"));
 const ImprimirGradePage = lazy(() => import("@/pages/imprimir-grade/index")); // [IMPRIMIR-GRADE]
 const RelatoriosPedagogicosPage = lazy(() => import("@/pages/relatorios-pedagogicos/index")); // [MENU-UNICO]
 const PresencaPage = lazy(() => import("@/pages/presenca/index")); // [PRESENCA-PEDAGOGIA]
-const OndeEstaPage = lazy(() => import("@/pages/onde-esta/index")); // [PRESENCA-PEDAGOGIA]
 const ExportarRcoPage = lazy(() => import("@/pages/rco/index")); // [MENU-UNICO]
 const CodigosRcoPage = lazy(() => import("@/pages/codigos-rco/index")); // [CODIGOS-RCO-TELA]
 const ArquivoRcoPage = lazy(() => import("@/pages/arquivo-rco/index")); // [ARQUIVO-RCO]
@@ -353,7 +351,7 @@ function EscolaGate({ component: Component }: { component: React.ComponentType }
   // [PAPEL-RESERVAS] gestor de reservas: so a agenda de reservas. As regras por
   // professor (prioridade/limite) sao da coordenacao -- /reservas/regras volta tambem.
   if (ehGestor) { // [GESTOR-METADATA]
-    if (rotaAtual !== "/reservas" && rotaAtual !== "/horario" && rotaAtual !== "/calendario") return <Redirect to="/reservas" />; // [CONSULTA-GESTOR] grade e calendario so consulta
+    if (rotaAtual !== "/reservas" && rotaAtual !== "/salas" && rotaAtual !== "/horario" && rotaAtual !== "/calendario") return <Redirect to="/reservas" />; // [CONSULTA-GESTOR] grade e calendario so consulta [GESTOR-SALAS]
   } else if (ehPedagogia) { // [PEDAGOGIA] sem o menu completo
     if (!ROTAS_PEDAGOGIA.includes(rotaAtual)) return <Redirect to={INICIO_PEDAGOGIA} />;
   } else if (ehProfessor) { // [ACESSOS-ESCOLA] professor (banco) ou membro comum (Clerk)
@@ -528,11 +526,11 @@ function Router() {
       <Route path="/escola" component={() => <ProtectedRoute component={EscolaPage} />} />
         <Route path="/configuracoes"><Redirect to="/escola?tab=configuracoes" /></Route>{/* [FASE-C1] */}
       <Route path="/configuracoes/seed-pr" component={() => <ProtectedRoute component={ConformidadeSeedPrPage} />} />
-      <Route path="/export" component={() => <ProtectedRoute component={ExportPage} />} />
+      <Route path="/export"><Redirect to="/imprimir-grade" /></Route>{/* [MENU-CARGOS] a planilha da grade fica em Imprimir Grade */}
       <Route path="/imprimir-grade" component={() => <ProtectedRoute component={ImprimirGradePage} />} /> {/* [IMPRIMIR-GRADE] */}
       <Route path="/relatorios-pedagogicos" component={() => <ProtectedRoute component={RelatoriosPedagogicosPage} />} />{/* [MENU-UNICO] */}
       <Route path="/presenca" component={() => <ProtectedRoute component={PresencaPage} />} />{/* [PRESENCA-PEDAGOGIA] */}
-      <Route path="/onde-esta" component={() => <ProtectedRoute component={OndeEstaPage} />} />{/* [PRESENCA-PEDAGOGIA] */}
+      <Route path="/onde-esta"><Redirect to="/presenca" /></Route>{/* [MENU-CARGOS] tela excluida em 31/10/2026 */}
       <Route path="/rco" component={() => <ProtectedRoute component={ExportarRcoPage} />} />{/* [MENU-UNICO] */}
       <Route path="/codigos-rco" component={() => <ProtectedRoute component={CodigosRcoPage} />} />{/* [CODIGOS-RCO-TELA] */}
       <Route path="/arquivo-rco" component={() => <ProtectedRoute component={ArquivoRcoPage} />} />{/* [ARQUIVO-RCO] */}
