@@ -4,6 +4,7 @@
 //   arquivo_rco_solicitado -> { em, por, mensagem }            (pedido em aberto)
 //   arquivo_rco_exportacao -> { nomeArquivo, enviadoEm, enviadoPor, resumo }   (ultimo envio, sem o conteudo)
 //   arquivo_rco_conteudo   -> { xml }                           (conteudo do ultimo envio; fora das listas)
+//   arquivo_rco_importado  -> { em, por, turmas }               (ultima importacao das turmas pelo Painel Master)
 import { db, configuracoesTable } from "@workspace/db";
 import { and, eq, inArray } from "drizzle-orm";
 import type { ResumoExportacaoRco } from "./rco-exportacao";
@@ -11,12 +12,15 @@ import type { ResumoExportacaoRco } from "./rco-exportacao";
 export const CHAVE_SOLICITADO = "arquivo_rco_solicitado";
 export const CHAVE_EXPORTACAO = "arquivo_rco_exportacao";
 export const CHAVE_CONTEUDO = "arquivo_rco_conteudo";
+export const CHAVE_IMPORTADO = "arquivo_rco_importado"; // [IMPORTAR-TURMAS-RCO]
 /** Chaves que a escola nao grava pela rota generica de configuracoes nem ve na lista. */
-export const CHAVES_ARQUIVO_RCO = new Set([CHAVE_SOLICITADO, CHAVE_EXPORTACAO, CHAVE_CONTEUDO]);
+export const CHAVES_ARQUIVO_RCO = new Set([CHAVE_SOLICITADO, CHAVE_EXPORTACAO, CHAVE_CONTEUDO, CHAVE_IMPORTADO]);
 
 export type PedidoArquivoRco = { em: string; por: string | null; mensagem: string | null };
 export type EnvioArquivoRco = { nomeArquivo: string; enviadoEm: string; enviadoPor: string | null; resumo: ResumoExportacaoRco; tamanho: number };
-export type SituacaoArquivoRco = { solicitado: PedidoArquivoRco | null; enviado: EnvioArquivoRco | null };
+/** [IMPORTAR-TURMAS-RCO] turmas criadas a partir do arquivo (Painel Master) */
+export type ImportacaoArquivoRco = { em: string; por: string | null; turmas: number; disciplinasNovas: number };
+export type SituacaoArquivoRco = { solicitado: PedidoArquivoRco | null; enviado: EnvioArquivoRco | null; importado: ImportacaoArquivoRco | null };
 
 async function ler<T>(escolaId: string, chave: string): Promise<T | null> {
   const [r] = await db.select({ valor: configuracoesTable.valor }).from(configuracoesTable)
@@ -38,21 +42,23 @@ async function apagar(escolaId: string, chave: string): Promise<void> {
 }
 
 export async function situacaoArquivoRco(escolaId: string): Promise<SituacaoArquivoRco> {
-  const [solicitado, enviado] = await Promise.all([
+  const [solicitado, enviado, importado] = await Promise.all([
     ler<PedidoArquivoRco>(escolaId, CHAVE_SOLICITADO),
     ler<EnvioArquivoRco>(escolaId, CHAVE_EXPORTACAO),
+    ler<ImportacaoArquivoRco>(escolaId, CHAVE_IMPORTADO),
   ]);
-  return { solicitado, enviado };
+  return { solicitado, enviado, importado };
 }
 
 /** Situacao de varias escolas (Painel Master), sem o conteudo dos arquivos. */
 export async function situacaoArquivoRcoEscolas(): Promise<Record<string, SituacaoArquivoRco>> {
   const rows = await db.select({ escolaId: configuracoesTable.escolaId, chave: configuracoesTable.chave, valor: configuracoesTable.valor })
-    .from(configuracoesTable).where(inArray(configuracoesTable.chave, [CHAVE_SOLICITADO, CHAVE_EXPORTACAO]));
+    .from(configuracoesTable).where(inArray(configuracoesTable.chave, [CHAVE_SOLICITADO, CHAVE_EXPORTACAO, CHAVE_IMPORTADO]));
   const out: Record<string, SituacaoArquivoRco> = {};
   for (const r of rows) {
-    const s = (out[r.escolaId] ??= { solicitado: null, enviado: null });
+    const s = (out[r.escolaId] ??= { solicitado: null, enviado: null, importado: null });
     if (r.chave === CHAVE_SOLICITADO) s.solicitado = r.valor as PedidoArquivoRco;
+    else if (r.chave === CHAVE_IMPORTADO) s.importado = r.valor as ImportacaoArquivoRco;
     else s.enviado = r.valor as EnvioArquivoRco;
   }
   return out;
