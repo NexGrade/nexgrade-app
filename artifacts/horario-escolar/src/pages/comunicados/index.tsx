@@ -74,7 +74,7 @@ export default function ComunicadosList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-center gap-3">{/* [CELULAR-PEDAGOGIA] (01/11/2026) titulo e botao quebram no celular */}
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Comunicados</h1>
           <p className="text-muted-foreground">Envie avisos e comunicados para a escola.</p>
@@ -83,7 +83,7 @@ export default function ComunicadosList() {
           <DialogTrigger asChild>
             <Button onClick={handleOpenCreate}><Plus className="mr-2 h-4 w-4" />Novo Comunicado</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[90dvh] overflow-y-auto">{/* [CELULAR-DIALOGO] (01/11/2026) rola quando o teclado do celular sobe */}
             <DialogHeader>
               <DialogTitle>Novo Comunicado</DialogTitle>
               <DialogDescription>Escreva o comunicado a ser publicado.</DialogDescription>
@@ -147,7 +147,7 @@ export default function ComunicadosList() {
           {comunicadosFiltrados.map((comunicado) => (
             <Card key={comunicado.id}>
               <CardContent className="pt-6 flex items-start justify-between gap-4">
-                <div>
+                <div className="min-w-0 break-words">
                   <h3 className="font-semibold">{comunicado.titulo}</h3>
                   <p className="text-sm text-muted-foreground mt-1">{comunicado.mensagem}</p>
                   {comunicado.createdAt && (

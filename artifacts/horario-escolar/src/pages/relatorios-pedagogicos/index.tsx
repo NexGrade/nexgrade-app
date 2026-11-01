@@ -170,7 +170,7 @@ export default function RelatoriosPedagogicosPage() {
             </div>
             <Button className="w-full" disabled={gerandoExcel === "ponto"} onClick={() => void baixarPonto()}>
               {gerandoExcel === "ponto" ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}
-              {gerandoExcel === "ponto" ? "Gerando..." : "Baixar Controle de Ponto (Excel)"}
+              {gerandoExcel === "ponto" ? "Gerando..." : "Baixar ponto (Excel)"}
             </Button>
           </CardContent>
         </Card>

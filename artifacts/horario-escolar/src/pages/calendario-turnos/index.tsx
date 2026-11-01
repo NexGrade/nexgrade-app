@@ -32,11 +32,16 @@ export default function CalendarioTurnosPage() {
 
   return (
     <div className="space-y-6">
+      {/* [CELULAR-CALENDARIO] (01/11/2026) em consulta a tela do calendario ja tem titulo e so ha uma aba:
+          sem titulo repetido e sem a barra de abas (economiza altura no celular) */}
+      {!somenteConsulta && (
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">{somenteConsulta ? "Calendário" : "Calendário e Turnos"}</h1>
-        <p className="text-muted-foreground">{somenteConsulta ? "Dias letivos do ano, somente para consulta." : "Dias letivos do ano e os horários das aulas em cada turno."}</p>
+        <h1 className="text-3xl font-bold tracking-tight">Calendário e Turnos</h1>
+        <p className="text-muted-foreground">Dias letivos do ano e os horários das aulas em cada turno.</p>
       </div>
+      )}
 
+      {!somenteConsulta && (
       <div className="flex items-center gap-1 border-b border-border overflow-x-auto">
         {ABAS.filter((a) => !somenteConsulta || a.key === "calendario").map((a) => (
           <button
@@ -53,6 +58,7 @@ export default function CalendarioTurnosPage() {
           </button>
         ))}
       </div>
+      )}
 
       <Suspense fallback={<Skeleton className="h-64 w-full" />}>
         {aba === "calendario" && <CalendarioEscolarPage />}

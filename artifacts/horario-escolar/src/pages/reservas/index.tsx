@@ -522,13 +522,13 @@ export default function ReservasPage() {
       <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-3 shadow-[0_8px_30px_hsl(174_29%_14%/_.035)] sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
           <Button data-testid="button-previous-day" variant="ghost" size="icon" onClick={() => shiftDate(-1)}><ChevronLeft className="h-4 w-4" /></Button>
-          <div className="min-w-[220px] text-center">
+          <div className="min-w-0 flex-1 text-center sm:min-w-[220px] sm:flex-none">
             <p className="font-heading text-base font-bold capitalize" data-testid="text-selected-date">{displayDate(selectedDate)}</p>
             <p className="text-xs text-muted-foreground">{days[weekdayFor(selectedDate)] ?? "Fim de semana"} · {selectedDate.slice(0, 4)}</p>
           </div>
           <Button data-testid="button-next-day" variant="ghost" size="icon" onClick={() => shiftDate(1)}><ChevronRight className="h-4 w-4" /></Button>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">{/* [CELULAR-RESERVAS] (01/11/2026) quebra a linha no celular */}
           <Input data-testid="input-filter-date" type="date" value={selectedDate} onChange={(event) => setSelectedDate(event.target.value)} className="h-9 w-auto bg-background" />
           <Button data-testid="button-today" variant="secondary" size="sm" onClick={() => setSelectedDate(today)}>Hoje</Button>
           <Button data-testid="button-semana" variant={mostrarSemana ? "default" : "outline"} size="sm" onClick={alternarSemana}>
