@@ -369,8 +369,10 @@ export default function ProfessorEditar() {
         </div>
 
         <div className="space-y-6">
+          {/* [CARGA-COMPACTA] (01/11/2026) quadro mais baixo, na altura do formulario ao lado: turno e HA
+              lado a lado e a distribuicao por dia numa linha so */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-3">
               <CardTitle>Carga Horária</CardTitle>
               <CardDescription>Total de aulas semanais que o professor tem na escola.</CardDescription>
             </CardHeader>
@@ -382,7 +384,7 @@ export default function ProfessorEditar() {
                   <Skeleton className="h-8 w-full" />
                 </div>
               ) : cargaData ? (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Total Semanal</span>
                     <span className="text-2xl font-bold">{cargaData.totalAulas} aulas</span>
@@ -390,7 +392,7 @@ export default function ProfessorEditar() {
 
                   {/* [MESMA-PESSOA-HA] aulas dos cadastros ligados (ex.: "Jessica (IFA)") somam para a HA */}
                   {(cargaData.cadastrosLigados?.length ?? 0) > 0 && (
-                    <div className="-mt-4 space-y-1 text-xs text-muted-foreground">
+                    <div className="-mt-2 space-y-1 text-xs text-muted-foreground">
                       {cargaData.cadastrosLigados!.map((c) => (
                         <div key={c.id} className="flex items-center justify-between">
                           <span>+ em {c.nome}</span>
@@ -406,15 +408,16 @@ export default function ProfessorEditar() {
                     </div>
                   )}
                   {cargaData.cadastroPrincipal && (
-                    <p className="-mt-4 text-xs text-muted-foreground">
+                    <p className="-mt-2 text-xs text-muted-foreground">
                       Cadastro secundário de <span className="font-medium text-foreground">{cargaData.cadastroPrincipal.nome}</span>:
                       estas aulas somam para a HA do cadastro principal, que é onde a HA fica.
                     </p>
                   )}
 
-                  <div className="space-y-2 pt-2 border-t">
-                    <h4 className="text-sm font-medium text-muted-foreground pb-1">Por Turno</h4>
-                    <div className="space-y-1.5">
+                  <div className="grid grid-cols-2 gap-4 pt-3 border-t">
+                  <div className="space-y-1.5">
+                    <h4 className="text-sm font-medium text-muted-foreground">Por Turno</h4>
+                    <div className="space-y-1">
                       {Object.entries(cargaData.porTurno ?? {}).map(([turno, aulas]) => (
                         <div key={turno} className="flex items-center justify-between text-sm">
                           <span className="capitalize">{turno}</span>
@@ -424,13 +427,13 @@ export default function ProfessorEditar() {
                     </div>
                   </div>
 
-                  <div className="space-y-2 pt-2 border-t">
-                    <h4 className="text-sm font-medium text-muted-foreground pb-1">HA Obrigatoria</h4>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Necessaria (institucional)</span>
+                  <div className="space-y-1.5">
+                    <h4 className="text-sm font-medium text-muted-foreground">HA obrigatória</h4>
+                    <div className="flex items-center justify-between text-sm" title="Necessária (institucional)">
+                      <span className="text-muted-foreground">Necessária</span>
                       <span className="font-medium">{cargaData.haInstitucionalTotal ?? 0} aula(s)</span>
                     </div>
-                    <div className="space-y-1.5 mt-1">
+                    <div className="space-y-1">
                       {/* [HA-CONTRATURNO-ASTERISCO] antes so listava turnos com HA necessaria
                           (= turnos com aula), escondendo a HA alocada em contraturno */}
                       {Array.from(new Set([
@@ -455,36 +458,31 @@ export default function ProfessorEditar() {
                       })}
                     </div>
                   </div>
+                  </div>
 
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">Distribuição por Dia</h4>
-                    {/* [FIX] `cargaData.porDia` vem do backend com chaves
-                        de NOME do dia ("Segunda", "Terça"...), não por
-                        índice numérico -- por isso sempre lia
-                        `undefined` e caía no "|| 0", mostrando 0 pra
-                        todo mundo mesmo com aulas reais cadastradas. */}
-                    {diasSemana.map((dia) => {
-                      const aulas = cargaData.porDia[dia] || 0;
-                      return (
-                        <div key={dia} className="flex items-center justify-between">
-                          <span className="text-sm">{dia}</span>
-                          <div className="flex items-center gap-3">
-                            <div className="w-24 h-2 bg-secondary rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-primary transition-all"
-                                style={{ width: `${Math.min(100, (aulas / 8) * 100)}%` }}
-                              />
+                  <div className="space-y-2 pt-3 border-t">
+                    <h4 className="text-sm font-medium text-muted-foreground">Distribuição por dia</h4>
+                    {/* [FIX] `cargaData.porDia` vem do backend com chaves de NOME do dia ("Segunda", "Terça"...),
+                        não por índice numérico. */}
+                    <div className="grid grid-cols-5 gap-2">
+                      {diasSemana.map((dia) => {
+                        const aulas = cargaData.porDia[dia] || 0;
+                        return (
+                          <div key={dia} className="flex flex-col items-center gap-1" title={`${dia}: ${aulas} aula(s)`}>
+                            <span className="text-sm font-semibold">{aulas}</span>
+                            <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
+                              <div className="h-full bg-primary transition-all" style={{ width: `${Math.min(100, (aulas / 8) * 100)}%` }} />
                             </div>
-                            <span className="text-sm font-medium w-4 text-right">{aulas}</span>
+                            <span className="text-xs text-muted-foreground">{dia.slice(0, 3)}</span>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
 
                   {disciplinasUnicas.length > 0 && (
-                    <div className="space-y-2 pt-2 border-t">
-                      <h4 className="text-sm font-medium text-muted-foreground pb-1">Disciplinas que leciona</h4>
+                    <div className="space-y-1.5 pt-3 border-t">
+                      <h4 className="text-sm font-medium text-muted-foreground">Disciplinas que leciona</h4>
                       <div className="flex flex-wrap gap-1.5">
                         {disciplinasUnicas.map((d) => (
                           <Badge key={d.id} variant="outline" className="whitespace-normal text-left h-auto py-1">{d.nome}</Badge>
