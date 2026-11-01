@@ -127,10 +127,17 @@ export default function ArquivoRcoPage() {
                 ({Object.entries(data.enviado.resumo.turmasPorTurno).map(([t, n]) => `${n} ${ROTULO_TURNO[t] ?? t}`).join(", ")}),{" "}
                 {data.enviado.resumo.disciplinas} disciplinas e {data.enviado.resumo.linhasGrade} linhas de grade.
               </p>
-              {/* [ARQUIVO-RCO-SITUACAO] (01/11/2026) o que acontece depois do envio */}
-              <p className="text-emerald-800">
-                Recebido. A equipe NexGrade vai conferir o arquivo e usar os dados no cadastro da escola (turmas, disciplinas e códigos do RCO). Você não precisa fazer mais nada.
-              </p>
+              {/* [ARQUIVO-RCO-SITUACAO] (01/11/2026) o que acontece depois do envio; [IMPORTAR-TURMAS-RCO] e depois da importacao */}
+              {data.importado && data.importado.em >= data.enviado.enviadoEm ? (
+                <p className="text-emerald-800">
+                  Turmas cadastradas em {new Date(data.importado.em).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} a partir deste arquivo
+                  ({data.importado.turmas} turma{data.importado.turmas === 1 ? "" : "s"}). Você não precisa fazer mais nada.
+                </p>
+              ) : (
+                <p className="text-emerald-800">
+                  Recebido. A equipe NexGrade vai conferir o arquivo e usar os dados no cadastro da escola (turmas, disciplinas e códigos do RCO). Você não precisa fazer mais nada.
+                </p>
+              )}
               <Button size="sm" variant="outline" className="gap-1.5" onClick={baixar}>
                 <Download className="h-3.5 w-3.5" /> Baixar o arquivo enviado
               </Button>

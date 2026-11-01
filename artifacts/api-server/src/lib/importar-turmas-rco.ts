@@ -15,7 +15,7 @@
 import { db, configuracoesTable, codigosRcoDisciplinaTable, disciplinasTable, turmasTable, turmaDisciplinasTable } from "@workspace/db";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { lerExportacaoRco, type ExportacaoRco } from "./rco-exportacao";
-import { CHAVE_CONTEUDO, CHAVE_EXPORTACAO, type EnvioArquivoRco } from "./arquivo-rco";
+import { CHAVE_CONTEUDO, CHAVE_EXPORTACAO, CHAVE_IMPORTADO, type EnvioArquivoRco, type ImportacaoArquivoRco } from "./arquivo-rco";
 import { NOME_PADRAO_POR_CODIGO } from "./nome-padrao-disciplina";
 import { carregarSiglasReferencia, siglaParaDisciplina, type SiglasReferencia } from "./sigla-disciplina";
 import { carregarCoresReferencia, corParaDisciplina } from "./cor-disciplina";
@@ -239,7 +239,7 @@ export type ResultadoImportacaoRco = {
 };
 
 /** Grava numa transacao, recalculando a prévia com o banco travado para a escola (dois cliques nao duplicam). */
-export async function aplicarImportacaoRco(escolaId: string, opcoes: OpcoesImportacaoRco): Promise<ResultadoImportacaoRco> {
+export async function aplicarImportacaoRco(escolaId: string, opcoes: OpcoesImportacaoRco, por: string | null = null): Promise<ResultadoImportacaoRco> {
   const [siglas, cores] = await Promise.all([carregarSiglasReferencia(), carregarCoresReferencia()]);
   return db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${"importar-turmas-rco:" + escolaId}))`);
@@ -283,6 +283,10 @@ export async function aplicarImportacaoRco(escolaId: string, opcoes: OpcoesImpor
     }
     const [n] = await tx.select({ n: sql<number>`count(*)::int` }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
     out.turmasDaEscolaAgora = Number(n?.n ?? 0);
+    // a tela Arquivo do RCO da escola mostra "Turmas cadastradas em DD/MM" (sem tabela nova)
+    const importado: ImportacaoArquivoRco = { em: new Date().toISOString(), por, turmas: out.turmas.length, disciplinasNovas: out.disciplinasNovas.length };
+    await tx.delete(configuracoesTable).where(and(eq(configuracoesTable.escolaId, escolaId), eq(configuracoesTable.chave, CHAVE_IMPORTADO)));
+    await tx.insert(configuracoesTable).values({ escolaId, chave: CHAVE_IMPORTADO, valor: importado, descricao: "Ultima importacao das turmas a partir do arquivo do RCO (Painel Master)" });
     return out;
   });
 }

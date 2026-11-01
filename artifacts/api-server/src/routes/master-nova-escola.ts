@@ -236,7 +236,7 @@ router.post("/escolas/:id/arquivo-rco/importar-turmas", async (req, res) => {
   const opcoes = ImportarRcoInput.safeParse(req.body ?? {});
   if (!opcoes.success) { res.status(400).json({ error: "Opções inválidas." }); return; }
   try {
-    const r = await aplicarImportacaoRco(escolaId, opcoes.data);
+    const r = await aplicarImportacaoRco(escolaId, opcoes.data, (await emailVerificado(req)) ?? null);
     await registrarAuditoria({
       req, escolaId, entidade: "importar_turmas_rco", entidadeId: 0, acao: "criacao",
       dadosAnteriores: null, dadosNovos: { ...opcoes.data, ...r },

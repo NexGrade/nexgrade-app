@@ -70,6 +70,7 @@ export function ImportarTurmasRcoDialog({ escola, onOpenChange }: { escola: { id
       toast({ title: "Turmas importadas do RCO", description: res?.mensagem });
       queryClient.invalidateQueries({ queryKey: getListEscolasMasterQueryKey() });
       queryClient.invalidateQueries({ queryKey: getGetMasterMetricsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: ["/api/master/arquivos-rco"] });
       onOpenChange(false);
     } catch (err) {
       toast({ title: "Não foi possível importar", description: erroDe(err), variant: "destructive" });

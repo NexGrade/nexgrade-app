@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { eq, inArray } from "drizzle-orm";
 import { db, pool, configuracoesTable, disciplinasTable, turmaDisciplinasTable, turmasTable } from "@workspace/db";
 import { aplicarImportacaoRco, previaImportacaoRco } from "../importar-turmas-rco";
-import { CHAVE_CONTEUDO } from "../arquivo-rco";
+import { CHAVE_CONTEUDO, situacaoArquivoRco } from "../arquivo-rco";
 
 // [IMPORTAR-TURMAS-RCO] (31/10/2026) prévia e aplicar com um Postgres de verdade (so com TEST_DATABASE_URL).
 const TEM_BANCO = !!process.env.TEST_DATABASE_URL;
@@ -49,6 +49,8 @@ describe.skipIf(!TEM_BANCO)("importar turmas do arquivo do RCO (integração)", 
     expect(vinc).toHaveLength(3); // Espanhola ficou de fora
     const [m] = await db.select().from(disciplinasTable).where(eq(disciplinasTable.id, mat));
     expect(m!.codigoExternoRco).toBe(2);
+    // a tela da escola mostra "Turmas cadastradas em DD/MM"
+    expect((await situacaoArquivoRco(E)).importado).toMatchObject({ turmas: 2, disciplinasNovas: 1 });
 
     await expect(aplicarImportacaoRco(E, { ano: 2027, comEspanhola: false })).rejects.toThrow(/Nada a gravar/);
     expect(await db.select().from(turmasTable).where(eq(turmasTable.escolaId, E))).toHaveLength(2);
