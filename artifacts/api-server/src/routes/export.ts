@@ -848,7 +848,8 @@ router.get("/grade-pdf/turma", async (req, res) => {
   const pdfBytes = modeloTurma
     ? await gerarPdfTurmasLadoALado(await buscarNomeEscola(escolaId), `${titulo} — ${TURNO_ROTULO[turnoFiltro!] ?? turnoFiltro}`, intervaloSemana(lerOffsetSemana(req)),
         [...blocos].sort((a, b) => a.rotulo.localeCompare(b.rotulo, "pt-BR", { numeric: true })))
-    : await gerarPdfGradeCompacta(await buscarNomeEscola(escolaId), titulo, intervaloSemana(lerOffsetSemana(req)), blocos);
+    : await gerarPdfGradeCompacta(await buscarNomeEscola(escolaId), titulo, intervaloSemana(lerOffsetSemana(req)), blocos,
+        req.query.modelo === "retrato" ? "retrato" : "paisagem"); // [PDF-RETRATO]
   res.setHeader("Content-Type", "application/pdf");
   const nomeArquivo = nomeExperimental
     ? `previa_${nomeExperimental.replace(/[^a-zA-Z0-9-_]/g, "_")}_por_turma.pdf`
@@ -1133,7 +1134,8 @@ router.get("/grade-pdf/professor", async (req, res) => {
     ? await gerarPdfProfessoresCompacto(await buscarNomeEscola(escolaId), tituloModelo, intervaloSemana(lerOffsetSemana(req)), blocos)
     : modeloProf === "quadro"
       ? await gerarPdfQuadroProfessores(await buscarNomeEscola(escolaId), tituloModelo, intervaloSemana(lerOffsetSemana(req)), blocos)
-      : await gerarPdfGradeCompacta(await buscarNomeEscola(escolaId), tituloProf, intervaloSemana(lerOffsetSemana(req)), blocos);
+      : await gerarPdfGradeCompacta(await buscarNomeEscola(escolaId), tituloProf, intervaloSemana(lerOffsetSemana(req)), blocos,
+          req.query.modelo === "retrato" ? "retrato" : "paisagem"); // [PDF-RETRATO]
   res.setHeader("Content-Type", "application/pdf");
   const nomeArquivoProf = nomeExperimental
     ? `previa_${nomeExperimental.replace(/[^a-zA-Z0-9-_]/g, "_")}_por_professor.pdf`
