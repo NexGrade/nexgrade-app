@@ -273,10 +273,11 @@ QUEM FAZ O QUÊ
 
   licencas: {
     titulo: "Licenças e afastamentos",
-    palavras: ["licença", "afastamento", "atestado", "licença médica", "falta longa"],
+    palavras: ["licença", "afastamento", "atestado", "licença médica", "falta longa", "substituto"],
     texto: `Menu Licenças → "Nova Licença".
-1. Escolha o Professor e informe o Tipo de licença (ex.: Licença médica), Data de início e Data de fim.
-2. Observações é opcional. Salve.
+1. Escolha o Professor, o Tipo (Afastamento, Férias, Capacitação ou Outro), a Data de início e a Data de fim.
+2. Se houver, escolha o Substituto. Salve.
+- Não se registra o motivo (por exemplo, de saúde): a licença guarda só o período e o substituto (LGPD).
 - A lista tem busca por nome do professor; o botão de remover pede confirmação.
 - Licenças ativas aparecem contadas na Visão Geral.
 - Para achar quem pode cobrir as aulas, pergunte ao Assistente "quem está livre na Xª aula de [dia] [turno]?".`,

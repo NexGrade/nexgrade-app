@@ -2249,8 +2249,8 @@ export const ListLicencasResponseItem = zod.object({
 }).optional(),
   "dataInicio": zod.string(),
   "dataFim": zod.string(),
-  "tipo": zod.enum(['medica', 'maternidade', 'paternidade', 'capacitacao', 'outros']),
-  "motivo": zod.string().nullish(),
+  "tipo": zod.enum(['afastamento', 'ferias', 'capacitacao', 'outros']),
+  "motivo": zod.string().nullish().describe('Sempre null: a licença não guarda motivo (LGPD).'),
   "aprovada": zod.boolean(),
   "comunicadoEnviado": zod.boolean().optional()
 })
@@ -2262,8 +2262,7 @@ export const CreateLicencaBody = zod.object({
   "professorSubstitutoId": zod.number().optional(),
   "dataInicio": zod.string(),
   "dataFim": zod.string(),
-  "tipo": zod.enum(['medica', 'maternidade', 'paternidade', 'capacitacao', 'outros']),
-  "motivo": zod.string().optional(),
+  "tipo": zod.enum(['afastamento', 'ferias', 'capacitacao', 'outros']),
   "aprovada": zod.boolean().optional()
 })
 
@@ -2291,8 +2290,8 @@ export const CreateLicencaResponse = zod.object({
 }).optional(),
   "dataInicio": zod.string(),
   "dataFim": zod.string(),
-  "tipo": zod.enum(['medica', 'maternidade', 'paternidade', 'capacitacao', 'outros']),
-  "motivo": zod.string().nullish(),
+  "tipo": zod.enum(['afastamento', 'ferias', 'capacitacao', 'outros']),
+  "motivo": zod.string().nullish().describe('Sempre null: a licença não guarda motivo (LGPD).'),
   "aprovada": zod.boolean(),
   "comunicadoEnviado": zod.boolean().optional()
 })
@@ -2306,8 +2305,7 @@ export const UpdateLicencaBody = zod.object({
   "professorSubstitutoId": zod.number().optional(),
   "dataInicio": zod.string().optional(),
   "dataFim": zod.string().optional(),
-  "tipo": zod.string().optional(),
-  "motivo": zod.string().optional(),
+  "tipo": zod.enum(['afastamento', 'ferias', 'capacitacao', 'outros']).optional(),
   "aprovada": zod.boolean().optional()
 })
 
@@ -2335,8 +2333,8 @@ export const UpdateLicencaResponse = zod.object({
 }).optional(),
   "dataInicio": zod.string(),
   "dataFim": zod.string(),
-  "tipo": zod.enum(['medica', 'maternidade', 'paternidade', 'capacitacao', 'outros']),
-  "motivo": zod.string().nullish(),
+  "tipo": zod.enum(['afastamento', 'ferias', 'capacitacao', 'outros']),
+  "motivo": zod.string().nullish().describe('Sempre null: a licença não guarda motivo (LGPD).'),
   "aprovada": zod.boolean(),
   "comunicadoEnviado": zod.boolean().optional()
 })

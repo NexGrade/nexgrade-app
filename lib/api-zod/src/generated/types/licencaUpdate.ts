@@ -5,12 +5,12 @@
  * GradeEscolar â€” Sistema Completo de GestÃ£o de HorÃ¡rios Escolares
  * OpenAPI spec version: 0.2.0
  */
+import type { LicencaUpdateTipo } from './licencaUpdateTipo';
 
 export interface LicencaUpdate {
   professorSubstitutoId?: number;
   dataInicio?: string;
   dataFim?: string;
-  tipo?: string;
-  motivo?: string;
+  tipo?: LicencaUpdateTipo;
   aprovada?: boolean;
 }

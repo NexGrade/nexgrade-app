@@ -18,7 +18,10 @@ export interface Licenca {
   dataInicio: string;
   dataFim: string;
   tipo: LicencaTipo;
-  /** @nullable */
+  /**
+     * Sempre null: a licença não guarda motivo (LGPD).
+     * @nullable
+     */
   motivo?: string | null;
   aprovada: boolean;
   comunicadoEnviado?: boolean;

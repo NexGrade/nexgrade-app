@@ -2800,8 +2800,8 @@ components:
           $ref: "#/components/schemas/Professor"
         dataInicio: { type: string }
         dataFim: { type: string }
-        tipo: { type: string, enum: [medica, maternidade, paternidade, capacitacao, outros] }
-        motivo: { type: ["string", "null"] }
+        tipo: { type: string, enum: [afastamento, ferias, capacitacao, outros] }
+        motivo: { type: ["string", "null"], description: "Sempre null: a licença não guarda motivo (LGPD)." }
         aprovada: { type: boolean }
         comunicadoEnviado: { type: boolean }
 
@@ -2813,8 +2813,7 @@ components:
         professorSubstitutoId: { type: integer }
         dataInicio: { type: string }
         dataFim: { type: string }
-        tipo: { type: string, enum: [medica, maternidade, paternidade, capacitacao, outros] }
-        motivo: { type: string }
+        tipo: { type: string, enum: [afastamento, ferias, capacitacao, outros] }
         aprovada: { type: boolean }
 
     LicencaUpdate:
@@ -2823,8 +2822,7 @@ components:
         professorSubstitutoId: { type: integer }
         dataInicio: { type: string }
         dataFim: { type: string }
-        tipo: { type: string }
-        motivo: { type: string }
+        tipo: { type: string, enum: [afastamento, ferias, capacitacao, outros] }
         aprovada: { type: boolean }
 
     Comunicado:

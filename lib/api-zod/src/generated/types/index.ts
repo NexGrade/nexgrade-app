@@ -92,6 +92,7 @@ export * from './licencaInput';
 export * from './licencaInputTipo';
 export * from './licencaTipo';
 export * from './licencaUpdate';
+export * from './licencaUpdateTipo';
 export * from './limiteDiarioProfessor';
 export * from './limiteDiarioProfessorInput';
 export * from './listAuditLogsParams';

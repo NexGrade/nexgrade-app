@@ -1139,9 +1139,8 @@ export type LicencaTipo = typeof LicencaTipo[keyof typeof LicencaTipo];
 
 
 export const LicencaTipo = {
-  medica: 'medica',
-  maternidade: 'maternidade',
-  paternidade: 'paternidade',
+  afastamento: 'afastamento',
+  ferias: 'ferias',
   capacitacao: 'capacitacao',
   outros: 'outros',
 } as const;
@@ -1156,7 +1155,10 @@ export interface Licenca {
   dataInicio: string;
   dataFim: string;
   tipo: LicencaTipo;
-  /** @nullable */
+  /**
+     * Sempre null: a licença não guarda motivo (LGPD).
+     * @nullable
+     */
   motivo?: string | null;
   aprovada: boolean;
   comunicadoEnviado?: boolean;
@@ -1166,9 +1168,8 @@ export type LicencaInputTipo = typeof LicencaInputTipo[keyof typeof LicencaInput
 
 
 export const LicencaInputTipo = {
-  medica: 'medica',
-  maternidade: 'maternidade',
-  paternidade: 'paternidade',
+  afastamento: 'afastamento',
+  ferias: 'ferias',
   capacitacao: 'capacitacao',
   outros: 'outros',
 } as const;
@@ -1179,16 +1180,24 @@ export interface LicencaInput {
   dataInicio: string;
   dataFim: string;
   tipo: LicencaInputTipo;
-  motivo?: string;
   aprovada?: boolean;
 }
+
+export type LicencaUpdateTipo = typeof LicencaUpdateTipo[keyof typeof LicencaUpdateTipo];
+
+
+export const LicencaUpdateTipo = {
+  afastamento: 'afastamento',
+  ferias: 'ferias',
+  capacitacao: 'capacitacao',
+  outros: 'outros',
+} as const;
 
 export interface LicencaUpdate {
   professorSubstitutoId?: number;
   dataInicio?: string;
   dataFim?: string;
-  tipo?: string;
-  motivo?: string;
+  tipo?: LicencaUpdateTipo;
   aprovada?: boolean;
 }
 

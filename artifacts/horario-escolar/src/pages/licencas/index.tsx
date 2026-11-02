@@ -23,13 +23,24 @@ import { Badge } from "@/components/ui/badge";
 import { useListaFiltrada } from "@/hooks/use-lista-filtrada";
 import { CampoBusca } from "@/components/campo-busca";
 
+// [LICENCA-SEM-DADO-SENSIVEL] (01/11/2026) a licenca guarda so o periodo e o substituto: tipo de lista fechada,
+// sem saude e sem campo de texto livre (LGPD: minimizacao). Ver api-server/src/lib/licenca-neutra.ts.
+const TIPOS = [
+  { valor: "afastamento", rotulo: "Afastamento" },
+  { valor: "ferias", rotulo: "Férias" },
+  { valor: "capacitacao", rotulo: "Capacitação" },
+  { valor: "outros", rotulo: "Outro" },
+] as const;
+const rotuloTipo = (t: string) => TIPOS.find((x) => x.valor === t)?.rotulo ?? "Afastamento";
+const SEM_SUBSTITUTO = "sem";
+
 const licencaSchema = z.object({
   professorId: z.coerce.number().min(1, "Selecione um professor"),
-  tipo: z.string().min(1, "Informe o tipo"),
+  tipo: z.enum(["afastamento", "ferias", "capacitacao", "outros"]),
   dataInicio: z.string().min(1, "Informe a data de início"),
   dataFim: z.string().min(1, "Informe a data de fim"),
-  observacoes: z.string().optional(),
-});
+  professorSubstitutoId: z.number().int().optional(),
+}).refine((v) => !v.dataInicio || !v.dataFim || v.dataFim >= v.dataInicio, { message: "A data de fim vem antes do início", path: ["dataFim"] });
 type LicencaFormValues = z.infer<typeof licencaSchema>;
 
 export default function LicencasList() {
@@ -52,16 +63,16 @@ export default function LicencasList() {
 
   const form = useForm<LicencaFormValues>({
     resolver: zodResolver(licencaSchema),
-    defaultValues: { professorId: undefined, tipo: "", dataInicio: "", dataFim: "", observacoes: "" },
+    defaultValues: { professorId: undefined, tipo: "afastamento", dataInicio: "", dataFim: "", professorSubstitutoId: undefined },
   });
 
   const handleOpenCreate = () => {
-    form.reset({ professorId: undefined, tipo: "", dataInicio: "", dataFim: "", observacoes: "" });
+    form.reset({ professorId: undefined, tipo: "afastamento", dataInicio: "", dataFim: "", professorSubstitutoId: undefined });
     setIsDialogOpen(true);
   };
 
   const onSubmit = (data: LicencaFormValues) => {
-    createLicenca.mutate({ data: data as any }, {
+    createLicenca.mutate({ data }, {
       onSuccess: () => {
         toast({ title: "Licença registrada!" });
         queryClient.invalidateQueries({ queryKey: getListLicencasQueryKey() });
@@ -125,8 +136,14 @@ export default function LicencasList() {
                   name="tipo"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tipo de licença</FormLabel>
-                      <FormControl><Input placeholder="Ex: Licença médica" {...field} /></FormControl>
+                      <FormLabel>Tipo</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          {TIPOS.map((t) => <SelectItem key={t.valor} value={t.valor}>{t.rotulo}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">Não registre o motivo (por exemplo, de saúde): basta o período e o substituto.</p>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -157,11 +174,17 @@ export default function LicencasList() {
                 </div>
                 <FormField
                   control={form.control}
-                  name="observacoes"
+                  name="professorSubstitutoId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Observações (opcional)</FormLabel>
-                      <FormControl><Input placeholder="Detalhes adicionais" {...field} /></FormControl>
+                      <FormLabel>Substituto (opcional)</FormLabel>
+                      <Select onValueChange={(v) => field.onChange(v === SEM_SUBSTITUTO ? undefined : Number(v))} value={field.value ? String(field.value) : SEM_SUBSTITUTO}>
+                        <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          <SelectItem value={SEM_SUBSTITUTO}>Sem substituto</SelectItem>
+                          {professores?.filter((p) => p.id !== form.watch("professorId")).map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -204,10 +227,11 @@ export default function LicencasList() {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-semibold">{nomeProfessor(licenca.professorId)}</h3>
-                    <Badge variant="outline">{licenca.tipo}</Badge>
+                    <Badge variant="outline">{rotuloTipo(licenca.tipo)}</Badge>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     {formatarData(licenca.dataInicio)} — {formatarData(licenca.dataFim)}
+                    {licenca.professorSubstitutoId ? ` · Substituto: ${nomeProfessor(licenca.professorSubstitutoId)}` : ""}
                   </p>
                 </div>
                 <AlertDialog>
