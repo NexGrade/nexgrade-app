@@ -4,6 +4,7 @@ import { licencasTable, professoresTable, comunicadosTable } from "@workspace/db
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
+import { TIPOS_LICENCA, tipoNeutro, comunicadoDaLicenca } from "../lib/licenca-neutra"; // [LICENCA-SEM-DADO-SENSIVEL]
 
 const router = Router();
 
@@ -12,8 +13,8 @@ const LicencaInput = z.object({
   professorSubstitutoId: z.number().int().optional(),
   dataInicio: z.string(),
   dataFim: z.string(),
-  tipo: z.enum(["medica", "maternidade", "paternidade", "capacitacao", "outros"]).default("medica"),
-  motivo: z.string().optional(),
+  // [LICENCA-SEM-DADO-SENSIVEL] sem motivo (o zod descarta o campo se vier) e sem tipo de saude
+  tipo: z.enum(TIPOS_LICENCA).default("afastamento"),
   aprovada: z.boolean().default(false),
 });
 
@@ -26,7 +27,8 @@ async function enrichLicenca(licenca: typeof licencasTable.$inferSelect) {
       ? db.select().from(professoresTable).where(eq(professoresTable.id, licenca.professorSubstitutoId)).then(r => r[0])
       : Promise.resolve(null),
   ]);
-  return { ...licenca, professor, professorSubstituto: substituto ?? null };
+  // [LICENCA-SEM-DADO-SENSIVEL] licenca antiga ainda no banco: nao devolve o motivo nem o tipo de saude
+  return { ...licenca, tipo: tipoNeutro(licenca.tipo), motivo: null, professor, professorSubstituto: substituto ?? null };
 }
 
 router.get("/", async (req, res) => {
@@ -65,12 +67,14 @@ router.post("/", async (req, res) => {
     return;
   }
 
-  const [licenca] = await db.insert(licencasTable).values({ ...parsed.data, escolaId }).returning();
+  const [licenca] = await db.insert(licencasTable).values({ ...parsed.data, motivo: null, escolaId }).returning();
 
+  const substituto = licenca.professorSubstitutoId
+    ? (await db.select().from(professoresTable).where(and(eq(professoresTable.id, licenca.professorSubstitutoId), eq(professoresTable.escolaId, escolaId))))[0]
+    : undefined;
   await db.insert(comunicadosTable).values({
     escolaId,
-    titulo: `Licença registrada — ${professor.nome}`,
-    mensagem: `Professor(a) ${professor.nome} terá licença de ${licenca.dataInicio} a ${licenca.dataFim} (${licenca.tipo}). ${licenca.motivo ? "Motivo: " + licenca.motivo : ""}`,
+    ...comunicadoDaLicenca(professor.nome, licenca.dataInicio, licenca.dataFim, substituto?.nome ?? null), // [LICENCA-SEM-DADO-SENSIVEL]
     tipo: "licenca",
     professorId: licenca.professorId,
     autorNome: "Sistema",
@@ -89,7 +93,7 @@ router.patch("/:id", async (req, res) => {
     return;
   }
   const [licenca] = await db.update(licencasTable)
-    .set(parsed.data)
+    .set({ ...parsed.data, motivo: null }) // [LICENCA-SEM-DADO-SENSIVEL] apaga o motivo antigo ao editar
     .where(and(eq(licencasTable.id, id), eq(licencasTable.escolaId, escolaId)))
     .returning();
   if (!licenca) {

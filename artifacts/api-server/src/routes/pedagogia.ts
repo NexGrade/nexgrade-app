@@ -22,10 +22,10 @@ import {
   type AulaGrade, type Marca, type SlotEsquema, type Status,
 } from "../lib/presenca";
 import { gerarPdfTabela } from "../lib/pdf-tabela";
+import { rotuloLicenca } from "../lib/licenca-neutra"; // [LICENCA-SEM-DADO-SENSIVEL]
 
 const router = Router();
 const NOME_DIA = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
-const ROTULO_LICENCA: Record<string, string> = { medica: "Licença médica", maternidade: "Licença maternidade", paternidade: "Licença paternidade", capacitacao: "Capacitação", outros: "Licença" };
 
 /** Tabela ainda nao criada (migracao atrasada): codigo 42P01 do Postgres. */
 function semTabela(e: unknown): boolean {
@@ -87,7 +87,7 @@ async function carregarDia(escolaId: string, dataISO: string): Promise<Dia | { e
     aviso: semAula ? `Atenção: ${semAula.descricao} — dia sem aula no calendário da escola.` : null,
     professores, aulas: lista,
     slots: slotsBanco.map((s) => ({ turno: s.turno, nivelEnsino: s.nivelEnsino ?? null, numeroAula: s.numeroAula, horaInicio: String(s.horaInicio), duracaoMinutos: s.duracaoMinutos ?? 50, letivo: s.letivo })),
-    licencas: new Map(licencas.map((l) => [l.professorId, ROTULO_LICENCA[l.tipo] ?? "Licença"])),
+    licencas: new Map(licencas.map((l) => [l.professorId, rotuloLicenca(l.tipo)])),
   };
 }
 

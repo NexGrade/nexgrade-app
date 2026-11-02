@@ -13,6 +13,5 @@ export interface LicencaInput {
   dataInicio: string;
   dataFim: string;
   tipo: LicencaInputTipo;
-  motivo?: string;
   aprovada?: boolean;
 }

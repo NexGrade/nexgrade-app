@@ -10,9 +10,8 @@ export type LicencaInputTipo = typeof LicencaInputTipo[keyof typeof LicencaInput
 
 
 export const LicencaInputTipo = {
-  medica: 'medica',
-  maternidade: 'maternidade',
-  paternidade: 'paternidade',
+  afastamento: 'afastamento',
+  ferias: 'ferias',
   capacitacao: 'capacitacao',
   outros: 'outros',
 } as const;
