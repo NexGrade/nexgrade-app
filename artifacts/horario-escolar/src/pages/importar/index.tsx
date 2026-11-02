@@ -10,9 +10,9 @@ import { Upload, FileText, CheckCircle2, AlertCircle, Download } from "lucide-re
 import { useQueryClient } from "@tanstack/react-query";
 
 const MODELOS = {
-  professores: `nome;email;cpf;matricula;cargaHorariaTotal
-João Silva;joao@escola.edu.br;123.456.789-00;MAT001;20
-Maria Santos;maria@escola.edu.br;987.654.321-00;MAT002;24`,
+  professores: `nome;email;telefone;cargaHorariaTotal
+João Silva;joao@escola.pr.gov.br;(41) 99999-0001;20
+Maria Santos;maria@escola.pr.gov.br;(41) 99999-0002;24`,
   turmas: `nome;serie;turno;anoLetivo
 1A;1º Ano EF;matutino;2026
 2B;2º Ano EF;vespertino;2026

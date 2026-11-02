@@ -311,7 +311,7 @@ QUEM FAZ O QUÊ
     palavras: ["importar", "csv", "planilha", "excel", "carga em lote", "subir dados"],
     texto: `Menu Configurações → Importar planilhas (Importação Inteligente) — professores, turmas e disciplinas via CSV.
 1. Em "Tipo de dado", escolha Professores, Turmas ou Disciplinas.
-2. Baixe o "Modelo" CSV. Colunas: Professores = nome;email;cpf;matricula;cargaHorariaTotal | Turmas = nome;serie;turno;anoLetivo | Disciplinas = nome;cargaSemanal;cor.
+2. Baixe o "Modelo" CSV. Colunas: Professores = nome;email;telefone;cargaHorariaTotal (e-mail institucional; não use CPF nem matrícula) | Turmas = nome;serie;turno;anoLetivo | Disciplinas = nome;cargaSemanal;cor.
 3. Preencha no Excel e salve como CSV (separador ponto-e-vírgula; primeira linha é o cabeçalho; UTF-8 com ou sem BOM).
 4. Cole o conteúdo ou use "Carregar arquivo" e clique em "Analisar CSV".
 5. Confira a pré-visualização e confirme. Dados duplicados são ignorados automaticamente.
