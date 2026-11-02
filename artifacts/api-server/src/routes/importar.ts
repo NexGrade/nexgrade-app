@@ -7,7 +7,7 @@ import { registrarAuditoria } from "../lib/audit";
 
 const router = Router();
 
-type ProfessorRow = { nome: string; email: string; cpf?: string; matricula?: string; cargaHorariaTotal?: number; disciplinas?: string };
+type ProfessorRow = { nome: string; email: string; telefone?: string; cargaHorariaTotal?: number; disciplinas?: string };
 type TurmaRow = { nome: string; serie: string; turno?: string; anoLetivo?: number };
 type DisciplinaRow = { nome: string; cargaSemanal?: number; cor?: string };
 
@@ -106,8 +106,9 @@ router.post("/confirmar", async (req, res) => {
           escolaId,
           nome,
           email,
-          cpf: row[idx(["cpf"])]?.trim() || undefined,
-          matricula: row[idx(["matricula"])]?.trim() || undefined,
+          // [PROFESSOR-SEM-CPF] (01/11/2026) o cadastro guarda so nome, e-mail institucional e telefone (LGPD):
+          // colunas cpf e matricula da planilha sao ignoradas
+          telefone: row[idx(["telefone", "celular", "fone"])]?.trim() || undefined,
           cargaHorariaTotal: Number(row[idx(["carga", "horas"])] ?? 20) || 20,
         }).onConflictDoNothing();
         importados++;

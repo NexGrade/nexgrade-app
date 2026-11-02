@@ -68,12 +68,12 @@ router.post("/", async (req, res) => {
   }
   const { disciplinaIds, ...data } = parsed.data as {
     nome: string; email: string; telefone?: string;
-    cpf?: string; matricula?: string; cargaHorariaTotal?: number;
+    cargaHorariaTotal?: number;
     disciplinaIds?: number[];
   };
   const [professor] = await db
     .insert(professoresTable)
-    .values({ escolaId, nome: data.nome, email: data.email, telefone: data.telefone, cpf: data.cpf, matricula: data.matricula, cargaHorariaTotal: data.cargaHorariaTotal })
+    .values({ escolaId, nome: data.nome, email: data.email, telefone: data.telefone, cargaHorariaTotal: data.cargaHorariaTotal })
     .returning();
   if (disciplinaIds && disciplinaIds.length > 0) {
     await db.insert(professorDisciplinasTable).values(
