@@ -1,11 +1,11 @@
-import { useListLicencas, useCreateLicenca, useDeleteLicenca, getListLicencasQueryKey, useListProfessores } from "@workspace/api-client-react";
+import { useListLicencas, useCreateLicenca, useDeleteLicenca, getListLicencasQueryKey, useListProfessores, useListDisciplinas } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useListaFiltrada } from "@/hooks/use-lista-filtrada";
 import { CampoBusca } from "@/components/campo-busca";
@@ -33,6 +33,9 @@ const TIPOS = [
 ] as const;
 const rotuloTipo = (t: string) => TIPOS.find((x) => x.valor === t)?.rotulo ?? "Afastamento";
 const SEM_SUBSTITUTO = "sem";
+// [LICENCA-SUBSTITUTO-HABILITADO] (01/11/2026) mesma disciplina pelo nome (a escola pode ter o mesmo nome com
+// ids diferentes, ex.: Fundamental e Medio)
+const normDisc = (n: string) => n.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
 
 const licencaSchema = z.object({
   professorId: z.coerce.number().min(1, "Selecione um professor"),
@@ -46,6 +49,7 @@ type LicencaFormValues = z.infer<typeof licencaSchema>;
 export default function LicencasList() {
   const { data: licencas, isLoading } = useListLicencas();
   const { data: professores } = useListProfessores();
+  const { data: disciplinas } = useListDisciplinas();
   const createLicenca = useCreateLicenca();
   const deleteLicenca = useDeleteLicenca();
   const queryClient = useQueryClient();
@@ -54,6 +58,14 @@ export default function LicencasList() {
 
   function nomeProfessor(id: number) {
     return professores?.find((p) => p.id === id)?.nome ?? `#${id}`;
+  }
+
+  // [LICENCA-SUBSTITUTO-HABILITADO] disciplinas em que cada professor e habilitado (cadastro do professor)
+  const nomeDisc = useMemo(() => new Map((disciplinas ?? []).map((d) => [d.id, d.nome])), [disciplinas]);
+  function disciplinasDe(id: number | undefined): string[] {
+    const p = professores?.find((x) => x.id === id);
+    return [...new Set((p?.disciplinaIds ?? []).map((d) => nomeDisc.get(d)).filter((n): n is string => !!n))]
+      .sort((a, b) => a.localeCompare(b, "pt-BR"));
   }
 
   const { busca, setBusca, itensFiltrados: licencasFiltradas } = useListaFiltrada(
@@ -65,6 +77,19 @@ export default function LicencasList() {
     resolver: zodResolver(licencaSchema),
     defaultValues: { professorId: undefined, tipo: "afastamento", dataInicio: "", dataFim: "", professorSubstitutoId: undefined },
   });
+
+  // [LICENCA-SUBSTITUTO-HABILITADO] substitutos: primeiro os habilitados em alguma disciplina do professor afastado
+  const professorEscolhido = form.watch("professorId");
+  const disciplinasDoAfastado = disciplinasDe(professorEscolhido);
+  const opcoesSubstituto = useMemo(() => {
+    const alvo = new Set(disciplinasDoAfastado.map(normDisc));
+    const outros = (professores ?? []).filter((p) => p.id !== professorEscolhido && p.ativo !== false);
+    const comuns = (id: number) => disciplinasDe(id).filter((n) => alvo.has(normDisc(n)));
+    const habilitados = outros.map((p) => ({ p, emComum: comuns(p.id) })).filter((x) => x.emComum.length > 0);
+    const idsHab = new Set(habilitados.map((x) => x.p.id));
+    return { habilitados, restantes: outros.filter((p) => !idsHab.has(p.id)) };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [professores, professorEscolhido, nomeDisc]);
 
   const handleOpenCreate = () => {
     form.reset({ professorId: undefined, tipo: "afastamento", dataInicio: "", dataFim: "", professorSubstitutoId: undefined });
@@ -121,12 +146,17 @@ export default function LicencasList() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Professor</FormLabel>
-                      <Select onValueChange={(v) => field.onChange(Number(v))} value={field.value ? String(field.value) : undefined}>
+                      <Select onValueChange={(v) => { field.onChange(Number(v)); form.setValue("professorSubstitutoId", undefined); }} value={field.value ? String(field.value) : undefined}>
                         <FormControl><SelectTrigger><SelectValue placeholder="Selecione o professor" /></SelectTrigger></FormControl>
                         <SelectContent>
                           {professores?.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
                         </SelectContent>
                       </Select>
+                      {field.value ? (
+                        <p className="text-xs text-muted-foreground">
+                          Disciplinas: {disciplinasDoAfastado.length ? disciplinasDoAfastado.join(", ") : "nenhuma cadastrada no professor"}
+                        </p>
+                      ) : null}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -182,7 +212,22 @@ export default function LicencasList() {
                         <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                         <SelectContent>
                           <SelectItem value={SEM_SUBSTITUTO}>Sem substituto</SelectItem>
-                          {professores?.filter((p) => p.id !== form.watch("professorId")).map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
+                          {opcoesSubstituto.habilitados.length > 0 && (
+                            <SelectGroup>
+                              <SelectSeparator />
+                              <SelectLabel>Habilitados na mesma disciplina</SelectLabel>
+                              {opcoesSubstituto.habilitados.map(({ p, emComum }) => (
+                                <SelectItem key={p.id} value={String(p.id)}>{p.nome} ({emComum.join(", ")})</SelectItem>
+                              ))}
+                            </SelectGroup>
+                          )}
+                          {opcoesSubstituto.restantes.length > 0 && (
+                            <SelectGroup>
+                              <SelectSeparator />
+                              <SelectLabel>Outros professores</SelectLabel>
+                              {opcoesSubstituto.restantes.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
+                            </SelectGroup>
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -229,6 +274,9 @@ export default function LicencasList() {
                     <h3 className="font-semibold">{nomeProfessor(licenca.professorId)}</h3>
                     <Badge variant="outline">{rotuloTipo(licenca.tipo)}</Badge>
                   </div>
+                  {disciplinasDe(licenca.professorId).length > 0 && (
+                    <p className="text-sm mt-1">{disciplinasDe(licenca.professorId).join(", ")}</p>
+                  )}
                   <p className="text-sm text-muted-foreground mt-1">
                     {formatarData(licenca.dataInicio)} — {formatarData(licenca.dataFim)}
                     {licenca.professorSubstitutoId ? ` · Substituto: ${nomeProfessor(licenca.professorSubstitutoId)}` : ""}
