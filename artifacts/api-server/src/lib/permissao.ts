@@ -104,7 +104,7 @@ const MSG_LEITURA_EQUIPE = "Apenas a equipe da escola (coordenação ou gestor d
 
 // [PEDAGOGIA] (28/10/2026) cargo Pedagogia: acompanha o dia a dia sem o menu completo.
 // Le os relatorios de ponto e carga horaria (que sao so da coordenacao) e altera so o que e dela:
-// licencas, comunicados e a area propria /pedagogia (ponto online, agenda). Nao mexe na grade,
+// licencas, comunicados, datas do calendario e a area propria /pedagogia (ponto online, agenda). Nao mexe na grade,
 // no cadastro, nas reservas, nos usuarios nem no RCO.
 const LEITURAS_DA_PEDAGOGIA = ["/export/ponto", "/export/relatorio-carga-pdf", "/export/carga-horaria-pdf", "/pedagogia"]; // [PRESENCA-PEDAGOGIA]
 export function ehLeituraLiberadaPedagogia(caminhoBruto: string): boolean {
@@ -112,8 +112,13 @@ export function ehLeituraLiberadaPedagogia(caminhoBruto: string): boolean {
   return LEITURAS_DA_PEDAGOGIA.some((p) => caminho === p || caminho.startsWith(p + "/"));
 }
 const ALTERACOES_DA_PEDAGOGIA = ["/licencas", "/comunicados", "/pedagogia"];
+// [CALENDARIO-PEDAGOGIA] (03/11/2026) decisao da dona: a pedagogia marca, edita e exclui as datas do calendario
+// (POST /calendario-escolar, PUT e DELETE /calendario-escolar/:id). Trimestres e "aplicar o calendario oficial"
+// continuam so com a equipe gestora (mudam a conta de dias letivos do ano).
+const RE_EVENTO_CALENDARIO = /^\/calendario-escolar(\/\d+)?$/;
 export function ehAlteracaoDaPedagogia(caminhoBruto: string): boolean {
   const caminho = normalizarCaminho(caminhoBruto);
+  if (RE_EVENTO_CALENDARIO.test(caminho)) return true;
   return ALTERACOES_DA_PEDAGOGIA.some((p) => caminho === p || caminho.startsWith(p + "/"));
 }
 
@@ -146,7 +151,7 @@ function exigirPorCargo(req: Request, res: Response, next: NextFunction) {
   if (total) return next();
   if (a.cargo === "pedagogia") { // [PEDAGOGIA]
     if (ehAlteracaoDaPedagogia(req.path)) return next();
-    res.status(403).json({ error: "Seu acesso (Pedagogia) permite alterar só o ponto, as licenças, os comunicados e a agenda." });
+    res.status(403).json({ error: "Seu acesso (Pedagogia) permite alterar só o ponto, as licenças, os comunicados, a agenda e as datas do calendário." });
     return;
   }
   if (a.cargo === "reservas") {

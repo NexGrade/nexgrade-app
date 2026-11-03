@@ -83,6 +83,18 @@ describe("com ACESSOS_PELO_BANCO=1", () => {
       expect(rodar(req({ method, path, cargo: "pedagogia" })), `${method} ${path}`).toMatchObject({ passou: false, status: 403 });
     }
   });
+  it("pedagogia marca, edita e exclui datas do calendario, mas nao mexe nos trimestres [CALENDARIO-PEDAGOGIA]", () => {
+    for (const [method, path] of [["POST", "/calendario-escolar"], ["PUT", "/calendario-escolar/12"], ["DELETE", "/Calendario-Escolar/12/"]]) {
+      expect(rodar(req({ method, path, cargo: "pedagogia" })).passou, `${method} ${path}`).toBe(true);
+      for (const cargo of ["professor", "reservas"]) {
+        expect(rodar(req({ method, path, cargo })), `${cargo} ${method} ${path}`).toMatchObject({ passou: false, status: 403 });
+      }
+    }
+    for (const [method, path] of [["PUT", "/calendario-escolar/trimestres"], ["POST", "/calendario-escolar/aplicar-oficial"], ["PUT", "/calendario-escolar/12/x"], ["POST", "/calendario-escolarx"]]) {
+      expect(rodar(req({ method, path, cargo: "pedagogia" })), `${method} ${path}`).toMatchObject({ passou: false, status: 403 });
+    }
+    expect(rodar(req({ method: "PUT", path: "/calendario-escolar/trimestres", cargo: "coordenacao" })).passou).toBe(true);
+  });
   it("professor nao le os relatorios da pedagogia nem altera licencas e comunicados [PEDAGOGIA]", () => {
     for (const path of ["/export/ponto", "/export/relatorio-carga-pdf", "/export/carga-horaria-pdf"]) {
       expect(rodar(req({ path, cargo: "professor" })), path).toMatchObject({ passou: false, status: 403 });
