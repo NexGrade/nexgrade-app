@@ -1,10 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import {
-  db, pool, aulasFixasTable, disciplinasTable, disponibilidadeTable, horariosExperimentaisTable, horariosTable, professoresTable,
+  db, pool, aulasFixasTable, calendarioEscolarTable, disciplinasTable, disponibilidadeTable, horariosExperimentaisTable, horariosTable, professoresTable,
   trimestresLetivosTable, turmaDisciplinasTable, turmasTable, viradasAnoTable,
 } from "@workspace/db";
 import { desfazerVirada, executarVirada, liberarViradaAntes, previaVirada, situacaoVirada } from "../virada-ano";
+import { CALENDARIOS_OFICIAIS } from "../calendario-oficial";
 
 // [VIRADA-ANO] (24/10/2026) virar o ano e desfazer, com um Postgres de verdade (so com TEST_DATABASE_URL).
 const TEM_BANCO = !!process.env.TEST_DATABASE_URL;
@@ -12,6 +13,8 @@ const E = `virada_${Date.now().toString(36)}${Math.random().toString(36).slice(2
 
 describe.skipIf(!TEM_BANCO)("virada do ano letivo (integração)", () => {
   const ids = { t6a: 0, t6b: 0, t9a: 0, pAna: 0, pBeto: 0, disc: 0 };
+  let calendarioDoTeste = false;
+  const trimestres2027 = async () => db.select().from(trimestresLetivosTable).where(and(eq(trimestresLetivosTable.escolaId, E), eq(trimestresLetivosTable.ano, 2027)));
 
   beforeAll(async () => {
     const [d] = await db.insert(disciplinasTable).values({ escolaId: E, nome: "Matemática" }).returning();
@@ -45,9 +48,13 @@ describe.skipIf(!TEM_BANCO)("virada do ano letivo (integração)", () => {
     await db.insert(aulasFixasTable).values({ escolaId: E, turmaId: ids.t9a, disciplinaId: ids.disc, professorId: ids.pAna, diaSemana: 1, numeroAula: 2, anoLetivo: 2026 } as never);
     // fim do ano letivo bem no futuro: a virada so anda se a Nexus Core liberar
     await db.insert(trimestresLetivosTable).values({ escolaId: E, ano: 2026, trimestre: 3, dataInicio: "2026-09-08", dataFim: "2099-12-18", diasLetivos: 70 });
+    // [VIRADA-CALENDARIO] o calendario oficial de 2027 ainda nao existe no sistema: o teste usa um so enquanto roda
+    if (!CALENDARIOS_OFICIAIS[2027]) { CALENDARIOS_OFICIAIS[2027] = { ...CALENDARIOS_OFICIAIS[2026]!, ano: 2027 }; calendarioDoTeste = true; }
   });
 
   afterAll(async () => {
+    if (calendarioDoTeste) delete CALENDARIOS_OFICIAIS[2027];
+    await db.delete(calendarioEscolarTable).where(eq(calendarioEscolarTable.escolaId, E));
     await db.delete(viradasAnoTable).where(eq(viradasAnoTable.escolaId, E));
     await db.delete(trimestresLetivosTable).where(eq(trimestresLetivosTable.escolaId, E));
     await db.delete(horariosExperimentaisTable).where(eq(horariosExperimentaisTable.escolaId, E));
@@ -69,6 +76,7 @@ describe.skipIf(!TEM_BANCO)("virada do ano letivo (integração)", () => {
   it("mostra a prévia sem gravar nada", async () => {
     const p = await previaVirada(E);
     expect(p.turmas).toHaveLength(3);
+    expect(p.situacao.calendarioNovo).toBe("oficial"); // [VIRADA-CALENDARIO]
     expect(p.zera).toEqual({ aulasOficiais: 3, experimentos: 1, disponibilidade: 2, codigosSere: 3, aulasFixas: 1 }); // [VIRADA-ZERA-FIXAS]
     expect((await db.select().from(horariosTable).where(eq(horariosTable.escolaId, E)))).toHaveLength(3);
   });
@@ -96,6 +104,8 @@ describe.skipIf(!TEM_BANCO)("virada do ano letivo (integração)", () => {
     expect(await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, [ids.pAna, ids.pBeto]))).toHaveLength(0);
     expect(await db.select().from(aulasFixasTable).where(eq(aulasFixasTable.escolaId, E))).toHaveLength(0); // [VIRADA-ZERA-FIXAS] todas zeram
     expect((r.body as any).resumo.aulasFixasApagadas).toBe(1);
+    expect((r.body as any).resumo.calendarioAplicado).toBe(true); // [VIRADA-CALENDARIO]
+    expect(await trimestres2027()).toHaveLength(CALENDARIOS_OFICIAIS[2027]!.trimestres.length);
     const s = await situacaoVirada(E);
     expect(s.anoDe).toBe(2027);
     expect(s.podeDesfazer).toBe(true);
@@ -131,6 +141,7 @@ describe.skipIf(!TEM_BANCO)("virada do ano letivo (integração)", () => {
     expect(nova!.id).toBeGreaterThan(Math.max(ids.t6a, ids.t6b, ids.t9a));
     await db.delete(turmasTable).where(eq(turmasTable.id, nova!.id));
     expect((await situacaoVirada(E)).anoDe).toBe(2026);
+    expect(await trimestres2027()).toHaveLength(0); // [VIRADA-CALENDARIO] o calendario que a virada pos sai junto
   });
 
   it("não desfaz se já houver grade oficial do ano novo", async () => {
