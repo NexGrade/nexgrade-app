@@ -20,7 +20,16 @@ describe("quais aulas oficiais o experimento substitui", () => {
     const substitui = regraDeSubstituicao([{ turmaId: 1, disciplinaId: 12, professorId: 400 }], vinculos);
     expect(substitui({ turmaId: 1, disciplinaId: 12, professorId: 400 })).toBe(true);
     expect(substitui({ turmaId: 1, disciplinaId: 12, professorId: 401 })).toBe(false); // o outro da dupla esta ligado
-    expect(substitui({ turmaId: 1, disciplinaId: 10, professorId: 100 })).toBe(false); // Matematica nao esta no experimento
+    expect(substitui({ turmaId: 1, disciplinaId: 10, professorId: 200 })).toBe(false); // Matematica, com o professor ligado, fica
+    expect(substitui({ turmaId: 2, disciplinaId: 10, professorId: 100 })).toBe(false); // turma fora do experimento: nada sai
+  });
+
+  it("[PROMOVER-VINCULO-SEM-PROFESSOR] vinculo que ficou sem professor: a aula antiga sai, mesmo fora do experimento", () => {
+    // 6TB, 03/11: Lingua Portuguesa (13) sem professor; o experimento regera a turma sem ela
+    const semLP = [...vinculos, { turmaId: 1, disciplinaId: 13, professorId: null, professorApoioId: null }];
+    const substitui = regraDeSubstituicao([{ turmaId: 1, disciplinaId: 11, professorId: 300 }], semLP);
+    expect(substitui({ turmaId: 1, disciplinaId: 13, professorId: 500 })).toBe(true); // LP do professor antigo
+    expect(substitui({ turmaId: 1, disciplinaId: 12, professorId: 400 })).toBe(false); // Recomposicao, ligada, fica
   });
 
   it("professor de apoio ligado nao sai", () => {

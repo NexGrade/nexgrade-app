@@ -2704,11 +2704,13 @@ function AbaExperimental() {
   // [SIMULAR-PROMOCAO] (05/10/2026) compara janelas (aula + HA recalculada +
   // atividade do sistema anterior) da grade oficial com a do experimento, sem gravar nada.
   type JanelaSim = { professorId?: number; professorNome: string; turno: string; dia: string; diaSemana?: number; janelas: number; dia_detalhe: string };
+  type ContagemSim = { janelas: number; porTurno?: Record<string, number>; diasComConflito: number; detalhe: JanelaSim[] };
   type ResultadoSim = {
     turnos: string[];
-    oficialHoje?: { janelas: number; diasComConflito: number; detalhe: JanelaSim[] }; // [SIMULAR-MUDANCA-REAL]
-    oficial: { janelas: number; diasComConflito: number; detalhe: JanelaSim[] };
-    experimento: { janelas: number; diasComConflito: number; detalhe: JanelaSim[] };
+    turnosDoExperimento?: string[]; // [HA-OUTRO-TURNO] os outros de `turnos` mudam pela HA de quem teve aula mexida
+    oficialHoje?: ContagemSim; // [SIMULAR-MUDANCA-REAL]
+    oficial: ContagemSim;
+    experimento: ContagemSim;
     professoresComHAMudando: number;
     aulasMudando?: number;
     aulasMovidas?: Array<{ professorNome: string; turma: string; disciplina: string; sai: string[]; entra: string[] }>;
@@ -3078,6 +3080,21 @@ function AbaExperimental() {
                             <div className={`text-xs font-medium ${corDif}`}>{textoDif}</div>
                           </div>
                         </div>
+                        {sim.turnos.length > 1 && hoje.porTurno && sim.experimento.porTurno && ( /* [HA-OUTRO-TURNO] */
+                          <ul className="mt-2 space-y-0.5 text-xs">
+                            {sim.turnos.map((t) => {
+                              const antes = hoje.porTurno?.[t] ?? 0, depois = sim.experimento.porTurno?.[t] ?? 0;
+                              const soPelaHA = !!sim.turnosDoExperimento && !sim.turnosDoExperimento.includes(t);
+                              const nomeT = ({ matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" } as Record<string, string>)[t] ?? t;
+                              return (
+                                <li key={t} className={soPelaHA && depois > antes ? "font-medium text-red-700" : undefined}>
+                                  {nomeT}: {antes} → {depois} janela(s)
+                                  {soPelaHA && " — este turno não está no experimento: muda porque a HA de quem teve aula mexida é refeita"}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
                         {sim.oficialHoje && sim.oficial.janelas !== hoje.janelas && (
                           <p className="mt-1 text-xs opacity-70">Para comparar: se a HA da oficial fosse recalculada pela regra, ela teria {sim.oficial.janelas} janela(s).</p>
                         )}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { reposicionarHAMovel, slotsLetivosPorTurno, type AulaPos, type DispLinha } from "../reposicionar-ha";
+import { reposicionarHAMovel, slotsLetivosPorTurno, turnosAfetadosPelaHA, type AulaPos, type DispLinha } from "../reposicionar-ha";
 
 // [HA-MOVEL-MELHORIA] casos da regra: HA movel vai para onde tira janela, sem mexer em aula
 const M = "matutino";
@@ -73,5 +73,14 @@ describe("reposicionarHAMovel", () => {
     // seg ja tem 3 HA: a HA de ter nao vai para seg 5 (que tiraria a janela de seg)
     const r = rodar(aulas, disp);
     expect(r.some((m) => m.linha.diaSemana === 1 && m.diaSemana === 0)).toBe(false);
+  });
+});
+
+// [HA-OUTRO-TURNO] (03/11/2026) promover a tarde refaz a HA de quem mudou tambem na manha (HA* e quem da aula nos dois)
+describe("turnosAfetadosPelaHA", () => {
+  it("inclui o turno em que ficou HA de quem teve aula mexida, e so dele", () => {
+    const ha = [{ professorId: 1, turno: "matutino" }, { professorId: 2, turno: "noturno" }, { professorId: 1, turno: "integral" }];
+    expect(turnosAfetadosPelaHA(["vespertino"], ha, new Set([1]))).toEqual(["vespertino", "matutino"]);
+    expect(turnosAfetadosPelaHA(["vespertino"], ha, new Set())).toEqual(["vespertino"]);
   });
 });

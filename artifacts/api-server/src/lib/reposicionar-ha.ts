@@ -20,6 +20,17 @@ export interface DispLinha {
 }
 export interface MovimentoHA<T extends DispLinha = DispLinha> { linha: T; diaSemana: number; horarioSlot: number }
 
+/**
+ * [HA-OUTRO-TURNO] (03/11/2026) Turnos em que a HA no buraco tem que passar depois de promover: os do experimento e
+ * os turnos em que o recalculo deixou HA de quem teve aula mexida (a HA* que nao coube no turno promovido, e a HA
+ * reorganizada de quem da aula em dois turnos). Antes so os do experimento: promover a tarde levou a manha de 3 para
+ * 10 janelas (escola do zero na Demonstracao). A turma integral fica de fora (a HA dela conta no turno real).
+ */
+export function turnosAfetadosPelaHA(turnosExperimento: string[], ha: Array<{ professorId: number; turno: string | null }>, mudaram: Set<number>): string[] {
+  const outros = ha.filter((m) => m.turno && m.turno !== "integral" && mudaram.has(m.professorId)).map((m) => m.turno!);
+  return [...new Set([...turnosExperimento, ...outros])];
+}
+
 const PARES_TURNO: Array<[string, string]> = [["matutino", "vespertino"], ["vespertino", "noturno"]];
 const MAX_HA_DIA = 3;
 const RE_ATIVIDADE = /\(ocupado:\s*[^)]+\)/;
