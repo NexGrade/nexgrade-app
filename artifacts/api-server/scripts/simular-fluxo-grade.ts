@@ -148,7 +148,7 @@ async function main() {
     };
 
     // ---------- 1) a mudanca do cenario ----------
-    let tempoLimiteS: number | undefined;
+    let tempoLimiteS: number | undefined = CENARIO !== "melhorar" && arg("tempo") ? Number(arg("tempo")) : undefined; // --tempo vale tambem para gerar
     switch (CENARIO) {
       case "base": case "promover-fora-do-periodo": case "heuristico-turma": case "conferir-promocao": case "melhorar": case "medir": break;
       case "bloqueio-2-dias": await bloquear([0, 1], slots); etapa("mudanca", `${prof.nome} (#${prof.id}, ${prof.aulas} aulas) indisponivel seg e ter`); break;
