@@ -351,6 +351,11 @@ export async function calcularHAIdeal(
       const bloqueado = bloqueadoPorTurno.get(turno) ?? new Set();
       const ocupado = new Set(ocupadoInicial);
       const MAX_HA_POR_DIA = maxHaPorDia;
+      // [HA-DIA-NA-ESCOLA] (03/11/2026, decisao da dona) a HA vai de preferencia no dia em que o professor ja esta
+      // na escola: 2 = tem aula neste turno no dia, 1 = tem aula em outro turno no dia, 0 = nao vem. Antes, o dia
+      // sem aula tinha 0 HA e nao criava janela, e ganhava no "dia com menos HA" (Ricardo Farias: so HA na segunda).
+      const diasNoTurno = new Set([...(ocupadoPorTurnoOriginal.get(turno) ?? [])].map((k) => Number(k.split("-")[0])));
+      const naEscola = (dia: number) => (diasNoTurno.has(dia) ? 2 : diasComAula.has(dia) ? 1 : 0);
 
 
       function livre(dia: number, aula: number): boolean {
@@ -437,6 +442,7 @@ export async function calcularHAIdeal(
           dia: number;
           aula: number;
           janelas: number;
+          escola: number; // [HA-DIA-NA-ESCOLA]
           fechaPausa: boolean; // [HA-1A-DA-TARDE]
           diaCount: number;
           colado: boolean;
@@ -463,17 +469,25 @@ export async function calcularHAIdeal(
           // acima); com isso corrigido, o criterio "janelas" (que vem
           // primeiro) ja resolve sozinho, sem precisar mexer nessa ordem.
           // [HA-1A-DA-TARDE] com o mesmo numero de janelas, a HA que fecha a pausa entre turnos vem antes
-          const mesmaFaixa = !melhor || (janelas === melhor.janelas && fechaPausa === melhor.fechaPausa);
+          // [HA-DIA-NA-ESCOLA] primeiro, nao fazer o professor ir a escola num dia a mais (antes ate de janela: a
+          // HA* da Elaine Duarte ia para uma terca sem aula so para nao abrir janela num dia em que ela ja vem);
+          // entre os dias em que ele vem, menos janelas e depois o dia com aula NESTE turno
+          const escola = naEscola(c.dia);
+          const vem = escola > 0;
+          const melhorVem = !!melhor && melhor.escola > 0;
+          const mesmaFaixa = !melhor || (vem === melhorVem && janelas === melhor.janelas && escola === melhor.escola && fechaPausa === melhor.fechaPausa);
           if (
             !melhor ||
-            janelas < melhor.janelas ||
-            (janelas === melhor.janelas && fechaPausa && !melhor.fechaPausa) ||
+            (vem && !melhorVem) ||
+            (vem === melhorVem && janelas < melhor.janelas) ||
+            (vem === melhorVem && janelas === melhor.janelas && escola > melhor.escola) ||
+            (janelas === melhor.janelas && escola === melhor.escola && fechaPausa && !melhor.fechaPausa) ||
             (mesmaFaixa && diaCount < melhor.diaCount) ||
             (mesmaFaixa && diaCount === melhor.diaCount && colado && !melhor.colado) ||
             (mesmaFaixa && diaCount === melhor.diaCount && colado === melhor.colado && dist < melhor.dist) ||
             (mesmaFaixa && diaCount === melhor.diaCount && colado === melhor.colado && dist === melhor.dist && c.dia < melhor.dia)
           ) {
-            melhor = { ...c, janelas, fechaPausa, diaCount, colado, dist };
+            melhor = { ...c, janelas, escola, fechaPausa, diaCount, colado, dist };
           }
         }
         if (!melhor) break;
