@@ -34,7 +34,7 @@ import { carregarLimitesPorDisciplina, limiteAulasDia } from "../lib/limite-disc
 import { REGRAS_REDE } from "../lib/regras-rede"; // [REGRAS-REDE]
 import { CHAVE_TETO_LIBERADO } from "./conflitos"; // [TETO-AUTORIZADO]
 import { salvarBackupGrade, listarBackupsGrade, restaurarBackupGrade } from "../lib/backup-grade"; // [BACKUP-GRADE]
-import { reposicionarHAMovel, slotsLetivosPorTurno, type AulaPos } from "../lib/reposicionar-ha"; // [HA-MOVEL-MELHORIA]
+import { reposicionarHAMovel, slotsLetivosPorTurno, turnosAfetadosPelaHA, type AulaPos } from "../lib/reposicionar-ha"; // [HA-MOVEL-MELHORIA] [HA-OUTRO-TURNO]
 import { carregarAssSoTurma } from "../lib/assincrona-so-turma"; // [ASS-SO-TURMA]
 import { evitarPorPausaEntreTurnos } from "../lib/pausa-entre-turnos"; // [PAUSA-ENTRE-TURNOS]
 import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
@@ -1213,7 +1213,9 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
         return r && h.professorId != null ? [{ professorId: h.professorId, turno: r.turno, diaSemana: h.diaSemana, numeroAula: r.numeroAula }] : [];
       });
       const dispMudaram = await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, mudaram));
-      const movs = reposicionarHAMovel({ aulas: aulasDepois, disp: dispMudaram, slotsLetivos: slotsLetivosPorTurno(slotsEscola), turnos: turnosExp, professores: mudaram });
+      // [HA-OUTRO-TURNO] tambem nos turnos em que o recalculo deixou HA de quem mudou (igual a simulacao)
+      const turnosHA = turnosAfetadosPelaHA(turnosExp, dispMudaram.filter((d) => d.horaAtividadeObrigatoria), new Set(mudaram));
+      const movs = reposicionarHAMovel({ aulas: aulasDepois, disp: dispMudaram, slotsLetivos: slotsLetivosPorTurno(slotsEscola), turnos: turnosHA, professores: mudaram });
       if (movs.length) {
         await db.transaction(async (tx) => {
           // 1) tira do lugar (posicao provisoria unica) para uma HA poder ir para onde outra acabou de sair

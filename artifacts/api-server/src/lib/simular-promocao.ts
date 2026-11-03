@@ -10,7 +10,7 @@ import { regraDeSubstituicao, vinculosDasTurmas } from "./promocao-substitui"; /
 import { db, professoresTable, turmasTable, horariosTable, horariosExperimentaisTable, disponibilidadeTable, disciplinasTable, horarioSlotsTable } from "@workspace/db";
 import { and, eq, inArray } from "drizzle-orm";
 import { calcularHAIdeal, type AulaParaCalculoHA, type MarcaHACalculada } from "./recalcular-ha";
-import { reposicionarHAMovel, slotsLetivosPorTurno, type AulaPos } from "./reposicionar-ha";
+import { reposicionarHAMovel, slotsLetivosPorTurno, turnosAfetadosPelaHA, type AulaPos } from "./reposicionar-ha";
 import { MOTIVO_HA_AUTO } from "./ha-contraturno"; // [HA-BURACO-QUEM-MUDOU]
 import { mapaIntegralDosSlots, posicaoReal } from "./turno-integral"; // [INTEGRAL-NA-OCUPACAO]
 
@@ -40,14 +40,18 @@ export interface HAMovida {
   entra: string[]; // HA que entra
 }
 
+export interface ContagemJanelas { janelas: number; porTurno: Record<string, number>; diasComConflito: number; detalhe: JanelaSimulada[] }
+
 export interface ResultadoSimulacao {
   nome: string;
+  /** [HA-OUTRO-TURNO] turnos contados: os do experimento e os que a HA de quem teve aula mexida alcança */
   turnos: string[];
+  turnosDoExperimento: string[];
   /** oficial como está HOJE (HA gravada de verdade: automática, manual, fixa, importada) */
-  oficialHoje: { janelas: number; diasComConflito: number; detalhe: JanelaSimulada[] };
+  oficialHoje: ContagemJanelas;
   /** oficial com a HA recalculada pela regra (o que o recálculo faria sem promover) */
-  oficial: { janelas: number; diasComConflito: number; detalhe: JanelaSimulada[] };
-  experimento: { janelas: number; diasComConflito: number; detalhe: JanelaSimulada[] };
+  oficial: ContagemJanelas;
+  experimento: ContagemJanelas;
   professoresComHAMudando: number;
   aulasMudando: number;
   aulasMovidas: AulaMovida[];
@@ -99,6 +103,24 @@ export async function simularPromocao(
   const haOficial = await calcularHAIdeal(escolaId, aulasOficial);
   const haSimulada = await calcularHAIdeal(escolaId, aulasSimuladas);
 
+  // [HA-SO-QUEM-MUDOU] igual a promocao: quem nao teve aula mexida fica com a HA de hoje
+  const chaveAulaP = (x: { turmaId: number; diaSemana: number; numeroAula: number }) => `${x.turmaId}|${x.diaSemana}|${x.numeroAula}`;
+  const porProf = (rows: AulaParaCalculoHA[]) => {
+    const m = new Map<number, Set<string>>();
+    for (const r of rows) { if (!m.has(r.professorId)) m.set(r.professorId, new Set()); m.get(r.professorId)!.add(chaveAulaP(r)); }
+    return m;
+  };
+  const antesP = porProf(aulasOficial); const depoisP = porProf(aulasSimuladas);
+  const mudou = new Set<number>();
+  for (const p of new Set([...antesP.keys(), ...depoisP.keys()])) {
+    const a = antesP.get(p) ?? new Set<string>(); const d = depoisP.get(p) ?? new Set<string>();
+    if (a.size !== d.size || [...a].some((k) => !d.has(k))) mudou.add(p);
+  }
+  // [HA-OUTRO-TURNO] (03/11/2026) o recalculo refaz a HA de quem teve aula mexida em TODOS os turnos dele (inclusive a
+  // HA* que nao coube no turno promovido). Esses turnos tambem entram na conta e na HA no buraco, igual a promocao.
+  // Antes so o turno do experimento era contado: promover a tarde levou a manha de 3 para 10 janelas sem aviso.
+  const turnosConta = turnosAfetadosPelaHA(turnos, haSimulada, mudou);
+
   const atividade = new Set(disp
     .filter((d) => profIds.has(d.professorId) && !d.horaAtividadeObrigatoria && d.turno && /\(ocupado:\s*[^)]+\)/.test(d.motivo ?? ""))
     .map((d) => `${d.professorId}|${d.turno}|${d.diaSemana}|${d.horarioSlot}`));
@@ -112,9 +134,9 @@ export async function simularPromocao(
     };
     for (const a of aulas) {
       const r = real(a); // [INTEGRAL-NA-OCUPACAO]
-      if (r && turnos.includes(r.turno)) marca(a.professorId, r.turno, a.diaSemana, r.numeroAula, "aula");
+      if (r && turnosConta.includes(r.turno)) marca(a.professorId, r.turno, a.diaSemana, r.numeroAula, "aula");
     }
-    for (const m of ha) if (turnos.includes(m.turno)) marca(m.professorId, m.turno, m.diaSemana, m.horarioSlot, m.outroTurno ? "HA*" : "HA");
+    for (const m of ha) if (turnosConta.includes(m.turno)) marca(m.professorId, m.turno, m.diaSemana, m.horarioSlot, m.outroTurno ? "HA*" : "HA");
 
     const detalhe: JanelaSimulada[] = [];
     for (const [k, m] of porDia) {
@@ -132,6 +154,7 @@ export async function simularPromocao(
     detalhe.sort((x, y) => y.janelas - x.janelas || x.professorNome.localeCompare(y.professorNome));
     return {
       janelas: detalhe.reduce((s, d) => s + d.janelas, 0),
+      porTurno: Object.fromEntries(turnosConta.map((t) => [t, detalhe.filter((d) => d.turno === t).reduce((s, d) => s + d.janelas, 0)])), // [HA-OUTRO-TURNO]
       diasComConflito: detalhe.filter((d) => d.janelas >= 2).length, // mesmo corte da tela de Conflitos
       detalhe,
     };
@@ -139,7 +162,7 @@ export async function simularPromocao(
 
   // [SIMULAR-MUDANCA-REAL] HA gravada hoje (qualquer tipo), nos turnos do experimento
   const haHoje: MarcaHACalculada[] = disp
-    .filter((d) => profIds.has(d.professorId) && d.horaAtividadeObrigatoria && d.turno && turnos.includes(d.turno))
+    .filter((d) => profIds.has(d.professorId) && d.horaAtividadeObrigatoria && d.turno && turnosConta.includes(d.turno))
     .map((d) => ({ professorId: d.professorId, turno: d.turno!, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, outroTurno: /outro turno|HA\*/i.test(d.motivo ?? "") }));
 
   const resOficialHoje = contar(aulasOficial, haHoje);
@@ -148,21 +171,8 @@ export async function simularPromocao(
   const TURNO_ROT: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
   const rotulo = (d: number, a: number) => `${DIAS[d] ?? d} ${a}ª`;
 
-  // HA: hoje x depois de promover, só nos turnos do experimento
+  // HA: hoje x depois de promover, nos turnos contados
   const chave = (m: MarcaHACalculada) => `${m.professorId}|${m.turno}|${m.diaSemana}|${m.horarioSlot}`;
-  // [HA-SO-QUEM-MUDOU] igual a promocao: quem nao teve aula mexida fica com a HA de hoje
-  const chaveAulaP = (x: { turmaId: number; diaSemana: number; numeroAula: number }) => `${x.turmaId}|${x.diaSemana}|${x.numeroAula}`;
-  const porProf = (rows: AulaParaCalculoHA[]) => {
-    const m = new Map<number, Set<string>>();
-    for (const r of rows) { if (!m.has(r.professorId)) m.set(r.professorId, new Set()); m.get(r.professorId)!.add(chaveAulaP(r)); }
-    return m;
-  };
-  const antesP = porProf(aulasOficial); const depoisP = porProf(aulasSimuladas);
-  const mudou = new Set<number>();
-  for (const p of new Set([...antesP.keys(), ...depoisP.keys()])) {
-    const a = antesP.get(p) ?? new Set<string>(); const d = depoisP.get(p) ?? new Set<string>();
-    if (a.size !== d.size || [...a].some((k) => !d.has(k))) mudou.add(p);
-  }
   // [HA-MOVEL-MELHORIA] quem nao teve aula mexida: a HA movel vai para onde tira janela (igual a promocao)
   const aulasSimPos: AulaPos[] = aulasSimuladas.flatMap((a) => {
     const r = real(a); // [INTEGRAL-NA-OCUPACAO] a HA nunca vai para cima de aula da turma integral
@@ -175,7 +185,7 @@ export async function simularPromocao(
   });
   const novoLugar = new Map(movHA.map((m) => [m.linha, m]));
   const haHojeReposta: MarcaHACalculada[] = dispEscola
-    .filter((d) => d.horaAtividadeObrigatoria && d.turno && turnos.includes(d.turno) && !mudou.has(d.professorId))
+    .filter((d) => d.horaAtividadeObrigatoria && d.turno && turnosConta.includes(d.turno) && !mudou.has(d.professorId))
     .map((d) => {
       const mv = novoLugar.get(d);
       return { professorId: d.professorId, turno: d.turno!, diaSemana: mv ? mv.diaSemana : d.diaSemana, horarioSlot: mv ? mv.horarioSlot : d.horarioSlot, outroTurno: /outro turno|HA\*/i.test(d.motivo ?? "") };
@@ -183,7 +193,7 @@ export async function simularPromocao(
   // [HA-BURACO-QUEM-MUDOU] (01/11/2026) quem teve aula mexida: depois do recalculo, a HA movel tambem vai para onde
   // tira janela (igual a promocao). Antes so quem NAO mudou passava por isso, e o recalculo mantinha a HA importada
   // onde estava: sobravam janelas que uma HA movida fecharia (Bruno Carvalho, simulacao de 01/11).
-  const haRecalculada = haSimulada.filter((m) => turnos.includes(m.turno) && mudou.has(m.professorId));
+  const haRecalculada = haSimulada.filter((m) => turnosConta.includes(m.turno) && mudou.has(m.professorId));
   const linhaHoje = new Map(dispEscola.filter((d) => d.horaAtividadeObrigatoria).map((d) => [`${d.professorId}|${d.turno}|${d.diaSemana}|${d.horarioSlot}`, d]));
   const haRecalcLinhas = haRecalculada.map((m) => ({
     professorId: m.professorId, turno: m.turno, diaSemana: m.diaSemana, horarioSlot: m.horarioSlot,
@@ -192,7 +202,7 @@ export async function simularPromocao(
     motivo: linhaHoje.get(`${m.professorId}|${m.turno}|${m.diaSemana}|${m.horarioSlot}`)?.motivo ?? MOTIVO_HA_AUTO,
   }));
   const movRecalc = reposicionarHAMovel({
-    aulas: aulasSimPos, slotsLetivos: slotsLetivosPorTurno(slots), turnos, professores: [...mudou],
+    aulas: aulasSimPos, slotsLetivos: slotsLetivosPorTurno(slots), turnos: turnosConta, professores: [...mudou],
     disp: [...dispEscola.filter((d) => mudou.has(d.professorId) && !d.horaAtividadeObrigatoria), ...haRecalcLinhas],
   });
   const lugarRecalc = new Map(movRecalc.map((mv) => [mv.linha, mv]));
@@ -246,7 +256,8 @@ export async function simularPromocao(
 
   return {
     nome,
-    turnos,
+    turnos: turnosConta, // [HA-OUTRO-TURNO] os do experimento e os que a HA de quem mudou alcanca
+    turnosDoExperimento: turnos,
     oficialHoje: resOficialHoje,
     oficial: resOficial,
     experimento: resExp,
@@ -259,9 +270,9 @@ export async function simularPromocao(
     // promocao: quem teve aula mexida fica com a HA recalculada e quem nao teve, com a HA de hoje.
     haDepoisPromover: [
       ...haDepois,
-      ...haSimulada.filter((m) => !turnos.includes(m.turno) && mudou.has(m.professorId)),
+      ...haSimulada.filter((m) => !turnosConta.includes(m.turno) && mudou.has(m.professorId)),
       ...dispEscola
-        .filter((d) => d.horaAtividadeObrigatoria && d.turno && !turnos.includes(d.turno) && !mudou.has(d.professorId))
+        .filter((d) => d.horaAtividadeObrigatoria && d.turno && !turnosConta.includes(d.turno) && !mudou.has(d.professorId))
         .map((d) => ({ professorId: d.professorId, turno: d.turno!, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, outroTurno: /outro turno|HA\*/i.test(d.motivo ?? "") })),
     ],
   };
