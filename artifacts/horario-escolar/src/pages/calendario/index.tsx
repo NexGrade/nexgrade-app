@@ -103,6 +103,8 @@ export default function CalendarioEscolarPage() {
   // [CALENDARIO-EDITAVEL]
   const papel = usePapelEfetivo();
   const podeEditar = !papel.carregando && !papel.ehGestor && !papel.ehPedagogia && !papel.ehProfessor && !papel.semEscola; // [PEDAGOGIA]
+  // [CALENDARIO-PEDAGOGIA] (03/11/2026) a pedagogia marca, edita e exclui as datas; trimestres e oficial seguem com podeEditar
+  const podeEditarDatas = podeEditar || (!papel.carregando && papel.ehPedagogia);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { data: oficiais = [] } = useQuery({
@@ -319,9 +321,9 @@ export default function CalendarioEscolarPage() {
                       return (
                         <div
                           key={ci}
-                          onClick={podeEditar && cel.dataStr ? () => novoEvento(cel.dataStr!) : undefined}
-                          title={podeEditar && cel.dataStr ? "Clique para adicionar uma data" : undefined}
-                          className={`${podeEditar && cel.dia ? "cursor-pointer hover:brightness-95 " : ""}min-h-[84px] p-1.5 border-r border-b border-border/40 last:border-r-0 ${si === semanas.length - 1 ? "last:border-b-0" : ""} ${fundo} transition-colors`}
+                          onClick={podeEditarDatas && cel.dataStr ? () => novoEvento(cel.dataStr!) : undefined}
+                          title={podeEditarDatas && cel.dataStr ? "Clique para adicionar uma data" : undefined}
+                          className={`${podeEditarDatas && cel.dia ? "cursor-pointer hover:brightness-95 " : ""}min-h-[84px] p-1.5 border-r border-b border-border/40 last:border-r-0 ${si === semanas.length - 1 ? "last:border-b-0" : ""} ${fundo} transition-colors`}
                         >
                           {cel.dia && (
                             <>
@@ -334,7 +336,7 @@ export default function CalendarioEscolarPage() {
                                   return (
                                     <div
                                       key={i}
-                                      onClick={podeEditar ? (clique) => { clique.stopPropagation(); setEditEvento({ id: ev.id, data: ev.data, tipo: ev.tipo, descricao: ev.descricao }); } : undefined}
+                                      onClick={podeEditarDatas ? (clique) => { clique.stopPropagation(); setEditEvento({ id: ev.id, data: ev.data, tipo: ev.tipo, descricao: ev.descricao }); } : undefined}
                                       title={`${tipo.label}: ${ev.descricao}`}
                                       className={`flex items-center gap-1 text-[10px] leading-tight px-1 py-0.5 rounded truncate ${tipo.color}`}
                                     >
@@ -382,11 +384,11 @@ export default function CalendarioEscolarPage() {
 
               {/* [CELULAR-CALENDARIO] (01/11/2026) a lista de datas do mes aparece tambem para quem so consulta:
                   no celular os nomes ficam cortados nos quadrinhos e o nome inteiro so aparecia passando o mouse */}
-              {(podeEditar || eventosDoMesLista.length > 0) && (
+              {(podeEditarDatas || eventosDoMesLista.length > 0) && (
                 <div className="mt-5 border-t pt-4 space-y-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-semibold">Datas de {MESES[mesAtual]}</p>
-                    {podeEditar && (
+                    {podeEditarDatas && (
                       <Button size="sm" onClick={() => novoEvento()}>
                         <Plus className="w-4 h-4 mr-1" /> Adicionar data
                       </Button>
@@ -400,7 +402,7 @@ export default function CalendarioEscolarPage() {
                         <span className="font-mono w-12 shrink-0">{formatarData(ev.data)}</span>
                         <span className={`text-xs px-2 py-0.5 rounded ${tipo.color}`}>{tipo.label}</span>
                         <span className="flex-1 min-w-[10rem] break-words">{ev.descricao}</span>
-                        {podeEditar && (
+                        {podeEditarDatas && (
                           <>
                             <Button variant="ghost" size="icon" className="h-7 w-7" title="Editar" onClick={() => setEditEvento({ id: ev.id, data: ev.data, tipo: ev.tipo, descricao: ev.descricao })}>
                               <Pencil className="w-3.5 h-3.5" />
@@ -413,7 +415,7 @@ export default function CalendarioEscolarPage() {
                       </div>
                     );
                   })}
-                  {podeEditar && <p className="text-xs text-muted-foreground">Dica: clique num dia do calendário para adicionar uma data nele (recesso, feriado municipal, reposição).</p>}
+                  {podeEditarDatas && <p className="text-xs text-muted-foreground">Dica: clique num dia do calendário para adicionar uma data nele (recesso, feriado municipal, reposição).</p>}
                 </div>
               )}
             </>
