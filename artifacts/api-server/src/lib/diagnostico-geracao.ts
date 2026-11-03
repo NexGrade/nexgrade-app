@@ -15,10 +15,53 @@ export type DiagnosticoGeracao = {
 const DIAS = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
 const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
 
+// [ORIGEM-BLOQUEIO] (03/11/2026) De onde vem cada horario que a API manda ao motor como "bloqueado" do professor.
+// O motor so ve uma lista e diz "29 bloqueados"; na bateria de 03/11 a professora tinha 21 bloqueios na
+// Disponibilidade, e o resto eram aulas dela no Fundamental (ja postas) -- a escola abriria a Disponibilidade e
+// veria 7 horarios livres, sem entender o "1 livre".
+export type OrigemBloqueio = "bloqueio" | "haFixa" | "outraTurma" | "integral" | "intervalo" | "naoLetivo";
+const TEXTO_ORIGEM: Array<[OrigemBloqueio, string, string]> = [
+  ["bloqueio", "bloqueado na Disponibilidade", "bloqueados na Disponibilidade"],
+  ["haFixa", "de HA fixa", "de HA fixa"],
+  ["outraTurma", "com aula em outra turma do turno", "com aula em outras turmas do turno"],
+  ["integral", "com aula na turma integral", "com aula na turma integral"],
+  ["intervalo", "no intervalo entre turnos", "no intervalo entre turnos"],
+  ["naoLetivo", "fora do período letivo", "fora do período letivo"],
+];
+
+/**
+ * Refaz a frase "X: N aulas no turno, mas só tem L horário(s) livre(s) (B bloqueados)." do motor (e a variante
+ * "até a Nª aula") dizendo de onde vem cada horario ocupado. `origens`: professor -> "dia-aula" -> origem.
+ * Se a conta nao bater com a do motor, devolve a frase como veio.
+ */
+export function explicarBloqueiosNaCausa(causa: string, origens: Map<string, Map<string, OrigemBloqueio>>): string {
+  const a = /^(.+?): (\d+) aulas no turno, mas só tem (\d+) horário\(s\) livre\(s\) \((\d+) bloqueados\)\.$/.exec(causa);
+  const b = a ? null : /^(.+?): (\d+) aulas em turmas que vão até a (\d+)ª aula, mas só tem (\d+) horário\(s\) livre\(s\) até a \3ª aula \((\d+) bloqueados\)\.$/.exec(causa);
+  if (!a && !b) return causa;
+  const prof = (a ?? b)![1]!;
+  const limite = b ? Number(b[3]) : Infinity;
+  const bloqueados = Number(a ? a[4] : b![5]);
+  const conta = new Map<OrigemBloqueio, number>();
+  for (const [chave, origem] of origens.get(prof) ?? []) {
+    if (Number(chave.split("-")[1]) <= limite) conta.set(origem, (conta.get(origem) ?? 0) + 1);
+  }
+  if ([...conta.values()].reduce((s, n) => s + n, 0) !== bloqueados) return causa;
+  const partes = TEXTO_ORIGEM.filter(([o]) => conta.get(o)).map(([o, um, varios]) => `${conta.get(o)} ${conta.get(o) === 1 ? um : varios}`);
+  const detalhe = partes.join(", ");
+  if (a) {
+    const onde = conta.get("outraTurma") ? "nas turmas que estão sendo geradas" : "no turno";
+    return `${prof}: ${a[2]} aulas ${onde}, mas só tem ${a[3]} horário(s) livre(s) (${detalhe}).`;
+  }
+  return `${prof}: ${b![2]} aulas em turmas que vão até a ${b![3]}ª aula, mas só tem ${b![4]} horário(s) livre(s) até a ${b![3]}ª aula (${detalhe}).`;
+}
+
 /** Sugestao para cada frase do diagnostico do motor (cpsat-service/app/diagnostico_inviabilidade.py). */
 export function sugestaoParaCausa(causa: string): string | undefined {
-  let m = /^(.+?): (\d+) aulas no turno, mas só tem (\d+) horário\(s\) livre\(s\)/.exec(causa);
-  if (m) return `Libere ${plural(Number(m[2]) - Number(m[3]), "horário", "horários")} de ${m[1]} na Disponibilidade, ou passe aulas para outro professor.`;
+  const outrasTurmas = /com aulas? em outras? turmas? do turno/.test(causa) ? " As aulas que já tem nas outras turmas do turno também ocupam horário." : "";
+  let m = /^(.+?): (\d+) aulas (?:no turno|nas turmas que estão sendo geradas), mas só tem (\d+) horário\(s\) livre\(s\)/.exec(causa);
+  if (m) return `Libere ${plural(Number(m[2]) - Number(m[3]), "horário", "horários")} de ${m[1]} na Disponibilidade, ou passe aulas para outro professor.${outrasTurmas}`;
+  m = /^(.+?): (\d+) aulas em turmas que vão até a (\d+)ª aula, mas só tem (\d+) horário\(s\) livre\(s\)/.exec(causa); // [DIAGNOSTICO-ULTIMA-AULA]
+  if (m) return `Libere ${plural(Number(m[2]) - Number(m[4]), "horário", "horários")} de ${m[1]} até a ${m[3]}ª aula na Disponibilidade, ou passe aulas para outro professor.${outrasTurmas}`;
   m = /^(.+?): (\d+) aulas no turno, acima do teto de (\d+)/.exec(causa);
   if (m) return `Tire ${plural(Number(m[2]) - Number(m[3]), "aula", "aulas")} de ${m[1]} neste turno, ou autorize um teto maior para ele em Conflitos.`;
   m = /^(.+?) · (.+?) · (.+?): precisa de (\d+) aula\(s\) por semana, mas só cabem (\d+)/.exec(causa);

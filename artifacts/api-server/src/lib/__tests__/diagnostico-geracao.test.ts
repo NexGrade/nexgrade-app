@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { diagnosticarGeracao, diagnosticarViolacoesPromocao, sugestaoParaCausa } from "../diagnostico-geracao";
+import { diagnosticarGeracao, diagnosticarViolacoesPromocao, sugestaoParaCausa, explicarBloqueiosNaCausa, type OrigemBloqueio } from "../diagnostico-geracao";
 
 // [DIAGNOSTICO-GERACAO] (01/11/2026) respostas reais da bateria de simulacoes (copia da Escola Demonstracao, CP-SAT local)
 describe("diagnostico da geracao", () => {
@@ -92,5 +92,35 @@ describe("diagnostico do heuristico com a turma cheia", () => {
   it("sugere substituir a grade da turma em vez de liberar horario do professor", () => {
     const d = diagnosticarGeracao(200, { conflitos: ["Apenas 0/4 aulas alocadas para \"Matemática\" (Ana): a turma não tem mais horário livre."] })!;
     expect(d.avisos[0]!.sugestao).toMatch(/substituindo a grade atual/);
+  });
+});
+
+// [ORIGEM-BLOQUEIO] [DIAGNOSTICO-ULTIMA-AULA] (03/11/2026) bateria de 03/11: Ed. Fisica do Medio passada para a Flavia
+describe("de onde vem cada horario bloqueado", () => {
+  const origens = (lista: Array<[number, number, OrigemBloqueio]>) => new Map([["Flávia Machado", new Map(lista.map(([d, a, o]) => [`${d}-${a}`, o] as [string, OrigemBloqueio]))]]);
+  // 21 bloqueios na Disponibilidade + 8 horarios com aula dela no Fundamental (ja posto na etapa anterior)
+  const flavia = origens([
+    ...[1, 2, 3, 4, 5, 6].flatMap((a) => [[0, a, "bloqueio"], [2, a, "bloqueio"], [3, a, "bloqueio"]] as Array<[number, number, OrigemBloqueio]>),
+    [1, 5, "bloqueio"], [1, 6, "bloqueio"], [4, 6, "bloqueio"],
+    [1, 1, "outraTurma"], [1, 2, "outraTurma"], [1, 3, "outraTurma"], [1, 4, "outraTurma"], [4, 1, "outraTurma"], [4, 2, "outraTurma"], [4, 3, "outraTurma"], [4, 5, "outraTurma"],
+  ]);
+
+  it("separa bloqueio da Disponibilidade e aula em outra turma", () => {
+    const c = explicarBloqueiosNaCausa("Flávia Machado: 4 aulas no turno, mas só tem 1 horário(s) livre(s) (29 bloqueados).", flavia);
+    expect(c).toBe("Flávia Machado: 4 aulas nas turmas que estão sendo geradas, mas só tem 1 horário(s) livre(s) (21 bloqueados na Disponibilidade, 8 com aula em outras turmas do turno).");
+    expect(sugestaoParaCausa(c)).toBe("Libere 3 horários de Flávia Machado na Disponibilidade, ou passe aulas para outro professor. As aulas que já tem nas outras turmas do turno também ocupam horário.");
+  });
+
+  it("conta que nao bate com a do motor: a frase fica como veio", () => {
+    const c = "Flávia Machado: 4 aulas no turno, mas só tem 1 horário(s) livre(s) (30 bloqueados).";
+    expect(explicarBloqueiosNaCausa(c, flavia)).toBe(c);
+    expect(explicarBloqueiosNaCausa("Turma 9MA: 26 aulas por semana, mas só tem 25 horários (5 por dia).", flavia)).toMatch(/^Turma 9MA/);
+  });
+
+  it("turmas que vao ate a 5a aula: conta so ate a 5a", () => {
+    const ricardo = new Map([["Ricardo Melo", new Map([3, 4].flatMap((d) => [1, 2, 3, 4, 5, 6].map((a) => [`${d}-${a}`, "bloqueio"] as [string, OrigemBloqueio])))]]);
+    const c = explicarBloqueiosNaCausa("Ricardo Melo: 16 aulas em turmas que vão até a 5ª aula, mas só tem 15 horário(s) livre(s) até a 5ª aula (10 bloqueados).", ricardo);
+    expect(c).toBe("Ricardo Melo: 16 aulas em turmas que vão até a 5ª aula, mas só tem 15 horário(s) livre(s) até a 5ª aula (10 bloqueados na Disponibilidade).");
+    expect(sugestaoParaCausa(c)).toBe("Libere 1 horário de Ricardo Melo até a 5ª aula na Disponibilidade, ou passe aulas para outro professor.");
   });
 });

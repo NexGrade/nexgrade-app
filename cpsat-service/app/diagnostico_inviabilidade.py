@@ -56,6 +56,21 @@ def diagnosticar_inviabilidade(disciplinas_turma, bloqueios, aulas_por_dia, teto
         if total > livres:
             achados.append((3, f"{prof}: {total} aulas no turno, mas só tem {livres} horário(s) livre(s) "
                                f"({len(bloqueados_do_prof[prof])} bloqueados)."))
+            continue
+        # [DIAGNOSTICO-ULTIMA-AULA] (03/11/2026) turma que termina antes (Fundamental vai ate a 5a no matutino):
+        # as aulas dessas turmas tem que caber nos horarios livres ATE a ultima aula delas. Antes a conta usava a
+        # ultima aula do turno, e o professor so do Fundamental com 16 aulas em 15 horarios passava sem causa.
+        linhas_prof = [dt for dt in disciplinas_turma if dt.professor == prof]
+        for limite in sorted({min(aulas_por_dia, dt.ultima_aula_turma) for dt in linhas_prof if dt.ultima_aula_turma}):
+            if limite >= aulas_por_dia:
+                continue
+            aulas_ate = sum(dt.aulas_semana for dt in linhas_prof if dt.ultima_aula_turma and dt.ultima_aula_turma <= limite)
+            livres_ate = sum(1 for dia in range(dias) for a in range(1, limite + 1) if (dia, a) not in bloqueados_do_prof[prof])
+            if aulas_ate > livres_ate:
+                achados.append((3, f"{prof}: {aulas_ate} aulas em turmas que vão até a {limite}ª aula, mas só tem "
+                                   f"{livres_ate} horário(s) livre(s) até a {limite}ª aula "
+                                   f"({dias * limite - livres_ate} bloqueados)."))
+                break
 
     # 3) linha (professor + turma + disciplina): nao cabe na semana com o limite por dia e os bloqueios
     for dt in disciplinas_turma:

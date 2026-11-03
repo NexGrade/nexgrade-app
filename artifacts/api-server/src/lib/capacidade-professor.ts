@@ -38,6 +38,8 @@ export interface CargaProfessor {
   professorId: number;
   professor: string;
   aulasPorTurno: Record<string, number>;
+  // [CAPACIDADE-POR-NIVEL] turno -> nivel de ensino da turma ("__sem_nivel__" sem nivel) -> aulas
+  aulasPorTurnoNivel?: Record<string, Record<string, number>>;
 }
 
 // [CARGA-PROFESSOR] Aulas de cada professor por turno, pela MESMA regra de
@@ -75,6 +77,7 @@ export async function calcularCargaPorProfessor(escolaId: string): Promise<{ car
   };
 
   const aulas = new Map<number, Record<string, number>>();
+  const aulasNivel = new Map<number, Record<string, Record<string, number>>>(); // [CAPACIDADE-POR-NIVEL]
   for (const td of tds) {
     const turma = turmaMap.get(td.turmaId);
     if (!turma) continue;
@@ -86,12 +89,16 @@ export async function calcularCargaPorProfessor(escolaId: string): Promise<{ car
     const r = aulas.get(prof.id) ?? {};
     r[turma.turno] = (r[turma.turno] ?? 0) + n;
     aulas.set(prof.id, r);
+    const rn = aulasNivel.get(prof.id) ?? {};
+    const nivel = turma.nivelEnsino ?? "__sem_nivel__";
+    rn[turma.turno] = { ...rn[turma.turno], [nivel]: (rn[turma.turno]?.[nivel] ?? 0) + n };
+    aulasNivel.set(prof.id, rn);
   }
 
   const cargas: CargaProfessor[] = [];
   for (const [pid, porTurno] of aulas) {
     const p = profMap.get(pid);
-    if (p) cargas.push({ professorId: pid, professor: p.nome, aulasPorTurno: porTurno });
+    if (p) cargas.push({ professorId: pid, professor: p.nome, aulasPorTurno: porTurno, aulasPorTurnoNivel: aulasNivel.get(pid) });
   }
   return { cargas, slots, disp, principal: montarMapaPrincipal(professores) };
 }
@@ -142,6 +149,16 @@ export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro
     if (s.numeroAula > (maxAulaTurno.get(s.turno) ?? 0)) maxAulaTurno.set(s.turno, s.numeroAula);
   }
   const turnos = [...maxAulaTurno.keys()];
+  // [CAPACIDADE-POR-NIVEL] (03/11/2026) ultima aula de cada nivel no turno (Fundamental vai ate a 5a no matutino),
+  // mesma regra do ultimaAulaTurma do payload do motor. Antes a conta usava a ultima aula do turno para todos, e
+  // o professor so do Fundamental com 16 aulas em 15 horarios aparecia como "cabe".
+  const maxAulaNivel = new Map<string, number>();
+  for (const s of slots) {
+    if (!s.letivo) continue;
+    const k = `${s.turno}|${s.nivelEnsino ?? "__sem_nivel__"}`;
+    if (s.numeroAula > (maxAulaNivel.get(k) ?? 0)) maxAulaNivel.set(k, s.numeroAula);
+  }
+  const NOME_NIVEL: Record<string, string> = { fundamental: "do Fundamental", medio_tecnico: "do Médio/Técnico" };
   // [CAPACIDADE-NAO-LETIVO] periodos nao letivos de cada turno (ex.: noturno aula 1, 18:00)
   const naoLetivos = new Map<string, Set<number>>();
   for (const s of slots) {
@@ -183,6 +200,26 @@ export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro
       livres[t] = n;
       livresSoHA[t] = soHA;
     }
+    // [CAPACIDADE-POR-NIVEL] as aulas das turmas que terminam antes cabem nos horarios livres ATE a ultima aula delas?
+    const porNivel = cargas.find((c) => c.professorId === pid)?.aulasPorTurnoNivel ?? {};
+    const faltaAteUltimaAula = (t: string): string | null => {
+      const mx = maxAulaTurno.get(t) ?? 0;
+      const nl = naoLetivos.get(t) ?? new Set<number>();
+      const limiteDe = (nivel: string) => Math.min(mx, maxAulaNivel.get(`${t}|${nivel}`) ?? mx);
+      const niveis = Object.keys(porNivel[t] ?? {});
+      for (const limite of [...new Set(niveis.map(limiteDe))].sort((a, b) => a - b)) {
+        if (limite >= mx) continue;
+        const dosNiveis = niveis.filter((n) => limiteDe(n) <= limite);
+        const aulasAte = dosNiveis.reduce((s, n) => s + (porNivel[t]![n] ?? 0), 0);
+        let livresAte = 0;
+        for (let dia = 0; dia < 5; dia++) for (let a = 1; a <= limite; a++) if (!nl.has(a) && !bloqueados.get(t)?.has(`${dia}-${a}`)) livresAte++;
+        if (aulasAte > livresAte) {
+          const nomeNivel = dosNiveis.map((n) => NOME_NIVEL[n] ?? "").filter(Boolean).join(" e ") || "das turmas que terminam antes";
+          return `${aulasAte} aula(s) ${nomeNivel}, que vão até a ${limite}ª aula, mas só ${livresAte} horário(s) livre(s) até a ${limite}ª aula nesse turno: a grade não fecha. Libere ${aulasAte - livresAte} horário(s) ou reduza a carga.`;
+        }
+      }
+      return null;
+    };
     const aulasTotal = Object.values(porTurno).reduce((s, n) => s + n, 0);
     // [MESMA-PESSOA-HA] secundario nao tem HA; principal usa o total da pessoa
     const ha = (ehSecundario(principal, pid) || ehProfessorEstudio(p.nome)) ? 0 : calcularHoraAtividadeTotalPorTurno(porTurnoHA.get(pid) ?? porTurno); // [HA-POR-TURNO]
@@ -198,7 +235,10 @@ export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro
       const livresComHA = livresT + (livresSoHA[turnoFiltro] ?? 0);
       const nomeT = ({ matutino: "manhã", vespertino: "tarde", noturno: "noite" } as Record<string, string>)[turnoFiltro] ?? turnoFiltro;
       const baseT = { ...base, aulasTotal: aulasT, haExigida: haT, turno: turnoFiltro, livresComHA }; // [CONTA-NA-HORA]
-      if (aulasT <= livresT && aulasT + haT <= livresComHA) {
+      const faltaNivel = aulasT <= livresT ? faltaAteUltimaAula(turnoFiltro) : null; // [CAPACIDADE-POR-NIVEL]
+      if (faltaNivel) {
+        problemas.push({ ...baseT, nivel: "erro", mensagem: faltaNivel });
+      } else if (aulasT <= livresT && aulasT + haT <= livresComHA) {
         // [CONTA-NA-HORA] cabe: so entra com incluirOk (tela de Disponibilidade mostra a conta mesmo quando esta certa)
         if (opcoes.incluirOk) problemas.push({ ...baseT, nivel: "ok", mensagem: `${aulasT} aula(s) + ${haT} HA na ${nomeT} e ${livresComHA} horário(s) livre(s): cabe, com ${livresComHA - aulasT - haT} de folga.` });
       } else if (aulasT > livresT) {
@@ -235,6 +275,10 @@ export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro
     for (const t of turnosEnsino) {
       const l = livres[t] ?? 0;
       if (porTurno[t]! > l) problemas.push({ ...base, nivel: "erro", mensagem: `${porTurno[t]} aula(s) no ${t}, mas so ${l} horario(s) livre(s) nesse turno: a grade nao fecha. Libere ${porTurno[t]! - l} horario(s) ou reduza a carga.` });
+      else {
+        const faltaNivel = faltaAteUltimaAula(t); // [CAPACIDADE-POR-NIVEL]
+        if (faltaNivel) problemas.push({ ...base, nivel: "erro", mensagem: `No ${t}: ${faltaNivel}` });
+      }
     }
     const precisa = aulasTotal + ha;
     if (precisa > livresTotal) {

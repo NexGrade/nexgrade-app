@@ -16,6 +16,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { ehHAMovel } from "./ha-contraturno";
 import { limitesLetivosPorTurno } from "./intervalo-entre-turnos";
 import { simularPromocao } from "./simular-promocao";
+import { regraDeSubstituicao, vinculosDasTurmas } from "./promocao-substitui"; // [PROMOVER-PROFESSOR-TROCADO]
 import { mapaIntegralDosSlots, posicaoReal, TURNO_INTEGRAL } from "./turno-integral"; // [INTEGRAL-NA-OCUPACAO]
 
 const DIAS = ["Seg", "Ter", "Qua", "Qui", "Sex"];
@@ -60,7 +61,7 @@ export async function opcoesFecharJanela(
   const limites = await limitesLetivosPorTurno(escolaId as never);
 
   // grade como fica depois de promover (mesma regra do promover), só o turno pedido
-  const pares = new Set(exp.map((e) => `${e.turmaId}|${e.professorId}`));
+  const substitui = regraDeSubstituicao(exp, await vinculosDasTurmas([...new Set(exp.map((e) => e.turmaId))])); // [PROMOVER-PROFESSOR-TROCADO]
   type Aula = { id: number | null; professorId: number; turmaId: number; disciplinaId: number; dia: number; aula: number; turno: string };
   // [INTEGRAL-NA-OCUPACAO] (01/11/2026) aula da turma integral ocupa o professor no turno e na aula REAIS (manha/tarde).
   // Aqui ela fica fixa (id null): mover exigiria a numeracao do integral, e a troca so mexe no turno pedido.
@@ -71,7 +72,7 @@ export async function opcoesFecharJanela(
     return { id: integral ? null : id, professorId: h.professorId, turmaId: h.turmaId, disciplinaId: h.disciplinaId, dia: h.diaSemana, aula: r?.numeroAula ?? h.numeroAula, turno: r?.turno ?? "" };
   };
   const aulasTodas: Aula[] = [
-    ...oficial.filter((h) => !pares.has(`${h.turmaId}|${h.professorId}`)).map((h) => naPosicaoReal(null, h)),
+    ...oficial.filter((h) => !substitui(h)).map((h) => naPosicaoReal(null, h)),
     ...exp.map((e) => naPosicaoReal(e.id, e)),
   ];
   const aulasTurno = aulasTodas.filter((a) => a.turno === turno);

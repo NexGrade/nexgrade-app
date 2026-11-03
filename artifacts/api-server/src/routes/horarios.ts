@@ -28,6 +28,7 @@ import { getEscolaId } from "../lib/escola-id";
 import { randomUUID } from "node:crypto";
 import { recalcularHoraAtividade } from "../lib/recalcular-ha";
 import { simularPromocao } from "../lib/simular-promocao"; // [SIMULAR-PROMOCAO]
+import { regraDeSubstituicao, vinculosDasTurmas } from "../lib/promocao-substitui"; // [PROMOVER-PROFESSOR-TROCADO]
 import { opcoesFecharJanela } from "../lib/fechar-janela"; // [FECHAR-JANELA]
 import { carregarLimitesPorDisciplina, limiteAulasDia } from "../lib/limite-disciplina"; // [LIMITE-DISCIPLINA]
 import { REGRAS_REDE } from "../lib/regras-rede"; // [REGRAS-REDE]
@@ -37,12 +38,12 @@ import { reposicionarHAMovel, slotsLetivosPorTurno, type AulaPos } from "../lib/
 import { carregarAssSoTurma } from "../lib/assincrona-so-turma"; // [ASS-SO-TURMA]
 import { evitarPorPausaEntreTurnos } from "../lib/pausa-entre-turnos"; // [PAUSA-ENTRE-TURNOS]
 import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
-import { ehBloqueioParaMotor } from "../lib/bloqueio-real"; // [HA-FIXA]
+import { ehBloqueioParaMotor, ehHaFixa } from "../lib/bloqueio-real"; // [HA-FIXA] [ORIGEM-BLOQUEIO]
 import { bloqueiosIntervaloEntreTurnos } from "../lib/intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 import { aulasFixasTable } from "@workspace/db"; // [AULA-FIXA-CADASTRO]
 import { validarCapacidadeProfessores, calcularCotaHaPorTurno, capacidadeDoProfessor } from "../lib/capacidade-professor";
 import { carregarMapaIntegral, slotReal, TURNO_INTEGRAL, carregarAulasIntegraisNoTurno, mapaIntegralDosSlots, posicaoReal } from "../lib/turno-integral"; // [TURNO-INTEGRAL] [INTEGRAL-NO-MOTOR]
-import { diagnosticarGeracao, diagnosticarViolacoesPromocao } from "../lib/diagnostico-geracao"; // [DIAGNOSTICO-GERACAO]
+import { diagnosticarGeracao, diagnosticarViolacoesPromocao, explicarBloqueiosNaCausa, type OrigemBloqueio } from "../lib/diagnostico-geracao"; // [DIAGNOSTICO-GERACAO] [ORIGEM-BLOQUEIO]
 import { tempoDoMotor, TEMPO_TOTAL_PADRAO_S, TEMPO_MINIMO_CHAMADA_S } from "../lib/tempo-geracao"; // [TEMPO-TOTAL]
 
 const router = Router();
@@ -1111,14 +1112,18 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
   const chaveAula = (h: { turmaId: number; disciplinaId: number; diaSemana: number; numeroAula: number }) => `${h.turmaId}|${h.disciplinaId}|${h.diaSemana}|${h.numeroAula}`;
   const oficialAntes = await db.select().from(horariosTable)
     .where(and(eq(horariosTable.escolaId, escolaId), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`));
-  const paresSet = new Set(turmaProfessorPares.map((x) => `${x.turmaId}|${x.professorId}`));
+  // [PROMOVER-PROFESSOR-TROCADO] (03/11/2026) alem dos pares turma+professor, sai a aula do professor que deixou a
+  // disciplina (ex.: substituto no lugar de quem saiu de licenca) -- antes ela ficava e a turma ficava em dobro
+  const ehSubstituida = regraDeSubstituicao(expSlots, await vinculosDasTurmas(turmaIds));
+  const paresDoExp = new Set(turmaProfessorPares.map((x) => `${x.turmaId}|${x.professorId}`));
+  const idsProfessorAntigo = new Set(oficialAntes.filter((h) => ehSubstituida(h) && !paresDoExp.has(`${h.turmaId}|${h.professorId}`)).map((h) => h.id));
   const aulasProf = (rows: Array<{ turmaId: number; disciplinaId: number; professorId: number; diaSemana: number; numeroAula: number }>) => {
     const m = new Map<number, Set<string>>();
     for (const r of rows) { if (!m.has(r.professorId)) m.set(r.professorId, new Set()); m.get(r.professorId)!.add(chaveAula(r)); }
     return m;
   };
   const antesPorProf = aulasProf(oficialAntes);
-  const depoisPorProf = aulasProf([...oficialAntes.filter((h) => !paresSet.has(`${h.turmaId}|${h.professorId}`)), ...expSlots]);
+  const depoisPorProf = aulasProf([...oficialAntes.filter((h) => !ehSubstituida(h)), ...expSlots]);
   const profsMudaram = new Set<number>();
   for (const p of new Set([...antesPorProf.keys(), ...depoisPorProf.keys()])) {
     const a = antesPorProf.get(p) ?? new Set<string>(); const d = depoisPorProf.get(p) ?? new Set<string>();
@@ -1137,7 +1142,7 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     const { slotsEscola, posicao, turnosDe } = await ocupacaoReal(escolaId); // [INTEGRAL-NA-OCUPACAO]
     const turnosExp = turnosDe(expSlots);
     if (profsMantem.length && turnosExp.length) {
-      const aulasDepois: AulaPos[] = [...oficialAntes.filter((h) => !paresSet.has(`${h.turmaId}|${h.professorId}`)), ...expSlots].flatMap((h) => {
+      const aulasDepois: AulaPos[] = [...oficialAntes.filter((h) => !ehSubstituida(h)), ...expSlots].flatMap((h) => {
         const r = posicao(h);
         return r ? [{ professorId: h.professorId, turno: r.turno, diaSemana: h.diaSemana, numeroAula: r.numeroAula }] : [];
       });
@@ -1157,6 +1162,9 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     for (const { turmaId, professorId } of turmaProfessorPares) {
       await tx.delete(horariosTable)
         .where(and(eq(horariosTable.turmaId, turmaId), eq(horariosTable.escolaId, escolaId), eq(horariosTable.professorId, professorId)));
+    }
+    if (idsProfessorAntigo.size) { // [PROMOVER-PROFESSOR-TROCADO]
+      await tx.delete(horariosTable).where(and(eq(horariosTable.escolaId, escolaId), inArray(horariosTable.id, [...idsProfessorAntigo])));
     }
     const gravados = await tx.insert(horariosTable).values(linhas).returning();
     await tx.delete(horariosExperimentaisTable)
@@ -2099,8 +2107,8 @@ async function runCpsatGeneracaoUnica(
 
   let bloqueiosOutrasTurmas: Array<{ professor: string; dia: number; aula: number }> = [];
   if (outrasTurmaIds.length > 0 && professorIdsUsados.size > 0) {
-    const [ocupadosOficial, ocupadosExperimental] = await Promise.all([
-      db.select({ professorId: horariosTable.professorId, dia: horariosTable.diaSemana, aula: horariosTable.numeroAula })
+    const [ocupadosOficialTodos, ocupadosExperimental] = await Promise.all([
+      db.select({ turmaId: horariosTable.turmaId, professorId: horariosTable.professorId, dia: horariosTable.diaSemana, aula: horariosTable.numeroAula })
         .from(horariosTable)
         .where(and(
           eq(horariosTable.escolaId, escolaId),
@@ -2116,16 +2124,22 @@ async function runCpsatGeneracaoUnica(
       // anterior ja superado. Agora so conta como bloqueio o rascunho da
       // MESMA geracao em andamento (mesmo nomeExperimental) -- e a grade
       // oficial (query separada acima), que continuam validos sempre.
-      db.select({ professorId: horariosExperimentaisTable.professorId, dia: horariosExperimentaisTable.diaSemana, aula: horariosExperimentaisTable.numeroAula })
+      db.select({ turmaId: horariosExperimentaisTable.turmaId, professorId: horariosExperimentaisTable.professorId, dia: horariosExperimentaisTable.diaSemana, aula: horariosExperimentaisTable.numeroAula })
         .from(horariosExperimentaisTable)
         .where(and(
           eq(horariosExperimentaisTable.escolaId, escolaId),
           eq(horariosExperimentaisTable.nome, nomeExperimental),
           inArray(horariosExperimentaisTable.turmaId, outrasTurmaIds),
-          inArray(horariosExperimentaisTable.professorId, [...professorIdsUsados]),
         )),
     ]);
-    bloqueiosOutrasTurmas = [...ocupadosOficial, ...ocupadosExperimental].map((o) => ({
+    // [OCUPADO-EM-DOBRO] (03/11/2026) turma que ja esta no rascunho desta geracao (ex.: o Fundamental, na etapa do
+    // Medio/Tecnico) ocupa o professor pelo rascunho, que e o que vai valer ao promover. Antes contava tambem a
+    // grade oficial ANTIGA dessa turma: o professor ficava preso nos dois lugares, e a etapa podia sair inviavel
+    // sem ser. (A busca do rascunho olha todos os professores, para achar as turmas que ele ja tem.)
+    const turmasNoRascunho = new Set(ocupadosExperimental.map((o) => o.turmaId));
+    const ocupadosOficial = ocupadosOficialTodos.filter((o) => !turmasNoRascunho.has(o.turmaId));
+    const ocupadosExperimentalDosUsados = ocupadosExperimental.filter((o) => o.professorId != null && professorIdsUsados.has(o.professorId));
+    bloqueiosOutrasTurmas = [...ocupadosOficial, ...ocupadosExperimentalDosUsados].map((o) => ({
       professor: professorMap.get(o.professorId!)?.nome ?? `Professor #${o.professorId}`,
       dia: o.dia,
       aula: o.aula,
@@ -2170,6 +2184,23 @@ async function runCpsatGeneracaoUnica(
   if (bloqueiosIntegral.length) console.log(`[INTEGRAL-NO-MOTOR] turno=${turno} bloqueios=${bloqueiosIntegral.length}`);
 
   const bloqueiosProfessor = [...bloqueiosDisponibilidade, ...bloqueiosOutrasTurmas, ...bloqueiosIntegral, ...bloqueiosPeriodoNaoLetivo, ...bloqueiosIntervaloTurnos];
+
+  // [ORIGEM-BLOQUEIO] de onde vem cada horario bloqueado (o primeiro motivo vale), para o diagnostico dizer
+  const origemBloqueio = new Map<string, Map<string, OrigemBloqueio>>();
+  const anotarOrigem = (lista: Array<{ professor: string; dia: number; aula: number }>, origem: OrigemBloqueio | ((i: number) => OrigemBloqueio)) =>
+    lista.forEach((b, i) => {
+      if (!origemBloqueio.has(b.professor)) origemBloqueio.set(b.professor, new Map());
+      const m = origemBloqueio.get(b.professor)!;
+      if (!m.has(`${b.dia}-${b.aula}`)) m.set(`${b.dia}-${b.aula}`, typeof origem === "function" ? origem(i) : origem);
+    });
+  const haFixaNaDisponibilidade = disponibilidades
+    .filter((d) => professorIdsUsados.has(d.professorId) && ehBloqueioParaMotor(d) && (d.turno === turno || d.turno == null))
+    .map((d) => ehHaFixa(d)); // mesma ordem de bloqueiosDisponibilidade
+  anotarOrigem(bloqueiosDisponibilidade, (i) => (haFixaNaDisponibilidade[i] ? "haFixa" : "bloqueio"));
+  anotarOrigem(bloqueiosOutrasTurmas, "outraTurma");
+  anotarOrigem(bloqueiosIntegral, "integral");
+  anotarOrigem(bloqueiosIntervaloTurnos, "intervalo");
+  anotarOrigem(bloqueiosPeriodoNaoLetivo, "naoLetivo");
 
   const aulasPorDia = horarioSlotsTurno.length > 0
     ? Math.max(...horarioSlotsTurno.map((s) => s.numeroAula))
@@ -2507,6 +2538,8 @@ async function runCpsatGeneracaoUnica(
     // que a grade e impossivel (antes saia como INVIAVEL e a escola ia mexer em dados certos). E a lista
     // completa de causas segue junto (antes so as 5 primeiras, dentro do texto da mensagem).
     const tempoEsgotado = resultado.status === "UNKNOWN";
+    // [ORIGEM-BLOQUEIO] a frase "N bloqueados" do motor passa a dizer de onde vem cada horario ocupado
+    const explicar = (c: string) => explicarBloqueiosNaCausa(c, origemBloqueio);
     return {
       httpStatus: 422,
       body: {
@@ -2514,8 +2547,8 @@ async function runCpsatGeneracaoUnica(
         status: resultado.status,
         mensagem: tempoEsgotado
           ? "O motor não terminou dentro do tempo limite. Isso não quer dizer que a grade é impossível: tente com mais tempo."
-          : (resultado.mensagem ?? "Nao existe grade possivel com os dados atuais."),
-        causasInviabilidade: resultado.causasInviabilidade ?? [],
+          : (resultado.mensagem ?? "Nao existe grade possivel com os dados atuais.").split("\n").map((l) => (l.startsWith("- ") ? `- ${explicar(l.slice(2))}` : l)).join("\n"),
+        causasInviabilidade: (resultado.causasInviabilidade ?? []).map(explicar),
       },
     };
   }
