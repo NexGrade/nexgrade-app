@@ -3102,6 +3102,12 @@ function AbaExperimental() {
                         {sim.oficialHoje && sim.oficial.janelas !== hoje.janelas && (
                           <p className="mt-1 text-xs opacity-70">Para comparar: se a HA da oficial fosse recalculada pela regra, ela teria {sim.oficial.janelas} janela(s).</p>
                         )}
+                        {sim.experimento.janelas > 0 && !nome.startsWith("MELHORIA-") && ( /* [DICA-MELHORAR] */
+                          <p className="mt-2 text-xs">
+                            <strong>Dica:</strong> depois de promover, use <strong>Melhorar grade oficial</strong> neste turno. Ele só troca aulas de lugar
+                            (e a HA, primeiro), nunca deixa a grade pior e costuma tirar janelas que a geração do zero deixa.
+                          </p>
+                        )}
 
                         <div className="mt-3">
                           <div className="font-medium">O que muda na grade ao promover</div>
