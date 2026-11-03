@@ -7,11 +7,12 @@
 // enquanto nenhuma grade do ano novo tiver sido promovida.
 // Liberada a partir do fim do 3o trimestre do ano corrente; antes, so se a Nexus Core liberar.
 import {
-  aulasFixasTable, db, disciplinasTable, disponibilidadeTable, horariosExperimentaisTable, horariosTable, limitesDiariosProfessorTable,
+  aulasFixasTable, calendarioEscolarTable, db, disciplinasTable, disponibilidadeTable, horariosExperimentaisTable, horariosTable, limitesDiariosProfessorTable,
   professoresTable, trimestresLetivosTable, turmaDisciplinasTable, turmasTable, viradasAnoTable,
 } from "@workspace/db";
 import { and, desc, eq, inArray, notInArray, sql } from "drizzle-orm";
 import { z } from "zod";
+import { CALENDARIOS_OFICIAIS, aplicarCalendarioOficial } from "./calendario-oficial"; // [VIRADA-CALENDARIO]
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -93,8 +94,13 @@ export async function situacaoVirada(escolaId: string, hoje = hojeEmBrasilia()) 
   const [{ n: aulasOficiais }] = await db.select({ n: sql<number>`count(*)::int` }).from(horariosTable).where(and(eq(horariosTable.escolaId, escolaId), ehOficial));
   const liberadaPeloMaster = !!liberacao;
   const liberada = viradaLiberadaPorData(hoje, fimDoAno, anoDe) || liberadaPeloMaster;
+  // [VIRADA-CALENDARIO] (03/11/2026) calendario do ano novo: o da escola, se ja cadastrou; senao o oficial da SEED-PR,
+  // se o sistema ja o tem (lib/calendario-oficial.ts); senao falta (as turmas ficam "sem calendario" em Conflitos)
+  const [triNovo] = await db.select({ id: trimestresLetivosTable.id }).from(trimestresLetivosTable)
+    .where(and(eq(trimestresLetivosTable.escolaId, escolaId), eq(trimestresLetivosTable.ano, anoPara))).limit(1);
+  const calendarioNovo: "ja_cadastrado" | "oficial" | "falta" = triNovo ? "ja_cadastrado" : CALENDARIOS_OFICIAIS[anoPara] ? "oficial" : "falta";
   return {
-    anoDe, anoPara, hoje, fimDoAno, liberada, liberadaPeloMaster,
+    anoDe, anoPara, hoje, fimDoAno, liberada, liberadaPeloMaster, calendarioNovo,
     confirmacao: textoConfirmacao(anoPara),
     // virada mais recente (para o ano em que as turmas estao agora)
     ultimaVirada: jaFeita ? { id: jaFeita.id, anoDe: jaFeita.anoDe, anoPara: jaFeita.anoPara, feitaEm: jaFeita.feitaEm, feitaPor: jaFeita.feitaPor, resumo: jaFeita.resumo } : null,
@@ -234,6 +240,9 @@ export async function executarVirada(escolaId: string, planoBruto: unknown, usua
     if (plano.excluirTurmas.length) await tx.delete(turmasTable).where(and(eq(turmasTable.escolaId, escolaId), inArray(turmasTable.id, plano.excluirTurmas)));
     // 4) turmas que continuam: ano novo, codigos SERE em branco
     if (ficam.length) await tx.update(turmasTable).set({ anoLetivo: sit.anoPara, codigoSere: null, codigoSereIf: null }).where(inArray(turmasTable.id, ficam));
+    // [VIRADA-CALENDARIO] calendario oficial do ano novo, se o sistema ja o tem e a escola ainda nao cadastrou o dela
+    const calendarioAplicado = sit.calendarioNovo === "oficial";
+    if (calendarioAplicado) await aplicarCalendarioOficial(escolaId, sit.anoPara, tx);
     // 5) turmas novas, copiadas de uma que continua (mesmas disciplinas e cargas, sem professor)
     let criadas = 0;
     for (const d of plano.duplicarTurmas) {
@@ -259,6 +268,7 @@ export async function executarVirada(escolaId: string, planoBruto: unknown, usua
       professoresQueSairam: plano.professoresQueSaem.length,
       aulasApagadas: backup.horarios.length, experimentosApagados: backup.experimentos.length, disponibilidadeApagada: backup.disponibilidade.length,
       aulasFixasApagadas: backup.aulasFixas.length, // [VIRADA-ZERA-FIXAS]
+      calendarioAplicado, // [VIRADA-CALENDARIO] o desfazer tira o calendario do ano novo so quando foi a virada que o pos
     };
     await tx.insert(viradasAnoTable).values({
       escolaId, anoDe: sit.anoDe, anoPara: sit.anoPara, status: "feita", backup, resumo, feitaPor: usuarioNome, feitaEm: new Date(),
@@ -320,6 +330,11 @@ export async function desfazerVirada(escolaId: string) {
     // os ids voltaram com o mesmo numero: acerta as sequencias para os proximos cadastros
     for (const tabela of ["turmas", "turma_disciplinas", "horarios", "horarios_experimentais", "disponibilidade_professores", "aulas_fixas", "limites_diarios_professor"]) {
       await tx.execute(sql.raw(`select setval(pg_get_serial_sequence('${tabela}', 'id'), greatest((select coalesce(max(id), 1) from ${tabela}), 1))`));
+    }
+    // [VIRADA-CALENDARIO] o calendario oficial que a virada aplicou no ano novo sai junto
+    if ((reg.resumo as { calendarioAplicado?: boolean } | null)?.calendarioAplicado) {
+      await tx.delete(calendarioEscolarTable).where(and(eq(calendarioEscolarTable.escolaId, escolaId), eq(calendarioEscolarTable.ano, reg.anoPara)));
+      await tx.delete(trimestresLetivosTable).where(and(eq(trimestresLetivosTable.escolaId, escolaId), eq(trimestresLetivosTable.ano, reg.anoPara)));
     }
     await tx.update(viradasAnoTable).set({ status: "desfeita", desfeitaEm: new Date() }).where(eq(viradasAnoTable.id, reg.id));
     return { status: 200, body: { ok: true, anoDe: reg.anoDe, turmas: b.turmas.length, aulas: b.horarios.length, disponibilidade: b.disponibilidade.length } } as const;

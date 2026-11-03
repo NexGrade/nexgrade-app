@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 
 type Situacao = {
   anoDe: number; anoPara: number; hoje: string; fimDoAno: string | null; liberada: boolean; liberadaPeloMaster: boolean;
+  calendarioNovo?: "ja_cadastrado" | "oficial" | "falta"; // [VIRADA-CALENDARIO]
   confirmacao: string;
   ultimaVirada: { id: number; anoDe: number; anoPara: number; feitaEm: string; feitaPor: string | null; resumo: Resumo | null } | null;
   podeDesfazer: boolean; motivoNaoDesfaz: string | null;
@@ -329,7 +330,12 @@ export default function ViradaAnoPage() {
                 <li>{saem.size ? `${saem.size} professores saem (ficam inativos); ${vagas.reduce((n, [, itens]) => n + itens.reduce((m, i) => m + i.turmas.length, 0), 0)} disciplinas em turmas ficam sem professor.` : "Todos os professores continuam, com as mesmas disciplinas e turmas."}</li>
                 <li>Saem da grade e vão para o backup: {previa.zera.aulasOficiais} aulas da grade oficial, {previa.zera.disponibilidade} linhas de disponibilidade (bloqueios e HA){previa.zera.experimentos ? `, ${previa.zera.experimentos} de experimentos` : ""}{previa.zera.aulasFixas ? `, ${previa.zera.aulasFixas} aula(s) fixa(s)` : ""}{previa.zera.codigosSere ? ` e ${previa.zera.codigosSere} códigos SERE` : ""}.</li>
                 <li>As reservas já feitas continuam.</li>
+                {s.calendarioNovo === "oficial" && <li>O calendário oficial de {s.anoPara} da SEED-PR (feriados, recessos e trimestres) é aplicado; a escola ajusta depois em Calendário Escolar.</li>}
+                {s.calendarioNovo === "ja_cadastrado" && <li>O calendário de {s.anoPara} que a escola já cadastrou continua.</li>}
               </ul>
+              {s.calendarioNovo === "falta" && ( /* [VIRADA-CALENDARIO] */
+                <p className="flex items-start gap-1.5 text-amber-700"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> O calendário oficial de {s.anoPara} ainda não está no sistema. Depois da virada, cadastre os trimestres de {s.anoPara} em Calendário Escolar (até lá, Conflitos mostra as turmas sem calendário).</p>
+              )}
               {!s.liberada && <p className="flex items-center gap-1.5 text-amber-700"><AlertTriangle className="h-4 w-4" /> A virada só fica liberada em {dataBR(s.fimDoAno) || `31/12/${s.anoDe}`}.</p>}
               <div className="flex flex-wrap items-center gap-2">
                 <Input className="h-9 w-40 uppercase" placeholder={s.confirmacao} value={confirmacao} onChange={(e) => setConfirmacao(e.target.value)} disabled={!s.liberada} />
