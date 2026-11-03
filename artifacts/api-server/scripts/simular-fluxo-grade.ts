@@ -150,7 +150,7 @@ async function main() {
     // ---------- 1) a mudanca do cenario ----------
     let tempoLimiteS: number | undefined;
     switch (CENARIO) {
-      case "base": case "promover-fora-do-periodo": case "heuristico-turma": case "conferir-promocao": case "melhorar": break;
+      case "base": case "promover-fora-do-periodo": case "heuristico-turma": case "conferir-promocao": case "melhorar": case "medir": break;
       case "bloqueio-2-dias": await bloquear([0, 1], slots); etapa("mudanca", `${prof.nome} (#${prof.id}, ${prof.aulas} aulas) indisponivel seg e ter`); break;
       case "professor-todo-bloqueado": await bloquear([0, 1, 2, 3, 4], slots); etapa("mudanca", `${prof.nome} (#${prof.id}, ${prof.aulas} aulas) indisponivel a semana toda`); break;
       case "fixa-em-bloqueio": {
@@ -177,6 +177,13 @@ async function main() {
         break;
       }
       case "tempo-curto": tempoLimiteS = 2; etapa("mudanca", "motor com 2 segundos"); break;
+      case "do-zero": { // [SIMULACOES-0311] escola sem grade nem HA (primeiro uso); os turnos seguintes rodam com --cenario=base no MESMO banco
+        const [{ n: aulas }] = await q(`delete from horarios where escola_id=$1 returning 1`, [ESCOLA]).then((r) => [{ n: r.length }]);
+        const ha = await q(`delete from disponibilidade_professores d using professores p where p.id=d.professor_id and p.escola_id=$1 and d.hora_atividade_obrigatoria returning 1`, [ESCOLA]);
+        await q(`delete from horarios_experimentais where escola_id=$1`, [ESCOLA]);
+        etapa("mudanca", `escola do zero: apagadas ${aulas} aulas da grade oficial e ${ha.length} horários de HA (todos os turnos)`);
+        break;
+      }
       default: {
         // [SIMULACOES-0311] alteracoes do dia a dia da escola (Escola Demonstracao, matutino); "combinado" junta varias
         const partes = CENARIO === "combinado" ? ["substituto", "dia-bloqueado", "fixa-valida"]
@@ -185,6 +192,17 @@ async function main() {
         for (const p of partes) mudancas.push(await alteracaoDoDia(p));
         etapa("mudanca", mudancas.length > 1 ? mudancas : mudancas[0]);
       }
+    }
+
+    // medir: so conta as janelas da grade oficial do turno (com a HA gravada), sem gerar nem promover
+    if (CENARIO === "medir") {
+      const [h] = await q(`select h.* from horarios h join turmas t on t.id=h.turma_id where h.escola_id=$1 and t.turno=$2 order by h.id limit 1`, [ESCOLA, TURNO]);
+      await q(`insert into horarios_experimentais (escola_id, nome, turma_id, disciplina_id, professor_id, dia_semana, numero_aula)
+        values ($1, 'Sim-medir', $2, $3, $4, $5, $6)`, [ESCOLA, h.turma_id, h.disciplina_id, h.professor_id, h.dia_semana, h.numero_aula]);
+      const sim = (await chamar("GET", `/horarios/experimentais/Sim-medir/simulacao`)).body;
+      await q(`delete from horarios_experimentais where escola_id=$1 and nome='Sim-medir'`, [ESCOLA]);
+      etapa("medida", { janelasOficial: sim.oficialHoje?.janelas, detalhe: sim.oficialHoje?.detalhe?.map((d: any) => `${d.professorNome} ${d.dia}: ${d.janelas} (${d.dia_detalhe})`) });
+      return;
     }
 
     // ---------- 2) gerar ----------
@@ -246,6 +264,8 @@ async function main() {
         await q(`insert into horarios_experimentais (escola_id, nome, turma_id, disciplina_id, professor_id, dia_semana, numero_aula)
           values ($1, 'Sim-neutro', $2, $3, $4, $5, $6)`, [ESCOLA, h.turma_id, h.disciplina_id, h.professor_id, h.dia_semana, h.numero_aula]);
         const real = (await chamar("GET", `/horarios/experimentais/Sim-neutro/simulacao`)).body;
+        // o auxiliar sai: rodando varios cenarios no MESMO banco, ele juntava turnos e a conferencia contava errado
+        await q(`delete from horarios_experimentais where escola_id=$1 and nome='Sim-neutro'`, [ESCOLA]);
         const previsto = sim.body.experimento, depois = real.oficialHoje;
         const porProf = (d: any[]) => new Map(d.map((x) => [`${x.professorNome}|${x.dia}`, x.janelas]));
         const a = porProf(previsto.detalhe), b = porProf(depois.detalhe);
