@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { turmasTable, turmaDisciplinasTable, horariosTable, disciplinasTable, professoresTable, professorDisciplinasTable, matrizesCurricularesTable, itensMatrizTable } from "@workspace/db";
+import { turmasTable, turmaDisciplinasTable, horariosTable, disciplinasTable, professoresTable, professorDisciplinasTable, matrizesCurricularesTable, itensMatrizTable, cursosTable } from "@workspace/db";
 import { eq, and, inArray } from "drizzle-orm";
 import {
   CreateTurmaBody,
@@ -349,8 +349,15 @@ router.post("/:id/aplicar-matriz", async (req, res) => {
         });
       }
     }
+    // [NIVEL-PELA-MATRIZ] (03/11/2026) a turma criada pela tela nascia sem nivel de ensino (so a importacao do RCO o
+    // preenchia). Num turno com esquema por nivel (Fundamental ate a 5a, Medio ate a 6a), a geracao nao acha o esquema
+    // "sem nivel" e usa a maior ultima aula do turno: o Fundamental podia ganhar a 6a aula. Sem nivel, a turma pega o
+    // do curso da matriz (mesma regra das turmas importadas: fundamental, ou medio_tecnico para medio/tecnico/normal).
+    const curso = turma.nivelEnsino == null && matriz.cursoId != null
+      ? await tx.select({ nivel: cursosTable.nivel }).from(cursosTable).where(eq(cursosTable.id, matriz.cursoId)).then((r) => r[0])
+      : undefined;
     await tx.update(turmasTable)
-      .set({ matrizCurricularId: matriz.id })
+      .set({ matrizCurricularId: matriz.id, ...(curso ? { nivelEnsino: curso.nivel === "fundamental" ? "fundamental" as const : "medio_tecnico" as const } : {}) })
       .where(eq(turmasTable.id, turmaId));
   });
 

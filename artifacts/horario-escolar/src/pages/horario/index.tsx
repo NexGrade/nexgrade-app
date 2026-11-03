@@ -1750,6 +1750,8 @@ const GRAVIDADE_CONFIG = {
 const TIPO_LABELS: Record<string, string> = {
   professor_duplicado: "Professor Duplicado",
   carga_insuficiente: "Carga Insuficiente",
+  turma_aula_dupla: "Turma com Duas Aulas no Mesmo Horário", // [TURMA-EM-DOBRO]
+  carga_excedente: "Aulas a Mais", // [TURMA-EM-DOBRO]
   professor_nao_habilitado: "Professor Não Habilitado",
   janelas_excessivas: "Janelas Excessivas",
   turma_sem_horario: "Turma Sem Horário",
@@ -2715,7 +2717,7 @@ function AbaExperimental() {
     aulasMudando?: number;
     aulasMovidas?: Array<{ professorNome: string; turma: string; disciplina: string; sai: string[]; entra: string[] }>;
     haMovidas?: Array<{ professorNome: string; sai: string[]; entra: string[] }>;
-    veredito: "melhor" | "empate" | "pior";
+    veredito: "melhor" | "empate" | "pior" | "primeira"; // [PRIMEIRA-GRADE]
   };
   const [simulacoes, setSimulacoes] = useState<Record<string, ResultadoSim | "carregando" | { erro: string }>>({});
   // "1:aula 2:HA 6:aula" -> "1º aula · 2º HA · 3º-5º sem aula/HA · 6º aula"
@@ -3042,13 +3044,15 @@ function AbaExperimental() {
                     const qtdAulas = sim.aulasMudando ?? movidas.length;
                     const dif = sim.experimento.janelas - hoje.janelas;
                     const cor = sim.veredito === "melhor" ? "border-green-300 bg-green-50 text-green-900"
-                      : sim.veredito === "empate" ? "border-slate-300 bg-slate-50 text-slate-800"
+                      : sim.veredito === "empate" || sim.veredito === "primeira" ? "border-slate-300 bg-slate-50 text-slate-800"
                       : "border-amber-300 bg-amber-50 text-amber-900";
-                    const titulo = sim.veredito === "melhor" ? "Vale promover: a nova grade deixa menos horários vagos"
+                    const titulo = sim.veredito === "primeira" ? "Primeira grade deste turno: ainda não há grade oficial para comparar" // [PRIMEIRA-GRADE]
+                      : sim.veredito === "melhor" ? "Vale promover: a nova grade deixa menos horários vagos"
                       : sim.veredito === "empate" ? "Tanto faz: o número de horários vagos é o mesmo da oficial"
                       : "Não recomendo promover: a nova grade deixa mais horários vagos";
-                    const textoDif = dif > 0 ? `${dif} a mais` : dif < 0 ? `${-dif} a menos` : "igual à oficial";
-                    const corDif = dif > 0 ? "text-red-700" : dif < 0 ? "text-green-700" : "text-slate-600";
+                    const primeira = sim.veredito === "primeira"; // [PRIMEIRA-GRADE] sem oficial no turno: nada a comparar
+                    const textoDif = primeira ? "não há grade oficial para comparar" : dif > 0 ? `${dif} a mais` : dif < 0 ? `${-dif} a menos` : "igual à oficial";
+                    const corDif = primeira ? "text-slate-600" : dif > 0 ? "text-red-700" : dif < 0 ? "text-green-700" : "text-slate-600";
                     const chave = (d: JanelaSim) => `${d.professorNome}|${d.dia}|${d.turno}`;
                     const janelasHoje = new Map(hoje.detalhe.map((d) => [chave(d), d.janelas]));
                     const LIMITE = 8;

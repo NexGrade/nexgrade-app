@@ -21,6 +21,11 @@ if (!["localhost", "127.0.0.1", "::1"].includes(host)) {
 
 const CURSO_FUND = "ensino fundamental - anos finais - tempo parcial diurno|";
 const CURSO_MEDIO_NOITE = "ensino medio - tempo parcial noturno - itinerario linguagens e ciencias humanas|";
+// --misto: a manha tem tambem uma turma do Medio diurno, com esquema proprio por nivel (Fundamental e Medio no mesmo turno)
+// --sem-nivel: apaga o nivel de ensino da turma depois de aplicar a matriz (como a turma criada pela tela antes de [NIVEL-PELA-MATRIZ])
+const MISTO = process.argv.includes("--misto");
+const SEM_NIVEL = process.argv.includes("--sem-nivel");
+const CURSO_MEDIO_DIA = "ensino medio 2026 - tempo parcial diurno - itinerario linguagens e ciencias humanas|";
 const INICIO: Record<string, [number, number]> = { matutino: [7, 30], vespertino: [13, 0], noturno: [19, 0] };
 const NOMES = ["Ana", "Bruno", "Carla", "Daniel", "Elisa", "Fernando", "Gabriela", "Heitor", "Iara", "João", "Karen", "Lucas",
   "Marina", "Nelson", "Olívia", "Paulo", "Quitéria", "Rafael", "Sônia", "Tiago", "Úrsula", "Vinícius", "Wanda", "Xavier", "Yara", "Zeca"];
@@ -73,7 +78,7 @@ async function main() {
     rel.cadastro.escola = { id: escola, mensagem: criada.mensagem };
 
     // ---------- 2) cursos do catalogo SEED-PR ----------
-    for (const chave of [CURSO_FUND, CURSO_MEDIO_NOITE]) rel.cadastro[`ofertar ${chave.split(" - ")[0]}${chave.includes("noturno") ? " (noite)" : ""}`] = exigir(await chamar("POST", "/matrizes-oficiais/catalogo-cursos/ofertar", { chave }), `ofertar ${chave}`);
+    for (const chave of [CURSO_FUND, CURSO_MEDIO_NOITE, ...(MISTO ? [CURSO_MEDIO_DIA] : [])]) rel.cadastro[`ofertar ${chave.split(" - ")[0]}${chave.includes("noturno") ? " (noite)" : chave.includes("medio") ? " (dia)" : ""}`] = exigir(await chamar("POST", "/matrizes-oficiais/catalogo-cursos/ofertar", { chave }), `ofertar ${chave}`);
     const matrizes = await q(`select m.id, m.serie_ano, c.nome curso, c.nivel, (select coalesce(sum(i.carga_horaria_semanal), 0)::int from itens_matriz i where i.matriz_curricular_id=m.id) carga,
         (select count(*)::int from itens_matriz i where i.matriz_curricular_id=m.id) itens
       from matrizes_curriculares m join cursos c on c.id=m.curso_id where m.escola_id=$1 order by c.nome, m.serie_ano`, [escola]);
@@ -86,16 +91,18 @@ async function main() {
       for (const letra of turno === "matutino" ? ["A", "B"] : ["C", "D"]) plano.push({ nome: `${6 + i}${turno === "matutino" ? "M" : "T"}${letra}`, serie, turno, noite: false });
     }
     for (const [i, serie] of ["1ª Série", "2ª Série", "3ª Série"].entries()) plano.push({ nome: `${i + 1}NA`, serie, turno: "noturno", noite: true });
-    const turmas: Array<{ id: number; nome: string; turno: string; carga: number }> = [];
+    if (MISTO) plano.push({ nome: "1MA", serie: "1ª Série", turno: "matutino", noite: false });
+    const turmas: Array<{ id: number; nome: string; turno: string; carga: number; nivel: string }> = [];
     for (const t of plano) {
       const m = matrizDe(t.serie, t.noite);
       if (!m) throw new Error(`sem matriz para ${t.serie}${t.noite ? " (noite)" : ""}; matrizes: ${rel.cadastro.matrizes.join(" | ")}`);
       const nova = exigir(await chamar("POST", "/turmas", { nome: t.nome, serie: t.serie, turno: t.turno, anoLetivo: 2026 }), `turma ${t.nome}`);
       exigir(await chamar("POST", `/turmas/${nova.id}/aplicar-matriz`, { matrizCurricularId: m.id }), `matriz da ${t.nome}`);
-      turmas.push({ id: nova.id, nome: t.nome, turno: t.turno, carga: m.carga });
+      if (SEM_NIVEL) await q(`update turmas set nivel_ensino=null where id=$1`, [nova.id]); // so para reproduzir o comportamento antigo
+      turmas.push({ id: nova.id, nome: t.nome, turno: t.turno, carga: m.carga, nivel: m.nivel === "fundamental" ? "fundamental" : "medio_tecnico" });
     }
     const [{ semNivel }] = await q(`select count(*)::int "semNivel" from turmas where escola_id=$1 and nivel_ensino is null`, [escola]);
-    rel.cadastro.turmas = `${turmas.length} turmas (${semNivel} sem nível de ensino: a tela de Turmas não pede o nível)`;
+    rel.cadastro.turmas = `${turmas.length} turmas (${semNivel} sem nível de ensino)`;
 
     // ---------- 4) esquema de aulas: aulas por dia pela carga da matriz ----------
     // a noite tem 5 aulas presenciais (19h as 22h35); o que passar disso a escola marca como assincrono (passo 9b)
@@ -108,7 +115,13 @@ async function main() {
         const min = h0 * 60 + m0 + i * 50 + (i >= 3 ? 15 : 0); // intervalo de 15 min depois da 3a aula
         return { numeroAula: i + 1, horaInicio: `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`, duracaoMinutos: 50 };
       });
-      exigir(await chamar("POST", "/horario-slots/lote", { turno, nivelEnsino: null, slots }), `esquema ${turno}`);
+      // --misto: na manha, um esquema por nivel (o Fundamental termina antes)
+      const niveis = MISTO && turno === "matutino" ? [...new Set(turmas.filter((t) => t.turno === turno).map((t) => t.nivel))] : [null];
+      for (const nivel of niveis) {
+        const n = nivel ? Math.ceil(Math.max(...turmas.filter((t) => t.turno === turno && t.nivel === nivel).map((t) => t.carga)) / 5) : porDia;
+        exigir(await chamar("POST", "/horario-slots/lote", { turno, nivelEnsino: nivel, slots: slots.slice(0, n) }), `esquema ${turno} ${nivel ?? ""}`);
+        if (nivel) rel.cadastro[`esquema ${turno} ${nivel}`] = `${n} aulas por dia`;
+      }
       rel.cadastro[`esquema ${turno}`] = `${porDia} aulas por dia (maior carga das turmas: ${carga}/semana), ${slots[0]!.horaInicio} a ${slots.at(-1)!.horaInicio}`;
     }
 
@@ -208,6 +221,9 @@ async function main() {
     }
 
     // ---------- 10) como a escola ficou ----------
+    rel.ultimaAulaPorNivel = await q(`select t.turno, coalesce(t.nivel_ensino::text, 'sem nivel') nivel, c.nivel curso, max(h.numero_aula)::int "ultimaAula", count(*) filter (where h.numero_aula > 6)::int "acimaDa6a"
+      from horarios h join turmas t on t.id=h.turma_id join matrizes_curriculares m on m.id=t.matriz_curricular_id join cursos c on c.id=m.curso_id
+      where h.escola_id=$1 group by 1,2,3 order by 1,2,3`, [escola]);
     const { detectarConflitos } = await import("../src/routes/conflitos");
     const conflitos = await detectarConflitos(escola, {});
     const porTipo: Record<string, number> = {};

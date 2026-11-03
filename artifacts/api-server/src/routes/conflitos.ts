@@ -188,6 +188,65 @@ export async function detectarConflitos(escolaId: string, opcoes: { incluirAceit
     }
   });
 
+  // [TURMA-EM-DOBRO] (03/11/2026) turma com duas disciplinas no mesmo horario, e disciplina com aulas a mais. Os dois
+  // bugs da promocao achados nas simulacoes de 03/11 (aula do professor antigo ou de vinculo sem professor ficando
+  // na oficial) deixavam a turma assim, e so aparecia o lado do professor ("em 2 turmas"), quando aparecia.
+  // Nao e choque: a mesma disciplina (codocencia), o mesmo trio, o mesmo grupo compartilhado, e a aula assincrona
+  // (nao ocupa a turma, igual ao motor).
+  {
+    const grupoDe = new Map(turmaDiscs.map((td) => [`${td.turmaId}|${td.disciplinaId}`,
+      td.grupoTrio?.trim() ? `trio:${td.grupoTrio.trim()}` : td.grupoCompartilhadoId ? `grupo:${td.grupoCompartilhadoId}` : `disc:${td.disciplinaId}`]));
+    const porHorario = new Map<string, typeof slots>();
+    for (const s of slots) {
+      if (s.assincrona) continue;
+      const k = `${s.turmaId}|${s.diaSemana}|${s.numeroAula}`;
+      if (!porHorario.has(k)) porHorario.set(k, []);
+      porHorario.get(k)!.push(s);
+    }
+    for (const [k, ls] of porHorario) {
+      const grupos = new Set(ls.map((s) => grupoDe.get(`${s.turmaId}|${s.disciplinaId}`) ?? `disc:${s.disciplinaId}`));
+      if (grupos.size < 2) continue;
+      const [turmaId, dia, aula] = k.split("|").map(Number);
+      const nomes = [...new Set(ls.map((s) => disciplinas.find((d) => d.id === s.disciplinaId)?.nome ?? `#${s.disciplinaId}`))];
+      conflitos.push({
+        tipo: "turma_aula_dupla",
+        descricao: `Turma ${turmas.find((t) => t.id === turmaId)?.nome ?? turmaId} tem ${nomes.length} aulas no mesmo horário (${["Seg", "Ter", "Qua", "Qui", "Sex"][dia!] ?? dia}, ${aula}ª): ${nomes.join(" e ")}`,
+        gravidade: "critico",
+        turmaId: turmaId ?? null,
+        professorId: null,
+        diaSemana: dia ?? null,
+        numeroAula: aula ?? null,
+      });
+    }
+    // aulas a mais: horarios distintos da disciplina na turma (a codocencia ocupa o mesmo horario e conta uma vez)
+    const horariosPorTurmaDisc = new Map<string, Set<string>>();
+    for (const s of slots) {
+      const k = `${s.turmaId}-${s.disciplinaId}`;
+      if (!horariosPorTurmaDisc.has(k)) horariosPorTurmaDisc.set(k, new Set());
+      horariosPorTurmaDisc.get(k)!.add(`${s.diaSemana}|${s.numeroAula}`);
+    }
+    const vistos = new Set<string>();
+    for (const td of turmaDiscs) {
+      const k = `${td.turmaId}-${td.disciplinaId}`;
+      if (vistos.has(k)) continue;
+      vistos.add(k);
+      const disc = disciplinas.find((d) => d.id === td.disciplinaId);
+      const esperada = td.cargaHorariaSemanalOverride ?? disc?.cargaSemanal;
+      const atual = horariosPorTurmaDisc.get(k)?.size ?? 0;
+      // a carga ora inclui a assincrona, ora nao (Romario 2M.AMB: carga 1 + 1 assincrona = 2 aulas): so passa do limite acima das duas
+      if (esperada == null || atual <= esperada + (td.aulasAssincronas ?? 0)) continue;
+      conflitos.push({
+        tipo: "carga_excedente",
+        descricao: `Turma ${turmas.find((t) => t.id === td.turmaId)?.nome ?? td.turmaId}: "${disc?.nome ?? td.disciplinaId}" tem ${atual} aulas na grade, mas a carga é ${esperada}`,
+        gravidade: "alto",
+        turmaId: td.turmaId,
+        professorId: null,
+        diaSemana: null,
+        numeroAula: null,
+      });
+    }
+  }
+
   const cargaPorTurmaDisc: Record<string, number> = {};
   slots.forEach(s => {
     const key = `${s.turmaId}-${s.disciplinaId}`;
@@ -640,6 +699,16 @@ function gerarSugestoes(conflito: Conflito): string[] {
         "Este slot foi gravado com um número de período que não existe no esquema atual da turma — use 'Substituir tudo' ou o motor CP-SAT para regenerar a grade, ambos garantem que nenhum período inválido é gerado",
         "Se o esquema de horários foi alterado recentemente (ex.: de 5 para 6 períodos), todos os slots anteriores ao novo esquema precisam ser removidos e regenerados",
         "Você pode remover manualmente este slot específico no editor de grade e reinserir no período correto",
+      ];
+    case "turma_aula_dupla": // [TURMA-EM-DOBRO]
+      return [
+        "Veja na grade da turma qual das duas aulas está certa (a outra costuma ser sobra de um professor que saiu da disciplina) e exclua a sobra",
+        "Ou gere a turma de novo e promova: a promoção tira as aulas de quem não tem mais vínculo",
+      ];
+    case "carga_excedente": // [TURMA-EM-DOBRO]
+      return [
+        "Exclua as aulas a mais na grade da turma, ou ajuste a carga da disciplina na turma",
+        "Se a disciplina trocou de professor, as aulas antigas podem ter ficado: gere a turma de novo e promova",
       ];
     case "professor_duplicado":
       return [
