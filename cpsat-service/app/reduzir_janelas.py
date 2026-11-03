@@ -144,6 +144,9 @@ def _restricoes_ok(aulas, ctx):
     vistos_dupla_turma = set()  # mesma dedup da RESTRICAO 2 do solver.py:
     # as 2+ linhas de um grupo_dupla sao UMA aula so (2 profs juntos),
     # nao contam como 2 ocupantes do mesmo slot de turma
+    # [DUPLA-POR-HORARIO] (03/11/2026) a dedup e por (grupo, horario). Antes guardava so o grupo, para a semana
+    # toda: depois do 1o horario da dupla, os outros nao contavam, e a troca punha outra disciplina da turma em
+    # cima (Virada simulada: 6TD ter 1a com Lingua Portuguesa + Recomposicao de Matematica em dupla).
 
     for a in aulas:
         dt_dupla_check = lookup_dt.get(_chave_dt(a))
@@ -151,10 +154,10 @@ def _restricoes_ok(aulas, ctx):
 
         chave_turma = (a["turma"], a["dia"], a["aula"])
         if grupo is not None:
-            if grupo in vistos_dupla_turma:
+            if (grupo, chave_turma) in vistos_dupla_turma:
                 pass  # ja contamos esse grupo nesse slot - nao soma de novo
             else:
-                vistos_dupla_turma.add(grupo)
+                vistos_dupla_turma.add((grupo, chave_turma))
                 ocup_turma[chave_turma] += 1
         else:
             ocup_turma[chave_turma] += 1

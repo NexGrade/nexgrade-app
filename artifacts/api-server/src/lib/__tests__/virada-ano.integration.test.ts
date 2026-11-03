@@ -69,7 +69,7 @@ describe.skipIf(!TEM_BANCO)("virada do ano letivo (integração)", () => {
   it("mostra a prévia sem gravar nada", async () => {
     const p = await previaVirada(E);
     expect(p.turmas).toHaveLength(3);
-    expect(p.zera).toEqual({ aulasOficiais: 3, experimentos: 1, disponibilidade: 2, codigosSere: 3 });
+    expect(p.zera).toEqual({ aulasOficiais: 3, experimentos: 1, disponibilidade: 2, codigosSere: 3, aulasFixas: 1 }); // [VIRADA-ZERA-FIXAS]
     expect((await db.select().from(horariosTable).where(eq(horariosTable.escolaId, E)))).toHaveLength(3);
   });
 
@@ -94,6 +94,8 @@ describe.skipIf(!TEM_BANCO)("virada do ano letivo (integração)", () => {
     expect(await db.select().from(horariosTable).where(eq(horariosTable.escolaId, E))).toHaveLength(0);
     expect(await db.select().from(horariosExperimentaisTable).where(eq(horariosExperimentaisTable.escolaId, E))).toHaveLength(0);
     expect(await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, [ids.pAna, ids.pBeto]))).toHaveLength(0);
+    expect(await db.select().from(aulasFixasTable).where(eq(aulasFixasTable.escolaId, E))).toHaveLength(0); // [VIRADA-ZERA-FIXAS] todas zeram
+    expect((r.body as any).resumo.aulasFixasApagadas).toBe(1);
     const s = await situacaoVirada(E);
     expect(s.anoDe).toBe(2027);
     expect(s.podeDesfazer).toBe(true);

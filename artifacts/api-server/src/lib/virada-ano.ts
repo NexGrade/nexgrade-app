@@ -42,15 +42,20 @@ export function validarPlano(
   for (const id of plano.professoresQueSaem) if (!idsProf.has(id)) erros.push(`Professor ${id} não é desta escola.`);
   const excluir = new Set(plano.excluirTurmas);
   if (excluir.size === turmas.length && turmas.length > 0 && plano.duplicarTurmas.length === 0) erros.push("A virada não pode excluir todas as turmas.");
+  // [VIRADA-NOMES-EXISTENTES] (03/11/2026) so a turma NOVA nao pode repetir nome (de outra nova ou de uma que continua).
+  // Nome que ja se repetia antes nao trava: no Mario Braga (e na Demonstracao, copia dele) as duas turmas fantasma
+  // "PAEE" (manha e tarde) faziam toda virada ser recusada com "Haveria 2 turmas com o nome PAEE".
   const nomesFinais = new Map<string, number>();
   for (const t of turmas) if (!excluir.has(t.id)) nomesFinais.set(t.nome.trim().toUpperCase(), (nomesFinais.get(t.nome.trim().toUpperCase()) ?? 0) + 1);
+  const nomesNovos = new Set<string>();
   for (const d of plano.duplicarTurmas) {
     if (!idsTurma.has(d.origemId)) { erros.push(`Turma ${d.origemId} (para duplicar) não é desta escola.`); continue; }
     if (excluir.has(d.origemId)) erros.push(`A turma ${turmas.find((t) => t.id === d.origemId)?.nome} está marcada para excluir e para duplicar.`);
     const k = d.nome.trim().toUpperCase();
     nomesFinais.set(k, (nomesFinais.get(k) ?? 0) + 1);
+    nomesNovos.add(k);
   }
-  for (const [nome, n] of nomesFinais) if (n > 1) erros.push(`Haveria ${n} turmas com o nome ${nome}.`);
+  for (const [nome, n] of nomesFinais) if (n > 1 && nomesNovos.has(nome)) erros.push(`Haveria ${n} turmas com o nome ${nome}.`);
   return erros;
 }
 
@@ -142,6 +147,8 @@ export async function previaVirada(escolaId: string) {
       experimentos,
       disponibilidade,
       codigosSere: turmas.filter((t) => t.codigoSere != null).length,
+      // [VIRADA-ZERA-FIXAS] aula fixa e do ano que termina (professor e horario podem mudar)
+      aulasFixas: turmas.length ? (await db.select({ n: sql<number>`count(*)::int` }).from(aulasFixasTable).where(inArray(aulasFixasTable.turmaId, turmas.map((t) => t.id))))[0]?.n ?? 0 : 0,
     },
   };
 }
@@ -214,6 +221,9 @@ export async function executarVirada(escolaId: string, planoBruto: unknown, usua
     await tx.delete(horariosTable).where(and(eq(horariosTable.escolaId, escolaId), ehOficial));
     await tx.delete(horariosExperimentaisTable).where(eq(horariosExperimentaisTable.escolaId, escolaId));
     if (profIds.length) await tx.delete(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, profIds));
+    // [VIRADA-ZERA-FIXAS] (03/11/2026, decisao da dona) todas as aulas fixas zeram (estao no backup; o desfazer devolve).
+    // Antes ficavam: a de quem saiu travava a geracao do ano novo ("Ha aula(s) fixa(s) impossivel(is) de manter").
+    if (ids.length) await tx.delete(aulasFixasTable).where(inArray(aulasFixasTable.turmaId, ids));
     // 2) professores que saem: inativos e fora das disciplinas
     if (plano.professoresQueSaem.length && ids.length) {
       await tx.update(professoresTable).set({ ativo: false }).where(and(eq(professoresTable.escolaId, escolaId), inArray(professoresTable.id, plano.professoresQueSaem)));
@@ -248,6 +258,7 @@ export async function executarVirada(escolaId: string, planoBruto: unknown, usua
       turmasContinuam: ficam.length, turmasExcluidas: plano.excluirTurmas.length, turmasCriadas: criadas,
       professoresQueSairam: plano.professoresQueSaem.length,
       aulasApagadas: backup.horarios.length, experimentosApagados: backup.experimentos.length, disponibilidadeApagada: backup.disponibilidade.length,
+      aulasFixasApagadas: backup.aulasFixas.length, // [VIRADA-ZERA-FIXAS]
     };
     await tx.insert(viradasAnoTable).values({
       escolaId, anoDe: sit.anoDe, anoPara: sit.anoPara, status: "feita", backup, resumo, feitaPor: usuarioNome, feitaEm: new Date(),
