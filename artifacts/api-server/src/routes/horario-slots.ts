@@ -33,12 +33,14 @@ import { getEscolaId } from "../lib/escola-id";
 const router = Router();
 
 const NivelEnsino = z.enum(["fundamental", "medio_tecnico"]).nullable().optional();
+// [HORA-VALIDA] (03/11/2026) antes aceitava qualquer HH:MM ("24:15", "25:05") e o banco respondia erro 500
+const HoraAula = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/, "Horário inválido: use HH:MM, de 00:00 a 23:59");
 
 const HorarioSlotInput = z.object({
   turno: z.enum(["matutino", "vespertino", "noturno", "integral"]), // [TURNO-INTEGRAL]
   nivelEnsino: NivelEnsino,
   numeroAula: z.number().int().min(1),
-  horaInicio: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, "Formato esperado HH:MM"),
+  horaInicio: HoraAula,
   duracaoMinutos: z.number().int().min(1).default(50),
 });
 
@@ -52,7 +54,7 @@ const HorarioSlotLoteInput = z.object({
   slots: z.array(
     z.object({
       numeroAula: z.number().int().min(1),
-      horaInicio: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/, "Formato esperado HH:MM"),
+      horaInicio: HoraAula,
       duracaoMinutos: z.number().int().min(1).default(50),
     }),
   ),

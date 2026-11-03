@@ -28,7 +28,7 @@ type Previa = {
   situacao: Situacao;
   turmas: Array<{ id: number; nome: string; serie: string; turno: string; anoLetivo: number; disciplinas: number; semProfessor: number }>;
   professores: Array<{ id: number; nome: string; ativo: boolean; aulas: number; disciplinas?: Array<{ disciplina: string; turmas: string[] }> }>;
-  zera: { aulasOficiais: number; experimentos: number; disponibilidade: number; codigosSere: number };
+  zera: { aulasOficiais: number; experimentos: number; disponibilidade: number; codigosSere: number; aulasFixas?: number }; // [VIRADA-ZERA-FIXAS]
 };
 
 const NOME_TURNO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite", integral: "Integral" };
@@ -327,7 +327,7 @@ export default function ViradaAnoPage() {
               <ul className="list-disc space-y-1 pl-5">
                 <li>{previa.turmas.length - excluir.size} turmas continuam{excluir.size ? `, ${excluir.size} fecham` : ""}{duplicar.length ? `, ${duplicar.length} novas` : ""}; todas passam para {s.anoPara}.</li>
                 <li>{saem.size ? `${saem.size} professores saem (ficam inativos); ${vagas.reduce((n, [, itens]) => n + itens.reduce((m, i) => m + i.turmas.length, 0), 0)} disciplinas em turmas ficam sem professor.` : "Todos os professores continuam, com as mesmas disciplinas e turmas."}</li>
-                <li>Saem da grade e vão para o backup: {previa.zera.aulasOficiais} aulas da grade oficial, {previa.zera.disponibilidade} linhas de disponibilidade (bloqueios e HA){previa.zera.experimentos ? `, ${previa.zera.experimentos} de experimentos` : ""}{previa.zera.codigosSere ? ` e ${previa.zera.codigosSere} códigos SERE` : ""}.</li>
+                <li>Saem da grade e vão para o backup: {previa.zera.aulasOficiais} aulas da grade oficial, {previa.zera.disponibilidade} linhas de disponibilidade (bloqueios e HA){previa.zera.experimentos ? `, ${previa.zera.experimentos} de experimentos` : ""}{previa.zera.aulasFixas ? `, ${previa.zera.aulasFixas} aula(s) fixa(s)` : ""}{previa.zera.codigosSere ? ` e ${previa.zera.codigosSere} códigos SERE` : ""}.</li>
                 <li>As reservas já feitas continuam.</li>
               </ul>
               {!s.liberada && <p className="flex items-center gap-1.5 text-amber-700"><AlertTriangle className="h-4 w-4" /> A virada só fica liberada em {dataBR(s.fimDoAno) || `31/12/${s.anoDe}`}.</p>}

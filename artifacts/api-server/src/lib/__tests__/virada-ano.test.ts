@@ -22,6 +22,13 @@ describe("validarPlano (virada do ano letivo)", () => {
     expect(validarPlano({ ...base, duplicarTurmas: [{ origemId: 1, nome: "6b" }] }, turmas, profs, 2027).join(" ")).toMatch(/6B/);
     expect(validarPlano({ ...base, excluirTurmas: [2], duplicarTurmas: [{ origemId: 1, nome: "6B" }] }, turmas, profs, 2027)).toEqual([]);
   });
+  it("[VIRADA-NOMES-EXISTENTES] nome que ja se repetia (PAEE de manha e de tarde) nao trava; a turma nova continua sem poder repetir", () => {
+    const comPaee = [...turmas, { id: 4, nome: "PAEE" }, { id: 5, nome: "PAEE" }];
+    expect(validarPlano(base, comPaee, profs, 2027)).toEqual([]);
+    expect(validarPlano({ ...base, duplicarTurmas: [{ origemId: 3, nome: "9B" }] }, comPaee, profs, 2027)).toEqual([]);
+    expect(validarPlano({ ...base, duplicarTurmas: [{ origemId: 3, nome: "paee" }] }, comPaee, profs, 2027).join(" ")).toMatch(/3 turmas com o nome PAEE/);
+    expect(validarPlano({ ...base, duplicarTurmas: [{ origemId: 3, nome: "9B" }, { origemId: 1, nome: "9b" }] }, comPaee, profs, 2027).join(" ")).toMatch(/2 turmas com o nome 9B/);
+  });
   it("recusa excluir e duplicar a mesma turma, e excluir todas", () => {
     expect(validarPlano({ ...base, excluirTurmas: [1], duplicarTurmas: [{ origemId: 1, nome: "6C" }] }, turmas, profs, 2027).join(" ")).toMatch(/excluir e para duplicar/);
     expect(validarPlano({ ...base, excluirTurmas: [1, 2, 3] }, turmas, profs, 2027).join(" ")).toMatch(/todas as turmas/);
