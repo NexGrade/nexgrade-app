@@ -57,7 +57,8 @@ export interface ResultadoSimulacao {
   aulasMovidas: AulaMovida[];
   haMovidas: HAMovida[];
   /** experimento (depois de promover) comparado com a oficial de HOJE */
-  veredito: "melhor" | "empate" | "pior";
+  // [PRIMEIRA-GRADE] "primeira": o turno do experimento ainda nao tem grade oficial (nada a comparar)
+  veredito: "melhor" | "empate" | "pior" | "primeira";
   /** [PDF-HA-DA-SIMULACAO] HA de cada professor, em TODOS os turnos, como a promocao vai gravar (para o PDF do
    * experimento). Fica fora da resposta da rota /simulacao. */
   haDepoisPromover: MarcaHACalculada[];
@@ -265,7 +266,10 @@ export async function simularPromocao(
     aulasMudando,
     aulasMovidas,
     haMovidas,
-    veredito: resExp.janelas < resOficialHoje.janelas ? "melhor" : resExp.janelas === resOficialHoje.janelas ? "empate" : "pior",
+    // [PRIMEIRA-GRADE] (03/11/2026) escola nova: sem grade oficial no turno, "0 janelas hoje" e grade nenhuma, e a
+    // comparacao dava "pior" (e "Nao recomendo promover") justo na primeira grade (escola nova simulada em 03/11)
+    veredito: !aulasOficial.some((a) => { const t = real(a)?.turno; return !!t && turnos.includes(t); }) ? "primeira"
+      : resExp.janelas < resOficialHoje.janelas ? "melhor" : resExp.janelas === resOficialHoje.janelas ? "empate" : "pior",
     // [PDF-HA-DA-SIMULACAO] (01/11/2026) nos turnos do experimento, a HA acima (com a HA no buraco); fora deles, igual a
     // promocao: quem teve aula mexida fica com a HA recalculada e quem nao teve, com a HA de hoje.
     haDepoisPromover: [
