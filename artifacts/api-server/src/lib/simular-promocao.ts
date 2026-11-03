@@ -1,10 +1,12 @@
 // [SIMULAR-PROMOCAO] (05/10/2026) Antes de promover um experimento: monta em
 // MEMORIA a grade oficial como ficaria depois da promocao (mesma regra do
-// promover: troca so as aulas dos pares turma+professor do experimento), roda o
+// promover, lib/promocao-substitui.ts: troca as aulas dos pares turma+professor do experimento e a de quem
+// deixou a disciplina), roda o
 // MESMO calculo de HA da promocao (calcularHAIdeal com aulasOverride, sem gravar)
 // e conta as janelas de professor dos turnos envolvidos do jeito da tela de
 // Conflitos: aula, HA e atividade do sistema anterior ("(ocupado: FORM)"...) ocupam o
 // horario. Compara com a oficial atual. Nada e gravado.
+import { regraDeSubstituicao, vinculosDasTurmas } from "./promocao-substitui"; // [PROMOVER-PROFESSOR-TROCADO]
 import { db, professoresTable, turmasTable, horariosTable, horariosExperimentaisTable, disponibilidadeTable, disciplinasTable, horarioSlotsTable } from "@workspace/db";
 import { and, eq, inArray } from "drizzle-orm";
 import { calcularHAIdeal, type AulaParaCalculoHA, type MarcaHACalculada } from "./recalcular-ha";
@@ -87,11 +89,11 @@ export async function simularPromocao(
   const real = (a: { turmaId: number; numeroAula: number }) => posicaoReal(a.turmaId, a.numeroAula, turnoDe, mapaInt);
   const turnos = [...new Set(exp.map((e) => real(e)?.turno).filter((t): t is string => !!t))];
 
-  // mesma regra do promover: apaga so os pares turma+professor do experimento
-  const pares = new Set(exp.map((e) => `${e.turmaId}|${e.professorId}`));
+  // mesma regra do promover: os pares turma+professor do experimento e a aula de quem deixou a disciplina
+  const substitui = regraDeSubstituicao(exp, await vinculosDasTurmas([...new Set(exp.map((e) => e.turmaId))])); // [PROMOVER-PROFESSOR-TROCADO]
   const aulasOficial: AulaParaCalculoHA[] = oficial.map((h) => ({ professorId: h.professorId, turmaId: h.turmaId, diaSemana: h.diaSemana, numeroAula: h.numeroAula }));
   const aulasSimuladas: AulaParaCalculoHA[] = [
-    ...aulasOficial.filter((a) => !pares.has(`${a.turmaId}|${a.professorId}`)),
+    ...oficial.filter((h) => !substitui(h)).map((h) => ({ professorId: h.professorId, turmaId: h.turmaId, diaSemana: h.diaSemana, numeroAula: h.numeroAula })),
     ...exp.map((e) => ({ professorId: e.professorId, turmaId: e.turmaId, diaSemana: e.diaSemana, numeroAula: e.numeroAula })),
   ];
   const haOficial = await calcularHAIdeal(escolaId, aulasOficial);
@@ -224,7 +226,7 @@ export async function simularPromocao(
     if (!grupo.has(k)) grupo.set(k, { p, t, d, of: new Set(), ex: new Set() });
     return grupo.get(k)!;
   };
-  for (const h of oficial) if (pares.has(`${h.turmaId}|${h.professorId}`)) g(h.professorId, h.turmaId, h.disciplinaId).of.add(`${h.diaSemana}|${h.numeroAula}`);
+  for (const h of oficial) if (substitui(h)) g(h.professorId, h.turmaId, h.disciplinaId).of.add(`${h.diaSemana}|${h.numeroAula}`);
   for (const e of exp) g(e.professorId, e.turmaId, e.disciplinaId).ex.add(`${e.diaSemana}|${e.numeroAula}`);
   const lbl = (k: string) => { const [d, a] = k.split("|").map(Number); return rotulo(d!, a!); };
   const ordem = (a: string, b: string) => a.localeCompare(b);
