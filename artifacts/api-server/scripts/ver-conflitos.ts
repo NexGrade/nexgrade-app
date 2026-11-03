@@ -1,13 +1,14 @@
 /**
  * Mostra os conflitos da grade de uma escola, os mesmos da tela Conflitos (28/10/2026). So le.
  * Uso (na raiz do repositorio):
- *   pnpm --filter @workspace/api-server exec tsx scripts/ver-conflitos.ts esc_xxx
+ *   pnpm --filter @workspace/api-server exec tsx scripts/ver-conflitos.ts esc_xxx [--incluir-aceitos]
  * Resumo por tipo na tela; lista completa em lib/db/_arquivo/conflitos-<escola>.txt
  */
 import fs from "node:fs";
 import path from "node:path";
 
 const ESCOLA_ID = process.argv[2];
+const INCLUIR_ACEITOS = process.argv.includes("--incluir-aceitos"); // [VER-ACEITOS]
 const RAIZ = path.resolve(process.cwd(), "..", "..");
 
 function carregarDatabaseUrl() {
@@ -27,8 +28,8 @@ async function main() {
   try {
     const [escola] = await db.select().from(escolasTable).where(eq(escolasTable.id, ESCOLA_ID));
     if (!escola) { console.log("Escola nao encontrada"); return; }
-    const todos = await detectarConflitos(ESCOLA_ID);
-    const abertos = todos; // detectarConflitos ja tira os aceitos pela escola
+    const todos = await detectarConflitos(ESCOLA_ID, { incluirAceitos: INCLUIR_ACEITOS });
+    const abertos = todos; // detectarConflitos ja tira os aceitos pela escola (menos com --incluir-aceitos)
     const porTipo = new Map<string, typeof abertos>();
     for (const c of abertos) porTipo.set(c.tipo, [...(porTipo.get(c.tipo) ?? []), c]);
     const ordem = { critico: 0, alto: 1, medio: 2, baixo: 3 } as Record<string, number>;

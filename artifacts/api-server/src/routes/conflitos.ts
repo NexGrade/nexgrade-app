@@ -55,7 +55,7 @@ type ConflitoComSugestao = {
 // copiada e colada aqui, sem levar turno em conta (o mesmo bug que já
 // corrigimos aqui). Duas implementações da mesma coisa sempre acabam
 // dessincronizando -- agora só existe uma fonte de verdade.
-export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
+export async function detectarConflitos(escolaId: string, opcoes: { incluirAceitos?: boolean } = {}): Promise<Conflito[]> {
   const [slots, professores, disciplinas, turmas, turmaDiscsTodos, profDiscs, salas, configs] = await Promise.all([
     db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
@@ -611,6 +611,8 @@ export async function detectarConflitos(escolaId: string): Promise<Conflito[]> {
   }
 
   // [CONFLITO-ACEITO] os aceitos pela escola nao aparecem (nem contam no painel)
+  // [VER-ACEITOS] (03/11/2026) scripts/ver-conflitos.ts --incluir-aceitos: lista tambem os aceitos (so leitura)
+  if (opcoes.incluirAceitos) return conflitos;
   const aceitos = configValor<ConflitosAceitos>(CHAVE_CONFLITOS_ACEITOS, {});
   return conflitos.filter((c) => !aceitos[chaveAceite(c)]);
 }
