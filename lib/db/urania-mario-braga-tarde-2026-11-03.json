@@ -1,0 +1,3041 @@
+{
+ "fonte": "Urania - Relatorio de Professores TARDE 02 a 06/11/2026 (CORRETO, recebido 03/11), lido pelas coordenadas do PDF",
+ "vespertino": {
+  "ALECKSEY": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "HA",
+     "7TD/CIEN",
+     "7TD/CIEN",
+     "6TA/CIEN"
+    ],
+    "Ter": [
+     "---",
+     "7TC/CIEN",
+     "7TE/CIEN",
+     "7TA/CIEN",
+     "7TA/CIEN"
+    ],
+    "Qua": [
+     "7TB/CIEN",
+     "HA",
+     "7TC/CIEN",
+     "6TA/CIEN",
+     "6TB/CIEN"
+    ],
+    "Qui": [
+     "---",
+     "7TE/CIEN",
+     "7TC/CIEN",
+     "7TD/CIEN",
+     "7TE/CIEN"
+    ],
+    "Sex": [
+     "---",
+     "6TB/CIEN",
+     "7TA/CIEN",
+     "7TB/CIEN",
+     "7TB/CIEN"
+    ]
+   }
+  },
+  "ANDRE": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "7TB/MAT",
+     "6TB/R MAT",
+     "7TA/MAT",
+     "6TB/R MAT",
+     "7TA/MAT"
+    ],
+    "Ter": [
+     "7TA/MAT",
+     "7TB/MAT",
+     "7TB/MAT",
+     "HA",
+     "---"
+    ],
+    "Qua": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qui": [
+     "HA",
+     "6TA/R MAT",
+     "6TA/R MAT",
+     "7TA/MAT",
+     "7TB/MAT"
+    ],
+    "Sex": [
+     "7TA/MAT",
+     "7TB/MAT",
+     "HA",
+     "HA",
+     "---"
+    ]
+   }
+  },
+  "ANTONIO SILVA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "8TG/RED",
+     "8TF/RED",
+     "8TH/LPORT",
+     "8TF/LPORT",
+     "8TG/LPORT"
+    ],
+    "Qua": [
+     "HA",
+     "8TH/LPORT",
+     "8TG/LPORT",
+     "HA",
+     "8TH/RED"
+    ],
+    "Qui": [
+     "8TH/LPORT",
+     "HA",
+     "8TF/RED",
+     "8TG/LPORT",
+     "8TF/LPORT"
+    ],
+    "Sex": [
+     "8TF/LPORT",
+     "HA",
+     "8TH/RED",
+     "HA",
+     "8TG/RED"
+    ]
+   }
+  },
+  "CLAIR": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Ter": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Qua": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Qui": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Sex": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ]
+   }
+  },
+  "CRISTIANE": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qui": [
+     "---",
+     "HA",
+     "9TI/EDFIS",
+     "9TH/EDFIS",
+     "9TH/EDFIS"
+    ],
+    "Sex": [
+     "---",
+     "HA",
+     "9TI/EDFIS",
+     "9TG/EDFIS",
+     "9TG/EDFIS"
+    ]
+   }
+  },
+  "DEBORA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qui": [
+     "6TH/ARTE",
+     "6TG/ARTE",
+     "6TG/ARTE",
+     "6TE/ARTE",
+     "6TH/ARTE"
+    ],
+    "Sex": [
+     "6TI/ARTE",
+     "6TI/ARTE",
+     "6TF/ARTE",
+     "6TF/ARTE",
+     "6TE/ARTE"
+    ]
+   }
+  },
+  "DORIVAL": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "7TD/GEO",
+     "7TC/GEO",
+     "HA",
+     "7TA/GEO",
+     "7TC/GEO"
+    ],
+    "Ter": [
+     "---",
+     "",
+     "7TD/GEO",
+     "HA",
+     "7TB/GEO"
+    ],
+    "Qua": [
+     "---",
+     "7TB/GEO",
+     "7TA/GEO",
+     "7TC/GEO",
+     "7TA/GEO"
+    ],
+    "Qui": [
+     "---",
+     "7TB/GEO",
+     "HA",
+     "HA",
+     "7TD/GEO"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "EDUARDA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "9TI/LPORT",
+     "HA",
+     "HA",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "9TI/INGL",
+     "9TH/LRPORT",
+     "9TI/LRPORT",
+     "HA",
+     "---"
+    ],
+    "Qua": [
+     "9TI/LPORT",
+     "7TE/GEO",
+     "9TI/LPORT",
+     "7TE/GEO",
+     "---"
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Sex": [
+     "9TH/LRPORT",
+     "9TI/LRPORT",
+     "7TE/GEO",
+     "9TI/INGL",
+     "---"
+    ]
+   }
+  },
+  "ANDERSON": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "8TF/MAT",
+     "8TF/MAT",
+     "HA",
+     ""
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "---",
+     "8TF/MAT",
+     "8TF/MAT",
+     "",
+     ""
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "ANDREIA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "9TG/CIEN",
+     "HA",
+     "9TH/CIEN",
+     "9TH/CIEN",
+     "9TG/CIEN"
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "CECILIA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "7TG/LPORT",
+     "6TC/LRPORT",
+     "6TA/LRPORT",
+     "7TG/LPORT",
+     "6TB/LRPORT"
+    ],
+    "Ter": [
+     "7TG/LPORT",
+     "6TC/LRPORT",
+     "6TA/LRPORT",
+     "6TB/LRPORT",
+     ""
+    ],
+    "Qua": [
+     "HA",
+     "HA",
+     "HA",
+     "",
+     ""
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "CRISLAINE": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "8TH/INGL",
+     "8TG/INGL",
+     "8TF/INGL",
+     "8TF/INGL"
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Sex": [
+     "8TG/INGL",
+     "8TH/INGL",
+     "HA",
+     "HA",
+     "---"
+    ]
+   }
+  },
+  "DAIANE": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "7TD/HIST",
+     "7TC/HIST",
+     "7TB/HIST",
+     "7TE/HIST"
+    ],
+    "Ter": [
+     "---",
+     "HA",
+     "HA",
+     "6TA/HIST",
+     "6TC/HIST"
+    ],
+    "Qua": [
+     "---",
+     "7TA/HIST",
+     "7TB/HIST",
+     "6TB/HIST",
+     "7TD/HIST"
+    ],
+    "Qui": [
+     "---",
+     "HA",
+     "HA",
+     "7TE/HIST",
+     "7TC/HIST"
+    ],
+    "Sex": [
+     "HA",
+     "6TC/HIST",
+     "6TB/HIST",
+     "7TA/HIST",
+     "6TA/HIST"
+    ]
+   }
+  },
+  "DORACI": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Ter": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Qua": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Qui": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Sex": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ]
+   }
+  },
+  "EDNILSON": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "7TG/HIST",
+     "HA",
+     "7TG/HIST",
+     "7TF/HIST",
+     "7TF/HIST"
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "EDUARDO": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "7TC/EDFIS",
+     "7TA/EDFIS",
+     "HA",
+     "HA",
+     "HA"
+    ],
+    "Ter": [
+     "8TF/EDFIS",
+     "7TE/EDFIS",
+     "7TF/EDFIS",
+     "7TB/EDFIS",
+     "8TH/EDFIS"
+    ],
+    "Qua": [
+     "7TD/EDFIS",
+     "8TG/EDFIS",
+     "HA",
+     "HA",
+     "HA"
+    ],
+    "Qui": [
+     "7TA/EDFIS",
+     "7TC/EDFIS",
+     "7TB/EDFIS",
+     "8TF/EDFIS",
+     ""
+    ],
+    "Sex": [
+     "8TH/EDFIS",
+     "8TG/EDFIS",
+     "7TD/EDFIS",
+     "7TF/EDFIS",
+     "7TE/EDFIS"
+    ]
+   }
+  },
+  "ELECIANA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "6TG/LPORT",
+     "6TG/LPORT",
+     "HA"
+    ],
+    "Qua": [
+     "---",
+     "---",
+     "",
+     "6TG/LPORT",
+     "6TG/LPORT"
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "ELISANGELA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "6TA/EDFIS",
+     "6TF/EDFIS",
+     "6TB/EDFIS",
+     "6TD/EDFIS",
+     "6TD/EDFIS"
+    ],
+    "Ter": [
+     "6TF/EDFIS",
+     "6TA/EDFIS",
+     "6TC/EDFIS",
+     "6TC/EDFIS",
+     "6TB/EDFIS"
+    ],
+    "Qua": [
+     "HA",
+     "HA",
+     "HA",
+     "---",
+     "---"
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "FERNANDA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Ter": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Qua": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Qui": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Sex": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ]
+   }
+  },
+  "FRANCIELLE S.": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Ter": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Qua": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Qui": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Sex": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ]
+   }
+  },
+  "GEVERSON": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "7TH/MAT",
+     "7TG/MAT",
+     "7TG/MAT",
+     "7TC/MAT",
+     "7TD/MAT"
+    ],
+    "Ter": [
+     "7TH/MAT",
+     "7TG/MAT",
+     "7TH/MAT",
+     "7TD/MAT",
+     "7TC/MAT"
+    ],
+    "Qua": [
+     "7TC/MAT",
+     "7TC/MAT",
+     "7TD/MAT",
+     "7TD/MAT",
+     "7TH/MAT"
+    ],
+    "Qui": [
+     "7TG/MAT",
+     "7TH/MAT",
+     "7TD/MAT",
+     "7TC/MAT",
+     "7TG/MAT"
+    ],
+    "Sex": [
+     "HA",
+     "HA",
+     "HA",
+     "HA",
+     "HA"
+    ]
+   }
+  },
+  "GUSTAVO": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "---",
+     "HA*",
+     "HA*",
+     "8TF/ED.DIG",
+     "8TF/ED.DIG"
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "HERICA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "7TB/INGL",
+     "7TD/INGL",
+     "7TA/INGL",
+     "7TC/INGL",
+     "HA"
+    ],
+    "Qua": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Sex": [
+     "7TC/INGL",
+     "7TA/INGL",
+     "7TB/INGL",
+     "7TD/INGL",
+     "HA"
+    ]
+   }
+  },
+  "IVANIR": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "",
+     "6TC/LRPORT",
+     "6TA/LRPORT",
+     "HA",
+     "6TB/LRPORT"
+    ],
+    "Ter": [
+     "6TE/LRPORT",
+     "6TC/LRPORT",
+     "6TA/LRPORT",
+     "6TB/LRPORT",
+     "6TI/LRPORT"
+    ],
+    "Qua": [
+     "6TF/LRPORT",
+     "6TH/LRPORT",
+     "HA",
+     "HA",
+     "HA"
+    ],
+    "Qui": [
+     "6TD/LRPORT",
+     "6TE/LRPORT",
+     "6TH/LRPORT",
+     "6TF/LRPORT",
+     "6TG/LRPORT"
+    ],
+    "Sex": [
+     "6TG/LRPORT",
+     "HA",
+     "6TI/LRPORT",
+     "HA",
+     "6TD/LRPORT"
+    ]
+   }
+  },
+  "ELIANE ROCHA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "9TH/INGL",
+     "7TH/INGL",
+     "9TG/INGL",
+     "7TE/INGL",
+     "7TG/INGL"
+    ],
+    "Qua": [
+     "---",
+     "---",
+     "HA",
+     "HA",
+     "HA"
+    ],
+    "Qui": [
+     "7TE/INGL",
+     "7TG/INGL",
+     "9TH/INGL",
+     "7TH/INGL",
+     "9TG/INGL"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "EMANUELE": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "8TG/GEO",
+     "7TH/GEO",
+     "7TH/GEO",
+     "HA",
+     ""
+    ],
+    "Ter": [
+     "---",
+     "",
+     "HA",
+     "8TH/GEO",
+     "9TI/GEO"
+    ],
+    "Qua": [
+     "---",
+     "",
+     "HA",
+     "8TG/GEO",
+     "9TI/GEO"
+    ],
+    "Qui": [
+     "---",
+     "8TH/GEO",
+     "7TH/GEO",
+     "9TI/GEO",
+     ""
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "FRANCIELE DE ASSIS": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "HA",
+     "HA",
+     "9TG/MAT",
+     "6TI/MAT",
+     "9TG/MAT"
+    ],
+    "Ter": [
+     "HA",
+     "6TI/MAT",
+     "8TG/MAT",
+     "9TG/MAT",
+     "9TG/MAT"
+    ],
+    "Qua": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qui": [
+     "6TI/MAT",
+     "9TG/MAT",
+     "HA",
+     "HA",
+     "8TG/MAT"
+    ],
+    "Sex": [
+     "6TE/CIEN",
+     "6TE/CIEN",
+     "8TG/MAT",
+     "8TG/MAT",
+     "6TI/MAT"
+    ]
+   }
+  },
+  "GABRIELA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "7TA/LPORT",
+     "7TB/LPORT",
+     "HA",
+     "7TE/LPORT",
+     "7TB/LPORT"
+    ],
+    "Ter": [
+     "7TD/LPORT",
+     "HA",
+     "7TC/LPORT",
+     "HA",
+     "7TE/LPORT"
+    ],
+    "Qua": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qui": [
+     "7TC/LPORT",
+     "7TD/LPORT",
+     "7TA/LPORT",
+     "7TB/LPORT",
+     "7TA/LPORT"
+    ],
+    "Sex": [
+     "7TE/LPORT",
+     "HA",
+     "HA",
+     "7TC/LPORT",
+     "7TD/LPORT"
+    ]
+   }
+  },
+  "GILBERTO": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "9TH/R MAT",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qui": [
+     "",
+     "6TH/R MAT",
+     "6TI/R MAT",
+     "6TI/R MAT",
+     "9TI/R MAT"
+    ],
+    "Sex": [
+     "9TI/R MAT",
+     "9TG/R MAT",
+     "9TG/R MAT",
+     "6TH/R MAT",
+     "9TH/R MAT"
+    ]
+   }
+  },
+  "HEBERTON": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "7TH/EDFIS",
+     "7TH/EDFIS",
+     "HA",
+     "7TG/EDFIS",
+     "7TG/EDFIS"
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "HERICLEIA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Ter": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Qua": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Qui": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Sex": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ]
+   }
+  },
+  "JACKSON": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "HA",
+     "HA",
+     "HA",
+     "---",
+     "---"
+    ],
+    "Qui": [
+     "9TH/GEO",
+     "6TC/GEO",
+     "9TG/GEO",
+     "9TG/GEO",
+     "6TC/GEO"
+    ],
+    "Sex": [
+     "9TG/GEO",
+     "9TH/GEO",
+     "9TH/GEO",
+     "6TB/GEO",
+     "6TB/GEO"
+    ]
+   }
+  },
+  "JANICE": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "6TB/ENSREL",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "JULIO": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "9TH/MAT",
+     "9TI/MAT",
+     "HA",
+     "HA",
+     "9TH/MAT"
+    ],
+    "Ter": [
+     "---",
+     "9TI/MAT",
+     "6TE/MAT",
+     "9TI/MAT",
+     "9TH/MAT"
+    ],
+    "Qua": [
+     "6TE/MAT",
+     "9TH/MAT",
+     "HA",
+     "9TI/MAT",
+     "6TE/MAT"
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Sex": [
+     "",
+     "HA",
+     "6TE/MAT",
+     "9TH/MAT",
+     "9TI/MAT"
+    ]
+   }
+  },
+  "LISIANE": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "6TE/R MAT",
+     "6TB/R MAT",
+     "6TC/R MAT",
+     "6TB/R MAT",
+     "6TG/R MAT"
+    ],
+    "Ter": [
+     "6TG/R MAT",
+     "6TE/R MAT",
+     "6TD/R MAT",
+     "6TD/R MAT",
+     "6TF/R MAT"
+    ],
+    "Qua": [
+     "9TH/R MAT",
+     "6TF/R MAT",
+     "HA",
+     "HA",
+     "HA"
+    ],
+    "Qui": [
+     "6TC/R MAT",
+     "6TH/R MAT",
+     "6TI/R MAT",
+     "6TI/R MAT",
+     "9TI/R MAT"
+    ],
+    "Sex": [
+     "9TI/R MAT",
+     "9TG/R MAT",
+     "9TG/R MAT",
+     "6TH/R MAT",
+     "9TH/R MAT"
+    ]
+   }
+  },
+  "LUCIANE": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "9TG/ARTE",
+     "9TG/ARTE",
+     "9TH/ARTE",
+     "9TH/ARTE",
+     "HA"
+    ],
+    "Qua": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qui": [
+     "9TI/ARTE",
+     "9TI/ARTE",
+     "8TH/ARTE",
+     "8TH/ARTE",
+     "HA"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "MARIO": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "8TF/HIST",
+     "9TH/HIST",
+     "8TH/HIST",
+     "8TG/HIST",
+     "9TI/HIST"
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "8TH/HIST",
+     "9TI/HIST",
+     "HA",
+     "HA",
+     "9TH/HIST"
+    ],
+    "Qui": [
+     "8TG/HIST",
+     "8TG/HIST",
+     "HA",
+     "HA",
+     "8TH/HIST"
+    ],
+    "Sex": [
+     "7TH/HIST",
+     "7TH/HIST",
+     "HA",
+     "8TF/HIST",
+     "8TF/HIST"
+    ]
+   }
+  },
+  "MARLETE": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "6TH/EDFIS",
+     "6TI/EDFIS",
+     "HA",
+     "6TG/EDFIS",
+     "6TI/EDFIS"
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "6TG/EDFIS",
+     "HA",
+     "6TE/EDFIS",
+     "6TE/EDFIS",
+     "6TH/EDFIS"
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "MATHEUS": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "6TF/MAT",
+     "6TH/MAT",
+     "6TH/MAT",
+     "8TH/MAT",
+     "8TH/MAT"
+    ],
+    "Ter": [
+     "6TH/MAT",
+     "6TH/MAT",
+     "HA",
+     "HA",
+     "6TG/MAT"
+    ],
+    "Qua": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qui": [
+     "6TG/MAT",
+     "HA",
+     "HA",
+     "6TG/MAT",
+     "6TF/MAT"
+    ],
+    "Sex": [
+     "6TF/MAT",
+     "6TF/MAT",
+     "6TG/MAT",
+     "8TH/MAT",
+     "8TH/MAT"
+    ]
+   }
+  },
+  "NOELI": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Ter": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Qua": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Qui": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Sex": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ]
+   }
+  },
+  "JORDANA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "7TA/ARTE",
+     "7TD/ARTE",
+     "7TE/ARTE",
+     "7TB/ARTE",
+     "7TC/ARTE"
+    ],
+    "Qui": [
+     "---",
+     "",
+     "HA",
+     "HA",
+     "HA"
+    ],
+    "Sex": [
+     "7TB/ARTE",
+     "7TD/ARTE",
+     "7TC/ARTE",
+     "7TE/ARTE",
+     "7TA/ARTE"
+    ]
+   }
+  },
+  "KAUANA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Ter": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Qua": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Qui": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Sex": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ]
+   }
+  },
+  "LORENA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "7TF/ARTE",
+     "8TG/ARTE",
+     "8TF/ARTE",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "8TF/ARTE",
+     "7TG/ARTE",
+     "7TH/ARTE",
+     "FORM",
+     "FORM"
+    ],
+    "Qui": [
+     "7TH/ARTE",
+     "HA",
+     "8TG/ARTE",
+     "7TG/ARTE",
+     "7TF/ARTE"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "MARCIO": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "6TC/MAT",
+     "7TE/MAT",
+     "HA",
+     "9TG/HIST",
+     "HA"
+    ],
+    "Ter": [
+     "7TE/MAT",
+     "HA",
+     "HA",
+     "6TE/HIST",
+     "6TD/MAT"
+    ],
+    "Qua": [
+     "7TE/MAT",
+     "6TD/MAT",
+     "9TG/HIST",
+     "6TC/MAT",
+     "6TA/ENSREL"
+    ],
+    "Qui": [
+     "6TE/HIST",
+     "6TD/MAT",
+     "7TE/MAT",
+     "6TC/MAT",
+     "6TD/HIST"
+    ],
+    "Sex": [
+     "6TD/MAT",
+     "7TE/MAT",
+     "6TC/MAT",
+     "6TD/HIST",
+     "7TH/ENSREL"
+    ]
+   }
+  },
+  "MARISE": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "7TF/INGL",
+     "HA",
+     "6TE/INGL",
+     "6TF/INGL",
+     "HA"
+    ],
+    "Ter": [
+     "6TI/INGL",
+     "6TG/INGL",
+     "HA",
+     "HA",
+     "6TH/INGL"
+    ],
+    "Qua": [
+     "6TC/INGL",
+     "6TB/INGL",
+     "6TH/INGL",
+     "6TD/INGL",
+     "6TF/INGL"
+    ],
+    "Qui": [
+     "6TB/INGL",
+     "HA",
+     "7TF/INGL",
+     "6TA/INGL",
+     "6TE/INGL"
+    ],
+    "Sex": [
+     "6TA/INGL",
+     "6TG/INGL",
+     "6TD/INGL",
+     "6TI/INGL",
+     "6TC/INGL"
+    ]
+   }
+  },
+  "MARTA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "6TD/LPORT",
+     "6TE/LPORT",
+     "6TI/LPORT",
+     "HA",
+     "6TH/LPORT"
+    ],
+    "Ter": [
+     "6TD/LPORT",
+     "6TF/LPORT",
+     "6TI/LPORT",
+     "6TH/LPORT",
+     "6TE/LPORT"
+    ],
+    "Qua": [
+     "6TI/LPORT",
+     "6TE/LPORT",
+     "6TF/LPORT",
+     "6TH/LPORT",
+     "6TD/LPORT"
+    ],
+    "Qui": [
+     "6TF/LPORT",
+     "6TI/LPORT",
+     "HA",
+     "HA",
+     "HA"
+    ],
+    "Sex": [
+     "6TH/LPORT",
+     "6TD/LPORT",
+     "HA",
+     "6TE/LPORT",
+     "6TF/LPORT"
+    ]
+   }
+  },
+  "MELINA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "HA",
+     "7TF/CIEN",
+     "7TF/CIEN",
+     "7TH/CIEN",
+     "---"
+    ],
+    "Qui": [
+     "7TF/CIEN",
+     "HA",
+     "7TG/CIEN",
+     "FOR",
+     "---"
+    ],
+    "Sex": [
+     "7TG/CIEN",
+     "7TG/CIEN",
+     "7TH/CIEN",
+     "7TH/CIEN",
+     "---"
+    ]
+   }
+  },
+  "PATRICIA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "---",
+     "7TH/LPORT",
+     "7TH/LPORT"
+    ],
+    "Qua": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "HA",
+     "7TH/LPORT"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "PAULO": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "8TG/ED.DIG",
+     "HA",
+     "8TH/ED.DIG",
+     "8TH/ED.DIG",
+     "8TG/ED.DIG"
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "PRISCILA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "6TB/ARTE",
+     "HA",
+     "6TD/ARTE",
+     "6TA/ARTE",
+     "6TC/ARTE"
+    ],
+    "Ter": [
+     "6TC/ARTE",
+     "6TD/ARTE",
+     "6TB/ARTE",
+     "HA",
+     "6TA/ARTE"
+    ],
+    "Qua": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "RICARDO": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "6TI/GEO",
+     "6TD/GEO",
+     "6TF/GEO",
+     "6TE/GEO",
+     "6TE/GEO"
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "6TH/GEO",
+     "6TG/GEO",
+     "6TA/GEO",
+     "6TF/GEO",
+     "6TI/GEO"
+    ],
+    "Qui": [
+     "---",
+     "8TF/GEO",
+     "6TD/GEO",
+     "HA",
+     "HA"
+    ],
+    "Sex": [
+     "---",
+     "8TF/GEO",
+     "6TA/GEO",
+     "6TG/GEO",
+     "6TH/GEO"
+    ]
+   }
+  },
+  "ROBSON": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "6TG/HIST",
+     "6TG/HIST",
+     "7TB/RED",
+     "7TH/RED",
+     "7TH/RED"
+    ],
+    "Ter": [
+     "7TC/RED",
+     "7TA/RED",
+     "6TF/HIST",
+     "6TF/HIST",
+     "7TD/RED"
+    ],
+    "Qua": [
+     "6TA/MAT",
+     "6TA/MAT",
+     "6TB/MAT",
+     "HA",
+     "7TB/RED"
+    ],
+    "Qui": [
+     "7TD/RED",
+     "7TA/RED",
+     "6TB/MAT",
+     "6TB/MAT",
+     "6TA/MAT"
+    ],
+    "Sex": [
+     "6TB/MAT",
+     "7TC/RED",
+     "7TF/ENSREL",
+     "6TA/MAT",
+     "7TG/ENSREL"
+    ]
+   }
+  },
+  "SALETE": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "HA",
+     "7TF/GEO",
+     "7TF/GEO",
+     "7TG/GEO"
+    ],
+    "Ter": [
+     "---",
+     "HA",
+     "7TG/GEO",
+     "7TG/GEO",
+     "7TF/GEO"
+    ],
+    "Qua": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "SILMARA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "6TE/LRPORT",
+     "HA",
+     "HA",
+     "HA",
+     "6TI/LRPORT"
+    ],
+    "Qua": [
+     "6TF/LRPORT",
+     "6TH/LRPORT",
+     "",
+     "",
+     ""
+    ],
+    "Qui": [
+     "6TD/LRPORT",
+     "6TE/LRPORT",
+     "6TH/LRPORT",
+     "6TF/LRPORT",
+     "6TG/LRPORT"
+    ],
+    "Sex": [
+     "6TG/LRPORT",
+     "HA",
+     "6TI/LRPORT",
+     "HA",
+     "6TD/LRPORT"
+    ]
+   }
+  },
+  "SIMONE*": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    "Ter": [
+     "HA*",
+     "HA*",
+     "HA*",
+     "HA*",
+     ""
+    ],
+    "Qua": [
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    "Qui": [
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    "Sex": [
+     "",
+     "",
+     "",
+     "",
+     ""
+    ]
+   }
+  },
+  "SYPRIANO": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "HA",
+     "HA",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "6TD/ENSREL",
+     "6TI/ENSREL",
+     "6TG/ENSREL",
+     "7TA/ENSREL",
+     "7TE/ENSREL"
+    ],
+    "Qui": [
+     "7TB/ENSREL",
+     "6TF/ENSREL",
+     "6TE/ENSREL",
+     "6TH/ENSREL",
+     ""
+    ],
+    "Sex": [
+     "7TD/ENSREL",
+     "HA",
+     "HA",
+     "6TC/ENSREL",
+     "7TC/ENSREL"
+    ]
+   }
+  },
+  "PEDRO": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "6TE/R MAT",
+     "HA",
+     "6TC/R MAT",
+     "HA",
+     "6TG/R MAT"
+    ],
+    "Ter": [
+     "6TG/R MAT",
+     "6TE/R MAT",
+     "6TD/R MAT",
+     "6TD/R MAT",
+     "6TF/R MAT"
+    ],
+    "Qua": [
+     "",
+     "6TF/R MAT",
+     "",
+     "",
+     ""
+    ],
+    "Qui": [
+     "6TC/R MAT",
+     "6TA/R MAT",
+     "6TA/R MAT",
+     "",
+     ""
+    ],
+    "Sex": [
+     "HA",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "RAFAEL": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "7TE/RED",
+     "6TA/LPORT",
+     "7TE/RED",
+     "6TC/LPORT",
+     "7TF/LPORT"
+    ],
+    "Ter": [
+     "6TA/LPORT",
+     "6TB/LPORT",
+     "HA",
+     "7TF/RED",
+     "HA"
+    ],
+    "Qua": [
+     "6TB/LPORT",
+     "9TG/LRPORT",
+     "6TC/LPORT",
+     "9TG/LRPORT",
+     "6TC/LPORT"
+    ],
+    "Qui": [
+     "6TA/LPORT",
+     "6TB/LPORT",
+     "6TC/LPORT",
+     "7TF/LPORT",
+     "6TB/LPORT"
+    ],
+    "Sex": [
+     "7TF/LPORT",
+     "6TA/LPORT",
+     "7TG/RED",
+     "7TG/RED",
+     "7TF/RED"
+    ]
+   }
+  },
+  "ROBERVAL": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qui": [
+     "TEATR",
+     "TEATR",
+     "TEATR",
+     "TEATR",
+     ""
+    ],
+    "Sex": [
+     "",
+     "",
+     "",
+     "",
+     ""
+    ]
+   }
+  },
+  "ROSINEI": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Ter": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Qua": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Qui": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Sex": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ]
+   }
+  },
+  "SARAH": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "---",
+     "---",
+     "6TI/HIST",
+     "6TI/HIST",
+     "---"
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "SILVANA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Ter": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Qua": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Qui": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ],
+    "Sex": [
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE",
+     "PAEE"
+    ]
+   }
+  },
+  "SONEIDE": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "9TG/LPORT",
+     "9TG/LPORT",
+     "9TH/LPORT",
+     "9TH/LPORT",
+     "HA"
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "CEL.1",
+     "CEL.1",
+     "HA"
+    ],
+    "Qua": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qui": [
+     "9TG/LPORT",
+     "9TH/LPORT",
+     "CEL.1",
+     "CEL.1",
+     "HA"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "WELLINGTON": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "HA",
+     "7TF/MAT",
+     "6TG/CIEN",
+     "6TH/CIEN",
+     "6TF/CIEN"
+    ],
+    "Ter": [
+     "HA",
+     "7TF/MAT",
+     "6TH/CIEN",
+     "6TI/CIEN",
+     "8TF/CIEN"
+    ],
+    "Qua": [
+     "7TF/MAT",
+     "6TC/CIEN",
+     "6TD/CIEN",
+     "FORM",
+     "FORM"
+    ],
+    "Qui": [
+     "8TF/CIEN",
+     "7TF/MAT",
+     "6TF/CIEN",
+     "6TD/CIEN",
+     "6TI/CIEN"
+    ],
+    "Sex": [
+     "6TC/CIEN",
+     "7TF/MAT",
+     "8TF/CIEN",
+     "HA",
+     "6TG/CIEN"
+    ]
+   }
+  },
+  "WEREDIANA": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "8TH/CIEN",
+     "8TG/CIEN",
+     "9TI/CIEN",
+     "9TI/CIEN",
+     "8TG/CIEN"
+    ],
+    "Ter": [
+     "8TH/CIEN",
+     "8TH/CIEN",
+     "HA",
+     "8TG/CIEN",
+     "HA"
+    ],
+    "Qua": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Sex": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ]
+   }
+  },
+  "WILLDEMBERG": {
+   "slots": [
+    "13:05",
+    "13:55",
+    "14:45",
+    "15:50",
+    "16:40"
+   ],
+   "grade": {
+    "Seg": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Ter": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qua": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Qui": [
+     "---",
+     "---",
+     "---",
+     "---",
+     "---"
+    ],
+    "Sex": [
+     "",
+     "6TH/HIST",
+     "6TH/HIST",
+     "---",
+     "---"
+    ]
+   }
+  }
+ }
+}
