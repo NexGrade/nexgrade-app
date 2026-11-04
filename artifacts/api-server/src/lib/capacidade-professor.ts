@@ -13,6 +13,7 @@ import { ehBloqueioReal, ehHaFixa } from "./bloqueio-real"; // [HA-FIXA]
 import { calcularHoraAtividadeTotalPorTurno, ehBloqueioPeriodoNaoLetivo } from "./recalcular-ha";
 import { calcularHoraAtividadePorTurno, ehProfessorEstudio } from "./hora-atividade";
 import { montarMapaPrincipal, ehSecundario, principalDe } from "./professor-principal"; // [MESMA-PESSOA-HA]
+import { ehHAMovel, ehHAManualDaTela } from "./ha-contraturno"; // [COTA-COM-HA-CONTRATURNO]
 
 export interface ProblemaCapacidade {
   professorId: number;
@@ -125,11 +126,24 @@ export async function calcularCotaHaPorTurno(escolaId: string, turno: string): P
   // desconta da cota para o motor nao reservar espaco em dobro.
   const fixasPorProfessor = new Map<number, number>();
   for (const d of disp) if (d.turno === turno && ehHaFixa(d)) fixasPorProfessor.set(d.professorId, (fixasPorProfessor.get(d.professorId) ?? 0) + 1);
+  // [COTA-COM-HA-CONTRATURNO] (04/11/2026) HA que o recalculo preserva (manual, fixa, probatorio...) num turno em que o
+  // professor NAO da aula conta no total dele e sai do turno com mais HA (recalcular-ha.ts, calcularHoraAtividadePorTurno).
+  // A cota nao descontava: o motor e o numero de janelas do Melhorar contavam com HA que nunca vem para este turno
+  // (Alexandre Moreira, 04/11: tela 0 janela, simulacao 1).
   const r: Record<string, number> = {};
   for (const c of cargas) {
     if (ehSecundario(principal, c.professorId)) continue; // [MESMA-PESSOA-HA]
     if (ehProfessorEstudio(c.professor)) continue; // [ESTUDIO-SEM-HA]
-    const cota = Math.max(0, (calcularHoraAtividadePorTurno(porTurnoHA.get(c.professorId) ?? c.aulasPorTurno)[turno] ?? 0) - (fixasPorProfessor.get(c.professorId) ?? 0));
+    const aulasHA = porTurnoHA.get(c.professorId) ?? c.aulasPorTurno;
+    const porTurno = calcularHoraAtividadePorTurno(aulasHA);
+    const contraturno = disp.filter((d) => d.professorId === c.professorId && d.horaAtividadeObrigatoria && d.turno
+      && !((aulasHA[d.turno] ?? 0) > 0) && (!ehHAMovel(d.motivo) || ehHAManualDaTela(d.motivo))).length;
+    for (let i = 0; i < contraturno; i++) { // mesma ordem do recalculo: tira sempre do turno com mais HA
+      const maior = Object.keys(porTurno).sort((x, y) => porTurno[y]! - porTurno[x]!)[0];
+      if (!maior || porTurno[maior]! <= 0) break;
+      porTurno[maior]! -= 1;
+    }
+    const cota = Math.max(0, (porTurno[turno] ?? 0) - (fixasPorProfessor.get(c.professorId) ?? 0));
     if (cota > 0) r[c.professor] = cota;
   }
   return r;
