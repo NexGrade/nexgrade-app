@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>NexGrade — slides novos da Apresentação Escola 2027</title>
+<!-- Slides novos e atualizados da "NexGrade — Apresentação Escola 2027.pdf" (03/11/2026).
+     Os demais slides vêm do PDF anterior; montar-apresentacao.py junta tudo na ordem certa. -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400&display=swap" rel="stylesheet">
+<style>
+  @page { size: 1920px 1080px; margin: 0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, sans-serif; }
+  .slide { width: 1920px; height: 1080px; position: relative; overflow: hidden; break-after: page; break-inside: avoid; background: #f6f7f5; color: #101a2b; padding: 0 128px 40px; display: flex; flex-direction: column; justify-content: center; }
+  .slide.escuro { background: #101a2b; color: #fff; }
+  .slide.img { padding: 0; background-size: 1920px 1080px; display: block; }
+  .conteudo { width: 100%; }
+  .card { break-inside: avoid; }
+  .compacto .card { padding: 30px 36px 32px; }
+  .compacto .card p { font-size: 24px; }
+  .novo { color: #2f6fed; font-weight: 600; letter-spacing: .2em; font-size: 24px; margin-bottom: 14px; }
+  .escuro .novo { color: #6fa8ff; }
+  h1 { font-family: "Source Serif 4", Georgia, serif; font-weight: 400; font-size: 64px; line-height: 1.12; margin: 0 0 44px; letter-spacing: -.005em; }
+  .grade { display: grid; gap: 25px; }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+  .g2 { grid-template-columns: repeat(2, 1fr); }
+  .g4 { grid-template-columns: repeat(4, 1fr); }
+  .card { background: #fff; border: 1px solid #e3e6ea; border-radius: 24px; padding: 34px 36px 38px; }
+  .escuro .card { background: #1a2740; border: none; }
+  .card h3 { margin: 0 0 12px; font-size: 30px; font-weight: 600; color: #2f6fed; line-height: 1.2; }
+  .escuro .card h3 { color: #6fa8ff; }
+  .card p { margin: 0; font-size: 25px; line-height: 1.45; color: #5b6169; }
+  .escuro .card p { color: #a7aeb8; }
+  .card ul { margin: 10px 0 0; padding-left: 28px; font-size: 29px; line-height: 1.6; color: #5b6169; }
+  .rodape { position: absolute; right: 128px; bottom: 44px; font-size: 25px; color: #9aa0a8; }
+  .escuro .rodape { color: #6b7483; }
+  /* legendas por cima da imagem original (slides 20, 23 e 25) */
+  .tampa { position: absolute; background: #f6f6f4; }
+  .legenda { position: absolute; top: 722px; width: 812px; }
+  .legenda h3 { margin: 0 0 22px; font-size: 32px; font-weight: 600; color: #2f6fed; }
+  .legenda p { margin: 0; font-size: 25px; line-height: 1.42; color: #5b6169; }
+  .logo { position: absolute; border-radius: 22%; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+  .contato { position: absolute; left: 0; right: 0; text-align: center; font-size: 30px; color: #101a2b; }
+  .contato b { color: #2f6fed; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- 1 · capa: logo atual do NexGrade -->
+<section class="slide img" style="background-image:url(s01.png)">
+  <div class="tampa" style="left:118px; top:198px; width:140px; height:140px; background:#101a2b"></div>
+  <img class="logo" src="logo.png" alt="NexGrade" style="left:128px; top:208px; width:120px; height:120px">
+</section>
+
+<!-- 11 · RCO (substitui o anterior) -->
+<section class="slide escuro">
+  <div class="conteudo">
+    <div class="novo">NOVO</div>
+    <h1>Do RCO para o NexGrade, e de volta para o RCO</h1>
+    <div class="grade g3">
+      <div class="card"><h3>O cadastro vem do RCO</h3><p>O arquivo da tela Grade de Horário do próprio RCO traz as turmas com o código SERE, as disciplinas com o Código Externo e a matriz de cada turma. Ninguém digita código.</p></div>
+      <div class="card"><h3>Arquivo de importação por turno</h3><p>A grade oficial vira o arquivo que a secretaria inclui no RCO, sem redigitar aula por aula. Se faltar algum código, o sistema mostra onde corrigir.</p></div>
+      <div class="card"><h3>De acordo com a grade SEED</h3><p>Cada disciplina é conferida com a grade SEED da turma, inclusive horários com trio, dupla e assíncrona.</p></div>
+    </div>
+  </div>
+  <div class="rodape">Confidencial · Nexus Core Tecnologia</div>
+</section>
+
+<!-- novo, depois do 12 · quando a grade nao fecha -->
+<section class="slide">
+  <div class="conteudo">
+    <div class="novo">NOVO</div>
+    <h1>Quando a grade não fecha, o sistema explica</h1>
+    <div class="grade g3">
+      <div class="card"><h3>Por que não gerou</h3><p>Um quadro mostra o que impede a grade (professor sem horário livre, aula fixa em horário bloqueado, carga acima do que cabe) e como corrigir cada caso.</p></div>
+      <div class="card"><h3>A conta na hora</h3><p>Na Disponibilidade, a cada clique a tela mostra se as aulas e a hora-atividade do professor ainda cabem no turno, antes de salvar.</p></div>
+      <div class="card"><h3>HA no buraco</h3><p>Ao promover a grade, a hora-atividade vai para os buracos entre as aulas e fecha janelas do professor. A simulação mostra cada mudança antes.</p></div>
+    </div>
+  </div>
+  <div class="rodape">Confidencial · Nexus Core Tecnologia</div>
+</section>
+
+<!-- 17 · mais controle no dia a dia (atualizado) -->
+<section class="slide">
+  <div class="conteudo">
+    <div class="novo">NOVO</div>
+    <h1>Mais controle no dia a dia</h1>
+    <div class="grade g3 compacto">
+      <div class="card"><h3>Acesso por cargo</h3><p>Direção, Coordenação e Secretaria com acesso completo; Pedagogia e Gestão de reservas só com o que acompanham.</p></div>
+      <div class="card"><h3>E-mail da escola</h3><p>Cada pessoa entra com o e-mail institucional @escola.pr.gov.br. O professor vê a própria agenda, sem convite.</p></div>
+      <div class="card"><h3>Conflitos em lote</h3><p>Avisos já conhecidos são aceitos de uma vez; na tela fica só o que pede ação.</p></div>
+      <div class="card"><h3>HA no contraturno</h3><p>Aparece como HA*, na tela e no PDF, e nunca vai para a noite.</p></div>
+      <div class="card"><h3>Coordenação em um clique</h3><p>Na Disponibilidade, o dia de coordenação é marcado de uma vez, sem mexer em aula nem HA.</p></div>
+      <div class="card"><h3>Teto autorizado</h3><p>Quando a direção autoriza mais aulas no turno, o motor respeita a autorização.</p></div>
+    </div>
+  </div>
+  <div class="rodape">Confidencial · Nexus Core Tecnologia</div>
+</section>
+
+<!-- novo, depois do 17 · pedagogia -->
+<section class="slide escuro">
+  <div class="conteudo">
+    <div class="novo">NOVO</div>
+    <h1>A pedagogia no mesmo sistema da grade</h1>
+    <div class="grade g4">
+      <div class="card"><h3>Presença dos professores</h3><p>Cada aula do dia marcada como presente, atraso, falta ou substituída, com o nome de quem substituiu.</p></div>
+      <div class="card"><h3>Licenças</h3><p>Período e substituto. Os professores habilitados na mesma disciplina aparecem primeiro.</p></div>
+      <div class="card"><h3>Comunicados</h3><p>Avisos para a equipe. A licença já gera o comunicado com o período e o substituto.</p></div>
+      <div class="card"><h3>Relatórios pedagógicos</h3><p>Controle de ponto do mês e carga horária, em PDF e Excel.</p></div>
+    </div>
+  </div>
+  <div class="rodape">Confidencial · Nexus Core Tecnologia</div>
+</section>
+
+<!-- 18 · seus dados (atualizado, com LGPD) -->
+<section class="slide escuro">
+  <div class="conteudo">
+    <h1>Seus dados, suas regras, sua decisão final</h1>
+    <div class="grade g3 compacto">
+      <div class="card"><h3>Cada escola tem sua própria base</h3><p>Professores, turmas e disponibilidade de uma escola nunca se misturam com os de outra.</p></div>
+      <div class="card"><h3>Nada é aplicado sem revisão</h3><p>Toda grade gerada fica em modo de teste até a coordenação aprovar.</p></div>
+      <div class="card"><h3>Sempre reversível</h3><p>Se algo não ficar bom, é possível voltar para a grade anterior a qualquer momento.</p></div>
+      <div class="card"><h3>Só o dado necessário (LGPD)</h3><p>Do professor, só nome, e-mail e telefone. Sem CPF, sem matrícula.</p></div>
+      <div class="card"><h3>Licença sem dado de saúde</h3><p>Tipo neutro e nenhum campo de motivo: diagnóstico não entra no sistema.</p></div>
+      <div class="card"><h3>Cópia diária e histórico</h3><p>Cópia de segurança criptografada todos os dias, e o histórico registra quem alterou o quê.</p></div>
+    </div>
+  </div>
+  <div class="rodape">Confidencial · Nexus Core Tecnologia</div>
+</section>
+
+<!-- 20 · professores (legenda atualizada) -->
+<section class="slide img" style="background-image:url(s20.png)">
+  <div class="tampa" style="left:0; right:0; top:715px; height:200px; background:#fff"></div>
+  <div class="legenda" style="left:128px"><h3>Professores</h3><p>Cadastro com habilitações e contato. O e-mail já dá acesso à Minha Agenda, sem convite.</p></div>
+  <div class="legenda" style="left:980px"><h3>Disponibilidade</h3><p>Bloqueios, hora-atividade e aulas fixas de cada professor, num clique por horário, com a conta do turno na hora.</p></div>
+</section>
+
+<!-- 23 · gerar e imprimir (legenda atualizada) -->
+<section class="slide img" style="background-image:url(s23.png)">
+  <div class="tampa" style="left:0; right:0; top:715px; height:200px"></div>
+  <div class="legenda" style="left:128px"><h3>Gerar Grade</h3><p>Grade por turno, turma ou professor, conflitos e Modo Experimental para gerar, comparar e promover.</p></div>
+  <div class="legenda" style="left:980px"><h3>Imprimir Grade</h3><p>PDF por turma e por professor, em paisagem ou retrato, e planilha em Excel com o cabeçalho da escola.</p></div>
+</section>
+
+<!-- 25 · relatorios e configuracoes (tela de Exportar Dados saiu do sistema) -->
+<section class="slide img" style="background-image:url(s25.png)">
+  <div class="tampa" style="left:0; right:0; top:60px; height:120px"></div>
+  <h1 style="position:absolute; left:128px; top:76px">Relatórios e configurações da escola</h1>
+  <div class="tampa" style="left:110px; width:850px; top:180px; height:740px"></div>
+  <div class="card" style="position:absolute; left:128px; top:188px; width:812px; height:520px; padding:40px 44px">
+    <h3>Tudo em PDF e Excel</h3>
+    <ul>
+      <li><strong>Imprimir Grade:</strong> por turma e por professor, em paisagem ou retrato</li>
+      <li><strong>Planilha da grade</strong> em Excel, com uma aba por turma</li>
+      <li><strong>Controle de ponto</strong> do mês, com o resumo por professor</li>
+      <li><strong>Carga horária</strong> de cada professor, por turno</li>
+      <li><strong>Agenda do professor</strong> em PDF, pelo celular</li>
+    </ul>
+  </div>
+  <div class="tampa" style="left:960px; right:0; top:715px; height:200px"></div>
+  <div class="legenda" style="left:128px"><h3>Relatórios</h3><p>Prontos para conferir e homologar, sem montar planilha à mão.</p></div>
+  <div class="legenda" style="left:980px"><h3>Escola</h3><p>Dados da escola, configurações e conformidade SEED-PR numa só página.</p></div>
+</section>
+
+<!-- 26 · chamada final: logo do NexGrade e contato -->
+<section class="slide img" style="background-image:url(s26.png)">
+  <div class="tampa" style="left:880px; top:290px; width:160px; height:160px; background:#f6f7f5"></div>
+  <img class="logo" src="logo.png" alt="NexGrade" style="left:910px; top:304px; width:100px; height:100px">
+  <div class="contato" style="top:840px">Fale com <b>Simone Barros</b> · WhatsApp <b>(41) 99818-0353</b> · simone@nexuscoretecnologia.com.br</div>
+</section>
+
+<!-- 27 · contato: Simone Barros e logo do NexGrade junto ao da Nexus Core -->
+<section class="slide img" style="background-image:url(s27.png)">
+  <div class="tampa" style="left:166px; top:518px; width:700px; height:46px; background:#192741"></div>
+  <div style="position:absolute; left:168px; top:520px; font-size:31px; font-weight:600; color:#fff">Simone Barros</div>
+  <img class="logo" src="logo.png" alt="NexGrade" style="left:1640px; top:478px; width:110px; height:110px">
+</section>
+
+</body>
+</html>

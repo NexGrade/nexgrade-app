@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>NexGrade — Relatório Executivo e Projeção Financeira</title>
+<!-- Fonte do PDF "NexGrade - Relatorio Executivo e Projecao de Crescimento.pdf". Para gerar de novo:
+     msedge --headless --no-pdf-header-footer --print-to-pdf="saida.pdf" relatorio-executivo.html -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 12mm 14mm 15mm;
+    @bottom-left { content: "NexGrade — Nexus Core Tecnologia | Simone Barros · WhatsApp (41) 99818-0353"; font: 7.5pt Inter, sans-serif; color: #64748b; }
+    @bottom-right { content: "Página " counter(page) " de " counter(pages); font: 7.5pt Inter, sans-serif; color: #64748b; } }
+  :root { --azul: #2562eb; --azul-esc: #1e3a8a; --escuro: #0e1729; --escuro2: #1d293b; --linha: #e2e7f0; --cinza: #f7fafb; --claro: #eff5ff; --texto: #1e293b; --suave: #475569; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, Arial, sans-serif; color: var(--texto); font-size: 9pt; line-height: 1.4; }
+  .topo { background: linear-gradient(110deg, var(--escuro) 0%, #1e3a8a 100%); color: #fff; border-radius: 8px; padding: 5mm 6mm; display: flex; align-items: center; gap: 5mm; }
+  .topo img { width: 15mm; height: 15mm; border-radius: 3.5mm; box-shadow: 0 1mm 3mm rgba(0,0,0,.35); }
+  .topo .nome { flex: 1; }
+  .topo h1 { margin: 0; font-size: 18pt; }
+  .topo .sub { color: #93c5fd; font-size: 9pt; margin-top: 1mm; }
+  .topo .selo { border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.08); border-radius: 5px; padding: 2.5mm 3.5mm; text-align: right; font-size: 7.8pt; line-height: 1.5; }
+  .topo .selo b { color: #38bdf8; font-size: 8.5pt; letter-spacing: .03em; }
+  h2 { font-size: 12pt; color: #0f172a; letter-spacing: .02em; margin: 4.5mm 0 2.5mm; padding-bottom: 1.5mm; border-bottom: 2px solid var(--azul); break-after: avoid; }
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 3.5mm; }
+  .g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; }
+  .caixa { background: var(--cinza); border: 1px solid var(--linha); border-left: 3px solid var(--azul); border-radius: 5px; padding: 3mm 4mm; break-inside: avoid; }
+  .caixa.verde { border-left-color: #0fb981; } .caixa.roxo { border-left-color: #8b5cf5; }
+  .caixa h3 { margin: 0 0 1.5mm; font-size: 10pt; color: var(--azul-esc); }
+  .caixa ul { margin: 0; padding-left: 4.5mm; } .caixa li { margin: 0 0 .8mm; }
+  .card { background: var(--cinza); border: 1px solid var(--linha); border-radius: 5px; padding: 2.2mm; text-align: center; break-inside: avoid; }
+  .card b { display: block; color: var(--azul-esc); font-size: 11.5pt; margin-bottom: 1mm; }
+  .card span { color: var(--suave); font-size: 8.2pt; }
+  .numeros { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin-top: 3mm; }
+  .numeros div { background: var(--claro); border-radius: 5px; padding: 2.2mm; text-align: center; }
+  .numeros b { display: block; font-size: 16pt; color: #0f9d6e; }
+  .numeros span { font-size: 8pt; color: var(--suave); }
+  table { width: 100%; border-collapse: collapse; font-size: 8.6pt; margin-bottom: 3mm; }
+  th { background: var(--escuro2); color: #fff; text-align: left; padding: 1.8mm 3mm; font-weight: 600; }
+  td { padding: 1.5mm 3mm; border-bottom: 1px solid var(--linha); }
+  tr:nth-child(even) td { background: var(--cinza); }
+  tr.total td { background: var(--claro); color: var(--azul-esc); font-weight: 700; border-top: 1.5px solid var(--azul); }
+  h4 { color: var(--azul-esc); font-size: 10pt; margin: 3mm 0 2mm; }
+  .nota { color: var(--suave); font-size: 8.2pt; margin: 1mm 0 3mm; }
+  .aporte { background: var(--claro); border: 1px solid #c7d7fe; border-radius: 6px; padding: 3mm 4.5mm; }
+  .aporte h3 { margin: 0 0 1.5mm; color: var(--azul-esc); font-size: 10.5pt; }
+  .aporte ul { margin: 1.5mm 0 0; padding-left: 4.5mm; }
+  .contato { margin-top: 4mm; background: linear-gradient(110deg, var(--escuro), #1e3a8a); color: #fff; border-radius: 6px; padding: 3.5mm 5mm; display: flex; align-items: center; gap: 4mm; break-inside: avoid; }
+  .contato img { width: 11mm; height: 11mm; border-radius: 2.5mm; }
+  .contato b { color: #93c5fd; }
+  .quebra { break-before: page; }
+</style>
+</head>
+<body>
+
+<div class="topo">
+  <img src="logo.png" alt="NexGrade">
+  <div class="nome"><h1>NexGrade</h1><div class="sub">Plataforma de Inteligência Pedagógica &amp; Gestão de Horários Escolares</div></div>
+  <div class="selo"><b>RELATÓRIO EXECUTIVO</b><br>Simone Barros<br>Nexus Core Tecnologia<br>Novembro de 2026</div>
+</div>
+
+<h2>1. TESE DE INVESTIMENTO E MERCADO</h2>
+<div class="g2">
+  <div class="caixa"><h3>O Problema Operacional</h3><ul>
+    <li><b>Semanas perdidas:</b> até 3 semanas manuais para montar a grade.</li>
+    <li><b>Custo de janelas:</b> perda de produtividade e insatisfação docente.</li>
+    <li><b>Normas complexas:</b> cálculo de hora-atividade, trios, co-docência e aulas assíncronas.</li>
+    <li><b>Retrabalho no RCO:</b> grade redigitada aula por aula no sistema oficial do estado.</li></ul></div>
+  <div class="caixa verde"><h3>A Solução NexGrade</h3><ul>
+    <li><b>Motor de otimização:</b> redução de até <b>93%</b> das janelas em minutos.</li>
+    <li><b>Pronto para o RCO:</b> cadastro a partir do arquivo oficial do RCO e grade exportada em arquivo por turno.</li>
+    <li><b>Ecossistema completo:</b> app “Minha Agenda”, reservas, pedagogia (presença, licenças, relatórios) e IA.</li></ul></div>
+</div>
+<div class="numeros">
+  <div><b>−93%</b><span>janelas numa escola real (184 → 12)</span></div>
+  <div><b>−78%</b><span>no noturno com trios e assíncronas</span></div>
+  <div><b>78</b><span>cursos do catálogo oficial SEED-PR</span></div>
+  <div><b>3 s</b><span>para gerar a grade do noturno</span></div>
+</div>
+
+<h2>2. ARQUITETURA MULTITENANT E DIFERENCIAIS TÉCNICOS</h2>
+<div class="g3">
+  <div class="card"><b>Multitenant</b><span>Base isolada por escola, acesso por cargo</span></div>
+  <div class="card"><b>LGPD por padrão</b><span>Só nome, e-mail e telefone do professor; sem dado de saúde</span></div>
+  <div class="card"><b>App PWA</b><span>Acesso pelo e-mail da escola, sem baixar em lojas</span></div>
+  <div class="card"><b>Parametrizável</b><span>Regras e hora-atividade configuráveis (Res. 7.200/2025)</span></div>
+  <div class="card"><b>Cópia diária</b><span>Backup criptografado todo dia, com teste de restauração</span></div>
+  <div class="card"><b>Cobrança integrada</b><span>30 dias de avaliação e bloqueio automático sem pagamento</span></div>
+</div>
+
+<h2>3. MODELO DE NEGÓCIO SAAS E PRECIFICAÇÃO</h2>
+<div class="g2">
+  <div class="caixa roxo"><h3>Rede Pública (Caixa Escolar / APMF)</h3><ul>
+    <li><b>Implantação do banco de dados:</b> R$ 28,00 por turma, uma vez.</li>
+    <li><b>Assinatura (ARR):</b> R$ 45,00 por turma ao ano, com tudo incluído.</li>
+    <li><b>Lançamento:</b> as 10 primeiras escolas pagam R$ 20,00 de implantação e R$ 30,00 por turma por 12 meses; depois, R$ 45,00.</li>
+    <li><b>Exemplo:</b> escola de 20 turmas = R$ 560,00 de implantação + R$ 900,00/ano.</li></ul></div>
+  <div class="caixa"><h3>Rede Privada (Ticket Premium)</h3><ul>
+    <li><b>Implantação (Setup):</b> R$ 800,00 a R$ 1.200,00 por colégio.</li>
+    <li><b>Assinatura (ARR):</b> R$ 1.200,00 a R$ 2.400,00/ano.</li></ul></div>
+</div>
+
+<h2 class="quebra">4. APRESENTAÇÃO DA PROJEÇÃO DE CRESCIMENTO (3 ANOS)</h2>
+<p class="nota">Projeção abrangendo a consolidação na rede pública do Paraná, a expansão para o mercado privado e a entrada em redes estaduais/municipais em outros estados do Brasil. Na rede pública, a conta usa a média de 20 turmas por escola: R$ 900,00/ano e R$ 560,00 de implantação (as 10 escolas fundadoras: R$ 600,00 no 1º ano e R$ 400,00 de implantação); na privada, o ticket premium. Renovação de 100% da base.</p>
+<h4>Evolução da Base de Clientes (Público + Privado)</h4>
+<table>
+  <tr><th>Métrica de Expansão</th><th>Ano 1 (Tração)</th><th>Ano 2 (Expansão)</th><th>Ano 3 (Escala)</th></tr>
+  <tr><td>Escolas Ativas — Rede Pública</td><td>35 escolas</td><td>100 escolas</td><td>220 escolas</td></tr>
+  <tr><td>Escolas Ativas — Rede Privada</td><td>15 escolas</td><td>50 escolas</td><td>130 escolas</td></tr>
+  <tr class="total"><td>TOTAL DE ESCOLAS NA BASE</td><td>50 escolas</td><td>150 escolas</td><td>350 escolas</td></tr>
+  <tr><td>Total de Turmas Gerenciadas</td><td>1.000 turmas</td><td>3.100 turmas</td><td>7.500 turmas</td></tr>
+</table>
+<h4>Demonstrativo Financeiro Projetado (R$)</h4>
+<table>
+  <tr><th>Linha de Receita</th><th>Ano 1</th><th>Ano 2</th><th>Ano 3</th></tr>
+  <tr><td>Receita de Setup (One-time)</td><td>R$ 30.000,00</td><td>R$ 75.400,00</td><td>R$ 164.200,00</td></tr>
+  <tr><td>Receita de Renovação (Base Retida)</td><td>R$ 0,00</td><td>R$ 58.500,00</td><td>R$ 210.000,00</td></tr>
+  <tr><td>Receita Novas Assinaturas</td><td>R$ 55.500,00</td><td>R$ 151.500,00</td><td>R$ 286.000,00</td></tr>
+  <tr class="total"><td>RECEITA RECORRENTE ANUAL (ARR)</td><td>R$ 55.500,00</td><td>R$ 210.000,00</td><td>R$ 496.000,00</td></tr>
+  <tr class="total"><td>FATURAMENTO BRUTO TOTAL</td><td>R$ 85.500,00</td><td>R$ 285.400,00</td><td>R$ 660.200,00</td></tr>
+</table>
+
+<h2>5. PROPOSTA DE PARCERIA: SMART MONEY &amp; SUPORTE TÉCNICO</h2>
+<div class="aporte">
+  <h3>Aporte Solicitado: R$ 130.000,00 por 16,67% de Participação Societária (Smart Money)</h3>
+  Buscamos um investidor anjo/estratégico para agregar nas seguintes frentes:
+  <ul>
+    <li><b>Arquitetura &amp; Nuvem:</b> suporte na escalabilidade da infraestrutura multitenant.</li>
+    <li><b>Segurança &amp; LGPD:</b> diretrizes de segurança de dados escolares.</li>
+    <li><b>Governança &amp; Conexões:</b> mentoria no produto e rede de contatos com colégios privados.</li>
+  </ul>
+</div>
+<p class="nota" style="margin-top:3mm"><b>Destinação do Capital:</b> 50% Expansão Comercial B2B | 30% Integrações e Nuvem | 20% Marketing Educacional.</p>
+
+<div class="contato">
+  <img src="logo.png" alt="">
+  <div>Fale com <b>Simone Barros</b> · WhatsApp <b>(41) 99818-0353</b> · simone@nexuscoretecnologia.com.br · nexuscoretecnologia.com.br</div>
+</div>
+
+</body>
+</html>

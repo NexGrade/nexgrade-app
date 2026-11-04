@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Cadastro de Escola — NexGrade</title>
+<!-- Fonte do PDF "Cadastro-de-Escola-NexGrade.pdf". Para gerar de novo:
+     msedge --headless --no-pdf-header-footer --print-to-pdf="saida.pdf" cadastro-de-escola.html -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  @page {
+    size: A4; margin: 20mm 15mm 18mm;
+    @top-left { content: "NexGrade · Cadastro de Escola – Informações Necessárias"; font: 600 8pt Inter, sans-serif; color: #5f6b76; vertical-align: bottom; padding-bottom: 4mm; }
+    @bottom-left { content: "Nexus Core Tecnologia · WhatsApp (41) 99818-0353 · Simone Barros · simone@nexuscoretecnologia.com.br"; font: 7.5pt Inter, sans-serif; color: #6b7a86; vertical-align: top; padding-top: 4mm; }
+    @bottom-right { content: counter(page); font: 7.5pt Inter, sans-serif; color: #6b7a86; vertical-align: top; padding-top: 4mm; }
+  }
+  @page :first { margin-top: 0; @top-left { content: none; } }
+  :root { --azul: #1564bf; --azul-esc: #0d47a1; --claro: #e2f2fd; --cinza: #ebeff0; --linha: #d5dde3; --texto: #1f2937; --suave: #5f6b76; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, "Segoe UI", Arial, sans-serif; color: var(--texto); font-size: 9.8pt; line-height: 1.5; background: #fff; }
+  h1, h2, .fale h3 { font-family: Montserrat, Inter, sans-serif; }
+  a { color: var(--azul); text-decoration: none; }
+
+  .topo { background: linear-gradient(120deg, var(--azul-esc) 0%, var(--azul) 70%, #3f8fe0 100%); color: #fff; margin: 0 -15mm 16px; padding: 14mm 15mm 9mm; }
+  .marca { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .marca .icone img { width: 52px; height: 52px; border-radius: 12px; display: block; box-shadow: 0 3px 10px rgba(0,0,0,.25); }
+  .marca b { font-family: Montserrat, sans-serif; font-size: 13pt; display: block; }
+  .marca span { font-size: 8.5pt; opacity: .9; }
+  .topo .rotulo { font-family: Montserrat, sans-serif; font-weight: 600; font-size: 9.5pt; letter-spacing: .04em; }
+  .topo h1 { margin: 6px 0 2px; font-size: 22pt; }
+  .topo .sub { font-family: Montserrat, sans-serif; font-weight: 600; font-size: 11.5pt; opacity: .92; }
+  .topo .versao { font-size: 8pt; opacity: .8; margin-top: 8px; }
+
+  h2 { color: var(--azul-esc); font-size: 14pt; margin: 18px 0 6px; break-after: avoid; }
+  p { margin: 0 0 7px; }
+  .quadro { background: var(--claro); border-left: 4px solid var(--azul); border-radius: 4px; padding: 9px 14px; margin: 8px 0 10px; break-inside: avoid; }
+  .quadro.cinza { background: var(--cinza); }
+  .quadro .tit { font-weight: 700; color: var(--azul-esc); margin-bottom: 4px; }
+  .quadro ol { margin: 4px 0 2px; padding-left: 20px; }
+  .quadro li { margin: 3px 0; }
+  .novo { display: inline-block; background: #2e7d32; color: #fff; font-size: 7.5pt; font-weight: 700; border-radius: 3px; padding: 0 5px; margin-left: 4px; vertical-align: 1px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 8.8pt; margin: 6px 0 8px; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+  th { background: var(--azul); color: #fff; text-align: left; padding: 5px 7px; font-weight: 600; border: 1px solid var(--azul); }
+  td { padding: 5px 7px; border: 1px solid var(--linha); vertical-align: top; height: 22px; }
+  tbody tr:nth-child(even) td { background: #f5f7f8; }
+  td.campo { background: var(--cinza) !important; font-weight: 600; width: 28%; }
+  td.obs { color: var(--suave); width: 34%; }
+  td.ex { color: var(--suave); font-style: italic; }
+  .vazias td { height: 22px; }
+
+  ul.lista { margin: 4px 0 8px; padding-left: 18px; }
+  ul.lista li { margin: 3px 0; }
+  .nota { color: var(--suave); font-size: 8.6pt; }
+
+  ul.check { list-style: none; padding: 0; margin: 6px 0 10px; }
+  ul.check li { padding-left: 24px; position: relative; margin: 5px 0; }
+  ul.check li::before { content: ""; position: absolute; left: 0; top: 2px; width: 13px; height: 13px; border: 1.5px solid var(--azul); border-radius: 3px; }
+
+  .fale { background: linear-gradient(120deg, var(--azul-esc), var(--azul) 70%, #3f8fe0); color: #fff; border-radius: 10px; padding: 16px 20px; display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; margin-top: 16px; break-inside: avoid; }
+  .fale .icone img { width: 56px; height: 56px; border-radius: 12px; display: block; }
+  .fale h3 { margin: 0 0 2px; font-size: 13pt; }
+  .fale .peq { font-size: 8.5pt; opacity: .9; }
+  .fale dl { margin: 0; display: grid; grid-template-columns: auto auto; gap: 3px 12px; font-size: 9pt; }
+  .fale dt { font-size: 7.5pt; letter-spacing: .08em; opacity: .8; align-self: center; }
+  .fale dd { margin: 0; font-weight: 700; }
+  .quebra { break-before: page; }
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="marca">
+    <div class="icone"><img src="logo.png" alt=""></div>
+    <div><b>Nexus Core Tecnologia</b><span>Tecnologia que organiza, escola que avança.</span></div>
+  </div>
+  <div class="rotulo">NEXGRADE · GRADE HORÁRIA PARA ESCOLAS DA SEED-PR</div>
+  <h1>Cadastro de Escola</h1>
+  <div class="sub">Informações necessárias para a grade sair pronta para o RCO</div>
+  <div class="versao">Versão de 03/11/2026</div>
+</header>
+
+<p>Para a grade horária sair pronta para o RCO, a Nexus Core precisa das informações dos <strong>9 blocos</strong> abaixo. Com tudo completo, a Nexus Core cadastra a escola no NexGrade e o arquivo do RCO sai sem pendências.</p>
+
+<div class="quadro">
+  <div class="tit">Dois envios já resolvem quase tudo</div>
+  <ol>
+    <li><strong>Arquivo do RCO</strong> <span class="novo">NOVO</span>: o cadastro oficial da escola, baixado do próprio RCO num atendimento com o suporte NexGrade. Traz as turmas com o código SERE, as disciplinas com o Código Externo e a grade SEED de cada turma. <strong>Cobre os blocos 3 e 4.</strong> Como fazer: bloco 10.</li>
+    <li><strong>Relatórios do horário atual</strong> (do sistema de horário que a escola usa hoje), em PDF: por professor e por turma, de cada turno. <strong>Cobrem os blocos 5, 6 e 8.</strong></li>
+  </ol>
+</div>
+<p>O restante (dados da escola, horários das aulas, hora-atividade e regras da casa) a secretaria ou a coordenação responde neste documento.</p>
+<p><strong>Como enviar:</strong> por e-mail para <a>simone@nexuscoretecnologia.com.br</a>, com o nome da escola no assunto, ou pelo WhatsApp <a>(41) 99818-0353</a>, com Simone Barros. Planilha, PDF ou print, do jeito que estiver: não é preciso redigitar.</p>
+<p><strong>Por que tanto cuidado com códigos:</strong> o RCO recusa o arquivo se a turma vier sem o código do SERE ou se a disciplina vier com código errado ou fora da grade SEED da turma. Com o Arquivo do RCO, os códigos vêm do próprio RCO e não há o que digitar.</p>
+
+<h2>1. Dados da escola e usuários</h2>
+<p>O código INEP é obrigatório: ele identifica a escola no arquivo do RCO.</p>
+<table>
+  <thead><tr><th>Informação</th><th>Observação</th><th>Resposta da escola</th></tr></thead>
+  <tbody>
+    <tr><td class="campo">Nome oficial da escola</td><td class="obs">Como aparece no SERE (ex.: Colégio Estadual Prof. ...)</td><td></td></tr>
+    <tr><td class="campo">Município</td><td class="obs"></td><td></td></tr>
+    <tr><td class="campo">NRE</td><td class="obs">Ex.: Área Metropolitana Norte</td><td></td></tr>
+    <tr><td class="campo">Código INEP</td><td class="obs">8 dígitos. Vai no arquivo do RCO</td><td></td></tr>
+    <tr><td class="campo">CNPJ</td><td class="obs">Para contrato e nota fiscal</td><td></td></tr>
+    <tr><td class="campo">Diretor(a)</td><td class="obs">Nome e e-mail. É com esse e-mail que a direção entra no sistema</td><td></td></tr>
+    <tr><td class="campo">Responsável pelo cadastro</td><td class="obs">Quem responde dúvidas (secretaria ou coordenação), com telefone</td><td></td></tr>
+    <tr><td class="campo">Ofertas da escola</td><td class="obs">Fundamental, Médio, Técnico, Formação de Docentes, EJA, CELEM etc.</td><td></td></tr>
+    <tr><td class="campo">Logo da escola</td><td class="obs">Opcional, imagem PNG ou JPG</td><td></td></tr>
+  </tbody>
+</table>
+<p><strong>Usuários do sistema.</strong> Liste a equipe que vai acessar o NexGrade, com o e-mail institucional (@escola.pr.gov.br, que permite entrar com a conta Google). <strong>Professores não entram nesta lista</strong>: eles acessam a Minha Agenda pelo e-mail do bloco 5.</p>
+<table>
+  <thead><tr><th style="width:34%">Nome</th><th style="width:36%">E-mail</th><th>Cargo</th></tr></thead>
+  <tbody>
+    <tr><td></td><td></td><td class="ex">Direção</td></tr>
+    <tr><td></td><td></td><td class="ex">Coordenação</td></tr>
+    <tr><td></td><td></td><td class="ex">Secretaria</td></tr>
+    <tr><td></td><td></td><td class="ex">Pedagogia</td></tr>
+    <tr><td></td><td></td><td class="ex">Gestor de reservas (se usar)</td></tr>
+  </tbody>
+</table>
+<p class="nota">Direção, Coordenação e Secretaria têm acesso completo. A Pedagogia acompanha presença, licenças, comunicados e relatórios. O Gestor de reservas cuida das salas e da agenda de reservas.</p>
+
+<h2>2. Turnos, horários das aulas e calendário</h2>
+<p>Preencha o horário real de início e fim de cada aula, por turno e por nível. Se o Fundamental e o Médio da mesma manhã tiverem horários diferentes, faça uma linha para cada. Exemplo de célula: 07:30–08:20.</p>
+<table>
+  <thead><tr><th>Turno / nível</th><th>Aulas/dia</th><th>1ª</th><th>2ª</th><th>3ª</th><th>4ª</th><th>5ª</th><th>6ª</th><th>7ª</th><th>Intervalo</th></tr></thead>
+  <tbody>
+    <tr><td class="campo">Manhã – Fundamental</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td class="campo">Manhã – Médio/Técnico</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td class="campo">Tarde – Fundamental</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td class="campo">Tarde – Médio/Técnico</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td class="campo">Noite</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+  </tbody>
+</table>
+<p>Também informe:</p>
+<ul class="lista">
+  <li>Se há aula aos sábados, e em qual turno.</li>
+  <li>A data de início da grade no RCO (vigência). Ex.: 12/09/2026. O RCO guarda cada grade com data de início e fim.</li>
+  <li>Turmas com horário diferente do restante do turno (ex.: técnico com 7ª aula, integral manhã e tarde).</li>
+</ul>
+<p class="nota">O calendário letivo oficial da SEED-PR já vem carregado no NexGrade. Informe só os dias próprios da escola (ex.: conselho de classe, evento sem aula).</p>
+<div class="quadro cinza"><strong>Atenção ao noturno:</strong> o RCO usa horários fixos (18:40, 19:30, 20:30, 21:20 e 22:10). Se o horário real da escola for diferente, o NexGrade mantém o horário real na grade e usa o horário do RCO só no arquivo de importação.</div>
+
+<h2>3. Turmas <span class="novo">VEM DO ARQUIVO DO RCO</span></h2>
+<p>Com o Arquivo do RCO, a Nexus Core cadastra as turmas de manhã, tarde e noite com o código SERE, inclusive os dois códigos do 3º ano dividido (formação geral FGB e parte IF). <strong>A escola não precisa preencher a lista de turmas.</strong> Informe só:</p>
+<table>
+  <thead><tr><th style="width:52%">Pergunta</th><th>Resposta da escola</th></tr></thead>
+  <tbody>
+    <tr><td class="campo" style="width:52%">Alguma turma tem nome diferente do RCO na escola (ex.: “3º Tec” em vez de 3A)?</td><td></td></tr>
+    <tr><td class="campo">Há turma integral (manhã e tarde)? Quais? Ela é cadastrada à parte.</td><td></td></tr>
+    <tr><td class="campo">Sala de recursos, PAEE e atendimentos que ocupam o horário do professor (entram na grade, não vão para o RCO)</td><td></td></tr>
+    <tr><td class="campo">CELEM, AETE, Aluno Monitor e outros programas que a escola quer ver na grade</td><td></td></tr>
+  </tbody>
+</table>
+<p class="nota">Sem o Arquivo do RCO: envie a lista do NRE com o código SERE de cada turma (bloco 10). No 3º ano da matriz antiga e no 3º ano técnico, informe os dois códigos (FGB e IF).</p>
+
+<h2>4. Grade SEED e Código Externo <span class="novo">VEM DO ARQUIVO DO RCO</span></h2>
+<p>A grade SEED da turma é a referência do RCO: se uma disciplina da grade horária não estiver nela, o RCO recusa a turma. O Arquivo do RCO traz a grade SEED de cada turma (disciplinas e aulas por semana) com o Código Externo de cada disciplina, e a Nexus Core monta as turmas a partir dela. <strong>A escola não precisa preencher a grade.</strong> Informe só:</p>
+<table>
+  <thead><tr><th style="width:52%">Pergunta</th><th>Resposta da escola</th></tr></thead>
+  <tbody>
+    <tr><td class="campo" style="width:52%">A escola oferta Língua Espanhola? Em quais turmas? (É optativa e não entra sozinha.)</td><td></td></tr>
+    <tr><td class="campo">Alguma turma vai mudar de matriz no próximo período (curso novo, ajuste do NRE)?</td><td></td></tr>
+    <tr><td class="campo">Monitoria e Treinamento Esportivo: a escola quer vê-los na grade?</td><td></td></tr>
+  </tbody>
+</table>
+<div class="quadro"><strong>O Código Externo não é o código SAE.</strong> O Código Externo é o número da disciplina no SERE e é ele que vai para o RCO. Sem o Arquivo do RCO, envie a grade SEED de cada turma pelo NRE (bloco 10) e cuide de: mesma disciplina com códigos diferentes conforme a turma (ex.: Recomposição de Língua Portuguesa no Fundamental e no Médio), disciplinas reais das trilhas e itinerários (e não “Híbrida” ou “Trilha”) e a versão I, II ou III certa de cada série.</div>
+
+<h2>5. Professores e vínculos</h2>
+<p>O vínculo diz quem dá qual disciplina em qual turma, com quantas aulas. É a base da geração da grade e do cálculo da hora-atividade.</p>
+<p><strong>Lista de professores.</strong> O NexGrade guarda só nome, e-mail e telefone (LGPD). <strong>Não envie CPF, matrícula nem documentos.</strong> O e-mail é o que o professor usa para entrar na Minha Agenda.</p>
+<table>
+  <thead><tr><th>Nome completo</th><th>Nome curto na grade</th><th>Turnos em que trabalha</th><th>E-mail</th><th>Telefone (opcional)</th></tr></thead>
+  <tbody class="vazias">
+    <tr><td></td><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td><td></td></tr>
+  </tbody>
+</table>
+<p><strong>Vínculos (professor × turma × disciplina):</strong></p>
+<table>
+  <thead><tr><th>Professor</th><th>Turma</th><th>Disciplina</th><th style="width:16%">Aulas por semana</th></tr></thead>
+  <tbody class="vazias">
+    <tr><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td></tr>
+  </tbody>
+</table>
+<div class="quadro">
+  Se a escola enviar os relatórios do horário atual por professor e por turma, estas tabelas não precisam ser preenchidas: os vínculos saem dos relatórios. Informe também:
+  <ul class="lista">
+    <li><strong>Codocência ou apoio:</strong> quem é o titular e quem é o apoio em cada turma. Na grade, o apoio fica no mesmo horário do titular.</li>
+    <li><strong>Disciplina ainda sem professor:</strong> informe mesmo assim. A aula fica reservada e aparece como pendência.</li>
+    <li><strong>Professor em mais de uma escola:</strong> os dias e horários em que ele está na outra escola entram como indisponibilidade (bloco 6).</li>
+  </ul>
+</div>
+
+<h2>6. Disponibilidade e compromissos fixos</h2>
+<p>O NexGrade nunca coloca aula num horário em que o professor está indisponível. Por isso a disponibilidade precisa vir completa antes de gerar a grade.</p>
+<table>
+  <thead><tr><th>Professor</th><th>Dia</th><th>Turno</th><th>Aulas (ex.: 1ª a 3ª)</th><th>Motivo: indisponível / outra escola / compromisso fixo</th></tr></thead>
+  <tbody class="vazias">
+    <tr><td></td><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td><td></td></tr>
+  </tbody>
+</table>
+<p>Compromissos fixos ocupam o horário do professor, mas não são aula da turma. Informe o horário e o que significa cada sigla. Exemplos já vistos em outras escolas:</p>
+<table>
+  <thead><tr><th style="width:20%">Sigla</th><th>Significado</th></tr></thead>
+  <tbody>
+    <tr><td class="campo">COORD</td><td>Coordenação de curso técnico</td></tr>
+    <tr><td class="campo">FORM</td><td>Programa Formadores</td></tr>
+    <tr><td class="campo">CEL</td><td>Turma do CELEM</td></tr>
+    <tr><td class="campo">PAC</td><td>Professor de Apoio à Comunicação Alternativa</td></tr>
+    <tr><td class="campo">LAB</td><td>Laboratório</td></tr>
+    <tr><td class="campo">R / RM</td><td>Recomposição de Português / Matemática</td></tr>
+  </tbody>
+</table>
+<p class="nota">Se o relatório por professor do sistema atual marca indisponibilidade com traços ou outro símbolo, avise como é a marcação. Mande a legenda das siglas da escola, porque cada escola usa as suas.</p>
+
+<h2>7. Hora-atividade</h2>
+<p>O NexGrade calcula a hora-atividade de cada professor pela tabela da SEED, a partir das aulas de cada turno, e distribui na grade sozinho, de preferência nos buracos entre as aulas. A escola não precisa enviar os horários de HA atuais; só as exceções.</p>
+<p><strong>Como o sistema distribui:</strong></p>
+<ul class="lista">
+  <li>primeiro no próprio turno em que o professor dá aula;</li>
+  <li>se não couber, no contraturno diurno, só em dia em que o professor tem aula, marcada como HA*;</li>
+  <li>nunca no período da noite.</li>
+</ul>
+<table>
+  <thead><tr><th style="width:62%">Pergunta</th><th>Resposta da escola</th></tr></thead>
+  <tbody>
+    <tr><td class="campo" style="width:62%">Algum professor tem HA combinada com a direção diferente da tabela? Quem e como?</td><td></td></tr>
+    <tr><td class="campo">Algum professor tem dois padrões ou dois cadastros (ex.: aulas regulares e trio)? A HA deve somar os dois.</td><td></td></tr>
+    <tr><td class="campo">A escola tem regra própria para a HA (ex.: dia fixo, HA em grupo por área)?</td><td></td></tr>
+  </tbody>
+</table>
+
+<h2>8. Trio, dupla, codocência e aulas assíncronas</h2>
+<p>Nessas aulas há mais de uma disciplina ou mais de um professor no mesmo horário. São os casos que mais geram erro no RCO, então precisam vir detalhados.</p>
+<p><strong>Trio e dupla (IFA e trilhas):</strong></p>
+<table>
+  <thead><tr><th>Turma</th><th>Dia e aula</th><th>Professor</th><th>Disciplina da trilha que ele dá</th><th>Revezamento semanal? Desde quando?</th></tr></thead>
+  <tbody class="vazias">
+    <tr><td class="ex">Ex.: 1NB</td><td class="ex">Quarta, 2ª aula</td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td><td></td></tr>
+  </tbody>
+</table>
+<p><strong>Aulas assíncronas:</strong></p>
+<table>
+  <thead><tr><th>Professor</th><th>Turma</th><th>Disciplina</th><th>Quantas por semana</th><th>Ocupa o horário da turma ou só do professor?</th><th>Em qual horário a escola lança no RCO?</th></tr></thead>
+  <tbody class="vazias">
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+  </tbody>
+</table>
+<p class="nota">As escolas fazem de jeitos diferentes: em algumas a assíncrona ocupa o horário da turma; em outras é tempo só do professor, enquanto a turma tem outra aula. Em algumas ela é lançada no RCO numa aula extra (ex.: 7ª aula da manhã). Por isso perguntamos caso a caso. Codocência: informe titular e apoio no bloco 5.</p>
+
+<h2>9. Regras e preferências da escola</h2>
+<p>O NexGrade já segue estas regras em toda escola: turma nunca fica com janela; professor nunca em dois lugares ao mesmo tempo; aula nunca em horário indisponível. As preferências abaixo são da escola e ajustam o resultado.</p>
+<table>
+  <thead><tr><th style="width:62%">Pergunta</th><th>Resposta da escola</th></tr></thead>
+  <tbody>
+    <tr><td class="campo" style="width:62%">Quais disciplinas devem ter aula dupla (geminada)? Em quais turmas?</td><td></td></tr>
+    <tr><td class="campo">Máximo de aulas da mesma disciplina no mesmo dia?</td><td></td></tr>
+    <tr><td class="campo">Professor que trabalha manhã e tarde pode ter a última aula da manhã e a 1ª da tarde?</td><td></td></tr>
+    <tr><td class="campo">Alguma aula precisa ficar fixa (dia e horário que não podem mudar)?</td><td></td></tr>
+    <tr><td class="campo">Alguma disciplina precisa de sala especial (laboratório, quadra, informática)?</td><td></td></tr>
+    <tr><td class="campo">A escola prefere manter a grade atual e só melhorar, ou pode reorganizar tudo?</td><td></td></tr>
+    <tr><td class="campo">Outras regras da casa</td><td></td></tr>
+  </tbody>
+</table>
+
+<h2>10. Como conseguir o Arquivo do RCO e os códigos</h2>
+<p>O caminho mais rápido é o <strong>Arquivo do RCO</strong>: ele sai do próprio RCO, já com todos os códigos e a grade SEED, e leva poucos minutos num atendimento.</p>
+<table>
+  <thead><tr><th style="width:26%">Caminho</th><th>O que a escola faz</th><th style="width:22%">O que resolve</th></tr></thead>
+  <tbody>
+    <tr><td class="campo">1. Arquivo do RCO (recomendado)</td><td>Combina um atendimento com o suporte NexGrade (remoto ou na escola), com a secretaria ou a direção logada no RCO. No RCO, abre <strong>Grade de Horário</strong> e escolhe o <strong>Período Letivo</strong> atual; o suporte baixa o arquivo .XML. Depois, envia o arquivo no NexGrade em <strong>RCO → Arquivo do RCO</strong>, sem abrir nem alterar.</td><td>Blocos 3 e 4 completos</td></tr>
+    <tr><td class="campo">2. Pedir ao NRE (documentação escolar / GEHA)</td><td>Envia a mensagem abaixo e repassa a lista que receber</td><td>Blocos 3 e 4, quando não der para baixar o arquivo</td></tr>
+    <tr><td class="campo">3. Exportar do sistema atual</td><td>No sistema de horário atual, gera o arquivo de exportação para o RCO, um por turno</td><td>Conferência da grade de hoje</td></tr>
+  </tbody>
+</table>
+<div class="quadro cinza">
+  <div class="tit">Mensagem pronta para o NRE (só se não der para baixar o Arquivo do RCO)</div>
+  Bom dia! Precisamos, para o [nome da escola] ([município]), da lista dos <strong>códigos das turmas no SERE</strong> ([ano], manhã, tarde e noite) e do <strong>Código Externo das disciplinas</strong>, com a <strong>grade SEED de cada turma</strong> (disciplinas e aulas por semana). É para importar a grade horária no RCO por arquivo. Obrigada!
+</div>
+
+<h2>11. Checklist final de envio</h2>
+<p>Marque o que já foi enviado. Com todos os itens marcados, o cadastro fica completo e a grade sai pronta para o RCO.</p>
+<ul class="check">
+  <li>Dados da escola, com o código INEP e o e-mail da direção (bloco 1)</li>
+  <li>Equipe com e-mail institucional e cargo (bloco 1)</li>
+  <li>Horário de cada aula por turno e nível, e data de início da grade no RCO (bloco 2)</li>
+  <li><strong>Arquivo do RCO</strong> enviado no NexGrade, ou a lista do NRE com códigos e grade SEED (blocos 3 e 4)</li>
+  <li>Respostas sobre turmas e grade: nomes próprios, integral, Espanhola, programas (blocos 3 e 4)</li>
+  <li>Professores com nome e e-mail, e os vínculos ou os relatórios do horário atual por professor e por turma (bloco 5)</li>
+  <li>Disponibilidade e legenda das siglas de compromissos fixos (bloco 6)</li>
+  <li>Exceções de hora-atividade (bloco 7)</li>
+  <li>Trios, duplas e assíncronas detalhados (bloco 8)</li>
+  <li>Regras e preferências da escola (bloco 9)</li>
+</ul>
+<p>Depois do envio, a Nexus Core confere tudo contra a grade SEED e devolve uma lista curta com o que faltar.</p>
+
+<div class="fale">
+  <div class="icone"><img src="logo.png" alt=""></div>
+  <div>
+    <h3>Fale com a gente</h3>
+    <div class="peq">Nexus Core Tecnologia · Piraquara/PR</div>
+    <div class="peq">Tecnologia que organiza, escola que avança.</div>
+  </div>
+  <dl>
+    <dt>WHATSAPP</dt><dd>(41) 99818-0353 · Simone Barros</dd>
+    <dt>E-MAIL</dt><dd>simone@nexuscoretecnologia.com.br</dd>
+    <dt>SITE</dt><dd>nexuscoretecnologia.com.br</dd>
+  </dl>
+</div>
+
+</body>
+</html>
