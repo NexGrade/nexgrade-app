@@ -33,8 +33,15 @@ describe("reposicionarHAMovel", () => {
     }
   });
 
-  it("nao mexe em HA fixa, probatorio nem manual", () => {
-    for (const motivo of ["HA fixa (definida manualmente)", "Importado do sistema anterior 21/10 (H.A.) - estagio probatorio", "Importado do sistema anterior 02-06/11 (HA) - estagio probatorio", "HA manual (definida na tela)", null]) {
+  it("HA manual (marcada na tela) muda de lugar para fechar janela e mantem o texto", () => { // [HA-MANUAL-MOVEL]
+    const r = rodar([aula(0, 1), aula(0, 2), aula(0, 4)], [ha(0, 6, "HA manual (definida na tela)")]);
+    expect(r).toHaveLength(1);
+    expect(r[0]).toMatchObject({ diaSemana: 0, horarioSlot: 3 });
+    expect(r[0]!.linha.motivo).toBe("HA manual (definida na tela)");
+  });
+
+  it("nao mexe em HA fixa nem probatorio", () => {
+    for (const motivo of ["HA fixa (definida manualmente)", "Importado do sistema anterior 21/10 (H.A.) - estagio probatorio", "Importado do sistema anterior 02-06/11 (HA) - estagio probatorio", null]) {
       expect(rodar([aula(0, 1), aula(0, 2), aula(0, 4)], [ha(0, 6, motivo)])).toHaveLength(0);
     }
   });
