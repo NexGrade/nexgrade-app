@@ -16,6 +16,7 @@ import {
   useCriarAulaFixa,
   useDeleteAulaFixa,
   getListAulasFixasQueryKey,
+  useGetProfessorCarga, // [HA-DEVIDA-UMA-CONTA]
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Users, Save, RotateCcw, Lock, CheckCircle2, Info, GraduationCap, BookOpen, Pin, Tag } from "lucide-react";
@@ -142,20 +143,21 @@ export default function DisponibilidadePage() {
     () => horariosProf.filter((h: any) => h.turma?.turno === turno),
     [horariosProf, turno],
   );
-  // [HA-POR-TURNO-NA-TELA] (21/10/2026) aulas e HA de cada turno pela tabela oficial SEED-PR (a mesma da
-  // tela de Conflitos e do recálculo; PROB e HA fixa contam como HA marcada)
+  // [HA-POR-TURNO-NA-TELA] (21/10/2026) aulas e HA de cada turno pela tabela oficial SEED-PR (PROB e HA fixa contam como
+  // HA marcada). [HA-DEVIDA-UMA-CONTA] (04/11/2026) o "pede" vem do servidor (/professores/:id/carga), com a mesma conta do
+  // recalculo: a turma integral no turno real, a HA presa em turno sem aula descontada e o cadastro secundario sem HA.
+  // Antes a tela tinha a propria copia da tabela e mostrava "faltam" onde o recalculo poe menos.
+  const { data: cargaProf } = useGetProfessorCarga(professorIdNum ?? 0, { query: { enabled: !!professorIdNum, queryKey: ["professor-carga", professorIdNum] as const } });
   const resumoHA = useMemo(() => {
-    const TABELA = [0, 0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 4, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 10, 10];
-    // [ESTUDIO-SEM-HA] "Escola Estúdio (SEED) - ..." são aulas do estúdio da SEED: não pedem HA
-    const estudio = /^\s*escola\s+est[uú]dio\b/i.test(professores.find((p) => p.id === professorIdNum)?.nome ?? "");
-    const pede = (n: number) => (estudio || n <= 0 ? 0 : n <= 30 ? TABELA[n]! : Math.ceil(n / 3));
+    const aulasPorTurno = (cargaProf?.porTurno ?? {}) as Record<string, number>;
+    const pedePorTurno = (cargaProf?.haInstitucionalPorTurno ?? {}) as Record<string, number>;
     const linhas = TURNOS.map((t) => {
-      const aulas = horariosProf.filter((h: any) => h.turma?.turno === t.value).length;
+      const aulas = aulasPorTurno[t.value] ?? 0;
       const marcadas = (disponibilidadeRows as any[]).filter((d) => d.turno === t.value && d.horaAtividadeObrigatoria).length;
-      return { turno: t.value, rotulo: t.label, aulas, pede: pede(aulas), marcadas };
-    }).filter((l) => l.aulas > 0 || l.marcadas > 0);
+      return { turno: t.value, rotulo: t.label, aulas, pede: pedePorTurno[t.value] ?? 0, marcadas };
+    }).filter((l) => l.aulas > 0 || l.marcadas > 0 || l.pede > 0);
     return { linhas, pede: linhas.reduce((s, l) => s + l.pede, 0), marcadas: linhas.reduce((s, l) => s + l.marcadas, 0) };
-  }, [horariosProf, disponibilidadeRows, professores, professorIdNum]);
+  }, [cargaProf, disponibilidadeRows]);
   // [ASS-SO-TURMA] periodo nao letivo depois da ultima aula do turno (ex.: 7a aula da manha,
   // so para a assincrona da 3STM): a linha so aparece para o professor que tem aula nela.
   const slotsOrdenados = useMemo(() => {
@@ -422,6 +424,7 @@ export default function DisponibilidadePage() {
       setRotulosOriginais({ ...rotulos }); // [ATIVIDADE-FORA-DE-SALA]
       queryClient.invalidateQueries({ queryKey: getListDisponibilidadeQueryKey({ professorId: professorIdNum }) });
       queryClient.invalidateQueries({ queryKey: ["/api/horarios/capacidade"] }); // [CONTA-NA-HORA] refaz a conta com o que foi salvo
+      queryClient.invalidateQueries({ queryKey: ["professor-carga", professorIdNum] }); // [HA-DEVIDA-UMA-CONTA]
       toast({
         title: `✅ Disponibilidade de ${professorSelecionado?.nome ?? "professor"} salva!`,
         description: `${itens.length} alteração(ões) aplicada(s) no turno ${TURNOS.find((t) => t.value === turno)?.label}.`,

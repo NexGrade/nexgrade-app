@@ -15,7 +15,9 @@ import { getEscolaId } from "../lib/escola-id";
 import { getAuth, clerkClient } from "@clerk/express";
 import { acessosPeloBanco, limparCacheAcessos } from "../lib/acesso"; // [ACESSOS-ESCOLA]
 import { registrarAuditoria } from "../lib/audit";
-import { calcularHoraAtividadePorTurno, ehProfessorEstudio } from "../lib/hora-atividade";
+import { ehProfessorEstudio, haDevidaPorTurno } from "../lib/hora-atividade"; // [HA-DEVIDA-UMA-CONTA]
+import { carregarMapaIntegral, slotReal } from "../lib/turno-integral"; // [COTA-INTEGRAL-TURNO-REAL]
+import { ehHAMovel, ehHAManualDaTela } from "../lib/ha-contraturno"; // [HA-DEVIDA-UMA-CONTA]
 
 const router = Router();
 
@@ -189,11 +191,14 @@ router.get("/:id/carga", async (req, res) => {
   // pro cálculo de HA institucional por turno (RNF-SEED-01, ver
   // lib/hora-atividade.ts) e pra regra de "HA no mesmo turno das aulas"
   // (Resolução SEED 7.200/2025, Art. 11, §4º).
-  const slots = await db
-    .select({ diaSemana: horariosTable.diaSemana, turno: turmasTable.turno })
+  const slotsBrutos = await db
+    .select({ diaSemana: horariosTable.diaSemana, turno: turmasTable.turno, numeroAula: horariosTable.numeroAula })
     .from(horariosTable)
     .innerJoin(turmasTable, eq(horariosTable.turmaId, turmasTable.id))
     .where(and(eq(horariosTable.professorId, parsed.data.id), eq(horariosTable.escolaId, escolaId)));
+  // [COTA-INTEGRAL-TURNO-REAL] aula da turma integral conta no turno real (manha ou tarde), como no recalculo da HA
+  const mapaIntegral = await carregarMapaIntegral(escolaId);
+  const slots = slotsBrutos.map((x) => ({ ...x, turno: x.turno ? slotReal(x.turno, x.numeroAula, mapaIntegral).turno : x.turno }));
 
   const diasNome = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
   const porDia: Record<string, number> = {};
@@ -226,11 +231,12 @@ router.get("/:id/carga", async (req, res) => {
       .from(professoresTable)
       .where(and(eq(professoresTable.professorPrincipalId, parsed.data.id), eq(professoresTable.escolaId, escolaId)));
     if (secundarios.length > 0) {
-      const slotsSec = await db
-        .select({ turno: turmasTable.turno, professorId: horariosTable.professorId })
+      const slotsSecBrutos = await db
+        .select({ turno: turmasTable.turno, professorId: horariosTable.professorId, numeroAula: horariosTable.numeroAula })
         .from(horariosTable)
         .innerJoin(turmasTable, eq(horariosTable.turmaId, turmasTable.id))
         .where(and(inArray(horariosTable.professorId, secundarios.map((x) => x.id)), eq(horariosTable.escolaId, escolaId)));
+      const slotsSec = slotsSecBrutos.map((x) => ({ ...x, turno: x.turno ? slotReal(x.turno, x.numeroAula, mapaIntegral).turno : x.turno })); // [COTA-INTEGRAL-TURNO-REAL]
       porTurnoHA = { ...porTurno };
       slotsSec.forEach((s) => (porTurnoHA[s.turno] = (porTurnoHA[s.turno] ?? 0) + 1));
       cadastrosLigados = secundarios
@@ -239,17 +245,21 @@ router.get("/:id/carga", async (req, res) => {
     }
   }
 
-  // [NOVO] RNF-SEED-01: HA institucional necessária, por turno.
-  const haInstitucionalPorTurno = ehProfessorEstudio(professor.nome) ? {} : calcularHoraAtividadePorTurno(porTurnoHA); // [ESTUDIO-SEM-HA]
-  const haInstitucionalTotal = Object.values(haInstitucionalPorTurno).reduce((a, b) => a + b, 0);
-
   // [NOVO] Quantas HA obrigatórias já estão de fato marcadas em
   // disponibilidade_professores, por turno — pra comparar com o
-  // necessário acima e mostrar o que ainda falta alocar na grade.
+  // necessário abaixo e mostrar o que ainda falta alocar na grade.
   const haJaAlocadas = await db
     .select()
     .from(disponibilidadeTable)
     .where(and(eq(disponibilidadeTable.professorId, parsed.data.id), eq(disponibilidadeTable.horaAtividadeObrigatoria, true)));
+
+  // [NOVO] RNF-SEED-01: HA institucional necessária, por turno.
+  // [HA-DEVIDA-UMA-CONTA] (04/11/2026) mesma conta do recalculo: integral no turno real e HA presa em turno sem aula
+  // (manual, fixa, probatorio) devida la e descontada do turno com mais HA
+  const devida = haDevidaPorTurno(porTurnoHA, haJaAlocadas.filter((d) => !ehHAMovel(d.motivo) || ehHAManualDaTela(d.motivo)));
+  const haInstitucionalPorTurno: Record<string, number> = ehProfessorEstudio(professor.nome) || professor.professorPrincipalId != null
+    ? {} : { ...devida.porTurno, ...devida.contraturno }; // [ESTUDIO-SEM-HA] [MESMA-PESSOA-HA]
+  const haInstitucionalTotal = Object.values(haInstitucionalPorTurno).reduce((a, b) => a + b, 0);
   const haAlocadaPorTurno: Record<string, number> = {};
   haJaAlocadas.forEach((d) => {
     const turno = d.turno ?? "indefinido";

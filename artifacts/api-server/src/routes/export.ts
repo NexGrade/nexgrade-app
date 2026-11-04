@@ -26,7 +26,7 @@ import { gerarPdfCargaProfessores, type RelatorioProfessor } from "../lib/pdf-ca
 import { gerarPdfCargaHoraria, type TurmaCargaHoraria } from "../lib/pdf-carga-horaria";
 import { calcularHAIdeal, type MarcaHACalculada } from "../lib/recalcular-ha";
 import { simularPromocao } from "../lib/simular-promocao"; // [PDF-HA-DA-SIMULACAO]
-import { ehHAOutroTurno } from "../lib/ha-contraturno"; // [HA-OUTRO-TURNO]
+import { ehHAOutroTurno, turnosComAulaPorProfessor } from "../lib/ha-contraturno"; // [HA-OUTRO-TURNO] [HA-ESTRELA-UMA-REGRA]
 import { carregarMapaIntegral, mapaIntegralDosSlots, projetarIntegral } from "../lib/turno-integral"; // [TURNO-INTEGRAL-PROFESSOR]
 import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
 import { carregarAssSoTurma, carregarPeriodosExtrasFinais, podarLinhasExtras } from "../lib/assincrona-so-turma"; // [ASS-SO-TURMA]
@@ -340,6 +340,8 @@ async function montarPontoDiario(escolaId: string, dataISO: string, turnoFiltro:
     }
     const colunas = [...horaPorAula.entries()].sort((a, b) => a[0] - b[0]).map(([numeroAula, hora]) => ({ numeroAula, hora }));
     const linhas: LinhaPonto[] = [];
+    // [HA-ESTRELA-UMA-REGRA] HA num turno sem aula do professor na semana (contraturno) tambem e H.A.*, como no PDF por professor
+    const turnosComAulaPonto = await turnosComAulaPorProfessor(escolaId, professores.map((p) => p.id));
     for (const prof of [...professores].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))) {
       const aulas = aulasDoTurno.filter((h) => h.professorId === prof.id);
       const dp = dispsTurno.filter((x) => x.professorId === prof.id);
@@ -350,7 +352,7 @@ async function montarPontoDiario(escolaId: string, dataISO: string, turnoFiltro:
           return { texto, tipo: "aula" };
         }
         const marca = dp.find((x) => x.horarioSlot === numeroAula);
-        if (marca?.horaAtividadeObrigatoria) return { texto: ehHAOutroTurno(marca.motivo) ? "H.A.*" : "H.A.", tipo: "ha" };
+        if (marca?.horaAtividadeObrigatoria) return { texto: ehHAOutroTurno(marca.motivo) || !(turnosComAulaPonto.get(prof.id)?.has(turno) ?? false) ? "H.A.*" : "H.A.", tipo: "ha" };
         const rot = marca ? rotuloDoBloqueio(marca.motivo) : undefined;
         if (marca && rot) return { texto: rot, tipo: "atividade" };
         if (marca && ehBloqueioReal(marca)) return { texto: "", tipo: "indisponivel" };

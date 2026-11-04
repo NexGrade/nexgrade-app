@@ -36,7 +36,7 @@ import { eq, inArray, sql } from "drizzle-orm";
 import { PARES_TURNO } from "./intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 import { mapaIntegralDosSlots, projetarIntegral } from "./turno-integral"; // [TURNO-INTEGRAL-PROFESSOR]
 
-import { MOTIVO_HA_AUTO, MOTIVO_HA_AUTO_OUTRO_TURNO, ehHAMovel, ehHAManualDaTela } from "./ha-contraturno"; // [HA-OUTRO-TURNO] [HA-IMPORTADA-MOVEL] [HA-MANUAL-MOVEL]
+import { MOTIVO_HA_AUTO, MOTIVO_HA_AUTO_OUTRO_TURNO, ehHAMovel, ehHAManualDaTela, ehHAOutroTurno } from "./ha-contraturno"; // [HA-OUTRO-TURNO] [HA-IMPORTADA-MOVEL] [HA-MANUAL-MOVEL]
 import { montarMapaPrincipal, principalDe } from "./professor-principal"; // [MESMA-PESSOA-HA]
 import { ehProfessorEstudio } from "./hora-atividade"; // [ESTUDIO-SEM-HA]
 
@@ -736,7 +736,10 @@ async function recalcularHoraAtividadeUmaPassada(escolaId: string): Promise<Resu
   // HA automatica que continua no mesmo lugar mas mudou de origem: so troca o motivo
   const paraTrocarMotivo = [...new Map(marcasFinais
     .map((m) => ({ m, d: existentesPorChave.get(chaveMarca(m)) }))
-    .filter((x) => x.d && (x.d.motivo ?? "").startsWith(MOTIVO_HA_AUTO) && x.d.motivo !== motivoDe(x.m))
+    // [HA-ESTRELA-UMA-REGRA] a importada movel que o recalculo manteve no lugar mas com outra origem (HA <-> HA*) tambem
+    // troca o texto: antes ficava o texto importado e a previa mostrava HA* onde a grade oficial mostrava HA
+    .filter((x) => x.d && x.d.motivo !== motivoDe(x.m) && ((x.d.motivo ?? "").startsWith(MOTIVO_HA_AUTO)
+      || (ehHAMovel(x.d.motivo) && !ehHAManualDaTela(x.d.motivo) && ehHAOutroTurno(x.d.motivo) !== !!x.m.outroTurno)))
     .map((x) => [x.d!.id, { id: x.d!.id, motivo: motivoDe(x.m), professorId: x.d!.professorId }] as const)).values()];
   const paraRemoverIds = disponibilidades
     .filter((d) => !finaisSet.has(chaveMarca({ professorId: d.professorId, turno: d.turno ?? "sem_turno", diaSemana: d.diaSemana, horarioSlot: d.horarioSlot })))

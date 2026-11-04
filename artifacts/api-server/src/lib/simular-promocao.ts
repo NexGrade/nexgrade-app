@@ -11,7 +11,7 @@ import { db, professoresTable, turmasTable, horariosTable, horariosExperimentais
 import { and, eq, inArray } from "drizzle-orm";
 import { calcularHAIdeal, type AulaParaCalculoHA, type MarcaHACalculada } from "./recalcular-ha";
 import { haForaDoTurnoDoExperimento, reposicionarHAMovel, slotsLetivosPorTurno, turnosAfetadosPelaHA, type AulaPos } from "./reposicionar-ha";
-import { MOTIVO_HA_AUTO } from "./ha-contraturno"; // [HA-BURACO-QUEM-MUDOU]
+import { MOTIVO_HA_AUTO, ehHAOutroTurno } from "./ha-contraturno"; // [HA-BURACO-QUEM-MUDOU] [HA-ESTRELA-UMA-REGRA]
 import { professoresComHAIncompleta } from "./ha-incompleta"; // [HA-INCOMPLETA-REFAZ]
 import { mapaIntegralDosSlots, posicaoReal } from "./turno-integral"; // [INTEGRAL-NA-OCUPACAO]
 import { montarMapaPrincipal } from "./professor-principal"; // [MESMA-PESSOA-HA]
@@ -132,7 +132,7 @@ export async function simularPromocao(
   });
   const haHojeDeQuemMudou: MarcaHACalculada[] = disp
     .filter((d) => profIds.has(d.professorId) && mudou.has(d.professorId) && d.horaAtividadeObrigatoria && d.turno)
-    .map((d) => ({ professorId: d.professorId, turno: d.turno!, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, outroTurno: /outro turno|HA\*/i.test(d.motivo ?? "") }));
+    .map((d) => ({ professorId: d.professorId, turno: d.turno!, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, outroTurno: ehHAOutroTurno(d.motivo) }));
   const haFora = haForaDoTurnoDoExperimento(haHojeDeQuemMudou, haSimulada, haOficial, aulasSimPos, turnos, mudou);
   const ehFora = (m: { professorId: number; turno: string | null }) => haFora.has(`${m.professorId}|${m.turno}`);
   const chaveHA = (m: MarcaHACalculada) => `${m.professorId}|${m.turno}|${m.diaSemana}|${m.horarioSlot}`;
@@ -187,7 +187,7 @@ export async function simularPromocao(
   // [SIMULAR-MUDANCA-REAL] HA gravada hoje (qualquer tipo), nos turnos do experimento
   const haHoje: MarcaHACalculada[] = disp
     .filter((d) => profIds.has(d.professorId) && d.horaAtividadeObrigatoria && d.turno && turnosConta.includes(d.turno))
-    .map((d) => ({ professorId: d.professorId, turno: d.turno!, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, outroTurno: /outro turno|HA\*/i.test(d.motivo ?? "") }));
+    .map((d) => ({ professorId: d.professorId, turno: d.turno!, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, outroTurno: ehHAOutroTurno(d.motivo) }));
 
   const resOficialHoje = contar(aulasOficial, haHoje);
   const resOficial = contar(aulasOficial, haOficial);
@@ -208,7 +208,7 @@ export async function simularPromocao(
     .filter((d) => d.horaAtividadeObrigatoria && d.turno && turnosConta.includes(d.turno) && !mudou.has(d.professorId))
     .map((d) => {
       const mv = novoLugar.get(d);
-      return { professorId: d.professorId, turno: d.turno!, diaSemana: mv ? mv.diaSemana : d.diaSemana, horarioSlot: mv ? mv.horarioSlot : d.horarioSlot, outroTurno: /outro turno|HA\*/i.test(d.motivo ?? "") };
+      return { professorId: d.professorId, turno: d.turno!, diaSemana: mv ? mv.diaSemana : d.diaSemana, horarioSlot: mv ? mv.horarioSlot : d.horarioSlot, outroTurno: ehHAOutroTurno(d.motivo) };
     });
   // [HA-BURACO-QUEM-MUDOU] (01/11/2026) quem teve aula mexida: depois do recalculo, a HA movel tambem vai para onde
   // tira janela (igual a promocao). Antes so quem NAO mudou passava por isso, e o recalculo mantinha a HA importada
@@ -300,7 +300,7 @@ export async function simularPromocao(
       ...haForaFinal.filter((m) => !turnosConta.includes(m.turno)),
       ...dispEscola
         .filter((d) => d.horaAtividadeObrigatoria && d.turno && !turnosConta.includes(d.turno) && !mudou.has(d.professorId))
-        .map((d) => ({ professorId: d.professorId, turno: d.turno!, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, outroTurno: /outro turno|HA\*/i.test(d.motivo ?? "") })),
+        .map((d) => ({ professorId: d.professorId, turno: d.turno!, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, outroTurno: ehHAOutroTurno(d.motivo) })),
     ],
   };
 }

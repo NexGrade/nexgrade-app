@@ -39,8 +39,13 @@ export function ehHAMovel(motivo: string | null | undefined): boolean {
   // ja tratava essas HA como moveis.
   return /^Importado do .+ \((H\.A\.|HA\*?)\)\s*$/i.test(m);
 }
+// [HA-ESTRELA-UMA-REGRA] (04/11/2026) HA de aulas de outro turno: a automatica ("... HA de outro turno (HA*)") e a
+// importada do Urania como "(HA*)". Antes a simulacao/previa usava outra regra (regex) e as telas e o PDF de ponto esta:
+// a mesma HA saia "HA*" na previa e "HA" depois de promover. HA* = esta funcao OU turno sem aula do professor
+// (contraturno, ver marcarContraturno).
 export function ehHAOutroTurno(motivo: string | null | undefined): boolean {
-  return (motivo ?? "").includes("HA de outro turno");
+  const m = motivo ?? "";
+  return m.includes("HA de outro turno") || /\(HA\*\)\s*$/i.test(m);
 }
 
 /** Turnos em que cada professor tem pelo menos uma aula na grade oficial. */

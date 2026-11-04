@@ -36,6 +36,7 @@ import { CHAVE_TETO_LIBERADO } from "./conflitos"; // [TETO-AUTORIZADO]
 import { salvarBackupGrade, listarBackupsGrade, restaurarBackupGrade } from "../lib/backup-grade"; // [BACKUP-GRADE]
 import { professoresComHAIncompleta } from "../lib/ha-incompleta"; // [HA-INCOMPLETA-REFAZ]
 import { montarMapaPrincipal } from "../lib/professor-principal"; // [MESMA-PESSOA-HA]
+import { fotografarGradeEHA, recalcularHASoDeQuemMudou } from "../lib/ha-so-quem-mudou"; // [HA-SO-QUEM-MUDOU-GERAL]
 import { haForaDoTurnoDoExperimento, reposicionarHAMovel, slotsLetivosPorTurno, type AulaPos } from "../lib/reposicionar-ha"; // [HA-MOVEL-MELHORIA] [HA-OUTRO-TURNO] [HA-SO-NO-TURNO-DO-EXPERIMENTO]
 import { carregarAssSoTurma } from "../lib/assincrona-so-turma"; // [ASS-SO-TURMA]
 import { evitarPorPausaEntreTurnos } from "../lib/pausa-entre-turnos"; // [PAUSA-ENTRE-TURNOS]
@@ -673,6 +674,8 @@ router.post("/gerar", async (req, res) => {
   if (recusa) { res.status(409).json({ error: recusa }); return; }
 
   try {
+    // [HA-SO-QUEM-MUDOU-GERAL] fotografia antes de gerar: depois, a HA so muda para quem teve aula mexida
+    const fotoAntes = (data.experimental ?? false) ? null : await fotografarGradeEHA(escolaId);
     const result = await gerarAlgoritmoMelhorTentativa({
       escolaId,
       turmaId: data.turmaId,
@@ -684,9 +687,9 @@ router.post("/gerar", async (req, res) => {
       experimental: data.experimental ?? false,
       nomeExperimental: data.nomeExperimental,
     });
-    if (!(data.experimental ?? false)) {
+    if (fotoAntes) {
       try {
-        await recalcularHoraAtividade(escolaId);
+        await recalcularHASoDeQuemMudou(escolaId, fotoAntes); // [HA-SO-QUEM-MUDOU-GERAL]
       } catch (errHA) {
         console.error("[HA] Falha ao recalcular hora-atividade apos geracao direta:", errHA);
       }
@@ -1537,6 +1540,7 @@ router.post("/corrigir-professor", async (req, res) => {
     return;
   }
 
+  const fotoAntesCorrigir = await fotografarGradeEHA(escolaId); // [HA-SO-QUEM-MUDOU-GERAL]
   const [todosSlotsDaEscola, disponibilidades, turmasDaEscola, horarioSlotsTodos] = await Promise.all([
     db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
     db.select().from(disponibilidadeTable).where(eq(disponibilidadeTable.professorId, professorId)),
@@ -1629,7 +1633,7 @@ router.post("/corrigir-professor", async (req, res) => {
 
   if (movidas.length > 0) {
     try {
-      await recalcularHoraAtividade(escolaId);
+      await recalcularHASoDeQuemMudou(escolaId, fotoAntesCorrigir); // [HA-SO-QUEM-MUDOU-GERAL]
     } catch (err) {
       console.error("[HA] Falha ao recalcular hora-atividade apos corrigir-professor:", err);
     }
