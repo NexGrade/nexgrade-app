@@ -23,6 +23,13 @@ DIAS = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"]
 _CTX = threading.local()
 
 
+def HA_NO_MODELO() -> bool:
+    """[HA-NO-MODELO] o motor decide a posicao da HA e conta a janela com ela. Ligado por padrao desde 03/11/2026
+    (bateria na Demonstracao do zero, 3 rodadas: manha 2 -> 0,7 janela, tarde 2 -> 0,3, HA em dia sem aula 6 -> 2,
+    mais rapido); CPSAT_HA_NO_MODELO=0 volta ao modelo anterior (HA so como reserva de espaco)."""
+    return os.getenv("CPSAT_HA_NO_MODELO", "1") == "1"
+
+
 def definir_evitar(lista):
     _CTX.evitar = {(e["professor"], int(e["dia"]), int(e["aula"])) for e in (lista or [])}
 
@@ -319,6 +326,48 @@ def resolver(
                 model.AddBoolOr([ocupado[a - 1].Not(), ocupado[a], ocupado[a + 1].Not()]).OnlyEnforceIf(buraco.Not())
                 penalidades_turma.append(buraco)
 
+    # [HA-NO-MODELO] (03/11/2026) Com CPSAT_HA_NO_MODELO=1, o motor tambem decide ONDE vai a HA de cada
+    # professor (dentro da cota do turno, ate RECALCULO_HA_MAX_POR_DIA por dia, fora de bloqueio e de aula), e a
+    # janela do professor passa a ser contada com aula + HA, como a simulacao e a tela contam. Antes a HA era so
+    # uma reserva de espaco ([HA-NO-CPSAT], abaixo): o motor contava as janelas so com as aulas e a HA era posta
+    # depois, na promocao. HA em dia sem aula do professor neste turno custa CPSAT_PESO_HA_SEM_AULA (decisao da
+    # dona: HA de preferencia no dia em que o professor esta na escola). Fora do "Melhorar" (que ja usa a HA atual).
+    ha_no_modelo = HA_NO_MODELO() and bool(ha_por_professor) and not apenas_turma and not ha_ocupado
+    ha_var = {}
+    deficits_ha_modelo = []
+    penalidades_ha_sem_aula = []
+    if ha_no_modelo:
+        teto_ha_dia_m = int(os.getenv("RECALCULO_HA_MAX_POR_DIA", "3"))
+        for prof, cota in sorted(ha_por_professor.items()):
+            cota = int(cota or 0)
+            idx_ha = [i for i, dt in enumerate(disciplinas_turma) if dt.professor == prof]
+            if cota <= 0 or not idx_ha:
+                continue
+            todos_ha = []
+            for dia in range(len(DIAS)):
+                tem_aula = model.NewBoolVar(f"tem_aula_{prof}_{dia}")
+                model.AddMaxEquality(tem_aula, [aula_var[(i, dia, a)] for i in idx_ha for a in range(1, aulas_por_dia + 1)])
+                do_dia = []
+                for aula in range(1, aulas_por_dia + 1):
+                    if (prof, dia, aula) in bloqueios:
+                        continue
+                    h = model.NewBoolVar(f"ha_{prof}_{dia}_{aula}")
+                    model.Add(h + sum(aula_var[(i, dia, aula)] for i in idx_ha) <= 1)
+                    sem_aula = model.NewBoolVar(f"ha_sem_aula_{prof}_{dia}_{aula}")
+                    model.AddBoolAnd([h, tem_aula.Not()]).OnlyEnforceIf(sem_aula)
+                    model.AddBoolOr([h.Not(), tem_aula]).OnlyEnforceIf(sem_aula.Not())
+                    penalidades_ha_sem_aula.append(sem_aula)
+                    ha_var[(prof, dia, aula)] = h
+                    do_dia.append(h)
+                if do_dia:
+                    model.Add(sum(do_dia) <= teto_ha_dia_m)
+                    todos_ha += do_dia
+            model.Add(sum(todos_ha) <= cota)
+            deficit_m = model.NewIntVar(0, cota, f"deficit_ha_m_{prof}")
+            model.Add(deficit_m >= cota - sum(todos_ha))
+            deficits_ha_modelo.append(deficit_m)
+    profs_com_ha_modelo = {k[0] for k in ha_var}
+
     # [NOVO] Mesmo objetivo, agora do lado do professor -- soma as
     # aulas dele em QUALQUER turma nesse turno (nao so uma), pra saber
     # se ele esta ocupado naquele horario, independente de qual turma.
@@ -328,15 +377,17 @@ def resolver(
         if not indices_prof:
             continue
         turmas_do_prof = {disciplinas_turma[i].turma for i in indices_prof}
-        tem_ha = bool(ha_ocupado) and any(h[0] == prof for h in ha_ocupado)
+        tem_ha = (bool(ha_ocupado) and any(h[0] == prof for h in ha_ocupado)) or prof in profs_com_ha_modelo  # [HA-NO-MODELO]
         if len(turmas_do_prof) < 2 and not tem_ha:
-            continue  # so cria variavel de janela pra quem da aula em 2+ turmas (ou tem HA no "Melhorar")
+            continue  # so cria variavel de janela pra quem da aula em 2+ turmas (ou tem HA no "Melhorar" ou no modelo)
         for dia in range(len(DIAS)):
             ocupado_prof = []
             for aula in range(1, aulas_por_dia + 1):
                 v = model.NewBoolVar(f"ocupado_prof_{prof}_{dia}_{aula}")
                 if ha_ocupado and (prof, dia, aula) in ha_ocupado:
                     model.Add(v == 1)  # [HA-OCUPA-MELHORIA] HA atual tapa o horario
+                elif (prof, dia, aula) in ha_var:
+                    model.Add(sum(aula_var[(i, dia, aula)] for i in indices_prof) + ha_var[(prof, dia, aula)] == v)  # [HA-NO-MODELO] aula ou HA
                 else:
                     model.Add(sum(aula_var[(i, dia, aula)] for i in indices_prof) == v)
                 ocupado_prof.append(v)
@@ -376,8 +427,8 @@ def resolver(
     # contam ate RECALCULO_HA_MAX_POR_DIA (mesmo limite do recalculo de HA).
     # O que faltar para a cota do professor vira "deficit", penalizado com
     # peso alto no objetivo. Sem cotas (payload antigo), nada muda.
-    deficits_ha = []
-    if ha_por_professor:
+    deficits_ha = list(deficits_ha_modelo)  # [HA-NO-MODELO] com a HA no modelo, a reserva abaixo nao e usada
+    if ha_por_professor and not ha_no_modelo:
         teto_ha_dia = int(os.getenv("RECALCULO_HA_MAX_POR_DIA", "3"))
         for prof, cota in sorted(ha_por_professor.items()):
             cota = int(cota or 0)
@@ -427,7 +478,8 @@ def resolver(
         and not (posicoes_iniciais and (i, dia, aula) in posicoes_iniciais)
     ]
     peso_pausa = int(os.getenv("CPSAT_PESO_PAUSA_TURNOS", "5"))
-    custo_base = sum(penalidades_turma) + peso_professor * sum(penalidades_professor) + peso_ha * sum(deficits_ha) + peso_assincrona * sum(penalidades_assincrona) + peso_pausa * sum(penalidades_pausa)
+    peso_ha_sem_aula = int(os.getenv("CPSAT_PESO_HA_SEM_AULA", "2"))  # [HA-NO-MODELO]
+    custo_base = sum(penalidades_turma) + peso_professor * sum(penalidades_professor) + peso_ha * sum(deficits_ha) + peso_assincrona * sum(penalidades_assincrona) + peso_pausa * sum(penalidades_pausa) + peso_ha_sem_aula * sum(penalidades_ha_sem_aula)
     # [ESTABILIDADE] (21/10/2026) "Melhorar grade oficial" parte da oficial e so
     # muda o necessario: cada aula que sai do lugar em que estava custa
     # CPSAT_PESO_MUDANCA (padrao 3) numa escala em que 1 janela custa 10. Uma
@@ -510,6 +562,9 @@ def resolver(
     else:
         status = solver.Solve(model)
 
+    # [HA-NO-MODELO] posicoes de HA que o motor escolheu, para as trocas finais contarem a HA como ocupada
+    if ha_var and status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+        _CTX.ha_do_modelo = {id(solver): {k for k, v in ha_var.items() if solver.Value(v)}}
     return solver, status, aula_var
 
 
@@ -685,7 +740,7 @@ def gerar_grade(
             aulas, disciplinas_turma_raw, bloqueios_raw, aulas_por_dia,
             fixadas=fixadas_fase3,
             iniciais=({(a["turma"], a["codigoSae"], a["professor"], a["dia"], a["aula"]) for a in aulas_iniciais} if aulas_iniciais else None),  # [ESTABILIDADE]
-            ha_ocupado=ha_ocup,  # [HA-OCUPA-MELHORIA]
+            ha_ocupado=ha_ocup or (getattr(_CTX, "ha_do_modelo", {}) or {}).get(id(solver)) or None,  # [HA-OCUPA-MELHORIA] [HA-NO-MODELO]
             ao_melhorar=(lambda j: progresso.registrar_solucao(pid_fase3, j)) if pid_fase3 else None,  # [PROGRESSO-MOTOR]
             deve_parar=(lambda: progresso.pedido_parar(pid_fase3)) if pid_fase3 else None,  # [PARAR-MOTOR]
         )
