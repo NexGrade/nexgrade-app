@@ -26,6 +26,7 @@ import { SeletorBusca } from "@/components/seletor-busca";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"; // [AULA-FIXA-DISP]
 import { ContaProfessor } from "@/components/conta-professor"; // [CONTA-NA-HORA]
+import { mapaIntegralDosSlots, projetarAulasIntegral, TURNO_INTEGRAL } from "@/lib/turno-integral"; // [DISP-AULA-INTEGRAL]
 
 const DIAS = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
 const DIAS_ABREV = ["SEG", "TER", "QUA", "QUI", "SEX"];
@@ -143,6 +144,16 @@ export default function DisponibilidadePage() {
     () => horariosProf.filter((h: any) => h.turma?.turno === turno),
     [horariosProf, turno],
   );
+  // [DISP-AULA-INTEGRAL] (04/11/2026) aula do professor na turma integral (ex.: 1ME DOC), no turno e na linha reais,
+  // como na grade do professor. Antes nao aparecia: o horario parecia livre entre a HA e as aulas, mas e aula
+  // (Carlos Farias, quarta 4a). Livrinho de outra cor; as opcoes de aula fixa continuam so das turmas do turno.
+  const { data: slotsEscolaIntegral = [] } = useListHorarioSlots({} as any, { query: { queryKey: getListHorarioSlotsQueryKey({} as any) } });
+  const aulasIntegralDoTurno = useMemo(() => {
+    if (!(horariosProf as any[]).some((h) => h.turma?.turno === TURNO_INTEGRAL)) return [];
+    const mapa = mapaIntegralDosSlots(slotsEscolaIntegral as any);
+    return ((projetarAulasIntegral(horariosProf as any[], mapa) ?? []) as any[])
+      .filter((h) => h.numeroAulaIntegral != null && h.turma?.turno === turno);
+  }, [horariosProf, slotsEscolaIntegral, turno]);
   // [HA-POR-TURNO-NA-TELA] (21/10/2026) aulas e HA de cada turno pela tabela oficial SEED-PR (PROB e HA fixa contam como
   // HA marcada). [HA-DEVIDA-UMA-CONTA] (04/11/2026) o "pede" vem do servidor (/professores/:id/carga), com a mesma conta do
   // recalculo: a turma integral no turno real, a HA presa em turno sem aula descontada e o cadastro secundario sem HA.
@@ -163,8 +174,9 @@ export default function DisponibilidadePage() {
   const slotsOrdenados = useMemo(() => {
     const ultimaLetiva = Math.max(0, ...slotsTodosOrdenados.filter((s: any) => s.letivo !== false).map((s) => s.numeroAula));
     return slotsTodosOrdenados.filter((s: any) =>
-      s.letivo !== false || s.numeroAula <= ultimaLetiva || horariosDoTurno.some((h: any) => h.numeroAula === s.numeroAula));
-  }, [slotsTodosOrdenados, horariosDoTurno]);
+      s.letivo !== false || s.numeroAula <= ultimaLetiva || horariosDoTurno.some((h: any) => h.numeroAula === s.numeroAula)
+      || aulasIntegralDoTurno.some((h: any) => h.numeroAula === s.numeroAula)); // [DISP-AULA-INTEGRAL]
+  }, [slotsTodosOrdenados, horariosDoTurno, aulasIntegralDoTurno]);
 
   // [AULA-FIXA-DISP] Fixar aula direto na disponibilidade: grava no mesmo
   // cadastro de Aulas Fixas da aba Esquema (o CP-SAT respeita as duas origens).
@@ -193,7 +205,8 @@ export default function DisponibilidadePage() {
       af.diaSemana === dia && af.numeroAula === numeroAula && turmaIdsDoTurno.has(af.turmaId));
   }
   function aulaReal(dia: number, numeroAula: number) {
-    return horariosDoTurno.find((h: any) => h.diaSemana === dia && h.numeroAula === numeroAula);
+    return horariosDoTurno.find((h: any) => h.diaSemana === dia && h.numeroAula === numeroAula)
+      ?? aulasIntegralDoTurno.find((h: any) => h.diaSemana === dia && h.numeroAula === numeroAula); // [DISP-AULA-INTEGRAL]
   }
 
   const salvarLote = useSetDisponibilidadeLote();
@@ -558,6 +571,12 @@ export default function DisponibilidadePage() {
               <BookOpen className="w-3.5 h-3.5 text-blue-600" />
               <span className="text-muted-foreground">Aula real marcada</span>
             </div>
+            {aulasIntegralDoTurno.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5 text-teal-600" />
+                <span className="text-muted-foreground">Aula na turma integral (DOC)</span>
+              </div>
+            )}{/* [DISP-AULA-INTEGRAL] */}
             {/* [ATIVIDADE-FORA-DE-SALA] */}
             <div className="flex items-center gap-1.5">
               <div className="w-4 h-4 rounded bg-slate-100 border border-slate-400" />
@@ -741,10 +760,13 @@ export default function DisponibilidadePage() {
                               {(estado === "ha_obrigatoria" || estado === "ha_fixa") && turnoEhContraturno && (<span className="absolute top-0 left-1 text-sm font-bold text-amber-800">*</span>)}{/* [HA-CONTRATURNO-ASTERISCO] */}
                               {(() => { const af = aulaFixaNaCelula(dia, slot.numeroAula); return af ? (<span className="absolute bottom-0.5 left-0.5 text-violet-700" title={`Aula fixa: ${rotuloTurmaDisc.get(`${af.turmaId}-${af.disciplinaId}`) ?? "turma/disciplina"}`}><Pin className="w-3 h-3" /></span>) : null; })()}{/* [AULA-FIXA-DISP] */}
                               {real && (
-                                <span className="absolute top-0.5 right-0.5 text-blue-600">
+                                <span
+                                  className={cn("absolute top-0.5 right-0.5", real.numeroAulaIntegral != null ? "text-teal-600" : "text-blue-600")}
+                                  title={real.numeroAulaIntegral != null ? `Aula na turma integral: ${real.turma?.nome ?? ""} — ${real.disciplina?.nome ?? ""}` : undefined}
+                                >
                                   <BookOpen className="w-2.5 h-2.5" />
                                 </span>
-                              )}
+                              )}{/* [DISP-AULA-INTEGRAL] livrinho verde-azulado na aula da integral */}
                             </button>
                           </td>
                         );
