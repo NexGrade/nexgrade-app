@@ -7,9 +7,11 @@
  * [CAPACIDADE-NAO-LETIVO] (05/10/2026) periodo nao letivo (noturno 18:00) nao
  * conta para aula, mas conta para HA (mesma regra do recalculo de HA).
  */
+import { horariosTable } from "@workspace/db"; // [COTA-INTEGRAL-TURNO-REAL]
+import { mapaIntegralDosSlots, posicaoReal, TURNO_INTEGRAL } from "./turno-integral"; // [COTA-INTEGRAL-TURNO-REAL]
 import { db, turmasTable, turmaDisciplinasTable, disciplinasTable, professoresTable, disponibilidadeTable, horarioSlotsTable, professorDisciplinasTable, itensMatrizTable } from "@workspace/db";
 import { and, eq, inArray } from "drizzle-orm";
-import { ehBloqueioReal, ehHaFixa } from "./bloqueio-real"; // [HA-FIXA]
+import { ehBloqueioReal, ehHaFixa, ehHaProbatorio } from "./bloqueio-real"; // [HA-FIXA] [HA-PROBATORIO-BLOQUEIA]
 import { calcularHoraAtividadeTotalPorTurno, ehBloqueioPeriodoNaoLetivo } from "./recalcular-ha";
 import { calcularHoraAtividadePorTurno, ehProfessorEstudio } from "./hora-atividade";
 import { montarMapaPrincipal, ehSecundario, principalDe } from "./professor-principal"; // [MESMA-PESSOA-HA]
@@ -120,12 +122,44 @@ function aulasParaHA(cargas: CargaProfessor[], principal: Map<number, number>): 
 // [HA-NO-CPSAT] Cota de HA de cada professor NUM turno (nome -> HA), pela
 // mesma divisao proporcional do recalculo. Vai no payload do CP-SAT.
 export async function calcularCotaHaPorTurno(escolaId: string, turno: string): Promise<Record<string, number>> {
-  const { cargas, disp, principal } = await calcularCargaPorProfessor(escolaId);
+  const { cargas, disp, principal, slots } = await calcularCargaPorProfessor(escolaId);
   const porTurnoHA = aulasParaHA(cargas, principal); // [MESMA-PESSOA-HA]
+  // [COTA-INTEGRAL-TURNO-REAL] (04/11/2026) a turma integral entrava como um turno a parte ("integral") e a HA dela nao
+  // somava no turno real; o recalculo conta cada aula da integral no turno real (manha ou tarde). Ex.: Carlos Farias,
+  // 8 aulas de manha + 3 da integral de manha = 11 -> 4 HA; a cota dizia 2. Usa a posicao das aulas da integral na
+  // grade oficial (como o recalculo); sem grade oficial da integral, a parte dela fica de fora (como antes).
+  const haIntegral = [...porTurnoHA.values()].some((r) => (r[TURNO_INTEGRAL] ?? 0) > 0);
+  if (haIntegral) {
+    const turmasEsc = await db.select({ id: turmasTable.id, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
+    const idsIntegral = turmasEsc.filter((t) => t.turno === TURNO_INTEGRAL).map((t) => t.id);
+    const turnoDaTurma = new Map(turmasEsc.map((t) => [t.id, t.turno]));
+    const mapa = mapaIntegralDosSlots(slots);
+    const real = new Map<number, Record<string, number>>();
+    if (idsIntegral.length) {
+      const aulasInt = await db.select({ professorId: horariosTable.professorId, turmaId: horariosTable.turmaId, numeroAula: horariosTable.numeroAula, versao: horariosTable.versaoGrade })
+        .from(horariosTable).where(inArray(horariosTable.turmaId, idsIntegral));
+      for (const a of aulasInt) {
+        if (a.professorId == null || (a.versao ?? "oficial") !== "oficial") continue;
+        const pos = posicaoReal(a.turmaId, a.numeroAula, turnoDaTurma, mapa);
+        if (!pos || pos.turno === TURNO_INTEGRAL) continue;
+        const alvo = principalDe(principal, a.professorId);
+        const r = real.get(alvo) ?? {};
+        r[pos.turno] = (r[pos.turno] ?? 0) + 1;
+        real.set(alvo, r);
+      }
+    }
+    for (const [pid, r] of porTurnoHA) {
+      if (!(r[TURNO_INTEGRAL] ?? 0)) continue;
+      const novo: Record<string, number> = { ...r };
+      delete novo[TURNO_INTEGRAL];
+      for (const [t, n] of Object.entries(real.get(pid) ?? {})) novo[t] = (novo[t] ?? 0) + n;
+      porTurnoHA.set(pid, novo);
+    }
+  }
   // [HA-FIXA] HA fixa ja ocupa o horario (o motor a ve como bloqueio):
   // desconta da cota para o motor nao reservar espaco em dobro.
   const fixasPorProfessor = new Map<number, number>();
-  for (const d of disp) if (d.turno === turno && ehHaFixa(d)) fixasPorProfessor.set(d.professorId, (fixasPorProfessor.get(d.professorId) ?? 0) + 1);
+  for (const d of disp) if (d.turno === turno && (ehHaFixa(d) || ehHaProbatorio(d))) fixasPorProfessor.set(d.professorId, (fixasPorProfessor.get(d.professorId) ?? 0) + 1);
   // [COTA-COM-HA-CONTRATURNO] (04/11/2026) HA que o recalculo preserva (manual, fixa, probatorio...) num turno em que o
   // professor NAO da aula conta no total dele e sai do turno com mais HA (recalcular-ha.ts, calcularHoraAtividadePorTurno).
   // A cota nao descontava: o motor e o numero de janelas do Melhorar contavam com HA que nunca vem para este turno

@@ -40,6 +40,23 @@ describe("reposicionarHAMovel", () => {
     expect(r[0]!.linha.motivo).toBe("HA manual (definida na tela)");
   });
 
+  it("[MESMA-PESSOA-HA] aula do cadastro secundario ocupa o horario: a HA nao vai para cima dela", () => {
+    // principal (1) tem aula na 1 e na 4; o secundario (2) tem a 2 e a 3; HA na 6. Sem o mapa, a HA ia para a 2 ou a 3
+    // (em cima da aula do 2); com o mapa, o unico buraco e a 5
+    const aulas = [aula(0, 1), aula(0, 4), aula(0, 2, M, 2), aula(0, 3, M, 2)];
+    const r = reposicionarHAMovel({ aulas, disp: [ha(0, 6)], slotsLetivos: slots, turnos: [M], professores: [1], principal: new Map([[1, 1], [2, 1]]) });
+    expect(r).toHaveLength(1);
+    expect(r[0]).toMatchObject({ diaSemana: 0, horarioSlot: 5 });
+    const semMapa = reposicionarHAMovel({ aulas, disp: [ha(0, 6)], slotsLetivos: slots, turnos: [M], professores: [1] });
+    expect([2, 3]).toContain(semMapa[0]?.horarioSlot);
+  });
+
+  it("[BLOQUEIO-SEM-TURNO] bloqueio sem turno vale no turno: a HA nao vai para la", () => {
+    const semTurno: DispLinha = { professorId: 1, turno: null, diaSemana: 0, horarioSlot: 3, disponivel: false, horaAtividadeObrigatoria: false, motivo: "Indisponivel" };
+    // aulas 1, 2, 4, 5; HA na 6; o unico buraco e a 3, bloqueada sem turno: a HA fica onde esta (antes ia para a 3)
+    expect(rodar([aula(0, 1), aula(0, 2), aula(0, 4), aula(0, 5)], [semTurno, ha(0, 6)])).toHaveLength(0);
+  });
+
   it("nao mexe em HA fixa nem probatorio", () => {
     for (const motivo of ["HA fixa (definida manualmente)", "Importado do sistema anterior 21/10 (H.A.) - estagio probatorio", "Importado do sistema anterior 02-06/11 (HA) - estagio probatorio", null]) {
       expect(rodar([aula(0, 1), aula(0, 2), aula(0, 4)], [ha(0, 6, motivo)])).toHaveLength(0);

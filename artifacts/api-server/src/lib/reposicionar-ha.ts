@@ -101,13 +101,16 @@ export function reposicionarHAMovel<T extends DispLinha>(opts: {
   slotsLetivos: Map<string, number[]>;
   turnos: string[];
   professores: Iterable<number>;
+  /** [MESMA-PESSOA-HA] cadastro -> principal: as aulas do secundario ocupam o horario do principal (como no recalculo) */
+  principal?: Map<number, number>;
 }): MovimentoHA<T>[] {
   const { aulas, disp, slotsLetivos, turnos } = opts;
+  const dono = (id: number) => opts.principal?.get(id) ?? id;
   const movimentos: MovimentoHA<T>[] = [];
   const profs = new Set(opts.professores);
 
   for (const p of profs) {
-    const aulasP = aulas.filter((a) => a.professorId === p);
+    const aulasP = aulas.filter((a) => dono(a.professorId) === p); // [MESMA-PESSOA-HA] antes so o proprio cadastro: a HA ia para cima da aula do secundario
     for (const turno of turnos) {
       const letivos = slotsLetivos.get(turno) ?? [];
       if (!letivos.length) continue;
@@ -116,7 +119,8 @@ export function reposicionarHAMovel<T extends DispLinha>(opts: {
       const diasComAula = new Set(aulasP.filter((a) => a.turno === turno).map((a) => a.diaSemana));
       const linhasP = disp.filter((d) => d.professorId === p && d.turno === turno);
       const atividade = new Set(linhasP.filter((d) => !d.horaAtividadeObrigatoria && RE_ATIVIDADE.test(d.motivo ?? "")).map((d) => `${d.diaSemana}|${d.horarioSlot}`));
-      const bloqueado = new Set(linhasP.filter((d) => !d.horaAtividadeObrigatoria && !d.disponivel).map((d) => `${d.diaSemana}|${d.horarioSlot}`));
+      // [BLOQUEIO-SEM-TURNO] bloqueio sem turno (turno = null) vale em todos os turnos, como no recalculo e no motor
+      const bloqueado = new Set(disp.filter((d) => d.professorId === p && (d.turno === turno || d.turno == null) && !d.horaAtividadeObrigatoria && !d.disponivel).map((d) => `${d.diaSemana}|${d.horarioSlot}`));
       // posicao atual de cada HA (as moveis mudam durante a busca)
       const has = linhasP.filter((d) => d.horaAtividadeObrigatoria).map((d) => ({ linha: d, movel: ehHAMovel(d.motivo), dia: d.diaSemana, aula: d.horarioSlot }));
       const moveis = has.filter((h) => h.movel);

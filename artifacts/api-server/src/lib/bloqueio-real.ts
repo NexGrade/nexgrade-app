@@ -34,11 +34,21 @@ export function ehHaFixa(d: {
   return !!d.horaAtividadeObrigatoria && (d.motivo ?? "").startsWith("HA fixa");
 }
 
-/** Bloqueio para o MOTOR (heuristico e CP-SAT): bloqueio real + HA fixa. */
+/**
+ * [HA-PROBATORIO-BLOQUEIA] (04/11/2026) HA do estagio probatorio (abono PROB): o recalculo e o "HA no buraco" nunca a
+ * movem, mas o motor nao a via e podia pôr aula em cima; depois o recalculo deixava de preserva-la (aula no horario) e
+ * ela sumia sem aviso. Agora o motor a trata como a HA fixa. So o probatorio: HA "presa" por outro motivo continua fora
+ * do motor (tratar HA como bloqueio derrubou a coordenacao em 23-24/09, ver acima).
+ */
+export function ehHaProbatorio(d: { horaAtividadeObrigatoria: boolean | null | undefined; motivo?: string | null }): boolean {
+  return !!d.horaAtividadeObrigatoria && /probat/i.test(d.motivo ?? "");
+}
+
+/** Bloqueio para o MOTOR (heuristico e CP-SAT): bloqueio real + HA fixa + HA de probatorio. */
 export function ehBloqueioParaMotor(d: {
   disponivel: boolean | null | undefined;
   horaAtividadeObrigatoria: boolean | null | undefined;
   motivo?: string | null;
 }): boolean {
-  return ehBloqueioReal(d) || ehHaFixa(d);
+  return ehBloqueioReal(d) || ehHaFixa(d) || ehHaProbatorio(d); // [HA-PROBATORIO-BLOQUEIA]
 }
