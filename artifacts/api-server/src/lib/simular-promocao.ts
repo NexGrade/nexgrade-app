@@ -10,7 +10,7 @@ import { regraDeSubstituicao, vinculosDasTurmas } from "./promocao-substitui"; /
 import { db, professoresTable, turmasTable, horariosTable, horariosExperimentaisTable, disponibilidadeTable, disciplinasTable, horarioSlotsTable } from "@workspace/db";
 import { and, eq, inArray } from "drizzle-orm";
 import { calcularHAIdeal, type AulaParaCalculoHA, type MarcaHACalculada } from "./recalcular-ha";
-import { reposicionarHAMovel, slotsLetivosPorTurno, turnosAfetadosPelaHA, type AulaPos } from "./reposicionar-ha";
+import { haForaDoTurnoDoExperimento, reposicionarHAMovel, slotsLetivosPorTurno, turnosAfetadosPelaHA, type AulaPos } from "./reposicionar-ha";
 import { MOTIVO_HA_AUTO } from "./ha-contraturno"; // [HA-BURACO-QUEM-MUDOU]
 import { mapaIntegralDosSlots, posicaoReal } from "./turno-integral"; // [INTEGRAL-NA-OCUPACAO]
 
@@ -120,7 +120,26 @@ export async function simularPromocao(
   // [HA-OUTRO-TURNO] (03/11/2026) o recalculo refaz a HA de quem teve aula mexida em TODOS os turnos dele (inclusive a
   // HA* que nao coube no turno promovido). Esses turnos tambem entram na conta e na HA no buraco, igual a promocao.
   // Antes so o turno do experimento era contado: promover a tarde levou a manha de 3 para 10 janelas sem aviso.
-  const turnosConta = turnosAfetadosPelaHA(turnos, haSimulada, mudou);
+  // [HA-SO-NO-TURNO-DO-EXPERIMENTO] (04/11/2026) igual a promocao: fora do turno do experimento a HA de quem mudou fica
+  // como hoje e so muda a quantidade que o experimento muda (a sobra que entra ou sai do turno promovido)
+  const aulasSimPos: AulaPos[] = aulasSimuladas.flatMap((a) => {
+    const r = real(a); // [INTEGRAL-NA-OCUPACAO] a HA nunca vai para cima de aula da turma integral
+    return r ? [{ professorId: a.professorId, turno: r.turno, diaSemana: a.diaSemana, numeroAula: r.numeroAula }] : [];
+  });
+  const haHojeDeQuemMudou: MarcaHACalculada[] = disp
+    .filter((d) => profIds.has(d.professorId) && mudou.has(d.professorId) && d.horaAtividadeObrigatoria && d.turno)
+    .map((d) => ({ professorId: d.professorId, turno: d.turno!, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, outroTurno: /outro turno|HA\*/i.test(d.motivo ?? "") }));
+  const haFora = haForaDoTurnoDoExperimento(haHojeDeQuemMudou, haSimulada, haOficial, aulasSimPos, turnos, mudou);
+  const ehFora = (m: { professorId: number; turno: string | null }) => haFora.has(`${m.professorId}|${m.turno}`);
+  const chaveHA = (m: MarcaHACalculada) => `${m.professorId}|${m.turno}|${m.diaSemana}|${m.horarioSlot}`;
+  const hojeFora = new Set(haHojeDeQuemMudou.filter(ehFora).map(chaveHA));
+  const haForaFinal = [...haFora.values()].flat();
+  // turno de fora entra na conta so quando a HA dele muda de fato
+  const turnosForaMudam = [...new Set([...haFora.entries()]
+    .filter(([k, rows]) => rows.length !== haHojeDeQuemMudou.filter((m) => `${m.professorId}|${m.turno}` === k).length || rows.some((m) => !hojeFora.has(chaveHA(m))))
+    .map(([k]) => k.split("|")[1]!))];
+  const haRefeita = haSimulada.filter((m) => !ehFora(m));
+  const turnosConta = [...new Set([...turnosAfetadosPelaHA(turnos, haRefeita, mudou), ...turnosForaMudam])];
 
   const atividade = new Set(disp
     .filter((d) => profIds.has(d.professorId) && !d.horaAtividadeObrigatoria && d.turno && /\(ocupado:\s*[^)]+\)/.test(d.motivo ?? ""))
@@ -175,10 +194,6 @@ export async function simularPromocao(
   // HA: hoje x depois de promover, nos turnos contados
   const chave = (m: MarcaHACalculada) => `${m.professorId}|${m.turno}|${m.diaSemana}|${m.horarioSlot}`;
   // [HA-MOVEL-MELHORIA] quem nao teve aula mexida: a HA movel vai para onde tira janela (igual a promocao)
-  const aulasSimPos: AulaPos[] = aulasSimuladas.flatMap((a) => {
-    const r = real(a); // [INTEGRAL-NA-OCUPACAO] a HA nunca vai para cima de aula da turma integral
-    return r ? [{ professorId: a.professorId, turno: r.turno, diaSemana: a.diaSemana, numeroAula: r.numeroAula }] : [];
-  });
   const dispEscola = disp.filter((d) => profIds.has(d.professorId));
   const movHA = reposicionarHAMovel({
     aulas: aulasSimPos, disp: dispEscola, slotsLetivos: slotsLetivosPorTurno(slots), turnos,
@@ -194,7 +209,7 @@ export async function simularPromocao(
   // [HA-BURACO-QUEM-MUDOU] (01/11/2026) quem teve aula mexida: depois do recalculo, a HA movel tambem vai para onde
   // tira janela (igual a promocao). Antes so quem NAO mudou passava por isso, e o recalculo mantinha a HA importada
   // onde estava: sobravam janelas que uma HA movida fecharia (Bruno Carvalho, simulacao de 01/11).
-  const haRecalculada = haSimulada.filter((m) => turnosConta.includes(m.turno) && mudou.has(m.professorId));
+  const haRecalculada = haRefeita.filter((m) => turnosConta.includes(m.turno) && mudou.has(m.professorId));
   const linhaHoje = new Map(dispEscola.filter((d) => d.horaAtividadeObrigatoria).map((d) => [`${d.professorId}|${d.turno}|${d.diaSemana}|${d.horarioSlot}`, d]));
   const haRecalcLinhas = haRecalculada.map((m) => ({
     professorId: m.professorId, turno: m.turno, diaSemana: m.diaSemana, horarioSlot: m.horarioSlot,
@@ -202,12 +217,14 @@ export async function simularPromocao(
     // a HA que ja existia fica com o motivo dela (manual/fixa continuam presas); a nova e automatica
     motivo: linhaHoje.get(`${m.professorId}|${m.turno}|${m.diaSemana}|${m.horarioSlot}`)?.motivo ?? MOTIVO_HA_AUTO,
   }));
+  // [HA-SO-NO-TURNO-DO-EXPERIMENTO] a HA no buraco de quem mudou so passa no turno do experimento (fora dele a HA fica)
   const movRecalc = reposicionarHAMovel({
-    aulas: aulasSimPos, slotsLetivos: slotsLetivosPorTurno(slots), turnos: turnosConta, professores: [...mudou],
+    aulas: aulasSimPos, slotsLetivos: slotsLetivosPorTurno(slots), turnos, professores: [...mudou],
     disp: [...dispEscola.filter((d) => mudou.has(d.professorId) && !d.horaAtividadeObrigatoria), ...haRecalcLinhas],
   });
   const lugarRecalc = new Map(movRecalc.map((mv) => [mv.linha, mv]));
   const haDepois = [
+    ...haForaFinal.filter((m) => turnosConta.includes(m.turno)),
     ...haRecalcLinhas.map((l) => {
       const mv = lugarRecalc.get(l);
       return mv ? { ...l.marca, diaSemana: mv.diaSemana, horarioSlot: mv.horarioSlot } : l.marca;
@@ -272,9 +289,11 @@ export async function simularPromocao(
       : resExp.janelas < resOficialHoje.janelas ? "melhor" : resExp.janelas === resOficialHoje.janelas ? "empate" : "pior",
     // [PDF-HA-DA-SIMULACAO] (01/11/2026) nos turnos do experimento, a HA acima (com a HA no buraco); fora deles, igual a
     // promocao: quem teve aula mexida fica com a HA recalculada e quem nao teve, com a HA de hoje.
+    // [HA-SO-NO-TURNO-DO-EXPERIMENTO] quem teve aula mexida e nao teve o turno refeito tambem fica com a de hoje
     haDepoisPromover: [
       ...haDepois,
-      ...haSimulada.filter((m) => !turnosConta.includes(m.turno) && mudou.has(m.professorId)),
+      ...haRefeita.filter((m) => !turnosConta.includes(m.turno) && mudou.has(m.professorId)),
+      ...haForaFinal.filter((m) => !turnosConta.includes(m.turno)),
       ...dispEscola
         .filter((d) => d.horaAtividadeObrigatoria && d.turno && !turnosConta.includes(d.turno) && !mudou.has(d.professorId))
         .map((d) => ({ professorId: d.professorId, turno: d.turno!, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, outroTurno: /outro turno|HA\*/i.test(d.motivo ?? "") })),

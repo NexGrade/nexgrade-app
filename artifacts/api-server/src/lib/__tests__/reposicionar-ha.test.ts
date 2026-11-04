@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { reposicionarHAMovel, slotsLetivosPorTurno, turnosAfetadosPelaHA, type AulaPos, type DispLinha } from "../reposicionar-ha";
+import { reposicionarHAMovel, slotsLetivosPorTurno, turnosAfetadosPelaHA, haForaDoTurnoDoExperimento, type AulaPos, type DispLinha } from "../reposicionar-ha";
 
 // [HA-MOVEL-MELHORIA] casos da regra: HA movel vai para onde tira janela, sem mexer em aula
 const M = "matutino";
@@ -82,5 +82,38 @@ describe("turnosAfetadosPelaHA", () => {
     const ha = [{ professorId: 1, turno: "matutino" }, { professorId: 2, turno: "noturno" }, { professorId: 1, turno: "integral" }];
     expect(turnosAfetadosPelaHA(["vespertino"], ha, new Set([1]))).toEqual(["vespertino", "matutino"]);
     expect(turnosAfetadosPelaHA(["vespertino"], ha, new Set())).toEqual(["vespertino"]);
+  });
+});
+
+// [HA-SO-NO-TURNO-DO-EXPERIMENTO] (04/11/2026) promover a manha so muda a HA da tarde no que a manha mudou
+describe("haForaDoTurnoDoExperimento", () => {
+  const V = "vespertino";
+  const h = (dia: number, n: number, turno = V, professorId = 1) => ({ professorId, turno, diaSemana: dia, horarioSlot: n });
+  const onde = (rows: Array<{ diaSemana: number; horarioSlot: number }> | undefined) => (rows ?? []).map((x) => `${x.diaSemana}/${x.horarioSlot}`).sort();
+  // tarde do Diego Cardoso (Demonstracao): ter 1a aula, HA 2-3-4, 5a aula; sex HA 2 e 4 (5 HA; a conta da 4)
+  const aulas = [aula(1, 1, V), aula(1, 5, V), aula(4, 1, V), aula(4, 3, V), aula(4, 5, V)];
+  const hoje = [h(1, 2), h(1, 3), h(1, 4), h(4, 2), h(4, 4)];
+  const quatro = [h(1, 2), h(1, 4), h(4, 2), h(4, 4)];
+  const roda = (recalc: ReturnType<typeof h>[], recalcHoje: ReturnType<typeof h>[]) =>
+    onde(haForaDoTurnoDoExperimento(hoje, recalc, recalcHoje, aulas, [M], new Set([1])).get("1|vespertino"));
+  it("a manha nao mudou a conta da tarde: fica a HA de hoje (nem a sobra importada sai)", () => {
+    expect(roda([h(0, 1), h(0, 2), h(2, 1), h(2, 2)], quatro)).toEqual(onde(hoje));
+  });
+  it("a manha tirou uma HA da tarde: sai uma das de hoje, as outras ficam no lugar", () => {
+    const fica = roda([h(1, 2), h(1, 4), h(4, 2)], quatro);
+    expect(fica).toHaveLength(4);
+    expect(fica.every((x) => onde(hoje).includes(x))).toBe(true);
+  });
+  it("sobra da manha (HA*): soma a nova sem mexer nas de hoje", () => {
+    expect(roda([...quatro, h(2, 1)], quatro)).toEqual(onde([...hoje, h(2, 1)]));
+  });
+  it("tira primeiro a HA da ponta do dia, que nao abre janela", () => {
+    const aulasPonta = [aula(1, 1, V), aula(1, 2, V)]; // ter: aulas 1-2, HA 3 e 4 (a 4 e a ponta)
+    const r = haForaDoTurnoDoExperimento([h(1, 3), h(1, 4)], [h(1, 3)], [h(1, 3), h(1, 4)], aulasPonta, [M], new Set([1]));
+    expect(onde(r.get("1|vespertino"))).toEqual(["1/3"]);
+  });
+  it("nao vale para o turno do experimento nem para quem nao teve aula mexida", () => {
+    const r = haForaDoTurnoDoExperimento([h(0, 1, M), h(0, 2, V, 2)], [], [], aulas, [M], new Set([1]));
+    expect(r.size).toBe(0);
   });
 });

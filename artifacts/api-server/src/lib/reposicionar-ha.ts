@@ -31,6 +31,61 @@ export function turnosAfetadosPelaHA(turnosExperimento: string[], ha: Array<{ pr
   return [...new Set([...turnosExperimento, ...outros])];
 }
 
+/**
+ * [HA-SO-NO-TURNO-DO-EXPERIMENTO] (04/11/2026) Ao promover, a HA de quem teve aula mexida e refeita so no turno do
+ * experimento; o que nao couber ali vai para outro turno (HA*). Nos outros turnos a HA de hoje fica onde esta e so
+ * muda a quantidade que o EXPERIMENTO muda: a diferenca entre o recalculo depois de promover (`recalculada`) e o
+ * recalculo da grade de hoje (`recalculadaHoje`). Se diminui, sai a HA da ponta do dia (a que nao abre janela,
+ * quando houver); se aumenta, entram as novas do recalculo. Antes o recalculo refazia todos os turnos: a
+ * MELHORIA-matutino da Demonstracao abria janela na tarde do Diego Cardoso (5 HA importadas onde a conta da 4: o
+ * recalculo tirava a do meio da terca, mesmo sem a manha ter mudado a tarde dele).
+ * Devolve, por "professor|turno" fora do experimento, as linhas finais (de `hoje` ou de `recalculada`). Funcao pura.
+ */
+export function haForaDoTurnoDoExperimento<H extends { professorId: number; turno: string | null; diaSemana: number; horarioSlot: number }>(
+  hoje: H[], recalculada: H[], recalculadaHoje: Array<{ professorId: number; turno: string | null }>,
+  aulas: AulaPos[], turnosExperimento: string[], mudaram: Set<number>,
+): Map<string, H[]> {
+  const agrupar = <R extends { professorId: number; turno: string | null }>(rows: R[]) => {
+    const m = new Map<string, R[]>();
+    for (const r of rows) {
+      if (!r.turno || turnosExperimento.includes(r.turno) || !mudaram.has(r.professorId)) continue;
+      const k = `${r.professorId}|${r.turno}`;
+      if (!m.has(k)) m.set(k, []);
+      m.get(k)!.push(r);
+    }
+    return m;
+  };
+  const antes = agrupar(hoje); const depois = agrupar(recalculada); const base = agrupar(recalculadaHoje);
+  const final = new Map<string, H[]>();
+  for (const k of new Set([...antes.keys(), ...depois.keys()])) {
+    const h = antes.get(k) ?? []; const r = depois.get(k) ?? [];
+    const alvo = Math.max(0, h.length + r.length - (base.get(k)?.length ?? 0));
+    if (alvo === h.length) { final.set(k, h); continue; }
+    const [p, t] = k.split("|");
+    const aulasDia = (d: number) => aulas.filter((a) => a.professorId === Number(p) && a.turno === t && a.diaSemana === d).map((a) => a.numeroAula);
+    if (alvo < h.length) {
+      // sai a que nao fica entre duas atividades do dia (nao abre janela); empate: a mais tarde da semana
+      const fica = [...h];
+      while (fica.length > alvo) {
+        const nota = (x: H) => {
+          const ocup = [...aulasDia(x.diaSemana), ...fica.filter((y) => y !== x && y.diaSemana === x.diaSemana).map((y) => y.horarioSlot)];
+          const dentro = ocup.some((n) => n < x.horarioSlot) && ocup.some((n) => n > x.horarioSlot);
+          return (dentro ? 0 : 1000) + x.diaSemana * 10 + x.horarioSlot;
+        };
+        const sai = fica.reduce((a, b) => (nota(b) > nota(a) ? b : a));
+        fica.splice(fica.indexOf(sai), 1);
+      }
+      final.set(k, fica);
+    } else {
+      // entram as do recalculo que nao estao no lugar de uma de hoje
+      const ocupado = new Set(h.map((x) => `${x.diaSemana}|${x.horarioSlot}`));
+      const novas = r.filter((x) => !ocupado.has(`${x.diaSemana}|${x.horarioSlot}`));
+      final.set(k, novas.length >= alvo - h.length ? [...h, ...novas.slice(0, alvo - h.length)] : r);
+    }
+  }
+  return final;
+}
+
 const PARES_TURNO: Array<[string, string]> = [["matutino", "vespertino"], ["vespertino", "noturno"]];
 const MAX_HA_DIA = 3;
 const RE_ATIVIDADE = /\(ocupado:\s*[^)]+\)/;
