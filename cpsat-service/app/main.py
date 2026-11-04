@@ -184,6 +184,9 @@ def melhorar_grade_endpoint(payload: dict):
         definir_teto_professor(payload.get("tetoPorProfessor"))  # [TETO-AUTORIZADO]
         progresso.iniciar(payload.get("progressoId"))  # [PROGRESSO-MOTOR]
         from .reduzir_janelas import contar_janelas_professor
+        from .estimativa_ha import criar_estimador  # [JANELAS-COM-HA-ENCAIXADA]
+        from .solver import _CTX
+        _CTX.estimador_ha = criar_estimador(payload.get("haParaEstimativa"), payload.get("bloqueiosProfessor"))
         aulas_iniciais = payload.get("aulasIniciais", [])
         if not aulas_iniciais:
             raise ValueError("aulasIniciais vazio: nada para melhorar")
@@ -206,3 +209,6 @@ def melhorar_grade_endpoint(payload: dict):
         return resultado
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        from .solver import _CTX
+        _CTX.estimador_ha = None  # [JANELAS-COM-HA-ENCAIXADA] a thread atende outras rotas depois

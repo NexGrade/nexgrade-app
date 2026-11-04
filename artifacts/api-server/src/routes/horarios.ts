@@ -39,6 +39,7 @@ import { carregarAssSoTurma } from "../lib/assincrona-so-turma"; // [ASS-SO-TURM
 import { evitarPorPausaEntreTurnos } from "../lib/pausa-entre-turnos"; // [PAUSA-ENTRE-TURNOS]
 import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
 import { ehBloqueioParaMotor, ehHaFixa } from "../lib/bloqueio-real"; // [HA-FIXA] [ORIGEM-BLOQUEIO]
+import { ehHAMovel } from "../lib/ha-contraturno"; // [JANELAS-COM-HA-ENCAIXADA]
 import { bloqueiosIntervaloEntreTurnos } from "../lib/intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 import { aulasFixasTable } from "@workspace/db"; // [AULA-FIXA-CADASTRO]
 import { validarCapacidadeProfessores, calcularCotaHaPorTurno, capacidadeDoProfessor } from "../lib/capacidade-professor";
@@ -2401,6 +2402,11 @@ async function runCpsatGeneracaoUnica(
   // alguma nao casar, aborta em vez de melhorar uma grade incompleta.
   const aulasIniciais: Array<{ turma: string; codigoSae: string; disciplina: string; professor: string; dia: number; diaNome: string; aula: number }> = [];
   const haAtual: Array<{ professor: string; dia: number; aula: number }> = []; // [HA-OCUPA-MELHORIA]
+  // [JANELAS-COM-HA-ENCAIXADA] (04/11/2026) o motor continua otimizando com haAtual (HA presa); estes dados servem so
+  // para o numero de janelas que a tela mostra ao vivo ja descontar a HA movel que a promocao encaixa nas janelas.
+  const haMovelAtual: Array<{ professor: string; dia: number; aula: number }> = [];
+  const haOcupadoFixo: Array<{ professor: string; dia: number; aula: number }> = [];
+  const haNaoMovelPorProfessor = new Map<string, number>();
   if (modoMelhoria) {
     const DIAS_NOME = ["Segunda", "Terca", "Quarta", "Quinta", "Sexta"];
     const codigoPorChave = new Map<string, { codigoSae: string; disciplina: string }>();
@@ -2456,7 +2462,15 @@ async function runCpsatGeneracaoUnica(
     for (const d of haHoje) {
       const nomeP = professorMap.get(d.professorId)?.nome;
       const lugar = novoLugarHA.get(d.id);
-      if (nomeP) haAtual.push({ professor: nomeP, dia: lugar ? lugar.diaSemana : d.diaSemana, aula: lugar ? lugar.horarioSlot : d.horarioSlot });
+      if (!nomeP) continue;
+      const pos = { professor: nomeP, dia: lugar ? lugar.diaSemana : d.diaSemana, aula: lugar ? lugar.horarioSlot : d.horarioSlot };
+      haAtual.push(pos);
+      if (ehHAMovel(d.motivo)) haMovelAtual.push(pos);
+      else {
+        haOcupadoFixo.push(pos);
+        // a HA fixa ja sai da cota (calcularCotaHaPorTurno); probatorio e manual ainda nao
+        if (!ehHaFixa(d)) haNaoMovelPorProfessor.set(nomeP, (haNaoMovelPorProfessor.get(nomeP) ?? 0) + 1);
+      }
     }
     // [ATIVIDADE-OCUPA-MELHORIA] (21/10/2026) atividade fora de sala ("(ocupado: FOR)", DOC 2, CGH...) tambem
     // ocupa o professor: o simulador e a tela de Conflitos nao contam como janela, e o motor contava
@@ -2473,6 +2487,7 @@ async function runCpsatGeneracaoUnica(
         const nomeP = professorMap.get(d.professorId)?.nome;
         if (nomeP && !haAtual.some((h) => h.professor === nomeP && h.dia === d.diaSemana && h.aula === d.horarioSlot)) {
           haAtual.push({ professor: nomeP, dia: d.diaSemana, aula: d.horarioSlot });
+          haOcupadoFixo.push({ professor: nomeP, dia: d.diaSemana, aula: d.horarioSlot }); // [JANELAS-COM-HA-ENCAIXADA]
         }
       }
     }
@@ -2507,7 +2522,25 @@ async function runCpsatGeneracaoUnica(
       // medios/grandes (60KB+) na rede interna do Render, mesmo dentro do
       // timeout configurado. axios usa http/https nativos do Node.
       const progressoId = progressoGeracao.getStore()?.jobId; // [PROGRESSO-MOTOR]
-      const corpoMotor = { ...(modoMelhoria ? { ...payloadComHa, aulasIniciais, haAtual } : payloadComHa), ...(progressoId ? { progressoId } : {}) }; // [HA-OCUPA-MELHORIA]
+      // [JANELAS-COM-HA-ENCAIXADA] aula do professor na integral ou em turma fora desta geracao tambem ocupa o horario
+      // (para o motor e so "bloqueio"; na conta da tela, como na simulacao, conta como ocupado)
+      const ocupadosMotor = [...haOcupadoFixo];
+      const jaOcupado = new Set(ocupadosMotor.map((o) => `${o.professor}|${o.dia}|${o.aula}`));
+      for (const o of [...bloqueiosIntegral, ...bloqueiosOutrasTurmas]) {
+        const k = `${o.professor}|${o.dia}|${o.aula}`;
+        if (!jaOcupado.has(k)) { jaOcupado.add(k); ocupadosMotor.push({ professor: o.professor, dia: o.dia, aula: o.aula }); }
+      }
+      // [JANELAS-COM-HA-ENCAIXADA] cota da HA movel = cota do turno menos a HA que nao move (probatorio, manual), ou a HA
+      // movel que o professor ja tem neste turno, se for mais (inclui a HA* de aulas de outro turno, que a cota nao conta)
+      const movelPorProfessor = new Map<string, number>();
+      for (const h of haMovelAtual) movelPorProfessor.set(h.professor, (movelPorProfessor.get(h.professor) ?? 0) + 1);
+      const cotasMovel: Record<string, number> = {};
+      for (const p of new Set([...Object.keys(haPorProfessor), ...movelPorProfessor.keys()])) {
+        const c = Math.max(Math.max(0, (haPorProfessor[p] ?? 0) - (haNaoMovelPorProfessor.get(p) ?? 0)), movelPorProfessor.get(p) ?? 0);
+        if (c > 0) cotasMovel[p] = c;
+      }
+      const haParaEstimativa = { cotas: cotasMovel, ocupados: ocupadosMotor };
+      const corpoMotor = { ...(modoMelhoria ? { ...payloadComHa, aulasIniciais, haAtual, haParaEstimativa } : payloadComHa), ...(progressoId ? { progressoId } : {}) }; // [HA-OCUPA-MELHORIA] [JANELAS-COM-HA-ENCAIXADA]
       const axiosResponse = await axios.post(`${CPSAT_SERVICE_URL}/${modoMelhoria ? "melhorar-grade" : usarCoordenacao ? "gerar-grade-coordenada" : "gerar-grade"}`, corpoMotor, { // [MELHORAR-GRADE] [HA-NO-CPSAT]
         headers: { "Content-Type": "application/json", ...(CPSAT_TOKEN ? { "X-NexGrade-Token": CPSAT_TOKEN } : {}) }, // [CPSAT-TOKEN]
         timeout: timeoutMs,

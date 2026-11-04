@@ -47,19 +47,23 @@ def teto_do_professor(prof, teto_padrao):
 class _ObservadorProgresso(cp_model.CpSolverSolutionCallback):
     """[PROGRESSO-MOTOR] registra cada grade melhor que o solver encontra (janelas e HA sem espaco)."""
 
-    def __init__(self, pid, janelas_turma, janelas_professor, deficits_ha):
+    def __init__(self, pid, janelas_turma, janelas_professor, deficits_ha, estimar=None, posicoes=None):
         super().__init__()
         self._pid = pid
         self._jt = janelas_turma
         self._jp = janelas_professor
         self._ha = deficits_ha
+        self._estimar = estimar  # [JANELAS-COM-HA-ENCAIXADA] Melhorar: janelas depois de encaixar a HA movel
+        self._posicoes = posicoes or []
 
     def _valor(self, lista):
         return int(sum(self.Value(v) for v in lista)) if lista else None
 
     def on_solution_callback(self):
         try:
-            progresso.registrar_solucao(self._pid, self._valor(self._jp), self._valor(self._jt), self._valor(self._ha))
+            jp = (self._estimar((p, d, a) for (p, d, a, v) in self._posicoes if self.Value(v))
+                  if self._estimar else self._valor(self._jp))  # [JANELAS-COM-HA-ENCAIXADA]
+            progresso.registrar_solucao(self._pid, jp, self._valor(self._jt), self._valor(self._ha))
             if progresso.pedido_parar(self._pid):  # [PARAR-MOTOR]
                 self.StopSearch()
         except Exception:
@@ -556,7 +560,9 @@ def resolver(
         vigia = threading.Thread(target=_vigiar, daemon=True)
         vigia.start()
         try:
-            status = solver.Solve(model, _ObservadorProgresso(pid, penalidades_turma, penalidades_professor, deficits_ha))
+            estimar = None if apenas_turma else getattr(_CTX, "estimador_ha", None)  # [JANELAS-COM-HA-ENCAIXADA]
+            posicoes = [(disciplinas_turma[i].professor, dia, aula, v) for (i, dia, aula), v in aula_var.items()] if estimar else None
+            status = solver.Solve(model, _ObservadorProgresso(pid, penalidades_turma, penalidades_professor, deficits_ha, estimar, posicoes))
         finally:
             fim_vigia.set()
     else:
@@ -736,15 +742,18 @@ def gerar_grade(
             }
         progresso.definir_fase("Ajuste fino: trocando aulas de lugar")  # [PROGRESSO-MOTOR]
         pid_fase3 = progresso.id_atual()
+        estimar_ha = getattr(_CTX, "estimador_ha", None)  # [JANELAS-COM-HA-ENCAIXADA]
         aulas_otimizadas, janelas_antes, janelas_depois = reduzir_janelas(
             aulas, disciplinas_turma_raw, bloqueios_raw, aulas_por_dia,
             fixadas=fixadas_fase3,
             iniciais=({(a["turma"], a["codigoSae"], a["professor"], a["dia"], a["aula"]) for a in aulas_iniciais} if aulas_iniciais else None),  # [ESTABILIDADE]
             ha_ocupado=ha_ocup or (getattr(_CTX, "ha_do_modelo", {}) or {}).get(id(solver)) or None,  # [HA-OCUPA-MELHORIA] [HA-NO-MODELO]
-            ao_melhorar=(lambda j: progresso.registrar_solucao(pid_fase3, j)) if pid_fase3 else None,  # [PROGRESSO-MOTOR]
+            ao_melhorar=(lambda j: progresso.registrar_solucao(pid_fase3, j)) if pid_fase3 and not estimar_ha else None,  # [PROGRESSO-MOTOR]
             deve_parar=(lambda: progresso.pedido_parar(pid_fase3)) if pid_fase3 else None,  # [PARAR-MOTOR]
         )
         resultado["aulas"] = aulas_otimizadas
+        if estimar_ha and pid_fase3:  # [JANELAS-COM-HA-ENCAIXADA] numero final, ja com a HA encaixada
+            progresso.registrar_solucao(pid_fase3, estimar_ha((a["professor"], a["dia"], a["aula"]) for a in aulas_otimizadas))
         resultado["janelasProfessorAntes"] = janelas_antes
         resultado["janelasProfessorDepois"] = janelas_depois
     else:
