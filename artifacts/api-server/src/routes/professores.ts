@@ -17,7 +17,7 @@ import { acessosPeloBanco, limparCacheAcessos } from "../lib/acesso"; // [ACESSO
 import { registrarAuditoria } from "../lib/audit";
 import { ehProfessorEstudio, haDevidaPorTurno } from "../lib/hora-atividade"; // [HA-DEVIDA-UMA-CONTA]
 import { carregarMapaIntegral, slotReal } from "../lib/turno-integral"; // [COTA-INTEGRAL-TURNO-REAL]
-import { ehHAMovel, ehHAManualDaTela } from "../lib/ha-contraturno"; // [HA-DEVIDA-UMA-CONTA]
+import { ehHAMovel, ehHAManualDaTela, ehFORContaComoHA } from "../lib/ha-contraturno"; // [HA-DEVIDA-UMA-CONTA] [FOR-CONTA-COMO-HA]
 
 const router = Router();
 
@@ -251,15 +251,17 @@ router.get("/:id/carga", async (req, res) => {
   // [NOVO] Quantas HA obrigatórias já estão de fato marcadas em
   // disponibilidade_professores, por turno — pra comparar com o
   // necessário abaixo e mostrar o que ainda falta alocar na grade.
-  const haJaAlocadas = await db
+  // [FOR-CONTA-COMO-HA] o FOR (formadores) conta como HA ja cumprida: entra junto (continua FOR no banco)
+  const haJaAlocadas = (await db
     .select()
     .from(disponibilidadeTable)
-    .where(and(eq(disponibilidadeTable.professorId, parsed.data.id), eq(disponibilidadeTable.horaAtividadeObrigatoria, true)));
+    .where(eq(disponibilidadeTable.professorId, parsed.data.id)))
+    .filter((d) => d.horaAtividadeObrigatoria || ehFORContaComoHA(d));
 
   // [NOVO] RNF-SEED-01: HA institucional necessária, por turno.
   // [HA-DEVIDA-UMA-CONTA] (04/11/2026) mesma conta do recalculo: integral no turno real e HA presa em turno sem aula
   // (manual, fixa, probatorio) devida la e descontada do turno com mais HA
-  const devida = haDevidaPorTurno(porTurnoHA, haJaAlocadas.filter((d) => !ehHAMovel(d.motivo) || ehHAManualDaTela(d.motivo)));
+  const devida = haDevidaPorTurno(porTurnoHA, haJaAlocadas.filter((d) => !d.horaAtividadeObrigatoria || !ehHAMovel(d.motivo) || ehHAManualDaTela(d.motivo))); // FOR fica no lugar
   const haInstitucionalPorTurno: Record<string, number> = ehProfessorEstudio(professor.nome) || professor.professorPrincipalId != null
     ? {} : { ...devida.porTurno, ...devida.contraturno }; // [ESTUDIO-SEM-HA] [MESMA-PESSOA-HA]
   const haInstitucionalTotal = Object.values(haInstitucionalPorTurno).reduce((a, b) => a + b, 0);

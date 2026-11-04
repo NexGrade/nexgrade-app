@@ -15,7 +15,7 @@ import { ehBloqueioReal, ehHaFixa, ehHaProbatorio } from "./bloqueio-real"; // [
 import { calcularHoraAtividadeTotalPorTurno, ehBloqueioPeriodoNaoLetivo } from "./recalcular-ha";
 import { calcularHoraAtividadePorTurno, ehProfessorEstudio, haDevidaPorTurno } from "./hora-atividade"; // [HA-DEVIDA-UMA-CONTA]
 import { montarMapaPrincipal, ehSecundario, principalDe } from "./professor-principal"; // [MESMA-PESSOA-HA]
-import { ehHAMovel, ehHAManualDaTela } from "./ha-contraturno"; // [COTA-COM-HA-CONTRATURNO]
+import { ehHAMovel, ehHAManualDaTela, ehFORContaComoHA } from "./ha-contraturno"; // [COTA-COM-HA-CONTRATURNO] [FOR-CONTA-COMO-HA]
 
 export interface ProblemaCapacidade {
   professorId: number;
@@ -161,8 +161,12 @@ async function projetarIntegralNaContaDeHA(escolaId: string, porTurnoHA: Map<num
 }
 
 // [HA-DEVIDA-UMA-CONTA] HA que o recalculo preserva (nao movel, ou manual da tela): conta no total do professor
-function haPresasDe(disp: Array<{ professorId: number; turno: string | null; horaAtividadeObrigatoria: boolean; motivo: string | null }>, profId: number) {
-  return disp.filter((d) => d.professorId === profId && d.horaAtividadeObrigatoria && (!ehHAMovel(d.motivo) || ehHAManualDaTela(d.motivo)));
+// [FOR-CONTA-COMO-HA] o FOR tambem conta como HA ja cumprida (fica no lugar)
+function haPresasDe(disp: Array<{ professorId: number; turno: string | null; horaAtividadeObrigatoria: boolean; disponivel: boolean; motivo: string | null }>, profId: number) {
+  return disp.filter((d) => d.professorId === profId && ((d.horaAtividadeObrigatoria && (!ehHAMovel(d.motivo) || ehHAManualDaTela(d.motivo))) || ehFORContaComoHA(d)));
+}
+function forNoTurno(disp: Array<{ professorId: number; turno: string | null; horaAtividadeObrigatoria: boolean; disponivel: boolean; motivo: string | null }>, profId: number, turno: string) {
+  return disp.filter((d) => d.professorId === profId && d.turno === turno && ehFORContaComoHA(d)).length;
 }
 
 // [HA-NO-CPSAT] Cota de HA de cada professor NUM turno (nome -> HA), pela
@@ -174,7 +178,7 @@ export async function calcularCotaHaPorTurno(escolaId: string, turno: string): P
   // [HA-FIXA] HA fixa ja ocupa o horario (o motor a ve como bloqueio):
   // desconta da cota para o motor nao reservar espaco em dobro.
   const fixasPorProfessor = new Map<number, number>();
-  for (const d of disp) if (d.turno === turno && (ehHaFixa(d) || ehHaProbatorio(d))) fixasPorProfessor.set(d.professorId, (fixasPorProfessor.get(d.professorId) ?? 0) + 1);
+  for (const d of disp) if (d.turno === turno && (ehHaFixa(d) || ehHaProbatorio(d) || ehFORContaComoHA(d))) fixasPorProfessor.set(d.professorId, (fixasPorProfessor.get(d.professorId) ?? 0) + 1);
   // [COTA-COM-HA-CONTRATURNO] [HA-DEVIDA-UMA-CONTA] mesma conta do recalculo: HA presa em turno sem aula sai do turno com
   // mais HA (Alexandre Moreira, 04/11: tela 0 janela, simulacao 1)
   const r: Record<string, number> = {};
@@ -251,7 +255,9 @@ export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro
         let livresNoDia = 0;
         for (let a = 1; a <= mx; a++) if (!nl.has(a) && !bloqueados.get(t)?.has(`${dia}-${a}`)) livresNoDia++;
         n += livresNoDia;
-        if (livresNoDia > 0) for (const a of nl) if (!bloqueados.get(t)?.has(`${dia}-${a}`) || bloqueioSoDeAula.has(`${t}|${dia}-${a}`)) soHA++;
+        // [HA-1800-DIA-COM-AULA] so o periodo nao letivo ANTES da ultima aula (18:00) recebe HA, como no recalculo; o de
+        // depois da ultima aula (7a da manha, so da assincrona) nunca recebe
+        if (livresNoDia > 0) for (const a of nl) if (a <= mx && (!bloqueados.get(t)?.has(`${dia}-${a}`) || bloqueioSoDeAula.has(`${t}|${dia}-${a}`))) soHA++;
       }
       livres[t] = n;
       livresSoHA[t] = soHA;
@@ -286,7 +292,8 @@ export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro
     if (turnoFiltro) { // [CAPACIDADE-POR-TURNO]
       const aulasT = porTurno[turnoFiltro] ?? 0;
       if (aulasT === 0) continue;
-      const haT = (ehSecundario(principal, pid) || ehProfessorEstudio(p.nome)) ? 0 : (haDevida(pid, porTurno).porTurno[turnoFiltro] ?? 0); // [HA-DEVIDA-UMA-CONTA]
+      // [FOR-CONTA-COMO-HA] o FOR ja cumpre parte da HA e ja ocupa o horario (fica fora dos livres): sai do que falta encaixar
+      const haT = (ehSecundario(principal, pid) || ehProfessorEstudio(p.nome)) ? 0 : Math.max(0, (haDevida(pid, porTurno).porTurno[turnoFiltro] ?? 0) - forNoTurno(disp, pid, turnoFiltro)); // [HA-DEVIDA-UMA-CONTA]
       const livresT = livres[turnoFiltro] ?? 0;
       const livresComHA = livresT + (livresSoHA[turnoFiltro] ?? 0);
       const nomeT = ({ matutino: "manhã", vespertino: "tarde", noturno: "noite" } as Record<string, string>)[turnoFiltro] ?? turnoFiltro;

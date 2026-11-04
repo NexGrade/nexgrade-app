@@ -8,7 +8,7 @@ import { REGRAS_REDE } from "../lib/regras-rede"; // [REGRAS-REDE]
 import { CHAVE_LIMITE_DISCIPLINA, lerLimites, limiteAulasDia } from "../lib/limite-disciplina"; // [LIMITE-DISCIPLINA]
 import { z } from "zod";
 import { ehProfessorEstudio, haDevidaPorTurno } from "../lib/hora-atividade"; // [HA-DEVIDA-UMA-CONTA]
-import { ehHAMovel, ehHAManualDaTela } from "../lib/ha-contraturno"; // [HA-DEVIDA-UMA-CONTA]
+import { ehHAMovel, ehHAManualDaTela, ehFORContaComoHA } from "../lib/ha-contraturno"; // [HA-DEVIDA-UMA-CONTA] [FOR-CONTA-COMO-HA]
 import { montarMapaPrincipal, principalDe } from "../lib/professor-principal"; // [MESMA-PESSOA-HA]
 import { limitesLetivosPorTurno, PARES_TURNO } from "../lib/intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 import { casosPausaEntreTurnos } from "../lib/pausa-entre-turnos"; // [PAUSA-ENTRE-TURNOS]
@@ -501,7 +501,11 @@ export async function detectarConflitos(escolaId: string, opcoes: { incluirAceit
   // [MESMA-PESSOA-HA] cadastro secundario (ex.: "Jessica (IFA)") nao e cobrado de HA:
   // as aulas dele somam na conta do principal, que recebe a HA toda.
   const mapaPrincipalHA = montarMapaPrincipal(professores);
-  professores.filter((prof) => prof.cargaHorariaTotal > 0 && !ehProfessorEstudio(prof.nome) && principalDe(mapaPrincipalHA, prof.id) === prof.id).forEach((prof) => { // [ESTUDIO-SEM-HA]
+  // [HA-HIBRIDA] (04/11/2026, regra confirmada pela dona) docente da modalidade Hibrida/EAD tem direito a HA, garantida
+  // por lei: o professor com cargaHorariaTotal = 0 (os da Hibrida) deixa de ser dispensado aqui, como no recalculo, que ja
+  // lhe dava HA. A cobranca e pela tabela proporcional as aulas (nao mais 9 HA fixas). Coordenador em funcao exclusiva
+  // nao da aula, entao a tabela ja da 0 HA.
+  professores.filter((prof) => !ehProfessorEstudio(prof.nome) && principalDe(mapaPrincipalHA, prof.id) === prof.id).forEach((prof) => { // [ESTUDIO-SEM-HA] [HA-HIBRIDA]
     const turnosComAula: Record<string, number> = {};
     slots.filter((s) => principalDe(mapaPrincipalHA, s.professorId) === prof.id).forEach((s) => {
       const turma = turmas.find((t) => t.id === s.turmaId);
@@ -527,10 +531,10 @@ export async function detectarConflitos(escolaId: string, opcoes: { incluirAceit
     // confirmado.
     // [HA-DEVIDA-UMA-CONTA] (04/11/2026) mesma conta do recalculo e das outras telas: HA presa em turno sem aula
     // (manual, fixa, probatorio) e devida la e sai do turno com mais HA
-    const devida = haDevidaPorTurno(turnosComAula, disponibilidades.filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && (!ehHAMovel(d.motivo) || ehHAManualDaTela(d.motivo))));
+    const devida = haDevidaPorTurno(turnosComAula, disponibilidades.filter((d) => d.professorId === prof.id && ((d.horaAtividadeObrigatoria && (!ehHAMovel(d.motivo) || ehHAManualDaTela(d.motivo))) || ehFORContaComoHA(d))));
     const exigido = [...Object.values(devida.porTurno), ...Object.values(devida.contraturno)].reduce((a, b) => a + b, 0);
 
-    const haMarcadas = disponibilidades.filter((d) => d.professorId === prof.id && d.horaAtividadeObrigatoria).length;
+    const haMarcadas = disponibilidades.filter((d) => d.professorId === prof.id && (d.horaAtividadeObrigatoria || ehFORContaComoHA(d))).length; // [FOR-CONTA-COMO-HA]
     if (exigido > 0 && haMarcadas < exigido) {
       conflitos.push({
         tipo: "hora_atividade_insuficiente",

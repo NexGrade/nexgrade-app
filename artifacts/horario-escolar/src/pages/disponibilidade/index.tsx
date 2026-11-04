@@ -164,7 +164,8 @@ export default function DisponibilidadePage() {
     const pedePorTurno = (cargaProf?.haInstitucionalPorTurno ?? {}) as Record<string, number>;
     const linhas = TURNOS.map((t) => {
       const aulas = aulasPorTurno[t.value] ?? 0;
-      const marcadas = (disponibilidadeRows as any[]).filter((d) => d.turno === t.value && d.horaAtividadeObrigatoria).length;
+      // [FOR-CONTA-COMO-HA] FOR (formadores) conta como HA ja cumprida
+      const marcadas = (disponibilidadeRows as any[]).filter((d) => d.turno === t.value && (d.horaAtividadeObrigatoria || (!d.disponivel && /\(ocupado:\s*FOR\s*\)/i.test(d.motivo ?? "")))).length;
       return { turno: t.value, rotulo: t.label, aulas, pede: pedePorTurno[t.value] ?? 0, marcadas };
     }).filter((l) => l.aulas > 0 || l.marcadas > 0 || l.pede > 0);
     return { linhas, pede: linhas.reduce((s, l) => s + l.pede, 0), marcadas: linhas.reduce((s, l) => s + l.marcadas, 0) };
