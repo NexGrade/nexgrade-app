@@ -10,7 +10,7 @@ import {
   DeleteProfessorParams,
   GetProfessorCargaParams,
 } from "@workspace/api-zod";
-import { horariosTable, turmasTable, disponibilidadeTable } from "@workspace/db";
+import { horariosTable, turmasTable, disponibilidadeTable, disciplinasTable } from "@workspace/db"; // [PAEE-SEM-HA]
 import { getEscolaId } from "../lib/escola-id";
 import { getAuth, clerkClient } from "@clerk/express";
 import { acessosPeloBanco, limparCacheAcessos } from "../lib/acesso"; // [ACESSOS-ESCOLA]
@@ -192,13 +192,16 @@ router.get("/:id/carga", async (req, res) => {
   // lib/hora-atividade.ts) e pra regra de "HA no mesmo turno das aulas"
   // (Resolução SEED 7.200/2025, Art. 11, §4º).
   const slotsBrutos = await db
-    .select({ diaSemana: horariosTable.diaSemana, turno: turmasTable.turno, numeroAula: horariosTable.numeroAula })
+    .select({ diaSemana: horariosTable.diaSemana, turno: turmasTable.turno, numeroAula: horariosTable.numeroAula, disciplinaId: horariosTable.disciplinaId })
     .from(horariosTable)
     .innerJoin(turmasTable, eq(horariosTable.turmaId, turmasTable.id))
     .where(and(eq(horariosTable.professorId, parsed.data.id), eq(horariosTable.escolaId, escolaId)));
   // [COTA-INTEGRAL-TURNO-REAL] aula da turma integral conta no turno real (manha ou tarde), como no recalculo da HA
   const mapaIntegral = await carregarMapaIntegral(escolaId);
   const slots = slotsBrutos.map((x) => ({ ...x, turno: x.turno ? slotReal(x.turno, x.numeroAula, mapaIntegral).turno : x.turno }));
+  // [PAEE-SEM-HA] (04/11/2026, decisao da dona) aula de PAEE (disciplina "sem turma") nao conta na tabela de HA
+  const discSemHA = new Set((await db.select({ id: disciplinasTable.id }).from(disciplinasTable)
+    .where(and(eq(disciplinasTable.escolaId, escolaId), eq(disciplinasTable.semTurma, true)))).map((d) => d.id));
 
   const diasNome = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
   const porDia: Record<string, number> = {};
@@ -212,7 +215,8 @@ router.get("/:id/carga", async (req, res) => {
 
   // [MESMA-PESSOA-HA] cadastro secundario (ex.: "Jessica (IFA)") nao tem HA propria;
   // o principal soma as aulas dos cadastros ligados a ele para a HA necessaria.
-  let porTurnoHA: Record<string, number> = porTurno;
+  let porTurnoHA: Record<string, number> = {}; // [PAEE-SEM-HA] sem as aulas de PAEE
+  slots.forEach((s) => { if (!discSemHA.has(s.disciplinaId)) porTurnoHA[s.turno] = (porTurnoHA[s.turno] ?? 0) + 1; });
   // [MESMA-PESSOA-HA] para a tela: no principal, os secundarios com as aulas de cada um;
   // no secundario, o principal (onde fica a HA).
   let cadastrosLigados: { id: number; nome: string; aulas: number }[] = [];
@@ -232,13 +236,12 @@ router.get("/:id/carga", async (req, res) => {
       .where(and(eq(professoresTable.professorPrincipalId, parsed.data.id), eq(professoresTable.escolaId, escolaId)));
     if (secundarios.length > 0) {
       const slotsSecBrutos = await db
-        .select({ turno: turmasTable.turno, professorId: horariosTable.professorId, numeroAula: horariosTable.numeroAula })
+        .select({ turno: turmasTable.turno, professorId: horariosTable.professorId, numeroAula: horariosTable.numeroAula, disciplinaId: horariosTable.disciplinaId })
         .from(horariosTable)
         .innerJoin(turmasTable, eq(horariosTable.turmaId, turmasTable.id))
         .where(and(inArray(horariosTable.professorId, secundarios.map((x) => x.id)), eq(horariosTable.escolaId, escolaId)));
       const slotsSec = slotsSecBrutos.map((x) => ({ ...x, turno: x.turno ? slotReal(x.turno, x.numeroAula, mapaIntegral).turno : x.turno })); // [COTA-INTEGRAL-TURNO-REAL]
-      porTurnoHA = { ...porTurno };
-      slotsSec.forEach((s) => (porTurnoHA[s.turno] = (porTurnoHA[s.turno] ?? 0) + 1));
+      slotsSec.forEach((s) => { if (!discSemHA.has(s.disciplinaId)) porTurnoHA[s.turno] = (porTurnoHA[s.turno] ?? 0) + 1; }); // [PAEE-SEM-HA]
       cadastrosLigados = secundarios
         .map((sec) => ({ id: sec.id, nome: sec.nome, aulas: slotsSec.filter((s) => s.professorId === sec.id).length }))
         .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));

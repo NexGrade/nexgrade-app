@@ -98,10 +98,10 @@ export async function simularPromocao(
 
   // mesma regra do promover: os pares turma+professor do experimento e a aula de quem deixou a disciplina
   const substitui = regraDeSubstituicao(exp, await vinculosDasTurmas([...new Set(exp.map((e) => e.turmaId))])); // [PROMOVER-PROFESSOR-TROCADO]
-  const aulasOficial: AulaParaCalculoHA[] = oficial.map((h) => ({ professorId: h.professorId, turmaId: h.turmaId, diaSemana: h.diaSemana, numeroAula: h.numeroAula }));
+  const aulasOficial: AulaParaCalculoHA[] = oficial.map((h) => ({ professorId: h.professorId, turmaId: h.turmaId, diaSemana: h.diaSemana, numeroAula: h.numeroAula, disciplinaId: h.disciplinaId })); // [PAEE-SEM-HA]
   const aulasSimuladas: AulaParaCalculoHA[] = [
-    ...oficial.filter((h) => !substitui(h)).map((h) => ({ professorId: h.professorId, turmaId: h.turmaId, diaSemana: h.diaSemana, numeroAula: h.numeroAula })),
-    ...exp.map((e) => ({ professorId: e.professorId, turmaId: e.turmaId, diaSemana: e.diaSemana, numeroAula: e.numeroAula })),
+    ...oficial.filter((h) => !substitui(h)).map((h) => ({ professorId: h.professorId, turmaId: h.turmaId, diaSemana: h.diaSemana, numeroAula: h.numeroAula, disciplinaId: h.disciplinaId })),
+    ...exp.map((e) => ({ professorId: e.professorId, turmaId: e.turmaId, diaSemana: e.diaSemana, numeroAula: e.numeroAula, disciplinaId: e.disciplinaId })), // [PAEE-SEM-HA]
   ];
   const haOficial = await calcularHAIdeal(escolaId, aulasOficial);
   const haSimulada = await calcularHAIdeal(escolaId, aulasSimuladas);

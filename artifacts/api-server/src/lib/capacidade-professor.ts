@@ -43,6 +43,8 @@ export interface CargaProfessor {
   aulasPorTurno: Record<string, number>;
   // [CAPACIDADE-POR-NIVEL] turno -> nivel de ensino da turma ("__sem_nivel__" sem nivel) -> aulas
   aulasPorTurnoNivel?: Record<string, Record<string, number>>;
+  // [PAEE-SEM-HA] aulas que contam na tabela de HA (sem as de PAEE / disciplina "sem turma")
+  aulasPorTurnoHA?: Record<string, number>;
 }
 
 // [CARGA-PROFESSOR] Aulas de cada professor por turno, pela MESMA regra de
@@ -81,6 +83,7 @@ export async function calcularCargaPorProfessor(escolaId: string): Promise<{ car
 
   const aulas = new Map<number, Record<string, number>>();
   const aulasNivel = new Map<number, Record<string, Record<string, number>>>(); // [CAPACIDADE-POR-NIVEL]
+  const aulasHA = new Map<number, Record<string, number>>(); // [PAEE-SEM-HA]
   for (const td of tds) {
     const turma = turmaMap.get(td.turmaId);
     if (!turma) continue;
@@ -92,6 +95,9 @@ export async function calcularCargaPorProfessor(escolaId: string): Promise<{ car
     const r = aulas.get(prof.id) ?? {};
     r[turma.turno] = (r[turma.turno] ?? 0) + n;
     aulas.set(prof.id, r);
+    const rh = aulasHA.get(prof.id) ?? {}; // [PAEE-SEM-HA] PAEE nao conta na tabela de HA (decisao da dona, 04/11/2026)
+    rh[turma.turno] = (rh[turma.turno] ?? 0) + (disc?.semTurma ? 0 : n);
+    aulasHA.set(prof.id, rh);
     const rn = aulasNivel.get(prof.id) ?? {};
     const nivel = turma.nivelEnsino ?? "__sem_nivel__";
     rn[turma.turno] = { ...rn[turma.turno], [nivel]: (rn[turma.turno]?.[nivel] ?? 0) + n };
@@ -101,7 +107,7 @@ export async function calcularCargaPorProfessor(escolaId: string): Promise<{ car
   const cargas: CargaProfessor[] = [];
   for (const [pid, porTurno] of aulas) {
     const p = profMap.get(pid);
-    if (p) cargas.push({ professorId: pid, professor: p.nome, aulasPorTurno: porTurno, aulasPorTurnoNivel: aulasNivel.get(pid) });
+    if (p) cargas.push({ professorId: pid, professor: p.nome, aulasPorTurno: porTurno, aulasPorTurnoNivel: aulasNivel.get(pid), aulasPorTurnoHA: aulasHA.get(pid) });
   }
   return { cargas, slots, disp, principal: montarMapaPrincipal(professores) };
 }
@@ -113,7 +119,7 @@ function aulasParaHA(cargas: CargaProfessor[], principal: Map<number, number>): 
   for (const c of cargas) {
     const alvo = principalDe(principal, c.professorId);
     const acc = r.get(alvo) ?? {};
-    for (const [t, n] of Object.entries(c.aulasPorTurno)) acc[t] = (acc[t] ?? 0) + n;
+    for (const [t, n] of Object.entries(c.aulasPorTurnoHA ?? c.aulasPorTurno)) acc[t] = (acc[t] ?? 0) + n; // [PAEE-SEM-HA]
     r.set(alvo, acc);
   }
   return r;
@@ -131,10 +137,12 @@ async function projetarIntegralNaContaDeHA(escolaId: string, porTurnoHA: Map<num
   const mapa = mapaIntegralDosSlots(slots);
   const real = new Map<number, Record<string, number>>();
   if (idsIntegral.length) {
-    const aulasInt = await db.select({ professorId: horariosTable.professorId, turmaId: horariosTable.turmaId, numeroAula: horariosTable.numeroAula, versao: horariosTable.versaoGrade })
+    const aulasInt = await db.select({ professorId: horariosTable.professorId, turmaId: horariosTable.turmaId, numeroAula: horariosTable.numeroAula, versao: horariosTable.versaoGrade, disciplinaId: horariosTable.disciplinaId })
       .from(horariosTable).where(inArray(horariosTable.turmaId, idsIntegral));
+    const semHA = new Set((await db.select({ id: disciplinasTable.id }).from(disciplinasTable).where(and(eq(disciplinasTable.escolaId, escolaId), eq(disciplinasTable.semTurma, true)))).map((d) => d.id)); // [PAEE-SEM-HA]
     for (const a of aulasInt) {
       if (a.professorId == null || (a.versao ?? "oficial") !== "oficial") continue;
+      if (semHA.has(a.disciplinaId)) continue; // [PAEE-SEM-HA]
       const pos = posicaoReal(a.turmaId, a.numeroAula, turnoDaTurma, mapa);
       if (!pos || pos.turno === TURNO_INTEGRAL) continue;
       const alvo = principalDe(principal, a.professorId);
@@ -173,7 +181,7 @@ export async function calcularCotaHaPorTurno(escolaId: string, turno: string): P
   for (const c of cargas) {
     if (ehSecundario(principal, c.professorId)) continue; // [MESMA-PESSOA-HA]
     if (ehProfessorEstudio(c.professor)) continue; // [ESTUDIO-SEM-HA]
-    const aulasHA = porTurnoHA.get(c.professorId) ?? c.aulasPorTurno;
+    const aulasHA = porTurnoHA.get(c.professorId) ?? c.aulasPorTurnoHA ?? c.aulasPorTurno; // [PAEE-SEM-HA]
     const porTurno = haDevidaPorTurno(aulasHA, haPresasDe(disp, c.professorId)).porTurno;
     const cota = Math.max(0, (porTurno[turno] ?? 0) - (fixasPorProfessor.get(c.professorId) ?? 0));
     if (cota > 0) r[c.professor] = cota;

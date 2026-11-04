@@ -1143,7 +1143,7 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     const turnosExpHA = turnosDeHA(expSlots);
     const aulasDepoisHA = [...oficialAntes.filter((h) => !ehSubstituida(h)), ...expSlots]
       .filter((h) => h.professorId != null)
-      .map((h) => ({ professorId: h.professorId!, turmaId: h.turmaId, diaSemana: h.diaSemana, numeroAula: h.numeroAula }));
+      .map((h) => ({ professorId: h.professorId!, turmaId: h.turmaId, diaSemana: h.diaSemana, numeroAula: h.numeroAula, disciplinaId: h.disciplinaId })); // [PAEE-SEM-HA]
     const haIdeal = await calcularHAIdeal(escolaId, aulasDepoisHA);
     const haHojeEscola = await db.select().from(disponibilidadeTable)
       .where(and(inArray(disponibilidadeTable.professorId, profsEscola.length ? profsEscola : [-1]), eq(disponibilidadeTable.horaAtividadeObrigatoria, true)));
@@ -1203,7 +1203,7 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     : [];
   let haRecalcAntes: MarcaHACalculada[] | null = null;
   try {
-    if (profsMudaram.size) haRecalcAntes = await calcularHAIdeal(escolaId, oficialAntes.map((h) => ({ professorId: h.professorId, turmaId: h.turmaId, diaSemana: h.diaSemana, numeroAula: h.numeroAula })));
+    if (profsMudaram.size) haRecalcAntes = await calcularHAIdeal(escolaId, oficialAntes.map((h) => ({ professorId: h.professorId, turmaId: h.turmaId, diaSemana: h.diaSemana, numeroAula: h.numeroAula, disciplinaId: h.disciplinaId }))); // [PAEE-SEM-HA]
   } catch (err) {
     console.error("[HA-SO-NO-TURNO-DO-EXPERIMENTO] Falha ao calcular a HA da grade de antes; fica a do recalculo:", err);
   }

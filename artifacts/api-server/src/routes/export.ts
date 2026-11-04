@@ -936,7 +936,7 @@ router.get("/grade-pdf/professor", async (req, res) => {
   const semanaCompletaProf: Array<{ professorId: number; turmaId: number }> = slots;
   if (nomeExperimental) {
     const overrideCompleto = [...(slotsSemProjecao as AulaPdfProf[]), ...aulasDeFora]
-      .map((s) => ({ professorId: s.professorId, turmaId: s.turmaId, diaSemana: s.diaSemana, numeroAula: s.numeroAula }));
+      .map((s) => ({ professorId: s.professorId, turmaId: s.turmaId, diaSemana: s.diaSemana, numeroAula: s.numeroAula, disciplinaId: (s as { disciplinaId?: number }).disciplinaId })); // [PAEE-SEM-HA]
     // [PDF-HA-DA-SIMULACAO] (01/11/2026) a HA da previa e a mesma da simulacao e da promocao: quem nao teve aula mexida
     // fica com a de hoje, quem teve fica com a recalculada, e a HA movel vai para o buraco. Antes o PDF recalculava a
     // HA de todos do zero (sem o buraco): a HA saia em outro lugar e aparecia janela que a simulacao dizia fechada.
