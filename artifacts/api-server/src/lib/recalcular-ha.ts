@@ -232,6 +232,17 @@ export async function calcularHAIdeal(
     // calculo de candidato, em qualquer fase. turno===null bloqueia em
     // todos os turnos onde o professor tem aula.
     const bloqueadoPorTurno = new Map<string, Set<string>>();
+    // [ATIVIDADE-NAO-E-JANELA-NO-RECALCULO] (04/11/2026) atividade fora de sala ("(ocupado: FOR)", COORD...) entre duas
+    // ocupacoes nao e janela -- como em Conflitos, na simulacao e no "HA no buraco". O guloso contava como buraco e
+    // podia escolher pior o lugar da HA.
+    const atividadePorTurno = new Map<string, Set<string>>();
+    for (const d of disponibilidades) {
+      if (d.professorId !== prof.id || d.disponivel || d.horaAtividadeObrigatoria || !/\(ocupado:\s*[^)]+\)/.test(d.motivo ?? "")) continue;
+      for (const t of d.turno == null ? Object.keys(aulasPorTurno) : [d.turno]) {
+        if (!atividadePorTurno.has(t)) atividadePorTurno.set(t, new Set());
+        atividadePorTurno.get(t)!.add(`${d.diaSemana}-${d.horarioSlot}`);
+      }
+    }
     for (const d of disponibilidades) {
       if (d.professorId !== prof.id || d.disponivel) continue;
       // [HA-NA-ENTRADA-NOTURNO] (05/10/2026, igual ao sistema anterior) o bloqueio automatico
@@ -241,9 +252,10 @@ export async function calcularHAIdeal(
       // a HA das 18:00 emenda direto na aula, como no sistema anterior. [HA-1800-SO-COLADA]
       // (05/10/2026) antes bastava ter aula no dia, e a HA das 18:00 criava janela
       // em quem so comecava as 19:35 (Dorival, Geverson).
+      // [HA-1800-DIA-COM-AULA] (04/11/2026, regra confirmada pela dona) o horario das 18:00 pode ter HA em qualquer dia em
+      // que o professor tem aula no turno (antes so com aula as 18:45); o guloso ja evita a HA que abre janela
       if (ehBloqueioPeriodoNaoLetivo(d.motivo) && d.turno) {
-        const primeiraLetiva = limitesLetivos.get(d.turno)?.primeira;
-        if (primeiraLetiva != null && ocupadoPorTurnoOriginal.get(d.turno)?.has(`${d.diaSemana}-${primeiraLetiva}`)) continue;
+        if ([...(ocupadoPorTurnoOriginal.get(d.turno) ?? [])].some((k) => k.startsWith(`${d.diaSemana}-`))) continue;
       }
       const chave = `${d.diaSemana}-${d.horarioSlot}`;
       if (d.turno == null) {
@@ -259,33 +271,17 @@ export async function calcularHAIdeal(
 
     // [HA-1800-PELO-ESQUEMA] (05/10/2026) a regra da HA no periodo nao letivo
     // (18:00) vale pelo ESQUEMA de horarios (letivo=false), nao so pela linha de
-    // bloqueio automatico: quando uma HA ocupava essa linha e depois saia, a linha
-    // sumia e o 18:00 ficava livre sem regra (Dorival, seg: HA* as 18:00 e aula so
-    // as 19:35). Periodo nao letivo so aceita HA em dia com a 1a aula letiva.
+    // bloqueio automatico. [HA-1800-DIA-COM-AULA] (04/11/2026) periodo nao letivo ANTES da 1a aula (18:00) aceita HA
+    // em dia com aula no turno; o periodo DEPOIS da ultima aula (7a da manha, [ASS-SO-TURMA]) nunca recebe HA.
+    // (O bloco estava duplicado; ficou um so.)
     for (const s of horarioSlots) {
       if (s.letivo !== false || !s.turno) continue;
-      const primeiraLetiva = limitesLetivos.get(s.turno)?.primeira;
-      const ultimaLetiva = limitesLetivos.get(s.turno)?.ultima; // [ASS-SO-TURMA] periodo nao letivo DEPOIS da ultima aula (7a da manha) nunca recebe HA
+      const ultimaLetiva = limitesLetivos.get(s.turno)?.ultima;
+      const depoisDaUltima = ultimaLetiva != null && s.numeroAula > ultimaLetiva;
       const ocup = ocupadoPorTurnoOriginal.get(s.turno);
       for (let dia = 0; dia < 5; dia++) {
-        if (primeiraLetiva != null && ocup?.has(`${dia}-${primeiraLetiva}`) && !(ultimaLetiva != null && s.numeroAula > ultimaLetiva)) continue;
-        if (!bloqueadoPorTurno.has(s.turno)) bloqueadoPorTurno.set(s.turno, new Set());
-        bloqueadoPorTurno.get(s.turno)!.add(`${dia}-${s.numeroAula}`);
-      }
-    }
-
-    // [HA-1800-PELO-ESQUEMA] (05/10/2026) a regra da HA no periodo nao letivo
-    // (18:00) vale pelo ESQUEMA de horarios (letivo=false), nao so pela linha de
-    // bloqueio automatico: quando uma HA ocupava essa linha e depois saia, a linha
-    // sumia e o 18:00 ficava livre sem regra (Dorival, seg: HA* as 18:00 e aula so
-    // as 19:35). Periodo nao letivo so aceita HA em dia com a 1a aula letiva.
-    for (const s of horarioSlots) {
-      if (s.letivo !== false || !s.turno) continue;
-      const primeiraLetiva = limitesLetivos.get(s.turno)?.primeira;
-      const ultimaLetiva = limitesLetivos.get(s.turno)?.ultima; // [ASS-SO-TURMA] periodo nao letivo DEPOIS da ultima aula (7a da manha) nunca recebe HA
-      const ocup = ocupadoPorTurnoOriginal.get(s.turno);
-      for (let dia = 0; dia < 5; dia++) {
-        if (primeiraLetiva != null && ocup?.has(`${dia}-${primeiraLetiva}`) && !(ultimaLetiva != null && s.numeroAula > ultimaLetiva)) continue;
+        const temAulaNoDia = [...(ocup ?? [])].some((k) => k.startsWith(`${dia}-`));
+        if (temAulaNoDia && !depoisDaUltima) continue;
         if (!bloqueadoPorTurno.has(s.turno)) bloqueadoPorTurno.set(s.turno, new Set());
         bloqueadoPorTurno.get(s.turno)!.add(`${dia}-${s.numeroAula}`);
       }
@@ -342,7 +338,8 @@ export async function calcularHAIdeal(
     // buraco na agenda de aula, entao nao precisa ser restrita igual).
     const MAX_HA_POR_DIA_ENSINO = Number(process.env.RECALCULO_HA_MAX_POR_DIA ?? "3");
     const MAX_HA_POR_DIA_CONTRATURNO = Number(process.env.RECALCULO_HA_MAX_POR_DIA_CONTRATURNO ?? "6");
-    const MAX_HA_SEGUIDAS_ENSINO = Number(process.env.RECALCULO_HA_MAX_SEGUIDAS ?? "2"); // [HA-MAX-SEGUIDAS] so turno de ensino; 0 = sem limite
+    // [HA-3-SEGUIDAS] (04/11/2026, regra confirmada pela dona) a HA pode ter ate 3 seguidas (antes 2)
+    const MAX_HA_SEGUIDAS_ENSINO = Number(process.env.RECALCULO_HA_MAX_SEGUIDAS ?? "3"); // [HA-MAX-SEGUIDAS] so turno de ensino; 0 = sem limite
     function preencherGuloso(
       turno: string,
       orcamentoInicial: number,
@@ -358,6 +355,7 @@ export async function calcularHAIdeal(
       let orcamento = orcamentoInicial;
       const maxAula = maxAulaPorTurno.get(turno) ?? 6;
       const bloqueado = bloqueadoPorTurno.get(turno) ?? new Set();
+      const atividade = atividadePorTurno.get(turno) ?? new Set<string>(); // [ATIVIDADE-NAO-E-JANELA-NO-RECALCULO]
       const ocupado = new Set(ocupadoInicial);
       const MAX_HA_POR_DIA = maxHaPorDia;
       // [HA-DIA-NA-ESCOLA] (03/11/2026, decisao da dona) a HA vai de preferencia no dia em que o professor ja esta
@@ -404,7 +402,7 @@ export async function calcularHAIdeal(
         if (min === null || max === null) return 0;
         let buracos = 0;
         for (let aula = min + 1; aula < max; aula++) {
-          if (!conjunto.has(`${dia}-${aula}`)) buracos++;
+          if (!conjunto.has(`${dia}-${aula}`) && !atividade.has(`${dia}-${aula}`)) buracos++; // [ATIVIDADE-NAO-E-JANELA-NO-RECALCULO]
         }
         return buracos;
       }
@@ -653,18 +651,21 @@ export async function calcularHAIdeal(
     // RECALCULO_HA_MAX_POR_DIA_EXCECAO=0 desliga a excecao.
     // [HA-OUTRO-TURNO] em cada turno, primeiro a sobra do proprio turno (HA),
     // depois a dos outros (HA*).
-    const MAX_HA_POR_DIA_EXCECAO = Number(process.env.RECALCULO_HA_MAX_POR_DIA_EXCECAO ?? "4");
+    // [HA-DIA-INTEIRO] (04/11/2026, regra confirmada pela dona) em ultimo caso a HA pode ocupar ate o dia inteiro (antes
+    // parava na 4a): a excecao nao tem limite por dia nem de seguidas. So entra depois de esgotar a regra normal.
+    const MAX_HA_POR_DIA_EXCECAO = Number(process.env.RECALCULO_HA_MAX_POR_DIA_EXCECAO ?? "99");
+    const MAX_HA_SEGUIDAS_EXCECAO = 0; // [HA-DIA-INTEIRO] sem limite de seguidas no ultimo caso
     if (totalSobra() > 0 && MAX_HA_POR_DIA_EXCECAO > MAX_HA_POR_DIA_ENSINO) {
       for (const turno of Object.keys(aulasPorTurno)) {
         if (totalSobra() <= 0) break;
         const proprio = sobraPorTurno[turno] ?? 0;
         if (proprio > 0) {
-          const resto = preencherGuloso(turno, proprio, ocupadoAtual(turno), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_EXCECAO, undefined, MAX_HA_SEGUIDAS_ENSINO);
+          const resto = preencherGuloso(turno, proprio, ocupadoAtual(turno), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_EXCECAO, undefined, MAX_HA_SEGUIDAS_EXCECAO);
           consumirSobra(proprio - resto, turno, true);
         }
         const outros = turno === "noturno" && !HA_PERMITIR_NOTURNO_DE_OUTRO_TURNO ? 0 : sobraDeOutros(turno); // [HA-NUNCA-NOITE]
         if (outros > 0) {
-          const resto = preencherGuloso(turno, outros, ocupadoAtual(turno), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_EXCECAO, undefined, MAX_HA_SEGUIDAS_ENSINO, true);
+          const resto = preencherGuloso(turno, outros, ocupadoAtual(turno), contagemDiaAtualProfessor, haPosicoesPorDiaProfessor, MAX_HA_POR_DIA_EXCECAO, undefined, MAX_HA_SEGUIDAS_EXCECAO, true);
           consumirSobra(outros - resto, turno, false);
         }
       }

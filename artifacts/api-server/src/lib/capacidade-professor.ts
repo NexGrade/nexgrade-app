@@ -251,7 +251,9 @@ export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro
         let livresNoDia = 0;
         for (let a = 1; a <= mx; a++) if (!nl.has(a) && !bloqueados.get(t)?.has(`${dia}-${a}`)) livresNoDia++;
         n += livresNoDia;
-        if (livresNoDia > 0) for (const a of nl) if (!bloqueados.get(t)?.has(`${dia}-${a}`) || bloqueioSoDeAula.has(`${t}|${dia}-${a}`)) soHA++;
+        // [HA-1800-DIA-COM-AULA] so o periodo nao letivo ANTES da ultima aula (18:00) recebe HA, como no recalculo; o de
+        // depois da ultima aula (7a da manha, so da assincrona) nunca recebe
+        if (livresNoDia > 0) for (const a of nl) if (a <= mx && (!bloqueados.get(t)?.has(`${dia}-${a}`) || bloqueioSoDeAula.has(`${t}|${dia}-${a}`))) soHA++;
       }
       livres[t] = n;
       livresSoHA[t] = soHA;
