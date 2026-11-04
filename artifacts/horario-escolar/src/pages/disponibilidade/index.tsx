@@ -456,18 +456,6 @@ export default function DisponibilidadePage() {
             obrigatória marcados aqui.
           </p>
         </div>
-        {hasChanges && (
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={resetar}>
-              <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
-              Desfazer
-            </Button>
-            <Button size="sm" onClick={salvar} disabled={salvarLote.isPending}>
-              <Save className="w-3.5 h-3.5 mr-1.5" />
-              {salvarLote.isPending ? "Salvando..." : "Salvar"}
-            </Button>
-          </div>
-        )}
       </div>
 
       {professorIdNum && resumoHA.linhas.length > 0 && (
@@ -641,6 +629,18 @@ export default function DisponibilidadePage() {
           </CardContent>
         </Card>
       ) : (
+        <div className="space-y-2">
+        {/* [SALVAR-SOBRE-A-GRADE] fora do quadro, no canto direito (acima da sexta); sempre visiveis (desabilitados sem mudancas) para a grade nao pular ao aparecerem */}
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={resetar} disabled={!hasChanges}>
+            <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+            Desfazer
+          </Button>
+          <Button size="sm" onClick={salvar} disabled={!hasChanges || salvarLote.isPending}>
+            <Save className="w-3.5 h-3.5 mr-1.5" />
+            {salvarLote.isPending ? "Salvando..." : "Salvar"}
+          </Button>
+        </div>
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -762,6 +762,7 @@ export default function DisponibilidadePage() {
             </div>
           </CardContent>
         </Card>
+        </div>
       )}
     </div>
   );
