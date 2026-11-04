@@ -258,6 +258,33 @@ export default function DisponibilidadePage() {
     setRotulosOriginais(matrizAtual.rot);
   }
 
+  // [DOC-TRAVADA] (04/11/2026, pedido da dona) o horario de aula da turma integral (DOC) nao pode ser bloqueado nem receber
+  // HA ou atividade: a celula fica travada. Bloqueio que ja existia ali e liberado na tela (vai no proximo Salvar) --
+  // senao, ao gerar de novo a grade da integral, o motor tiraria a aula DOC do lugar.
+  const aulaDOC = (dia: number, numeroAula: number) =>
+    aulasIntegralDoTurno.find((h: any) => h.diaSemana === dia && h.numeroAula === numeroAula);
+  const [docLiberadosKey, setDocLiberadosKey] = useState("");
+  useEffect(() => {
+    if (!ultimaMatrizKey || !aulasIntegralDoTurno.length) return;
+    const chaveAviso = `${ultimaMatrizKey}|${aulasIntegralDoTurno.length}`;
+    if (chaveAviso === docLiberadosKey) return;
+    const liberar = aulasIntegralDoTurno
+      .map((h: any) => cellKey(h.diaSemana, h.numeroAula))
+      .filter((k) => (matriz[k] ?? "disponivel") !== "disponivel");
+    setDocLiberadosKey(chaveAviso);
+    if (!liberar.length) return;
+    setMatriz((prev) => { const next = { ...prev }; for (const k of liberar) next[k] = "disponivel"; return next; });
+    toast({
+      title: `${liberar.length} horário(s) com aula DOC estavam bloqueados ou marcados`,
+      description: "Foram liberados, porque o horário de aula da turma integral não pode ser bloqueado. Clique em Salvar para gravar.",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ultimaMatrizKey, aulasIntegralDoTurno]);
+  const avisarDOC = (dia: number, numeroAula: number) => {
+    const h: any = aulaDOC(dia, numeroAula);
+    toast({ title: "Horário de aula DOC: travado", description: `Aqui o professor dá aula na turma integral (${h?.turma?.nome ?? "DOC"} — ${h?.disciplina?.nome ?? ""}). Este horário não pode ser bloqueado nem receber HA ou atividade.` });
+  };
+
   const professorSelecionado = professores.find((p) => String(p.id) === professorId);
   const totalBloqueios = Object.values(matriz).filter((v) => v === "bloqueado").length;
   const totalHA = Object.values(matriz).filter((v) => v === "ha_obrigatoria" || v === "ha_fixa").length; // [HA-FIXA]
@@ -280,6 +307,7 @@ export default function DisponibilidadePage() {
     Object.keys(matriz).some((k) => rotuloSeAtividade(matriz, rotulos, k) !== rotuloSeAtividade(original, rotulosOriginais, k));
 
   const toggle = (dia: number, numeroAula: number) => {
+    if (aulaDOC(dia, numeroAula)) { avisarDOC(dia, numeroAula); return; } // [DOC-TRAVADA]
     if (modoFixarAula) { setOpcaoFixar(""); setCelulaFixar({ dia, numeroAula }); return; } // [AULA-FIXA-DISP]
     if (modoAtividade) { setRotuloEscolhido(rotulos[cellKey(dia, numeroAula)] ?? ""); setCelulaAtividade({ dia, numeroAula }); return; } // [ATIVIDADE-FORA-DE-SALA]
     const key = cellKey(dia, numeroAula);
@@ -345,6 +373,7 @@ export default function DisponibilidadePage() {
     setMatriz((prev) => {
       const next = { ...prev };
       slotsOrdenados.forEach((slot) => {
+        if (aulaDOC(dia, slot.numeroAula)) return; // [DOC-TRAVADA] horario de aula DOC nao bloqueia
         next[cellKey(dia, slot.numeroAula)] = "bloqueado";
       });
       return next;
@@ -722,6 +751,7 @@ export default function DisponibilidadePage() {
                       {DIAS.map((_, dia) => {
                         const estado = matriz[cellKey(dia, slot.numeroAula)] ?? "disponivel";
                         const real = aulaReal(dia, slot.numeroAula);
+                        const doc: any = aulaDOC(dia, slot.numeroAula); // [DOC-TRAVADA]
                         return (
                           <td key={dia} className="p-0">
                             <button
@@ -738,8 +768,9 @@ export default function DisponibilidadePage() {
                                   "bg-amber-100 border-amber-500 text-amber-800 hover:bg-amber-200", // [HA-FIXA]
                                 estado === "atividade" &&
                                   "bg-slate-100 border-slate-400 text-slate-700 hover:bg-slate-200", // [ATIVIDADE-FORA-DE-SALA]
+                                doc && "!bg-teal-50 !border-teal-300 !text-teal-800 cursor-not-allowed", // [DOC-TRAVADA]
                               )}
-                              title={
+                              title={doc ? `Aula na turma integral: ${doc.turma?.nome ?? "DOC"} — ${doc.disciplina?.nome ?? ""}. Horário travado: não pode ser bloqueado nem receber HA ou atividade.` :
                                 (real ? `Aula real: ${real.turma?.nome ?? "?"} — ${real.disciplina?.nome ?? "?"}. ` : "") +
                                 (estado === "disponivel"
                                   ? "Disponível — clique para bloquear"
@@ -753,7 +784,7 @@ export default function DisponibilidadePage() {
                                 ((estado === "ha_obrigatoria" || estado === "ha_fixa") && turnoEhContraturno ? " — HA em contraturno (turno sem aula)" : "") /* [HA-CONTRATURNO-ASTERISCO] */
                               }
                             >
-                              {estado === "disponivel" && "✓"}
+                              {doc ? (<span className="inline-flex items-center justify-center gap-0.5 w-full text-[11px] font-bold"><Lock className="w-3 h-3" />DOC</span>) : estado === "disponivel" && "✓"}{/* [DOC-TRAVADA] */}
                               {estado === "bloqueado" && <Lock className="w-3.5 h-3.5 mx-auto" />}
                               {estado === "atividade" && <span className="text-[11px] font-bold tracking-tight">{rotulos[cellKey(dia, slot.numeroAula)]}</span>}{/* [ATIVIDADE-FORA-DE-SALA] */}
                               {estado === "ha_obrigatoria" && <GraduationCap className="w-3.5 h-3.5 mx-auto" />}

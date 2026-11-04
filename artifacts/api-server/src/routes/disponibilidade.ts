@@ -5,6 +5,7 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 import { turnosComAulaPorProfessor, marcarContraturno } from "../lib/ha-contraturno"; // [HA-CONTRATURNO-ASTERISCO]
+import { carregarAulasIntegraisNoTurno } from "../lib/turno-integral"; // [DOC-TRAVADA]
 
 // RF-DISP-01 a RF-DISP-03, RF-PROF-04: CRUD da disponibilidade semanal do
 // professor, consumida pelo algoritmo de geração de horário
@@ -168,6 +169,22 @@ router.post("/lote", async (req, res) => {
     res.status(404).json({ error: "Professor não encontrado" });
     return;
   }
+
+  // [DOC-TRAVADA] (04/11/2026, pedido da dona) horario de aula da turma integral (DOC) nao pode ser bloqueado nem receber HA
+  // ou atividade: o que vier para esse horario grava como livre (vale para qualquer tela que chame esta rota)
+  const turnosDoLote = [...new Set(parsed.data.itens.map((i) => i.turno).filter((t): t is NonNullable<typeof t> => !!t))];
+  const horariosDOC = new Set<string>();
+  for (const t of turnosDoLote) {
+    for (const a of await carregarAulasIntegraisNoTurno(escolaId, t, [parsed.data.professorId])) horariosDOC.add(`${t}|${a.diaSemana}|${a.numeroAula}`);
+  }
+  let docLiberados = 0;
+  for (const item of parsed.data.itens) {
+    if (!item.turno || !horariosDOC.has(`${item.turno}|${item.diaSemana}|${item.horarioSlot}`)) continue;
+    if (item.disponivel && !item.horaAtividadeObrigatoria) continue;
+    item.disponivel = true; item.horaAtividadeObrigatoria = false; item.motivo = "";
+    docLiberados++;
+  }
+  if (docLiberados) console.log(`[DOC-TRAVADA] professor ${parsed.data.professorId}: ${docLiberados} horario(s) de aula DOC gravados como livres`);
 
   const existentes = await db.select().from(disponibilidadeTable)
     .where(eq(disponibilidadeTable.professorId, parsed.data.professorId));
