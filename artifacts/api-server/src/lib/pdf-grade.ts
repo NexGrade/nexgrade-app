@@ -17,6 +17,8 @@ type SlotGrade = {
   numeroAula: number;
   linha1: string;
   linha2?: string;
+  // [PDF-CODOCENCIA] codocencia: um professor por linha (disciplina, professor 1, professor 2), no lugar de linha2
+  professores?: string[];
   destacado?: boolean;
   texto?: string; // [PDF-MODELOS] texto completo da celula nos outros modelos ("Disciplina (Professor)")
 };
@@ -73,10 +75,22 @@ function desenharPontilhado(page: PDFPage, x: number, y: number, largura: number
   }
 }
 
+function aulasDoBloco(bloco: BlocoGrade): number[] {
+  return bloco.horariosPorAula
+    ? Object.keys(bloco.horariosPorAula).map(Number).sort((a, b) => a - b)
+    : [...new Set(bloco.slots.map((s) => s.numeroAula))].sort((a, b) => a - b);
+}
+// [PDF-CODOCENCIA] a linha da tabela com codocencia (disciplina + um professor por linha) fica mais alta, para a
+// letra continuar legivel; as outras ficam como sempre
+function alturaDaLinha(bloco: BlocoGrade, numeroAula: number, alturaLinhaDado: number): number {
+  return bloco.slots.some((s) => s.numeroAula === numeroAula && (s.professores?.length ?? 0) > 1) ? alturaLinhaDado * 1.5 : alturaLinhaDado;
+}
 function alturaDoBloco(bloco: BlocoGrade, alturaLinhaDado: number, alturaLinhaCabecalho: number): number {
   const aulas = [...new Set(bloco.slots.map((s) => s.numeroAula))];
   const numLinhas = Math.max(aulas.length, bloco.horariosPorAula ? Object.keys(bloco.horariosPorAula).length : 0, 5);
-  return 6 + alturaLinhaCabecalho + numLinhas * alturaLinhaDado + 18;
+  const desenhadas = aulasDoBloco(bloco);
+  const soma = desenhadas.reduce((s, a) => s + alturaDaLinha(bloco, a, alturaLinhaDado), 0);
+  return 6 + alturaLinhaCabecalho + soma + Math.max(0, numLinhas - desenhadas.length) * alturaLinhaDado + 18;
 }
 
 function desenharBloco(
@@ -97,9 +111,7 @@ function desenharBloco(
   page.drawText(bloco.rotulo, { x: x0, y: yTopo, size: m.fonte > 1 ? 11.5 : 9.5, font: fontBold, color: AZUL_ESCURO });
   let y = yTopo - 6;
 
-  const aulasNumeros = bloco.horariosPorAula
-    ? Object.keys(bloco.horariosPorAula).map(Number).sort((a, b) => a - b)
-    : [...new Set(bloco.slots.map((s) => s.numeroAula))].sort((a, b) => a - b);
+  const aulasNumeros = aulasDoBloco(bloco);
 
   page.drawRectangle({ x: x0, y: y - alturaLinhaCabecalho, width: colAulaLargura, height: alturaLinhaCabecalho, color: AZUL_PRINCIPAL });
   page.drawText("Hor", { x: x0 + 5, y: y - alturaLinhaCabecalho / 2 - 3, size: 7.5 * m.fonte, font: fontBold, color: BRANCO });
@@ -111,32 +123,37 @@ function desenharBloco(
   });
   y -= alturaLinhaCabecalho;
 
+  let yCursor = y; // [PDF-CODOCENCIA] cada linha tem a sua altura
   aulasNumeros.forEach((numeroAula, linhaIdx) => {
-    const yLinha = y - alturaLinhaDado * (linhaIdx + 1);
+    const alturaLinha = alturaDaLinha(bloco, numeroAula, alturaLinhaDado);
+    const yLinha = yCursor - alturaLinha;
+    yCursor = yLinha;
     const corFundoLinha = linhaIdx % 2 === 0 ? BRANCO : CINZA_CLARO;
 
-    page.drawRectangle({ x: x0, y: yLinha, width: colAulaLargura, height: alturaLinhaDado, color: corFundoLinha, borderColor: CINZA_BORDA, borderWidth: 0.4 });
+    page.drawRectangle({ x: x0, y: yLinha, width: colAulaLargura, height: alturaLinha, color: corFundoLinha, borderColor: CINZA_BORDA, borderWidth: 0.4 });
     const horaReal = bloco.horariosPorAula?.[numeroAula];
     const rotuloAula = horaReal ?? String(numeroAula);
     const larguraRotulo = font.widthOfTextAtSize(rotuloAula, 7.5 * m.fonte);
-    page.drawText(rotuloAula, { x: x0 + colAulaLargura / 2 - larguraRotulo / 2, y: yLinha + alturaLinhaDado / 2 - 3, size: 7.5 * m.fonte, font, color: AZUL_ESCURO });
+    page.drawText(rotuloAula, { x: x0 + colAulaLargura / 2 - larguraRotulo / 2, y: yLinha + alturaLinha / 2 - 3, size: 7.5 * m.fonte, font, color: AZUL_ESCURO });
 
     DIAS_CURTOS.forEach((_, diaSemana) => {
       const x = x0 + colAulaLargura + diaSemana * colDiaLargura;
       const slot = bloco.slots.find((s) => s.numeroAula === numeroAula && s.diaSemana === diaSemana);
       const corFundo = slot?.destacado ? AMARELO_HA : corFundoLinha;
-      page.drawRectangle({ x, y: yLinha, width: colDiaLargura, height: alturaLinhaDado, color: corFundo, borderColor: CINZA_BORDA, borderWidth: 0.4 });
+      page.drawRectangle({ x, y: yLinha, width: colDiaLargura, height: alturaLinha, color: corFundo, borderColor: CINZA_BORDA, borderWidth: 0.4 });
       if (slot) {
         // [PDF-CABE-NA-CELULA] mede a largura real: 1 linha se couber; senao 2 linhas e fonte menor; so entao reticencias
-        desenharTextoNaCelula(page, slot.linha2 ? [slot.linha1, slot.linha2] : [slot.linha1], slot.linha2 ? font : fontBold, x, yLinha, colDiaLargura - 6, alturaLinhaDado, (slot.linha2 ? 6.5 : 7) * m.fonte);
+        // [PDF-CODOCENCIA] dois professores: uma linha cada (antes iam juntos na 2a linha e o segundo era cortado: "FERNANDA G. + ISABEL…")
+        const linhasCelula = slot.professores && slot.professores.length > 1 ? [slot.linha1, ...slot.professores] : slot.linha2 ? [slot.linha1, slot.linha2] : [slot.linha1];
+        desenharTextoNaCelula(page, linhasCelula, linhasCelula.length > 1 ? font : fontBold, x, yLinha, colDiaLargura - 6, alturaLinha, (linhasCelula.length > 1 ? 6.5 : 7) * m.fonte);
       } else {
         const bloqueada = bloco.celulasBloqueadas?.find(
           (c) => c.diaSemana === diaSemana && c.numeroAula === numeroAula,
         );
         // [ROTULO-BLOQUEIO] atividade com nome (PAEE, COORD, LAB...) sai escrita, como no sistema anterior;
         // bloqueio sem nome continua com a hachura pontilhada.
-        if (bloqueada?.rotulo) desenharTextoNaCelula(page, [sanitizarTextoPdf(bloqueada.rotulo)], font, x, yLinha, colDiaLargura - 6, alturaLinhaDado, 7 * m.fonte);
-        else if (bloqueada) desenharPontilhado(page, x, yLinha, colDiaLargura, alturaLinhaDado);
+        if (bloqueada?.rotulo) desenharTextoNaCelula(page, [sanitizarTextoPdf(bloqueada.rotulo)], font, x, yLinha, colDiaLargura - 6, alturaLinha, 7 * m.fonte);
+        else if (bloqueada) desenharPontilhado(page, x, yLinha, colDiaLargura, alturaLinha);
       }
     });
   });
@@ -160,11 +177,22 @@ function dividirEmDuas(t: string): string[] {
 function desenharTextoNaCelula(page: PDFPage, linhas: string[], f: PDFFont, x: number, yLinha: number, largura: number, altura: number, tamanhoBase: number): void {
   const MIN = 5;
   const junto = linhas.join("/");
-  if (f.widthOfTextAtSize(junto, tamanhoBase) <= largura) {
+  if (linhas.length < 3 && f.widthOfTextAtSize(junto, tamanhoBase) <= largura) {
     page.drawText(junto, { x: x + 3, y: yLinha + altura / 2 - 3, size: tamanhoBase, font: f, color: PRETO });
     return;
   }
   const partes = linhas.length > 1 ? linhas : dividirEmDuas(linhas[0]);
+  // [PDF-CODOCENCIA] 3+ linhas (disciplina e um professor por linha): fonte do tamanho que couber na altura
+  // (nunca junta numa linha so com "/": "REC.APR.MAT/FERNANDA G./ISABELA N." ficaria ambiguo)
+  if (partes.length >= 3) {
+    const MIN3 = 4;
+    let tam = Math.min(tamanhoBase, (altura - 2) / partes.length);
+    while (tam > MIN3 && Math.max(...partes.map((q) => f.widthOfTextAtSize(q, tam))) > largura) tam -= 0.25;
+    const passo = tam + 0.6;
+    const yPrimeira = yLinha + altura / 2 + ((partes.length - 1) * passo) / 2 - tam / 2 + 0.5;
+    partes.forEach((q, i) => page.drawText(cortarParaCaber(q, f, tam, largura), { x: x + 3, y: yPrimeira - i * passo, size: tam, font: f, color: PRETO }));
+    return;
+  }
   if (partes.length === 2 && altura >= 2 * MIN + 2) {
     let tam = Math.min(tamanhoBase, (altura - 3) / 2);
     while (tam > MIN && Math.max(...partes.map((q) => f.widthOfTextAtSize(q, tam))) > largura) tam -= 0.25;

@@ -822,13 +822,16 @@ router.get("/grade-pdf/turma", async (req, res) => {
       });
       return [...agrupado.values()].map((grupo) => {
         const primeiro = grupo[0]!;
-        const nomesProfessores = grupo
+        // [PDF-CODOCENCIA] nomes em ordem alfabetica (antes variava de uma celula para outra: "ISABELA N. + FERNANDA G.")
+        const listaProfessores = [...new Set(grupo
           .map((s) => nomeCurto(professores.find((p) => p.id === s.professorId)?.nome ?? "?") // [PDF-NOME-PROF]
-            + (revezTurma.get(`${s.turmaId}|${s.disciplinaId}|${s.professorId}`)?.presencial ? " (P)" : "")) // [REVEZAMENTO-TRIO]
-          .join(" + ");
+            + (revezTurma.get(`${s.turmaId}|${s.disciplinaId}|${s.professorId}`)?.presencial ? " (P)" : "")))] // [REVEZAMENTO-TRIO]
+          .sort((a, b) => a.localeCompare(b, "pt-BR"));
+        const nomesProfessores = listaProfessores.join(" + ");
         return {
           diaSemana: primeiro.diaSemana,
           numeroAula: primeiro.numeroAula,
+          professores: listaProfessores, // [PDF-CODOCENCIA] um por linha no modelo paisagem
           // [ASSINCRONA-EXIBICAO] todas as siglas do horario (trio mostra as 3) + marca de assincrona
           linha1: [...new Set(grupo.map((s) => siglaOuFallback(disciplinas.find((d) => d.id === s.disciplinaId))))].join("/") + (grupo.some((s) => s.assincrona) ? " (ASS)" : ""),
           linha2: nomesProfessores,
