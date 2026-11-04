@@ -205,7 +205,7 @@ PASSO A PASSO
 CONFERIR E PROMOVER
 - Em cada experimento: veja a grade por turma, baixe "PDF por turma" ou "PDF por professor".
 - "Simular promoção": sem gravar nada, compara as janelas dos professores (aula + HA + atividade fora de sala) de como a grade ficaria depois de promover com a oficial como está hoje, e diz se vale promover. Mostra também quais aulas mudam de lugar (professor, turma, disciplina, de onde sai e para onde vai) e a HA que muda de cada professor. Use sempre antes de promover.
-- "Promover para oficial" substitui o horário das turmas do experimento (pede confirmação) e recalcula a HA desses professores. HA marcada à mão (HA manual, HA fixa, probatório) é mantida.
+- "Promover para oficial" substitui o horário das turmas do experimento (pede confirmação) e recalcula a HA desses professores. HA fixa e probatório (🔒) ficam onde estão. A HA manual (marcada na tela) é mantida, mas pode mudar de lugar para fechar uma janela; para travar uma HA, use HA fixa na Disponibilidade.
 - Apague os experimentos que não for usar.
 
 REGRAS DA HORA-ATIVIDADE AO PROMOVER
@@ -231,7 +231,7 @@ O Assistente de IA não gera grade — ele só explica o caminho.`,
 - Trio: a célula mostra a disciplina do professor presencial da semana, os 3 professores e o selo "PRESENCIAL"; clicando aparecem as 3 disciplinas.
 - Professor com aula ou HA em mais de um turno, com o filtro em "Todos os turnos": aparece um quadro por turno, lado a lado, com o horário de cada aula e o total de aulas e HA do turno. Para ver só um, escolha o turno no filtro.
 - Na grade do professor: Livre (contorno verde) = horário disponível sem aula nem HA; Indisp. (cinza) = bloqueio do professor; "indisp." embaixo do dia = turno inteiro bloqueado naquele dia; HA/HA* em amarelo; atividades fora de sala (FORM, COORD...) em cinza com o nome.
-- Trocar HA ou bloqueio pela grade do professor: clique num Livre, Indisp. ou HA e escolha Marcar HA, Tirar HA, Bloquear horário ou Liberar horário. Para mudar uma HA de lugar: "Tirar HA" na antiga e "Marcar HA" na nova. Grava na Disponibilidade (HA marcada aqui é HA manual: a promoção de grade não mexe nela). HA fixa e probatório (🔒) só na tela Disponibilidade.
+- Trocar HA ou bloqueio pela grade do professor: clique num Livre, Indisp. ou HA e escolha Marcar HA, Tirar HA, Bloquear horário ou Liberar horário. Para mudar uma HA de lugar: "Tirar HA" na antiga e "Marcar HA" na nova. Grava na Disponibilidade (HA marcada aqui é HA manual: a promoção mantém, mas pode mudá-la de lugar para fechar janela; para travar, use HA fixa). HA fixa e probatório (🔒) só na tela Disponibilidade.
 - Clique numa aula para ver os detalhes, editar ou excluir (a exclusão pede confirmação e não pode ser desfeita).
 - "Adicionar aula manual": escolha Turma, Disciplina, Dia da semana, Número da aula e Professor (titular). Para co-docência, ligue "Aula com dois professores" e escolha o Professor de apoio. Grava direto na grade oficial; se já houver aula naquele horário para a turma, a inclusão é bloqueada.
   - Disciplina tem busca (digite parte do nome); as da turma aparecem primeiro, com o professor do vínculo. Disciplina cadastrada duas vezes aparece uma vez só; mesmo nome com código diferente mostra o SAE ao lado.

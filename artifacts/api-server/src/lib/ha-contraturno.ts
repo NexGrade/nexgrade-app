@@ -19,12 +19,19 @@ export const MOTIVO_HA_AUTO_OUTRO_TURNO = `${MOTIVO_HA_AUTO} -- HA de outro turn
 /**
  * [HA-IMPORTADA-MOVEL] (16/10/2026) HA que o sistema pode reposicionar: a automatica e a importada
  * de outro sistema de horarios ("Importado do ... (H.A.)"), que so valia para a grade de origem. Quando as aulas
- * mudam, ela segue a regra do NexGrade (juntar HA, sem janela). Continua fixa (manual): HA fixa,
- * abono do estagio probatorio (PROB) e qualquer outra marcada a mao.
+ * mudam, ela segue a regra do NexGrade (juntar HA, sem janela). Continua presa: HA fixa (cadeado), abono do
+ * estagio probatorio (PROB) e HA sem texto conhecido.
+ * [HA-MANUAL-MOVEL] (04/11/2026) a "HA manual (definida na tela)" tambem muda de lugar para fechar janela (decisao da
+ * dona: quem quer travar uma HA usa a HA fixa). Ela continua existindo e contando na cota: o recalculo a preserva
+ * (ver ehHAManualDaTela em recalcular-ha.ts); so o "HA no buraco" (reposicionarHAMovel) pode leva-la para outro horario.
  */
+export function ehHAManualDaTela(motivo: string | null | undefined): boolean {
+  return (motivo ?? "").startsWith("HA manual");
+}
 export function ehHAMovel(motivo: string | null | undefined): boolean {
   const m = motivo ?? "";
   if (m.startsWith(MOTIVO_HA_AUTO)) return true;
+  if (ehHAManualDaTela(m)) return true; // [HA-MANUAL-MOVEL]
   if (/probat/i.test(m) || m.startsWith("HA fixa")) return false;
   // [HA-IMPORTADA-FORMATOS] (01/11/2026) a importacao do Urania (Mario Braga, 02-06/11) grava "(HA)" e "(HA*)", sem
   // pontos; so "(H.A.)" (Arlinda) era aceito e 206 HA do matutino ficavam presas, deixando janelas que uma HA movida

@@ -36,7 +36,7 @@ import { eq, inArray, sql } from "drizzle-orm";
 import { PARES_TURNO } from "./intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 import { mapaIntegralDosSlots, projetarIntegral } from "./turno-integral"; // [TURNO-INTEGRAL-PROFESSOR]
 
-import { MOTIVO_HA_AUTO, MOTIVO_HA_AUTO_OUTRO_TURNO, ehHAMovel } from "./ha-contraturno"; // [HA-OUTRO-TURNO] [HA-IMPORTADA-MOVEL]
+import { MOTIVO_HA_AUTO, MOTIVO_HA_AUTO_OUTRO_TURNO, ehHAMovel, ehHAManualDaTela } from "./ha-contraturno"; // [HA-OUTRO-TURNO] [HA-IMPORTADA-MOVEL] [HA-MANUAL-MOVEL]
 import { montarMapaPrincipal, principalDe } from "./professor-principal"; // [MESMA-PESSOA-HA]
 import { ehProfessorEstudio } from "./hora-atividade"; // [ESTUDIO-SEM-HA]
 
@@ -301,7 +301,7 @@ export async function calcularHAIdeal(
     // tomada por fora do sistema (autorizacao da coordenacao), sempre
     // respeitada e nunca recalculada por aqui. Conta pro total exigido.
     const haManualContraturno = disponibilidades.filter(
-      (d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && !ehHAMovel(d.motivo) && !ocupadoPorTurnoOriginal.get(d.turno ?? "")?.has(`${d.diaSemana}-${d.horarioSlot}`), // [FIX-HA-AUTO-NAO-E-MANUAL] [HA-MANUAL-QUALQUER-TURNO] [HA-MANUAL-CEDE-A-AULA] HA nao automatica e preservada em qualquer turno, exceto se uma aula passou a ocupar o horario
+      (d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && (!ehHAMovel(d.motivo) || ehHAManualDaTela(d.motivo)) && !ocupadoPorTurnoOriginal.get(d.turno ?? "")?.has(`${d.diaSemana}-${d.horarioSlot}`), // [FIX-HA-AUTO-NAO-E-MANUAL] [HA-MANUAL-QUALQUER-TURNO] [HA-MANUAL-CEDE-A-AULA] HA nao automatica e preservada em qualquer turno, exceto se uma aula passou a ocupar o horario
     );
     for (const m of haManualContraturno) {
       marcasFinais.push({ professorId: prof.id, turno: m.turno ?? "sem_turno", diaSemana: m.diaSemana, horarioSlot: m.horarioSlot });

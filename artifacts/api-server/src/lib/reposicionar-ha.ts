@@ -3,7 +3,8 @@
 // Motivo: no Arlinda (grade do sistema anterior), a manha tinha 11 janelas; o "Melhorar" mexia 25 aulas para
 // chegar a 3, mas so mudando a HA de lugar dava 0. O "Melhorar" agora tenta isto ANTES de mexer em aula.
 // Regras:
-//  - so move HA movel; HA fixa, probatorio e HA manual ficam onde estao (e ocupam o horario);
+//  - so move HA movel; HA fixa e probatorio ficam onde estao (e ocupam o horario). [HA-MANUAL-MOVEL] desde 04/11/2026
+//    a HA manual (marcada na tela) tambem muda de lugar, mantendo o texto "HA manual";
 //  - a quantidade de HA de cada professor em cada turno nao muda;
 //  - so vai para dia em que o professor ja tem aula naquele turno, em horario letivo livre
 //    (sem aula, sem HA, sem bloqueio), com no maximo 3 HA no dia;
