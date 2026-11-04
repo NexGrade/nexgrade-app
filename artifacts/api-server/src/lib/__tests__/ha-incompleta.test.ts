@@ -19,11 +19,8 @@ describe("[HA-INCOMPLETA-REFAZ] professoresComHAIncompleta", () => {
     expect([...professoresComHAIncompleta(ideal, hoje, ["matutino"])]).toEqual([1]);
   });
 
-  it("HA a mais do que a regra tambem entra (a quantidade tem que ser a da regra)", () => {
-    expect([...professoresComHAIncompleta([ha(1, "matutino")], [ha(1, "matutino"), ha(1, "matutino")], ["matutino"])]).toEqual([1]);
-  });
-
-  it("HA num turno do experimento onde a regra nao poe nenhuma entra", () => {
-    expect([...professoresComHAIncompleta([], [ha(3, "matutino")], ["matutino"])]).toEqual([3]);
+  it("[HA-SO-COMPLETAR] HA a mais do que a regra NAO entra (fica como esta)", () => {
+    expect(professoresComHAIncompleta([ha(1, "matutino")], [ha(1, "matutino"), ha(1, "matutino")], ["matutino"]).size).toBe(0);
+    expect(professoresComHAIncompleta([], [ha(3, "matutino")], ["matutino"]).size).toBe(0);
   });
 });

@@ -1,5 +1,5 @@
-// [HA-SO-QUEM-MUDOU-GERAL] (04/11/2026) A promocao refaz a HA so de quem teve aula mexida (ou esta com a quantidade
-// diferente da regra, [HA-INCOMPLETA-REFAZ]); os demais ficam com a HA de hoje, inclusive a importada e a que o
+// [HA-SO-QUEM-MUDOU-GERAL] (04/11/2026) A promocao refaz a HA so de quem teve aula mexida (quem esta abaixo da regra
+// fica com a de hoje e ganha so a que falta, [HA-SO-COMPLETAR]); os demais ficam com a HA de hoje, inclusive a importada e a que o
 // "HA no buraco" encaixou. Gerar direto (gerador simples) e "Corrigir professor" chamavam o recalculo da escola
 // inteira: corrigir as aulas de UM professor refazia a HA de todos (a importada virava automatica e as HA encaixadas
 // voltavam para o lugar do calculo guloso, abrindo janelas em quem nem foi tocado). Aqui a mesma regra da promocao,
@@ -8,7 +8,7 @@
 import { db, horariosTable, disponibilidadeTable, professoresTable, turmasTable, horarioSlotsTable } from "@workspace/db";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { recalcularHoraAtividade } from "./recalcular-ha";
-import { professoresComHAIncompleta } from "./ha-incompleta";
+import { professoresComHAIncompleta, completarHA, gravarHACompletada } from "./ha-incompleta";
 import { reposicionarHAMovel, slotsLetivosPorTurno, type AulaPos } from "./reposicionar-ha";
 import { montarMapaPrincipal } from "./professor-principal";
 import { mapaIntegralDosSlots, posicaoReal, TURNO_INTEGRAL } from "./turno-integral";
@@ -65,13 +65,14 @@ export function professoresQueMudaram(antes: LinhaHorario[], depois: LinhaHorari
  * Recalcula a HA e devolve a de hoje a quem nao teve aula mexida e esta com a quantidade da regra.
  * Lanca erro se o recalculo falhar (o chamador decide como avisar).
  */
-export async function recalcularHASoDeQuemMudou(escolaId: string, antes: FotoAntes): Promise<{ refeitos: number; mantidos: number; reposicionadas: number }> {
+export async function recalcularHASoDeQuemMudou(escolaId: string, antes: FotoAntes): Promise<{ refeitos: number; mantidos: number; reposicionadas: number; completadas: number }> {
   await recalcularHoraAtividade(escolaId);
   const [depois, ids] = await Promise.all([oficialDaEscola(escolaId), idsProfessores(escolaId)]);
   const haRecalc = await haDaEscola(escolaId, ids);
 
   const refazer = professoresQueMudaram(antes.oficial, depois);
-  for (const p of professoresComHAIncompleta(haRecalc, antes.ha, TURNOS)) refazer.add(p);
+  // [HA-SO-COMPLETAR] quem nao teve aula mexida fica com a HA de hoje; se estiver abaixo da regra, completa-se so o que falta
+  const acompletar = new Set([...professoresComHAIncompleta(haRecalc, antes.ha, TURNOS)].filter((p) => !refazer.has(p)));
   const mantem = ids.filter((p) => !refazer.has(p));
   const haMantida = antes.ha.filter((d) => mantem.includes(d.professorId));
 
@@ -86,6 +87,12 @@ export async function recalcularHASoDeQuemMudou(escolaId: string, antes: FotoAnt
         await tx.insert(disponibilidadeTable).values(lote.map(({ id: _id, createdAt: _c, ...resto }) => resto));
       }
     });
+  }
+
+  let completadas = 0;
+  if (acompletar.size) {
+    const haAgora = (await haDaEscola(escolaId, [...acompletar]));
+    completadas = await gravarHACompletada(await completarHA(escolaId, acompletar, haAgora));
   }
 
   // HA no buraco para quem teve a HA refeita (como na promocao)
@@ -120,6 +127,6 @@ export async function recalcularHASoDeQuemMudou(escolaId: string, antes: FotoAnt
       reposicionadas = movs.length;
     }
   }
-  console.log(`[HA-SO-QUEM-MUDOU-GERAL] HA refeita para ${refeitos.length} professor(es); ${mantem.length} ficaram com a de hoje; ${reposicionadas} HA no buraco`);
-  return { refeitos: refeitos.length, mantidos: mantem.length, reposicionadas };
+  console.log(`[HA-SO-QUEM-MUDOU-GERAL] HA refeita para ${refeitos.length} professor(es); ${mantem.length} ficaram com a de hoje (${completadas} HA acrescentada(s) a quem estava abaixo da regra); ${reposicionadas} HA no buraco`);
+  return { refeitos: refeitos.length, mantidos: mantem.length, reposicionadas, completadas };
 }

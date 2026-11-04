@@ -1,9 +1,9 @@
 /**
- * [AJUSTAR-HA-PELA-REGRA] (04/11/2026) Aplica as regras de HA de 04/11 na grade OFICIAL de uma escola, sem mexer em aula:
- * a mesma regra da promocao ([HA-INCOMPLETA-REFAZ] + [HA-SO-QUEM-MUDOU-GERAL]):
- *  - quem esta com a quantidade de HA de algum turno DIFERENTE da regra (a menos ou a mais) tem a HA refeita pela regra
- *    (tabela por turno, integral no turno real, PAEE fora, FOR conta como HA, HA presa preservada) e levada para os buracos;
- *  - quem ja esta com a quantidade certa fica como esta (inclusive a HA importada).
+ * [AJUSTAR-HA-PELA-REGRA] (04/11/2026) Completa a HA da grade OFICIAL de uma escola pelas regras de 04/11, sem mexer em
+ * aula nem na HA que ja existe ([HA-SO-COMPLETAR], decisao da dona: "nao precisa mudar, so completar se faltar"):
+ *  - quem tem MENOS HA do que a regra num turno ganha so as que faltam, nos horarios livres que deixam menos janela
+ *    (tabela por turno, integral no turno real, PAEE fora, FOR conta como HA);
+ *  - a HA de hoje fica onde esta; HA a mais do que a regra tambem fica.
  * Uso (na raiz do repositorio):
  *   pnpm --filter @workspace/api-server exec tsx --env-file=C:\projetos\nexgrade-app\lib\db\.env scripts/ajustar-ha-pela-regra.ts
  *       (sem escola: lista as escolas com o id)
@@ -31,7 +31,7 @@ async function main() {
     await pool.end(); return;
   }
   const { calcularHAIdeal } = await import("../src/lib/recalcular-ha");
-  const { professoresComHAIncompleta } = await import("../src/lib/ha-incompleta");
+  const { professoresComHAIncompleta, completarHA } = await import("../src/lib/ha-incompleta");
   const { fotografarGradeEHA, recalcularHASoDeQuemMudou } = await import("../src/lib/ha-so-quem-mudou");
   const { mapaIntegralDosSlots, posicaoReal } = await import("../src/lib/turno-integral");
   const { ehFORContaComoHA } = await import("../src/lib/ha-contraturno");
@@ -45,6 +45,7 @@ async function main() {
   const foto = await fotografarGradeEHA(ESCOLA);
   const ideal = await calcularHAIdeal(ESCOLA);
   const refazer = professoresComHAIncompleta(ideal, foto.ha, TURNOS);
+  const novas = await completarHA(ESCOLA, refazer, foto.ha);
 
   // janelas por turno (aula + HA ocupam; FOR/COORD... entre elas nao e janela)
   const q = async (s: string, p: unknown[] = []) => (await pool.query(s, p)).rows as any[];
@@ -67,20 +68,21 @@ async function main() {
     }
     return r;
   };
-  const haDepois = [...foto.ha.filter((d) => !refazer.has(d.professorId)), ...ideal.filter((m) => refazer.has(m.professorId))];
+  const haDepois = [...foto.ha, ...novas];
 
   const cont = (rows: Array<{ professorId: number; turno: string | null }>, p: number, t: string) => rows.filter((r) => r.professorId === p && r.turno === t).length;
   const pos = (rows: Array<{ professorId: number; turno: string | null; diaSemana: number; horarioSlot: number }>, p: number, t: string) =>
     rows.filter((r) => r.professorId === p && r.turno === t).sort((a, b) => a.diaSemana - b.diaSemana || a.horarioSlot - b.horarioSlot).map((r) => `${DIAS[r.diaSemana]} ${r.horarioSlot}ª`).join(", ") || "-";
-  console.log(`Professores com a HA diferente da regra: ${refazer.size} de ${profs.length}\n`);
+  console.log(`Professores com HA abaixo da regra: ${refazer.size} de ${profs.length} (a HA de hoje fica; so se acrescenta a que falta)\n`);
   for (const p of [...refazer].sort((a, b) => String(nome.get(a)).localeCompare(String(nome.get(b)), "pt-BR"))) {
     for (const t of TURNOS) {
       const a = cont(foto.ha, p, t), b = cont(ideal, p, t);
-      if (a === b) continue;
+      if (a >= b) continue;
       const nFor = todaDisp.filter((d) => d.professorId === p && d.turno === t && ehFORContaComoHA(d)).length;
       console.log(`  ${nome.get(p)} (${T(t)}): ${a} -> ${b} HA${nFor ? `  [${nFor} FOR conta como HA]` : ""}`);
       console.log(`      hoje:  ${pos(foto.ha, p, t)}`);
-      console.log(`      regra: ${pos(ideal, p, t)}`);
+      const acr = pos(novas, p, t);
+      console.log(`      acrescenta: ${acr === "-" ? "nada (a HA a mais em outro turno ja cobre o total)" : acr}`);
     }
   }
   console.log(`\nJanelas de professor (aula + HA; o "HA no buraco" pode fechar mais ao aplicar):`);
@@ -95,7 +97,7 @@ async function main() {
   const r = await recalcularHASoDeQuemMudou(ESCOLA, foto);
   const haFinal = await db.select().from(disponibilidadeTable).where(and(inArray(disponibilidadeTable.professorId, profs.map((p) => p.id)), eq(disponibilidadeTable.horaAtividadeObrigatoria, true)));
   const jf = janelas(haFinal);
-  console.log(`Gravado: HA refeita para ${r.refeitos} professor(es); ${r.mantidos} ficaram como estavam; ${r.reposicionadas} HA no buraco.`);
+  console.log(`Gravado: ${r.completadas} HA acrescentada(s); a HA que ja existia ficou como estava.`);
   for (const t of TURNOS) if (ja[t] || jf[t]) console.log(`  janelas ${T(t)}: ${ja[t] ?? 0} -> ${jf[t] ?? 0}`);
   await pool.end();
 }

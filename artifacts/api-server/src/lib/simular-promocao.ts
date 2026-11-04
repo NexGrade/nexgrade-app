@@ -12,7 +12,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { calcularHAIdeal, type AulaParaCalculoHA, type MarcaHACalculada } from "./recalcular-ha";
 import { haForaDoTurnoDoExperimento, reposicionarHAMovel, slotsLetivosPorTurno, turnosAfetadosPelaHA, type AulaPos } from "./reposicionar-ha";
 import { MOTIVO_HA_AUTO, ehHAOutroTurno } from "./ha-contraturno"; // [HA-BURACO-QUEM-MUDOU] [HA-ESTRELA-UMA-REGRA]
-import { professoresComHAIncompleta } from "./ha-incompleta"; // [HA-INCOMPLETA-REFAZ]
+import { professoresComHAIncompleta, completarHA } from "./ha-incompleta"; // [HA-INCOMPLETA-REFAZ] [HA-SO-COMPLETAR]
 import { mapaIntegralDosSlots, posicaoReal } from "./turno-integral"; // [INTEGRAL-NA-OCUPACAO]
 import { montarMapaPrincipal } from "./professor-principal"; // [MESMA-PESSOA-HA]
 
@@ -119,8 +119,12 @@ export async function simularPromocao(
     const a = antesP.get(p) ?? new Set<string>(); const d = depoisP.get(p) ?? new Set<string>();
     if (a.size !== d.size || [...a].some((k) => !d.has(k))) mudou.add(p);
   }
-  // [HA-INCOMPLETA-REFAZ] quem esta com HA diferente da regra (a menos ou a mais) no turno do experimento tem a HA refeita
-  for (const p of professoresComHAIncompleta(haSimulada, disp.filter((d) => profIds.has(d.professorId)), turnos)) mudou.add(p);
+  // [HA-INCOMPLETA-REFAZ] [HA-SO-COMPLETAR] quem nao teve aula mexida e esta com MENOS HA do que a regra no turno do
+  // experimento fica com a HA de hoje e ganha so as que faltam (igual a promocao). HA a mais fica como esta.
+  const haAcompletar = new Set([...professoresComHAIncompleta(haSimulada, disp.filter((d) => profIds.has(d.professorId)), turnos)].filter((p) => !mudou.has(p)));
+  const haCompletada: MarcaHACalculada[] = haAcompletar.size
+    ? (await completarHA(escolaId, haAcompletar, disp.filter((d) => haAcompletar.has(d.professorId) && d.horaAtividadeObrigatoria), aulasSimuladas))
+    : [];
   // [HA-OUTRO-TURNO] (03/11/2026) o recalculo refaz a HA de quem teve aula mexida em TODOS os turnos dele (inclusive a
   // HA* que nao coube no turno promovido). Esses turnos tambem entram na conta e na HA no buraco, igual a promocao.
   // Antes so o turno do experimento era contado: promover a tarde levou a manha de 3 para 10 janelas sem aviso.
@@ -234,6 +238,7 @@ export async function simularPromocao(
       return mv ? { ...l.marca, diaSemana: mv.diaSemana, horarioSlot: mv.horarioSlot } : l.marca;
     }),
     ...haHojeReposta,
+    ...haCompletada.filter((m) => turnosConta.includes(m.turno)), // [HA-SO-COMPLETAR]
   ];
   const resExp = contar(aulasSimuladas, haDepois);
   const sHoje = new Set(haHoje.map(chave));
@@ -298,6 +303,7 @@ export async function simularPromocao(
       ...haDepois,
       ...haRefeita.filter((m) => !turnosConta.includes(m.turno) && mudou.has(m.professorId)),
       ...haForaFinal.filter((m) => !turnosConta.includes(m.turno)),
+      ...haCompletada.filter((m) => !turnosConta.includes(m.turno)), // [HA-SO-COMPLETAR]
       ...dispEscola
         .filter((d) => d.horaAtividadeObrigatoria && d.turno && !turnosConta.includes(d.turno) && !mudou.has(d.professorId))
         .map((d) => ({ professorId: d.professorId, turno: d.turno!, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, outroTurno: ehHAOutroTurno(d.motivo) })),

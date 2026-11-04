@@ -34,7 +34,7 @@ import { carregarLimitesPorDisciplina, limiteAulasDia } from "../lib/limite-disc
 import { REGRAS_REDE } from "../lib/regras-rede"; // [REGRAS-REDE]
 import { CHAVE_TETO_LIBERADO } from "./conflitos"; // [TETO-AUTORIZADO]
 import { salvarBackupGrade, listarBackupsGrade, restaurarBackupGrade } from "../lib/backup-grade"; // [BACKUP-GRADE]
-import { professoresComHAIncompleta } from "../lib/ha-incompleta"; // [HA-INCOMPLETA-REFAZ]
+import { professoresComHAIncompleta, completarHA, gravarHACompletada } from "../lib/ha-incompleta"; // [HA-INCOMPLETA-REFAZ] [HA-SO-COMPLETAR]
 import { montarMapaPrincipal } from "../lib/professor-principal"; // [MESMA-PESSOA-HA]
 import { fotografarGradeEHA, recalcularHASoDeQuemMudou } from "../lib/ha-so-quem-mudou"; // [HA-SO-QUEM-MUDOU-GERAL]
 import { haForaDoTurnoDoExperimento, reposicionarHAMovel, slotsLetivosPorTurno, type AulaPos } from "../lib/reposicionar-ha"; // [HA-MOVEL-MELHORIA] [HA-OUTRO-TURNO] [HA-SO-NO-TURNO-DO-EXPERIMENTO]
@@ -1136,20 +1136,22 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     if (a.size !== d.size || [...a].some((k) => !d.has(k))) profsMudaram.add(p);
   }
   const profsEscola = (await db.select({ id: professoresTable.id }).from(professoresTable).where(eq(professoresTable.escolaId, escolaId))).map((p) => p.id);
-  // [HA-INCOMPLETA-REFAZ] quem esta com HA diferente da regra (a menos ou a mais) no turno do experimento tem a HA refeita (fica com a
-  // do recalculo, como quem teve aula mexida), igual a simulacao
+  // [HA-INCOMPLETA-REFAZ] [HA-SO-COMPLETAR] quem nao teve aula mexida e esta com MENOS HA do que a regra no turno do experimento
+  // fica com a HA de hoje e, depois, ganha so as que faltam (decisao da dona: nao muda, so completa). HA a mais fica.
+  let haAcompletar = new Set<number>();
+  let aulasDepoisParaHA: Array<{ professorId: number; turmaId: number; diaSemana: number; numeroAula: number; disciplinaId: number }> = [];
   try {
     const { turnosDe: turnosDeHA } = await ocupacaoReal(escolaId);
     const turnosExpHA = turnosDeHA(expSlots);
     const aulasDepoisHA = [...oficialAntes.filter((h) => !ehSubstituida(h)), ...expSlots]
       .filter((h) => h.professorId != null)
       .map((h) => ({ professorId: h.professorId!, turmaId: h.turmaId, diaSemana: h.diaSemana, numeroAula: h.numeroAula, disciplinaId: h.disciplinaId })); // [PAEE-SEM-HA]
+    aulasDepoisParaHA = aulasDepoisHA;
     const haIdeal = await calcularHAIdeal(escolaId, aulasDepoisHA);
     const haHojeEscola = await db.select().from(disponibilidadeTable)
       .where(and(inArray(disponibilidadeTable.professorId, profsEscola.length ? profsEscola : [-1]), eq(disponibilidadeTable.horaAtividadeObrigatoria, true)));
-    const incompletos = professoresComHAIncompleta(haIdeal, haHojeEscola, turnosExpHA);
-    for (const p of incompletos) profsMudaram.add(p);
-    if (incompletos.size) console.log(`[HA-INCOMPLETA-REFAZ] HA refeita para ${incompletos.size} professor(es) com HA diferente da regra`);
+    haAcompletar = new Set([...professoresComHAIncompleta(haIdeal, haHojeEscola, turnosExpHA)].filter((p) => !profsMudaram.has(p)));
+    if (haAcompletar.size) console.log(`[HA-SO-COMPLETAR] ${haAcompletar.size} professor(es) com HA abaixo da regra: a HA de hoje fica e completa-se o que falta`);
   } catch (err) {
     console.error("[HA-INCOMPLETA-REFAZ] falhou; segue so com quem teve aula mexida:", err);
   }
@@ -1231,6 +1233,18 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     }
   } catch (err) {
     console.error("[HA-SO-QUEM-MUDOU] Falha ao devolver a HA de quem nao mudou:", err);
+  }
+  // [HA-SO-COMPLETAR] quem ficou com a HA de hoje e esta abaixo da regra: acrescenta so a HA que falta
+  try {
+    if (haAcompletar.size) {
+      const haAgora = await db.select().from(disponibilidadeTable)
+        .where(and(inArray(disponibilidadeTable.professorId, [...haAcompletar]), eq(disponibilidadeTable.horaAtividadeObrigatoria, true)));
+      const novas = await completarHA(escolaId, haAcompletar, haAgora, aulasDepoisParaHA);
+      const gravadas = await gravarHACompletada(novas);
+      console.log(`[HA-SO-COMPLETAR] ${gravadas} HA acrescentada(s) para ${haAcompletar.size} professor(es)`);
+    }
+  } catch (err) {
+    console.error("[HA-SO-COMPLETAR] Falha ao completar a HA de quem estava abaixo da regra:", err);
   }
 
   // [HA-SO-NO-TURNO-DO-EXPERIMENTO] (04/11/2026) quem teve aula mexida: fora do turno do experimento a HA volta a ser a
@@ -2485,21 +2499,11 @@ async function runCpsatGeneracaoUnica(
       console.error("[HA-MOVEL-MELHORIA] falhou ao reposicionar HA; motor recebe a HA de hoje:", err);
       novoLugarHA = new Map();
     }
-    // [HA-INCOMPLETA-REFAZ] quem esta com HA diferente da regra no turno tera a HA refeita na promocao: a HA de hoje
-    // dele nao vale como "ocupado" para o motor nem para a estimativa (a HA a mais escondia buraco: Diego Cardoso, tarde,
-    // 5 HA onde a regra da 4; o Melhorar contava com a 5a, a promocao a tirava e a janela aparecia)
-    let haSeraRefeita = new Set<number>();
-    try {
-      if (haHoje.length) haSeraRefeita = professoresComHAIncompleta(await calcularHAIdeal(escolaId), haHoje, [turno]);
-      if (haSeraRefeita.size) console.log(`[HA-INCOMPLETA-REFAZ] turno=${turno} HA de hoje ignorada no Melhorar para ${haSeraRefeita.size} professor(es)`);
-    } catch (err) {
-      console.error("[HA-INCOMPLETA-REFAZ] falhou ao comparar a HA com a regra; segue com a HA de hoje:", err);
-    }
+    // [HA-SO-COMPLETAR] (04/11/2026) a HA de hoje nao muda na promocao (so se completa a que falta): conta como ocupada
     for (const d of haHoje) {
       const nomeP = professorMap.get(d.professorId)?.nome;
       const lugar = novoLugarHA.get(d.id);
       if (!nomeP) continue;
-      if (haSeraRefeita.has(d.professorId) && ehHAMovel(d.motivo)) continue; // [HA-INCOMPLETA-REFAZ] sera refeita
       const pos = { professor: nomeP, dia: lugar ? lugar.diaSemana : d.diaSemana, aula: lugar ? lugar.horarioSlot : d.horarioSlot };
       haAtual.push(pos);
       if (ehHAMovel(d.motivo)) haMovelAtual.push(pos);
