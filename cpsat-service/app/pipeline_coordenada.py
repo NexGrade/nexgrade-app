@@ -19,7 +19,7 @@ from collections import defaultdict
 
 from ortools.sat.python import cp_model
 
-from .solver import gerar_grade, resolver, DisciplinaTurma
+from .solver import gerar_grade, resolver, DisciplinaTurma, HA_NO_MODELO  # [HA-NO-MODELO]
 from . import progresso  # [PARAR-MOTOR]
 
 
@@ -101,7 +101,7 @@ def _coordenar_pontes(disciplinas_turma_raw, bloqueios_raw, turno, aulas_por_dia
 
 def _rodar_uma_tentativa(disciplinas_turma_raw, bloqueios_raw, turno, aulas_por_dia,
                           turmas_raw, nomes_fundamental, nomes_medio,
-                          tempo_coordenacao_s, tempo_fase_s, tempo_fase3_s, fixas_usuario=None):  # [AULA-FIXA]
+                          tempo_coordenacao_s, tempo_fase_s, tempo_fase3_s, fixas_usuario=None, ha_por_professor=None):  # [AULA-FIXA] [HA-NO-MODELO]
     fixar_raw = _coordenar_pontes(
         disciplinas_turma_raw, bloqueios_raw, turno, aulas_por_dia,
         nomes_fundamental, nomes_medio, tempo_coordenacao_s, fixas_usuario=fixas_usuario,  # [AULA-FIXA]
@@ -112,13 +112,21 @@ def _rodar_uma_tentativa(disciplinas_turma_raw, bloqueios_raw, turno, aulas_por_
 
     disc_fund = [d for d in disciplinas_turma_raw if d["turma"] in nomes_fundamental]
     disc_medio = [d for d in disciplinas_turma_raw if d["turma"] in nomes_medio]
+    # [HA-NO-MODELO] com a chave ligada, cada etapa recebe a cota de HA de quem so da aula nela (o professor-ponte
+    # fica de fora, senao a HA dele seria reservada nas duas etapas). Antes nenhuma etapa recebia a cota.
+    cota_fund = cota_medio = None
+    if ha_por_professor and HA_NO_MODELO():
+        profs_fund = {d["professor"] for d in disc_fund}
+        profs_medio = {d["professor"] for d in disc_medio}
+        cota_fund = {p: c for p, c in ha_por_professor.items() if p in profs_fund and p not in profs_medio} or None
+        cota_medio = {p: c for p, c in ha_por_professor.items() if p in profs_medio and p not in profs_fund} or None
     turmas_fund = [t for t in turmas_raw if t["nome"] in nomes_fundamental]
     turmas_medio = [t for t in turmas_raw if t["nome"] in nomes_medio]
 
     resultado_fund = gerar_grade(
         disciplinas_turma_raw=disc_fund, bloqueios_raw=bloqueios_raw,
         turno=turno, aulas_por_dia=aulas_por_dia, turmas_raw=turmas_fund,
-        tempo_limite_s=tempo_fase_s, fixar_raw=fixar_raw,
+        tempo_limite_s=tempo_fase_s, fixar_raw=fixar_raw, ha_por_professor=cota_fund,  # [HA-NO-MODELO]
     )
     if not resultado_fund["viavel"]:
         return None
@@ -126,7 +134,7 @@ def _rodar_uma_tentativa(disciplinas_turma_raw, bloqueios_raw, turno, aulas_por_
     resultado_medio = gerar_grade(
         disciplinas_turma_raw=disc_medio, bloqueios_raw=bloqueios_raw,
         turno=turno, aulas_por_dia=aulas_por_dia, turmas_raw=turmas_medio,
-        tempo_limite_s=tempo_fase_s, fixar_raw=fixar_raw,
+        tempo_limite_s=tempo_fase_s, fixar_raw=fixar_raw, ha_por_professor=cota_medio,  # [HA-NO-MODELO]
     )
     if not resultado_medio["viavel"]:
         return None
@@ -163,6 +171,7 @@ def gerar_grade_coordenada(
     tempo_fase_s: int = 300,
     tempo_fase3_s: int = 60,
     fixas_usuario: list[dict] | None = None,  # [AULA-FIXA]
+    ha_por_professor: dict | None = None,  # [HA-NO-MODELO] so usado com CPSAT_HA_NO_MODELO=1
 ) -> dict:
     """
     Gera a grade de um turno que mistura Fundamental e Medio/Tecnico,
@@ -209,6 +218,7 @@ def gerar_grade_coordenada(
             disciplinas_turma_raw, bloqueios_raw, turno, aulas_por_dia, turmas_raw,
             nomes_fundamental, nomes_medio,
             tempo_coordenacao_s, tempo_fase_s, tempo_fase3_s, fixas_usuario=fixas_usuario,  # [AULA-FIXA]
+            ha_por_professor=ha_por_professor,  # [HA-NO-MODELO]
         )
         if resultado is None:
             continue

@@ -159,6 +159,7 @@ def gerar_grade_coordenada_endpoint(payload: dict):
             tempo_fase_s,
             tempo_fase3_s,
             fixas_usuario=payload.get("recursos"),  # [AULA-FIXA]
+            ha_por_professor=payload.get("haPorProfessor"),  # [HA-NO-MODELO]
         )
 
         if not resultado.get("viavel"):

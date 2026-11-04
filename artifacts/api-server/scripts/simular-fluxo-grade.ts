@@ -267,14 +267,17 @@ async function main() {
         // o auxiliar sai: rodando varios cenarios no MESMO banco, ele juntava turnos e a conferencia contava errado
         await q(`delete from horarios_experimentais where escola_id=$1 and nome='Sim-neutro'`, [ESCOLA]);
         const previsto = sim.body.experimento, depois = real.oficialHoje;
-        const porProf = (d: any[]) => new Map(d.map((x) => [`${x.professorNome}|${x.dia}`, x.janelas]));
+        // so os turnos que a simulacao do experimento contou: o auxiliar pode contar outros ([HA-OUTRO-TURNO])
+        const turnosComparados = new Set<string>(sim.body.turnos ?? [TURNO]);
+        const porProf = (d: any[]) => new Map(d.filter((x) => turnosComparados.has(x.turno)).map((x) => [`${x.professorNome}|${x.turno}|${x.dia}`, x.janelas]));
         const a = porProf(previsto.detalhe), b = porProf(depois.detalhe);
+        const somaB = [...b.values()].reduce((s, n) => s + n, 0);
         const diferentes = [...new Set([...a.keys(), ...b.keys()])].filter((k) => (a.get(k) ?? 0) !== (b.get(k) ?? 0))
           .map((k) => `${k}: previsto ${a.get(k) ?? 0}, real ${b.get(k) ?? 0}`);
         const [{ ha }] = await q(`select count(*)::int ha from disponibilidade_professores d join professores p on p.id=d.professor_id
           where p.escola_id=$1 and d.hora_atividade_obrigatoria and d.turno=$2`, [ESCOLA, TURNO]);
         etapa("conferencia", {
-          janelasPrevistasNaSimulacao: previsto.janelas, janelasReaisDepoisDePromover: depois.janelas,
+          janelasPrevistasNaSimulacao: previsto.janelas, janelasReaisDepoisDePromover: somaB,
           diasComJanelaPrevisto: previsto.diasComConflito, diasComJanelaReal: depois.diasComConflito,
           professorDiaDiferentes: diferentes.length, amostra: diferentes.slice(0, 15), haNoTurnoDepois: ha,
         });
