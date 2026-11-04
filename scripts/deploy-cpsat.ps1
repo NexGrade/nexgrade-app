@@ -9,7 +9,7 @@ $vm = "nexgrade-cpsat-teste"
 $zona = "southamerica-east1-a"
 $local = Join-Path $PSScriptRoot "..\cpsat-service\app"  # pasta do proprio repositorio (onde o script esta)
 $remoto = "/home/simone/cpsat-service/app"
-$arquivos = @("main.py", "solver.py", "pipeline_coordenada.py", "reduzir_janelas.py", "__init__.py", "progresso.py", "diagnostico_inviabilidade.py")  # [PROGRESSO-MOTOR] progresso.py novo em 16/10; [DIAGNOSTICO-INVIAVEL] diagnostico_inviabilidade.py novo em 22/10
+$arquivos = @("main.py", "solver.py", "pipeline_coordenada.py", "reduzir_janelas.py", "__init__.py", "progresso.py", "diagnostico_inviabilidade.py", "estimativa_ha.py")  # [PROGRESSO-MOTOR] progresso.py novo em 16/10; [DIAGNOSTICO-INVIAVEL] diagnostico_inviabilidade.py novo em 22/10; [JANELAS-COM-HA-ENCAIXADA] estimativa_ha.py novo em 04/11
 
 function Get-HashLF([string]$caminho) {
   $t = [IO.File]::ReadAllText($caminho).Replace("`r`n", "`n")
