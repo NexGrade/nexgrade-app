@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Treinamento Comercial NexGrade — Vendas para Escolas Públicas</title>
+<!-- Fonte do PDF "Treinamento_Comercial_NexGrade_2026-3.pdf". Para gerar de novo:
+     msedge --headless --no-pdf-header-footer --print-to-pdf="saida.pdf" treinamento-comercial.html -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4 landscape; margin: 0; }
+  :root { --azul: #1565c0; --azul-esc: #0d47a1; --escuro: #112131; --claro: #edf2f9; --verde: #2e7d32; --vermelho: #c62828; --rosa: #fdebe9; --texto: #1f2a37; --suave: #607d8b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, Arial, sans-serif; color: var(--texto); font-size: 9.3pt; line-height: 1.42; }
+  .pag { width: 297mm; height: 210mm; position: relative; overflow: hidden; break-after: page; padding: 13mm 12mm 14mm; }
+  .topo { position: absolute; top: 5.5mm; left: 12mm; right: 12mm; display: flex; justify-content: space-between; font-size: 7.3pt; color: var(--suave); }
+  .rodape { position: absolute; bottom: 6mm; left: 12mm; right: 12mm; display: flex; justify-content: space-between; font-size: 7.3pt; color: var(--suave); border-top: 1px solid #dfe5ec; padding-top: 2mm; }
+  .modulo { font-size: 7.8pt; font-weight: 700; color: var(--azul); letter-spacing: .02em; margin-top: 4mm; }
+  h1 { font-size: 20pt; color: var(--azul-esc); margin: 1mm 0 0; line-height: 1.15; }
+  .lead { color: var(--suave); font-size: 10.2pt; margin: 1mm 0 4.5mm; }
+  .caixa { background: var(--claro); border-radius: 4px; padding: 3.2mm 4mm; }
+  .caixa h3 { margin: 0 0 1.5mm; font-size: 10pt; color: var(--azul-esc); font-weight: 600; }
+  .caixa h2 { margin: 0 0 1.5mm; font-size: 17pt; color: var(--azul); }
+  .caixa p { margin: 0 0 1.3mm; }
+  .caixa ul { margin: 0; padding-left: 4mm; }
+  .caixa li { margin: 0 0 1mm; }
+  .grade { display: grid; gap: 3.5mm; }
+  .g2 { grid-template-columns: 1fr 1fr; } .g3 { grid-template-columns: repeat(3, 1fr); }
+  .alerta { background: var(--rosa); color: var(--vermelho); border-radius: 4px; padding: 3mm 4mm; margin-top: 3.5mm; }
+  .ok { background: #e8f5e9; color: #1b5e20; border-radius: 4px; padding: 3mm 4mm; margin-top: 3.5mm; }
+  .grande { font-size: 22pt; font-weight: 700; color: var(--verde); line-height: 1.1; margin-bottom: 1mm; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.5pt; align-self: start; }
+  th { background: var(--azul); color: #fff; text-align: left; padding: 2mm 2.5mm; font-weight: 600; }
+  td { padding: 2mm 2.5mm; border-bottom: 1px solid #dfe5ec; vertical-align: top; }
+  tr:nth-child(even) td { background: #f7f9fc; }
+  td.obj { font-weight: 700; width: 19%; }
+  td.aco { color: var(--suave); width: 29%; }
+  .citacao { font-style: italic; }
+  .nota { color: var(--suave); font-size: 8pt; margin: 2.5mm 0; }
+
+  .capa { background: var(--escuro); color: #fff; padding: 16mm 15mm; }
+  .capa .marca { display: flex; align-items: center; gap: 5mm; }
+  .capa .marca img { width: 19mm; height: 19mm; border-radius: 4.5mm; box-shadow: 0 2mm 5mm rgba(0,0,0,.35); }
+  .capa .marca span { color: #64b5f6; font-weight: 700; font-size: 8pt; letter-spacing: .04em; }
+  .capa h1 { color: #fff; font-size: 30pt; margin-top: 26mm; }
+  .capa .lead { color: #b0bec5; font-size: 11.5pt; max-width: 175mm; }
+  .capa .ficha { position: absolute; left: 15mm; right: 15mm; bottom: 30mm; display: grid; grid-template-columns: 1fr 1fr 1.4fr 1fr; gap: 6mm; }
+  .capa .ficha b { display: block; color: #64b5f6; font-size: 7pt; letter-spacing: .05em; margin-bottom: 1.5mm; }
+  .capa .ficha div { font-size: 9.5pt; }
+  .capa .contato { position: absolute; left: 15mm; right: 15mm; bottom: 14mm; display: flex; justify-content: space-between; font-size: 8pt; color: #90a4ae; border-top: 1px solid #263b52; padding-top: 3mm; }
+  .capa .contato strong { color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- 1 · capa -->
+<section class="pag capa">
+  <div class="marca"><img src="logo.png" alt="NexGrade"><span>PLAYBOOK DE VENDAS B2B · MÓDULO ESCOLAS PÚBLICAS</span></div>
+  <h1>Treinamento Comercial NexGrade</h1>
+  <p class="lead">Prospecção, contorno de objeções, demonstração de valor e fechamento de contratos para escolas da rede estadual (foco: SEED-PR).</p>
+  <div class="ficha">
+    <div><b>PRODUTO</b>NexGrade (Nexus Core)</div>
+    <div><b>PÚBLICO-ALVO</b>Consultores de vendas</div>
+    <div><b>MERCADO</b>Escolas estaduais / APMF / Fundo Rotativo</div>
+    <div><b>VERSÃO</b>2026.3 — novembro/2026</div>
+  </div>
+  <div class="contato"><span>Nexus Core Tecnologia · Documento de treinamento interno · nexuscoretecnologia.com.br</span><span>Dúvidas: <strong>Simone Barros</strong> · WhatsApp <strong>(41) 99818-0353</strong></span></div>
+</section>
+
+<!-- 2 · fundamentos -->
+<section class="pag">
+  <div class="topo"><span>Treinamento Comercial NexGrade · Vendas para Escolas Públicas · Documento interno — Nexus Core Tecnologia</span><span>Slide 2 de 6</span></div>
+  <div class="modulo">MÓDULO 1 · FUNDAMENTOS DO MERCADO PÚBLICO</div>
+  <h1>Perfil do decisor e o mindset de venda</h1>
+  <p class="lead">A venda para a escola pública exige entender as travas burocráticas e priorizar a segurança jurídica.</p>
+  <div class="grade g3">
+    <div class="caixa"><h3>Quem decide — comitê gestor</h3><ul>
+      <li><b>Diretor(a):</b> responsável final; foca em segurança fiscal, normas legais e paz no colégio.</li>
+      <li><b>Pedagogo(a) / coordenação:</b> sofre com a montagem da grade, a conferência das regras e o dia a dia (faltas, licenças, substituições).</li>
+      <li><b>Conselho da APMF:</b> aprova a aplicação do recurso.</li></ul></div>
+    <div class="caixa"><h3>Origem da verba</h3><ul>
+      <li><b>Fundo Rotativo / cota escola:</b> recurso público para a gestão operacional.</li>
+      <li>Recursos próprios da APMF.</li>
+      <li><b>Exigência:</b> nota fiscal + CNPJ regular + contrato, sem burocracia.</li></ul></div>
+    <div class="caixa"><h3>A regra de ouro</h3><p class="citacao">“Não vendemos um gerador de grade. Vendemos a grade certa pelas regras da SEED, sem janelas, pronta para o RCO, e a operação da escola funcionando o ano inteiro — com suporte de quem conhece a rede.”</p></div>
+  </div>
+  <h3 style="color:var(--azul-esc); margin:5mm 0 2mm; font-size:11pt">As 4 maiores dores do diretor de escola estadual no Paraná</h3>
+  <div class="grade" style="grid-template-columns: repeat(4, 1fr)">
+    <div class="caixa"><h3>1. Risco legal na hora-atividade</h3><p>Erro no cálculo das frações da Resolução 7.200/2025 vira notificação.</p></div>
+    <div class="caixa"><h3>2. Regras novas a cada ano</h3><p>Em 2026 chegaram as aulas assíncronas e a docência por trio — e a grade manual não fecha.</p></div>
+    <div class="caixa"><h3>3. Lançar a grade no RCO</h3><p>Redigitar aula por aula, com código SERE e Código Externo certos, ou o RCO recusa a turma.</p></div>
+    <div class="caixa"><h3>4. Desgaste com os professores</h3><p>Reclamações contínuas por horários picados, com janelas e HA mal distribuída.</p></div>
+  </div>
+  <div class="rodape"><span>Dúvidas sobre o produto: Simone Barros · WhatsApp (41) 99818-0353</span><span>nexuscoretecnologia.com.br</span></div>
+</section>
+
+<!-- 3 · argumentos -->
+<section class="pag">
+  <div class="topo"><span>Treinamento Comercial NexGrade · Vendas para Escolas Públicas · Documento interno — Nexus Core Tecnologia</span><span>Slide 3 de 6</span></div>
+  <div class="modulo">MÓDULO 2 · ARGUMENTAÇÃO COMERCIAL</div>
+  <h1>Os 6 argumentos de ouro do NexGrade</h1>
+  <p class="lead">Pilares comprovados em escolas reais. Use só o que está aqui: nada de prometer o que o sistema ainda não faz.</p>
+  <div class="grade g3">
+    <div class="caixa"><h3>01 · Pronto para as regras SEED-PR 2026</h3><p>Aulas <b>assíncronas</b> (ocupam o professor, não a turma), <b>docência por trio</b> e <b>co-docência</b> já funcionam no gerador, com avisos de entrada e saída no app do professor.</p></div>
+    <div class="caixa"><h3>02 · Hora-atividade e catálogo oficiais</h3><p>HA calculada pela <b>tabela oficial SEED-PR</b> e levada para os buracos entre as aulas. Toda escola já nasce com o <b>catálogo oficial</b> (78 cursos com matrizes) e o calendário letivo da SEED.</p></div>
+    <div class="caixa"><h3>03 · Da grade pronta para o RCO</h3><p>O cadastro vem do <b>arquivo do próprio RCO</b> (turmas, códigos e matriz, sem digitar código). A grade oficial sai em <b>arquivo por turno</b>, que a secretaria inclui no RCO.</p></div>
+    <div class="caixa"><div class="grande">−93% e −78%</div><p><b>Queda real de janelas:</b> 184 → 12 numa escola; 23 → 5 no noturno de outra, com trios e assíncronas, em 3 segundos.</p></div>
+    <div class="caixa"><h3>05 · Pedagogia no mesmo sistema</h3><p><b>Presença</b> dos professores, <b>licenças</b> com substituto (habilitados na disciplina primeiro), <b>comunicados</b> e <b>relatórios</b> de ponto e carga horária em PDF e Excel.</p></div>
+    <div class="caixa"><h3>06 · App, reservas e IA</h3><p>O professor vê a agenda no celular e <b>reserva salas</b> com limite e prioridade da coordenação. O <b>Assistente de IA</b> consulta a grade e sempre pede confirmação antes de alterar.</p></div>
+  </div>
+  <div class="ok"><b>Pode dizer:</b> “a grade sai em arquivo pronto para o RCO, por turno” e “quando a grade não fecha, o sistema mostra o motivo e como corrigir”.</div>
+  <div class="alerta"><b>Não prometer:</b> integração <b>automática</b> com o RCO — é um arquivo que a secretaria inclui no RCO. Turmas com trio no mesmo horário são gravadas no RCO com o <b>suporte NexGrade</b> (atalho em teste): não prometa que a escola faz sozinha.</div>
+  <div class="rodape"><span>Dúvidas sobre o produto: Simone Barros · WhatsApp (41) 99818-0353</span><span>nexuscoretecnologia.com.br</span></div>
+</section>
+
+<!-- 4 · objecoes -->
+<section class="pag">
+  <div class="topo"><span>Treinamento Comercial NexGrade · Vendas para Escolas Públicas · Documento interno — Nexus Core Tecnologia</span><span>Slide 4 de 6</span></div>
+  <div class="modulo">MÓDULO 3 · CONTORNO DE OBJEÇÕES</div>
+  <h1>Matriz de quebra de objeções (método A.C.A.)</h1>
+  <p class="lead">Sempre: Acolher a dor → Conectar com o problema → Apresentar a solução NexGrade.</p>
+  <table>
+    <tr><th>Objeção do cliente</th><th>Acolhimento e conexão</th><th>Apresentação de valor (resposta oficial)</th></tr>
+    <tr><td class="obj">“Já usamos o Urânia há anos.”</td><td class="aco">Entendo. O Urânia monta o horário de janeiro. E no resto do ano, quando o professor sai, a regra muda ou chega a assíncrona?</td><td>O NexGrade já segue as regras SEED-PR 2026 (assíncronas, trio, HA oficial), gera a grade com menos janelas, entrega o arquivo para o RCO e acompanha o ano todo: presença, licenças, app do professor, reservas e IA — com suporte próximo.</td></tr>
+    <tr><td class="obj">“É mais caro que o Urânia.”</td><td class="aco">É justo comparar. Quanto tempo a coordenação gasta hoje conferindo a HA, refazendo a grade e lançando no RCO?</td><td>São R$ 45 por turma ao ano, com tudo incluído: uma escola de 20 turmas paga R$ 900 por ano, abaixo do Urânia numa escola grande — e economiza as horas de trabalho manual da coordenação. Nas 10 escolas fundadoras, R$ 30 por turma no primeiro ano.</td></tr>
+    <tr><td class="obj">“Podemos pagar com Fundo Rotativo / APMF?”</td><td class="aco">Compreendo o rigor na prestação de contas.</td><td>A Nexus Core emite nota fiscal e fornece contrato. O NexGrade é um serviço de tecnologia de apoio à gestão pedagógica, com parcelamento ajustável aos repasses.</td></tr>
+    <tr><td class="obj">“E se a SEED mudar as regras?”</td><td class="aco">Ponto crítico: a legislação no Paraná muda com frequência.</td><td>Nós atualizamos as regras no sistema para todas as escolas, sem perder a grade nem o histórico — como fizemos com as assíncronas e os trios de 2026.</td></tr>
+    <tr><td class="obj">“E a LGPD? Os dados dos professores?”</td><td class="aco">Preocupação certa: a escola responde pelos dados da equipe.</td><td>O NexGrade guarda só nome, e-mail e telefone do professor (sem CPF nem matrícula), a licença não tem campo de motivo de saúde, cada escola tem base própria e há cópia de segurança diária.</td></tr>
+    <tr><td class="obj">“A equipe resiste a sistemas novos.”</td><td class="aco">Compreensível: ninguém quer treinamentos longos.</td><td>A implantação é feita conosco, com manual de uso e guia de cadastro; o cadastro oficial vem do arquivo do RCO. O professor só abre a agenda no celular, com o próprio e-mail da escola.</td></tr>
+  </table>
+  <div class="rodape"><span>Dúvidas sobre o produto: Simone Barros · WhatsApp (41) 99818-0353</span><span>nexuscoretecnologia.com.br</span></div>
+</section>
+
+<!-- 5 · scripts -->
+<section class="pag">
+  <div class="topo"><span>Treinamento Comercial NexGrade · Vendas para Escolas Públicas · Documento interno — Nexus Core Tecnologia</span><span>Slide 5 de 6</span></div>
+  <div class="modulo">MÓDULO 4 · SCRIPTS PRÁTICOS</div>
+  <h1>Script de prospecção e roteiro de demonstração</h1>
+  <p class="lead">Abordagem por WhatsApp ou ligação e reunião de demonstração de 20 minutos.</p>
+  <div class="grade g2">
+    <div class="caixa"><h3>Script de abordagem (WhatsApp / ligação)</h3>
+      <p class="citacao">“Olá, Diretor(a) [Nome]! Aqui é [Seu Nome], da Nexus Core.</p>
+      <p class="citacao">Sei como a montagem da grade, a conferência da hora-atividade e o lançamento no RCO tomam semanas da escola — e, em 2026, ainda vieram as aulas assíncronas e os trios.</p>
+      <p class="citacao">Desenvolvemos o NexGrade para as escolas estaduais do Paraná: ele gera a grade pelas regras da SEED, calcula a HA pela tabela oficial, entrega o arquivo para o RCO e já reduziu as janelas dos professores em até 93% numa escola real.</p>
+      <p class="citacao">Podemos mostrar em 20 minutos, nesta semana, para a sua equipe pedagógica?”</p></div>
+    <div class="caixa"><h3>Roteiro de demonstração (20 minutos)</h3><ul>
+      <li><b>0–4 · Acolhimento:</b> pergunte quanto tempo levam hoje para montar a grade, conferir a HA e lançar no RCO, e como lidam com as assíncronas e os trios.</li>
+      <li><b>4–10 · Regras e segurança:</b> mostre o catálogo oficial, a montagem da turma (trio e assíncronas), o cálculo da HA e a conta na hora na Disponibilidade.</li>
+      <li><b>10–15 · Resultado:</b> gere uma grade no Modo Experimental, compare as janelas e mostre o quadro “Por que não gerou”; mostre a Minha Agenda no celular.</li>
+      <li><b>15–18 · Ano inteiro:</b> arquivo para o RCO, presença, licenças e relatórios em PDF/Excel.</li>
+      <li><b>18–20 · Fechamento sem risco:</b> 30 dias de avaliação; a grade só vira oficial quando a coordenação aprovar; apresente o preço por turma e a condição de implantação.</li></ul></div>
+  </div>
+  <p class="nota">Use a <b>Escola Demonstração</b> na apresentação: os professores têm nome fictício. Nunca mostre dados de outra escola cliente.</p>
+  <div class="rodape"><span>Dúvidas sobre o produto: Simone Barros · WhatsApp (41) 99818-0353</span><span>nexuscoretecnologia.com.br</span></div>
+</section>
+
+<!-- 6 · planos -->
+<section class="pag">
+  <div class="topo"><span>Treinamento Comercial NexGrade · Vendas para Escolas Públicas · Documento interno — Nexus Core Tecnologia</span><span>Slide 6 de 6</span></div>
+  <div class="modulo">MÓDULO 5 · NEGOCIAÇÃO E FECHAMENTO</div>
+  <h1>Preço por turma, implantação e gatilhos de fechamento</h1>
+  <p class="lead">Um preço só, proporcional ao tamanho da escola, pensado para o Fundo Rotativo e para mostrar o diferencial frente ao Urânia.</p>
+  <div class="grade" style="grid-template-columns: 1.15fr 1fr">
+    <div>
+      <div class="grade g2" style="margin-bottom:3mm">
+        <div class="caixa" style="text-align:center"><div class="grande" style="color:var(--azul)">R$ 45</div><p><b>por turma, por ano</b><br>assinatura com tudo incluído</p></div>
+        <div class="caixa" style="text-align:center"><div class="grande" style="color:var(--azul)">R$ 28</div><p><b>por turma, uma vez</b><br>implantação do banco de dados da escola</p></div>
+      </div>
+      <div class="ok" style="margin:0 0 3mm"><b>Escola fundadora (10 vagas):</b> as 10 primeiras escolas a fechar pagam <b>R$ 30 por turma</b> de assinatura e <b>R$ 20 por turma</b> de implantação, por <b>12 meses</b>. Depois, preço de tabela. Em troca: depoimento e uso dos resultados como caso.</div>
+      <table>
+        <tr><th>Exemplo</th><th>Tabela (ano)</th><th>Implantação</th><th>Fundadora: 1º ano</th></tr>
+        <tr><td>Escola com 12 turmas</td><td><b>R$ 540</b></td><td>R$ 336</td><td>R$ 360 + R$ 240</td></tr>
+        <tr><td>Escola com 20 turmas</td><td><b>R$ 900</b></td><td>R$ 560</td><td>R$ 600 + R$ 400</td></tr>
+        <tr><td>Escola com 35 turmas</td><td><b>R$ 1.575</b></td><td>R$ 980</td><td>R$ 1.050 + R$ 700</td></tr>
+      </table>
+    </div>
+    <div class="caixa"><h3>O que está incluído</h3>
+      <p><b>Assinatura:</b> grade com o motor CP-SAT, HA pela tabela oficial, assíncronas, trio e co-docência, conflitos, Modo Experimental, PDFs e Excel, arquivo para o RCO, Minha Agenda dos professores, Pedagogia (presença, licenças, comunicados e relatórios), Reservas de espaços e Assistente de IA.</p>
+      <p><b>Implantação:</b> montagem do banco de dados da escola (cadastro a partir do arquivo do RCO, professores, turmas e matrizes), parametrização, treinamento da coordenação e acompanhamento da 1ª grade oficial.</p>
+      <p><b>Como contar:</b> número de turmas da escola no ano letivo, somando todos os turnos.</p></div>
+  </div>
+  <p class="nota">Referência de mercado: uma escola grande paga cerca de R$ 1.800 por ano no Urânia. Pagamento à vista, ou parcelado conforme os repasses do Fundo Rotativo.</p>
+  <div class="caixa"><h3>4 gatilhos de fechamento</h3>
+    <div class="grade" style="grid-template-columns: repeat(4, 1fr); gap: 4mm">
+      <div><b style="color:var(--verde)">1. Escola fundadora</b><p class="citacao">“São só 10 vagas a R$ 30 por turma no primeiro ano. Depois, R$ 45.” Pode somar: 30 dias de avaliação antes de pagar.</p></div>
+      <div><b style="color:var(--verde)">2. Garantia do Modo Experimental</b><p class="citacao">“A grade roda como experimento. A escola só homologa quando a coordenação aprovar 100% dos horários.”</p></div>
+      <div><b style="color:var(--verde)">3. Implantação grátis</b><p class="citacao">“Assinando o ano até [data], a implantação sai sem custo.”</p></div>
+      <div><b style="color:var(--verde)">4. Adequação às cotas do Fundo</b><p class="citacao">“Ajustamos o parcelamento ao calendário de repasses das cotas do Estado.”</p></div>
+    </div>
+  </div>
+  <div class="rodape"><span>Dúvidas sobre o produto: Simone Barros · WhatsApp (41) 99818-0353</span><span>nexuscoretecnologia.com.br</span></div>
+</section>
+
+</body>
+</html>

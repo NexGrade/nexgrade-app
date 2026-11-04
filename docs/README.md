@@ -6,6 +6,13 @@
 - [`passagem-2026-11-01.md`](./passagem-2026-11-01.md) — nota de passagem mais recente: PDF em retrato, quadro Carga Horária, escola nova no PR (migração 0005), cliente da API alinhado, intervalo com a turma integral, banco de teste local e a lista de pendências atualizada.
 - [`passagem-2026-10-31.md`](./passagem-2026-10-31.md) — nota de passagem: planilhas em Excel formatadas, cargo Pedagogia no banco, turma integral pelo horário real, Mário Braga pelo Urânia, Ensino Médio 2026 no catálogo, Iedo, Escola Demonstração, esquema aula por aula e o que está em aberto.
 - [`passagem-2026-10-17.md`](./passagem-2026-10-17.md) — nota de passagem: Reservas (tablets por quantidade, gestor agendando por professor, cards da semana, permissões), como testar e o que está em aberto.
+
+### Materiais da escola e comerciais (03/11/2026)
+- [`manual-escola/`](./manual-escola/) — para entregar à escola: `manual-uso-escola.html` (manual de uso) e `cadastro-de-escola.html` (o que a escola precisa enviar para a implantação).
+- [`apresentacao/`](./apresentacao/) — apresentação para escolas 2027: `slides-novos.html` (slides novos) + `base-2026-10-22.pdf`; `montar-apresentacao.py` junta os dois no PDF final.
+- [`relatorio-executivo/`](./relatorio-executivo/) — **interno**: relatório executivo com preços e projeção financeira.
+- [`treinamento/`](./treinamento/) — **interno**: treinamento comercial (playbook de vendas para escolas públicas).
+
 - [`../CLAUDE.md`](../CLAUDE.md) — instruções que o Claude Code carrega ao abrir o projeto (onde ler primeiro, regras de trabalho, banco, verificação e git).
 
 ## Convenção de rastreabilidade
