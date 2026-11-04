@@ -26,7 +26,7 @@ import {
 import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 import { randomUUID } from "node:crypto";
-import { recalcularHoraAtividade } from "../lib/recalcular-ha";
+import { calcularHAIdeal, recalcularHoraAtividade, type MarcaHACalculada } from "../lib/recalcular-ha";
 import { simularPromocao } from "../lib/simular-promocao"; // [SIMULAR-PROMOCAO]
 import { regraDeSubstituicao, vinculosDasTurmas } from "../lib/promocao-substitui"; // [PROMOVER-PROFESSOR-TROCADO]
 import { opcoesFecharJanela } from "../lib/fechar-janela"; // [FECHAR-JANELA]
@@ -34,7 +34,7 @@ import { carregarLimitesPorDisciplina, limiteAulasDia } from "../lib/limite-disc
 import { REGRAS_REDE } from "../lib/regras-rede"; // [REGRAS-REDE]
 import { CHAVE_TETO_LIBERADO } from "./conflitos"; // [TETO-AUTORIZADO]
 import { salvarBackupGrade, listarBackupsGrade, restaurarBackupGrade } from "../lib/backup-grade"; // [BACKUP-GRADE]
-import { reposicionarHAMovel, slotsLetivosPorTurno, turnosAfetadosPelaHA, type AulaPos } from "../lib/reposicionar-ha"; // [HA-MOVEL-MELHORIA] [HA-OUTRO-TURNO]
+import { haForaDoTurnoDoExperimento, reposicionarHAMovel, slotsLetivosPorTurno, type AulaPos } from "../lib/reposicionar-ha"; // [HA-MOVEL-MELHORIA] [HA-OUTRO-TURNO] [HA-SO-NO-TURNO-DO-EXPERIMENTO]
 import { carregarAssSoTurma } from "../lib/assincrona-so-turma"; // [ASS-SO-TURMA]
 import { evitarPorPausaEntreTurnos } from "../lib/pausa-entre-turnos"; // [PAUSA-ENTRE-TURNOS]
 import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
@@ -1172,6 +1172,17 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     return gravados;
   });
 
+  // [HA-SO-NO-TURNO-DO-EXPERIMENTO] HA de hoje de quem teve aula mexida (o recalculo abaixo refaz todos os turnos) e o
+  // recalculo da grade de ANTES (a base: fora do turno do experimento so muda o que o experimento mudar na conta)
+  const haMudaramHoje = profsMudaram.size
+    ? await db.select().from(disponibilidadeTable).where(and(inArray(disponibilidadeTable.professorId, [...profsMudaram]), eq(disponibilidadeTable.horaAtividadeObrigatoria, true)))
+    : [];
+  let haRecalcAntes: MarcaHACalculada[] | null = null;
+  try {
+    if (profsMudaram.size) haRecalcAntes = await calcularHAIdeal(escolaId, oficialAntes.map((h) => ({ professorId: h.professorId, turmaId: h.turmaId, diaSemana: h.diaSemana, numeroAula: h.numeroAula })));
+  } catch (err) {
+    console.error("[HA-SO-NO-TURNO-DO-EXPERIMENTO] Falha ao calcular a HA da grade de antes; fica a do recalculo:", err);
+  }
   // [HA-FALHOU-AVISA] (01/11/2026) a falha do recalculo so ia para o log e a escola ficava sem a HA nova sem saber
   let avisoHA: string | undefined;
   try {
@@ -1198,6 +1209,42 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     console.error("[HA-SO-QUEM-MUDOU] Falha ao devolver a HA de quem nao mudou:", err);
   }
 
+  // [HA-SO-NO-TURNO-DO-EXPERIMENTO] (04/11/2026) quem teve aula mexida: fora do turno do experimento a HA volta a ser a
+  // de hoje e so muda o que o experimento mudar na quantidade (a sobra que nao coube no turno promovido)
+  try {
+    const { posicao, turnosDe } = await ocupacaoReal(escolaId);
+    const turnosExp = turnosDe(expSlots);
+    if (profsMudaram.size && turnosExp.length && !avisoHA && haRecalcAntes) {
+      const oficialDepois = await db.select().from(horariosTable)
+        .where(and(eq(horariosTable.escolaId, escolaId), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`));
+      const aulasPos: AulaPos[] = oficialDepois.flatMap((h) => {
+        const r = posicao(h);
+        return r && h.professorId != null ? [{ professorId: h.professorId, turno: r.turno, diaSemana: h.diaSemana, numeroAula: r.numeroAula }] : [];
+      });
+      const recalc = await db.select().from(disponibilidadeTable).where(and(inArray(disponibilidadeTable.professorId, [...profsMudaram]), eq(disponibilidadeTable.horaAtividadeObrigatoria, true)));
+      const final = haForaDoTurnoDoExperimento(haMudaramHoje, recalc, haRecalcAntes, aulasPos, turnosExp, profsMudaram);
+      const onde = (rows: Array<{ diaSemana: number; horarioSlot: number }>) => rows.map((x) => `${x.diaSemana}|${x.horarioSlot}`).sort().join(" ");
+      const trocar = [...final.entries()].filter(([k, rows]) => onde(rows) !== onde(recalc.filter((r) => `${r.professorId}|${r.turno}` === k)));
+      const devolver = trocar.flatMap(([, rows]) => rows);
+      if (trocar.length) {
+        await db.transaction(async (tx) => {
+          for (const [k] of trocar) {
+            const [p, t] = k.split("|");
+            await tx.delete(disponibilidadeTable).where(and(eq(disponibilidadeTable.professorId, Number(p)), eq(disponibilidadeTable.turno, t!), eq(disponibilidadeTable.horaAtividadeObrigatoria, true)));
+          }
+          for (let i = 0; i < devolver.length; i += 500) {
+            const lote = devolver.slice(i, i + 500);
+            await tx.delete(disponibilidadeTable).where(sql`(${disponibilidadeTable.professorId}, ${disponibilidadeTable.diaSemana}, ${disponibilidadeTable.horarioSlot}, COALESCE(${disponibilidadeTable.turno}, '')) IN (${sql.join(
+              lote.map((x) => sql`(${x.professorId}, ${x.diaSemana}, ${x.horarioSlot}, ${x.turno ?? ""})`), sql`, `)})`);
+            await tx.insert(disponibilidadeTable).values(lote.map(({ id: _id, createdAt: _c, ...resto }) => resto));
+          }
+        });
+      }
+    }
+  } catch (err) {
+    console.error("[HA-SO-NO-TURNO-DO-EXPERIMENTO] Falha ao devolver a HA de hoje fora do turno do experimento; fica a do recalculo:", err);
+  }
+
   // [HA-BURACO-QUEM-MUDOU] (01/11/2026) quem teve aula mexida: depois do recalculo, a HA movel tambem vai para onde
   // tira janela (mesma regra e mesma passada do simulador, lib/simular-promocao.ts). Antes so quem NAO mudou passava
   // por isso, e o recalculo mantinha a HA importada onde estava, deixando janelas que uma HA movida fecharia.
@@ -1214,8 +1261,8 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
       });
       const dispMudaram = await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, mudaram));
       // [HA-OUTRO-TURNO] tambem nos turnos em que o recalculo deixou HA de quem mudou (igual a simulacao)
-      const turnosHA = turnosAfetadosPelaHA(turnosExp, dispMudaram.filter((d) => d.horaAtividadeObrigatoria), new Set(mudaram));
-      const movs = reposicionarHAMovel({ aulas: aulasDepois, disp: dispMudaram, slotsLetivos: slotsLetivosPorTurno(slotsEscola), turnos: turnosHA, professores: mudaram });
+      // [HA-SO-NO-TURNO-DO-EXPERIMENTO] so no turno do experimento: fora dele a HA ficou como hoje (acima)
+      const movs = reposicionarHAMovel({ aulas: aulasDepois, disp: dispMudaram, slotsLetivos: slotsLetivosPorTurno(slotsEscola), turnos: turnosExp, professores: mudaram });
       if (movs.length) {
         await db.transaction(async (tx) => {
           // 1) tira do lugar (posicao provisoria unica) para uma HA poder ir para onde outra acabou de sair
