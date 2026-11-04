@@ -34,11 +34,13 @@ import { carregarLimitesPorDisciplina, limiteAulasDia } from "../lib/limite-disc
 import { REGRAS_REDE } from "../lib/regras-rede"; // [REGRAS-REDE]
 import { CHAVE_TETO_LIBERADO } from "./conflitos"; // [TETO-AUTORIZADO]
 import { salvarBackupGrade, listarBackupsGrade, restaurarBackupGrade } from "../lib/backup-grade"; // [BACKUP-GRADE]
+import { professoresComHAIncompleta } from "../lib/ha-incompleta"; // [HA-INCOMPLETA-REFAZ]
+import { montarMapaPrincipal } from "../lib/professor-principal"; // [MESMA-PESSOA-HA]
 import { haForaDoTurnoDoExperimento, reposicionarHAMovel, slotsLetivosPorTurno, type AulaPos } from "../lib/reposicionar-ha"; // [HA-MOVEL-MELHORIA] [HA-OUTRO-TURNO] [HA-SO-NO-TURNO-DO-EXPERIMENTO]
 import { carregarAssSoTurma } from "../lib/assincrona-so-turma"; // [ASS-SO-TURMA]
 import { evitarPorPausaEntreTurnos } from "../lib/pausa-entre-turnos"; // [PAUSA-ENTRE-TURNOS]
 import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
-import { ehBloqueioParaMotor, ehHaFixa } from "../lib/bloqueio-real"; // [HA-FIXA] [ORIGEM-BLOQUEIO]
+import { ehBloqueioParaMotor, ehHaFixa, ehHaProbatorio } from "../lib/bloqueio-real"; // [HA-FIXA] [ORIGEM-BLOQUEIO] [HA-PROBATORIO-BLOQUEIA]
 import { ehHAMovel } from "../lib/ha-contraturno"; // [JANELAS-COM-HA-ENCAIXADA]
 import { bloqueiosIntervaloEntreTurnos } from "../lib/intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 import { aulasFixasTable } from "@workspace/db"; // [AULA-FIXA-CADASTRO]
@@ -1131,6 +1133,23 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     if (a.size !== d.size || [...a].some((k) => !d.has(k))) profsMudaram.add(p);
   }
   const profsEscola = (await db.select({ id: professoresTable.id }).from(professoresTable).where(eq(professoresTable.escolaId, escolaId))).map((p) => p.id);
+  // [HA-INCOMPLETA-REFAZ] quem esta com HA diferente da regra (a menos ou a mais) no turno do experimento tem a HA refeita (fica com a
+  // do recalculo, como quem teve aula mexida), igual a simulacao
+  try {
+    const { turnosDe: turnosDeHA } = await ocupacaoReal(escolaId);
+    const turnosExpHA = turnosDeHA(expSlots);
+    const aulasDepoisHA = [...oficialAntes.filter((h) => !ehSubstituida(h)), ...expSlots]
+      .filter((h) => h.professorId != null)
+      .map((h) => ({ professorId: h.professorId!, turmaId: h.turmaId, diaSemana: h.diaSemana, numeroAula: h.numeroAula }));
+    const haIdeal = await calcularHAIdeal(escolaId, aulasDepoisHA);
+    const haHojeEscola = await db.select().from(disponibilidadeTable)
+      .where(and(inArray(disponibilidadeTable.professorId, profsEscola.length ? profsEscola : [-1]), eq(disponibilidadeTable.horaAtividadeObrigatoria, true)));
+    const incompletos = professoresComHAIncompleta(haIdeal, haHojeEscola, turnosExpHA);
+    for (const p of incompletos) profsMudaram.add(p);
+    if (incompletos.size) console.log(`[HA-INCOMPLETA-REFAZ] HA refeita para ${incompletos.size} professor(es) com HA diferente da regra`);
+  } catch (err) {
+    console.error("[HA-INCOMPLETA-REFAZ] falhou; segue so com quem teve aula mexida:", err);
+  }
   const profsMantem = profsEscola.filter((p) => !profsMudaram.has(p));
   const haMantidaHoje = profsMantem.length
     ? await db.select().from(disponibilidadeTable).where(and(inArray(disponibilidadeTable.professorId, profsMantem), eq(disponibilidadeTable.horaAtividadeObrigatoria, true)))
@@ -1148,7 +1167,8 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
         return r ? [{ professorId: h.professorId, turno: r.turno, diaSemana: h.diaSemana, numeroAula: r.numeroAula }] : [];
       });
       const dispMantem = await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, profsMantem));
-      const movs = reposicionarHAMovel({ aulas: aulasDepois, disp: dispMantem, slotsLetivos: slotsLetivosPorTurno(slotsEscola), turnos: turnosExp, professores: profsMantem });
+      const principalEsc = montarMapaPrincipal(await db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId))); // [MESMA-PESSOA-HA]
+      const movs = reposicionarHAMovel({ aulas: aulasDepois, disp: dispMantem, slotsLetivos: slotsLetivosPorTurno(slotsEscola), turnos: turnosExp, professores: profsMantem, principal: principalEsc });
       const novo = new Map(movs.map((m) => [m.linha.id, m]));
       haMantida = haMantidaHoje.map((h) => { const m = novo.get(h.id); return m ? { ...h, diaSemana: m.diaSemana, horarioSlot: m.horarioSlot } : h; });
       haReposicionadas = movs.length;
@@ -1263,7 +1283,8 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
       const dispMudaram = await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, mudaram));
       // [HA-OUTRO-TURNO] tambem nos turnos em que o recalculo deixou HA de quem mudou (igual a simulacao)
       // [HA-SO-NO-TURNO-DO-EXPERIMENTO] so no turno do experimento: fora dele a HA ficou como hoje (acima)
-      const movs = reposicionarHAMovel({ aulas: aulasDepois, disp: dispMudaram, slotsLetivos: slotsLetivosPorTurno(slotsEscola), turnos: turnosExp, professores: mudaram });
+      const principalEsc = montarMapaPrincipal(await db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId))); // [MESMA-PESSOA-HA]
+      const movs = reposicionarHAMovel({ aulas: aulasDepois, disp: dispMudaram, slotsLetivos: slotsLetivosPorTurno(slotsEscola), turnos: turnosExp, professores: mudaram, principal: principalEsc });
       if (movs.length) {
         await db.transaction(async (tx) => {
           // 1) tira do lugar (posicao provisoria unica) para uma HA poder ir para onde outra acabou de sair
@@ -2245,7 +2266,7 @@ async function runCpsatGeneracaoUnica(
     });
   const haFixaNaDisponibilidade = disponibilidades
     .filter((d) => professorIdsUsados.has(d.professorId) && ehBloqueioParaMotor(d) && (d.turno === turno || d.turno == null))
-    .map((d) => ehHaFixa(d)); // mesma ordem de bloqueiosDisponibilidade
+    .map((d) => ehHaFixa(d) || ehHaProbatorio(d)); // mesma ordem de bloqueiosDisponibilidade [HA-PROBATORIO-BLOQUEIA]
   anotarOrigem(bloqueiosDisponibilidade, (i) => (haFixaNaDisponibilidade[i] ? "haFixa" : "bloqueio"));
   anotarOrigem(bloqueiosOutrasTurmas, "outraTurma");
   anotarOrigem(bloqueiosIntegral, "integral");
@@ -2451,6 +2472,7 @@ async function runCpsatGeneracaoUnica(
         const movs = reposicionarHAMovel({
           aulas: aulasProfs.flatMap((h) => { const r = posicao(h); return r ? [{ professorId: h.professorId, turno: r.turno, diaSemana: h.diaSemana, numeroAula: r.numeroAula }] : []; }),
           disp: dispProfs, slotsLetivos: slotsLetivosPorTurno(slotsEsc), turnos: [turno], professores: profsT,
+          principal: montarMapaPrincipal(await db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId))), // [MESMA-PESSOA-HA]
         });
         novoLugarHA = new Map(movs.map((m) => [m.linha.id, { diaSemana: m.diaSemana, horarioSlot: m.horarioSlot }]));
         console.log(`[HA-MOVEL-MELHORIA] turno=${turno} HA reposicionadas antes do motor: ${movs.length}`);
@@ -2459,17 +2481,28 @@ async function runCpsatGeneracaoUnica(
       console.error("[HA-MOVEL-MELHORIA] falhou ao reposicionar HA; motor recebe a HA de hoje:", err);
       novoLugarHA = new Map();
     }
+    // [HA-INCOMPLETA-REFAZ] quem esta com HA diferente da regra no turno tera a HA refeita na promocao: a HA de hoje
+    // dele nao vale como "ocupado" para o motor nem para a estimativa (a HA a mais escondia buraco: Diego Cardoso, tarde,
+    // 5 HA onde a regra da 4; o Melhorar contava com a 5a, a promocao a tirava e a janela aparecia)
+    let haSeraRefeita = new Set<number>();
+    try {
+      if (haHoje.length) haSeraRefeita = professoresComHAIncompleta(await calcularHAIdeal(escolaId), haHoje, [turno]);
+      if (haSeraRefeita.size) console.log(`[HA-INCOMPLETA-REFAZ] turno=${turno} HA de hoje ignorada no Melhorar para ${haSeraRefeita.size} professor(es)`);
+    } catch (err) {
+      console.error("[HA-INCOMPLETA-REFAZ] falhou ao comparar a HA com a regra; segue com a HA de hoje:", err);
+    }
     for (const d of haHoje) {
       const nomeP = professorMap.get(d.professorId)?.nome;
       const lugar = novoLugarHA.get(d.id);
       if (!nomeP) continue;
+      if (haSeraRefeita.has(d.professorId) && ehHAMovel(d.motivo)) continue; // [HA-INCOMPLETA-REFAZ] sera refeita
       const pos = { professor: nomeP, dia: lugar ? lugar.diaSemana : d.diaSemana, aula: lugar ? lugar.horarioSlot : d.horarioSlot };
       haAtual.push(pos);
       if (ehHAMovel(d.motivo)) haMovelAtual.push(pos);
       else {
         haOcupadoFixo.push(pos);
-        // a HA fixa ja sai da cota (calcularCotaHaPorTurno); probatorio e manual ainda nao
-        if (!ehHaFixa(d)) haNaoMovelPorProfessor.set(nomeP, (haNaoMovelPorProfessor.get(nomeP) ?? 0) + 1);
+        // HA fixa e probatorio ja saem da cota (calcularCotaHaPorTurno); a manual e movel desde [HA-MANUAL-MOVEL]
+        if (!ehHaFixa(d) && !ehHaProbatorio(d)) haNaoMovelPorProfessor.set(nomeP, (haNaoMovelPorProfessor.get(nomeP) ?? 0) + 1);
       }
     }
     // [ATIVIDADE-OCUPA-MELHORIA] (21/10/2026) atividade fora de sala ("(ocupado: FOR)", DOC 2, CGH...) tambem

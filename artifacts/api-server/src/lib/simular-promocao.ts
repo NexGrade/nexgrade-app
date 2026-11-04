@@ -12,7 +12,9 @@ import { and, eq, inArray } from "drizzle-orm";
 import { calcularHAIdeal, type AulaParaCalculoHA, type MarcaHACalculada } from "./recalcular-ha";
 import { haForaDoTurnoDoExperimento, reposicionarHAMovel, slotsLetivosPorTurno, turnosAfetadosPelaHA, type AulaPos } from "./reposicionar-ha";
 import { MOTIVO_HA_AUTO } from "./ha-contraturno"; // [HA-BURACO-QUEM-MUDOU]
+import { professoresComHAIncompleta } from "./ha-incompleta"; // [HA-INCOMPLETA-REFAZ]
 import { mapaIntegralDosSlots, posicaoReal } from "./turno-integral"; // [INTEGRAL-NA-OCUPACAO]
+import { montarMapaPrincipal } from "./professor-principal"; // [MESMA-PESSOA-HA]
 
 const DIAS = ["Seg", "Ter", "Qua", "Qui", "Sex"];
 
@@ -117,6 +119,8 @@ export async function simularPromocao(
     const a = antesP.get(p) ?? new Set<string>(); const d = depoisP.get(p) ?? new Set<string>();
     if (a.size !== d.size || [...a].some((k) => !d.has(k))) mudou.add(p);
   }
+  // [HA-INCOMPLETA-REFAZ] quem esta com HA diferente da regra (a menos ou a mais) no turno do experimento tem a HA refeita
+  for (const p of professoresComHAIncompleta(haSimulada, disp.filter((d) => profIds.has(d.professorId)), turnos)) mudou.add(p);
   // [HA-OUTRO-TURNO] (03/11/2026) o recalculo refaz a HA de quem teve aula mexida em TODOS os turnos dele (inclusive a
   // HA* que nao coube no turno promovido). Esses turnos tambem entram na conta e na HA no buraco, igual a promocao.
   // Antes so o turno do experimento era contado: promover a tarde levou a manha de 3 para 10 janelas sem aviso.
@@ -197,7 +201,7 @@ export async function simularPromocao(
   const dispEscola = disp.filter((d) => profIds.has(d.professorId));
   const movHA = reposicionarHAMovel({
     aulas: aulasSimPos, disp: dispEscola, slotsLetivos: slotsLetivosPorTurno(slots), turnos,
-    professores: [...profIds].filter((p) => !mudou.has(p)),
+    professores: [...profIds].filter((p) => !mudou.has(p)), principal: montarMapaPrincipal(profs), // [MESMA-PESSOA-HA]
   });
   const novoLugar = new Map(movHA.map((m) => [m.linha, m]));
   const haHojeReposta: MarcaHACalculada[] = dispEscola
@@ -219,7 +223,7 @@ export async function simularPromocao(
   }));
   // [HA-SO-NO-TURNO-DO-EXPERIMENTO] a HA no buraco de quem mudou so passa no turno do experimento (fora dele a HA fica)
   const movRecalc = reposicionarHAMovel({
-    aulas: aulasSimPos, slotsLetivos: slotsLetivosPorTurno(slots), turnos, professores: [...mudou],
+    aulas: aulasSimPos, slotsLetivos: slotsLetivosPorTurno(slots), turnos, professores: [...mudou], principal: montarMapaPrincipal(profs), // [MESMA-PESSOA-HA]
     disp: [...dispEscola.filter((d) => mudou.has(d.professorId) && !d.horaAtividadeObrigatoria), ...haRecalcLinhas],
   });
   const lugarRecalc = new Map(movRecalc.map((mv) => [mv.linha, mv]));
