@@ -899,9 +899,22 @@ router.get("/grade-pdf/professor", async (req, res) => {
     db.select().from(disponibilidadeTable),
     carregarMapaIntegral(escolaId),
   ]);
+  type AulaPdfProf = { turmaId: number; disciplinaId: number; professorId: number; diaSemana: number; numeroAula: number; assincrona?: boolean | null; foraDoExperimento?: boolean };
+  // [PREVIA-AULAS-DE-FORA] (03/11/2026) na previa, as aulas oficiais das turmas que o experimento nao toca (ex.: a
+  // turma integral 1ME DOC numa MELHORIA-matutino) continuam valendo depois de promover e tambem ocupam o professor.
+  // Antes o PDF so desenhava as aulas do experimento: a manha da Demonstracao mostrava 17 "janelas" onde o professor
+  // estava na 1ME DOC, e a simulacao (que conta essas aulas) dizia 2.
+  const aulasDeFora: AulaPdfProf[] = nomeExperimental
+    ? (await db.select().from(horariosTable).where(and(
+        eq(horariosTable.escolaId, escolaId),
+        notInArray(horariosTable.turmaId, [...new Set(slotsSemProjecao.map((s) => s.turmaId)), -1]),
+      ))).map((h) => ({ ...h, foraDoExperimento: true }))
+    : [];
   // [TURNO-INTEGRAL-PROFESSOR] aula da turma integral vai para o turno/aula real do professor
-  const { turmas, aulas: slotsBrutos } = projetarIntegral(turmasDoBanco, slotsSemProjecao as Array<{ turmaId: number; disciplinaId: number; professorId: number; diaSemana: number; numeroAula: number; assincrona?: boolean | null }>, mapaIntegral);
-  const slots = slotsBrutos as Array<{ turmaId: number; disciplinaId: number; professorId: number; diaSemana: number; numeroAula: number; assincrona?: boolean | null }>;
+  const { turmas, aulas: slotsBrutos } = projetarIntegral(turmasDoBanco, [...(slotsSemProjecao as AulaPdfProf[]), ...aulasDeFora], mapaIntegral);
+  // slots: o que o professor tem na semana (na previa, experimento + aulas de fora); slotsExp: so o experimento
+  const slots = slotsBrutos as AulaPdfProf[];
+  const slotsExp = slots.filter((s) => !s.foraDoExperimento);
   // [REVEZAMENTO-TRIO] trio: (P) presencial / (S) suporte na semana do PDF
   const revezProf = await mapaRevezamento(turmas.map((t) => t.id), hojeBrasil(lerOffsetSemana(req)));
   // [FIX-HA-SIMULADA] O experimento pode cobrir só ALGUNS turmas/turnos
@@ -917,18 +930,11 @@ router.get("/grade-pdf/professor", async (req, res) => {
   // [HA-CONTRATURNO-ASTERISCO] semana completa (aulas) de cada professor, usada
   // para saber em quais turnos ele da aula. Oficial: as proprias aulas. Previa:
   // aulas do experimento + oficiais fora do escopo (overrideCompleto, abaixo).
-  let semanaCompletaProf: Array<{ professorId: number; turmaId: number }> = slots;
+  // [PREVIA-AULAS-DE-FORA] slots ja traz as aulas de fora (com a integral no turno real)
+  const semanaCompletaProf: Array<{ professorId: number; turmaId: number }> = slots;
   if (nomeExperimental) {
-    const turmaIdsNoExperimento = new Set(slots.map((s) => s.turmaId));
-    const slotsOficiaisForaDoEscopo = await db
-      .select({ turmaId: horariosTable.turmaId, professorId: horariosTable.professorId, diaSemana: horariosTable.diaSemana, numeroAula: horariosTable.numeroAula })
-      .from(horariosTable)
-      .where(and(eq(horariosTable.escolaId, escolaId), notInArray(horariosTable.turmaId, [...turmaIdsNoExperimento])));
-    const overrideCompleto = [
-      ...slots.map((s) => ({ professorId: s.professorId, turmaId: s.turmaId, diaSemana: s.diaSemana, numeroAula: s.numeroAula })),
-      ...slotsOficiaisForaDoEscopo,
-    ];
-    semanaCompletaProf = overrideCompleto;
+    const overrideCompleto = [...(slotsSemProjecao as AulaPdfProf[]), ...aulasDeFora]
+      .map((s) => ({ professorId: s.professorId, turmaId: s.turmaId, diaSemana: s.diaSemana, numeroAula: s.numeroAula }));
     // [PDF-HA-DA-SIMULACAO] (01/11/2026) a HA da previa e a mesma da simulacao e da promocao: quem nao teve aula mexida
     // fica com a de hoje, quem teve fica com a recalculada, e a HA movel vai para o buraco. Antes o PDF recalculava a
     // HA de todos do zero (sem o buraco): a HA saia em outro lugar e aparecia janela que a simulacao dizia fechada.
@@ -959,7 +965,7 @@ router.get("/grade-pdf/professor", async (req, res) => {
   const turnosDoPdf: Set<string> | null = turnoFiltroProf
     ? new Set([turnoFiltroProf])
     : nomeExperimental
-      ? new Set(slots.map((s) => turnoDaTurma.get(s.turmaId)).filter((t): t is string => !!t))
+      ? new Set(slotsExp.map((s) => turnoDaTurma.get(s.turmaId)).filter((t): t is string => !!t))
       : null;
   const professoresBase = nomeExperimental
     ? professoresTodos.filter((p) =>
