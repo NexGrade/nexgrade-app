@@ -159,6 +159,7 @@ export interface MarcaHACalculada {
 export async function calcularHAIdeal(
   escolaId: string,
   aulasOverride?: AulaParaCalculoHA[],
+  opcoes: { preservarHAde?: Set<number> } = {}, // [HA-SO-COMPLETAR] professores cuja HA de hoje fica toda no lugar
 ): Promise<MarcaHACalculada[]> {
   const [professores, turmasDoBanco, horariosReais, horarioSlots, disponibilidadesTodas] = await Promise.all([
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
@@ -306,7 +307,7 @@ export async function calcularHAIdeal(
     // tomada por fora do sistema (autorizacao da coordenacao), sempre
     // respeitada e nunca recalculada por aqui. Conta pro total exigido.
     const haManualContraturno = disponibilidades.filter(
-      (d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && (!ehHAMovel(d.motivo) || ehHAManualDaTela(d.motivo)) && !ocupadoPorTurnoOriginal.get(d.turno ?? "")?.has(`${d.diaSemana}-${d.horarioSlot}`), // [FIX-HA-AUTO-NAO-E-MANUAL] [HA-MANUAL-QUALQUER-TURNO] [HA-MANUAL-CEDE-A-AULA] HA nao automatica e preservada em qualquer turno, exceto se uma aula passou a ocupar o horario
+      (d) => d.professorId === prof.id && d.horaAtividadeObrigatoria && (!ehHAMovel(d.motivo) || ehHAManualDaTela(d.motivo) || !!opcoes.preservarHAde?.has(prof.id)) && !ocupadoPorTurnoOriginal.get(d.turno ?? "")?.has(`${d.diaSemana}-${d.horarioSlot}`), // [FIX-HA-AUTO-NAO-E-MANUAL] [HA-MANUAL-QUALQUER-TURNO] [HA-MANUAL-CEDE-A-AULA] HA nao automatica e preservada em qualquer turno, exceto se uma aula passou a ocupar o horario
     );
     for (const m of haManualContraturno) {
       marcasFinais.push({ professorId: prof.id, turno: m.turno ?? "sem_turno", diaSemana: m.diaSemana, horarioSlot: m.horarioSlot });
