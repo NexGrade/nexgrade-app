@@ -86,3 +86,12 @@ export function marcarContraturno<
       !(turnosComAula.get(r.professorId)?.has(r.turno) ?? false),
   }));
 }
+
+/**
+ * [FOR-CONTA-COMO-HA] (04/11/2026, regra confirmada pela dona) FOR (formadores), marcado como atividade fora de sala
+ * ("(ocupado: FOR)"), CONTA COMO HA: cada horario de FOR e uma HA ja cumprida naquele turno. O horario continua sendo
+ * FOR (nao vira HA no banco nem no PDF); so entra na conta. Outras atividades (COORD, DOC 2, CGH, PAEE) nao contam.
+ */
+export function ehFORContaComoHA(d: { disponivel?: boolean | null; horaAtividadeObrigatoria?: boolean | null; motivo?: string | null }): boolean {
+  return !d.disponivel && !d.horaAtividadeObrigatoria && /\(ocupado:\s*FOR\s*\)/i.test(d.motivo ?? "");
+}

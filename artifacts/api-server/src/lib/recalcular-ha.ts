@@ -37,7 +37,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { PARES_TURNO } from "./intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 import { mapaIntegralDosSlots, projetarIntegral } from "./turno-integral"; // [TURNO-INTEGRAL-PROFESSOR]
 
-import { MOTIVO_HA_AUTO, MOTIVO_HA_AUTO_OUTRO_TURNO, ehHAMovel, ehHAManualDaTela, ehHAOutroTurno } from "./ha-contraturno"; // [HA-OUTRO-TURNO] [HA-IMPORTADA-MOVEL] [HA-MANUAL-MOVEL]
+import { MOTIVO_HA_AUTO, MOTIVO_HA_AUTO_OUTRO_TURNO, ehHAMovel, ehHAManualDaTela, ehHAOutroTurno, ehFORContaComoHA } from "./ha-contraturno"; // [HA-OUTRO-TURNO] [HA-IMPORTADA-MOVEL] [HA-MANUAL-MOVEL]
 import { montarMapaPrincipal, principalDe } from "./professor-principal"; // [MESMA-PESSOA-HA]
 import { ehProfessorEstudio } from "./hora-atividade"; // [ESTUDIO-SEM-HA]
 
@@ -322,6 +322,8 @@ export async function calcularHAIdeal(
     // dando HA a mais (manual + automatica somando mais que o exigido).
     const manualPorTurno: Record<string, number> = {};
     for (const m of haManualContraturno) manualPorTurno[m.turno ?? "sem_turno"] = (manualPorTurno[m.turno ?? "sem_turno"] ?? 0) + 1;
+    // [FOR-CONTA-COMO-HA] cada horario de FOR e uma HA ja cumprida no turno dele: sai do orcamento (o horario continua FOR)
+    for (const d of disponibilidades) if (d.professorId === prof.id && ehFORContaComoHA(d)) manualPorTurno[d.turno ?? "sem_turno"] = (manualPorTurno[d.turno ?? "sem_turno"] ?? 0) + 1;
     const orcamentoPorTurno = calcularHoraAtividadePorTurno(aulasParaTabela, manualPorTurno); // [HA-MANUAL-NO-PROPRIO-TURNO] [PAEE-SEM-HA]
 
     // [PREENCHIMENTO-GULOSO] Funcao reutilizavel: dado um turno, um

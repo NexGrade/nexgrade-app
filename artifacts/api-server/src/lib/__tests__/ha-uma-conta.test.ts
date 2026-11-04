@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { haDevidaPorTurno } from "../hora-atividade";
-import { ehHAOutroTurno } from "../ha-contraturno";
+import { ehHAOutroTurno, ehFORContaComoHA } from "../ha-contraturno";
 import { professoresQueMudaram } from "../ha-so-quem-mudou";
 
 describe("[HA-DEVIDA-UMA-CONTA] haDevidaPorTurno", () => {
@@ -41,5 +41,14 @@ describe("[HA-SO-QUEM-MUDOU-GERAL] professoresQueMudaram", () => {
     const antes = [h(1, 10, 100, 0, 1), h(1, 10, 101, 0, 2), h(2, 11, 200, 1, 1)];
     const depois = [h(1, 10, 101, 0, 1), h(1, 10, 100, 0, 2), h(2, 11, 200, 1, 1)];
     expect([...professoresQueMudaram(antes, depois)]).toEqual([1]);
+  });
+});
+
+describe("[FOR-CONTA-COMO-HA] ehFORContaComoHA", () => {
+  it("so o FOR (atividade fora de sala) conta; COORD e HA nao", () => {
+    expect(ehFORContaComoHA({ disponivel: false, horaAtividadeObrigatoria: false, motivo: "Atividade fora de sala (ocupado: FOR)" })).toBe(true);
+    expect(ehFORContaComoHA({ disponivel: false, horaAtividadeObrigatoria: false, motivo: "Atividade fora de sala (ocupado: COORD)" })).toBe(false);
+    expect(ehFORContaComoHA({ disponivel: false, horaAtividadeObrigatoria: false, motivo: "Atividade fora de sala (ocupado: FORM)" })).toBe(false);
+    expect(ehFORContaComoHA({ disponivel: true, horaAtividadeObrigatoria: true, motivo: "HA manual (definida na tela)" })).toBe(false);
   });
 });
