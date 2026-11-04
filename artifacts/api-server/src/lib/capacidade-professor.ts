@@ -13,7 +13,7 @@ import { db, turmasTable, turmaDisciplinasTable, disciplinasTable, professoresTa
 import { and, eq, inArray } from "drizzle-orm";
 import { ehBloqueioReal, ehHaFixa, ehHaProbatorio } from "./bloqueio-real"; // [HA-FIXA] [HA-PROBATORIO-BLOQUEIA]
 import { calcularHoraAtividadeTotalPorTurno, ehBloqueioPeriodoNaoLetivo } from "./recalcular-ha";
-import { calcularHoraAtividadePorTurno, ehProfessorEstudio } from "./hora-atividade";
+import { calcularHoraAtividadePorTurno, ehProfessorEstudio, haDevidaPorTurno } from "./hora-atividade"; // [HA-DEVIDA-UMA-CONTA]
 import { montarMapaPrincipal, ehSecundario, principalDe } from "./professor-principal"; // [MESMA-PESSOA-HA]
 import { ehHAMovel, ehHAManualDaTela } from "./ha-contraturno"; // [COTA-COM-HA-CONTRATURNO]
 
@@ -43,6 +43,8 @@ export interface CargaProfessor {
   aulasPorTurno: Record<string, number>;
   // [CAPACIDADE-POR-NIVEL] turno -> nivel de ensino da turma ("__sem_nivel__" sem nivel) -> aulas
   aulasPorTurnoNivel?: Record<string, Record<string, number>>;
+  // [PAEE-SEM-HA] aulas que contam na tabela de HA (sem as de PAEE / disciplina "sem turma")
+  aulasPorTurnoHA?: Record<string, number>;
 }
 
 // [CARGA-PROFESSOR] Aulas de cada professor por turno, pela MESMA regra de
@@ -81,6 +83,7 @@ export async function calcularCargaPorProfessor(escolaId: string): Promise<{ car
 
   const aulas = new Map<number, Record<string, number>>();
   const aulasNivel = new Map<number, Record<string, Record<string, number>>>(); // [CAPACIDADE-POR-NIVEL]
+  const aulasHA = new Map<number, Record<string, number>>(); // [PAEE-SEM-HA]
   for (const td of tds) {
     const turma = turmaMap.get(td.turmaId);
     if (!turma) continue;
@@ -92,6 +95,9 @@ export async function calcularCargaPorProfessor(escolaId: string): Promise<{ car
     const r = aulas.get(prof.id) ?? {};
     r[turma.turno] = (r[turma.turno] ?? 0) + n;
     aulas.set(prof.id, r);
+    const rh = aulasHA.get(prof.id) ?? {}; // [PAEE-SEM-HA] PAEE nao conta na tabela de HA (decisao da dona, 04/11/2026)
+    rh[turma.turno] = (rh[turma.turno] ?? 0) + (disc?.semTurma ? 0 : n);
+    aulasHA.set(prof.id, rh);
     const rn = aulasNivel.get(prof.id) ?? {};
     const nivel = turma.nivelEnsino ?? "__sem_nivel__";
     rn[turma.turno] = { ...rn[turma.turno], [nivel]: (rn[turma.turno]?.[nivel] ?? 0) + n };
@@ -101,7 +107,7 @@ export async function calcularCargaPorProfessor(escolaId: string): Promise<{ car
   const cargas: CargaProfessor[] = [];
   for (const [pid, porTurno] of aulas) {
     const p = profMap.get(pid);
-    if (p) cargas.push({ professorId: pid, professor: p.nome, aulasPorTurno: porTurno, aulasPorTurnoNivel: aulasNivel.get(pid) });
+    if (p) cargas.push({ professorId: pid, professor: p.nome, aulasPorTurno: porTurno, aulasPorTurnoNivel: aulasNivel.get(pid), aulasPorTurnoHA: aulasHA.get(pid) });
   }
   return { cargas, slots, disp, principal: montarMapaPrincipal(professores) };
 }
@@ -113,10 +119,50 @@ function aulasParaHA(cargas: CargaProfessor[], principal: Map<number, number>): 
   for (const c of cargas) {
     const alvo = principalDe(principal, c.professorId);
     const acc = r.get(alvo) ?? {};
-    for (const [t, n] of Object.entries(c.aulasPorTurno)) acc[t] = (acc[t] ?? 0) + n;
+    for (const [t, n] of Object.entries(c.aulasPorTurnoHA ?? c.aulasPorTurno)) acc[t] = (acc[t] ?? 0) + n; // [PAEE-SEM-HA]
     r.set(alvo, acc);
   }
   return r;
+}
+
+// [COTA-INTEGRAL-TURNO-REAL] (04/11/2026) a turma integral entrava como um turno a parte ("integral") e a HA dela nao
+// somava no turno real; o recalculo conta cada aula da integral no turno real (manha ou tarde). Ex.: Carlos Farias,
+// 8 aulas de manha + 3 da integral de manha = 11 -> 4 HA; a cota dizia 2. Usa a posicao das aulas da integral na
+// grade oficial (como o recalculo); sem grade oficial da integral, a parte dela fica de fora. Altera porTurnoHA.
+async function projetarIntegralNaContaDeHA(escolaId: string, porTurnoHA: Map<number, Record<string, number>>, slots: (typeof horarioSlotsTable.$inferSelect)[], principal: Map<number, number>): Promise<void> {
+  if (![...porTurnoHA.values()].some((r) => (r[TURNO_INTEGRAL] ?? 0) > 0)) return;
+  const turmasEsc = await db.select({ id: turmasTable.id, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
+  const idsIntegral = turmasEsc.filter((t) => t.turno === TURNO_INTEGRAL).map((t) => t.id);
+  const turnoDaTurma = new Map(turmasEsc.map((t) => [t.id, t.turno]));
+  const mapa = mapaIntegralDosSlots(slots);
+  const real = new Map<number, Record<string, number>>();
+  if (idsIntegral.length) {
+    const aulasInt = await db.select({ professorId: horariosTable.professorId, turmaId: horariosTable.turmaId, numeroAula: horariosTable.numeroAula, versao: horariosTable.versaoGrade, disciplinaId: horariosTable.disciplinaId })
+      .from(horariosTable).where(inArray(horariosTable.turmaId, idsIntegral));
+    const semHA = new Set((await db.select({ id: disciplinasTable.id }).from(disciplinasTable).where(and(eq(disciplinasTable.escolaId, escolaId), eq(disciplinasTable.semTurma, true)))).map((d) => d.id)); // [PAEE-SEM-HA]
+    for (const a of aulasInt) {
+      if (a.professorId == null || (a.versao ?? "oficial") !== "oficial") continue;
+      if (semHA.has(a.disciplinaId)) continue; // [PAEE-SEM-HA]
+      const pos = posicaoReal(a.turmaId, a.numeroAula, turnoDaTurma, mapa);
+      if (!pos || pos.turno === TURNO_INTEGRAL) continue;
+      const alvo = principalDe(principal, a.professorId);
+      const r = real.get(alvo) ?? {};
+      r[pos.turno] = (r[pos.turno] ?? 0) + 1;
+      real.set(alvo, r);
+    }
+  }
+  for (const [pid, r] of porTurnoHA) {
+    if (!(r[TURNO_INTEGRAL] ?? 0)) continue;
+    const novo: Record<string, number> = { ...r };
+    delete novo[TURNO_INTEGRAL];
+    for (const [t, n] of Object.entries(real.get(pid) ?? {})) novo[t] = (novo[t] ?? 0) + n;
+    porTurnoHA.set(pid, novo);
+  }
+}
+
+// [HA-DEVIDA-UMA-CONTA] HA que o recalculo preserva (nao movel, ou manual da tela): conta no total do professor
+function haPresasDe(disp: Array<{ professorId: number; turno: string | null; horaAtividadeObrigatoria: boolean; motivo: string | null }>, profId: number) {
+  return disp.filter((d) => d.professorId === profId && d.horaAtividadeObrigatoria && (!ehHAMovel(d.motivo) || ehHAManualDaTela(d.motivo)));
 }
 
 // [HA-NO-CPSAT] Cota de HA de cada professor NUM turno (nome -> HA), pela
@@ -124,59 +170,19 @@ function aulasParaHA(cargas: CargaProfessor[], principal: Map<number, number>): 
 export async function calcularCotaHaPorTurno(escolaId: string, turno: string): Promise<Record<string, number>> {
   const { cargas, disp, principal, slots } = await calcularCargaPorProfessor(escolaId);
   const porTurnoHA = aulasParaHA(cargas, principal); // [MESMA-PESSOA-HA]
-  // [COTA-INTEGRAL-TURNO-REAL] (04/11/2026) a turma integral entrava como um turno a parte ("integral") e a HA dela nao
-  // somava no turno real; o recalculo conta cada aula da integral no turno real (manha ou tarde). Ex.: Carlos Farias,
-  // 8 aulas de manha + 3 da integral de manha = 11 -> 4 HA; a cota dizia 2. Usa a posicao das aulas da integral na
-  // grade oficial (como o recalculo); sem grade oficial da integral, a parte dela fica de fora (como antes).
-  const haIntegral = [...porTurnoHA.values()].some((r) => (r[TURNO_INTEGRAL] ?? 0) > 0);
-  if (haIntegral) {
-    const turmasEsc = await db.select({ id: turmasTable.id, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
-    const idsIntegral = turmasEsc.filter((t) => t.turno === TURNO_INTEGRAL).map((t) => t.id);
-    const turnoDaTurma = new Map(turmasEsc.map((t) => [t.id, t.turno]));
-    const mapa = mapaIntegralDosSlots(slots);
-    const real = new Map<number, Record<string, number>>();
-    if (idsIntegral.length) {
-      const aulasInt = await db.select({ professorId: horariosTable.professorId, turmaId: horariosTable.turmaId, numeroAula: horariosTable.numeroAula, versao: horariosTable.versaoGrade })
-        .from(horariosTable).where(inArray(horariosTable.turmaId, idsIntegral));
-      for (const a of aulasInt) {
-        if (a.professorId == null || (a.versao ?? "oficial") !== "oficial") continue;
-        const pos = posicaoReal(a.turmaId, a.numeroAula, turnoDaTurma, mapa);
-        if (!pos || pos.turno === TURNO_INTEGRAL) continue;
-        const alvo = principalDe(principal, a.professorId);
-        const r = real.get(alvo) ?? {};
-        r[pos.turno] = (r[pos.turno] ?? 0) + 1;
-        real.set(alvo, r);
-      }
-    }
-    for (const [pid, r] of porTurnoHA) {
-      if (!(r[TURNO_INTEGRAL] ?? 0)) continue;
-      const novo: Record<string, number> = { ...r };
-      delete novo[TURNO_INTEGRAL];
-      for (const [t, n] of Object.entries(real.get(pid) ?? {})) novo[t] = (novo[t] ?? 0) + n;
-      porTurnoHA.set(pid, novo);
-    }
-  }
+  await projetarIntegralNaContaDeHA(escolaId, porTurnoHA, slots, principal); // [COTA-INTEGRAL-TURNO-REAL]
   // [HA-FIXA] HA fixa ja ocupa o horario (o motor a ve como bloqueio):
   // desconta da cota para o motor nao reservar espaco em dobro.
   const fixasPorProfessor = new Map<number, number>();
   for (const d of disp) if (d.turno === turno && (ehHaFixa(d) || ehHaProbatorio(d))) fixasPorProfessor.set(d.professorId, (fixasPorProfessor.get(d.professorId) ?? 0) + 1);
-  // [COTA-COM-HA-CONTRATURNO] (04/11/2026) HA que o recalculo preserva (manual, fixa, probatorio...) num turno em que o
-  // professor NAO da aula conta no total dele e sai do turno com mais HA (recalcular-ha.ts, calcularHoraAtividadePorTurno).
-  // A cota nao descontava: o motor e o numero de janelas do Melhorar contavam com HA que nunca vem para este turno
-  // (Alexandre Moreira, 04/11: tela 0 janela, simulacao 1).
+  // [COTA-COM-HA-CONTRATURNO] [HA-DEVIDA-UMA-CONTA] mesma conta do recalculo: HA presa em turno sem aula sai do turno com
+  // mais HA (Alexandre Moreira, 04/11: tela 0 janela, simulacao 1)
   const r: Record<string, number> = {};
   for (const c of cargas) {
     if (ehSecundario(principal, c.professorId)) continue; // [MESMA-PESSOA-HA]
     if (ehProfessorEstudio(c.professor)) continue; // [ESTUDIO-SEM-HA]
-    const aulasHA = porTurnoHA.get(c.professorId) ?? c.aulasPorTurno;
-    const porTurno = calcularHoraAtividadePorTurno(aulasHA);
-    const contraturno = disp.filter((d) => d.professorId === c.professorId && d.horaAtividadeObrigatoria && d.turno
-      && !((aulasHA[d.turno] ?? 0) > 0) && (!ehHAMovel(d.motivo) || ehHAManualDaTela(d.motivo))).length;
-    for (let i = 0; i < contraturno; i++) { // mesma ordem do recalculo: tira sempre do turno com mais HA
-      const maior = Object.keys(porTurno).sort((x, y) => porTurno[y]! - porTurno[x]!)[0];
-      if (!maior || porTurno[maior]! <= 0) break;
-      porTurno[maior]! -= 1;
-    }
+    const aulasHA = porTurnoHA.get(c.professorId) ?? c.aulasPorTurnoHA ?? c.aulasPorTurno; // [PAEE-SEM-HA]
+    const porTurno = haDevidaPorTurno(aulasHA, haPresasDe(disp, c.professorId)).porTurno;
     const cota = Math.max(0, (porTurno[turno] ?? 0) - (fixasPorProfessor.get(c.professorId) ?? 0));
     if (cota > 0) r[c.professor] = cota;
   }
@@ -188,6 +194,8 @@ export async function calcularCotaHaPorTurno(escolaId: string, turno: string): P
 export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro?: string, opcoes: OpcoesCapacidade = {}): Promise<ProblemaCapacidade[]> {
   const { cargas, slots, disp, principal } = opcoes.dados ?? await calcularCargaPorProfessor(escolaId);
   const porTurnoHA = aulasParaHA(cargas, principal); // [MESMA-PESSOA-HA]
+  await projetarIntegralNaContaDeHA(escolaId, porTurnoHA, slots, principal); // [COTA-INTEGRAL-TURNO-REAL] [HA-DEVIDA-UMA-CONTA]
+  const haDevida = (pid: number, porTurnoAulas: Record<string, number>) => haDevidaPorTurno(porTurnoHA.get(pid) ?? porTurnoAulas, haPresasDe(disp, pid)); // [HA-DEVIDA-UMA-CONTA]
   const aulas = new Map(cargas.map((c) => [c.professorId, c.aulasPorTurno]));
   const profMap = new Map(cargas.map((c) => [c.professorId, { nome: c.professor }]));
 
@@ -270,7 +278,7 @@ export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro
     };
     const aulasTotal = Object.values(porTurno).reduce((s, n) => s + n, 0);
     // [MESMA-PESSOA-HA] secundario nao tem HA; principal usa o total da pessoa
-    const ha = (ehSecundario(principal, pid) || ehProfessorEstudio(p.nome)) ? 0 : calcularHoraAtividadeTotalPorTurno(porTurnoHA.get(pid) ?? porTurno); // [HA-POR-TURNO]
+    const ha = (ehSecundario(principal, pid) || ehProfessorEstudio(p.nome)) ? 0 : (() => { const d = haDevida(pid, porTurno); return [...Object.values(d.porTurno), ...Object.values(d.contraturno)].reduce((x, y) => x + y, 0); })(); // [HA-POR-TURNO] [HA-DEVIDA-UMA-CONTA]
     const turnosEnsino = Object.keys(porTurno);
     const livresEnsino = turnosEnsino.reduce((s, t) => s + (livres[t] ?? 0) + (livresSoHA[t] ?? 0), 0); // [CAPACIDADE-NAO-LETIVO]
     const livresTotal = turnos.reduce((s, t) => s + (livres[t] ?? 0) + (livresSoHA[t] ?? 0), 0);
@@ -278,7 +286,7 @@ export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro
     if (turnoFiltro) { // [CAPACIDADE-POR-TURNO]
       const aulasT = porTurno[turnoFiltro] ?? 0;
       if (aulasT === 0) continue;
-      const haT = (ehSecundario(principal, pid) || ehProfessorEstudio(p.nome)) ? 0 : (calcularHoraAtividadePorTurno(porTurnoHA.get(pid) ?? porTurno)[turnoFiltro] ?? 0);
+      const haT = (ehSecundario(principal, pid) || ehProfessorEstudio(p.nome)) ? 0 : (haDevida(pid, porTurno).porTurno[turnoFiltro] ?? 0); // [HA-DEVIDA-UMA-CONTA]
       const livresT = livres[turnoFiltro] ?? 0;
       const livresComHA = livresT + (livresSoHA[turnoFiltro] ?? 0);
       const nomeT = ({ matutino: "manhã", vespertino: "tarde", noturno: "noite" } as Record<string, string>)[turnoFiltro] ?? turnoFiltro;
@@ -295,7 +303,7 @@ export async function validarCapacidadeProfessores(escolaId: string, turnoFiltro
         // [CAPACIDADE-HA-OUTRO-TURNO] o que nao cabe vai para outro turno como HA* -- se houver espaco la.
         // Diurno nunca vai para a noite (HA-NUNCA-NOITE); a noite pode ir para o diurno.
         const sobra = aulasT + haT - livresComHA;
-        const haPorTurno = (ehSecundario(principal, pid) || ehProfessorEstudio(p.nome)) ? {} : calcularHoraAtividadePorTurno(porTurnoHA.get(pid) ?? porTurno);
+        const haPorTurno = (ehSecundario(principal, pid) || ehProfessorEstudio(p.nome)) ? {} : haDevida(pid, porTurno).porTurno; // [HA-DEVIDA-UMA-CONTA]
         // ordem igual a do recalculo: primeiro outro turno em que ele da aula, depois o turno vizinho
         const VIZINHO: Record<string, string[]> = { matutino: ["vespertino"], vespertino: ["matutino"], noturno: ["vespertino", "matutino"] };
         const destinos = turnos

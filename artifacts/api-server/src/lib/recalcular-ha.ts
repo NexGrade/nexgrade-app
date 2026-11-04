@@ -31,12 +31,13 @@ import {
   horariosTable,
   horarioSlotsTable,
   disponibilidadeTable,
+  disciplinasTable, // [PAEE-SEM-HA]
 } from "@workspace/db";
-import { eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { PARES_TURNO } from "./intervalo-entre-turnos"; // [INTERVALO-ENTRE-TURNOS]
 import { mapaIntegralDosSlots, projetarIntegral } from "./turno-integral"; // [TURNO-INTEGRAL-PROFESSOR]
 
-import { MOTIVO_HA_AUTO, MOTIVO_HA_AUTO_OUTRO_TURNO, ehHAMovel, ehHAManualDaTela } from "./ha-contraturno"; // [HA-OUTRO-TURNO] [HA-IMPORTADA-MOVEL] [HA-MANUAL-MOVEL]
+import { MOTIVO_HA_AUTO, MOTIVO_HA_AUTO_OUTRO_TURNO, ehHAMovel, ehHAManualDaTela, ehHAOutroTurno } from "./ha-contraturno"; // [HA-OUTRO-TURNO] [HA-IMPORTADA-MOVEL] [HA-MANUAL-MOVEL]
 import { montarMapaPrincipal, principalDe } from "./professor-principal"; // [MESMA-PESSOA-HA]
 import { ehProfessorEstudio } from "./hora-atividade"; // [ESTUDIO-SEM-HA]
 
@@ -129,6 +130,7 @@ export interface AulaParaCalculoHA {
   turmaId: number;
   diaSemana: number;
   numeroAula: number;
+  disciplinaId?: number; // [PAEE-SEM-HA] para nao contar a aula de PAEE na tabela
 }
 
 export interface MarcaHACalculada {
@@ -165,6 +167,10 @@ export async function calcularHAIdeal(
     db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId)),
     db.select().from(disponibilidadeTable),
   ]);
+  // [PAEE-SEM-HA] (04/11/2026, decisao da dona) aula de disciplina "sem turma" (PAEE) nao conta na tabela de HA
+  // (Res. 7.863/2024, como a tela de Conflitos ja fazia); continua ocupando o horario do professor
+  const discSemHA = new Set((await db.select({ id: disciplinasTable.id }).from(disciplinasTable)
+    .where(and(eq(disciplinasTable.escolaId, escolaId), eq(disciplinasTable.semTurma, true)))).map((d) => d.id));
   // [TURNO-INTEGRAL-PROFESSOR] aula da turma integral conta (e ocupa) no turno real do professor
   const { turmas, aulas: horarios } = projetarIntegral(turmasDoBanco, aulasOverride ?? horariosReais, mapaIntegralDosSlots(horarioSlots));
 
@@ -210,11 +216,14 @@ export async function calcularHAIdeal(
     if (aulasDoProf.length === 0) continue;
 
     const aulasPorTurno: Record<string, number> = {};
+    const aulasParaTabela: Record<string, number> = {}; // [PAEE-SEM-HA] so as aulas que contam na tabela de HA
     const ocupadoPorTurnoOriginal = new Map<string, Set<string>>();
     for (const h of aulasDoProf) {
       const turno = turmaMap.get(h.turmaId)?.turno;
       if (!turno) continue;
       aulasPorTurno[turno] = (aulasPorTurno[turno] ?? 0) + 1;
+      const discId = (h as { disciplinaId?: number | null }).disciplinaId;
+      aulasParaTabela[turno] = (aulasParaTabela[turno] ?? 0) + (discId != null && discSemHA.has(discId) ? 0 : 1);
       if (!ocupadoPorTurnoOriginal.has(turno)) ocupadoPorTurnoOriginal.set(turno, new Set());
       ocupadoPorTurnoOriginal.get(turno)!.add(`${h.diaSemana}-${h.numeroAula}`);
     }
@@ -310,14 +319,14 @@ export async function calcularHAIdeal(
 
     const totalAulas = Object.values(aulasPorTurno).reduce((s, n) => s + n, 0);
     const diasComAula = new Set(aulasDoProf.map((h) => h.diaSemana)); // [FIX-CONTRATURNO-SO-DIA-COM-AULA]
-    const exigidoTotal = calcularHoraAtividadeTotalPorTurno(aulasPorTurno); // [HA-POR-TURNO]
+    const exigidoTotal = calcularHoraAtividadeTotalPorTurno(aulasParaTabela); // [HA-POR-TURNO] [PAEE-SEM-HA]
     // [FIX] a HA manual de contraturno ja preservada acima conta pro
     // total exigido -- sem subtrair aqui, o orcamento automatico por
     // turno de ensino seria calculado em cima do total CHEIO de novo,
     // dando HA a mais (manual + automatica somando mais que o exigido).
     const manualPorTurno: Record<string, number> = {};
     for (const m of haManualContraturno) manualPorTurno[m.turno ?? "sem_turno"] = (manualPorTurno[m.turno ?? "sem_turno"] ?? 0) + 1;
-    const orcamentoPorTurno = calcularHoraAtividadePorTurno(aulasPorTurno, manualPorTurno); // [HA-MANUAL-NO-PROPRIO-TURNO]
+    const orcamentoPorTurno = calcularHoraAtividadePorTurno(aulasParaTabela, manualPorTurno); // [HA-MANUAL-NO-PROPRIO-TURNO] [PAEE-SEM-HA]
 
     // [PREENCHIMENTO-GULOSO] Funcao reutilizavel: dado um turno, um
     // orcamento e o conjunto inicial de slots ocupados (aula real),
@@ -736,7 +745,10 @@ async function recalcularHoraAtividadeUmaPassada(escolaId: string): Promise<Resu
   // HA automatica que continua no mesmo lugar mas mudou de origem: so troca o motivo
   const paraTrocarMotivo = [...new Map(marcasFinais
     .map((m) => ({ m, d: existentesPorChave.get(chaveMarca(m)) }))
-    .filter((x) => x.d && (x.d.motivo ?? "").startsWith(MOTIVO_HA_AUTO) && x.d.motivo !== motivoDe(x.m))
+    // [HA-ESTRELA-UMA-REGRA] a importada movel que o recalculo manteve no lugar mas com outra origem (HA <-> HA*) tambem
+    // troca o texto: antes ficava o texto importado e a previa mostrava HA* onde a grade oficial mostrava HA
+    .filter((x) => x.d && x.d.motivo !== motivoDe(x.m) && ((x.d.motivo ?? "").startsWith(MOTIVO_HA_AUTO)
+      || (ehHAMovel(x.d.motivo) && !ehHAManualDaTela(x.d.motivo) && ehHAOutroTurno(x.d.motivo) !== !!x.m.outroTurno)))
     .map((x) => [x.d!.id, { id: x.d!.id, motivo: motivoDe(x.m), professorId: x.d!.professorId }] as const)).values()];
   const paraRemoverIds = disponibilidades
     .filter((d) => !finaisSet.has(chaveMarca({ professorId: d.professorId, turno: d.turno ?? "sem_turno", diaSemana: d.diaSemana, horarioSlot: d.horarioSlot })))

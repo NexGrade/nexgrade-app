@@ -69,3 +69,33 @@ export function ehProfessorEstudio(nome: string | null | undefined): boolean {
 export function calcularHoraAtividadeTotal(aulasPorTurno: Record<string, number>): number {
   return Object.values(calcularHoraAtividadePorTurno(aulasPorTurno)).reduce((s, n) => s + n, 0);
 }
+
+/**
+ * [HA-DEVIDA-UMA-CONTA] (04/11/2026) HA devida em cada turno, com a MESMA regra do recalculo (recalcular-ha.ts):
+ *  - tabela oficial consultada com as aulas de cada turno (a turma integral ja projetada no turno real pelo chamador);
+ *  - HA presa (manual, fixa, probatorio... que o recalculo preserva) num turno SEM aula do professor, ou sem turno,
+ *    conta no total dele e sai do turno com mais HA; nesse contraturno ela e devida la mesmo (HA*).
+ * Antes a capacidade, a pagina do professor e a Disponibilidade faziam cada uma a sua conta (sem a integral no turno
+ * real e sem descontar o contraturno) e mostravam "falta HA" onde o recalculo poe menos.
+ */
+export function haDevidaPorTurno(
+  aulasPorTurno: Record<string, number>,
+  presas: Array<{ turno: string | null }>,
+): { porTurno: Record<string, number>; contraturno: Record<string, number> } {
+  const porTurno: Record<string, number> = {};
+  for (const [t, n] of Object.entries(aulasPorTurno)) if ((n ?? 0) > 0 && t !== "integral") porTurno[t] = calcularHoraAtividadeInstitucional(n);
+  const contraturno: Record<string, number> = {};
+  let tirar = 0;
+  for (const p of presas) {
+    if (!p.turno) { tirar++; continue; }
+    if ((aulasPorTurno[p.turno] ?? 0) > 0) continue;
+    contraturno[p.turno] = (contraturno[p.turno] ?? 0) + 1;
+    tirar++;
+  }
+  for (let i = 0; i < tirar; i++) {
+    const maior = Object.keys(porTurno).sort((x, y) => porTurno[y]! - porTurno[x]!)[0];
+    if (!maior || porTurno[maior]! <= 0) break;
+    porTurno[maior]! -= 1;
+  }
+  return { porTurno, contraturno };
+}

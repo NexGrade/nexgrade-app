@@ -8,7 +8,7 @@ import {
 } from "@workspace/db";
 import { and, eq, isNull, or } from "drizzle-orm";
 import { carregarAssSoTurma } from "./assincrona-so-turma"; // [ASS-SO-TURMA]
-import { ehHAOutroTurno } from "./ha-contraturno"; // [HA-OUTRO-TURNO]
+import { ehHAOutroTurno, turnosComAulaPorProfessor } from "./ha-contraturno"; // [HA-OUTRO-TURNO] [HA-ESTRELA-UMA-REGRA]
 import { mapaRevezamento, hojeBrasil } from "./revezamento-trio"; // [REVEZAMENTO-TRIO]
 
 // [PDF-AGENDA] dados da agenda (aulas oficiais, HA e horarios) usados pela tela e pelo PDF
@@ -62,7 +62,9 @@ export async function dadosAgenda(professor: { id: number }, escolaId: string) {
     );
 
   // [HA-OUTRO-TURNO] devolve so a marca (HA de aulas de outro turno = HA*), nunca o motivo
-  const horasAtividade = horasAtividadeBrutas.map(({ motivo, ...h }) => ({ ...h, outroTurno: ehHAOutroTurno(motivo) }));
+  // [HA-ESTRELA-UMA-REGRA] HA* tambem quando a HA esta num turno sem aula do professor (contraturno), como nas telas e PDFs
+  const turnosComAula = (await turnosComAulaPorProfessor(escolaId, [professor.id])).get(professor.id) ?? new Set<string>();
+  const horasAtividade = horasAtividadeBrutas.map(({ motivo, ...h }) => ({ ...h, outroTurno: ehHAOutroTurno(motivo) || (!!h.turno && !turnosComAula.has(h.turno)) }));
 
   // [AGENDA-TURNOS] horario de inicio de cada aula, por turno (esquema de aulas da escola)
   const slots = await db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId));
