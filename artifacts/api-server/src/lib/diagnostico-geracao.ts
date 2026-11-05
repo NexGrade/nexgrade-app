@@ -68,6 +68,8 @@ export function sugestaoParaCausa(causa: string): string | undefined {
   if (m) return `Libere horários de ${m[1]}, ou aumente o limite de aulas por dia de ${m[3]} em Regras de Distribuição.`;
   m = /^Turma (.+?): (\d+) aulas por semana, mas só tem (\d+) horários/.exec(causa);
   if (m) return `Reduza ${plural(Number(m[2]) - Number(m[3]), "aula", "aulas")} da turma ${m[1]}, ou marque aulas como assíncronas.`;
+  m = /^Turma (.+?): precisa de (\d+) aulas por semana, mas os professores dela só conseguem cobrir (\d+)/.exec(causa); // [TURMA-POR-DIA]
+  if (m) return `Faltam ${plural(Number(m[2]) - Number(m[3]), "aula", "aulas")} na turma ${m[1]}: libere horários dos professores dela nos dias indicados (Disponibilidade), ou aumente o limite por dia de alguma disciplina dela (Regras de Distribuição).`;
   if (/^Aula fixa de .+ cai num horário bloqueado/.test(causa)) return "Mova a aula fixa para um horário livre do professor, ou libere esse horário na Disponibilidade.";
   if (/duas aulas fixas no mesmo horário/.test(causa)) return "Mova uma das aulas fixas para outro horário.";
   return undefined;
