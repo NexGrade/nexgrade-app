@@ -3,6 +3,8 @@
 // repassada para a Nexus Core receber o valor cheio: cobrar = (receber + fixo) / (1 - taxa%), parcela
 // arredondada para cima no centavo (pode ficar alguns centavos acima do simulador do Asaas).
 // Gera a mensagem pronta para o WhatsApp. Precos e taxas ficam guardados no navegador.
+// [PROPOSTA-PDF] (05/11/2026) Nome do contato (A/C) e a proposta em PDF (modelo em ./proposta-pdf.ts).
+// Precos padrao: R$ 40 por turma/ano e R$ 20 de implantacao por turma (Simone, 05/11/2026).
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,13 +14,14 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Calculator } from "lucide-react";
+import { Copy, Calculator, FileDown } from "lucide-react";
+import { abrirPropostaPdf, type DadosProposta } from "./proposta-pdf"; // [PROPOSTA-PDF]
 
 type Config = {
   precoTurma: string; implTurma: string;
   t1p: string; t1f: string; tnp: string; tnf: string; tpp: string; tpf: string;
 };
-const PADRAO: Config = { precoTurma: "30", implTurma: "20", t1p: "2.99", t1f: "0.49", tnp: "3.99", tnf: "0.49", tpp: "0", tpf: "0" };
+const PADRAO: Config = { precoTurma: "40", implTurma: "20", t1p: "2.99", t1f: "0.49", tnp: "3.99", tnf: "0.49", tpp: "0", tpf: "0" };
 const CHAVE = "nexgrade.simuladorProposta";
 
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -36,18 +39,28 @@ function calcular(liquido: number, c: Config, n: number): Opcoes {
   };
 }
 
+// [PROPOSTA-PDF] versao 2 dos precos guardados: quem tinha os precos antigos (R$ 30) passa para os novos
+// padroes; as taxas do Asaas guardadas continuam.
+const VERSAO_PRECOS = 2;
 function lerConfig(): Config {
-  try { return { ...PADRAO, ...JSON.parse(localStorage.getItem(CHAVE) || "{}") }; } catch { return PADRAO; }
+  try {
+    const salvo = JSON.parse(localStorage.getItem(CHAVE) || "{}") as Partial<Config> & { v?: number };
+    if (salvo.v !== VERSAO_PRECOS) { delete salvo.precoTurma; delete salvo.implTurma; }
+    delete salvo.v;
+    return { ...PADRAO, ...salvo };
+  } catch { return PADRAO; }
 }
 
 export default function SimuladorProposta() {
   const { toast } = useToast();
   const [turmas, setTurmas] = useState("20");
   const [escola, setEscola] = useState("");
+  const [contato, setContato] = useState(""); // [PROPOSTA-PDF]
+  const [tratamento, setTratamento] = useState<DadosProposta["tratamento"]>("Prezada");
   const [comImpl, setComImpl] = useState(true);
   const [parcelas, setParcelas] = useState("12");
   const [cfg, setCfg] = useState<Config>(lerConfig);
-  useEffect(() => { try { localStorage.setItem(CHAVE, JSON.stringify(cfg)); } catch { /* sem armazenamento */ } }, [cfg]);
+  useEffect(() => { try { localStorage.setItem(CHAVE, JSON.stringify({ ...cfg, v: VERSAO_PRECOS })); } catch { /* sem armazenamento */ } }, [cfg]);
   const set = (k: keyof Config) => (e: React.ChangeEvent<HTMLInputElement>) => setCfg((c) => ({ ...c, [k]: e.target.value }));
 
   const r = useMemo(() => {
@@ -82,6 +95,11 @@ export default function SimuladorProposta() {
   const copiar = async () => {
     try { await navigator.clipboard.writeText(mensagem); toast({ title: "Mensagem copiada" }); }
     catch { toast({ title: "Não foi possível copiar", description: "Selecione o texto e use Ctrl+C.", variant: "destructive" }); }
+  };
+
+  const gerarPdf = () => {
+    const ok = abrirPropostaPdf({ escola, contato, tratamento, turmas: r.t, precoTurma: r.preco, implTurma: r.impl, comImpl });
+    if (!ok) toast({ title: "O navegador bloqueou a janela da proposta", description: "Permita pop-ups para este site e clique de novo.", variant: "destructive" });
   };
 
   const Bloco = ({ titulo, base, liquido, o, destaque }: { titulo: string; base: string; liquido: number; o: Opcoes; destaque?: boolean }) => (
@@ -123,6 +141,21 @@ export default function SimuladorProposta() {
             <Label htmlFor="sim-escola">Nome da escola (opcional)</Label>
             <Input id="sim-escola" value={escola} onChange={(e) => setEscola(e.target.value)} placeholder="Ex.: C.E. ..." />
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="sim-contato">Aos cuidados de (opcional)</Label>
+            <div className="flex gap-2">
+              <Select value={tratamento} onValueChange={(v) => setTratamento(v as DadosProposta["tratamento"])}>
+                <SelectTrigger className="w-[110px] shrink-0" aria-label="Tratamento"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Prezada">Prezada</SelectItem>
+                  <SelectItem value="Prezado">Prezado</SelectItem>
+                  <SelectItem value="Olá">Olá</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input id="sim-contato" value={contato} onChange={(e) => setContato(e.target.value)} placeholder="Nome da pessoa" />
+            </div>
+            <p className="text-xs text-muted-foreground">Sai no PDF como "A/C" e na saudação, com o primeiro nome.</p>
+          </div>
           <div className="flex items-center justify-between gap-2">
             <Label htmlFor="sim-impl">Incluir implantação</Label>
             <Switch id="sim-impl" checked={comImpl} onCheckedChange={setComImpl} />
@@ -157,6 +190,15 @@ export default function SimuladorProposta() {
           <Card><CardContent className="py-8 text-center text-muted-foreground">Digite o número de turmas para ver os valores.</CardContent></Card>
         ) : (
           <>
+            <Card className="border-primary">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Proposta em PDF</CardTitle>
+                <CardDescription>Abre a proposta pronta para anexar no e-mail. Na janela de impressão, escolha "Salvar como PDF".</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={gerarPdf}><FileDown className="w-4 h-4 mr-2" /> Gerar PDF da proposta</Button>
+              </CardContent>
+            </Card>
             {r.oTotal && <Bloco titulo="Primeiro ano" base="implantação + assinatura" liquido={r.implV + r.assin} o={r.oTotal} destaque />}
             {r.oImpl && <Bloco titulo="Implantação" base={`${r.t} turmas × ${brl(r.impl)} · uma vez`} liquido={r.implV} o={r.oImpl} />}
             <Bloco titulo="Assinatura anual" base={`${r.t} turmas × ${brl(r.preco)} por ano`} liquido={r.assin} o={r.oAssin} />
