@@ -79,7 +79,11 @@ export default function SimuladorProposta() {
   const mensagem = useMemo(() => {
     if (r.t <= 0) return "";
     const linhas = (o: Opcoes) => `• PIX ou boleto: ${brl(o.pix)}\n• Cartão à vista: ${brl(o.avista)}\n• Cartão em ${o.n}x: ${o.n}x de ${brl(o.parc)}`;
-    let m = `*NexGrade — Gestão de Horários Escolares* 📚\n*Proposta comercial${escola.trim() ? " — " + escola.trim() : ""} (${r.t} turmas)*\n\n`;
+    // [PROPOSTA-PDF] (05/11/2026) nome do contato tambem na mensagem: saudacao com o primeiro nome e A/C
+    const nome = contato.trim(), primeiro = nome.split(/\s+/)[0] ?? "";
+    let m = nome ? `${tratamento === "Olá" ? `Olá, ${primeiro}!` : `${tratamento} ${primeiro},`} segue a proposta do NexGrade.\n\n` : "";
+    m += `*NexGrade — Gestão de Horários Escolares* 📚\n*Proposta comercial${escola.trim() ? " — " + escola.trim() : ""} (${r.t} turmas)*\n`;
+    m += nome ? `A/C: ${nome}\n\n` : "\n";
     if (r.oImpl) m += `🛠️ *Implantação (valor único): ${brl(r.implV)}*\n(${brl(r.impl)} por turma)\nEntregamos o sistema completo, já com o banco de dados da escola: turmas, disciplinas, professores, grade atual, disponibilidade, hora-atividade e calendário letivo. A escola já começa usando.\n\n`;
     m += `💰 *Assinatura anual: ${brl(r.assin)}*\n(${brl(r.preco)} por turma, por ano, tudo incluso)\n\n💳 *Valores e formas de pagamento*\n\n`;
     if (r.oImpl) m += `*Implantação*\n${linhas(r.oImpl)}\n\n`;
@@ -90,7 +94,7 @@ export default function SimuladorProposta() {
     m += `✅ *Tudo incluso na assinatura*\n• Montagem automática da grade de horários (manhã, tarde, noite e integral)\n• Hora-atividade calculada pela tabela oficial da SEED-PR\n• Disponibilidade de cada professor e aviso de conflitos\n• Aulas assíncronas, trio e co-docência (Recomposição)\n• Grade em PDF: por turma, por professor, por disciplina e quadro geral\n• Reservas de espaços com PDF da semana\n• Calendário letivo oficial SEED-PR\n• Licenças, comunicados e assistente com inteligência artificial\n• Suporte pelo WhatsApp\n\n`;
     m += `🎁 30 dias de avaliação gratuita.\n\nQualquer dúvida, estou à disposição!\n*Simone Barros — NexGrade*`;
     return m;
-  }, [r, escola]);
+  }, [r, escola, contato, tratamento]);
 
   const copiar = async () => {
     try { await navigator.clipboard.writeText(mensagem); toast({ title: "Mensagem copiada" }); }
@@ -154,7 +158,7 @@ export default function SimuladorProposta() {
               </Select>
               <Input id="sim-contato" value={contato} onChange={(e) => setContato(e.target.value)} placeholder="Nome da pessoa" />
             </div>
-            <p className="text-xs text-muted-foreground">Sai no PDF como "A/C" e na saudação, com o primeiro nome.</p>
+            <p className="text-xs text-muted-foreground">Sai no PDF e na mensagem do WhatsApp como "A/C" e na saudação, com o primeiro nome.</p>
           </div>
           <div className="flex items-center justify-between gap-2">
             <Label htmlFor="sim-impl">Incluir implantação</Label>

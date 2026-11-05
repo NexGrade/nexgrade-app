@@ -35,7 +35,8 @@ export function montarPropostaHtml(d: DadosProposta, origem: string): string {
   const assin = Math.round(t * d.precoTurma * 100) / 100;
   const implV = d.comImpl ? Math.round(t * d.implTurma * 100) / 100 : 0;
   const total = assin + implV;
-  const saudacao = primeiroNome ? `${d.tratamento} ${esc(primeiroNome)},` : d.tratamento === "Olá" ? "Olá!" : "Prezados,";
+  const saudacao = !primeiroNome ? (d.tratamento === "Olá" ? "Olá!" : "Prezados,")
+    : d.tratamento === "Olá" ? `Olá, ${esc(primeiroNome)}!` : `${d.tratamento} ${esc(primeiroNome)},`;
   const td = "padding:10px 8px; border-bottom:1px solid #e2e7f0;";
   const th = "background:#1e3a8a; color:#ffffff; font-weight:bold; padding:10px 8px;";
   const item = (titulo: string, texto: string) =>
@@ -47,13 +48,18 @@ export function montarPropostaHtml(d: DadosProposta, origem: string): string {
 <meta charset="utf-8">
 <title>${esc(tituloProposta(escola))}</title>
 <style>
-  @page { size: A4; margin: 12mm; }
+  /* margem 0 na página: o navegador não imprime data, título e "about:blank" no topo e no rodapé */
+  @page { size: A4; margin: 0; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  body { margin: 0; padding: 0; background: #ffffff; }
+  body { margin: 0; padding: 0 12mm; background: #ffffff; }
+  /* thead/tfoot vazios se repetem em cada página impressa: fazem a margem de cima e de baixo */
+  table.pagina { width: 100%; border-collapse: collapse; }
+  table.pagina > thead td, table.pagina > tfoot td { height: 12mm; padding: 0; }
   tr, table.bloco { break-inside: avoid; }
 </style>
 </head>
 <body>
+<table class="pagina" role="presentation"><thead><tr><td></td></tr></thead><tfoot><tr><td></td></tr></tfoot><tbody><tr><td style="padding:0;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; width:100%; max-width:720px; margin:0 auto; font-family:Arial, Helvetica, sans-serif; color:#1e293b;">
   <tr>
     <td style="background:#0e1729; padding:22px 24px; border-radius:10px 10px 0 0;">
@@ -161,6 +167,7 @@ export function montarPropostaHtml(d: DadosProposta, origem: string): string {
     </td>
   </tr>
 </table>
+</td></tr></tbody></table>
 </body>
 </html>`;
 }
