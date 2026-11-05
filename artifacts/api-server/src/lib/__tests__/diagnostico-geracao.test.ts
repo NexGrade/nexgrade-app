@@ -78,6 +78,14 @@ describe("diagnostico da geracao", () => {
     expect(d.problemas[0]!.sugestao).toBe("Tente de novo em 1 ou 2 minutos.");
   });
 
+  it("turma que os professores nao conseguem cobrir no dia: sugestao aponta Disponibilidade e limite por dia [TURMA-POR-DIA]", () => {
+    const c = "Turma 2MF: precisa de 30 aulas por semana, mas os professores dela só conseguem cobrir 28 (bloqueios de cada um + limite por dia de cada disciplina). Por dia: Segunda 4 de 6.";
+    expect(sugestaoParaCausa(c)).toBe("Faltam 2 aulas na turma 2MF: libere horários dos professores dela nos dias indicados (Disponibilidade), ou aumente o limite por dia de alguma disciplina dela (Regras de Distribuição).");
+    const d = diagnosticarGeracao(422, { error: "INVIAVEL", status: "INFEASIBLE", causasInviabilidade: [c] })!;
+    expect(d.titulo).toBe("Não existe grade possível com os dados de hoje");
+    expect(d.problemas[0]!.oQue).toBe(c);
+  });
+
   it("frase desconhecida do motor fica sem sugestao (nao inventa)", () => {
     expect(sugestaoParaCausa("Alguma regra nova do motor.")).toBeUndefined();
   });

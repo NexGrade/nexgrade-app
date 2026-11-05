@@ -15,6 +15,11 @@ import time
 from . import progresso  # [PROGRESSO-MOTOR]
 from .diagnostico_inviabilidade import diagnosticar_inviabilidade, montar_mensagem  # [DIAGNOSTICO-INVIAVEL]
 
+
+class _SemCausa(Exception):
+    """[TURMA-POR-DIA] tempo acabou e o diagnostico nao achou causa: a resposta continua UNKNOWN."""
+
+
 TETO_AULAS_TURNO = {"noturno": 19, "matutino": 24, "vespertino": 24}
 DIAS = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"]
 
@@ -763,15 +768,28 @@ def gerar_grade(
             if status == cp_model.INFEASIBLE
             else ("Cálculo interrompido antes de encontrar uma grade válida." if progresso.pedido_parar() else f"Solver não terminou dentro do tempo limite de {tempo_limite_s}s.")  # [PARAR-MOTOR]
         )
-        if status == cp_model.INFEASIBLE:  # [DIAGNOSTICO-INVIAVEL] diz QUEM trava, em vez de so "nao existe grade"
+        # [DIAGNOSTICO-INVIAVEL] diz QUEM trava, em vez de so "nao existe grade".
+        # [TURMA-POR-DIA] (05/11/2026) tambem quando o tempo acaba sem nenhuma grade (UNKNOWN): as contas do diagnostico
+        # sao prova (melhor caso), entao se acharem causa a grade e impossivel e a resposta vira INFEASIBLE com as causas,
+        # em vez de "tente com mais tempo". Sem causa, o UNKNOWN fica como estava.
+        tempo_acabou = status == cp_model.UNKNOWN and not progresso.pedido_parar()
+        if status == cp_model.INFEASIBLE or tempo_acabou:
             try:
                 causas = diagnosticar_inviabilidade(disciplinas_turma, bloqueios, aulas_por_dia, TETO_AULAS_TURNO.get(turno, 24), fixar=fixar,
                                                     teto_por_professor=getattr(_CTX, "teto_professor", None))  # [TETO-AUTORIZADO]
+                if tempo_acabou:
+                    if not causas:
+                        raise _SemCausa()
+                    resultado["status"] = "INFEASIBLE"
+                    resultado["mensagem"] = ("Não existe grade que satisfaça todas as restrições com esses dados "
+                                             "(disponibilidade dos professores + teto de aulas por turno).")
                 resultado["causasInviabilidade"] = causas
                 resultado["mensagem"] = montar_mensagem(resultado["mensagem"], causas)
                 print(f"[INVIAVEL] {turno}: {len(causas)} causa(s) encontrada(s)", flush=True)
                 for c in causas:
                     print(f"[INVIAVEL]   {c}", flush=True)
+            except _SemCausa:
+                pass
             except Exception as e:  # o diagnostico nunca pode derrubar a resposta
                 print(f"[INVIAVEL] diagnostico falhou: {e}", flush=True)
 
