@@ -13,6 +13,8 @@ export const DICIONARIO_CODDISC_PENDENTE: Record<string, number> = {
   // [MATRIZ-3A-RCO] (31/10/2026) do arquivo do RCO do Mario Braga (sem SAE no SERE)
   "Língua Espanhola": 3826,
   "Prática de Formação": 1269,
+  // [PROJETO-DE-VIDA-594] (04/11/2026) codigo do RCO informado pela dona (3MB DES do Mario Braga)
+  "Projeto de Vida": 594,
 };
 
 export type OrigemCoddisc = "externo" | "sae" | "dicionario";
