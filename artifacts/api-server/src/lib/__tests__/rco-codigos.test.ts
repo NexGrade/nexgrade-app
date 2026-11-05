@@ -10,7 +10,7 @@ describe("codigo da disciplina no arquivo do RCO [CODIGOS-RCO-TELA]", () => {
   });
   it("Espanhol e Pratica de Formacao pelo arquivo do RCO [MATRIZ-3A-RCO]", () => {
     expect(resolverCoddiscComOrigem({ disciplinaNome: "Prática de Formação", ...sem })?.codigo).toBe(1269);
-    expect(resolverCoddiscComOrigem({ disciplinaNome: "Projeto de Vida", ...sem })?.codigo).toBe(594); // [PROJETO-DE-VIDA-594]
+    expect(resolverCoddiscComOrigem({ disciplinaNome: "Projeto de Vida", ...sem })?.codigo).toBe(3780); // [PROJETO-DE-VIDA-3780] Codigo Externo do RCO (594 e o SAE)
   });
   it("nao chuta codigo de nome parecido (Lingua Espanhola I fica sem)", () => {
     expect(resolverCoddiscComOrigem({ disciplinaNome: "Língua Espanhola I", ...sem })).toBeNull();
