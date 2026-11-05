@@ -13,6 +13,8 @@
 - [`apresentacao/`](./apresentacao/) — apresentação para escolas 2027: `slides-novos.html` (slides novos) + `base-2026-10-22.pdf`; `montar-apresentacao.py` junta os dois no PDF final.
 - [`relatorio-executivo/`](./relatorio-executivo/) — **interno**: relatório executivo com preços e projeção financeira.
 - [`treinamento/`](./treinamento/) — **interno**: treinamento comercial (playbook de vendas para escolas públicas).
+- [`email-marketing/`](./email-marketing/) — e-mail de divulgação para as escolas estaduais: `email-opcao-2.html` (versão escolhida, pronta para colar no Gmail/Outlook) e `email-marketing.md` (texto, assuntos e o que conferir antes de enviar). Sem preços.
+- [`propostas/`](./propostas/) — **interno**: propostas comerciais enviadas a escolas (HTML e PDF). O modelo atual fica no Painel Master → Simulador de proposta (`artifacts/horario-escolar/src/pages/master/proposta-pdf.ts`).
 
 - [`../CLAUDE.md`](../CLAUDE.md) — instruções que o Claude Code carrega ao abrir o projeto (onde ler primeiro, regras de trabalho, banco, verificação e git).
 
