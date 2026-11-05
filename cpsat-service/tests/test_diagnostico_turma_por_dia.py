@@ -96,5 +96,36 @@ class TurmaPorDia(unittest.TestCase):
         self.assertEqual(causas, [])  # segunda: P0 2 + P1 2 + P4 2 = 6
 
 
+class HorarioSemProfessor(unittest.TestCase):
+    """[HORARIO-SEM-PROFESSOR] caso do Iedo: num horario, menos professores livres do que turmas cheias."""
+
+    def _duas_turmas(self):
+        # T1 e T2 cheias (30 em 30). P0 da aula nas duas; P1..P4 so na T1; Q1..Q4 so na T2.
+        linhas = [L("T1", "D0", "D0", 6, "P0", 2), L("T2", "D0", "D0", 6, "P0", 2)]
+        linhas += [L("T1", f"D{i}", f"D{i}", 6, f"P{i}", 2) for i in range(1, 5)]
+        linhas += [L("T2", f"D{i}", f"D{i}", 6, f"Q{i}", 2) for i in range(1, 5)]
+        return linhas
+
+    def test_um_professor_para_duas_turmas_no_mesmo_horario(self):
+        linhas = self._duas_turmas()
+        # quarta 6a: so P0 livre (todos os outros bloqueados) -> 2 turmas, 1 professor
+        bloq = [(p, 2, 6) for p in ["P1", "P2", "P3", "P4", "Q1", "Q2", "Q3", "Q4"]]
+        causas = [c for c in diag(linhas, bloq) if c.startswith("Quarta, 6ª aula")]
+        self.assertEqual(len(causas), 1)
+        self.assertIn("2 turmas cheias", causas[0])
+        self.assertIn("cobrir 1", causas[0])
+
+    def test_um_livre_em_cada_turma_nao_acusa(self):
+        linhas = self._duas_turmas()
+        bloq = [(p, 2, 6) for p in ["P0", "P2", "P3", "P4", "Q2", "Q3", "Q4"]]  # P1 livre na T1, Q1 na T2
+        self.assertEqual([c for c in diag(linhas, bloq) if "6ª aula" in c and c.startswith("Quarta")], [])
+
+    def test_turma_com_folga_nao_entra(self):
+        linhas = self._duas_turmas()
+        linhas = [d for d in linhas if not (d.turma == "T2" and d.professor == "Q4")]  # T2 com 24 aulas: nao e cheia
+        bloq = [(p, 2, 6) for p in ["P1", "P2", "P3", "P4", "Q1", "Q2", "Q3"]]
+        self.assertEqual([c for c in diag(linhas, bloq) if c.startswith("Quarta, 6ª aula")], [])
+
+
 if __name__ == "__main__":
     unittest.main()

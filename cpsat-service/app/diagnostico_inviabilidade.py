@@ -157,6 +157,72 @@ def diagnosticar_inviabilidade(disciplinas_turma, bloqueios, aulas_por_dia, teto
             achados.append((5, f"Turma {turma}: precisa de {demanda} aulas por semana, mas os professores dela só conseguem "
                                f"cobrir {cobertura_semana} (bloqueios de cada um + limite por dia de cada disciplina).{detalhe}"))
 
+    # 6) [HORARIO-SEM-PROFESSOR] (05/11/2026) num mesmo horario, as turmas CHEIAS (aulas = horarios da semana) precisam,
+    # todas, de um professor -- e cada professor so esta numa turma por vez. Se os professores livres naquele horario
+    # nao dao para todas (emparelhamento maximo turma <-> professor livre que da aula nela), a grade e impossivel.
+    # Caso real do C. E. Iedo em 05/11: 6a aula de quarta com 9 professores livres para 10 turmas cheias; o motor
+    # rodou 600 s sem achar grade e os itens acima nao pegavam (olham uma turma ou um professor por vez).
+    cheias = {}
+    for turma, linhas in linhas_por_turma.items():
+        vistos, demanda = set(), 0
+        for dt in linhas:
+            if dt.assincrona:
+                continue
+            if dt.grupo_dupla is not None:
+                if dt.grupo_dupla in vistos:
+                    continue
+                vistos.add(dt.grupo_dupla)
+            demanda += dt.aulas_semana
+        limite_aula = min(aulas_por_dia, min((dt.ultima_aula_turma or aulas_por_dia) for dt in linhas))
+        if demanda == dias * limite_aula:
+            cheias[turma] = (limite_aula, linhas)
+    for dia in range(dias):
+        for aula in range(1, aulas_por_dia + 1):
+            turmas_slot = sorted(t for t, (lim, _l) in cheias.items() if aula <= lim)
+            if len(turmas_slot) < 2:
+                continue
+            # quem pode cobrir a turma neste horario: professor livre (ou com aula fixa ali) de alguma linha dela;
+            # dupla precisa de todos do grupo livres e conta como um "professor" composto
+            candidatos = {}
+            for t in turmas_slot:
+                opcoes, grupos = set(), defaultdict(list)
+                for dt in cheias[t][1]:
+                    if dt.assincrona:
+                        continue
+                    if dt.grupo_dupla is not None:
+                        grupos[dt.grupo_dupla].append(dt)
+                        continue
+                    if (dia, aula) not in bloqueados_do_prof[dt.professor] or (dia, aula) in _fixas_da_linha(fixar, dt):
+                        opcoes.add(dt.professor)
+                for membros in grupos.values():
+                    if all((dia, aula) not in bloqueados_do_prof[m.professor] or (dia, aula) in _fixas_da_linha(fixar, m) for m in membros):
+                        opcoes.add(tuple(sorted(m.professor for m in membros)))
+                candidatos[t] = opcoes
+            # emparelhamento maximo turma <-> opcao (algoritmo de Kuhn). A dupla entra como uma opcao propria, sem
+            # disputar com os membros sozinhos: isso so AUMENTA o que da para cobrir (melhor caso), entao a conta
+            # continua so acusando o impossivel.
+            dono = {}  # opcao -> turma
+
+            def _tenta(t, visitados):
+                for op in candidatos[t]:
+                    if op in visitados:
+                        continue
+                    visitados.add(op)
+                    if op not in dono or _tenta(dono[op], visitados):
+                        dono[op] = t
+                        return True
+                return False
+
+            cobertas = sum(1 for t in turmas_slot if _tenta(t, set()))
+            if cobertas < len(turmas_slot):
+                livres = sorted({p for ops in candidatos.values() for op in ops for p in (op if isinstance(op, tuple) else (op,))})
+                bloqueados = sorted({dt.professor for t in turmas_slot for dt in cheias[t][1]
+                                     if not dt.assincrona and (dia, aula) in bloqueados_do_prof[dt.professor]})
+                nome_dia = NOMES_DIA[dia] if dia < len(NOMES_DIA) else dia
+                achados.append((1, f"{nome_dia}, {aula}ª aula: {len(turmas_slot)} turmas cheias precisam de aula nesse horário, "
+                                   f"mas só dá para cobrir {cobertas} (professores dessas turmas livres: {len(livres)}). "
+                                   f"Bloqueados nesse horário: {', '.join(bloqueados[:12])}{' e outros' if len(bloqueados) > 12 else ''}."))
+
     achados.sort(key=lambda x: x[0])
     vistos_txt, saida = set(), []
     for _p, texto in achados:

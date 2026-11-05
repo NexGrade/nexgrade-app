@@ -86,6 +86,11 @@ describe("diagnostico da geracao", () => {
     expect(d.problemas[0]!.oQue).toBe(c);
   });
 
+  it("horario com menos professores livres do que turmas cheias: diz o horario e quantos liberar [HORARIO-SEM-PROFESSOR]", () => {
+    const c = "Quarta, 6ª aula: 10 turmas cheias precisam de aula nesse horário, mas só dá para cobrir 9 (professores dessas turmas livres: 9). Bloqueados nesse horário: Kerolen, Pamela.";
+    expect(sugestaoParaCausa(c)).toBe("Libere esse horário (Quarta, 6ª aula) de pelo menos 1 professor dessas turmas na Disponibilidade. Todas as turmas cheias precisam de um professor em cada horário.");
+  });
+
   it("frase desconhecida do motor fica sem sugestao (nao inventa)", () => {
     expect(sugestaoParaCausa("Alguma regra nova do motor.")).toBeUndefined();
   });
