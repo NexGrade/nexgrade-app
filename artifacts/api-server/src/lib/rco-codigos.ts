@@ -13,8 +13,9 @@ export const DICIONARIO_CODDISC_PENDENTE: Record<string, number> = {
   // [MATRIZ-3A-RCO] (31/10/2026) do arquivo do RCO do Mario Braga (sem SAE no SERE)
   "Língua Espanhola": 3826,
   "Prática de Formação": 1269,
-  // [PROJETO-DE-VIDA-594] (04/11/2026) codigo do RCO informado pela dona (3MB DES do Mario Braga)
-  "Projeto de Vida": 594,
+  // [PROJETO-DE-VIDA-3780] (05/11/2026) 3780 = Codigo Externo do RCO (arquivo do RCO do Iedo, cadastro do
+  // Romario e tabela codigos_rco_disciplina SAE 594 -> 3780). Em 04/11 tinha entrado 594, que e o SAE.
+  "Projeto de Vida": 3780,
 };
 
 export type OrigemCoddisc = "externo" | "sae" | "dicionario";
