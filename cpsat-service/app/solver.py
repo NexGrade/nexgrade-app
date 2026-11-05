@@ -639,6 +639,30 @@ def gerar_grade(
     # [HA-OCUPA-MELHORIA] HA de hoje conta como ocupada ao medir janela de professor
     ha_ocup = {(h["professor"], int(h["dia"]), int(h["aula"])) for h in (ha_atual or [])} or None
 
+    # [DIAGNOSTICO-ANTES] (05/11/2026) as contas do diagnostico sao prova (melhor caso, sem solver, milissegundos):
+    # se ja acusam, a grade e impossivel e nao adianta gastar 5-10 minutos de motor. Caso do C. E. Iedo em 05/11:
+    # 6a aula de quarta com 9 professores livres para 10 turmas cheias -- tres tentativas de 300 a 600 s em vao.
+    # Desliga com CPSAT_DIAGNOSTICO_ANTES=0.
+    if os.getenv("CPSAT_DIAGNOSTICO_ANTES", "1") != "0":
+        try:
+            causas_antes = diagnosticar_inviabilidade(disciplinas_turma, bloqueios, aulas_por_dia, TETO_AULAS_TURNO.get(turno, 24), fixar=fixar,
+                                                      teto_por_professor=getattr(_CTX, "teto_professor", None))  # [TETO-AUTORIZADO]
+        except Exception as e:  # o diagnostico nunca pode impedir o calculo
+            print(f"[INVIAVEL] diagnostico antes falhou: {e}", flush=True)
+            causas_antes = []
+        if causas_antes:
+            print(f"[INVIAVEL] {turno}: {len(causas_antes)} causa(s) antes de calcular", flush=True)
+            for c in causas_antes:
+                print(f"[INVIAVEL]   {c}", flush=True)
+            return {
+                "status": "INFEASIBLE", "otimo": False, "viavel": False,
+                "tempoResolucaoS": 0.0, "tempoParedeS": 0.0, "aulas": [],
+                "causasInviabilidade": causas_antes,
+                "mensagem": montar_mensagem("Não existe grade que satisfaça todas as restrições com esses dados "
+                                            "(disponibilidade dos professores + teto de aulas por turno).", causas_antes),
+                "paradoPeloUsuario": False,
+            }
+
     inicio = time.time()
     # [LIMITE-PRATICO] Objetivo de janela de professor e' custoso e
     # instavel em tempo de execucao para turnos grandes (24 turmas) --
