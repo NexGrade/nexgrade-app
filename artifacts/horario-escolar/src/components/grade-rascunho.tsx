@@ -67,9 +67,15 @@ export function GradeRascunho({ nome }: { nome: string }) {
         if (v == null || v === SEM) continue;
         const novo = Number(v);
         if (novo === a.professorId) continue;
-        await customFetch(`/api/horarios/experimentais/${encodeURIComponent(nome)}/atribuicoes`, {
-          method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ turmaDisciplinaId: a.turmaDisciplinaId, professorId: novo }),
+        // [RASCUNHO-AVISO-PROFESSOR] o servidor avisa se o professor novo tem aula em outra turma, bloqueio ou HA nesses horarios
+        const enviar = (confirmar: boolean) => customFetch<{ aplicado: boolean; avisos?: string[] }>(`/api/horarios/experimentais/${encodeURIComponent(nome)}/atribuicoes`, {
+          method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ turmaDisciplinaId: a.turmaDisciplinaId, professorId: novo, confirmar }),
         });
+        const r = await enviar(false);
+        if (!r.aplicado) {
+          if (!confirm(`Atenção:\n\n${(r.avisos ?? []).map((x) => `• ${x}`).join("\n")}\n\nTrocar o professor mesmo assim?`)) continue;
+          await enviar(true);
+        }
         mudou++;
       }
       await qc.invalidateQueries({ queryKey: ["atribuicoes-exp", nome] });

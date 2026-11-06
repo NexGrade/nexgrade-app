@@ -122,6 +122,29 @@ describe.skipIf(!TEM_BANCO)("modo rascunho: fluxo completo e casos de erro", () 
     expect((await chamar("GET", "/horarios/rascunho/atual")).body).toEqual({ rascunho: null });
   });
 
+  it("[RASCUNHO-AVISO-PROFESSOR] trocar o professor avisa choque com aula em outra turma e com bloqueio; so troca confirmando", async () => {
+    await chamar("POST", "/horarios/rascunho/atual", { nome: "Plano G" });
+    const url = `/horarios/experimentais/${enc("Plano G")}`;
+    // no rascunho, o Caio tambem tem Portugues na 1B na segunda 1a (mesmo horario da Matematica da 1A)
+    await db.insert(horariosExperimentaisTable).values({ escolaId: E, nome: "Plano G", turmaId: ids.t2, disciplinaId: ids.por, professorId: ids.caio, diaSemana: 0, numeroAula: 1 });
+    // e a Bia esta bloqueada na segunda 2a, so no rascunho
+    await chamar("POST", `/disponibilidade/lote?experimento=${enc("Plano G")}`, { professorId: ids.bia, itens: [{ diaSemana: 0, horarioSlot: 2, turno: "matutino", disponivel: false, motivo: "Bloqueio (definido na tela)", horaAtividadeObrigatoria: false }] });
+    let r = await chamar("PUT", `${url}/atribuicoes`, { turmaDisciplinaId: ids.tdMat1, professorId: ids.caio });
+    expect(r.body).toMatchObject({ aplicado: false, avisos: ["Caio já tem aula na 1B na segunda, 1ª aula."] });
+    r = await chamar("PUT", `${url}/atribuicoes`, { turmaDisciplinaId: ids.tdMat1, professorId: ids.bia });
+    expect(r.body).toMatchObject({ aplicado: false, avisos: ["Bia tem bloqueio na segunda, 2ª aula."] });
+    // sem confirmar, nada mudou
+    expect((await doRascunho("Plano G")).filter((h) => h.turmaId === ids.t1 && h.disciplinaId === ids.mat).map((h) => h.professorId)).toEqual([ids.ana, ids.ana]);
+    expect((await chamar("GET", `${url}/atribuicoes`)).body.filter((x: any) => x.mudou)).toEqual([]);
+    // confirmando, troca
+    r = await chamar("PUT", `${url}/atribuicoes`, { turmaDisciplinaId: ids.tdMat1, professorId: ids.bia, confirmar: true });
+    expect(r.body).toMatchObject({ aplicado: true, aulasAtualizadas: 2 });
+    // voltar para a professora da escola nao pede confirmacao (ela ja dava essas aulas)
+    r = await chamar("PUT", `${url}/atribuicoes`, { turmaDisciplinaId: ids.tdMat1, professorId: ids.ana });
+    expect(r.body.aplicado).toBe(true);
+    await chamar("DELETE", "/horarios/rascunho/atual");
+  });
+
   it("descartar com professor, disponibilidade e troca: a escola fica como estava", async () => {
     await chamar("POST", "/horarios/rascunho/atual", { nome: "Plano E" });
     const url = `/horarios/experimentais/${enc("Plano E")}`;

@@ -6,6 +6,7 @@ import {
 } from "../lib/disponibilidade-experimento"; // [DISP-EXPERIMENTAL] [EXPERIMENTO-COMPLETO]
 import { experimentosTable, atribuicaoExperimentalTable, disponibilidadeExperimentalTable } from "@workspace/db"; // [EXPERIMENTO-COMPLETO]
 import { lerRascunho, gravarRascunho, limparRascunho } from "../lib/rascunho"; // [MODO-RASCUNHO]
+import { aulasDePartidaDoMelhorar } from "../lib/rascunho-melhorar"; // [RASCUNHO-MELHORAR]
 import axios from "axios";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { db } from "@workspace/db";
@@ -1617,7 +1618,7 @@ router.get("/experimentais/:nome/atribuicoes", async (req, res) => {
   })).sort((a, b) => a.turma.localeCompare(b.turma, "pt-BR", { numeric: true }) || a.disciplina.localeCompare(b.disciplina, "pt-BR")));
 });
 
-const AtribuirBody = z.object({ turmaDisciplinaId: z.number().int(), professorId: z.number().int().nullable() });
+const AtribuirBody = z.object({ turmaDisciplinaId: z.number().int(), professorId: z.number().int().nullable(), confirmar: z.boolean().optional() });
 
 /** Troca o professor de uma disciplina so no experimento. As aulas do experimento dessa disciplina passam para ele. */
 router.put("/experimentais/:nome/atribuicoes", async (req, res) => {
@@ -1634,6 +1635,12 @@ router.put("/experimentais/:nome/atribuicoes", async (req, res) => {
   }
   const atual = await carregarAtribuicoes(escolaId, nome);
   const professorAntes = atual.has(linha.td.id) ? atual.get(linha.td.id)! : linha.td.professorId ?? null;
+  // [RASCUNHO-AVISO-PROFESSOR] (06/11/2026) antes de trocar: o professor novo ja tem aula em outra turma, bloqueio ou HA
+  // nos horarios desta disciplina? Sem confirmar, so devolve os avisos (como a troca de aulas).
+  if (b.data.professorId != null && b.data.professorId !== professorAntes && !b.data.confirmar) {
+    const avisos = await avisosDoProfessorNovo(escolaId, nome, linha.td.turmaId, linha.td.disciplinaId, professorAntes, b.data.professorId);
+    if (avisos.length) { res.json({ ok: false, aplicado: false, avisos }); return; }
+  }
   try {
     const onde = and(eq(atribuicaoExperimentalTable.escolaId, escolaId), eq(atribuicaoExperimentalTable.nome, nome), eq(atribuicaoExperimentalTable.turmaDisciplinaId, linha.td.id));
     if ((linha.td.professorId ?? null) === b.data.professorId) await db.delete(atribuicaoExperimentalTable).where(onde); // voltou a ser a oficial
@@ -1653,8 +1660,34 @@ router.put("/experimentais/:nome/atribuicoes", async (req, res) => {
       eq(horariosExperimentaisTable.professorId, professorAntes),
     )).returning({ id: horariosExperimentaisTable.id })).length;
   }
-  res.json({ ok: true, aulasAtualizadas });
+  res.json({ ok: true, aplicado: true, aulasAtualizadas });
 });
+
+/** [RASCUNHO-AVISO-PROFESSOR] Choques do professor novo nos horarios da disciplina (aulas do experimento dessa turma). */
+async function avisosDoProfessorNovo(escolaId: string, nome: string, turmaId: number, disciplinaId: number, professorAntes: number | null, professorNovo: number): Promise<string[]> {
+  const exp = await db.select().from(horariosExperimentaisTable).where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome)));
+  const daDisciplina = exp.filter((h) => h.turmaId === turmaId && h.disciplinaId === disciplinaId && (professorAntes == null || h.professorId === professorAntes));
+  if (!daDisciplina.length) return [];
+  const turmas = await db.select({ id: turmasTable.id, nome: turmasTable.nome, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
+  const tm = new Map(turmas.map((t) => [t.id, t]));
+  const turno = tm.get(turmaId)?.turno;
+  const turmasNoExp = new Set(exp.map((h) => h.turmaId));
+  const oficial = await db.select().from(horariosTable).where(and(eq(horariosTable.escolaId, escolaId), eq(horariosTable.professorId, professorNovo), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`));
+  const outras = [...exp.filter((h) => h.professorId === professorNovo && h.turmaId !== turmaId), ...oficial.filter((h) => !turmasNoExp.has(h.turmaId))];
+  const disp = await comExperimento(escolaId, nome, () => db.select().from(disponibilidadeTable).where(eq(disponibilidadeTable.professorId, professorNovo))
+    .then((r) => sobreporExperimento(r, (d) => d.professorId === professorNovo)));
+  const [p] = await db.select({ nome: professoresTable.nome }).from(professoresTable).where(eq(professoresTable.id, professorNovo));
+  const DIA = ["segunda", "terça", "quarta", "quinta", "sexta"];
+  const avisos: string[] = [];
+  for (const h of daDisciplina) {
+    const onde = `${DIA[h.diaSemana] ?? h.diaSemana}, ${h.numeroAula}ª aula`;
+    const choque = outras.find((x) => x.diaSemana === h.diaSemana && x.numeroAula === h.numeroAula && tm.get(x.turmaId)?.turno === turno);
+    if (choque) avisos.push(`${p?.nome ?? "O professor"} já tem aula na ${tm.get(choque.turmaId)?.nome ?? "outra turma"} na ${onde}.`);
+    const d = disp.find((x) => x.diaSemana === h.diaSemana && x.horarioSlot === h.numeroAula && x.turno === turno && (!x.disponivel || x.horaAtividadeObrigatoria));
+    if (d) avisos.push(`${p?.nome ?? "O professor"} tem ${d.horaAtividadeObrigatoria ? "hora-atividade" : "bloqueio"} na ${onde}.`);
+  }
+  return [...new Set(avisos)];
+}
 
 const TrocarAulasBody = z.object({
   turmaId: z.number().int(),
@@ -2806,7 +2839,16 @@ async function runCpsatGeneracaoUnica(
       const ids = chaveParaIds.get(`${d.turma}||${d.codigoSae}`);
       if (ids) codigoPorChave.set(`${ids.turmaId}|${ids.disciplinaId}|${d.professor}|${ids.assincrona ? 1 : 0}`, { codigoSae: d.codigoSae, disciplina: d.nome }); // [ASSINCRONA-TRIO]
     }
-    const oficiais = await db.select().from(horariosTable).where(inArray(horariosTable.turmaId, turmaIds));
+    // [RASCUNHO-MELHORAR] (06/11/2026) dentro de um experimento que ja tem a grade dessas turmas (o rascunho), o
+    // Melhorar parte dela -- com as trocas de aula e de professor feitas nele --, e nao da grade oficial
+    // (so para o rascunho da escola: nos outros experimentos o Melhorar continua partindo da oficial, como a tela explica)
+    const ehRascunho = (await lerRascunho(escolaId).catch(() => null))?.nome === nomeExperimental;
+    const daGradeDoExp = ehRascunho ? await db.select().from(horariosExperimentaisTable).where(and(
+      eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nomeExperimental), inArray(horariosExperimentaisTable.turmaId, turmaIds))) : [];
+    const turmasComGradeNoExp = new Set(daGradeDoExp.map((h) => h.turmaId));
+    const oficiais = aulasDePartidaDoMelhorar(
+      await db.select().from(horariosTable).where(inArray(horariosTable.turmaId, turmaIds)), daGradeDoExp, [...passthroughSoTurma, ...passthroughAcompanhante]);
+    if (turmasComGradeNoExp.size) console.log(`[RASCUNHO-MELHORAR] "${nomeExperimental}": melhorando a partir da grade do experimento em ${turmasComGradeNoExp.size} turma(s)`);
     const semMapa: string[] = [];
     const idsPassthrough = new Set([...passthroughSoTurma, ...passthroughAcompanhante].map((x) => x.id)); // [ASS-SO-TURMA] [ACOMPANHANTE]
     for (const h of oficiais) {
@@ -2837,8 +2879,12 @@ async function runCpsatGeneracaoUnica(
       if (haHoje.length) {
         const profsT = [...professorIdsUsados];
         const { slotsEscola: slotsEsc, posicao } = await ocupacaoReal(escolaId); // [INTEGRAL-NA-OCUPACAO]
-        const aulasProfs = await db.select().from(horariosTable).where(and(
-          eq(horariosTable.escolaId, escolaId), inArray(horariosTable.professorId, profsT), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`));
+        const aulasProfs = [ // [RASCUNHO-MELHORAR] nas turmas que o experimento tem, as aulas dele
+          ...(await db.select().from(horariosTable).where(and(
+            eq(horariosTable.escolaId, escolaId), inArray(horariosTable.professorId, profsT), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`)))
+            .filter((h) => !turmasComGradeNoExp.has(h.turmaId)),
+          ...daGradeDoExp.filter((h) => profsT.includes(h.professorId)),
+        ];
         const dispProfs = await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, profsT))
           .then((r) => sobreporExperimento(r, (d) => profsT.includes(d.professorId))); // [DISP-EXPERIMENTAL]
         const movs = reposicionarHAMovel({
