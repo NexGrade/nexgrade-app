@@ -5,12 +5,12 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { and, eq, sql } from "drizzle-orm";
 import {
   db, disciplinasTable, disponibilidadeTable, disponibilidadeExperimentalTable, gradeBackupsTable, horariosExperimentaisTable,
-  horariosTable, horarioSlotsTable, professoresTable, turmasTable,
+  horariosTable, horarioSlotsTable, professoresTable, turmasTable, turmaDisciplinasTable,
 } from "@workspace/db";
 import { exigirAdminParaAlterar } from "../../lib/permissao";
 import disponibilidadeRouter from "../disponibilidade";
 import horariosRouter from "../horarios";
-import { comExperimento, sobreporExperimento, middlewareDisponibilidadeExperimental } from "../../lib/disponibilidade-experimento";
+import { comExperimento, sobreporExperimento, sobreporAtribuicao, middlewareDisponibilidadeExperimental } from "../../lib/disponibilidade-experimento";
 
 // [DISP-EXPERIMENTAL] (06/11/2026) Disponibilidade dentro de um experimento, com Postgres de verdade (migracao 0008):
 // editar so no experimento, a oficial intacta, as leituras do experimento enxergando a mudanca, promover aplicando
@@ -31,7 +31,7 @@ async function chamar(metodo: string, caminho: string, corpo?: unknown) {
   const body: any = tipo.includes("json") ? await r.json() : await r.text();
   return { status: r.status, body };
 }
-const ids = { ana: 0, turma: 0, disc: 0 };
+const ids = { ana: 0, turma: 0, disc: 0, bia: 0, td: 0 };
 const dispOficial = () => db.select().from(disponibilidadeTable).where(eq(disponibilidadeTable.professorId, ids.ana));
 const enc = encodeURIComponent;
 
@@ -69,6 +69,10 @@ describe.skipIf(!TEM_BANCO)("disponibilidade em experimento: integracao com banc
       await db.insert(horarioSlotsTable).values({ escolaId: E, turno: "matutino", nivelEnsino: "medio_tecnico", numeroAula: n, horaInicio: h, duracaoMinutos: 50, letivo: true } as any);
     const [ana] = await db.insert(professoresTable).values({ escolaId: E, nome: "Ana", email: `ana.${E}@escola.test` }).returning();
     Object.assign(ids, { ana: ana!.id, turma: turma!.id, disc: disc!.id });
+    // [EXPERIMENTO-COMPLETO] Bia (outra professora) e a linha da disciplina na turma (professora oficial: Ana)
+    const [bia] = await db.insert(professoresTable).values({ escolaId: E, nome: "Bia", email: `bia.${E}@escola.test` }).returning();
+    const [td] = await db.insert(turmaDisciplinasTable).values({ turmaId: turma!.id, disciplinaId: disc!.id, professorId: ana!.id } as any).returning();
+    Object.assign(ids, { bia: bia!.id, td: td!.id });
     await db.insert(horariosTable).values({ escolaId: E, turmaId: turma!.id, disciplinaId: disc!.id, professorId: ana!.id, diaSemana: 1, numeroAula: 1 } as any);
     // oficial: Ana bloqueada na quinta, 2a aula
     await db.insert(disponibilidadeTable).values({ professorId: ana!.id, diaSemana: 3, horarioSlot: 2, turno: "matutino", disponivel: false, motivo: "Bloqueio (definido na tela)" });
@@ -76,7 +80,7 @@ describe.skipIf(!TEM_BANCO)("disponibilidade em experimento: integracao com banc
 
   afterAll(async () => {
     await new Promise<void>((ok) => (server ? server.close(() => ok()) : ok()));
-    for (const t of ["disponibilidade_experimental", "horarios_experimentais", "grade_backups", "horarios", "horario_slots", "turmas", "disciplinas", "professores"]) {
+    for (const t of ["atribuicao_experimental", "experimentos", "disponibilidade_experimental", "horarios_experimentais", "grade_backups", "horarios", "horario_slots", "turmas", "disciplinas", "professores"]) {
       await db.execute(sql.raw(`delete from ${t} where escola_id = '${E}'`));
     }
   });
@@ -156,6 +160,67 @@ describe.skipIf(!TEM_BANCO)("disponibilidade em experimento: integracao com banc
     expect((await chamar("DELETE", `/horarios/experimentais/${enc(OUTRO)}`)).status).toBe(204);
     expect((await chamar("GET", "/disponibilidade/experimentos")).body.experimentos).toEqual([]);
     expect((await dispOficial()).length).toBe(antes);
+  });
+
+  // ── [EXPERIMENTO-COMPLETO] experimento como area de trabalho ──
+  const COPIA = "Cópia da manhã";
+
+  it("cria experimento copiando a grade oficial do turno; nome repetido recusa; aparece no resumo", async () => {
+    const r = await chamar("POST", "/horarios/experimentos", { nome: COPIA, copiarOficial: "matutino" });
+    expect(r.status).toBe(201);
+    expect(r.body.aulasCopiadas).toBe(1);
+    expect((await chamar("POST", "/horarios/experimentos", { nome: COPIA })).status).toBe(409);
+    const vazio = await chamar("POST", "/horarios/experimentos", { nome: "Vazio" });
+    expect(vazio.body.aulasCopiadas).toBe(0);
+    const resumo = await chamar("GET", "/horarios/experimentos-resumo");
+    expect(resumo.body.experimentos.map((e: any) => [e.nome, e.aulas])).toEqual(expect.arrayContaining([[COPIA, 1], ["Vazio", 0]]));
+  });
+
+  it("atribuicao no experimento: troca o professor so nele, as aulas dele passam para o novo e voltar a oficial limpa", async () => {
+    const r = await chamar("PUT", `/horarios/experimentais/${enc(COPIA)}/atribuicoes`, { turmaDisciplinaId: ids.td, professorId: ids.bia });
+    expect(r.status).toBe(200);
+    expect(r.body.aulasAtualizadas).toBe(1);
+    const lista = await chamar("GET", `/horarios/experimentais/${enc(COPIA)}/atribuicoes`);
+    expect(lista.body.find((l: any) => l.turmaDisciplinaId === ids.td)).toMatchObject({ professorOficialId: ids.ana, professorId: ids.bia, mudou: true });
+    const [oficial] = await db.select().from(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.id, ids.td));
+    expect(oficial!.professorId).toBe(ids.ana); // a oficial nao mudou
+    const ler = () => db.select().from(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.id, ids.td)).then((x) => sobreporAtribuicao(x));
+    expect((await comExperimento(E, COPIA, ler))[0]!.professorId).toBe(ids.bia); // o motor ve a Bia dentro do experimento
+    expect((await ler())[0]!.professorId).toBe(ids.ana);
+    const exp = await db.select().from(horariosExperimentaisTable).where(and(eq(horariosExperimentaisTable.escolaId, E), eq(horariosExperimentaisTable.nome, COPIA)));
+    expect(exp.map((h) => h.professorId)).toEqual([ids.bia]);
+    // professor de fora recusa
+    expect((await chamar("PUT", `/horarios/experimentais/${enc(COPIA)}/atribuicoes`, { turmaDisciplinaId: ids.td, professorId: 999999999 })).status).toBe(400);
+  });
+
+  it("trocar aulas no experimento: vago sem aviso troca direto; com bloqueio avisa e so troca confirmando", async () => {
+    const url = `/horarios/experimentais/${enc(COPIA)}/trocar-aulas`;
+    let r = await chamar("POST", url, { turmaId: ids.turma, de: { diaSemana: 1, numeroAula: 1 }, para: { diaSemana: 1, numeroAula: 2 } });
+    expect(r.body).toEqual({ aplicado: true, avisos: [] });
+    await db.insert(disponibilidadeTable).values({ professorId: ids.bia, diaSemana: 2, horarioSlot: 1, turno: "matutino", disponivel: false, motivo: "Bloqueio (definido na tela)" });
+    r = await chamar("POST", url, { turmaId: ids.turma, de: { diaSemana: 1, numeroAula: 2 }, para: { diaSemana: 2, numeroAula: 1 } });
+    expect(r.body.aplicado).toBe(false);
+    expect(r.body.avisos).toEqual(["Bia tem bloqueio na quarta, 1ª aula."]);
+    r = await chamar("POST", url, { turmaId: ids.turma, de: { diaSemana: 1, numeroAula: 2 }, para: { diaSemana: 2, numeroAula: 1 }, confirmar: true });
+    expect(r.body.aplicado).toBe(true);
+    const exp = await db.select().from(horariosExperimentaisTable).where(and(eq(horariosExperimentaisTable.escolaId, E), eq(horariosExperimentaisTable.nome, COPIA)));
+    expect(exp.map((h) => [h.diaSemana, h.numeroAula])).toEqual([[2, 1]]);
+    // de volta para o vago sem bloqueio (para o promover nao cair em cima do bloqueio)
+    await chamar("POST", url, { turmaId: ids.turma, de: { diaSemana: 2, numeroAula: 1 }, para: { diaSemana: 1, numeroAula: 2 }, confirmar: true });
+  });
+
+  it("promover aplica a atribuicao na oficial e a copia de seguranca volta o professor", async () => {
+    const r = await chamar("POST", `/horarios/experimentais/${enc(COPIA)}/promover`);
+    expect(r.status).toBe(200);
+    expect(r.body.atribuicaoAplicada).toBe(1);
+    const [td] = await db.select().from(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.id, ids.td));
+    expect(td!.professorId).toBe(ids.bia);
+    const oficial = await db.select().from(horariosTable).where(eq(horariosTable.escolaId, E));
+    expect(oficial.map((h) => h.professorId)).toEqual([ids.bia]); // a aula da Ana saiu (professora trocada)
+    expect((await chamar("GET", "/horarios/experimentos-resumo")).body.experimentos.map((e: any) => e.nome)).not.toContain(COPIA);
+    expect((await chamar("POST", `/horarios/backups/${r.body.backupId}/restaurar`)).status).toBe(200);
+    const [volta] = await db.select().from(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.id, ids.td));
+    expect(volta!.professorId).toBe(ids.ana);
   });
 
   it("sem a migracao 0008: tudo segue com a oficial e so a edicao no experimento avisa (503)", async () => {

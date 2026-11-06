@@ -12,11 +12,15 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { Request, Response, NextFunction } from "express";
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { db, disponibilidadeTable, disponibilidadeExperimentalTable, type DisponibilidadeExperimental } from "@workspace/db";
+import {
+  db, disponibilidadeTable, disponibilidadeExperimentalTable, atribuicaoExperimentalTable, experimentosTable, turmaDisciplinasTable,
+  type DisponibilidadeExperimental,
+} from "@workspace/db";
 import { getEscolaId } from "./escola-id";
 
 export type LinhaDisp = typeof disponibilidadeTable.$inferSelect;
-type Contexto = { escolaId: string; nome: string; linhas: LinhaDisp[] };
+// [EXPERIMENTO-COMPLETO] (06/11/2026) o contexto leva tambem a atribuicao do experimento (turmaDisciplinaId -> professor)
+type Contexto = { escolaId: string; nome: string; linhas: LinhaDisp[]; atribuicoes: Map<number, number | null> };
 const contexto = new AsyncLocalStorage<Contexto>();
 
 type ChaveDisp = { professorId: number; diaSemana: number; horarioSlot: number; turno: string | null };
@@ -61,17 +65,40 @@ export function sobreporExperimento<T extends ChaveDisp>(oficial: T[], filtro?: 
   return ctx ? sobrepor(oficial, ctx.linhas, filtro) : oficial;
 }
 
+/** [EXPERIMENTO-COMPLETO] atribuicao do experimento: troca o professor das linhas de turma_disciplinas. */
+export function sobreporAtribuicao<T extends { id: number; professorId: number | null }>(rows: T[]): T[] {
+  const ctx = contexto.getStore();
+  if (!ctx || !ctx.atribuicoes.size) return rows;
+  return rows.map((r) => (ctx.atribuicoes.has(r.id) ? { ...r, professorId: ctx.atribuicoes.get(r.id)! } : r));
+}
+
+export async function carregarAtribuicoes(escolaId: string, nome: string): Promise<Map<number, number | null>> {
+  try {
+    const r = await db.select().from(atribuicaoExperimentalTable)
+      .where(and(eq(atribuicaoExperimentalTable.escolaId, escolaId), eq(atribuicaoExperimentalTable.nome, nome)));
+    return new Map(r.map((x) => [x.turmaDisciplinaId, x.professorId ?? null]));
+  } catch (e) {
+    if (semTabelaExperimental(e)) return new Map();
+    throw e;
+  }
+}
+
+async function montarContexto(escolaId: string, nome: string): Promise<Contexto | null> {
+  const [{ linhas }, atribuicoes] = await Promise.all([carregarMudancas(escolaId, nome), carregarAtribuicoes(escolaId, nome)]);
+  if (!linhas.length && !atribuicoes.size) return null;
+  return { escolaId, nome, linhas: linhas.map(comoLinhaDisp), atribuicoes };
+}
+
 /** Nome do experimento do contexto atual (para logs e testes). */
 export const experimentoDoContexto = () => contexto.getStore()?.nome ?? null;
 
 /** Roda `fn` com as mudancas do experimento no contexto (usado pelo middleware e pelos testes). */
 export async function comExperimento<T>(escolaId: string, nome: string, fn: () => Promise<T>): Promise<T> {
-  const { linhas } = await carregarMudancas(escolaId, nome);
-  if (!linhas.length) return fn();
-  return contexto.run({ escolaId, nome, linhas: linhas.map(comoLinhaDisp) }, fn);
+  const ctx = await montarContexto(escolaId, nome);
+  return ctx ? contexto.run(ctx, fn) : fn();
 }
 
-const ROTA_DO_EXPERIMENTO = /^\/experimentais\/([^/]+)\/(simulacao|fechar-janela|trocar)\/?$/;
+const ROTA_DO_EXPERIMENTO = /^\/experimentais\/([^/]+)\/(simulacao|fechar-janela|trocar|trocar-aulas)\/?$/;
 
 /** Nome do experimento que a requisicao usa: nomeExperimental no corpo ou na URL, ou /experimentais/:nome/... */
 export function nomeDaRequisicao(req: Pick<Request, "body" | "query" | "path">): string | null {
@@ -89,9 +116,9 @@ export function middlewareDisponibilidadeExperimental(req: Request, _res: Respon
   if (!nome) { next(); return; }
   let escolaId: string;
   try { escolaId = getEscolaId(req); } catch { next(); return; }
-  carregarMudancas(escolaId, nome).then(({ linhas }) => {
-    if (!linhas.length) { next(); return; }
-    contexto.run({ escolaId, nome, linhas: linhas.map(comoLinhaDisp) }, () => next());
+  montarContexto(escolaId, nome).then((ctx) => {
+    if (!ctx) { next(); return; }
+    contexto.run(ctx, () => next());
   }, next);
 }
 
@@ -157,4 +184,51 @@ export async function apagarMudancas(escolaId: string, nome: string): Promise<nu
     if (semTabelaExperimental(e)) return 0;
     throw e;
   }
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// [EXPERIMENTO-COMPLETO] registro do experimento e atribuicao ao promover
+
+/** Garante o registro do experimento (ele existe mesmo sem aula gerada). Sem a migracao 0009, nao faz nada. */
+export async function registrarExperimento(escolaId: string, nome: string, criadoPor?: string | null): Promise<void> {
+  try {
+    await db.insert(experimentosTable).values({ escolaId, nome, criadoPor: criadoPor ?? null }).onConflictDoNothing();
+  } catch (e) {
+    if (!semTabelaExperimental(e)) throw e;
+  }
+}
+
+export type AtribuicaoAntes = Array<{ turmaDisciplinaId: number; professorId: number | null }>;
+
+/** Grava a atribuicao do experimento em turma_disciplinas; devolve como estava (para a copia e para desfazer). */
+export async function aplicarAtribuicoesNaOficial(atribuicoes: Map<number, number | null>): Promise<AtribuicaoAntes> {
+  if (!atribuicoes.size) return [];
+  const ids = [...atribuicoes.keys()];
+  const antes = (await db.select({ id: turmaDisciplinasTable.id, professorId: turmaDisciplinasTable.professorId })
+    .from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.id, ids)))
+    .map((r) => ({ turmaDisciplinaId: r.id, professorId: r.professorId ?? null }));
+  await db.transaction(async (tx) => {
+    for (const [id, professorId] of atribuicoes) await tx.update(turmaDisciplinasTable).set({ professorId }).where(eq(turmaDisciplinasTable.id, id));
+  });
+  return antes;
+}
+
+export async function voltarAtribuicoes(tx: Tx, antes: AtribuicaoAntes): Promise<void> {
+  for (const a of antes) await tx.update(turmaDisciplinasTable).set({ professorId: a.professorId }).where(eq(turmaDisciplinasTable.id, a.turmaDisciplinaId));
+}
+
+/** Apaga tudo o que o experimento guarda alem das aulas (disponibilidade, atribuicao e o registro). */
+export async function apagarExtrasDoExperimento(escolaId: string, nome: string): Promise<number> {
+  let n = await apagarMudancas(escolaId, nome);
+  try {
+    n += (await db.delete(atribuicaoExperimentalTable)
+      .where(and(eq(atribuicaoExperimentalTable.escolaId, escolaId), eq(atribuicaoExperimentalTable.nome, nome)))
+      .returning({ id: atribuicaoExperimentalTable.id })).length;
+    n += (await db.delete(experimentosTable)
+      .where(and(eq(experimentosTable.escolaId, escolaId), eq(experimentosTable.nome, nome)))
+      .returning({ id: experimentosTable.id })).length;
+  } catch (e) {
+    if (!semTabelaExperimental(e)) throw e;
+  }
+  return n;
 }

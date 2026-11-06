@@ -4,6 +4,7 @@
 // (feriado nao muda a ordem). Os outros dois professores ficam em suporte.
 import { db, turmaDisciplinasTable } from "@workspace/db";
 import { and, inArray, isNotNull } from "drizzle-orm";
+import { sobreporAtribuicao } from "./disponibilidade-experimento"; // [EXPERIMENTO-COMPLETO]
 
 const DIA_MS = 86_400_000;
 
@@ -41,7 +42,7 @@ export async function mapaRevezamento(turmaIds: number[], data: Date): Promise<M
     isNotNull(turmaDisciplinasTable.grupoTrio),
     isNotNull(turmaDisciplinasTable.trioOrdem),
     isNotNull(turmaDisciplinasTable.trioInicio),
-  ));
+  )).then((r) => sobreporAtribuicao(r)); // [EXPERIMENTO-COMPLETO] trio com o professor do experimento
   for (const l of linhas) {
     if (!l.professorId || !l.trioInicio || !l.trioOrdem || !(l.grupoTrio ?? "").trim()) continue;
     mapa.set(`${l.turmaId}|${l.disciplinaId}|${l.professorId}`, {
