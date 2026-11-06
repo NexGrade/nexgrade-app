@@ -81,7 +81,7 @@ describe.skipIf(!TEM_BANCO)("disponibilidade em experimento: integracao com banc
 
   afterAll(async () => {
     await new Promise<void>((ok) => (server ? server.close(() => ok()) : ok()));
-    for (const t of ["atribuicao_experimental", "experimentos", "disponibilidade_experimental", "horarios_experimentais", "grade_backups", "horarios", "horario_slots", "turmas", "disciplinas", "professores"]) {
+    for (const t of ["configuracoes", "atribuicao_experimental", "experimentos", "disponibilidade_experimental", "horarios_experimentais", "grade_backups", "horarios", "horario_slots", "turmas", "disciplinas", "professores"]) {
       await db.execute(sql.raw(`delete from ${t} where escola_id = '${E}'`));
     }
   });
@@ -222,6 +222,36 @@ describe.skipIf(!TEM_BANCO)("disponibilidade em experimento: integracao com banc
     expect((await chamar("POST", `/horarios/backups/${r.body.backupId}/restaurar`)).status).toBe(200);
     const [volta] = await db.select().from(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.id, ids.td));
     expect(volta!.professorId).toBe(ids.ana);
+  });
+
+  it("[MODO-RASCUNHO] rascunho da escola: cria com a grade copiada, um so por vez, mostra as diferencas, restaura a turma e descarta", async () => {
+    expect((await chamar("GET", "/horarios/rascunho/atual")).body).toEqual({ rascunho: null });
+    let r = await chamar("POST", "/horarios/rascunho/atual", { nome: "Rascunho 1" });
+    expect(r.status).toBe(201);
+    expect(r.body.aulas).toBeGreaterThan(0);
+    expect((await chamar("POST", "/horarios/rascunho/atual", { nome: "Outro" })).status).toBe(409);
+    r = await chamar("GET", "/horarios/rascunho/atual");
+    expect(r.body.rascunho).toMatchObject({ nome: "Rascunho 1", aulas: expect.any(Number) });
+    const [aula] = await db.select().from(horariosTable).where(eq(horariosTable.escolaId, E));
+    const livre = aula!.numeroAula === 1 ? 2 : 1;
+    r = await chamar("POST", `/horarios/experimentais/${enc("Rascunho 1")}/trocar-aulas`, { turmaId: ids.turma, de: { diaSemana: aula!.diaSemana, numeroAula: aula!.numeroAula }, para: { diaSemana: aula!.diaSemana, numeroAula: livre }, confirmar: true });
+    expect(r.body.aplicado).toBe(true);
+    const dif = await chamar("GET", `/horarios/experimentais/${enc("Rascunho 1")}/diferencas`);
+    expect(dif.body.turmas).toHaveLength(1);
+    expect(dif.body.turmas[0].mudancas).toHaveLength(2); // saiu de um horario e entrou no outro
+    expect((await db.select().from(horariosTable).where(eq(horariosTable.escolaId, E))).map((h) => h.numeroAula)).toEqual([aula!.numeroAula]); // a oficial nao mudou
+    await chamar("POST", `/horarios/experimentais/${enc("Rascunho 1")}/restaurar-turma`, { turmaId: ids.turma });
+    expect((await chamar("GET", `/horarios/experimentais/${enc("Rascunho 1")}/diferencas`)).body.turmas).toEqual([]);
+    expect((await chamar("DELETE", "/horarios/rascunho/atual")).status).toBe(204);
+    expect((await chamar("GET", "/horarios/rascunho/atual")).body).toEqual({ rascunho: null });
+    expect(await db.select().from(horariosExperimentaisTable).where(and(eq(horariosExperimentaisTable.escolaId, E), eq(horariosExperimentaisTable.nome, "Rascunho 1")))).toEqual([]);
+  });
+
+  it("[MODO-RASCUNHO] aplicar (promover) o rascunho limpa o rascunho da escola", async () => {
+    await chamar("POST", "/horarios/rascunho/atual", { nome: "Rascunho 2" });
+    const r = await chamar("POST", `/horarios/experimentais/${enc("Rascunho 2")}/promover`);
+    expect(r.status).toBe(200);
+    expect((await chamar("GET", "/horarios/rascunho/atual")).body).toEqual({ rascunho: null });
   });
 
   it("sem a migracao 0008: tudo segue com a oficial e so a edicao no experimento avisa (503)", async () => {

@@ -5,6 +5,7 @@ import {
   apagarExtrasDoExperimento, registrarExperimento, semTabelaExperimental, comExperimento, type AtribuicaoAntes,
 } from "../lib/disponibilidade-experimento"; // [DISP-EXPERIMENTAL] [EXPERIMENTO-COMPLETO]
 import { experimentosTable, atribuicaoExperimentalTable, disponibilidadeExperimentalTable } from "@workspace/db"; // [EXPERIMENTO-COMPLETO]
+import { lerRascunho, gravarRascunho, limparRascunho } from "../lib/rascunho"; // [MODO-RASCUNHO]
 import axios from "axios";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { db } from "@workspace/db";
@@ -1258,6 +1259,7 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     throw err;
   }
   await apagarExtrasDoExperimento(escolaId, nome); // [DISP-EXPERIMENTAL] [EXPERIMENTO-COMPLETO] ja estao na oficial
+  await limparRascunho(escolaId, nome).catch((e) => console.error("[MODO-RASCUNHO] falhou ao limpar o rascunho aplicado:", e)); // [MODO-RASCUNHO]
 
   // [HA-SO-NO-TURNO-DO-EXPERIMENTO] HA de hoje de quem teve aula mexida (o recalculo abaixo refaz todos os turnos) e o
   // recalculo da grade de ANTES (a base: fora do turno do experimento so muda o que o experimento mudar na conta)
@@ -1464,20 +1466,127 @@ router.post("/experimentos", async (req, res) => {
   catch (e) { if (semTabelaExperimental(e)) { res.status(503).json({ error: "O experimento completo ainda não está pronto no banco (falta a atualização do sistema). Avise o suporte NexGrade." }); return; } throw e; }
   if (existe || jaRegistrado) { res.status(409).json({ error: `Já existe um experimento "${nome}". Escolha outro nome.` }); return; }
   await registrarExperimento(escolaId, nome);
-  let copiadas = 0;
-  if (copiarOficial) {
-    const turmas = await db.select({ id: turmasTable.id, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
-    const ids = turmas.filter((t) => copiarOficial === "todos" || t.turno === copiarOficial).map((t) => t.id);
-    const oficial = ids.length ? await db.select().from(horariosTable).where(and(
-      eq(horariosTable.escolaId, escolaId), inArray(horariosTable.turmaId, ids), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`)) : [];
-    const linhas = oficial.filter((h) => h.professorId != null).map((h) => ({
-      escolaId, nome, turmaId: h.turmaId, disciplinaId: h.disciplinaId, professorId: h.professorId!, diaSemana: h.diaSemana, numeroAula: h.numeroAula,
-      sala: h.sala, assincrona: !!h.assincrona, fixa: !!h.fixa, ativo: true,
-    }));
-    for (let i = 0; i < linhas.length; i += 500) await db.insert(horariosExperimentaisTable).values(linhas.slice(i, i + 500));
-    copiadas = linhas.length;
-  }
+  const copiadas = copiarOficial ? await copiarOficialParaExperimento(escolaId, nome, copiarOficial) : 0;
   res.status(201).json({ nome, aulasCopiadas: copiadas });
+});
+
+/** Copia a grade oficial (um turno, ou "todos") para o experimento. Com turmaId, so essa turma (apaga a dela antes).
+ *  O professor de cada aula segue a atribuicao do experimento, se houver. */
+async function copiarOficialParaExperimento(escolaId: string, nome: string, copiar: string, turmaId?: number): Promise<number> {
+  const turmas = await db.select({ id: turmasTable.id, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
+  const ids = turmas.filter((t) => (turmaId != null ? t.id === turmaId : copiar === "todos" || t.turno === copiar)).map((t) => t.id);
+  if (!ids.length) return 0;
+  const oficial = await db.select().from(horariosTable).where(and(
+    eq(horariosTable.escolaId, escolaId), inArray(horariosTable.turmaId, ids), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`));
+  const atrib = await carregarAtribuicoes(escolaId, nome);
+  const tds = atrib.size ? await db.select().from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, ids)) : [];
+  const profNovo = new Map<string, number | null>();
+  for (const td of tds) if (atrib.has(td.id) && td.professorId != null) profNovo.set(`${td.turmaId}|${td.disciplinaId}|${td.professorId}`, atrib.get(td.id)!);
+  const linhas = oficial.filter((h) => h.professorId != null).map((h) => {
+    const novo = profNovo.get(`${h.turmaId}|${h.disciplinaId}|${h.professorId}`);
+    return {
+      escolaId, nome, turmaId: h.turmaId, disciplinaId: h.disciplinaId, professorId: novo ?? h.professorId!, diaSemana: h.diaSemana, numeroAula: h.numeroAula,
+      sala: h.sala, assincrona: !!h.assincrona, fixa: !!h.fixa, ativo: true,
+    };
+  });
+  await db.transaction(async (tx) => {
+    if (turmaId != null) await tx.delete(horariosExperimentaisTable).where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome), eq(horariosExperimentaisTable.turmaId, turmaId)));
+    for (let i = 0; i < linhas.length; i += 500) await tx.insert(horariosExperimentaisTable).values(linhas.slice(i, i + 500));
+  });
+  return linhas.length;
+}
+
+// ── [MODO-RASCUNHO] (06/11/2026) um rascunho por escola; as telas de sempre leem e gravam nele quando ligado ──
+
+/** O rascunho da escola (ou null) e quanto ele ja mudou. */
+router.get("/rascunho/atual", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const r = await lerRascunho(escolaId);
+  if (!r) { res.json({ rascunho: null }); return; }
+  const [aulas] = await db.select({ n: sql<number>`count(*)::int` }).from(horariosExperimentaisTable)
+    .where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, r.nome)));
+  let disp = 0, atrib = 0;
+  try {
+    disp = (await db.select({ n: sql<number>`count(*)::int` }).from(disponibilidadeExperimentalTable).where(and(eq(disponibilidadeExperimentalTable.escolaId, escolaId), eq(disponibilidadeExperimentalTable.nome, r.nome))))[0]?.n ?? 0;
+    atrib = (await db.select({ n: sql<number>`count(*)::int` }).from(atribuicaoExperimentalTable).where(and(eq(atribuicaoExperimentalTable.escolaId, escolaId), eq(atribuicaoExperimentalTable.nome, r.nome))))[0]?.n ?? 0;
+  } catch (e) { if (!semTabelaExperimental(e)) throw e; }
+  res.json({ rascunho: { ...r, aulas: aulas?.n ?? 0, mudancasDisponibilidade: disp, mudancasAtribuicao: atrib } });
+});
+
+/** Cria o rascunho da escola: um experimento com a grade oficial inteira copiada. */
+router.post("/rascunho/atual", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const nome = typeof req.body?.nome === "string" ? req.body.nome.trim().slice(0, 80) : "";
+  if (!nome) { res.status(400).json({ error: "Dê um nome ao rascunho." }); return; }
+  const atual = await lerRascunho(escolaId);
+  if (atual) { res.status(409).json({ error: `A escola já tem o rascunho "${atual.nome}". Aplique ou descarte antes de começar outro.` }); return; }
+  const [existe] = await db.select({ id: horariosExperimentaisTable.id }).from(horariosExperimentaisTable)
+    .where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome))).limit(1);
+  if (existe) { res.status(409).json({ error: `Já existe um experimento "${nome}". Escolha outro nome.` }); return; }
+  try {
+    await db.insert(experimentosTable).values({ escolaId, nome }).onConflictDoNothing();
+  } catch (e) {
+    if (semTabelaExperimental(e)) { res.status(503).json({ error: "O rascunho ainda não está pronto no banco (falta a atualização do sistema). Avise o suporte NexGrade." }); return; }
+    throw e;
+  }
+  const aulas = await copiarOficialParaExperimento(escolaId, nome, "todos");
+  const quem = (req as unknown as { acesso?: { email?: string } }).acesso?.email ?? null;
+  await gravarRascunho(escolaId, { nome, criadoEm: new Date().toISOString(), criadoPor: quem });
+  res.status(201).json({ nome, aulas });
+});
+
+/** Descarta o rascunho: apaga tudo o que ele guardava. A oficial nao muda. */
+router.delete("/rascunho/atual", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const r = await lerRascunho(escolaId);
+  if (r) {
+    await db.delete(horariosExperimentaisTable).where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, r.nome)));
+    await apagarExtrasDoExperimento(escolaId, r.nome);
+  }
+  await limparRascunho(escolaId);
+  res.status(204).send();
+});
+
+/** Aulas do experimento que mudaram em relacao a oficial, por turma (para "Ver mudanças"). */
+router.get("/experimentais/:nome/diferencas", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const nome = req.params.nome;
+  const exp = await db.select().from(horariosExperimentaisTable).where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome)));
+  const turmaIds = [...new Set(exp.map((h) => h.turmaId))];
+  if (!turmaIds.length) { res.json({ turmas: [] }); return; }
+  const [oficial, turmas, discs, profs] = await Promise.all([
+    db.select().from(horariosTable).where(and(eq(horariosTable.escolaId, escolaId), inArray(horariosTable.turmaId, turmaIds), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`)),
+    db.select({ id: turmasTable.id, nome: turmasTable.nome }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
+    db.select({ id: disciplinasTable.id, nome: disciplinasTable.nome }).from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
+    db.select({ id: professoresTable.id, nome: professoresTable.nome }).from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
+  ]);
+  const tn = new Map(turmas.map((t) => [t.id, t.nome])), dn = new Map(discs.map((d) => [d.id, d.nome])), pn = new Map(profs.map((p) => [p.id, p.nome]));
+  const celula = (rows: Array<{ disciplinaId: number; professorId: number | null }>) =>
+    rows.map((r) => `${dn.get(r.disciplinaId) ?? "?"} — ${r.professorId != null ? pn.get(r.professorId) ?? "?" : "sem professor"}`).sort().join(" + ") || "Vago";
+  const DIA = ["Seg", "Ter", "Qua", "Qui", "Sex"];
+  const saida = turmaIds.map((turmaId) => {
+    const e = exp.filter((h) => h.turmaId === turmaId), o = oficial.filter((h) => h.turmaId === turmaId);
+    const chaves = [...new Set([...e, ...o].map((h) => `${h.diaSemana}|${h.numeroAula}`))];
+    const mudancas = chaves.map((k) => {
+      const [d, a] = k.split("|").map(Number) as [number, number];
+      const antes = celula(o.filter((h) => h.diaSemana === d && h.numeroAula === a));
+      const depois = celula(e.filter((h) => h.diaSemana === d && h.numeroAula === a));
+      return antes === depois ? null : { diaSemana: d, numeroAula: a, quando: `${DIA[d] ?? d} ${a}ª`, antes, depois };
+    }).filter(Boolean).sort((x, y) => x!.diaSemana - y!.diaSemana || x!.numeroAula - y!.numeroAula);
+    return { turmaId, turma: tn.get(turmaId) ?? `#${turmaId}`, mudancas };
+  }).filter((t) => t.mudancas.length).sort((a, b) => a.turma.localeCompare(b.turma, "pt-BR", { numeric: true }));
+  res.json({ turmas: saida });
+});
+
+/** Desfaz as mudancas de aula de uma turma no experimento (volta a grade oficial dela, com a atribuicao dele). */
+router.post("/experimentais/:nome/restaurar-turma", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const turmaId = Number(req.body?.turmaId);
+  if (!Number.isInteger(turmaId)) { res.status(400).json({ error: "Turma inválida." }); return; }
+  const [t] = await db.select({ id: turmasTable.id }).from(turmasTable).where(and(eq(turmasTable.id, turmaId), eq(turmasTable.escolaId, escolaId)));
+  if (!t) { res.status(404).json({ error: "Turma não encontrada." }); return; }
+  const aulas = await copiarOficialParaExperimento(escolaId, req.params.nome, "todos", turmaId);
+  res.json({ ok: true, aulas });
 });
 
 /** Atribuicao no experimento: cada disciplina de cada turma com o professor oficial e o do experimento. */
