@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { and, eq, sql } from "drizzle-orm";
 import {
   db, disciplinasTable, disponibilidadeTable, disponibilidadeExperimentalTable, gradeBackupsTable, horariosExperimentaisTable,
-  horariosTable, horarioSlotsTable, professoresTable, turmasTable, turmaDisciplinasTable,
+  horariosTable, horarioSlotsTable, professoresTable, turmasTable, turmaDisciplinasTable, professorDisciplinasTable,
 } from "@workspace/db";
 import { exigirAdminParaAlterar } from "../../lib/permissao";
 import disponibilidadeRouter from "../disponibilidade";
@@ -73,6 +73,7 @@ describe.skipIf(!TEM_BANCO)("disponibilidade em experimento: integracao com banc
     const [bia] = await db.insert(professoresTable).values({ escolaId: E, nome: "Bia", email: `bia.${E}@escola.test` }).returning();
     const [td] = await db.insert(turmaDisciplinasTable).values({ turmaId: turma!.id, disciplinaId: disc!.id, professorId: ana!.id } as any).returning();
     Object.assign(ids, { bia: bia!.id, td: td!.id });
+    await db.insert(professorDisciplinasTable).values({ professorId: bia!.id, disciplinaId: disc!.id } as any); // [ATRIBUICAO-CREDENCIADOS] so a Bia
     await db.insert(horariosTable).values({ escolaId: E, turmaId: turma!.id, disciplinaId: disc!.id, professorId: ana!.id, diaSemana: 1, numeroAula: 1 } as any);
     // oficial: Ana bloqueada na quinta, 2a aula
     await db.insert(disponibilidadeTable).values({ professorId: ana!.id, diaSemana: 3, horarioSlot: 2, turno: "matutino", disponivel: false, motivo: "Bloqueio (definido na tela)" });
@@ -181,7 +182,7 @@ describe.skipIf(!TEM_BANCO)("disponibilidade em experimento: integracao com banc
     expect(r.status).toBe(200);
     expect(r.body.aulasAtualizadas).toBe(1);
     const lista = await chamar("GET", `/horarios/experimentais/${enc(COPIA)}/atribuicoes`);
-    expect(lista.body.find((l: any) => l.turmaDisciplinaId === ids.td)).toMatchObject({ professorOficialId: ids.ana, professorId: ids.bia, mudou: true });
+    expect(lista.body.find((l: any) => l.turmaDisciplinaId === ids.td)).toMatchObject({ professorOficialId: ids.ana, professorId: ids.bia, mudou: true, credenciados: [ids.bia] });
     const [oficial] = await db.select().from(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.id, ids.td));
     expect(oficial!.professorId).toBe(ids.ana); // a oficial nao mudou
     const ler = () => db.select().from(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.id, ids.td)).then((x) => sobreporAtribuicao(x));

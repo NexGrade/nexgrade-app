@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 type LinhaAtribuicao = {
   turmaDisciplinaId: number; turmaId: number; turma: string; turno: string; disciplinaId: number; disciplina: string;
   professorOficialId: number | null; professorId: number | null; mudou: boolean;
+  credenciados?: number[]; // [ATRIBUICAO-CREDENCIADOS] professores com a disciplina no cadastro
 };
 const SEM = "__sem__";
 
@@ -33,6 +34,8 @@ export function AtribuicaoExperimento({ nome, professores, turmaInicial }: {
   const mudadas = linhas.filter((l) => l.mudou);
   const [turmaId, setTurmaId] = useState<string>(turmaInicial ? String(turmaInicial) : "");
   const [salvando, setSalvando] = useState<number | null>(null);
+  // [ATRIBUICAO-CREDENCIADOS] (06/11/2026) pedido da dona: por padrao so os professores credenciados para a disciplina
+  const [soCredenciados, setSoCredenciados] = useState(true);
   const nomeProf = (id: number | null) => (id == null ? "Sem professor" : professores.find((p) => p.id === id)?.nome ?? `#${id}`);
   const daTurma = linhas.filter((l) => String(l.turmaId) === turmaId);
 
@@ -76,6 +79,10 @@ export function AtribuicaoExperimento({ nome, professores, turmaInicial }: {
           ))}
         </div>
       )}
+      <label className="flex items-center gap-2 text-sm cursor-pointer select-none w-fit">
+        <input type="checkbox" className="accent-primary" checked={soCredenciados} onChange={(e) => setSoCredenciados(e.target.checked)} />
+        Mostrar só professores credenciados para a disciplina
+      </label>
       <SeletorBusca
         className="max-w-xs"
         options={turmas.map((t) => ({ value: String(t.id), label: t.nome + (mudadas.some((m) => m.turmaId === t.id) ? " •" : "") }))}
@@ -99,7 +106,10 @@ export function AtribuicaoExperimento({ nome, professores, turmaInicial }: {
                   <SelectTrigger className="h-9 w-60 max-w-full">{salvando === l.turmaDisciplinaId ? <Loader2 className="w-4 h-4 animate-spin" /> : <SelectValue />}</SelectTrigger>
                   <SelectContent>
                     <SelectItem value={SEM}>Sem professor</SelectItem>
-                    {professores.filter((p) => p.ativo !== false || p.id === l.professorId).map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
+                    {professores
+                      .filter((p) => (p.ativo !== false || p.id === l.professorId) && (!soCredenciados || p.id === l.professorId || (l.credenciados ?? []).includes(p.id)))
+                      .map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}{soCredenciados || !(l.credenciados ?? []).includes(p.id) ? "" : " ✓"}</SelectItem>)}
+                    {soCredenciados && !(l.credenciados ?? []).length && <div className="px-2 py-1.5 text-xs text-muted-foreground">Nenhum professor credenciado para esta disciplina. Desmarque o filtro para ver todos.</div>}
                   </SelectContent>
                 </Select>
                 {l.mudou && (
