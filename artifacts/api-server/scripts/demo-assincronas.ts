@@ -93,8 +93,32 @@ async function main() {
 
     // 2) trio: a primeira turma que tiver 3 disciplinas com professores diferentes (escolhida antes, para nao repetir turma)
     const comAulas = turmas.filter((t) => aulas.some((a) => a.turma_id === t.id));
+    // 0) o que ja existe: assincronas por turma e os trios (com ou sem revezamento)
+    const turmaNome = new Map(turmas.map((t) => [t.id, t]));
+    const discNome = new Map(aulas.map((a) => [a.disciplina_id, a.disciplina]));
+    const jaAss = new Map<number, number>();
+    for (const a of aulas.filter((x) => x.assincrona)) jaAss.set(a.turma_id, (jaAss.get(a.turma_id) ?? 0) + 1);
+    if (jaAss.size) log(`\n== Assíncronas que já existem: ${[...jaAss.entries()].map(([t, n]) => `${turmaNome.get(t)?.nome ?? t} (${n})`).join(", ")}`);
+    const gruposExist = new Map<string, typeof vinculos>();
+    for (const v of vinculos.filter((x) => (x.grupo_trio ?? "").trim())) {
+      const k = `${v.turma_id}|${v.grupo_trio!.trim()}`;
+      gruposExist.set(k, [...(gruposExist.get(k) ?? []), v]);
+    }
+    const ligarRevez: typeof vinculos = []; // vinculos de trios que ainda nao tem revezamento
+    if (gruposExist.size) {
+      log(`\n== Híbridas (trios) que já existem`);
+      for (const [k, membros] of gruposExist) {
+        const t = turmaNome.get(Number(k.split("|")[0]));
+        const temRevez = membros.every((m) => m.trio_ordem && m.trio_inicio);
+        log(`  ${t?.nome ?? k} (${ROTULO[t?.turno ?? ""] ?? t?.turno}) · ${membros.map((m) => `${discNome.get(m.disciplina_id) ?? `disc ${m.disciplina_id}`} — ${profs.get(m.professor_id ?? -1) ?? "sem professor"}${m.trio_ordem ? ` (ordem ${m.trio_ordem})` : ""}`).join(" / ")}`
+          + (temRevez ? ` · revezamento desde ${membros[0]!.trio_inicio!.split("-").reverse().join("/")}` : " · SEM revezamento: liga agora (ordem 1-2-3 a partir desta semana)"));
+        if (!temRevez) ligarRevez.push(...[...membros].sort((a, b) => a.id - b.id));
+      }
+    }
+
     let trio: { turma: { id: number; nome: string; turno: string }; aulas: typeof aulas } | null = null;
-    for (const t of comAulas) {
+    // ja existe Hibrida na escola: nao cria outra (o trio novo atrapalharia a proxima geracao da turma)
+    for (const t of gruposExist.size ? [] : comAulas) {
       const usados = new Set<number>(), discs = new Set<number>();
       const escolhidas: typeof aulas = [];
       for (const a of candidatas(t.id)) {
@@ -125,7 +149,7 @@ async function main() {
       log(`\n== Híbrida (trio "demo-trio", revezamento a partir de ${inicio.split("-").reverse().join("/")}) na turma ${trio.turma.nome} (${ROTULO[trio.turma.turno] ?? trio.turma.turno})`);
       trio.aulas.forEach((a, i) => log(`  ordem ${i + 1}: ${a.disciplina} — ${profs.get(a.professor_id!) ?? "?"} · assíncrona em ${DIAS[a.dia_semana]} ${a.numero_aula}ª`));
       marcar.push(...trio.aulas);
-    } else log("\n== Híbrida: nenhuma turma com 3 disciplinas de professores diferentes livres para o trio (não cria).");
+    } else if (!gruposExist.size) log("\n== Híbrida: nenhuma turma com 3 disciplinas de professores diferentes livres para o trio (não cria).");
 
     const tri = (await c.query("select id, trimestre, data_inicio::text as ini, data_fim::text as fim from trimestres_letivos where escola_id = $1 and ano = $2 order by trimestre", [ESCOLA, ANO])).rows;
     let copiarTri: Array<{ trimestre: number; ini: string; fim: string; dias_letivos: number }> = [];
@@ -139,12 +163,13 @@ async function main() {
       } else log(`\n== Trimestres de ${ANO}: a escola não tem e nenhuma outra tem os 3 cadastrados. Cadastre em Calendário e Turnos.`);
     }
 
-    log(`\nTotal: ${marcar.length} aula(s) viram assíncronas${trio ? ", 1 trio" : ""}${copiarTri.length ? `, ${copiarTri.length} trimestre(s)` : ""}.`);
+    log(`\nTotal: ${marcar.length} aula(s) viram assíncronas${trio ? ", 1 trio novo" : ""}${ligarRevez.length ? `, revezamento ligado em ${ligarRevez.length} vínculo(s) de Híbrida` : ""}${copiarTri.length ? `, ${copiarTri.length} trimestre(s)` : ""}.`);
     if (!APLICAR) { log("\nDRY-RUN: nada gravado. Confira e rode de novo com --aplicar."); return; }
 
     // backup
     const idsVinc = new Set<number>();
     for (const a of marcar) idsVinc.add(vinc(a.turma_id, a.disciplina_id)!.id);
+    for (const v of ligarRevez) idsVinc.add(v.id);
     const bk: Backup = {
       escola: ESCOLA, quando: new Date().toISOString(),
       horarios: marcar.map((a) => ({ id: a.id, assincrona: a.assincrona })),
@@ -156,6 +181,11 @@ async function main() {
       await c.query("update horarios set assincrona = true where id = $1 and escola_id = $2", [a.id, ESCOLA]);
       await c.query("update turma_disciplinas set aulas_assincronas = aulas_assincronas + 1 where id = $1", [vinc(a.turma_id, a.disciplina_id)!.id]);
     }
+    // Hibridas que ja existiam sem revezamento: ordem 1-2-3 (pela ordem do cadastro) a partir desta semana
+    const porGrupo = new Map<string, typeof vinculos>();
+    for (const v of ligarRevez) { const k = `${v.turma_id}|${v.grupo_trio!.trim()}`; porGrupo.set(k, [...(porGrupo.get(k) ?? []), v]); }
+    for (const membros of porGrupo.values()) for (const [i, v] of membros.entries())
+      await c.query("update turma_disciplinas set trio_ordem = $2, trio_inicio = $3 where id = $1", [v.id, i + 1, inicio]);
     if (trio) for (const [i, a] of trio.aulas.entries())
       await c.query("update turma_disciplinas set grupo_trio = 'demo-trio', trio_ordem = $2, trio_inicio = $3 where id = $1", [vinc(a.turma_id, a.disciplina_id)!.id, i + 1, inicio]);
     for (const t of copiarTri) {
