@@ -37,7 +37,7 @@ import {
   Check, ArrowRight, ArrowLeft, Lock, ChevronDown, ChevronRight, Plus,
   Calendar, ListChecks, AlertTriangle, FlaskConical,
   CheckCircle2, RefreshCw, ChevronUp, ArrowUpCircle, Loader2, Trash2, Clock, Info, X, Sparkles, Download, RotateCcw,
-  Wand2,
+  Wand2, Printer,
 } from "lucide-react";
 
 // Hub único de Horário — Esquema > Regras > Grade > Conflitos > Experimental,
@@ -1094,6 +1094,36 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
   const isTurmaSelected = turmaId !== "all";
   const isProfessorSelected = professorId !== "all";
 
+  // [IMPRIMIR-NA-GRADE] (06/11/2026) imprimir o que esta filtrado, com os PDFs de Imprimir Grade (grade oficial):
+  // professor escolhido = PDF do professor; turma escolhida = PDF da turma; sem filtro = todas as turmas do turno.
+  // Abre o PDF numa aba nova (a janela e aberta antes do download para o navegador nao bloquear).
+  const [imprimindo, setImprimindo] = useState(false);
+  const imprimir = async () => {
+    const rota = isProfessorSelected ? "professor" : "turma";
+    const url = new URL(`/api/export/grade-pdf/${rota}`, window.location.origin);
+    if (isProfessorSelected) url.searchParams.set("professorId", professorId);
+    else if (isTurmaSelected) url.searchParams.set("turmaId", turmaId);
+    if (turno !== "all") url.searchParams.set("turno", turno);
+    const aba = window.open("", "_blank");
+    setImprimindo(true);
+    try {
+      const blob = await customFetch<Blob>(url.toString(), { responseType: "blob" });
+      const obj = URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
+      if (aba) aba.location.href = obj;
+      else { // navegador bloqueou a aba: baixa o arquivo
+        const a = document.createElement("a");
+        a.href = obj; a.download = `grade_${rota}.pdf`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      }
+      setTimeout(() => URL.revokeObjectURL(obj), 60_000);
+    } catch (err) {
+      aba?.close();
+      toast({ title: "Não foi possível gerar o PDF", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+    } finally {
+      setImprimindo(false);
+    }
+  };
+
   // [GRADE-TURNOS-LADO-A-LADO] (16/10/2026) professor com aula/HA em mais de um turno e filtro
   // "Todos os turnos": uma grade por turno, lado a lado (antes as duas saiam sobrepostas, porque o
   // numero da aula se repete entre turnos).
@@ -1311,6 +1341,11 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
             />
           </div>
           <Button variant="outline" onClick={() => { setTurmaId("all"); setProfessorId("all"); setTurno("all"); }}>Limpar</Button>
+          <Button variant="outline" onClick={() => void imprimir()} disabled={imprimindo}
+            title={isProfessorSelected ? "Imprimir a grade deste professor (PDF)" : isTurmaSelected ? "Imprimir a grade desta turma (PDF)" : "Imprimir a grade de todas as turmas do turno (PDF)"}>
+            {imprimindo ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Printer className="w-4 h-4 mr-2" />}
+            Imprimir
+          </Button>{/* [IMPRIMIR-NA-GRADE] */}
           {!somenteConsulta && (
           <Button variant="outline" onClick={abrirAdicionarGeral}>
             <Plus className="w-4 h-4 mr-2" />
