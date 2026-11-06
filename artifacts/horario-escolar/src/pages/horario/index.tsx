@@ -35,6 +35,8 @@ import { ProgressoGeracao, type EtapaGeracao, type ProgressoGeracaoDados, type P
 import { DiagnosticoGeracaoDialog, diagnosticoDe, type DiagnosticoGeracao } from "@/components/diagnostico-geracao"; // [DIAGNOSTICO-GERACAO]
 import { PainelDisponibilidade } from "@/pages/disponibilidade"; // [EXPERIMENTO-COMPLETO]
 import { AtribuicaoExperimento } from "@/components/atribuicao-experimento"; // [EXPERIMENTO-COMPLETO]
+import { useRascunho } from "@/lib/rascunho"; // [MODO-RASCUNHO]
+import { GradeRascunho } from "@/components/grade-rascunho"; // [MODO-RASCUNHO]
 import {
   Check, ArrowRight, ArrowLeft, Lock, ChevronDown, ChevronRight, Plus,
   Calendar, ListChecks, AlertTriangle, FlaskConical,
@@ -163,6 +165,7 @@ export default function HorarioHubPage() {
   if (tabParam === "esquema" && typeof window !== "undefined") window.location.replace("/calendario?tab=turnos"); // [FASE-C3]
   const abaInicial = (ABAS.some((a) => a.key === tabParam) ? tabParam : "grade") as AbaKey; // [FASE-C3] Horario abre na Grade
   const [aba, setAba] = useState<AbaKey>(abaInicial);
+  const { nomeAtivo: rascunhoAtivo } = useRascunho(); // [MODO-RASCUNHO] grade do rascunho na aba Grade
   // [CONFLITO-VAI-AO-PROBLEMA] clicar num conflito troca o ?tab= sem recarregar: a aba acompanha
   useEffect(() => { if (tabParam && ABAS.some((a) => a.key === tabParam)) setAba(tabParam as AbaKey); }, [tabParam, search]);
   const somenteConsulta = useSomenteConsultaGrade(); // [CONSULTA-GESTOR] [PEDAGOGIA]
@@ -196,7 +199,7 @@ export default function HorarioHubPage() {
         ))}
       </div>
 
-      {(aba === "grade" || somenteConsulta) && <AbaGrade somenteConsulta={somenteConsulta} />}{/* [CONSULTA-GESTOR] */}
+      {(aba === "grade" || somenteConsulta) && (rascunhoAtivo && !somenteConsulta ? <GradeRascunho nome={rascunhoAtivo} /> : <AbaGrade somenteConsulta={somenteConsulta} />)}{/* [CONSULTA-GESTOR] [MODO-RASCUNHO] */}
       {!somenteConsulta && aba === "conflitos" && <AbaConflitos />}
       {!somenteConsulta && aba === "experimental" && <AbaExperimental />}
     </div>
@@ -2221,6 +2224,7 @@ function AbaExperimental() {
 
   // [DISP-EXPERIMENTAL] (06/11/2026) experimentos com disponibilidade propria (tela Disponibilidade → "Editando: experimento")
   type MudancaDisp = { professorId: number; professor: string; turno: string; diaSemana: number; horarioSlot: number; antes: string; depois: string };
+  const { nomeAtivo: rascunhoNome } = useRascunho(); // [MODO-RASCUNHO] com o rascunho ligado, gerar ja vem com o nome dele
   // [EXPERIMENTO-COMPLETO] (06/11/2026) resumo de todos os experimentos (com aula, disponibilidade e/ou atribuicao)
   type ResumoExp = { nome: string; aulas: number; turmas: number; disponibilidade: number; professoresDisp: number; atribuicoes: number };
   const { data: resumoExp } = useQuery({
@@ -2979,13 +2983,13 @@ function AbaExperimental() {
         <div className="flex flex-col gap-3 shrink-0 items-stretch w-56">
           <div>
             <div className="flex flex-col gap-2">
-              <Button className="w-full justify-start" onClick={() => setOpenGerarCpsatTurma(true)}>
+              <Button className="w-full justify-start" onClick={() => { if (rascunhoNome) setCpsatTurmaForm((f) => ({ ...f, nomeExperimental: rascunhoNome })); setOpenGerarCpsatTurma(true); }}>
                 <Sparkles className="w-4 h-4 mr-2" />Turma
               </Button>
-              <Button className="w-full justify-start" onClick={() => setOpenGerarCpsatTurnoParcial(true)}>
+              <Button className="w-full justify-start" onClick={() => { if (rascunhoNome) setCpsatTurnoParcialForm((f) => ({ ...f, nomeExperimental: rascunhoNome })); setOpenGerarCpsatTurnoParcial(true); }}>
                 <Sparkles className="w-4 h-4 mr-2" />Turno Parcial
               </Button>
-              <Button className="w-full justify-start" onClick={() => { setCpsatForm((f) => ({ ...f, nomeExperimental: nomeCpsatAuto(f.turno) })); setOpenGerarCpsat(true); }}>
+              <Button className="w-full justify-start" onClick={() => { setCpsatForm((f) => ({ ...f, nomeExperimental: rascunhoNome ?? nomeCpsatAuto(f.turno) })); setOpenGerarCpsat(true); }}>
                 <Sparkles className="w-4 h-4 mr-2" />Turno inteiro
               </Button>
             </div>

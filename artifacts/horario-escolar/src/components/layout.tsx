@@ -18,6 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useSituacaoArquivoRco } from "@/lib/arquivo-rco"; // [ARQUIVO-RCO]
 import { useSituacaoAcesso, AvisoFimAvaliacao } from "@/lib/situacao-acesso"; // [TRAVA-AVALIACAO]
+import { RascunhoBarra } from "@/components/rascunho-barra"; // [MODO-RASCUNHO]
 
 type Icone = React.ComponentType<{ className?: string }>;
 // [MENU-DESTAQUE] numero = etapa (1, 2, 3) no titulo; icone = demais secoes; principal = Gerar Grade (fundo azul, sem selo)
@@ -283,6 +284,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex-1 overflow-auto p-4 md:p-8">
           <div className="max-w-6xl mx-auto">
             {!ehGestorMenu && !ehPedagogiaMenu && <AvisoFimAvaliacao situacao={situacaoAcesso} />}{/* [TRAVA-AVALIACAO] direcao, coordenacao e secretaria */}
+            <RascunhoBarra />{/* [MODO-RASCUNHO] */}
             {children}
           </div>
         </div>

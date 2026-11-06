@@ -21,6 +21,7 @@ import {
   customFetch, // [DISP-EXPERIMENTAL]
 } from "@workspace/api-client-react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useRascunho } from "@/lib/rascunho"; // [MODO-RASCUNHO]
 import { Users, Save, RotateCcw, Lock, CheckCircle2, Info, GraduationCap, BookOpen, Pin, Tag, FlaskConical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AceitarConflito } from "@/components/aceitar-conflito"; // [CONFLITO-ACEITO]
@@ -87,7 +88,9 @@ function formatHora(horaInicio: string) {
 const SEM_LINHAS: never[] = [];
 
 export default function DisponibilidadePage() {
-  return <PainelDisponibilidade />;
+  // [MODO-RASCUNHO] com o rascunho ligado, a pagina le e grava no rascunho
+  const { nomeAtivo } = useRascunho();
+  return <PainelDisponibilidade key={nomeAtivo ?? "oficial"} experimento={nomeAtivo} />;
 }
 
 export function PainelDisponibilidade({ experimento = null, embutido = false }: { experimento?: string | null; embutido?: boolean }) {

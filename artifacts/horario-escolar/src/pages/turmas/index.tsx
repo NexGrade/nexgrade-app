@@ -4,7 +4,8 @@ import {
   useAplicarMatrizTurma, useGetMatrizCurricularPorId, getGetMatrizCurricularPorIdQueryKey,
   useGetTurma, getGetTurmaQueryKey, useListProfessores, customFetch, useListHorarios, getListHorariosQueryKey, // [PROF-DISCIPLINA] [FILTRO-SEM-HORARIO]
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useRascunho } from "@/lib/rascunho"; // [MODO-RASCUNHO]
 import { Link, useSearch } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -60,7 +61,29 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
   const [abrirCodoc, setAbrirCodoc] = useState<number | null>(null);
   const [criandoTrio, setCriandoTrio] = useState(false); // [CRIAR-TRIO]
   const [selTrio, setSelTrio] = useState<number[]>([]);
-  const linhas = ((turma as any)?.disciplinasComCarga ?? []) as any[];
+  // [MODO-RASCUNHO] com o rascunho ligado, o professor de cada disciplina e o do rascunho e a troca grava nele
+  const { nomeAtivo: rascunho } = useRascunho();
+  const atribRascunho = useQuery({
+    queryKey: ["atribuicoes-exp", rascunho],
+    queryFn: () => customFetch<Array<{ turmaDisciplinaId: number; professorId: number | null; mudou: boolean }>>(`/api/horarios/experimentais/${encodeURIComponent(rascunho!)}/atribuicoes`),
+    enabled: !!rascunho,
+  });
+  const profRascunho = new Map((atribRascunho.data ?? []).map((a) => [a.turmaDisciplinaId, a]));
+  const linhas = (((turma as any)?.disciplinasComCarga ?? []) as any[]).map((l) => {
+    const r = rascunho ? profRascunho.get(l.turmaDisciplinaId) : undefined;
+    return r ? { ...l, professorId: r.professorId, mudouNoRascunho: r.mudou } : l;
+  });
+  const atribuirNoRascunho = async (turmaDisciplinaId: number, professorId: number | null) => {
+    setSalvando(`prof-${turmaDisciplinaId}`);
+    try {
+      await customFetch(`/api/horarios/experimentais/${encodeURIComponent(rascunho!)}/atribuicoes`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ turmaDisciplinaId, professorId }) });
+      await queryClient.invalidateQueries({ queryKey: ["atribuicoes-exp", rascunho] });
+      await queryClient.invalidateQueries({ queryKey: ["rascunho"] });
+      toast({ title: "Professor trocado no rascunho", description: "A escola não mudou. Para valer, use \"Aplicar na escola\"." });
+    } catch (e) {
+      toast({ title: "Não foi possível trocar o professor", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
+    } finally { setSalvando(null); }
+  };
 
   // agrupa as linhas por disciplina (co-docencia = 2 linhas da mesma disciplina)
   const grupos: Array<{ disciplinaId: number; nome: string; carga: number; linhas: any[]; trio: string; assinc: number; trioOrdem: number | null; trioInicio: string | null }> = [];
@@ -248,6 +271,11 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
           </div>
         )}
       </div>
+      {rascunho && (
+        <p className="rounded-md border border-violet-200 bg-violet-50 px-3 py-2 text-xs text-violet-900">
+          Rascunho ligado: a troca de professor fica só no rascunho. Co-docência, trio e aulas assíncronas ainda mudam a escola direto.
+        </p>
+      )}{/* [MODO-RASCUNHO] */}
       <div className="space-y-2">
         {grupos.map((g) => {
           const urlModalidade = `/api/turmas/${turmaId}/disciplinas/${g.disciplinaId}/modalidade`;
@@ -264,8 +292,11 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
                 {g.linhas.map((l, i) => (
                   <div key={l.turmaDisciplinaId} className="flex items-center gap-1">
                     {seletor(g.disciplinaId, l.professorId ?? null,
-                      (v) => chamar(`/api/turmas/${turmaId}/disciplinas/linha/${l.turmaDisciplinaId}`, "PATCH", { professorId: v === "__nenhum__" ? null : Number(v) }, v === "__nenhum__" ? "Professor removido" : "Professor definido"),
+                      (v) => rascunho
+                        ? atribuirNoRascunho(l.turmaDisciplinaId, v === "__nenhum__" ? null : Number(v)) // [MODO-RASCUNHO]
+                        : chamar(`/api/turmas/${turmaId}/disciplinas/linha/${l.turmaDisciplinaId}`, "PATCH", { professorId: v === "__nenhum__" ? null : Number(v) }, v === "__nenhum__" ? "Professor removido" : "Professor definido"),
                       !!l.professorId && i === 0 && g.linhas.length === 1, `prof-${l.turmaDisciplinaId}`)}
+                    {l.mudouNoRascunho && <span className="text-[11px] font-semibold rounded bg-violet-100 text-violet-800 px-1.5 py-0.5">no rascunho</span>}
                     {i > 0 && (
                       <Button type="button" size="sm" variant="ghost" className="h-8 px-2 text-destructive hover:text-destructive" disabled={salvando !== null}
                         onClick={() => { if (confirm(`Remover o 2º professor de ${g.nome}? A disciplina continua com o 1º professor.`)) chamar(`/api/turmas/${turmaId}/disciplinas/linha/${l.turmaDisciplinaId}`, "DELETE", undefined, "Co-docência removida"); }}>
