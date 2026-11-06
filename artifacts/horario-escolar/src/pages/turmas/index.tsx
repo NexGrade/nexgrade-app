@@ -307,7 +307,13 @@ export default function TurmasList() {
   const [soSemProfessor, setSoSemProfessor] = useState(filtroUrl === "sem-professor");
   const semProfessorDa = (t: any) => Number(t?.disciplinasSemProfessor ?? 0);
   const qtdTurmasSemProfessor = (turmas ?? []).filter((t) => semProfessorDa(t) > 0).length;
+  // [TURMAS-POR-PERIODO] (06/11/2026) pedido da dona: escolher as turmas por periodo (turno); lembra a escolha no navegador
+  const [periodo, setPeriodoState] = useState<string>(() => { try { return localStorage.getItem("turmas.periodo") ?? "todos"; } catch { return "todos"; } });
+  const setPeriodo = (v: string) => { setPeriodoState(v); try { localStorage.setItem("turmas.periodo", v); } catch { /* sem armazenamento */ } };
+  const PERIODOS = [{ v: "matutino", r: "Manhã" }, { v: "vespertino", r: "Tarde" }, { v: "noturno", r: "Noite" }, { v: "integral", r: "Integral" }]
+    .map((p) => ({ ...p, n: (turmas ?? []).filter((t) => t.turno === p.v).length })).filter((p) => p.n > 0);
   const turmasFiltradas = turmasBuscadas
+    .filter((t) => periodo === "todos" || !PERIODOS.some((p) => p.v === periodo) || t.turno === periodo)
     .filter((t) => !(soSemHorario && horariosTodos) || !turmasComHorario.has(t.id))
     .filter((t) => !soSemProfessor || semProfessorDa(t) > 0);
   const deleteTurma = useDeleteTurma();
@@ -365,6 +371,17 @@ export default function TurmasList() {
           placeholder="Buscar turma por nome..."
           className="max-w-sm"
         />
+        {/* [TURMAS-POR-PERIODO] */}
+        {PERIODOS.length > 1 && (
+          <div className="flex rounded-md border overflow-hidden" role="group" aria-label="Período">
+            {[{ v: "todos", r: "Todos", n: (turmas ?? []).length }, ...PERIODOS].map((p) => (
+              <button key={p.v} type="button" onClick={() => setPeriodo(p.v)} aria-pressed={periodo === p.v}
+                className={`px-3 h-9 text-sm font-medium ${periodo === p.v || (p.v === "todos" && !PERIODOS.some((x) => x.v === periodo)) ? "bg-primary text-primary-foreground" : "bg-background hover:bg-accent"}`}>
+                {p.r} <span className="opacity-70">({p.n})</span>
+              </button>
+            ))}
+          </div>
+        )}
         {/* [FILTRO-SEM-PROFESSOR] */}
         <Button
           type="button"
