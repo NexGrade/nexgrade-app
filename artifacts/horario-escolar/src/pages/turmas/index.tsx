@@ -76,7 +76,13 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
   const atribuirNoRascunho = async (turmaDisciplinaId: number, professorId: number | null) => {
     setSalvando(`prof-${turmaDisciplinaId}`);
     try {
-      await customFetch(`/api/horarios/experimentais/${encodeURIComponent(rascunho!)}/atribuicoes`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ turmaDisciplinaId, professorId }) });
+      // [RASCUNHO-AVISO-PROFESSOR] professor novo com aula em outra turma, bloqueio ou HA nos horarios: avisa antes
+      const enviar = (confirmar: boolean) => customFetch<{ aplicado: boolean; avisos?: string[] }>(`/api/horarios/experimentais/${encodeURIComponent(rascunho!)}/atribuicoes`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ turmaDisciplinaId, professorId, confirmar }) });
+      const r = await enviar(false);
+      if (!r.aplicado) {
+        if (!confirm(`Atenção:\n\n${(r.avisos ?? []).map((x) => `• ${x}`).join("\n")}\n\nTrocar o professor mesmo assim?`)) return;
+        await enviar(true);
+      }
       await queryClient.invalidateQueries({ queryKey: ["atribuicoes-exp", rascunho] });
       await queryClient.invalidateQueries({ queryKey: ["rascunho"] });
       toast({ title: "Professor trocado no rascunho", description: "A escola não mudou. Para valer, use \"Aplicar na escola\"." });

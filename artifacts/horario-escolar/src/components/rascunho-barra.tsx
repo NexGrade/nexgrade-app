@@ -166,7 +166,7 @@ export function RascunhoBarra() {
                     <div key={a.turmaDisciplinaId} className="flex items-center gap-2">
                       <span className="flex-1">{a.turma} · {a.disciplina}: <span className="text-muted-foreground line-through">{a.professorOficialId != null ? nm.profs.get(a.professorOficialId) ?? "?" : "sem professor"}</span> → <strong>{a.professorId != null ? nm.profs.get(a.professorId) ?? "?" : "sem professor"}</strong></span>
                       <button type="button" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
-                        onClick={() => void desfazer(() => customFetch(`/api/horarios/experimentais/${encodeURIComponent(rascunho.nome)}/atribuicoes`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ turmaDisciplinaId: a.turmaDisciplinaId, professorId: a.professorOficialId }) }))}>
+                        onClick={() => void desfazer(() => customFetch(`/api/horarios/experimentais/${encodeURIComponent(rascunho.nome)}/atribuicoes`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ turmaDisciplinaId: a.turmaDisciplinaId, professorId: a.professorOficialId, confirmar: true }) }))}>
                         <RotateCcw className="w-3 h-3" />desfazer
                       </button>
                     </div>
