@@ -11,6 +11,7 @@
 //  - não cria "pausa entre turnos" (última da manhã + 1ª da tarde no mesmo dia).
 // Primeiro um filtro rápido (aulas + HA que não se move); as melhores vão para a simulação completa
 // (mesma conta do botão "Simular promoção", com a HA recalculada) e só ficam as que baixam as janelas.
+import { sobreporExperimento } from "./disponibilidade-experimento"; // [DISP-EXPERIMENTAL]
 import { db, horariosTable, horariosExperimentaisTable, turmasTable, disponibilidadeTable, professoresTable, disciplinasTable, horarioSlotsTable } from "@workspace/db";
 import { and, eq, inArray } from "drizzle-orm";
 import { ehHAMovel } from "./ha-contraturno";
@@ -79,7 +80,10 @@ export async function opcoesFecharJanela(
 
   // horários travados de cada professor (bloqueio, HA que não se move, atividade fora de sala)
   const profIds = [...new Set(aulasTurno.map((a) => a.professorId))];
-  const disp = profIds.length ? await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, profIds)) : [];
+  const disp = profIds.length
+    ? await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, profIds))
+      .then((r) => sobreporExperimento(r, (d) => profIds.includes(d.professorId))) // [DISP-EXPERIMENTAL]
+    : [];
   const travado = new Set<string>();
   const haFixa = new Set<string>();
   for (const d of disp) {

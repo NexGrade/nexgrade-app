@@ -7,6 +7,7 @@
  * [CAPACIDADE-NAO-LETIVO] (05/10/2026) periodo nao letivo (noturno 18:00) nao
  * conta para aula, mas conta para HA (mesma regra do recalculo de HA).
  */
+import { sobreporExperimento } from "./disponibilidade-experimento"; // [DISP-EXPERIMENTAL]
 import { horariosTable } from "@workspace/db"; // [COTA-INTEGRAL-TURNO-REAL]
 import { mapaIntegralDosSlots, posicaoReal, TURNO_INTEGRAL } from "./turno-integral"; // [COTA-INTEGRAL-TURNO-REAL]
 import { db, turmasTable, turmaDisciplinasTable, disciplinasTable, professoresTable, disponibilidadeTable, horarioSlotsTable, professorDisciplinasTable, itensMatrizTable } from "@workspace/db";
@@ -64,7 +65,10 @@ export async function calcularCargaPorProfessor(escolaId: string): Promise<{ car
     db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId)),
   ]);
   const profIds = professores.map((p) => p.id);
-  const disp = profIds.length > 0 ? await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, profIds)) : [];
+  const disp = profIds.length > 0
+    ? await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, profIds))
+      .then((r) => sobreporExperimento(r, (d) => profIds.includes(d.professorId))) // [DISP-EXPERIMENTAL]
+    : [];
 
   const turmaMap = new Map(turmas.map((t) => [t.id, t]));
   const discMap = new Map(disciplinas.map((d) => [d.id, d]));
