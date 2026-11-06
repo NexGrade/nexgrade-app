@@ -1416,6 +1416,7 @@ router.delete("/experimentais/:nome", async (req, res) => {
     .where(and(eq(horariosExperimentaisTable.nome, req.params.nome), eq(horariosExperimentaisTable.escolaId, escolaId)))
     .returning({ id: horariosExperimentaisTable.id });
   const dispApagadas = await apagarExtrasDoExperimento(escolaId, req.params.nome); // [DISP-EXPERIMENTAL] [EXPERIMENTO-COMPLETO]
+  await limparRascunho(escolaId, req.params.nome); // [MODO-RASCUNHO] apagar o rascunho pela lista do Modo Experimental tambem encerra o rascunho
   const apagadas = [...aulasApagadas, ...Array(dispApagadas).fill(null)];
   // [NOME-EXPERIMENTO] (21/10/2026) antes respondia 204 mesmo sem apagar nada (nome com espaco no fim
   // chegava cortado): a tela dizia "removido" e o experimento continuava la
