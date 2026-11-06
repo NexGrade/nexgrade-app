@@ -29,6 +29,22 @@ describe("presenca dos professores [PRESENCA-PEDAGOGIA]", () => {
     ]);
   });
 
+  it("[PRESENCA-ASS-HA] mostra assincrona e HA; no mesmo horario a aula presencial vence; HA usa o nivel das aulas dele", () => {
+    const dia = montarDia(profs, [
+      aula(1, 1, "6ºA", { nivelEnsino: "fundamental" }),
+      aula(1, 2, "7ºA", { tipo: "assincrona", nivelEnsino: "fundamental" }),
+      aula(1, 2, "", { tipo: "ha", nivelEnsino: null, disciplina: "HA" }),
+      aula(1, 1, "", { tipo: "ha", nivelEnsino: null, disciplina: "HA" }),
+      aula(2, 1, "", { tipo: "ha", nivelEnsino: null, disciplina: "HA*" }),
+    ], slots, new Map(), new Map(), "matutino", new Map([[1, "saiu mais cedo"]]));
+    expect(dia.map((d) => [d.nome, d.observacao])).toEqual([["Ana", null], ["Bruna", "saiu mais cedo"]]);
+    expect(dia[0]!.aulas).toEqual([expect.objectContaining({ numeroAula: 1, tipo: "ha", disciplinas: "HA*", hora: "07:30" })]);
+    expect(dia[1]!.aulas).toEqual([
+      expect.objectContaining({ numeroAula: 1, tipo: "aula", turmas: "6ºA", hora: "07:40" }),
+      expect.objectContaining({ numeroAula: 2, tipo: "assincrona", turmas: "7ºA" }),
+    ]);
+  });
+
   it("resume o mes por professor e conta quem substituiu", () => {
     const r = resumirMes([
       { professorId: 1, status: "falta", substitutoId: null },

@@ -3,7 +3,7 @@ import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { sql } from "drizzle-orm";
-import { db, disciplinasTable, horariosTable, horarioSlotsTable, professoresTable, reservasTable, salasTable, turmasTable } from "@workspace/db";
+import { db, disciplinasTable, disponibilidadeTable, horariosTable, horarioSlotsTable, professoresTable, reservasTable, salasTable, turmasTable } from "@workspace/db";
 import { exigirAdminParaAlterar } from "../../lib/permissao";
 import pedagogiaRouter from "../pedagogia";
 
@@ -59,14 +59,18 @@ describe.skipIf(!TEM_BANCO)("presenca dos professores: integracao com banco real
     }
     await db.insert(horariosTable).values({ escolaId: E, turmaId: turma!.id, disciplinaId: disc!.id, professorId: ids.prof[0]!, diaSemana: 0, numeroAula: 1, sala: "Sala 3" } as any);
     await db.insert(horariosTable).values({ escolaId: E, turmaId: turma!.id, disciplinaId: disc!.id, professorId: ids.prof[1]!, diaSemana: 0, numeroAula: 2 } as any);
+    // [PRESENCA-ASS-HA] assincrona da Bruna na 2a aula e HA da Ana na 3a
+    await db.insert(horariosTable).values({ escolaId: E, turmaId: turma!.id, disciplinaId: disc!.id, professorId: ids.prof[0]!, diaSemana: 0, numeroAula: 2, assincrona: true } as any);
+    await db.insert(disponibilidadeTable).values({ professorId: ids.prof[1]!, diaSemana: 0, horarioSlot: 3, turno: "matutino", disponivel: false, horaAtividadeObrigatoria: true, motivo: "HA manual (definida na tela)" });
     const [lab] = await db.insert(salasTable).values({ escolaId: E, nome: "Laboratório", tipo: "laboratorio" }).returning();
     await db.insert(reservasTable).values({ escolaId: E, salaId: lab!.id, professorId: ids.prof[1]!, data: DIA, diaSemana: 0, numeroAula: 2, turno: "matutino", titulo: "Aula prática" } as any);
   });
 
   afterAll(async () => {
     try { await db.execute(sql`alter table if exists presencas_off rename to presencas_professores`); } catch { /* ja esta com o nome certo */ }
+    try { await db.execute(sql`alter table if exists observacoes_off rename to presencas_observacoes`); } catch { /* ja esta com o nome certo */ }
     await new Promise<void>((ok) => (server ? server.close(() => ok()) : ok()));
-    for (const t of ["presencas_professores", "reservas", "horarios", "horario_slots", "turmas", "disciplinas", "salas", "professores"]) {
+    for (const t of ["presencas_observacoes", "presencas_professores", "reservas", "horarios", "horario_slots", "turmas", "disciplinas", "salas", "professores"]) {
       await db.execute(sql.raw(`delete from ${t} where escola_id = '${E}'`));
     }
   });
@@ -76,6 +80,41 @@ describe.skipIf(!TEM_BANCO)("presenca dos professores: integracao com banco real
     expect(r.status).toBe(200);
     expect(r.body.semTabela).toBe(false);
     expect(r.body.professores.map((p: any) => [p.nome, p.aulas[0].hora, p.aulas[0].sala])).toEqual([["Ana", "08:20", "Laboratório"], ["Bruna", "07:30", "Sala 3"]]);
+  });
+
+  it("[PRESENCA-ASS-HA] traz a assincrona e a HA do professor", async () => {
+    const r = await chamar("GET", `/pedagogia/presenca?data=${DIA}&turno=matutino`);
+    const porNome = Object.fromEntries(r.body.professores.map((p: any) => [p.nome, p.aulas.map((a: any) => [a.numeroAula, a.tipo, a.disciplinas])]));
+    expect(porNome.Ana).toEqual([[2, "aula", "MAT"], [3, "ha", "HA"]]);
+    expect(porNome.Bruna).toEqual([[1, "aula", "MAT"], [2, "assincrona", "MAT"]]);
+  });
+
+  it("[PRESENCA-OBS-GERAL] grava, mostra e apaga a observacao geral do professor", async () => {
+    const [bruna] = ids.prof as [number, number];
+    let r = await chamar("PUT", "/pedagogia/presenca", { data: DIA, turno: "matutino", marcas: [], observacoes: [{ professorId: bruna, observacao: " saiu mais cedo " }] });
+    expect(r.status).toBe(200);
+    r = await chamar("GET", `/pedagogia/presenca?data=${DIA}&turno=matutino`);
+    expect(r.body.semTabelaObservacoes).toBe(false);
+    expect(r.body.professores.find((p: any) => p.nome === "Bruna").observacao).toBe("saiu mais cedo");
+    const fora = await chamar("PUT", "/pedagogia/presenca", { data: DIA, turno: "matutino", marcas: [], observacoes: [{ professorId: 999999999, observacao: "x" }] });
+    expect(fora.status).toBe(400);
+    await chamar("PUT", "/pedagogia/presenca", { data: DIA, turno: "matutino", marcas: [], observacoes: [{ professorId: bruna, observacao: "" }] });
+    r = await chamar("GET", `/pedagogia/presenca?data=${DIA}&turno=matutino`);
+    expect(r.body.professores.find((p: any) => p.nome === "Bruna").observacao).toBeNull();
+  });
+
+  it("[PRESENCA-OBS-GERAL] sem a migracao 0007 a lista abre e avisa", async () => {
+    await db.execute(sql`alter table presencas_observacoes rename to observacoes_off`);
+    try {
+      const r = await chamar("GET", `/pedagogia/presenca?data=${DIA}&turno=matutino`);
+      expect(r.status).toBe(200);
+      expect(r.body.semTabelaObservacoes).toBe(true);
+      expect((await chamar("GET", `/pedagogia/presenca/mes?mes=${Number(DIA.slice(5, 7))}&ano=${DIA.slice(0, 4)}`)).status).toBe(200);
+      const s = await chamar("PUT", "/pedagogia/presenca", { data: DIA, turno: "matutino", marcas: [], observacoes: [{ professorId: ids.prof[0]!, observacao: "x" }] });
+      expect(s.status).toBe(503);
+    } finally {
+      await db.execute(sql`alter table observacoes_off rename to presencas_observacoes`);
+    }
   });
 
   it("salva, atualiza e desmarca", async () => {

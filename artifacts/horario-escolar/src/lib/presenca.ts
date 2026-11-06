@@ -13,12 +13,22 @@ export const STATUS: Array<{ valor: Status; curto: string; rotulo: string; cor: 
 export const ROTULO_STATUS: Record<Status, string> = { presente: "Presente", falta: "Falta", atraso: "Atraso", substituido: "Substituído" };
 
 export type Marca = { status: Status; substitutoId: number | null; substitutoNome: string | null; observacao: string | null };
-export type AulaDoDia = { numeroAula: number; hora: string; fim: string; turmas: string; disciplinas: string; sala: string; marca: Marca | null };
-export type ProfessorDoDia = { professorId: number; nome: string; licenca: string | null; aulas: AulaDoDia[] };
+// [PRESENCA-ASS-HA] (06/11/2026) a lista traz tambem as assincronas e a hora-atividade (disciplinas = "HA" ou "HA*")
+export type TipoAula = "aula" | "assincrona" | "ha";
+export type AulaDoDia = { numeroAula: number; hora: string; fim: string; tipo?: TipoAula; turmas: string; disciplinas: string; sala: string; marca: Marca | null };
+// [PRESENCA-OBS-GERAL] (06/11/2026) observacao geral do professor no dia/turno (antes era por aula)
+export type ProfessorDoDia = { professorId: number; nome: string; licenca: string | null; observacao?: string | null; aulas: AulaDoDia[] };
 export type Presenca = {
   data: string; dataBR: string; diaSemana: string; aviso: string | null; turno: string; rotuloTurno: string;
-  semTabela: boolean; professores: ProfessorDoDia[]; substitutos: Array<{ id: number; nome: string }>;
+  semTabela: boolean; semTabelaObservacoes?: boolean; professores: ProfessorDoDia[]; substitutos: Array<{ id: number; nome: string }>;
 };
+export type ObservacaoEnvio = { professorId: number; observacao: string | null };
+
+/** Turma da linha nos relatorios: "1ºA (assíncrona)", "HA" etc. */
+export function rotuloTurmas(a: AulaDoDia): string {
+  if (a.tipo === "ha") return a.disciplinas || "HA";
+  return a.tipo === "assincrona" ? `${a.turmas} (assíncrona)` : a.turmas;
+}
 export type MarcaEnvio = { professorId: number; numeroAula: number; status: Status | null; substitutoId?: number | null; substitutoNome?: string | null; observacao?: string | null };
 
 
@@ -51,22 +61,24 @@ export function mensagemErro(e: unknown): string | undefined {
 
 export const buscarPresenca = (data: string, turno: string) =>
   customFetch<Presenca>(`/api/pedagogia/presenca?data=${encodeURIComponent(data)}&turno=${encodeURIComponent(turno)}`);
-export const salvarPresenca = (data: string, turno: string, marcas: MarcaEnvio[]) =>
+export const salvarPresenca = (data: string, turno: string, marcas: MarcaEnvio[], observacoes: ObservacaoEnvio[] = []) =>
   customFetch<{ ok: boolean; gravadas: number; apagadas: number }>("/api/pedagogia/presenca", {
-    method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data, turno, marcas }),
+    method: "PUT", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(observacoes.length ? { data, turno, marcas, observacoes } : { data, turno, marcas }),
   });
 export const buscarMes = (mes: string, ano: string) => customFetch<ResumoMes>(`/api/pedagogia/presenca/mes?mes=${mes}&ano=${ano}`);
 
 export function excelDoDia(p: Presenca) {
   const nomes = new Map(p.substitutos.map((s) => [s.id, s.nome]));
   const linhas: Valor[][] = [];
-  for (const prof of p.professores) for (const a of prof.aulas) {
+  for (const prof of p.professores) prof.aulas.forEach((a, i) => {
     const m = a.marca;
     linhas.push([
-      prof.nome + (prof.licenca ? ` (${prof.licenca})` : ""), `${a.numeroAula}ª`, a.hora ? `${a.hora}–${a.fim}` : "", a.turmas, a.disciplinas, a.sala,
-      m ? ROTULO_STATUS[m.status] : "", m?.status === "substituido" ? (m.substitutoId != null ? nomes.get(m.substitutoId) ?? "" : m.substitutoNome ?? "") : "", m?.observacao ?? "",
+      prof.nome + (prof.licenca ? ` (${prof.licenca})` : ""), `${a.numeroAula}ª`, a.hora ? `${a.hora}–${a.fim}` : "", rotuloTurmas(a), a.tipo === "ha" ? "Hora-atividade" : a.disciplinas, a.sala,
+      m ? ROTULO_STATUS[m.status] : "", m?.status === "substituido" ? (m.substitutoId != null ? nomes.get(m.substitutoId) ?? "" : m.substitutoNome ?? "") : "",
+      [i === 0 ? prof.observacao : null, m?.observacao].filter(Boolean).join(" · "), // [PRESENCA-OBS-GERAL]
     ]);
-  }
+  });
   return baixarExcel([{
     nome: "Presença",
     titulo: "Presença dos professores",
