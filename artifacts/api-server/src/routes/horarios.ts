@@ -1486,17 +1486,24 @@ router.get("/experimentais/:nome/atribuicoes", async (req, res) => {
   const nome = req.params.nome;
   const turmas = await db.select({ id: turmasTable.id, nome: turmasTable.nome, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
   const ids = turmas.map((t) => t.id);
-  const [linhas, discs, atrib] = await Promise.all([
+  const [linhas, discs, atrib, credenciais] = await Promise.all([
     ids.length ? db.select().from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, ids)) : Promise.resolve([]),
     db.select({ id: disciplinasTable.id, nome: disciplinasTable.nome }).from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
     carregarAtribuicoes(escolaId, nome),
+    // [ATRIBUICAO-CREDENCIADOS] (06/11/2026) professores credenciados (vinculados no cadastro) para cada disciplina
+    db.select({ professorId: professorDisciplinasTable.professorId, disciplinaId: professorDisciplinasTable.disciplinaId })
+      .from(professorDisciplinasTable).innerJoin(professoresTable, eq(professoresTable.id, professorDisciplinasTable.professorId))
+      .where(eq(professoresTable.escolaId, escolaId)),
   ]);
+  const credenciados = new Map<number, number[]>();
+  for (const c of credenciais) credenciados.set(c.disciplinaId, [...(credenciados.get(c.disciplinaId) ?? []), c.professorId]);
   const turmaMap = new Map(turmas.map((t) => [t.id, t]));
   const discMap = new Map(discs.map((d) => [d.id, d.nome]));
   res.json(linhas.map((l) => ({
     turmaDisciplinaId: l.id, turmaId: l.turmaId, turma: turmaMap.get(l.turmaId)?.nome ?? "", turno: turmaMap.get(l.turmaId)?.turno ?? "",
     disciplinaId: l.disciplinaId, disciplina: discMap.get(l.disciplinaId) ?? "", professorOficialId: l.professorId ?? null,
     professorId: atrib.has(l.id) ? atrib.get(l.id)! : l.professorId ?? null, mudou: atrib.has(l.id),
+    credenciados: credenciados.get(l.disciplinaId) ?? [],
   })).sort((a, b) => a.turma.localeCompare(b.turma, "pt-BR", { numeric: true }) || a.disciplina.localeCompare(b.disciplina, "pt-BR")));
 });
 
