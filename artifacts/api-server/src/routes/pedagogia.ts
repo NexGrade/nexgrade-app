@@ -259,23 +259,28 @@ router.get("/presenca/pdf", async (req, res) => {
   const r = await montarPresenca(escolaId, data, turno);
   if ("erro" in r) { res.status(400).json({ error: r.erro }); return; }
   const nomes = new Map(r.substitutos.map((s) => [s.id, s.nome]));
-  const linhas = r.professores.flatMap((p) => p.aulas.map((a, i) => ({
-    destaque: a.marca?.status === "falta",
-    celulas: [
-      i === 0 ? p.nome + (p.licenca ? ` (${p.licenca})` : "") : "",
-      `${a.numeroAula}ª ${a.hora}`, rotuloTurmas(a), a.sala || "—", rotuloMarca(a.marca),
-      a.marca?.status === "substituido" ? (a.marca.substitutoId != null ? nomes.get(a.marca.substitutoId) ?? "" : a.marca.substitutoNome ?? "") : "",
-      // [PRESENCA-OBS-GERAL] a observacao geral sai na primeira linha do professor; a antiga (por aula) na linha dela
-      [i === 0 ? p.observacao : null, a.marca?.observacao].filter(Boolean).join(" · "),
-    ],
-  })));
+  // [PRESENCA-PDF-ENXUTO] (06/11/2026) pedido da dona: so Professor, Aula, Turma (texto inteiro) e Observacao.
+  // Sala, Situacao e Substituto sairam como colunas; o que foi marcado vai escrito no comeco da observacao.
+  const linhas = r.professores.flatMap((p) => p.aulas.map((a, i) => {
+    const subst = a.marca?.status === "substituido" ? (a.marca.substitutoId != null ? nomes.get(a.marca.substitutoId) ?? "" : a.marca.substitutoNome ?? "") : "";
+    const marca = a.marca ? rotuloMarca(a.marca) + (subst ? ` por ${subst}` : "") : null;
+    return {
+      destaque: a.marca?.status === "falta",
+      celulas: [
+        i === 0 ? p.nome + (p.licenca ? ` (${p.licenca})` : "") : "",
+        `${a.numeroAula}ª ${a.hora}`, rotuloTurmas(a),
+        // [PRESENCA-OBS-GERAL] a observacao geral sai na primeira linha do professor; a antiga (por aula) na linha dela
+        [marca, i === 0 ? p.observacao : null, a.marca?.observacao].filter(Boolean).join(" · "),
+      ],
+    };
+  }));
   const marcadas = r.professores.reduce((s, p) => s + p.aulas.filter((a) => a.marca).length, 0);
   const total = r.professores.reduce((s, p) => s + p.aulas.length, 0);
   const bytes = await gerarPdfTabela({
     escola: await nomeEscola(escolaId),
     titulo: `Presença dos professores — ${r.rotuloTurno} — ${r.diaSemana}, ${r.dataBR}`,
     subtitulo: `${marcadas} de ${total} aula(s) marcada(s)${r.aviso ? " · " + r.aviso : ""}`,
-    colunas: [{ titulo: "Professor", peso: 24 }, { titulo: "Aula", peso: 9 }, { titulo: "Turma", peso: 12 }, { titulo: "Sala", peso: 11 }, { titulo: "Situação", peso: 11 }, { titulo: "Substituto", peso: 15 }, { titulo: "Observação", peso: 18 }],
+    colunas: [{ titulo: "Professor", peso: 22 }, { titulo: "Aula", peso: 11 }, { titulo: "Turma", peso: 25 }, { titulo: "Observação", peso: 42 }],
     linhas, vazio: "Nenhuma aula neste turno.",
   });
   res.setHeader("Content-Type", "application/pdf");
