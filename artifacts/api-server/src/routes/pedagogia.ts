@@ -90,7 +90,8 @@ async function carregarDia(escolaId: string, dataISO: string): Promise<Dia | { e
     const assincrona = !!h.assincrona; // [PRESENCA-ASS-HA] aparece, marcada como assincrona (sem sala)
     lista.push({
       professorId: h.professorId, numeroAula: h.numeroAula, turno: t.turno, nivelEnsino: t.nivelEnsino ?? null,
-      turma: t.nome, disciplina: disc?.sigla || disc?.nome || "",
+      // [PRESENCA-ASS-DISCIPLINA] (06/11/2026) na assincrona vai o nome inteiro da disciplina (pedido da dona)
+      turma: t.nome, disciplina: (assincrona ? disc?.nome || disc?.sigla : disc?.sigla || disc?.nome) || "",
       sala: assincrona ? "" : salaReservada(h.professorId, h.numeroAula, t.turno) ?? h.sala ?? "",
       tipo: assincrona ? "assincrona" : "aula",
       trio: assincrona ? null : (() => { const r = trioDoHorario.get(h.id); return r ? (r.presencial ? "presencial" : "suporte") : null; })(),
@@ -256,8 +257,12 @@ function rotuloMarca(m: Marca | null): string {
 router.get("/presenca/pdf", async (req, res) => {
   const escolaId = getEscolaId(req);
   const data = String(req.query.data ?? ""), turno = String(req.query.turno ?? "");
-  const r = await montarPresenca(escolaId, data, turno);
-  if ("erro" in r) { res.status(400).json({ error: r.erro }); return; }
+  const r0 = await montarPresenca(escolaId, data, turno);
+  if ("erro" in r0) { res.status(400).json({ error: r0.erro }); return; }
+  // [PRESENCA-ASS-DISCIPLINA] ?assincronas=0 tira as aulas assincronas do PDF (opcao na tela)
+  const r = req.query.assincronas === "0"
+    ? { ...r0, professores: r0.professores.map((p) => ({ ...p, aulas: p.aulas.filter((a) => a.tipo !== "assincrona") })).filter((p) => p.aulas.length) }
+    : r0;
   const nomes = new Map(r.substitutos.map((s) => [s.id, s.nome]));
   // [PRESENCA-PDF-ENXUTO] (06/11/2026) pedido da dona: so Professor, Aula, Turma (texto inteiro) e Observacao.
   // Sala, Situacao e Substituto sairam como colunas; o que foi marcado vai escrito no comeco da observacao.

@@ -94,7 +94,7 @@ export function montarDia(
 /** Rotulo da linha nos relatorios: "1ºA (assíncrona)", "HA" etc. */
 export function rotuloTurmas(a: Pick<AulaDoDia, "tipo" | "turmas" | "disciplinas"> & { trio?: SituacaoTrio | null }): string {
   if (a.tipo === "ha") return a.disciplinas || "HA";
-  if (a.tipo === "assincrona") return `${a.turmas} (assíncrona)`;
+  if (a.tipo === "assincrona") return `${a.turmas} · ${a.disciplinas} (assíncrona)`; // [PRESENCA-ASS-DISCIPLINA]
   return a.trio ? `${a.turmas} (híbrida, ${a.trio})` : a.turmas;
 }
 

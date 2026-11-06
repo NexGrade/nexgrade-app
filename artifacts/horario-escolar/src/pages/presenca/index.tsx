@@ -38,6 +38,9 @@ export default function PresencaPage() {
   const [obsPendentes, setObsPendentes] = useState<Map<number, string>>(new Map());
   const [obsAberta, setObsAberta] = useState<Set<number>>(new Set());
   const [salvando, setSalvando] = useState(false);
+  // [PRESENCA-ASS-DISCIPLINA] (06/11/2026) aulas assincronas no PDF/Excel do dia: opcional (lembra a escolha neste navegador)
+  const [assNoRelatorio, setAssNoRelatorio] = useState<boolean>(() => { try { return localStorage.getItem("presenca.assNoRelatorio") !== "0"; } catch { return true; } });
+  const mudarAssNoRelatorio = (v: boolean) => { setAssNoRelatorio(v); try { localStorage.setItem("presenca.assNoRelatorio", v ? "1" : "0"); } catch { /* sem armazenamento */ } };
   // [PRESENCA-PERIODO] painel do relatorio por periodo
   const [relAberto, setRelAberto] = useState(false);
   const [rel, setRel] = useState<FiltroPeriodo>({ de: inicioDoMes(), ate: hojeLocal(), tipo: "geral", professorId: "" });
@@ -58,6 +61,7 @@ export default function PresencaPage() {
     retry: false,
   });
   const p: Presenca | undefined = q.data;
+  const temAssincrona = !!p?.professores.some((x) => x.aulas.some((a) => a.tipo === "assincrona"));
 
   useEffect(() => { setPendentes(new Map()); setObsPendentes(new Map()); setObsAberta(new Set()); }, [data, turno]);
   const totalPendentes = pendentes.size + obsPendentes.size;
@@ -163,15 +167,21 @@ export default function PresencaPage() {
               {contagem.atraso > 0 && <Badge className="bg-amber-500">{contagem.atraso} atraso(s)</Badge>}
               {contagem.substituido > 0 && <Badge className="bg-sky-600">{contagem.substituido} substituída(s)</Badge>}
               <div className="flex-1" />
+              {temAssincrona && (
+                <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none" title="Incluir as aulas assíncronas no PDF e no Excel do dia">
+                  <input type="checkbox" className="accent-primary" checked={assNoRelatorio} onChange={(e) => mudarAssNoRelatorio(e.target.checked)} />
+                  Assíncronas no relatório
+                </label>
+              )}{/* [PRESENCA-ASS-DISCIPLINA] */}
               <Button size="sm" variant="outline" onClick={marcarRestantesPresente} disabled={contagem.marcadas === contagem.total}>
                 <CheckCheck className="w-4 h-4 mr-1" /> Restantes = Presente
               </Button>
               <Button size="sm" variant="outline" disabled={baixando["pdf-dia"] || totalPendentes > 0}
                 title={totalPendentes ? "Salve antes de gerar o relatório" : undefined}
-                onClick={() => baixar(montarUrl("/api/pedagogia/presenca/pdf", { data, turno }), `presenca_${data}_${turno}.pdf`, "pdf-dia")}>
+                onClick={() => baixar(montarUrl("/api/pedagogia/presenca/pdf", { data, turno, ...(assNoRelatorio ? {} : { assincronas: "0" }) }), `presenca_${data}_${turno}.pdf`, "pdf-dia")}>
                 {baixando["pdf-dia"] ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <FileDown className="w-4 h-4 mr-1" />} PDF
               </Button>
-              <Button size="sm" variant="outline" disabled={totalPendentes > 0} onClick={() => p && excelDoDia(p).catch((e) => toast({ title: "Não foi possível gerar a planilha", description: mensagemErro(e), variant: "destructive" }))}
+              <Button size="sm" variant="outline" disabled={totalPendentes > 0} onClick={() => p && excelDoDia(p, assNoRelatorio).catch((e) => toast({ title: "Não foi possível gerar a planilha", description: mensagemErro(e), variant: "destructive" }))}
                 title={totalPendentes ? "Salve antes de gerar o relatório" : undefined}>
                 <FileSpreadsheet className="w-4 h-4 mr-1" /> Excel
               </Button>

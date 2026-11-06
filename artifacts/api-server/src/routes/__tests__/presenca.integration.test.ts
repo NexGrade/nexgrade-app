@@ -89,7 +89,11 @@ describe.skipIf(!TEM_BANCO)("presenca dos professores: integracao com banco real
     const r = await chamar("GET", `/pedagogia/presenca?data=${DIA}&turno=matutino`);
     const porNome = Object.fromEntries(r.body.professores.map((p: any) => [p.nome, p.aulas.map((a: any) => [a.numeroAula, a.tipo, a.disciplinas])]));
     expect(porNome.Ana).toEqual([[2, "aula", "MAT"], [3, "ha", "HA"]]);
-    expect(porNome.Bruna).toEqual([[1, "aula", "MAT"], [2, "assincrona", "MAT"]]);
+    expect(porNome.Bruna).toEqual([[1, "aula", "MAT"], [2, "assincrona", "Matemática"]]); // [PRESENCA-ASS-DISCIPLINA] nome inteiro
+    for (const q of ["", "&assincronas=0"]) {
+      const pdf = await chamar("GET", `/pedagogia/presenca/pdf?data=${DIA}&turno=matutino${q}`);
+      expect(Buffer.from(pdf.body).subarray(0, 4).toString()).toBe("%PDF");
+    }
   });
 
   it("[PRESENCA-HIBRIDA] aula de trio vem com presencial ou suporte na semana da data", async () => {

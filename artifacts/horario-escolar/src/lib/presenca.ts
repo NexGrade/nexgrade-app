@@ -70,10 +70,13 @@ export const salvarPresenca = (data: string, turno: string, marcas: MarcaEnvio[]
   });
 export const buscarMes = (mes: string, ano: string) => customFetch<ResumoMes>(`/api/pedagogia/presenca/mes?mes=${mes}&ano=${ano}`);
 
-export function excelDoDia(p: Presenca) {
+export function excelDoDia(p: Presenca, comAssincronas = true) {
   const nomes = new Map(p.substitutos.map((s) => [s.id, s.nome]));
   const linhas: Valor[][] = [];
-  for (const prof of p.professores) prof.aulas.forEach((a, i) => {
+  // [PRESENCA-ASS-DISCIPLINA] opcao da tela: sem as assincronas
+  const professores = comAssincronas ? p.professores
+    : p.professores.map((x) => ({ ...x, aulas: x.aulas.filter((a) => a.tipo !== "assincrona") })).filter((x) => x.aulas.length);
+  for (const prof of professores) prof.aulas.forEach((a, i) => {
     const m = a.marca;
     linhas.push([
       prof.nome + (prof.licenca ? ` (${prof.licenca})` : ""), `${a.numeroAula}ª`, a.hora ? `${a.hora}–${a.fim}` : "", rotuloTurmas(a), a.tipo === "ha" ? "Hora-atividade" : a.disciplinas, a.sala,
