@@ -107,6 +107,18 @@ describe.skipIf(!TEM_BANCO)("presenca dos professores: integracao com banco real
     expect(ana.aulas[0].trio).toBe("suporte");
   });
 
+  it("[AGENDA-ASSINCRONAS] agenda das assincronas: na Hibrida, a da semana e do professor presencial", async () => {
+    const proxima = new Date(Date.parse(`${DIA}T12:00:00Z`) + 7 * 86_400_000).toISOString().slice(0, 10);
+    const r = await chamar("GET", `/pedagogia/presenca/periodo?de=${DIA}&ate=${proxima}&tipo=assincronas`);
+    expect(r.status).toBe(200);
+    const linhas = r.body.linhas.filter((l: any) => !l.grupo).map((l: any) => [l.celulas[1], l.celulas[3], l.celulas[4]]);
+    expect(linhas).toEqual([["2ª 08:20", "Matemática (Híbrida)", "Ana"], ["2ª 08:20", "Matemática (Híbrida)", "Bruna"]]);
+    const so = await chamar("GET", `/pedagogia/presenca/periodo?de=${DIA}&ate=${proxima}&tipo=assincronas&professorId=${ids.prof[0]}`);
+    expect(so.body.linhas.filter((l: any) => !l.grupo).map((l: any) => l.celulas[4])).toEqual(["Bruna"]);
+    const pdf = await chamar("GET", `/pedagogia/presenca/periodo?de=${DIA}&ate=${proxima}&tipo=assincronas&formato=pdf`);
+    expect(Buffer.from(pdf.body).subarray(0, 4).toString()).toBe("%PDF");
+  });
+
   it("[PRESENCA-OBS-GERAL] grava, mostra e apaga a observacao geral do professor", async () => {
     const [bruna] = ids.prof as [number, number];
     let r = await chamar("PUT", "/pedagogia/presenca", { data: DIA, turno: "matutino", marcas: [], observacoes: [{ professorId: bruna, observacao: " saiu mais cedo " }] });

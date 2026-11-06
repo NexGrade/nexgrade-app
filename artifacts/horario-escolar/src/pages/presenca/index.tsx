@@ -206,11 +206,11 @@ export default function PresencaPage() {
                     </button>
                   ))}
                 </div>
-                {rel.tipo === "individual" && (
+                {(rel.tipo === "individual" || rel.tipo === "assincronas") && (
                   <Select value={rel.professorId || "todos"} onValueChange={(v) => setRel((r) => ({ ...r, professorId: v === "todos" ? "" : v }))}>
                     <SelectTrigger className="h-10 w-64 max-w-full"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="todos">Todos (um bloco por professor)</SelectItem>
+                      <SelectItem value="todos">{rel.tipo === "assincronas" ? "Todos os professores" : "Todos (um bloco por professor)"}</SelectItem>
                       {(p?.substitutos ?? []).map((s) => <SelectItem key={s.id} value={String(s.id)}>{s.nome}</SelectItem>)}
                     </SelectContent>
                   </Select>
