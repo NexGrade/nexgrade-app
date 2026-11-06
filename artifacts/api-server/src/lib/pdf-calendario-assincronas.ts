@@ -107,3 +107,77 @@ export async function gerarPdfCalendarioAssincronas(o: {
   }
   return pdf.save();
 }
+
+// [CALENDARIO-LADO-A-LADO] (06/11/2026) pedido da dona: varias turmas lado a lado (3 por folha, do mesmo periodo).
+// Colunas: Semana | Turma A | Turma B | Turma C; em cada celula, quem esta presencial na Hibrida e as assincronas da
+// semana com o dia ("Seg 2a 19:30 · Filosofia — Bruna"). Dias sem aula do calendario aparecem na coluna da semana.
+const DIA_CURTO = ["Seg", "Ter", "Qua", "Qui", "Sex"];
+export async function gerarPdfCalendarioLadoALado(o: {
+  escola: string; titulo: string; subtitulo: string; turmas: CalendarioTurma[]; vazio: string; porFolha?: number;
+}): Promise<Uint8Array> {
+  if (!o.turmas.length) return gerarPdfCalendarioAssincronas(o);
+  const pdf = await PDFDocument.create();
+  pdf.setTitle(`NexGrade — ${o.titulo}`);
+  pdf.setProducer("NexGrade (by Nexus Core Tecnologia)");
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const gerado = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const util = LARGURA - 2 * MARGEM;
+  const porFolha = Math.max(1, Math.min(4, o.porFolha ?? 3));
+  const TAM = 7, LH = 8.6, PAD = 3, H_CAB = 15;
+  const grupos: CalendarioTurma[][] = [];
+  for (const t of o.turmas) {
+    const ult = grupos[grupos.length - 1];
+    if (ult && ult.length < porFolha && ult[0]!.turno === t.turno) ult.push(t); else grupos.push([t]);
+  }
+  let page!: PDFPage;
+  let y = 0;
+  for (const grupo of grupos) {
+    const larg = [util * 0.11, ...grupo.map(() => (util * 0.89) / grupo.length)];
+    const cabecalho = (continua: boolean) => {
+      page = pdf.addPage([LARGURA, ALTURA]);
+      page.drawRectangle({ x: 0, y: ALTURA - 46, width: LARGURA, height: 46, color: AZUL });
+      page.drawText(limpar(o.escola), { x: MARGEM, y: ALTURA - 20, size: 12, font: bold, color: BRANCO });
+      page.drawText(limpar(`${o.titulo} — ${ROTULO_TURNO[grupo[0]!.turno] ?? grupo[0]!.turno}${continua ? " (continuação)" : ""}`), { x: MARGEM, y: ALTURA - 36, size: 9.5, font, color: rgb(0.85, 0.9, 1) });
+      page.drawText(limpar(o.subtitulo), { x: MARGEM, y: ALTURA - 58, size: 7.5, font, color: CINZA });
+      page.drawText(limpar(`Gerado pelo NexGrade em ${gerado}`), { x: MARGEM, y: 12, size: 6.5, font, color: CINZA });
+      y = ALTURA - 66;
+      let x = MARGEM;
+      page.drawRectangle({ x: MARGEM, y: y - H_CAB, width: util, height: H_CAB, color: AZUL });
+      ["Semana", ...grupo.map((t) => t.turma)].forEach((t, i) => { page.drawText(limpar(t), { x: x + PAD, y: y - H_CAB + 4.5, size: 8, font: bold, color: BRANCO }); x += larg[i]!; });
+      y -= H_CAB;
+    };
+    cabecalho(false);
+    grupo[0]!.semanas.forEach((base, idx) => {
+      type Linha = { t: string; f: PDFFont; cor: ReturnType<typeof rgb> };
+      const colSemana: Linha[] = [{ t: `${ddmm(base.segunda)} a ${ddmm(base.dias[4]!.data)}`, f: bold, cor: rgb(0.1, 0.1, 0.1) }];
+      base.dias.forEach((d, i) => {
+        if (d.fora || !d.semAula) return;
+        for (const l of quebrar(`${DIA_CURTO[i]} ${ddmm(d.data)}: ${d.semAula}`, font, TAM, larg[0]! - 2 * PAD)) colSemana.push({ t: l, f: font, cor: CINZA });
+      });
+      const celulas: Linha[][] = [colSemana];
+      grupo.forEach((turma, k) => {
+        const sem = turma.semanas[idx]!;
+        const w = larg[k + 1]! - 2 * PAD;
+        const c: Linha[] = [];
+        for (const p of sem.presenciais) for (const l of quebrar(`Presencial: ${p}`, bold, TAM, w)) c.push({ t: l, f: bold, cor: ROXO });
+        sem.dias.forEach((d, i) => {
+          for (const it of d.itens) {
+            for (const l of quebrar(`${DIA_CURTO[i]} ${it.numeroAula}ª ${it.hora} · ${it.disciplina} — ${it.professor}`, font, TAM, w)) c.push({ t: l, f: font, cor: it.trio ? ROXO : rgb(0.1, 0.1, 0.1) });
+          }
+        });
+        celulas.push(c);
+      });
+      const altura = Math.max(...celulas.map((c) => c.length), 1) * LH + 2 * PAD;
+      if (y - altura < 24) cabecalho(true);
+      let x = MARGEM;
+      celulas.forEach((c, i) => {
+        page.drawRectangle({ x, y: y - altura, width: larg[i]!, height: altura, color: idx % 2 ? ZEBRA : BRANCO, borderColor: BORDA, borderWidth: 0.5 });
+        c.forEach((l, k) => page.drawText(l.t, { x: x + PAD, y: y - PAD - (k + 1) * LH + 2, size: TAM, font: l.f, color: l.cor }));
+        x += larg[i]!;
+      });
+      y -= altura;
+    });
+  }
+  return pdf.save();
+}

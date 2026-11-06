@@ -130,12 +130,17 @@ export default function ImprimirGradePage() {
   });
   const hoje = new Date().toISOString().slice(0, 10);
   const [trimestreEscolhido, setTrimestreEscolhido] = useState<string | null>(null);
+  // [CALENDARIO-LADO-A-LADO] (06/11/2026) periodo proprio do cartao e o modelo (uma turma por folha ou lado a lado)
+  const [periodoCal, setPeriodoCal] = useState(TODOS);
+  const [modeloCal, setModeloCal] = useState<"folha" | "lado">("folha");
   const trimestre = trimestreEscolhido ?? String(trimestres.find((t) => String(t.dataInicio).slice(0, 10) <= hoje && hoje <= String(t.dataFim).slice(0, 10))?.trimestre ?? trimestres[0]?.trimestre ?? "");
   const br = (iso: string) => String(iso).slice(0, 10).split("-").reverse().join("/");
 
   const baixar = async (m: Modelo) => {
     const url = new URL(`/api/export/grade-pdf/${m.rota}`, window.location.origin);
-    if (turno !== TODOS) url.searchParams.set("turno", turno);
+    const turnoDoModelo = m.rota === "assincronas" ? periodoCal : turno; // [CALENDARIO-LADO-A-LADO]
+    if (turnoDoModelo !== TODOS) url.searchParams.set("turno", turnoDoModelo);
+    if (m.rota === "assincronas" && modeloCal === "lado") url.searchParams.set("modelo", "lado-a-lado");
     if (semana === "proxima") url.searchParams.set("semana", "proxima");
     if (m.modelo) url.searchParams.set("modelo", m.modelo);
     if (m.rota === "assincronas") { url.searchParams.set("trimestre", trimestre); url.searchParams.set("ano", String(anoAtual)); } // [CALENDARIO-ASSINCRONAS]
@@ -147,7 +152,7 @@ export default function ImprimirGradePage() {
       const obj = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = obj;
-      a.download = m.rota === "assincronas" ? `assincronas_${trimestre}tri_${anoAtual}.pdf` : `grade_${m.chave}${turno !== TODOS ? "_" + turno : ""}${semana === "proxima" ? "_proxima_semana" : ""}.pdf`;
+      a.download = m.rota === "assincronas" ? `assincronas_${trimestre}tri_${anoAtual}${periodoCal !== TODOS ? "_" + periodoCal : ""}${modeloCal === "lado" ? "_lado_a_lado" : ""}.pdf` : `grade_${m.chave}${turno !== TODOS ? "_" + turno : ""}${semana === "proxima" ? "_proxima_semana" : ""}.pdf`;
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       URL.revokeObjectURL(obj);
     } catch (err) {
@@ -188,9 +193,10 @@ export default function ImprimirGradePage() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {MODELOS.map((m) => {
-          const precisaTurno = turno === TODOS && !m.aceitaTodos;
+          const precisaTurno = turno === TODOS && !m.aceitaTodos && m.rota !== "assincronas";
           const semIntegral = turno === "integral" && m.rota !== "turma" && m.rota !== "assincronas" ? "No integral, use os modelos por turma: o professor sai no turno real dele (manhã ou tarde)." : null;
-          const listaTurmas = turmas.filter((t) => turno === TODOS || t.turno === turno);
+          const turnoDoCartao = m.rota === "assincronas" ? periodoCal : turno; // [CALENDARIO-LADO-A-LADO]
+          const listaTurmas = turmas.filter((t) => turnoDoCartao === TODOS || t.turno === turnoDoCartao);
           return (
             <Card key={m.chave} className="flex flex-col">
               <CardHeader className="pb-3">
@@ -199,6 +205,27 @@ export default function ImprimirGradePage() {
                 <CardDescription>{m.descricao}</CardDescription>
               </CardHeader>
               <CardContent className="mt-auto space-y-3">
+                {m.rota === "assincronas" && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Select value={periodoCal} onValueChange={(v) => { setPeriodoCal(v); setFiltros((f) => ({ ...f, [m.chave]: "" })); }}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={TODOS}>Todos os períodos</SelectItem>
+                        <SelectItem value="matutino">Matutino</SelectItem>
+                        <SelectItem value="vespertino">Vespertino</SelectItem>
+                        <SelectItem value="noturno">Noturno</SelectItem>
+                        <SelectItem value="integral">Integral</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={modeloCal} onValueChange={(v) => setModeloCal(v as "folha" | "lado")}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="folha">Uma turma por folha</SelectItem>
+                        <SelectItem value="lado">Turmas lado a lado (3 por folha)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}{/* [CALENDARIO-LADO-A-LADO] */}
                 {m.filtro && (
                   <Select value={filtros[m.chave] ?? TODOS} onValueChange={(v) => setFiltros((f) => ({ ...f, [m.chave]: v === TODOS ? "" : v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
