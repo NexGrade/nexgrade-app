@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import {
   useListProfessores,
+  useListTurmas, // [DISP-POR-TURMA]
   useListDisponibilidade,
   useSetDisponibilidadeLote,
   useListHorarioSlots,
@@ -19,8 +20,6 @@ import {
   useGetProfessorCarga, // [HA-DEVIDA-UMA-CONTA]
   customFetch, // [DISP-EXPERIMENTAL]
 } from "@workspace/api-client-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // [DISP-EXPERIMENTAL]
-import { Input } from "@/components/ui/input"; // [DISP-EXPERIMENTAL]
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { Users, Save, RotateCcw, Lock, CheckCircle2, Info, GraduationCap, BookOpen, Pin, Tag, FlaskConical } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -82,14 +81,16 @@ function formatHora(horaInicio: string) {
   return horaInicio.slice(0, 5);
 }
 
-// [DISP-EXPERIMENTAL] (06/11/2026) "Editando: Oficial" ou um experimento: no experimento a tela le e grava as mudancas
-// so nele (rotas /api/disponibilidade?experimento=); a oficial nao muda ate promover o experimento.
-const OFICIAL = "__oficial__";
-const NOVO_EXPERIMENTO = "__novo__";
+// [DISP-EXPERIMENTAL] (06/11/2026) a mesma tela serve a disponibilidade oficial (pagina Disponibilidade) e a de um
+// experimento (aba Disponibilidade dentro do experimento, no Modo Experimental). [EXPERIMENTO-COMPLETO] (06/11/2026) a
+// pedido da dona, o seletor de experimento saiu desta pagina: dentro do experimento tudo se faz pelas abas dele.
 const SEM_LINHAS: never[] = [];
-type ListaExperimentos = { semTabela: boolean; experimentos: Array<{ nome: string; mudancas: number; professores: number }> };
 
 export default function DisponibilidadePage() {
+  return <PainelDisponibilidade />;
+}
+
+export function PainelDisponibilidade({ experimento = null, embutido = false }: { experimento?: string | null; embutido?: boolean }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [professorId, setProfessorId] = useState<string>("");
@@ -101,24 +102,6 @@ export default function DisponibilidadePage() {
   const [modoAtividade, setModoAtividade] = useState(false);
   const [celulaAtividade, setCelulaAtividade] = useState<{ dia: number; numeroAula: number } | null>(null);
   const [rotuloEscolhido, setRotuloEscolhido] = useState("");
-  // [DISP-EXPERIMENTAL] experimento em edicao (null = oficial); vem tambem de /disponibilidade?experimento=Nome
-  const [experimento, setExperimento] = useState<string | null>(() => new URLSearchParams(window.location.search).get("experimento")?.trim() || null);
-  const [novoExpAberto, setNovoExpAberto] = useState(() => new URLSearchParams(window.location.search).get("novoExperimento") === "1"); // vindo do Modo Experimental
-  const [novoExpNome, setNovoExpNome] = useState("");
-  const listaExp = useQuery({
-    queryKey: ["disp-exp-lista"],
-    queryFn: () => customFetch<ListaExperimentos>("/api/disponibilidade/experimentos"),
-  });
-  const nomesExp = useMemo(() => {
-    const n = (listaExp.data?.experimentos ?? []).map((e) => e.nome);
-    return experimento && !n.includes(experimento) ? [...n, experimento] : n;
-  }, [listaExp.data, experimento]);
-  const trocarExperimento = (nome: string | null) => {
-    setExperimento(nome);
-    const u = new URL(window.location.href);
-    if (nome) u.searchParams.set("experimento", nome); else u.searchParams.delete("experimento");
-    window.history.replaceState(null, "", u.toString());
-  };
 
   // Permite chegar nesta página já com um professor pré-selecionado,
   // via link tipo /disponibilidade?professorId=42 — usado pelo botão
@@ -134,6 +117,15 @@ export default function DisponibilidadePage() {
   const tipoConflitoVindo = new URLSearchParams(window.location.search).get("tipo");
 
   const { data: professores = [], isLoading: carregandoProfessores } = useListProfessores();
+  // [DISP-POR-TURMA] (06/11/2026) pedido da dona: escolher a turma e ver so os professores dela (pela grade oficial)
+  const { data: turmasTodas = [] } = useListTurmas();
+  const [turmaFiltro, setTurmaFiltro] = useState("");
+  const turmaFiltroNum = turmaFiltro ? Number(turmaFiltro) : undefined;
+  const { data: aulasDaTurma = [] } = useListHorarios(
+    { turmaId: turmaFiltroNum },
+    { query: { enabled: !!turmaFiltroNum, queryKey: getListHorariosQueryKey({ turmaId: turmaFiltroNum }) } },
+  );
+  const profsDaTurma = new Set((aulasDaTurma as Array<{ professorId?: number | null }>).map((h) => h.professorId).filter((id): id is number => id != null));
 
   const { data: slots = [], isLoading: carregandoSlots } = useListHorarioSlots(
     // No matutino, sempre pede o esquema "medio_tecnico" (6 aulas) em
@@ -510,7 +502,7 @@ export default function DisponibilidadePage() {
         setOriginal({ ...matriz });
         setRotulosOriginais({ ...rotulos });
         queryClient.invalidateQueries({ queryKey: ["disp-exp", experimento] });
-        queryClient.invalidateQueries({ queryKey: ["disp-exp-lista"] });
+        queryClient.invalidateQueries({ queryKey: ["experimentos-resumo"] });
         toast({
           title: `Disponibilidade salva no experimento "${experimento}"`,
           description: `${itens.length} alteração(ões) de ${professorSelecionado?.nome ?? "professor"}. A disponibilidade oficial não mudou.`,
@@ -536,7 +528,7 @@ export default function DisponibilidadePage() {
 
   return (
     <div className="space-y-6">
-      {conflitoVindo && (
+      {!embutido && conflitoVindo && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-800">
           <span><strong>Conflito:</strong> {conflitoVindo}</span>
           <span className="flex items-center gap-3">
@@ -546,7 +538,7 @@ export default function DisponibilidadePage() {
           </span>
         </div>
       )}{/* [CONFLITO-VAI-AO-PROBLEMA] */}
-      <div className="flex items-start justify-between">
+      {!embutido && <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <Users className="w-7 h-7 text-rose-500" />
@@ -557,20 +549,15 @@ export default function DisponibilidadePage() {
             obrigatória marcados aqui.
           </p>
         </div>
-      </div>
+      </div>}
 
       {experimento && (
-        <div className="flex flex-wrap items-center gap-2 rounded-md border border-violet-300 bg-violet-50 px-4 py-2.5 text-sm text-violet-900">
-          <FlaskConical className="w-4 h-4 shrink-0" />
-          <span className="flex-1 min-w-[16rem]">
-            Editando o experimento <strong>{experimento}</strong>: as mudanças ficam só nele (horários com contorno roxo) e a disponibilidade oficial não muda.
-            Depois gere a grade com este mesmo nome em <a href="/horario?tab=experimental" className="underline font-medium">Gerar Grade → Modo Experimental</a> e, se ficar bom, promova.
-          </span>
-          <button type="button" className="text-xs underline" onClick={() => trocarExperimento(null)}>Voltar à oficial</button>
-        </div>
+        <p className="text-sm text-violet-900 rounded-md border border-violet-200 bg-violet-50 px-3 py-2">
+          Mudanças feitas aqui ficam só no experimento <strong>{experimento}</strong> (horários com contorno roxo). A disponibilidade oficial só muda ao promover.
+        </p>
       )}{/* [DISP-EXPERIMENTAL] */}
-      {listaExp.data?.semTabela && experimento && (
-        <div className="rounded-md border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-900">A disponibilidade em experimento ainda não está pronta no banco (falta a atualização do sistema). Avise o suporte NexGrade.</div>
+      {experimento && dispExp.isError && (
+        <div className="rounded-md border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-900">Não foi possível abrir a disponibilidade do experimento{dispExp.error instanceof Error ? `: ${dispExp.error.message}` : "."}</div>
       )}
       {professorIdNum && resumoHA.linhas.length > 0 && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md border border-border bg-muted/30 px-4 py-2 text-sm">
@@ -588,29 +575,24 @@ export default function DisponibilidadePage() {
       {professorIdNum && <ContaProfessor professorId={professorIdNum} turno={turno} deltaLivres={deltaLivres} />}{/* [CONTA-NA-HORA] */}
 
       <div className="flex flex-wrap items-center gap-4">
+        {/* [DISP-POR-TURMA] */}
+        <SeletorBusca
+          className="w-56"
+          options={[{ value: "", label: "Todas as turmas" }, ...[...turmasTodas].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { numeric: true })).map((t) => ({ value: String(t.id), label: t.nome }))]}
+          value={turmaFiltro}
+          onChange={setTurmaFiltro}
+          placeholder="Todas as turmas"
+          buscarPlaceholder="Buscar turma..."
+        />
         <SeletorBusca
           className="w-72"
-          options={professores.filter((p) => p.ativo).map((p) => ({ value: String(p.id), label: p.nome }))}
+          options={professores.filter((p) => p.ativo && (!turmaFiltroNum || profsDaTurma.has(p.id))).map((p) => ({ value: String(p.id), label: p.nome }))}
           value={professorId}
           onChange={setProfessorId}
           placeholder={carregandoProfessores ? "Carregando..." : "Selecione um professor"}
           buscarPlaceholder="Buscar professor por nome..."
         />
 
-        {/* [DISP-EXPERIMENTAL] o que esta sendo editado */}
-        <Select value={experimento ?? OFICIAL} onValueChange={(v) => { if (v === NOVO_EXPERIMENTO) { setNovoExpNome(""); setNovoExpAberto(true); } else trocarExperimento(v === OFICIAL ? null : v); }}>
-          <SelectTrigger className={cn("w-64", experimento && "border-violet-400 text-violet-800")}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={OFICIAL}>Editando: disponibilidade oficial</SelectItem>
-            {nomesExp.map((n) => {
-              const info = listaExp.data?.experimentos.find((e) => e.nome === n);
-              return <SelectItem key={n} value={n}>Experimento: {n}{info ? ` (${info.mudancas} mudança${info.mudancas === 1 ? "" : "s"})` : ""}</SelectItem>;
-            })}
-            <SelectItem value={NOVO_EXPERIMENTO}>+ Novo experimento de disponibilidade…</SelectItem>
-          </SelectContent>
-        </Select>
 
         <Tabs value={turno} onValueChange={(v) => setTurno(v as Turno)}>
           <TabsList>
@@ -905,21 +887,6 @@ export default function DisponibilidadePage() {
         </Card>
         </div>
       )}
-    {/* [DISP-EXPERIMENTAL] novo experimento de disponibilidade */}
-      <Dialog open={novoExpAberto} onOpenChange={setNovoExpAberto}>
-        <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Novo experimento de disponibilidade</DialogTitle></DialogHeader>
-          <div className="space-y-2 text-sm">
-            <p className="text-muted-foreground">As mudanças de disponibilidade ficam guardadas neste experimento, sem mexer na oficial. Para testar, gere a grade com o <strong>mesmo nome</strong> no Modo Experimental.</p>
-            <Input autoFocus value={novoExpNome} maxLength={80} placeholder="Ex.: Teste Ana sem sexta" onChange={(e) => setNovoExpNome(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && novoExpNome.trim()) { trocarExperimento(novoExpNome.trim()); setNovoExpAberto(false); } }} />
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setNovoExpAberto(false)}>Cancelar</Button>
-            <Button disabled={!novoExpNome.trim()} onClick={() => { trocarExperimento(novoExpNome.trim()); setNovoExpAberto(false); }}>Começar a editar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

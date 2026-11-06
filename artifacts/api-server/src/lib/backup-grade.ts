@@ -5,7 +5,7 @@
 // não é feita e quem chamou recebe um aviso.
 import { db, gradeBackupsTable, horariosTable, disponibilidadeTable, professoresTable } from "@workspace/db";
 import { and, eq, desc, inArray, notInArray, sql } from "drizzle-orm";
-import { voltarChaves, type DispAntes } from "./disponibilidade-experimento"; // [DISP-EXPERIMENTAL]
+import { voltarChaves, voltarAtribuicoes, type DispAntes, type AtribuicaoAntes } from "./disponibilidade-experimento"; // [DISP-EXPERIMENTAL] [EXPERIMENTO-COMPLETO]
 
 const MANTER_POR_ESCOLA = 10;
 
@@ -20,6 +20,8 @@ export interface DadosBackup {
   ha: Array<{ professorId: number; turno: string | null; diaSemana: number; horarioSlot: number; motivo: string | null; disponivel?: boolean }>;
   // [DISP-EXPERIMENTAL] (06/11/2026) promocao de experimento com disponibilidade: como estavam as linhas que ele mudou
   disponibilidade?: DispAntes;
+  // [EXPERIMENTO-COMPLETO] promocao com atribuicao: o professor que cada disciplina tinha antes
+  atribuicao?: AtribuicaoAntes;
 }
 
 function tabelaAusente(err: unknown): boolean {
@@ -45,9 +47,9 @@ async function lerGradeOficial(escolaId: string): Promise<DadosBackup> {
 }
 
 /** Guarda a grade oficial atual. Devolve { ok: true, id } ou { ok: false, aviso }. */
-export async function salvarBackupGrade(escolaId: string, motivo: string, usuarioNome?: string | null, disponibilidade?: DispAntes):
+export async function salvarBackupGrade(escolaId: string, motivo: string, usuarioNome?: string | null, disponibilidade?: DispAntes, atribuicao?: AtribuicaoAntes):
   Promise<{ ok: true; id: number } | { ok: false; aviso: string }> {
-  const dados: DadosBackup = { ...(await lerGradeOficial(escolaId)), ...(disponibilidade ? { disponibilidade } : {}) };
+  const dados: DadosBackup = { ...(await lerGradeOficial(escolaId)), ...(disponibilidade ? { disponibilidade } : {}), ...(atribuicao?.length ? { atribuicao } : {}) };
   try {
     const [b] = await db.insert(gradeBackupsTable).values({
       escolaId, motivo, qtdAulas: dados.horarios.length, qtdHa: dados.ha.length, dados, usuarioNome: usuarioNome ?? null,
@@ -99,6 +101,7 @@ export async function restaurarBackupGrade(
     // [DISP-EXPERIMENTAL] antes da HA: a disponibilidade que o experimento promovido mudou volta ao que era
     // (a HA da copia vem depois e tem a palavra final no mesmo horario)
     if (dados.disponibilidade) await voltarChaves(tx, dados.disponibilidade, new Set(profIds));
+    if (dados.atribuicao) await voltarAtribuicoes(tx, dados.atribuicao); // [EXPERIMENTO-COMPLETO]
     for (let i = 0; i < dados.horarios.length; i += 500) {
       const lote = dados.horarios.slice(i, i + 500).map((h) => ({ escolaId, ...h, versaoGrade: "oficial" }));
       if (lote.length) await tx.insert(horariosTable).values(lote);

@@ -1,8 +1,10 @@
 import { Router } from "express";
 import {
-  sobreporExperimento, middlewareDisponibilidadeExperimental, carregarMudancas, oficialNasChaves, paraDispAntes,
-  aplicarMudancasNaOficial, voltarChaves, apagarMudancas,
-} from "../lib/disponibilidade-experimento"; // [DISP-EXPERIMENTAL]
+  sobreporExperimento, sobreporAtribuicao, middlewareDisponibilidadeExperimental, carregarMudancas, oficialNasChaves, paraDispAntes,
+  aplicarMudancasNaOficial, voltarChaves, carregarAtribuicoes, aplicarAtribuicoesNaOficial, voltarAtribuicoes,
+  apagarExtrasDoExperimento, registrarExperimento, semTabelaExperimental, comExperimento, type AtribuicaoAntes,
+} from "../lib/disponibilidade-experimento"; // [DISP-EXPERIMENTAL] [EXPERIMENTO-COMPLETO]
+import { experimentosTable, atribuicaoExperimentalTable, disponibilidadeExperimentalTable } from "@workspace/db"; // [EXPERIMENTO-COMPLETO]
 import axios from "axios";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { db } from "@workspace/db";
@@ -120,7 +122,7 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
   const AULAS_VALIDAS_TURMA = new Set(slotsDoTurno.filter(s => s.letivo).map(s => s.numeroAula));
 
   const [turmaDiscs, disciplinas, professores, profDiscs, configGeminadas, configComplementarPadrao, limitesProfessor] = await Promise.all([
-    db.select().from(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.turmaId, turmaId)),
+    db.select().from(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.turmaId, turmaId)).then((r) => sobreporAtribuicao(r)), // [EXPERIMENTO-COMPLETO]
     db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
     db.select().from(professoresTable)
       .where(and(eq(professoresTable.escolaId, escolaId)))
@@ -1047,7 +1049,8 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
   if (expSlots.length === 0) {
     // [DISP-EXPERIMENTAL] experimento so com disponibilidade: falta gerar a grade com ela
     const { linhas } = await carregarMudancas(escolaId, nome);
-    if (linhas.length) { res.status(400).json({ error: "Este experimento só tem mudanças de disponibilidade. Gere a grade com este nome antes de promover." }); return; }
+    const atrib = await carregarAtribuicoes(escolaId, nome); // [EXPERIMENTO-COMPLETO]
+    if (linhas.length || atrib.size) { res.status(400).json({ error: "Este experimento ainda não tem grade. Gere a grade (ou copie a oficial) antes de promover." }); return; }
     res.status(404).json({ error: "Horário experimental não encontrado" });
     return;
   }
@@ -1116,12 +1119,18 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
   // (vai na copia de seguranca: "Voltar a grade anterior" desfaz tambem a disponibilidade)
   const { linhas: mudancasDisp } = await carregarMudancas(escolaId, nome);
   const dispAntes = paraDispAntes(mudancasDisp, await oficialNasChaves(mudancasDisp));
+  // [EXPERIMENTO-COMPLETO] atribuicao do experimento e o professor que cada disciplina tem hoje
+  const atribuicoesExp = await carregarAtribuicoes(escolaId, nome);
+  const atribAntes: AtribuicaoAntes = atribuicoesExp.size
+    ? (await db.select({ id: turmaDisciplinasTable.id, professorId: turmaDisciplinasTable.professorId }).from(turmaDisciplinasTable)
+        .where(inArray(turmaDisciplinasTable.id, [...atribuicoesExp.keys()]))).map((r) => ({ turmaDisciplinaId: r.id, professorId: r.professorId ?? null }))
+    : [];
 
   // [BACKUP-GRADE] cópia da oficial (aulas + HA) antes de trocar, para "Voltar à grade anterior"
   let avisoBackup: string | null = null;
   let backupId: number | null = null;
   try {
-    const b = await salvarBackupGrade(escolaId, `Antes de promover "${nome}"`, null, mudancasDisp.length ? dispAntes : undefined);
+    const b = await salvarBackupGrade(escolaId, `Antes de promover "${nome}"`, null, mudancasDisp.length ? dispAntes : undefined, atribAntes);
     if (b.ok) backupId = b.id; else avisoBackup = b.aviso;
   } catch (err) {
     res.status(500).json({ error: "Não foi possível guardar a cópia de segurança da grade. Nada foi promovido.", detalhe: err instanceof Error ? err.message : String(err) });
@@ -1136,6 +1145,17 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
       await aplicarMudancasNaOficial(mudancasDisp);
     } catch (err) {
       res.status(500).json({ error: "Não foi possível aplicar a disponibilidade do experimento. Nada foi promovido.", detalhe: err instanceof Error ? err.message : String(err) });
+      return;
+    }
+  }
+  // [EXPERIMENTO-COMPLETO] a atribuicao tambem vai antes: a regra de substituicao abaixo (professor que deixou a
+  // disciplina perde a aula dela) ja le o professor novo
+  if (atribuicoesExp.size) {
+    try {
+      await aplicarAtribuicoesNaOficial(atribuicoesExp);
+    } catch (err) {
+      if (mudancasDisp.length) await db.transaction((tx) => voltarChaves(tx, dispAntes)).catch(() => undefined);
+      res.status(500).json({ error: "Não foi possível aplicar a atribuição do experimento. Nada foi promovido.", detalhe: err instanceof Error ? err.message : String(err) });
       return;
     }
   }
@@ -1231,9 +1251,13 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
       try { await db.transaction((tx) => voltarChaves(tx, dispAntes)); }
       catch (e2) { console.error("[DISP-EXPERIMENTAL] falhou ao desfazer a disponibilidade depois da promocao falhar:", e2); }
     }
+    if (atribAntes.length) { // [EXPERIMENTO-COMPLETO]
+      try { await db.transaction((tx) => voltarAtribuicoes(tx, atribAntes)); }
+      catch (e2) { console.error("[EXPERIMENTO-COMPLETO] falhou ao desfazer a atribuicao depois da promocao falhar:", e2); }
+    }
     throw err;
   }
-  if (mudancasDisp.length) await apagarMudancas(escolaId, nome); // [DISP-EXPERIMENTAL] ja estao na oficial
+  await apagarExtrasDoExperimento(escolaId, nome); // [DISP-EXPERIMENTAL] [EXPERIMENTO-COMPLETO] ja estao na oficial
 
   // [HA-SO-NO-TURNO-DO-EXPERIMENTO] HA de hoje de quem teve aula mexida (o recalculo abaixo refaz todos os turnos) e o
   // recalculo da grade de ANTES (a base: fora do turno do experimento so muda o que o experimento mudar na conta)
@@ -1360,7 +1384,7 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     console.error("[HA-BURACO-QUEM-MUDOU] Falha ao levar a HA de quem mudou para os buracos; a HA do recalculo fica:", err);
   }
 
-  res.json({ slotsGerados: inserted.length, conflitos: [], horario: [], backupId, avisoBackup, avisoHA, professoresComAulaMexida: profsMudaram.size, haReposicionadas, disponibilidadeAplicada: mudancasDisp.length });
+  res.json({ slotsGerados: inserted.length, conflitos: [], horario: [], backupId, avisoBackup, avisoHA, professoresComAulaMexida: profsMudaram.size, haReposicionadas, disponibilidadeAplicada: mudancasDisp.length, atribuicaoAplicada: atribuicoesExp.size });
 });
 
 // [BACKUP-GRADE] cópias da grade oficial guardadas antes de promover (mais nova primeiro)
@@ -1389,12 +1413,185 @@ router.delete("/experimentais/:nome", async (req, res) => {
   const aulasApagadas = await db.delete(horariosExperimentaisTable)
     .where(and(eq(horariosExperimentaisTable.nome, req.params.nome), eq(horariosExperimentaisTable.escolaId, escolaId)))
     .returning({ id: horariosExperimentaisTable.id });
-  const dispApagadas = await apagarMudancas(escolaId, req.params.nome); // [DISP-EXPERIMENTAL]
+  const dispApagadas = await apagarExtrasDoExperimento(escolaId, req.params.nome); // [DISP-EXPERIMENTAL] [EXPERIMENTO-COMPLETO]
   const apagadas = [...aulasApagadas, ...Array(dispApagadas).fill(null)];
   // [NOME-EXPERIMENTO] (21/10/2026) antes respondia 204 mesmo sem apagar nada (nome com espaco no fim
   // chegava cortado): a tela dizia "removido" e o experimento continuava la
   if (apagadas.length === 0) { res.status(404).json({ error: "Experimento não encontrado. Nada foi apagado." }); return; }
   res.status(204).send();
+});
+
+// ── [EXPERIMENTO-COMPLETO] (06/11/2026) experimento como area de trabalho ─────────────────────────────
+
+/** Resumo dos experimentos da escola: registrados, com aulas, com disponibilidade e com atribuicao. */
+router.get("/experimentos-resumo", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const aulas = await db.select({ nome: horariosExperimentaisTable.nome, n: sql<number>`count(*)::int`, turmas: sql<number>`count(distinct ${horariosExperimentaisTable.turmaId})::int` })
+    .from(horariosExperimentaisTable).where(eq(horariosExperimentaisTable.escolaId, escolaId)).groupBy(horariosExperimentaisTable.nome);
+  const resumo = new Map<string, { nome: string; aulas: number; turmas: number; disponibilidade: number; professoresDisp: number; atribuicoes: number; criadoEm: string | null }>();
+  const de = (nome: string) => { if (!resumo.has(nome)) resumo.set(nome, { nome, aulas: 0, turmas: 0, disponibilidade: 0, professoresDisp: 0, atribuicoes: 0, criadoEm: null }); return resumo.get(nome)!; };
+  for (const a of aulas) Object.assign(de(a.nome), { aulas: a.n, turmas: a.turmas });
+  let semTabela = false;
+  try {
+    for (const e of await db.select().from(experimentosTable).where(eq(experimentosTable.escolaId, escolaId))) de(e.nome).criadoEm = e.createdAt.toISOString();
+    for (const d of await db.select({ nome: disponibilidadeExperimentalTable.nome, n: sql<number>`count(*)::int`, p: sql<number>`count(distinct ${disponibilidadeExperimentalTable.professorId})::int` })
+      .from(disponibilidadeExperimentalTable).where(eq(disponibilidadeExperimentalTable.escolaId, escolaId)).groupBy(disponibilidadeExperimentalTable.nome)) Object.assign(de(d.nome), { disponibilidade: d.n, professoresDisp: d.p });
+    for (const a of await db.select({ nome: atribuicaoExperimentalTable.nome, n: sql<number>`count(*)::int` })
+      .from(atribuicaoExperimentalTable).where(eq(atribuicaoExperimentalTable.escolaId, escolaId)).groupBy(atribuicaoExperimentalTable.nome)) de(a.nome).atribuicoes = a.n;
+  } catch (e) {
+    if (!semTabelaExperimental(e)) throw e;
+    semTabela = true;
+  }
+  res.json({ semTabela, experimentos: [...resumo.values()].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")) });
+});
+
+const NovoExperimentoBody = z.object({
+  nome: z.string().trim().min(1).max(80),
+  // copiar a grade oficial para o experimento: um turno, "todos" ou nada (comeca vazio)
+  copiarOficial: z.enum(["matutino", "vespertino", "noturno", "integral", "todos"]).nullable().optional(),
+});
+
+/** Cria o experimento (vazio ou com a grade oficial copiada, para trocar aulas a mao). */
+router.post("/experimentos", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const b = NovoExperimentoBody.safeParse(req.body);
+  if (!b.success) { res.status(400).json({ error: "Informe o nome do experimento." }); return; }
+  const { nome, copiarOficial } = b.data;
+  const [existe] = await db.select({ id: horariosExperimentaisTable.id }).from(horariosExperimentaisTable)
+    .where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome))).limit(1);
+  let jaRegistrado = false;
+  try { jaRegistrado = !!(await db.select({ id: experimentosTable.id }).from(experimentosTable).where(and(eq(experimentosTable.escolaId, escolaId), eq(experimentosTable.nome, nome))))[0]; }
+  catch (e) { if (semTabelaExperimental(e)) { res.status(503).json({ error: "O experimento completo ainda não está pronto no banco (falta a atualização do sistema). Avise o suporte NexGrade." }); return; } throw e; }
+  if (existe || jaRegistrado) { res.status(409).json({ error: `Já existe um experimento "${nome}". Escolha outro nome.` }); return; }
+  await registrarExperimento(escolaId, nome);
+  let copiadas = 0;
+  if (copiarOficial) {
+    const turmas = await db.select({ id: turmasTable.id, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
+    const ids = turmas.filter((t) => copiarOficial === "todos" || t.turno === copiarOficial).map((t) => t.id);
+    const oficial = ids.length ? await db.select().from(horariosTable).where(and(
+      eq(horariosTable.escolaId, escolaId), inArray(horariosTable.turmaId, ids), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`)) : [];
+    const linhas = oficial.filter((h) => h.professorId != null).map((h) => ({
+      escolaId, nome, turmaId: h.turmaId, disciplinaId: h.disciplinaId, professorId: h.professorId!, diaSemana: h.diaSemana, numeroAula: h.numeroAula,
+      sala: h.sala, assincrona: !!h.assincrona, fixa: !!h.fixa, ativo: true,
+    }));
+    for (let i = 0; i < linhas.length; i += 500) await db.insert(horariosExperimentaisTable).values(linhas.slice(i, i + 500));
+    copiadas = linhas.length;
+  }
+  res.status(201).json({ nome, aulasCopiadas: copiadas });
+});
+
+/** Atribuicao no experimento: cada disciplina de cada turma com o professor oficial e o do experimento. */
+router.get("/experimentais/:nome/atribuicoes", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const nome = req.params.nome;
+  const turmas = await db.select({ id: turmasTable.id, nome: turmasTable.nome, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
+  const ids = turmas.map((t) => t.id);
+  const [linhas, discs, atrib] = await Promise.all([
+    ids.length ? db.select().from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, ids)) : Promise.resolve([]),
+    db.select({ id: disciplinasTable.id, nome: disciplinasTable.nome }).from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
+    carregarAtribuicoes(escolaId, nome),
+  ]);
+  const turmaMap = new Map(turmas.map((t) => [t.id, t]));
+  const discMap = new Map(discs.map((d) => [d.id, d.nome]));
+  res.json(linhas.map((l) => ({
+    turmaDisciplinaId: l.id, turmaId: l.turmaId, turma: turmaMap.get(l.turmaId)?.nome ?? "", turno: turmaMap.get(l.turmaId)?.turno ?? "",
+    disciplinaId: l.disciplinaId, disciplina: discMap.get(l.disciplinaId) ?? "", professorOficialId: l.professorId ?? null,
+    professorId: atrib.has(l.id) ? atrib.get(l.id)! : l.professorId ?? null, mudou: atrib.has(l.id),
+  })).sort((a, b) => a.turma.localeCompare(b.turma, "pt-BR", { numeric: true }) || a.disciplina.localeCompare(b.disciplina, "pt-BR")));
+});
+
+const AtribuirBody = z.object({ turmaDisciplinaId: z.number().int(), professorId: z.number().int().nullable() });
+
+/** Troca o professor de uma disciplina so no experimento. As aulas do experimento dessa disciplina passam para ele. */
+router.put("/experimentais/:nome/atribuicoes", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const nome = req.params.nome;
+  const b = AtribuirBody.safeParse(req.body);
+  if (!b.success) { res.status(400).json({ error: "Dados inválidos." }); return; }
+  const [linha] = await db.select({ td: turmaDisciplinasTable, escolaId: turmasTable.escolaId }).from(turmaDisciplinasTable)
+    .innerJoin(turmasTable, eq(turmasTable.id, turmaDisciplinasTable.turmaId)).where(eq(turmaDisciplinasTable.id, b.data.turmaDisciplinaId));
+  if (!linha || linha.escolaId !== escolaId) { res.status(404).json({ error: "Disciplina da turma não encontrada." }); return; }
+  if (b.data.professorId != null) {
+    const [p] = await db.select({ id: professoresTable.id }).from(professoresTable).where(and(eq(professoresTable.id, b.data.professorId), eq(professoresTable.escolaId, escolaId)));
+    if (!p) { res.status(400).json({ error: "Professor que não é desta escola." }); return; }
+  }
+  const atual = await carregarAtribuicoes(escolaId, nome);
+  const professorAntes = atual.has(linha.td.id) ? atual.get(linha.td.id)! : linha.td.professorId ?? null;
+  try {
+    const onde = and(eq(atribuicaoExperimentalTable.escolaId, escolaId), eq(atribuicaoExperimentalTable.nome, nome), eq(atribuicaoExperimentalTable.turmaDisciplinaId, linha.td.id));
+    if ((linha.td.professorId ?? null) === b.data.professorId) await db.delete(atribuicaoExperimentalTable).where(onde); // voltou a ser a oficial
+    else await db.insert(atribuicaoExperimentalTable).values({ escolaId, nome, turmaDisciplinaId: linha.td.id, professorId: b.data.professorId })
+      .onConflictDoUpdate({ target: [atribuicaoExperimentalTable.escolaId, atribuicaoExperimentalTable.nome, atribuicaoExperimentalTable.turmaDisciplinaId], set: { professorId: b.data.professorId, atualizadoEm: new Date() } });
+  } catch (e) {
+    if (semTabelaExperimental(e)) { res.status(503).json({ error: "O experimento completo ainda não está pronto no banco (falta a atualização do sistema). Avise o suporte NexGrade." }); return; }
+    throw e;
+  }
+  await registrarExperimento(escolaId, nome);
+  // as aulas ja geradas/copiadas dessa disciplina nesta turma passam para o professor novo
+  let aulasAtualizadas = 0;
+  if (b.data.professorId != null && professorAntes != null && professorAntes !== b.data.professorId) {
+    aulasAtualizadas = (await db.update(horariosExperimentaisTable).set({ professorId: b.data.professorId }).where(and(
+      eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome),
+      eq(horariosExperimentaisTable.turmaId, linha.td.turmaId), eq(horariosExperimentaisTable.disciplinaId, linha.td.disciplinaId),
+      eq(horariosExperimentaisTable.professorId, professorAntes),
+    )).returning({ id: horariosExperimentaisTable.id })).length;
+  }
+  res.json({ ok: true, aulasAtualizadas });
+});
+
+const TrocarAulasBody = z.object({
+  turmaId: z.number().int(),
+  de: z.object({ diaSemana: z.number().int().min(0).max(4), numeroAula: z.number().int().min(0).max(20) }),
+  para: z.object({ diaSemana: z.number().int().min(0).max(4), numeroAula: z.number().int().min(0).max(20) }),
+  confirmar: z.boolean().optional(),
+});
+
+/** Troca dois horarios da mesma turma no experimento (ou leva a aula para um horario vago). Sem confirmar, so devolve
+ *  os avisos (professor com aula em outra turma, bloqueio, HA, aula fixa); com confirmar = true, troca mesmo assim. */
+router.post("/experimentais/:nome/trocar-aulas", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const nome = req.params.nome;
+  const b = TrocarAulasBody.safeParse(req.body);
+  if (!b.success) { res.status(400).json({ error: "Dados inválidos." }); return; }
+  const { turmaId, de, para } = b.data;
+  if (de.diaSemana === para.diaSemana && de.numeroAula === para.numeroAula) { res.status(400).json({ error: "Escolha dois horários diferentes." }); return; }
+  const doExp = and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome));
+  const exp = await db.select().from(horariosExperimentaisTable).where(doExp);
+  const naCelula = (c: { diaSemana: number; numeroAula: number }) => exp.filter((h) => h.turmaId === turmaId && h.diaSemana === c.diaSemana && h.numeroAula === c.numeroAula);
+  const blocoA = naCelula(de), blocoB = naCelula(para);
+  if (!blocoA.length && !blocoB.length) { res.status(404).json({ error: "Não há aula nesses horários do experimento." }); return; }
+  const [turma] = await db.select().from(turmasTable).where(and(eq(turmasTable.id, turmaId), eq(turmasTable.escolaId, escolaId)));
+  if (!turma) { res.status(404).json({ error: "Turma não encontrada." }); return; }
+  // avisos: cada professor que muda de horario, no horario novo
+  const turmasEsc = await db.select({ id: turmasTable.id, nome: turmasTable.nome, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
+  const turmaNome = new Map(turmasEsc.map((t) => [t.id, t]));
+  const turmasNoExp = new Set(exp.map((h) => h.turmaId));
+  const oficial = await db.select().from(horariosTable).where(and(eq(horariosTable.escolaId, escolaId), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`));
+  const disp = await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, [...new Set([...blocoA, ...blocoB].map((h) => h.professorId))].concat(-1)))
+    .then((r) => sobreporExperimento(r));
+  const profs = new Map((await db.select({ id: professoresTable.id, nome: professoresTable.nome }).from(professoresTable).where(eq(professoresTable.escolaId, escolaId))).map((p) => [p.id, p.nome]));
+  const DIA = ["segunda", "terça", "quarta", "quinta", "sexta"];
+  const avisos: string[] = [];
+  const verificar = (bloco: typeof blocoA, alvo: { diaSemana: number; numeroAula: number }) => {
+    for (const h of bloco) {
+      const prof = profs.get(h.professorId) ?? `#${h.professorId}`;
+      const onde = `${DIA[alvo.diaSemana]}, ${alvo.numeroAula}ª aula`;
+      if (h.fixa) avisos.push(`A aula de ${prof} é fixa (travada) e vai mudar de lugar.`);
+      const outra = [...exp.filter((x) => x.turmaId !== turmaId), ...oficial.filter((x) => !turmasNoExp.has(x.turmaId))]
+        .find((x) => x.professorId === h.professorId && x.diaSemana === alvo.diaSemana && x.numeroAula === alvo.numeroAula && turmaNome.get(x.turmaId)?.turno === turma.turno);
+      if (outra) avisos.push(`${prof} já tem aula na ${turmaNome.get(outra.turmaId)?.nome ?? "outra turma"} na ${onde}.`);
+      const d = disp.find((x) => x.professorId === h.professorId && x.diaSemana === alvo.diaSemana && x.horarioSlot === alvo.numeroAula && x.turno === turma.turno && (!x.disponivel || x.horaAtividadeObrigatoria));
+      if (d) avisos.push(`${prof} tem ${d.horaAtividadeObrigatoria ? "hora-atividade" : "bloqueio"} na ${onde}.`);
+    }
+  };
+  verificar(blocoA, para);
+  verificar(blocoB, de);
+  if (avisos.length && !b.data.confirmar) { res.json({ aplicado: false, avisos }); return; }
+  await db.transaction(async (tx) => {
+    if (blocoA.length) await tx.update(horariosExperimentaisTable).set({ diaSemana: para.diaSemana, numeroAula: para.numeroAula }).where(inArray(horariosExperimentaisTable.id, blocoA.map((h) => h.id)));
+    if (blocoB.length) await tx.update(horariosExperimentaisTable).set({ diaSemana: de.diaSemana, numeroAula: de.numeroAula }).where(inArray(horariosExperimentaisTable.id, blocoB.map((h) => h.id)));
+  });
+  res.json({ aplicado: true, avisos });
 });
 
 // ── GERAÇÃO EM MASSA ─────────────────────────────────────────────────
@@ -2013,7 +2210,7 @@ async function runCpsatGeneracaoUnica(
 
   const matrizIdsAlvo = [...new Set(turmasDoTurno.map((t) => t.matrizCurricularId).filter((id): id is number => id != null))];
   const [turmaDiscsTodos, disciplinas, professoresTodos, disponibilidades, horarioSlotsTurno, profDiscsTodos, itensMatrizTodos] = await Promise.all([
-    db.select().from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, turmaIds)),
+    db.select().from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, turmaIds)).then((r) => sobreporAtribuicao(r)), // [EXPERIMENTO-COMPLETO]
     db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
     db.select().from(disponibilidadeTable).then((r) => sobreporExperimento(r)), // [DISP-EXPERIMENTAL]

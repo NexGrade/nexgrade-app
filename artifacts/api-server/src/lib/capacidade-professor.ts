@@ -7,7 +7,7 @@
  * [CAPACIDADE-NAO-LETIVO] (05/10/2026) periodo nao letivo (noturno 18:00) nao
  * conta para aula, mas conta para HA (mesma regra do recalculo de HA).
  */
-import { sobreporExperimento } from "./disponibilidade-experimento"; // [DISP-EXPERIMENTAL]
+import { sobreporExperimento, sobreporAtribuicao } from "./disponibilidade-experimento"; // [DISP-EXPERIMENTAL] [EXPERIMENTO-COMPLETO]
 import { horariosTable } from "@workspace/db"; // [COTA-INTEGRAL-TURNO-REAL]
 import { mapaIntegralDosSlots, posicaoReal, TURNO_INTEGRAL } from "./turno-integral"; // [COTA-INTEGRAL-TURNO-REAL]
 import { db, turmasTable, turmaDisciplinasTable, disciplinasTable, professoresTable, disponibilidadeTable, horarioSlotsTable, professorDisciplinasTable, itensMatrizTable } from "@workspace/db";
@@ -57,7 +57,7 @@ export async function calcularCargaPorProfessor(escolaId: string): Promise<{ car
   const turmaIds = turmas.map((t) => t.id);
   const matrizIds = [...new Set(turmas.map((t) => t.matrizCurricularId).filter((id): id is number => id != null))];
   const [tds, disciplinas, professores, profDiscs, itensMatriz, slots] = await Promise.all([
-    db.select().from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, turmaIds)),
+    db.select().from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, turmaIds)).then((r) => sobreporAtribuicao(r)), // [EXPERIMENTO-COMPLETO]
     db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
     db.select().from(professorDisciplinasTable),
