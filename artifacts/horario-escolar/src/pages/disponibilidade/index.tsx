@@ -865,6 +865,11 @@ export function PainelDisponibilidade({ experimento = null, embutido = false }: 
                                   <BookOpen className="w-2.5 h-2.5" />
                                 </span>
                               )}{/* [DISP-AULA-INTEGRAL] livrinho verde-azulado na aula da integral */}
+                              {real && !doc && (
+                                <span className="absolute bottom-0.5 inset-x-1 truncate text-[9px] font-medium leading-tight text-blue-800/80 pointer-events-none">
+                                  {real.disciplina?.nome ?? ""}{real.turma?.nome ? ` · ${real.turma.nome}` : ""}
+                                </span>
+                              )}{/* [DISP-NOME-DISCIPLINA] (06/11/2026) pedido da dona: o nome da disciplina (e a turma) na celula com aula */}
                             </button>
                           </td>
                         );
