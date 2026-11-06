@@ -6,6 +6,8 @@ import { sql } from "drizzle-orm";
 import { db, disciplinasTable, disponibilidadeTable, turmaDisciplinasTable, horariosTable, horarioSlotsTable, professoresTable, reservasTable, salasTable, turmasTable } from "@workspace/db";
 import { exigirAdminParaAlterar } from "../../lib/permissao";
 import pedagogiaRouter from "../pedagogia";
+import exportRouter from "../export";
+import { writeFileSync } from "node:fs";
 
 // [PRESENCA-PEDAGOGIA] (28/10/2026) Lista de presenca dos professores com Postgres de verdade (rotas reais,
 // filtro de permissao real, migracao 0004). So roda com TEST_DATABASE_URL (o CI sobe um Postgres migrado).
@@ -46,6 +48,7 @@ describe.skipIf(!TEM_BANCO)("presenca dos professores: integracao com banco real
     });
     app.use(exigirAdminParaAlterar);
     app.use("/pedagogia", pedagogiaRouter);
+    app.use("/export", exportRouter);
     server = app.listen(0);
     porta = (server.address() as AddressInfo).port;
 
@@ -73,7 +76,7 @@ describe.skipIf(!TEM_BANCO)("presenca dos professores: integracao com banco real
     try { await db.execute(sql`alter table if exists presencas_off rename to presencas_professores`); } catch { /* ja esta com o nome certo */ }
     try { await db.execute(sql`alter table if exists observacoes_off rename to presencas_observacoes`); } catch { /* ja esta com o nome certo */ }
     await new Promise<void>((ok) => (server ? server.close(() => ok()) : ok()));
-    for (const t of ["presencas_observacoes", "presencas_professores", "reservas", "horarios", "horario_slots", "turmas", "disciplinas", "salas", "professores"]) {
+    for (const t of ["trimestres_letivos", "presencas_observacoes", "presencas_professores", "reservas", "horarios", "horario_slots", "turmas", "disciplinas", "salas", "professores"]) {
       await db.execute(sql.raw(`delete from ${t} where escola_id = '${E}'`));
     }
   });
@@ -117,6 +120,17 @@ describe.skipIf(!TEM_BANCO)("presenca dos professores: integracao com banco real
     expect(so.body.linhas.filter((l: any) => !l.grupo).map((l: any) => l.celulas[4])).toEqual(["Bruna"]);
     const pdf = await chamar("GET", `/pedagogia/presenca/periodo?de=${DIA}&ate=${proxima}&tipo=assincronas&formato=pdf`);
     expect(Buffer.from(pdf.body).subarray(0, 4).toString()).toBe("%PDF");
+  });
+
+  it("[CALENDARIO-ASSINCRONAS] calendario trimestral em PDF (pede o trimestre cadastrado)", async () => {
+    const [ano] = DIA.split("-").map(Number);
+    expect((await chamar("GET", `/export/grade-pdf/assincronas?trimestre=1&ano=${ano}`, undefined, "direcao")).status).toBe(400);
+    const fim = new Date(Date.parse(`${DIA}T12:00:00Z`) + 20 * 86_400_000).toISOString().slice(0, 10);
+    await db.execute(sql`insert into trimestres_letivos (escola_id, ano, trimestre, data_inicio, data_fim, dias_letivos) values (${E}, ${ano}, 1, ${DIA}, ${fim}, 15)`);
+    const pdf = await chamar("GET", `/export/grade-pdf/assincronas?trimestre=1&ano=${ano}`, undefined, "direcao");
+    expect(pdf.status).toBe(200);
+    expect(Buffer.from(pdf.body).subarray(0, 4).toString()).toBe("%PDF");
+    if (process.env.SALVAR_PDF_TESTE) writeFileSync(process.env.SALVAR_PDF_TESTE, Buffer.from(pdf.body));
   });
 
   it("[PRESENCA-OBS-GERAL] grava, mostra e apaga a observacao geral do professor", async () => {

@@ -94,3 +94,43 @@ export function tabelaAgendaAssincronas(o: {
     linhas,
   };
 }
+
+// [CALENDARIO-ASSINCRONAS] (06/11/2026) Calendario trimestral das assincronas (Imprimir Grade): por turma, uma linha
+// por semana com os 5 dias e, na semana, quem esta presencial na Hibrida (o mesmo professor da assincrona do trio).
+export type DiaCalendario = { data: string; fora: boolean; semAula: string | null; itens: LinhaAgenda[] };
+export type SemanaCalendario = { segunda: string; dias: DiaCalendario[]; presenciais: string[] };
+export type CalendarioTurma = { turma: string; turno: string; semanas: SemanaCalendario[] };
+
+const somaDias = (iso: string, n: number) => new Date(Date.parse(`${iso}T12:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
+export function segundaDe(iso: string): string {
+  const dow = new Date(`${iso}T12:00:00Z`).getUTCDay();
+  return somaDias(iso, -((dow + 6) % 7));
+}
+
+export function calendarioPorTurma(
+  dias: DiaDaAgenda[], linhas: LinhaAgenda[],
+  presenciaisDaSemana?: (turma: string, segunda: string) => string[], // pelo revezamento (mesmo sem assincrona na semana)
+): CalendarioTurma[] {
+  if (!dias.length) return [];
+  const de = dias[0]!.data, ate = dias[dias.length - 1]!.data;
+  const semAula = new Map(dias.map((d) => [d.data, d.semAula ?? null]));
+  const segundas: string[] = [];
+  for (let s = segundaDe(de); s <= ate; s = somaDias(s, 7)) segundas.push(s);
+  const chaves = [...new Set(linhas.map((l) => `${l.turno}|${l.turma}`))]
+    .sort((a, b) => (ORDEM_TURNO[a.split("|")[0]!] ?? 9) - (ORDEM_TURNO[b.split("|")[0]!] ?? 9) || a.split("|")[1]!.localeCompare(b.split("|")[1]!, "pt-BR", { numeric: true }));
+  return chaves.map((k) => {
+    const [turno, turma] = k.split("|") as [string, string];
+    const daTurma = linhas.filter((l) => l.turno === turno && l.turma === turma);
+    const semanas = segundas.map((segunda) => {
+      const ds = [0, 1, 2, 3, 4].map((i) => {
+        const data = somaDias(segunda, i);
+        const fora = data < de || data > ate;
+        return { data, fora, semAula: fora ? null : semAula.get(data) ?? null, itens: fora ? [] : daTurma.filter((l) => l.data === data) };
+      });
+      const presenciais = presenciaisDaSemana ? presenciaisDaSemana(turma, segunda)
+        : [...new Set(ds.flatMap((d) => d.itens.filter((l) => l.trio).map((l) => l.disciplina.includes(" / ") ? l.professor : `${l.professor} (${l.disciplina})`)))];
+      return { segunda, dias: ds, presenciais };
+    });
+    return { turma, turno, semanas };
+  });
+}

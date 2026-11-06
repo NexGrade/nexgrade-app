@@ -32,6 +32,9 @@ import { carregarMapaIntegral, mapaIntegralDosSlots, projetarIntegral } from "..
 import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
 import { carregarAssSoTurma, carregarPeriodosExtrasFinais, podarLinhasExtras } from "../lib/assincrona-so-turma"; // [ASS-SO-TURMA]
 import { gerarPdfPontoDiario, type PontoDiario, type CelulaPonto, type LinhaPonto } from "../lib/pdf-ponto-diario"; // [PONTO-DIARIO]
+import { carregarDadosAgenda, agendaDoPeriodo, presenciaisDoTrio } from "../lib/agenda-assincronas-dados"; // [CALENDARIO-ASSINCRONAS]
+import { calendarioPorTurma } from "../lib/agenda-assincronas";
+import { gerarPdfCalendarioAssincronas } from "../lib/pdf-calendario-assincronas";
 
 // [RCO-HORARIO-NOTURNO] (15/10/2026) o RCO do noturno usa a grade de horarios fixa da SEED
 // (18:40, 19:30, 20:30, 21:20, 22:10); a escola pode ter o horario real um pouco diferente
@@ -883,6 +886,35 @@ router.get("/grade-pdf/turma", async (req, res) => {
 // turnos diferentes na mesma célula dia+número, e a primeira encontrada
 // "vencia" silenciosamente, sumindo com as aulas dos outros turnos.
 // ------------------------------------------------------------------
+// [CALENDARIO-ASSINCRONAS] (06/11/2026) calendario trimestral das aulas assincronas (Imprimir Grade):
+// ?trimestre=1..3[&ano=][&turno=][&turmaId=]. Datas do trimestre: Calendario e Turnos (trimestres_letivos).
+router.get("/grade-pdf/assincronas", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const trimestre = Number(req.query.trimestre);
+  const ano = req.query.ano ? Number(req.query.ano) : Number(new Date(Date.now() - 3 * 3_600_000).toISOString().slice(0, 4));
+  if (![1, 2, 3].includes(trimestre) || !(ano >= 2020 && ano <= 2100)) { res.status(400).json({ error: "Escolha o trimestre (1º, 2º ou 3º)." }); return; }
+  const [tri] = await db.select().from(trimestresLetivosTable)
+    .where(and(eq(trimestresLetivosTable.escolaId, escolaId), eq(trimestresLetivosTable.ano, ano), eq(trimestresLetivosTable.trimestre, trimestre)));
+  if (!tri) { res.status(400).json({ error: `O ${trimestre}º trimestre de ${ano} não está cadastrado. Cadastre as datas em Calendário e Turnos.` }); return; }
+  const de = String(tri.dataInicio).slice(0, 10), ate = String(tri.dataFim).slice(0, 10);
+  const dados = await carregarDadosAgenda(escolaId, de, ate);
+  const turno = typeof req.query.turno === "string" && req.query.turno !== "todos" ? req.query.turno : null;
+  const turmaId = req.query.turmaId ? Number(req.query.turmaId) : null;
+  const nomesFiltro = new Set(dados.turmas.filter((t) => (!turno || t.turno === turno) && (turmaId == null || t.id === turmaId)).map((t) => t.nome));
+  const linhas = agendaDoPeriodo(dados).filter((l) => nomesFiltro.has(l.turma));
+  const br = (iso: string) => iso.split("-").reverse().join("/");
+  const bytes = await gerarPdfCalendarioAssincronas({
+    escola: await buscarNomeEscola(escolaId),
+    titulo: `Calendário das aulas assíncronas — ${trimestre}º trimestre (${br(de)} a ${br(ate)})`,
+    subtitulo: "Pela grade oficial. Na Híbrida (trio), o professor presencial da semana é quem dá a assíncrona (em roxo).",
+    turmas: calendarioPorTurma(dados.dias, linhas, presenciaisDoTrio(dados)),
+    vazio: "Nenhuma aula assíncrona neste trimestre para o filtro escolhido.",
+  });
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="assincronas_${trimestre}tri_${ano}.pdf"`);
+  res.send(Buffer.from(bytes));
+});
+
 router.get("/grade-pdf/professor", async (req, res) => {
   const escolaId = getEscolaId(req);
   const professorIdFiltro = req.query.professorId ? Number(req.query.professorId) : undefined;

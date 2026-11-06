@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { montarAgendaAssincronas, tabelaAgendaAssincronas, type AulaAssincrona, type TrioDaAula } from "../agenda-assincronas";
+import { montarAgendaAssincronas, tabelaAgendaAssincronas, calendarioPorTurma, segundaDe, type AulaAssincrona, type TrioDaAula } from "../agenda-assincronas";
 import type { SlotEsquema } from "../presenca";
 
 // [AGENDA-ASSINCRONAS] (06/11/2026) regra confirmada pela dona: na Hibrida (trio) a assincrona da semana e do
@@ -51,5 +51,20 @@ describe("agenda das assincronas [AGENDA-ASSINCRONAS]", () => {
       "Segunda-feira, 02/11/2026", "Segunda-feira, 09/11/2026", "Terça-feira, 10/11/2026 — Feriado (sem aula)", "Segunda-feira, 16/11/2026",
     ]);
     expect(t.linhas[1]!.celulas).toEqual(["Noite", "2ª 19:30", "3B-HUM", "Sociologia (Híbrida)", "Ana"]);
+  });
+
+  it("[CALENDARIO-ASSINCRONAS] calendario por turma: semanas inteiras, dias fora do periodo vazios e quem esta presencial", () => {
+    expect(segundaDe("2026-11-05")).toBe("2026-11-02");
+    const periodo = ["2026-11-04", "2026-11-05", "2026-11-06", "2026-11-07", "2026-11-08", "2026-11-09", "2026-11-10", "2026-11-11"]
+      .map((data) => ({ data, semAula: data === "2026-11-10" ? "Feriado" : null }));
+    const linhas = montarAgendaAssincronas({ dias: periodo, aulas, trio, slots, nomes, ordemDaSemana });
+    const cal = calendarioPorTurma(periodo, linhas);
+    expect(cal).toHaveLength(1);
+    expect(cal[0]!.semanas.map((s) => s.segunda)).toEqual(["2026-11-02", "2026-11-09"]);
+    const [s1, s2] = cal[0]!.semanas;
+    expect(s1!.dias.map((d) => d.fora)).toEqual([true, true, false, false, false]); // trimestre comecou na quarta
+    expect(s1!.presenciais).toEqual([]); // a segunda 02/11 ficou fora do periodo
+    expect(s2!.presenciais).toEqual(["Bruna (Filosofia)"]);
+    expect(s2!.dias[1]).toMatchObject({ semAula: "Feriado", itens: [] });
   });
 });
