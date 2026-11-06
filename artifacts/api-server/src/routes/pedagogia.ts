@@ -16,8 +16,10 @@ import { and, eq, gte, lte, sql, ne, inArray } from "drizzle-orm";
 import {
   db, horariosTable, turmasTable, disciplinasTable, professoresTable, horarioSlotsTable,
   reservasTable, salasTable, licencasTable, calendarioEscolarTable, escolasTable, presencasProfessoresTable,
-  presencasObservacoesTable, disponibilidadeTable,
+  presencasObservacoesTable, disponibilidadeTable, turmaDisciplinasTable,
 } from "@workspace/db";
+import { montarAgendaAssincronas, tabelaAgendaAssincronas, type AulaAssincrona, type TrioDaAula } from "../lib/agenda-assincronas"; // [AGENDA-ASSINCRONAS]
+import { ordemPresencial } from "../lib/revezamento-trio";
 import { getEscolaId } from "../lib/escola-id";
 import { acessoDe } from "../lib/acesso";
 import { getAuth } from "@clerk/express";
@@ -90,7 +92,8 @@ async function carregarDia(escolaId: string, dataISO: string): Promise<Dia | { e
     const assincrona = !!h.assincrona; // [PRESENCA-ASS-HA] aparece, marcada como assincrona (sem sala)
     lista.push({
       professorId: h.professorId, numeroAula: h.numeroAula, turno: t.turno, nivelEnsino: t.nivelEnsino ?? null,
-      turma: t.nome, disciplina: disc?.sigla || disc?.nome || "",
+      // [PRESENCA-ASS-DISCIPLINA] (06/11/2026) na assincrona vai o nome inteiro da disciplina (pedido da dona)
+      turma: t.nome, disciplina: (assincrona ? disc?.nome || disc?.sigla : disc?.sigla || disc?.nome) || "",
       sala: assincrona ? "" : salaReservada(h.professorId, h.numeroAula, t.turno) ?? h.sala ?? "",
       tipo: assincrona ? "assincrona" : "aula",
       trio: assincrona ? null : (() => { const r = trioDoHorario.get(h.id); return r ? (r.presencial ? "presencial" : "suporte") : null; })(),
@@ -256,26 +259,35 @@ function rotuloMarca(m: Marca | null): string {
 router.get("/presenca/pdf", async (req, res) => {
   const escolaId = getEscolaId(req);
   const data = String(req.query.data ?? ""), turno = String(req.query.turno ?? "");
-  const r = await montarPresenca(escolaId, data, turno);
-  if ("erro" in r) { res.status(400).json({ error: r.erro }); return; }
+  const r0 = await montarPresenca(escolaId, data, turno);
+  if ("erro" in r0) { res.status(400).json({ error: r0.erro }); return; }
+  // [PRESENCA-ASS-DISCIPLINA] ?assincronas=0 tira as aulas assincronas do PDF (opcao na tela)
+  const r = req.query.assincronas === "0"
+    ? { ...r0, professores: r0.professores.map((p) => ({ ...p, aulas: p.aulas.filter((a) => a.tipo !== "assincrona") })).filter((p) => p.aulas.length) }
+    : r0;
   const nomes = new Map(r.substitutos.map((s) => [s.id, s.nome]));
-  const linhas = r.professores.flatMap((p) => p.aulas.map((a, i) => ({
-    destaque: a.marca?.status === "falta",
-    celulas: [
-      i === 0 ? p.nome + (p.licenca ? ` (${p.licenca})` : "") : "",
-      `${a.numeroAula}ª ${a.hora}`, rotuloTurmas(a), a.sala || "—", rotuloMarca(a.marca),
-      a.marca?.status === "substituido" ? (a.marca.substitutoId != null ? nomes.get(a.marca.substitutoId) ?? "" : a.marca.substitutoNome ?? "") : "",
-      // [PRESENCA-OBS-GERAL] a observacao geral sai na primeira linha do professor; a antiga (por aula) na linha dela
-      [i === 0 ? p.observacao : null, a.marca?.observacao].filter(Boolean).join(" · "),
-    ],
-  })));
+  // [PRESENCA-PDF-ENXUTO] (06/11/2026) pedido da dona: so Professor, Aula, Turma (texto inteiro) e Observacao.
+  // Sala, Situacao e Substituto sairam como colunas; o que foi marcado vai escrito no comeco da observacao.
+  const linhas = r.professores.flatMap((p) => p.aulas.map((a, i) => {
+    const subst = a.marca?.status === "substituido" ? (a.marca.substitutoId != null ? nomes.get(a.marca.substitutoId) ?? "" : a.marca.substitutoNome ?? "") : "";
+    const marca = a.marca ? rotuloMarca(a.marca) + (subst ? ` por ${subst}` : "") : null;
+    return {
+      destaque: a.marca?.status === "falta",
+      celulas: [
+        i === 0 ? p.nome + (p.licenca ? ` (${p.licenca})` : "") : "",
+        `${a.numeroAula}ª ${a.hora}`, rotuloTurmas(a),
+        // [PRESENCA-OBS-GERAL] a observacao geral sai na primeira linha do professor; a antiga (por aula) na linha dela
+        [marca, i === 0 ? p.observacao : null, a.marca?.observacao].filter(Boolean).join(" · "),
+      ],
+    };
+  }));
   const marcadas = r.professores.reduce((s, p) => s + p.aulas.filter((a) => a.marca).length, 0);
   const total = r.professores.reduce((s, p) => s + p.aulas.length, 0);
   const bytes = await gerarPdfTabela({
     escola: await nomeEscola(escolaId),
     titulo: `Presença dos professores — ${r.rotuloTurno} — ${r.diaSemana}, ${r.dataBR}`,
     subtitulo: `${marcadas} de ${total} aula(s) marcada(s)${r.aviso ? " · " + r.aviso : ""}`,
-    colunas: [{ titulo: "Professor", peso: 24 }, { titulo: "Aula", peso: 9 }, { titulo: "Turma", peso: 12 }, { titulo: "Sala", peso: 11 }, { titulo: "Situação", peso: 11 }, { titulo: "Substituto", peso: 15 }, { titulo: "Observação", peso: 18 }],
+    colunas: [{ titulo: "Professor", peso: 22 }, { titulo: "Aula", peso: 11 }, { titulo: "Turma", peso: 25 }, { titulo: "Observação", peso: 42 }],
     linhas, vazio: "Nenhuma aula neste turno.",
   });
   res.setHeader("Content-Type", "application/pdf");
@@ -338,7 +350,7 @@ router.get("/presenca/mes", async (req, res) => {
 const PeriodoInput = z.object({
   de: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inicial inválida."),
   ate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data final inválida."),
-  tipo: z.enum(TIPOS_RELATORIO).default("geral"),
+  tipo: z.enum([...TIPOS_RELATORIO, "assincronas"] as const).default("geral"), // [AGENDA-ASSINCRONAS]
   professorId: z.coerce.number().int().positive().optional(),
   formato: z.enum(["json", "pdf"]).default("json"),
 });
@@ -353,6 +365,7 @@ router.get("/presenca/periodo", async (req, res) => {
   if (dias > 366) { res.status(400).json({ error: "Escolha um período de até um ano." }); return; }
   const professores = await db.select({ id: professoresTable.id, nome: professoresTable.nome }).from(professoresTable).where(eq(professoresTable.escolaId, escolaId));
   const nomes = new Map(professores.map((p) => [p.id, p.nome]));
+  if (tipo === "assincronas") { await agendaAssincronas(req, res, { escolaId, de, ate, formato, nomes, professorId: q.data.professorId ?? null }); return; }
   const professorId = tipo === "individual" ? q.data.professorId ?? null : null;
   if (professorId != null && !nomes.has(professorId)) { res.status(400).json({ error: "Professor que não é desta escola." }); return; }
 
@@ -392,5 +405,65 @@ router.get("/presenca/periodo", async (req, res) => {
   res.setHeader("Content-Disposition", `attachment; filename="${arquivo}.pdf"`);
   res.send(Buffer.from(bytes));
 });
+
+// [AGENDA-ASSINCRONAS] (06/11/2026) agenda das assincronas no periodo (tipo=assincronas do relatorio por periodo)
+async function agendaAssincronas(
+  _req: Request, res: import("express").Response,
+  o: { escolaId: string; de: string; ate: string; formato: "json" | "pdf"; nomes: Map<number, string>; professorId: number | null },
+) {
+  const { escolaId, de, ate, formato, nomes, professorId } = o;
+  if (professorId != null && !nomes.has(professorId)) { res.status(400).json({ error: "Professor que não é desta escola." }); return; }
+  const [turmasDoBanco, disciplinas, horariosDoBanco, slotsBanco, eventos] = await Promise.all([
+    db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
+    db.select({ id: disciplinasTable.id, nome: disciplinasTable.nome, sigla: disciplinasTable.sigla }).from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
+    db.select().from(horariosTable).where(and(eq(horariosTable.escolaId, escolaId), eq(horariosTable.assincrona, true), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`)),
+    db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId)),
+    db.select().from(calendarioEscolarTable).where(and(eq(calendarioEscolarTable.escolaId, escolaId), gte(calendarioEscolarTable.data, de), lte(calendarioEscolarTable.data, ate))),
+  ]);
+  const turmaIds = turmasDoBanco.map((t) => t.id);
+  const trioLinhas = turmaIds.length
+    ? await db.select().from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, turmaIds))
+    : [];
+  const trioOrig = new Map<string, TrioDaAula>();
+  for (const l of trioLinhas) {
+    if (!l.professorId || !l.trioOrdem || !l.trioInicio || !(l.grupoTrio ?? "").trim()) continue;
+    trioOrig.set(`${l.turmaId}|${l.disciplinaId}|${l.professorId}`, { grupo: `${l.turmaId}:${(l.grupoTrio ?? "").trim()}`, ordem: l.trioOrdem, inicio: l.trioInicio });
+  }
+  const { turmas, aulas } = projetarIntegral(turmasDoBanco, horariosDoBanco, mapaIntegralDosSlots(slotsBanco));
+  const ehAssSoTurma = await carregarAssSoTurma(escolaId);
+  const turmaMap = new Map(turmas.map((t) => [t.id, t]));
+  const discMap = new Map(disciplinas.map((d) => [d.id, d]));
+  const origPorId = new Map(horariosDoBanco.map((h) => [h.id, h]));
+  // todos os membros do trio (tambem quem nao tem assincrona: pode ser o presencial da semana) + as chaves da integral projetada
+  const trio = new Map<string, TrioDaAula>(trioOrig);
+  const lista: AulaAssincrona[] = [];
+  for (const h of aulas) {
+    const t = turmaMap.get(h.turmaId);
+    if (!t || ehAssSoTurma(h, t) || h.professorId == null) continue; // a da 7a aula nao letiva e so da turma
+    const orig = origPorId.get(h.id);
+    const tr = orig ? trioOrig.get(`${orig.turmaId}|${orig.disciplinaId}|${orig.professorId}`) : undefined;
+    if (tr) trio.set(`${h.turmaId}|${h.disciplinaId}|${h.professorId}`, tr);
+    const d = discMap.get(h.disciplinaId);
+    lista.push({ turmaId: h.turmaId, turma: t.nome, turno: t.turno, nivelEnsino: t.nivelEnsino ?? null, diaSemana: h.diaSemana, numeroAula: h.numeroAula, disciplinaId: h.disciplinaId, disciplina: d?.nome || d?.sigla || "", professorId: h.professorId });
+  }
+  const dias: Array<{ data: string; semAula: string | null }> = [];
+  for (let t = Date.parse(`${de}T12:00:00Z`); t <= Date.parse(`${ate}T12:00:00Z`); t += 86_400_000) {
+    const data = new Date(t).toISOString().slice(0, 10);
+    const ev = eventos.find((e) => e.data === data && !e.diaLetivo && ["feriado", "recesso", "ponto_facultativo", "estudo_planejamento"].includes(e.tipo));
+    dias.push({ data, semAula: ev ? ev.descricao : null });
+  }
+  const slots = slotsBanco.map((s) => ({ turno: s.turno, nivelEnsino: s.nivelEnsino ?? null, numeroAula: s.numeroAula, horaInicio: String(s.horaInicio), duracaoMinutos: s.duracaoMinutos ?? 50, letivo: s.letivo }));
+  const linhas = montarAgendaAssincronas({
+    dias, aulas: lista, trio, slots, nomes, professorId,
+    ordemDaSemana: (inicio, dataISO) => ordemPresencial(inicio, new Date(`${dataISO}T12:00:00Z`)),
+  });
+  const tabela = tabelaAgendaAssincronas({ de, ate, dias, linhas, professor: professorId != null ? nomes.get(professorId) : null });
+  const arquivo = `assincronas_${de}_a_${ate}`;
+  if (formato !== "pdf") { res.json({ ...tabela, tipo: "assincronas", de, ate, semTabela: false, arquivo }); return; }
+  const bytes = await gerarPdfTabela({ escola: await nomeEscola(escolaId), titulo: tabela.titulo, subtitulo: tabela.subtitulo, colunas: tabela.colunas, linhas: tabela.linhas, vazio: tabela.vazio });
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="${arquivo}.pdf"`);
+  res.send(Buffer.from(bytes));
+}
 
 export default router;

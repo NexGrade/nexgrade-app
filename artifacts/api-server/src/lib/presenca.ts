@@ -94,7 +94,7 @@ export function montarDia(
 /** Rotulo da linha nos relatorios: "1ºA (assíncrona)", "HA" etc. */
 export function rotuloTurmas(a: Pick<AulaDoDia, "tipo" | "turmas" | "disciplinas"> & { trio?: SituacaoTrio | null }): string {
   if (a.tipo === "ha") return a.disciplinas || "HA";
-  if (a.tipo === "assincrona") return `${a.turmas} (assíncrona)`;
+  if (a.tipo === "assincrona") return `${a.turmas} · ${a.disciplinas} (assíncrona)`; // [PRESENCA-ASS-DISCIPLINA]
   return a.trio ? `${a.turmas} (híbrida, ${a.trio})` : a.turmas;
 }
 
@@ -176,6 +176,28 @@ export function relatorioPeriodo(o: {
       const c = (s: Status) => doTurno.filter((r) => r.status === s).length;
       return [linha(`${ROTULO_TURNO[t]}: aulas marcadas · faltas · atrasos · substituídas`, `${doTurno.length} · ${c("falta")} · ${c("atraso")} · ${c("substituido")}`)];
     });
+    function quemFaltou(): TabelaRelatorio["linhas"] {
+      const faltas = o.registros.filter((r) => r.status === "falta").sort(porDataTurnoAula);
+      if (!faltas.length) return [];
+      const porProf = new Map<number, RegistroPeriodo[]>();
+      for (const f of faltas) porProf.set(f.professorId, [...(porProf.get(f.professorId) ?? []), f]);
+      const ordem = [...porProf.entries()].sort((a, b) => b[1].length - a[1].length || nome(a[0]).localeCompare(nome(b[0]), "pt-BR"));
+      return [
+        { grupo: true, celulas: ["Quem faltou no período", ""] },
+        ...ordem.flatMap(([id, fs]) => {
+          const porDia = new Map<string, string[]>();
+          for (const f of fs) { const k = `${dataBR(f.data).slice(0, 5)}${o.registros.some((r) => r.data === f.data && r.turno !== f.turno) ? ` ${ROTULO_TURNO[f.turno] ?? f.turno}` : ""}`; porDia.set(k, [...(porDia.get(k) ?? []), `${f.numeroAula}ª`]); }
+          const dias = [...porDia.entries()].map(([d, aulas]) => `${d} (${aulas.join(", ")})`);
+          // muitos dias: continua nas linhas de baixo (o PDF corta texto longo)
+          const blocos: string[][] = [];
+          for (let i = 0; i < dias.length; i += 5) blocos.push(dias.slice(i, i + 5));
+          return blocos.map((b, i) => ({
+            destaque: true,
+            celulas: [i === 0 ? `${nome(id)} — ${b.join("; ")}` : `     ${b.join("; ")}`, i === 0 ? `${fs.length} falta${fs.length === 1 ? "" : "s"}` : ""],
+          }));
+        }),
+      ];
+    }
     const linhas = o.registros.length || o.observacoes.length ? [
       linha("Aulas marcadas", total.marcadas),
       linha("Presente", total.presente),
@@ -188,6 +210,8 @@ export function relatorioPeriodo(o: {
       linha("Professores com pelo menos uma falta", resumo.filter((r) => r.falta > 0).length),
       linha("Observações do dia registradas", o.observacoes.length),
       ...porTurno,
+      // [PRESENCA-TOTAL-QUEM-FALTOU] (06/11/2026) pedido da dona: o Total diz QUEM faltou (com os dias e as aulas)
+      ...quemFaltou(),
     ] : [];
     return {
       titulo, subtitulo: "Totais da escola no período, pela lista de presença.", vazio: "Nenhuma presença marcada no período.",

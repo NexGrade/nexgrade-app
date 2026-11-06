@@ -70,10 +70,13 @@ export const salvarPresenca = (data: string, turno: string, marcas: MarcaEnvio[]
   });
 export const buscarMes = (mes: string, ano: string) => customFetch<ResumoMes>(`/api/pedagogia/presenca/mes?mes=${mes}&ano=${ano}`);
 
-export function excelDoDia(p: Presenca) {
+export function excelDoDia(p: Presenca, comAssincronas = true) {
   const nomes = new Map(p.substitutos.map((s) => [s.id, s.nome]));
   const linhas: Valor[][] = [];
-  for (const prof of p.professores) prof.aulas.forEach((a, i) => {
+  // [PRESENCA-ASS-DISCIPLINA] opcao da tela: sem as assincronas
+  const professores = comAssincronas ? p.professores
+    : p.professores.map((x) => ({ ...x, aulas: x.aulas.filter((a) => a.tipo !== "assincrona") })).filter((x) => x.aulas.length);
+  for (const prof of professores) prof.aulas.forEach((a, i) => {
     const m = a.marca;
     linhas.push([
       prof.nome + (prof.licenca ? ` (${prof.licenca})` : ""), `${a.numeroAula}ª`, a.hora ? `${a.hora}–${a.fim}` : "", rotuloTurmas(a), a.tipo === "ha" ? "Hora-atividade" : a.disciplinas, a.sala,
@@ -98,11 +101,13 @@ export function excelDoDia(p: Presenca) {
 }
 
 // [PRESENCA-PERIODO] (06/11/2026) relatorio por periodo: geral, individual (um ou todos os professores) e total
-export type TipoRelatorio = "geral" | "individual" | "total";
+export type TipoRelatorio = "geral" | "individual" | "total" | "assincronas";
 export const TIPOS_RELATORIO: Array<{ valor: TipoRelatorio; rotulo: string; dica: string }> = [
   { valor: "geral", rotulo: "Geral", dica: "Todos os professores: presenças, faltas, atrasos e % de presença, com o total e as ocorrências" },
   { valor: "individual", rotulo: "Individual", dica: "Aula a aula de cada professor (ou só do escolhido), com a observação do dia" },
   { valor: "total", rotulo: "Total", dica: "Números da escola no período" },
+  // [AGENDA-ASSINCRONAS] (06/11/2026) na Híbrida, a assíncrona da semana é do professor presencial
+  { valor: "assincronas", rotulo: "Assíncronas", dica: "Agenda das aulas assíncronas dia a dia, com o professor responsável (na Híbrida, o presencial da semana)" },
 ];
 export type RelatorioPeriodo = {
   tipo: TipoRelatorio; de: string; ate: string; semTabela: boolean; arquivo: string;
@@ -111,7 +116,7 @@ export type RelatorioPeriodo = {
   linhas: Array<{ celulas: string[]; destaque?: boolean; grupo?: boolean; cabecalho?: boolean }>;
 };
 export type FiltroPeriodo = { de: string; ate: string; tipo: TipoRelatorio; professorId?: string };
-export const parametrosPeriodo = (f: FiltroPeriodo) => ({ de: f.de, ate: f.ate, tipo: f.tipo, ...(f.tipo === "individual" && f.professorId ? { professorId: f.professorId } : {}) });
+export const parametrosPeriodo = (f: FiltroPeriodo) => ({ de: f.de, ate: f.ate, tipo: f.tipo, ...((f.tipo === "individual" || f.tipo === "assincronas") && f.professorId ? { professorId: f.professorId } : {}) });
 export const buscarPeriodo = (f: FiltroPeriodo) =>
   customFetch<RelatorioPeriodo>(`/api/pedagogia/presenca/periodo?${new URLSearchParams(parametrosPeriodo(f)).toString()}`);
 export function inicioDoMes(): string { return `${hojeLocal().slice(0, 8)}01`; }

@@ -105,6 +105,9 @@ describe("presenca dos professores [PRESENCA-PEDAGOGIA]", () => {
       const v = Object.fromEntries(t.linhas.map((l) => [l.celulas[0], l.celulas[1]]));
       expect(v).toMatchObject({ "Aulas marcadas": "4", Falta: "1", "% de presença (presente + atraso)": "50%", "Dias com marcação": "2", "Professores com pelo menos uma falta": "1", "Observações do dia registradas": "2" });
       expect(v["Manhã: aulas marcadas · faltas · atrasos · substituídas"]).toBe("4 · 1 · 1 · 1");
+      // [PRESENCA-TOTAL-QUEM-FALTOU] quem faltou, com o dia e a aula
+      const i = t.linhas.findIndex((l) => l.grupo && l.celulas[0] === "Quem faltou no período");
+      expect(t.linhas.slice(i + 1).map((l) => l.celulas)).toEqual([["Bruna — 03/11 (2ª)", "1 falta"]]);
     });
   });
 
