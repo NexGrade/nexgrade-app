@@ -43,6 +43,24 @@ import {
 // Hub único de Horário — Esquema > Regras > Grade > Conflitos > Experimental,
 // unificando as antigas 5 telas separadas num fluxo em cascata só.
 
+// [IMPRIMIR-NA-GRADE] (06/11/2026) impressao da grade da tela: folha deitada, so a area da grade
+const ESTILO_IMPRESSAO_GRADE = `
+  .titulo-impressao { display: none; }
+  @media print {
+    @page { size: 297mm 210mm; margin: 7mm; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body * { visibility: hidden !important; }
+    .area-impressao-grade, .area-impressao-grade * { visibility: visible !important; }
+    .area-impressao-grade { position: absolute; left: 0; top: 0; width: 100%; }
+    .area-impressao-grade .overflow-x-auto { overflow: visible !important; }
+    .area-impressao-grade [class*="min-w-"] { min-width: 0 !important; }
+    .area-impressao-grade .sticky { position: static !important; }
+    .area-impressao-grade button { pointer-events: none; }
+    .area-impressao-grade .rounded-xl, .area-impressao-grade .card { break-inside: avoid; page-break-inside: avoid; }
+    .titulo-impressao { display: block !important; }
+  }
+`;
+
 const ABAS = [
   { key: "grade", label: "Grade", icon: Calendar },
   { key: "conflitos", label: "Conflitos", icon: AlertTriangle },
@@ -1094,35 +1112,14 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
   const isTurmaSelected = turmaId !== "all";
   const isProfessorSelected = professorId !== "all";
 
-  // [IMPRIMIR-NA-GRADE] (06/11/2026) imprimir o que esta filtrado, com os PDFs de Imprimir Grade (grade oficial):
-  // professor escolhido = PDF do professor; turma escolhida = PDF da turma; sem filtro = todas as turmas do turno.
-  // Abre o PDF numa aba nova (a janela e aberta antes do download para o navegador nao bloquear).
-  const [imprimindo, setImprimindo] = useState(false);
-  const imprimir = async () => {
-    const rota = isProfessorSelected ? "professor" : "turma";
-    const url = new URL(`/api/export/grade-pdf/${rota}`, window.location.origin);
-    if (isProfessorSelected) url.searchParams.set("professorId", professorId);
-    else if (isTurmaSelected) url.searchParams.set("turmaId", turmaId);
-    if (turno !== "all") url.searchParams.set("turno", turno);
-    const aba = window.open("", "_blank");
-    setImprimindo(true);
-    try {
-      const blob = await customFetch<Blob>(url.toString(), { responseType: "blob" });
-      const obj = URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
-      if (aba) aba.location.href = obj;
-      else { // navegador bloqueou a aba: baixa o arquivo
-        const a = document.createElement("a");
-        a.href = obj; a.download = `grade_${rota}.pdf`;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      }
-      setTimeout(() => URL.revokeObjectURL(obj), 60_000);
-    } catch (err) {
-      aba?.close();
-      toast({ title: "Não foi possível gerar o PDF", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
-    } finally {
-      setImprimindo(false);
-    }
-  };
+  // [IMPRIMIR-NA-GRADE] (06/11/2026) pedido da dona: imprime a MESMA grade que esta na tela (o que estiver filtrado),
+  // em folha deitada, sem menu nem filtros (estilo ESTILO_IMPRESSAO_GRADE). Antes abria o PDF de Imprimir Grade.
+  const imprimir = () => window.print();
+  const tituloImpressao = isProfessorSelected
+    ? `Professor(a): ${(professores ?? []).find((p) => String(p.id) === professorId)?.nome ?? ""}`
+    : isTurmaSelected
+      ? `Turma: ${(turmas ?? []).find((t) => String(t.id) === turmaId)?.nome ?? ""}`
+      : turno !== "all" ? `Turno: ${TURNO_ROTULO_AVISO[turno] ?? turno}` : "Todas as turmas";
 
   // [GRADE-TURNOS-LADO-A-LADO] (16/10/2026) professor com aula/HA em mais de um turno e filtro
   // "Todos os turnos": uma grade por turno, lado a lado (antes as duas saiam sobrepostas, porque o
@@ -1341,9 +1338,8 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
             />
           </div>
           <Button variant="outline" onClick={() => { setTurmaId("all"); setProfessorId("all"); setTurno("all"); }}>Limpar</Button>
-          <Button variant="outline" onClick={() => void imprimir()} disabled={imprimindo}
-            title={isProfessorSelected ? "Imprimir a grade deste professor (PDF)" : isTurmaSelected ? "Imprimir a grade desta turma (PDF)" : "Imprimir a grade de todas as turmas do turno (PDF)"}>
-            {imprimindo ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Printer className="w-4 h-4 mr-2" />}
+          <Button variant="outline" onClick={imprimir} title="Imprimir a grade como está na tela">
+            <Printer className="w-4 h-4 mr-2" />
             Imprimir
           </Button>{/* [IMPRIMIR-NA-GRADE] */}
           {!somenteConsulta && (
@@ -1371,6 +1367,10 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
         </p>
       )}
 
+      {/* [IMPRIMIR-NA-GRADE] so esta parte sai na impressao */}
+      <style>{ESTILO_IMPRESSAO_GRADE}</style>
+      <div className="area-impressao-grade">
+      <h2 className="titulo-impressao text-base font-semibold mb-2">Grade horária — {tituloImpressao}</h2>
       {isLoading ? (
         <Skeleton className="h-[500px] w-full" />
       ) : !isTurmaSelected && !isProfessorSelected && turno !== "all" ? (
@@ -1746,6 +1746,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
           </div>
         </Card>
       )}
+      </div>
 
       <DialogAdicionarAula
         open={openAdicionar}
