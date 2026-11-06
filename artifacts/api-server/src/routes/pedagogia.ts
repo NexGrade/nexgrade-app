@@ -16,10 +16,10 @@ import { and, eq, gte, lte, sql, ne, inArray } from "drizzle-orm";
 import {
   db, horariosTable, turmasTable, disciplinasTable, professoresTable, horarioSlotsTable,
   reservasTable, salasTable, licencasTable, calendarioEscolarTable, escolasTable, presencasProfessoresTable,
-  presencasObservacoesTable, disponibilidadeTable, turmaDisciplinasTable,
+  presencasObservacoesTable, disponibilidadeTable,
 } from "@workspace/db";
-import { montarAgendaAssincronas, tabelaAgendaAssincronas, type AulaAssincrona, type TrioDaAula } from "../lib/agenda-assincronas"; // [AGENDA-ASSINCRONAS]
-import { ordemPresencial } from "../lib/revezamento-trio";
+import { tabelaAgendaAssincronas } from "../lib/agenda-assincronas"; // [AGENDA-ASSINCRONAS]
+import { carregarDadosAgenda, agendaDoPeriodo } from "../lib/agenda-assincronas-dados";
 import { getEscolaId } from "../lib/escola-id";
 import { acessoDe } from "../lib/acesso";
 import { getAuth } from "@clerk/express";
@@ -413,50 +413,9 @@ async function agendaAssincronas(
 ) {
   const { escolaId, de, ate, formato, nomes, professorId } = o;
   if (professorId != null && !nomes.has(professorId)) { res.status(400).json({ error: "Professor que não é desta escola." }); return; }
-  const [turmasDoBanco, disciplinas, horariosDoBanco, slotsBanco, eventos] = await Promise.all([
-    db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
-    db.select({ id: disciplinasTable.id, nome: disciplinasTable.nome, sigla: disciplinasTable.sigla }).from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
-    db.select().from(horariosTable).where(and(eq(horariosTable.escolaId, escolaId), eq(horariosTable.assincrona, true), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`)),
-    db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId)),
-    db.select().from(calendarioEscolarTable).where(and(eq(calendarioEscolarTable.escolaId, escolaId), gte(calendarioEscolarTable.data, de), lte(calendarioEscolarTable.data, ate))),
-  ]);
-  const turmaIds = turmasDoBanco.map((t) => t.id);
-  const trioLinhas = turmaIds.length
-    ? await db.select().from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, turmaIds))
-    : [];
-  const trioOrig = new Map<string, TrioDaAula>();
-  for (const l of trioLinhas) {
-    if (!l.professorId || !l.trioOrdem || !l.trioInicio || !(l.grupoTrio ?? "").trim()) continue;
-    trioOrig.set(`${l.turmaId}|${l.disciplinaId}|${l.professorId}`, { grupo: `${l.turmaId}:${(l.grupoTrio ?? "").trim()}`, ordem: l.trioOrdem, inicio: l.trioInicio });
-  }
-  const { turmas, aulas } = projetarIntegral(turmasDoBanco, horariosDoBanco, mapaIntegralDosSlots(slotsBanco));
-  const ehAssSoTurma = await carregarAssSoTurma(escolaId);
-  const turmaMap = new Map(turmas.map((t) => [t.id, t]));
-  const discMap = new Map(disciplinas.map((d) => [d.id, d]));
-  const origPorId = new Map(horariosDoBanco.map((h) => [h.id, h]));
-  // todos os membros do trio (tambem quem nao tem assincrona: pode ser o presencial da semana) + as chaves da integral projetada
-  const trio = new Map<string, TrioDaAula>(trioOrig);
-  const lista: AulaAssincrona[] = [];
-  for (const h of aulas) {
-    const t = turmaMap.get(h.turmaId);
-    if (!t || ehAssSoTurma(h, t) || h.professorId == null) continue; // a da 7a aula nao letiva e so da turma
-    const orig = origPorId.get(h.id);
-    const tr = orig ? trioOrig.get(`${orig.turmaId}|${orig.disciplinaId}|${orig.professorId}`) : undefined;
-    if (tr) trio.set(`${h.turmaId}|${h.disciplinaId}|${h.professorId}`, tr);
-    const d = discMap.get(h.disciplinaId);
-    lista.push({ turmaId: h.turmaId, turma: t.nome, turno: t.turno, nivelEnsino: t.nivelEnsino ?? null, diaSemana: h.diaSemana, numeroAula: h.numeroAula, disciplinaId: h.disciplinaId, disciplina: d?.nome || d?.sigla || "", professorId: h.professorId });
-  }
-  const dias: Array<{ data: string; semAula: string | null }> = [];
-  for (let t = Date.parse(`${de}T12:00:00Z`); t <= Date.parse(`${ate}T12:00:00Z`); t += 86_400_000) {
-    const data = new Date(t).toISOString().slice(0, 10);
-    const ev = eventos.find((e) => e.data === data && !e.diaLetivo && ["feriado", "recesso", "ponto_facultativo", "estudo_planejamento"].includes(e.tipo));
-    dias.push({ data, semAula: ev ? ev.descricao : null });
-  }
-  const slots = slotsBanco.map((s) => ({ turno: s.turno, nivelEnsino: s.nivelEnsino ?? null, numeroAula: s.numeroAula, horaInicio: String(s.horaInicio), duracaoMinutos: s.duracaoMinutos ?? 50, letivo: s.letivo }));
-  const linhas = montarAgendaAssincronas({
-    dias, aulas: lista, trio, slots, nomes, professorId,
-    ordemDaSemana: (inicio, dataISO) => ordemPresencial(inicio, new Date(`${dataISO}T12:00:00Z`)),
-  });
+  const dados = await carregarDadosAgenda(escolaId, de, ate);
+  const dias = dados.dias;
+  const linhas = agendaDoPeriodo(dados, professorId);
   const tabela = tabelaAgendaAssincronas({ de, ate, dias, linhas, professor: professorId != null ? nomes.get(professorId) : null });
   const arquivo = `assincronas_${de}_a_${ate}`;
   if (formato !== "pdf") { res.json({ ...tabela, tipo: "assincronas", de, ate, semTabela: false, arquivo }); return; }
