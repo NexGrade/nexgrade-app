@@ -5,10 +5,16 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { customFetch, useListTurmas, useListDisciplinas, useListProfessores } from "@workspace/api-client-react";
 import { SeletorBusca } from "@/components/seletor-busca";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 type Linha = { id: number; nome: string; turmaId: number; disciplinaId: number; professorId: number; diaSemana: number; numeroAula: number; assincrona?: boolean };
 const DIAS = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
+// [RASCUNHO-TROCAR-PROFESSOR] (06/11/2026) linha da atribuicao do rascunho (professor de cada disciplina da turma)
+type Atrib = { turmaDisciplinaId: number; turmaId: number; disciplinaId: number; disciplina: string; turma: string; professorOficialId: number | null; professorId: number | null; mudou: boolean; credenciados?: number[] };
+const SEM = "__sem__";
 
 export function GradeRascunho({ nome, turmaInicial }: { nome: string; turmaInicial?: string }) {
   const { toast } = useToast();
@@ -27,6 +33,46 @@ export function GradeRascunho({ nome, turmaInicial }: { nome: string; turmaInici
   const [sel, setSel] = useState<{ diaSemana: number; numeroAula: number } | null>(null);
   const [trocando, setTrocando] = useState(false);
   const maxAula = Math.max(5, ...linhas.map((l) => l.numeroAula));
+
+  // [RASCUNHO-TROCAR-PROFESSOR] lapis na aula: trocar ou tirar o professor da disciplina na turma (so no rascunho)
+  const atribQ = useQuery({
+    queryKey: ["atribuicoes-exp", nome],
+    queryFn: () => customFetch<Atrib[]>(`/api/horarios/experimentais/${encodeURIComponent(nome)}/atribuicoes`),
+  });
+  const [editando, setEditando] = useState<{ disciplinaId: number } | null>(null);
+  const [escolha, setEscolha] = useState<Record<number, string>>({});
+  const [soCredenciados, setSoCredenciados] = useState(true);
+  const [salvandoProf, setSalvandoProf] = useState(false);
+  const linhasAtrib = editando ? (atribQ.data ?? []).filter((a) => String(a.turmaId) === turmaId && a.disciplinaId === editando.disciplinaId) : [];
+  const abrirEdicao = (disciplinaId: number) => {
+    const ls = (atribQ.data ?? []).filter((a) => String(a.turmaId) === turmaId && a.disciplinaId === disciplinaId);
+    setEscolha(Object.fromEntries(ls.map((a) => [a.turmaDisciplinaId, a.professorId != null ? String(a.professorId) : SEM])));
+    setSoCredenciados(true);
+    setEditando({ disciplinaId });
+  };
+  const salvarProfessor = async () => {
+    setSalvandoProf(true);
+    try {
+      let mudou = 0;
+      for (const a of linhasAtrib) {
+        const v = escolha[a.turmaDisciplinaId];
+        if (v == null || v === SEM) continue;
+        const novo = Number(v);
+        if (novo === a.professorId) continue;
+        await customFetch(`/api/horarios/experimentais/${encodeURIComponent(nome)}/atribuicoes`, {
+          method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ turmaDisciplinaId: a.turmaDisciplinaId, professorId: novo }),
+        });
+        mudou++;
+      }
+      await qc.invalidateQueries({ queryKey: ["atribuicoes-exp", nome] });
+      await qc.invalidateQueries({ queryKey: ["grade-rascunho", nome] });
+      await qc.invalidateQueries({ queryKey: ["rascunho"] });
+      setEditando(null);
+      if (mudou) toast({ title: "Professor trocado no rascunho", description: "Vale para todas as aulas dessa disciplina na turma. A escola não mudou." });
+    } catch (e) {
+      toast({ title: "Não foi possível trocar o professor", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
+    } finally { setSalvandoProf(false); }
+  };
 
   const clicar = async (diaSemana: number, numeroAula: number) => {
     if (trocando) return;
@@ -65,7 +111,7 @@ export function GradeRascunho({ nome, turmaInicial }: { nome: string; turmaInici
           buscarPlaceholder="Buscar turma..."
         />
         <p className="text-xs text-muted-foreground flex-1">
-          Para trocar: clique numa aula (ou num horário vago) e depois em outra. Para gerar de novo com o motor, use a aba Modo Experimental (o nome do rascunho já vem preenchido).
+          Para trocar de lugar: clique numa aula (ou num horário vago) e depois em outra. Para trocar o professor: lápis na aula. Para gerar de novo com o motor, use a aba Modo Experimental (o nome do rascunho já vem preenchido).
         </p>
       </div>
       {!turmaId && <p className="text-sm text-muted-foreground">Escolha uma turma para ver a grade dela no rascunho.</p>}
@@ -85,15 +131,23 @@ export function GradeRascunho({ nome, turmaInicial }: { nome: string; turmaInici
                   const marcada = sel?.diaSemana === dia && sel?.numeroAula === aula;
                   const disc = aqui[0] ? disciplinas.find((d) => d.id === aqui[0]!.disciplinaId) : undefined;
                   return (
-                    <button key={dia} type="button" disabled={trocando} onClick={() => void clicar(dia, aula)}
-                      className={`p-1 min-h-[54px] border-r border-violet-100 last:border-0 text-left ${marcada ? "ring-2 ring-inset ring-violet-500 bg-violet-50" : "hover:bg-violet-50/50"}`}>
+                    <div key={dia} role="button" tabIndex={0} aria-disabled={trocando}
+                      onClick={() => void clicar(dia, aula)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); void clicar(dia, aula); } }}
+                      className={`group relative p-1 min-h-[54px] border-r border-violet-100 last:border-0 text-left cursor-pointer ${marcada ? "ring-2 ring-inset ring-violet-500 bg-violet-50" : "hover:bg-violet-50/50"}`}>
                       {aqui.length ? (
-                        <div className="h-full rounded p-1.5 border-l-4 text-[10px] leading-tight" style={{ backgroundColor: `${disc?.cor ?? "#8E24AA"}15`, borderLeftColor: disc?.cor ?? "#8E24AA" }}>
+                        <div className="h-full rounded p-1.5 pr-6 border-l-4 text-[10px] leading-tight" style={{ backgroundColor: `${disc?.cor ?? "#8E24AA"}15`, borderLeftColor: disc?.cor ?? "#8E24AA" }}>
                           <div className="font-semibold truncate">{disc?.nome ?? "?"}{aqui.some((l) => l.assincrona) ? " (assíncrona)" : ""}</div>
                           <div className="text-muted-foreground truncate">{aqui.map((l) => nomeProf(l.professorId)).join(" + ")}</div>
                         </div>
                       ) : <span className="flex h-full items-center justify-center text-[10px] text-muted-foreground/40">Vago</span>}
-                    </button>
+                      {aqui[0] && (
+                        <button type="button" title="Trocar ou tirar o professor desta disciplina (só no rascunho)" aria-label="Trocar professor"
+                          onClick={(e) => { e.stopPropagation(); abrirEdicao(aqui[0]!.disciplinaId); }}
+                          className="absolute top-1.5 right-1.5 rounded p-1 bg-white/80 text-violet-700 opacity-60 group-hover:opacity-100 hover:bg-violet-100">
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                      )}{/* [RASCUNHO-TROCAR-PROFESSOR] */}
+                    </div>
                   );
                 })}
               </div>
@@ -101,6 +155,38 @@ export function GradeRascunho({ nome, turmaInicial }: { nome: string; turmaInici
           </div>
         </div>
       )}
+      <Dialog open={!!editando} onOpenChange={(v) => { if (!v) setEditando(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Professor de {linhasAtrib[0]?.disciplina ?? "disciplina"} · {linhasAtrib[0]?.turma ?? ""}</DialogTitle></DialogHeader>
+          <div className="space-y-3 text-sm">
+            <p className="text-muted-foreground">Tira o professor atual e põe o escolhido em <strong>todas as aulas</strong> desta disciplina nesta turma, só no rascunho.</p>
+            {atribQ.isLoading && <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="w-4 h-4 animate-spin" /> Carregando...</div>}
+            {!atribQ.isLoading && !linhasAtrib.length && <p className="text-destructive">Esta disciplina não está ligada à turma (Turmas → disciplinas).</p>}
+            {linhasAtrib.map((a, i) => (
+              <div key={a.turmaDisciplinaId} className="space-y-1">
+                {linhasAtrib.length > 1 && <p className="text-xs font-medium">{i === 0 ? "1º professor" : "2º professor (co-docência)"}</p>}
+                <Select value={escolha[a.turmaDisciplinaId] ?? SEM} onValueChange={(v) => setEscolha((e) => ({ ...e, [a.turmaDisciplinaId]: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {professores
+                      .filter((p) => (p.ativo !== false || p.id === a.professorId) && (!soCredenciados || p.id === a.professorId || (a.credenciados ?? []).includes(p.id)))
+                      .map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {a.mudou && <p className="text-xs text-muted-foreground">Na escola: {a.professorOficialId != null ? nomeProf(a.professorOficialId) : "sem professor"}</p>}
+              </div>
+            ))}
+            <label className="flex items-center gap-2 cursor-pointer select-none w-fit text-xs">
+              <input type="checkbox" className="accent-primary" checked={soCredenciados} onChange={(e) => setSoCredenciados(e.target.checked)} />
+              Só professores credenciados para a disciplina
+            </label>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditando(null)}>Cancelar</Button>
+            <Button disabled={salvandoProf || !linhasAtrib.length} onClick={() => void salvarProfessor()}>{salvandoProf && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Salvar no rascunho</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>{/* [RASCUNHO-TROCAR-PROFESSOR] */}
     </div>
   );
 }
