@@ -6,7 +6,8 @@
 // cada conversa mais lenta ou mais cara.
 //
 // MANUTENCAO: escrito a partir das telas reais em 04/10/2026 (geracao, grade e conflitos revistos em 16/10/2026;
-// turno Integral, RCO (XML e script), Arquivo do RCO e aula manual revistos em 26/10/2026). Ao mudar um
+// turno Integral, RCO (XML e script), Arquivo do RCO e aula manual revistos em 26/10/2026; Modo rascunho, presenca,
+// calendario das assincronas, turmas por periodo e disponibilidade por turma em 06/11/2026). Ao mudar um
 // nome de menu, botao ou fluxo no front (artifacts/horario-escolar), atualize
 // o topico correspondente aqui -- o assistente repete o que estiver escrito.
 
@@ -130,6 +131,10 @@ DEFINIR OS PROFESSORES (abrir a turma para editar)
 - Trio (3 disciplinas, cada uma com seu professor, sempre no mesmo dia e horário): "+ Criar trio" e marque as 3 disciplinas. Elas precisam ter a mesma carga semanal e já ter professor definido. Para desfazer, use "desfazer" no trio.
 - Assíncronas/sem.: quantas aulas semanais da disciplina são assíncronas (a aula assíncrona ocupa o professor, não a turma).
 
+LISTA DE TURMAS
+- Botões Todos / Manhã / Tarde / Noite / Integral ao lado da busca: mostram só as turmas daquele período (o sistema lembra a escolha). "Sem professor" mostra as turmas com disciplina sem professor.
+- Com o Modo rascunho ligado, trocar o professor da disciplina grava só no rascunho (aparece a marca "no rascunho"); co-docência, trio e aulas assíncronas ainda mudam a escola direto (assunto "rascunho").
+
 HORÁRIO DA TURMA
 - Na lista, o botão "Horário" abre a grade da turma, com "Professores por Disciplina", aplicação de matriz e o botão "Gerar grade" (gera uma prévia no Modo Experimental; a grade oficial só muda depois de promover).
 - Remover turma apaga também todo o horário dela.`,
@@ -139,10 +144,12 @@ HORÁRIO DA TURMA
     titulo: "Disponibilidade, hora-atividade (HA) e aulas fixas",
     palavras: ["disponibilidade", "bloqueio", "indisponível", "hora-atividade", "ha", "ha*", "ha fixa", "contraturno", "fixar aula", "aula fixa"],
     texto: `Menu Disponibilidade (ou, no cadastro do professor, "Gerenciar disponibilidade").
-1. Escolha o professor (dá para buscar pelo nome) e a aba do turno (Matutino, Vespertino, Noturno).
+1. Escolha o professor (dá para buscar pelo nome) e a aba do turno (Matutino, Vespertino, Noturno). Para achar mais rápido, escolha antes a turma ("Todas as turmas" ou uma turma): a lista mostra só os professores dela.
 2. Clique nas células da grade. Cada clique muda o estado: Disponível (verde) → Bloqueado (vermelho) → Hora-Atividade obrigatória (amarelo) → HA fixa (o motor não move) → volta para Disponível.
 3. Clique em "Salvar" (ou "Desfazer" para descartar). Repita para cada turno em que o professor trabalha.
+- O livrinho no canto da célula mostra onde o professor já tem aula, com o nome da disciplina e a turma embaixo.
 - Se o horário já tem aula real e você bloqueia, o sistema avisa que isso vai gerar conflito "professor indisponível".
+- Com o Modo rascunho ligado, o que você salvar aqui fica só no rascunho (horários com contorno roxo); a disponibilidade da escola só muda ao aplicar o rascunho (assunto "rascunho").
 - Se aparecer "Nenhum esquema de horário configurado para o turno", configure antes em Calendário e Turnos → Esquema de aulas por turno.
 - HA* = hora-atividade em contraturno (num turno em que o professor não tem aula) ou referente a aulas de outro turno (ex.: HA das aulas da tarde cumprida de manhã). Aparece assim na Grade, na Minha Agenda, no perfil e nos PDFs.
 - Quantidade de HA: a tabela oficial da SEED-PR é consultada com as aulas de CADA turno, e não com o total da escola. Ex.: 14 aulas de manhã (4 HA) + 8 à tarde (2 HA) = 6 HA.
@@ -183,6 +190,7 @@ Os espaços cadastrados aqui são os que aparecem em Reservas.`,
     titulo: "Gerar a grade horária (Turma, Turno parcial, Turno inteiro, Modo Experimental e promover)",
     palavras: ["gerar", "gerar horário", "gerar grade", "cp-sat", "experimental", "promover", "oficial", "prévia", "melhorar grade", "janelas", "refazer horário", "turno parcial", "turma", "turno inteiro", "parar", "cancelar", "andamento", "simular promoção"],
     texto: `A grade é gerada no menu Gerar Grade (tela Horário) → aba Modo Experimental. Toda geração vira um EXPERIMENTO: nada muda na grade oficial até você clicar em "Promover para oficial".
+Para TESTAR MUDANÇAS numa grade pronta (trocar professor, mudar disponibilidade, trocar aulas de lugar), use o Modo rascunho (assunto "rascunho"): com ele ligado, as janelas de geração já vêm com o nome do rascunho e o motor usa a disponibilidade e os professores dele.
 
 QUAL BOTÃO USAR (Turma, Turno parcial ou Turno inteiro)
 O NexGrade recalcula só as turmas escolhidas. As aulas das outras turmas ficam paradas e contam como horário ocupado para os professores delas (ninguém fica em dois lugares). Ao promover, só as turmas do experimento são trocadas.
@@ -200,7 +208,7 @@ PASSO A PASSO
    - "Parar e usar a melhor até agora": interrompe e salva a melhor grade encontrada até ali (fica disponível depois da primeira grade encontrada).
    - "Cancelar sem salvar": interrompe e não salva nada.
 6. Se a página recarregar no meio, a geração continua de onde parou.
-- "Melhorar grade oficial" (turno inteiro): parte da grade oficial e tenta reduzir janelas trocando aulas de lugar. O resultado também vira um experimento.
+- "Melhorar grade oficial" (turno inteiro): parte da grade oficial e tenta reduzir janelas trocando aulas de lugar. O resultado também vira um experimento. Com o nome do rascunho da escola, o Melhorar parte da grade do RASCUNHO (com as trocas de aula e de professor feitas nele).
 
 CONFERIR E PROMOVER
 - Em cada experimento: veja a grade por turma, baixe "PDF por turma" ou "PDF por professor".
@@ -294,16 +302,47 @@ QUEM FAZ O QUÊ
 
   presenca_professores: { // [PRESENCA-PEDAGOGIA]
     titulo: "Presença dos professores",
-    palavras: ["presença", "presenca", "falta do professor", "faltou", "atraso", "substituição", "substituto", "lista de presença", "chamada dos professores", "pedagogia", "pedagogo", "faltas do mês"],
+    palavras: ["presença", "presenca", "falta do professor", "faltou", "atraso", "substituição", "substituto", "lista de presença", "chamada dos professores", "pedagogia", "pedagogo", "faltas do mês", "relatório por período", "quem faltou", "agenda das assíncronas", "observação"],
     texto: `Menu Pedagogia → Presença dos professores. Funciona também no celular (o menu abre pelo botão ☰ no topo).
-1. Escolha o Dia e o turno (Manhã, Tarde ou Noite). Aparecem as aulas da grade oficial daquele dia, um cartão por professor, com horário, turma e sala.
-2. Em cada aula toque em P (presente), F (falta), A (atraso) ou S (substituído). Tocar de novo desmarca. Em S, escolha quem deu a aula (ou "Outra pessoa" e digite o nome). O balão abre a Observação (ex.: atestado).
-3. "Restantes = Presente" marca como presente todas as aulas que ainda estão em branco.
-4. Clique em Salvar (barra embaixo). Dá para voltar e corrigir depois, a qualquer momento.
-- PDF e Excel do dia: botões no topo da lista (salve antes) ou em Relatórios Pedagógicos → Presença do dia.
-- Faltas do mês por professor (PDF ou Excel): Relatórios Pedagógicos → Faltas do mês. Mostra presenças, faltas, atrasos, aulas substituídas e quantas aulas cada um deu no lugar de outro, e a lista das ocorrências.
-- Quem usa: direção, coordenação, secretaria e o cargo Pedagogia. O professor não vê essas telas.
-- Aulas assíncronas não entram na lista (não são presenciais).`,
+1. Escolha o Dia e o turno (Manhã, Tarde ou Noite). Aparecem as aulas da grade oficial daquele dia, um cartão por professor, com horário, turma e sala. Aparecem também as aulas assíncronas (etiqueta "Assíncrona", com o nome da disciplina), a hora-atividade (etiqueta HA ou HA*) e, na Híbrida (trio), se o professor está "presencial" ou no "suporte" naquela semana.
+2. Em cada aula toque em P (presente), F (falta), A (atraso) ou S (substituído). Na HA não há S. Tocar de novo desmarca. Em S, escolha quem deu a aula (ou "Outra pessoa" e digite o nome).
+3. Observação: é uma por professor no dia (balão no cabeçalho do cartão), ex.: atestado, saiu mais cedo.
+4. "Restantes = Presente" marca como presente todas as aulas que ainda estão em branco.
+5. Clique em Salvar (barra embaixo). Dá para voltar e corrigir depois, a qualquer momento.
+- PDF e Excel do dia: botões no topo da lista (salve antes). O PDF sai com Professor, Aula, Turma e Observação (o que foi marcado vai escrito na observação). A caixa "Assíncronas no relatório" decide se as aulas assíncronas entram.
+- Relatório por período (botão no topo): escolha De/Até e o tipo, em PDF ou Excel:
+  - Geral: uma linha por professor (presente, falta, atraso, substituído, quantas deu no lugar de outro, % de presença), o TOTAL e a lista das ocorrências.
+  - Individual: aula a aula de um professor ou de todos (um bloco por professor), com a observação do dia.
+  - Total: os números da escola no período e "Quem faltou no período" (professor, dias e aulas).
+  - Assíncronas: agenda das aulas assíncronas dia a dia com o professor responsável (na Híbrida, o presencial da semana).
+- Faltas do mês por professor (PDF ou Excel) continua em Relatórios Pedagógicos → Faltas do mês.
+- Quem usa: direção, coordenação, secretaria e o cargo Pedagogia. O professor não vê essas telas.`,
+  },
+
+  rascunho: { // [MODO-RASCUNHO]
+    titulo: "Modo rascunho (testar mudanças sem mexer na escola)",
+    palavras: ["rascunho", "modo rascunho", "testar", "simular", "simulação", "experimento", "experimental", "trocar professor", "trocar aula", "mudar professor", "aplicar na escola", "descartar", "ver mudanças", "sair do rascunho", "começar rascunho"],
+    texto: `O rascunho serve para testar mudanças (professor, disponibilidade e aulas) sem mexer na escola. Você usa as telas de sempre; nada vale até "Aplicar na escola".
+COMEÇAR
+1. Em Gerar Grade (tela Horário), Disponibilidade ou Turmas, clique em "Começar rascunho" (canto direito, acima do título) e dê um nome (ex.: "Ana sem sexta"). O sistema copia a escola de hoje para o rascunho.
+2. Aparece a faixa roxa no topo: "o que você mudar fica só no rascunho. Nada vale para a escola ainda." Sem a faixa, você está mexendo na escola de verdade.
+MEXER NO RASCUNHO
+- Trocar aulas de lugar: Horário → Grade. Escolha o período (Manhã, Tarde, Noite, Integral) e a turma, ou "Todas as turmas" do período. Clique numa aula e depois em outra da mesma turma (ou num "Vago"). Se o professor já tiver aula em outra turma, bloqueio ou HA no novo horário, o sistema avisa e só troca confirmando.
+- Trocar o professor: lápis na aula (na mesma grade) → escolha o professor → "Salvar no rascunho". A lista mostra só os professores credenciados para a disciplina (desmarque a caixa para ver todos). Vale para todas as aulas daquela disciplina na turma. Se o professor novo já tiver aula em outra turma, bloqueio ou HA nesses horários, o sistema avisa e só troca confirmando. Também dá para trocar em Turmas.
+- Disponibilidade: a tela de sempre grava no rascunho (horários com contorno roxo).
+GERAR OU MELHORAR (aba Modo Experimental; o nome do rascunho já vem preenchido)
+- Só trocou aulas de lugar ou o professor: não precisa gerar.
+- Quer tirar janelas sem refazer: "Melhorar" (na janela do Turno inteiro) parte da grade do rascunho, com as suas trocas.
+- Mudou a disponibilidade e aulas caíram em cima de bloqueio: "Turma" ou "Turno parcial" só nas turmas afetadas (elas são refeitas do zero; as trocas feitas à mão nelas se perdem). "Turno inteiro" refaz o período todo.
+- Ordem recomendada: disponibilidade e professores → gerar ou melhorar → trocas finas → "Simular promoção" → aplicar.
+VER, APLICAR, SAIR E DESCARTAR (botões da faixa roxa)
+- "Ver mudanças": lista única com professores, disponibilidade e aulas (antes → depois), com "desfazer" em cada item e "voltar como está na escola" por turma.
+- "Aplicar na escola": a grade, a disponibilidade e os professores do rascunho passam a valer. O professor novo passa a ser o da disciplina (tela Turmas) e recebe as aulas; quem saiu perde só as aulas daquela disciplina naquela turma; a HA dos dois é recalculada. Antes, o sistema guarda uma cópia: "Voltar à grade anterior" (Modo Experimental) desfaz tudo, inclusive professores e disponibilidade.
+- "Sair do rascunho": volta a mostrar a escola como está; o rascunho fica guardado ("Entrar no rascunho" para continuar).
+- "Descartar": apaga o rascunho e tudo o que foi mudado nele.
+BOM SABER
+- Um rascunho por vez na escola; toda a direção, coordenação e secretaria vê o mesmo, e cada pessoa entra ou sai dele no próprio navegador. Professores, pedagogia e gestor de reservas não veem o rascunho.
+- O rascunho também aparece na lista do Modo Experimental (com Simular promoção); apagar por ali também encerra o rascunho.`,
   },
 
   importar: {
@@ -328,7 +367,9 @@ Depois de importar professores, marque as disciplinas de cada um em Professores;
 - Professores compacto: 6 professores por linha, com a turma em cada aula.
 - Quadro geral de professores: uma linha por professor e os dias com as aulas nas colunas, em paisagem (para afixar na sala dos professores).
 - Por disciplina: um quadro por disciplina, com a turma e o professor em cada aula.
-- Os modelos novos (lado a lado, compacto, quadro geral e por disciplina) pedem um turno. Turno Integral: use os modelos por turma; no PDF por professor, a aula da turma integral sai na manhã/tarde dele.`,
+- Os modelos novos (lado a lado, compacto, quadro geral e por disciplina) pedem um turno. Turno Integral: use os modelos por turma; no PDF por professor, a aula da turma integral sai na manhã/tarde dele.
+- Calendário trimestral das assíncronas: escolha no próprio cartão o período (Todos, Matutino, Vespertino, Noturno, Integral), a turma (ou todas), o trimestre (as datas vêm de Calendário e Turnos) e o modelo: "Uma turma por folha" ou "Turmas lado a lado (3 por folha)". Uma linha por semana do trimestre; em cada dia, as aulas assíncronas com aula, horário, disciplina e professor responsável; na coluna da semana, quem está presencial na Híbrida (trio). Na Híbrida, a assíncrona da semana é do professor presencial daquela semana. Feriado e recesso aparecem como "sem aula". Se os trimestres não estiverem cadastrados, o cartão avisa.
+- Na tela Horário → Grade, o botão "Imprimir" imprime a grade como está na tela (o que estiver filtrado), em folha deitada, sem menu nem filtros.`,
   },
 
   exportar: {

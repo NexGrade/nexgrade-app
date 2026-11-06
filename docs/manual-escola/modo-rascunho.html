@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>NexGrade — Modo Rascunho</title>
+<!-- Fonte do PDF "NexGrade — Modo Rascunho". Para gerar de novo:
+     msedge --headless --no-pdf-header-footer --print-to-pdf="saida.pdf" modo-rascunho.html -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 14mm 14mm 16mm;
+    @bottom-center { content: "NexGrade · Modo Rascunho · WhatsApp (41) 99818-0353 · Simone Barros · página " counter(page) " de " counter(pages); font: 7.5pt Inter, sans-serif; color: #6b7a86; } }
+  :root {
+    --azul: #1565bf; --azul-esc: #0d47a1; --verde-agua: #00897b; --roxo: #6a1b99;
+    --laranja: #e65000; --verde: #2e7d32; --vermelho: #c62828;
+    --texto: #1f2937; --suave: #5f6b76; --linha: #e7ecf1;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, "Segoe UI", Arial, sans-serif; color: var(--texto); font-size: 10.2pt; line-height: 1.5; background: #fff; }
+  strong { font-weight: 700; }
+
+  .capa { background: linear-gradient(110deg, var(--azul-esc) 0%, var(--azul) 55%, #42a5f5 100%); border-radius: 12px; color: #fff; padding: 18px 22px; display: flex; align-items: center; gap: 18px; }
+  .capa img { width: 64px; height: 64px; border-radius: 14px; box-shadow: 0 3px 10px rgba(0,0,0,.25); }
+  .capa .marca { letter-spacing: .18em; font-weight: 700; font-size: 9pt; opacity: .9; }
+  .capa h1 { margin: 2px 0 4px; font-size: 21pt; line-height: 1.15; }
+  .capa .sub { font-size: 9pt; opacity: .9; }
+  .faixas { display: flex; gap: 6px; margin: 10px 0 12px; }
+  .faixas span { flex: 1; height: 4px; border-radius: 2px; }
+
+  .endereco { border: 1.5px dashed var(--azul); border-radius: 10px; padding: 8px 14px; color: var(--azul-esc); font-weight: 600; margin-bottom: 14px; }
+  .endereco span { font-weight: 700; font-size: 11.5pt; margin-left: 6px; }
+
+  .secao { --cor: var(--azul); --fundo: #eef5fd; border-left: 4px solid var(--cor); background: linear-gradient(90deg, var(--fundo) 0%, #fff 60%); padding: 10px 14px 10px 16px; margin: 0 0 14px; break-inside: avoid; }
+  .secao.quebra { break-inside: auto; }
+  .secao h2 { display: flex; align-items: center; gap: 9px; color: var(--cor); font-size: 13.5pt; margin: 0 0 6px; }
+  .secao h2 .n { background: var(--cor); color: #fff; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10pt; flex: none; }
+  .secao p { margin: 0 0 7px; }
+  .secao .nota { color: var(--suave); font-size: 9pt; margin: 6px 0 0; }
+  .s-azul { --cor: var(--azul); --fundo: #eef5fd; }
+  .s-agua { --cor: var(--verde-agua); --fundo: #e3f4f1; }
+  .s-roxo { --cor: var(--roxo); --fundo: #f3e9f8; }
+  .s-laranja { --cor: var(--laranja); --fundo: #fff0e6; }
+  .s-verde { --cor: var(--verde); --fundo: #e9f5ea; }
+  .s-vermelho { --cor: var(--vermelho); --fundo: #fdecec; }
+
+  ul.marcas { margin: 4px 0 6px; padding: 0; list-style: none; }
+  ul.marcas li { position: relative; padding-left: 16px; margin: 3px 0; }
+  ul.marcas li::before { content: ""; position: absolute; left: 2px; top: .55em; width: 6px; height: 6px; border-radius: 1.5px; background: var(--cor); }
+
+  table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--linha); border-radius: 8px; overflow: hidden; font-size: 9.2pt; margin: 4px 0 4px; background: #fff; }
+  th { background: var(--cor); color: #fff; text-align: left; padding: 6px 9px; font-weight: 600; }
+  td { padding: 6px 9px; vertical-align: top; border-top: 1px solid var(--linha); }
+  tr:nth-child(even) td { background: var(--fundo); }
+  td:first-child { font-weight: 700; white-space: nowrap; }
+
+  ol.passos { list-style: none; margin: 4px 0 6px; padding: 0; counter-reset: p; }
+  ol.passos li { counter-increment: p; position: relative; padding: 2px 0 6px 34px; min-height: 24px; }
+  ol.passos li::before { content: counter(p); position: absolute; left: 0; top: 0; width: 22px; height: 22px; border: 1.5px solid var(--cor); border-radius: 6px; color: var(--cor); font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 9.5pt; background: #fff; }
+  ol.passos li .onde { display: inline-block; font-size: 8.4pt; font-weight: 600; color: var(--cor); background: var(--fundo); border-radius: 4px; padding: 0 6px; margin-left: 4px; }
+
+  .dica { border: 1px solid var(--cor); border-radius: 8px; padding: 7px 11px; background: #fff; margin: 6px 0 2px; }
+  .dica b { color: var(--cor); }
+
+  .etapa { font-weight: 700; color: var(--cor); text-transform: uppercase; letter-spacing: .06em; font-size: 8.4pt; margin: 8px 0 2px; }
+
+  .ajuda { background: linear-gradient(110deg, var(--azul-esc), var(--azul)); color: #fff; border-radius: 12px; padding: 14px 20px; display: flex; gap: 18px; align-items: center; break-inside: avoid; margin-top: 6px; }
+  .ajuda img { width: 52px; height: 52px; border-radius: 12px; }
+  .ajuda h3 { margin: 0 0 3px; font-size: 11.5pt; }
+  .ajuda p { margin: 1px 0; font-size: 9.4pt; }
+  .ajuda .contato { font-weight: 700; color: #cfe6ff; }
+  .rodape-versao { text-align: center; color: var(--suave); font-size: 8pt; margin-top: 10px; }
+  .faixa-roxa { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; background: #f3eefe; border: 1px solid #c9b5f5; border-radius: 8px; padding: 8px 10px; color: #4c1d95; font-size: 9pt; margin: 6px 0; }
+  .faixa-roxa .t { flex: 1 1 60%; }
+  .faixa-roxa .b { border: 1px solid #c9b5f5; border-radius: 5px; padding: 1px 7px; background: #fff; font-weight: 600; font-size: 8.4pt; }
+  .faixa-roxa .b.forte { background: #6d28d9; color: #fff; border-color: #6d28d9; }
+</style>
+</head>
+<body>
+
+<div class="capa">
+  <img src="logo.png" alt="">
+  <div>
+    <div class="marca">NEXGRADE</div>
+    <h1>Modo Rascunho: passo a passo</h1>
+    <div class="sub">Testar trocas de professor, disponibilidade e aulas sem mexer na escola · Novembro de 2026</div>
+  </div>
+</div>
+<div class="faixas"><span style="background:#1565bf"></span><span style="background:#00897b"></span><span style="background:#6a1b99"></span><span style="background:#e65000"></span><span style="background:#2e7d32"></span><span style="background:#c62828"></span></div>
+
+<section class="secao s-roxo">
+  <h2><span class="n">1</span>O que é o rascunho</h2>
+  <p>Uma cópia da escola para testar mudanças. Você usa as <strong>telas de sempre</strong> (Grade, Disponibilidade e Turmas) e <strong>nada vale até clicar em “Aplicar na escola”</strong>. Com o rascunho ligado, aparece esta faixa roxa no topo de todas as telas:</p>
+  <div class="faixa-roxa"><span class="t">Rascunho <b>Ana sem sexta</b>: o que você mudar na Grade, na Disponibilidade e em Turmas fica só no rascunho. <b>Nada vale para a escola ainda.</b></span><span class="b">Ver mudanças</span><span class="b forte">Aplicar na escola</span><span class="b">Sair do rascunho</span><span class="b">Descartar</span></div>
+  <p class="nota">Sem a faixa roxa, você está vendo e mexendo na escola de verdade.</p>
+</section>
+
+<section class="secao s-azul quebra">
+  <h2><span class="n">2</span>Passo a passo</h2>
+  <ol class="passos">
+    <li><strong>Comece o rascunho.</strong> Em Gerar Grade → Horário (ou Disponibilidade, ou Turmas), clique em <strong>Começar rascunho</strong>, no canto direito, e dê um nome que explique o teste. O sistema copia a escola de hoje.</li>
+    <li><strong>Troque aulas de lugar.</strong> Na aba Grade, escolha o período (Manhã, Tarde, Noite) e a turma, ou “Todas as turmas”. Clique numa aula e depois em outra da mesma turma, ou num “Vago”. Se o professor já tiver aula em outra turma, bloqueio ou hora-atividade no novo horário, o sistema avisa e só troca se você confirmar. <span class="onde">Horário → Grade</span></li>
+    <li><strong>Troque o professor de uma disciplina.</strong> Clique no <strong>lápis</strong> da aula, escolha o novo professor e clique em <strong>Salvar no rascunho</strong>. A lista mostra só os <strong>credenciados</strong> para a disciplina (desmarque a caixa para ver todos). Vale para todas as aulas da disciplina naquela turma e também avisa choque antes. <span class="onde">Grade ou Turmas</span></li>
+    <li><strong>Mude a disponibilidade.</strong> A tela de sempre: escolha a turma e o professor, marque e salve. Os horários mudados ganham contorno roxo. <span class="onde">Disponibilidade</span></li>
+    <li><strong>Se precisar, use o motor.</strong> No Modo Experimental, o nome do rascunho já vem preenchido (veja a tabela abaixo). Depois, <strong>Simular promoção</strong> mostra como ficariam as janelas e a hora-atividade.</li>
+    <li><strong>Confira em “Ver mudanças”.</strong> Uma lista única: professores das disciplinas, disponibilidade e aulas (antes → depois), cada item com <strong>desfazer</strong>; nas aulas, “voltar como está na escola” desfaz as trocas da turma.</li>
+    <li><strong>Aplique na escola.</strong> Clique em <strong>Aplicar na escola</strong> e confirme. Grade, disponibilidade e professores do rascunho passam a valer, e o rascunho é encerrado.</li>
+  </ol>
+  <div class="dica"><b>Ordem recomendada:</b> disponibilidade e professores → gerar ou melhorar → trocas finas de aula → Simular promoção → Aplicar na escola.</div>
+</section>
+
+<section class="secao s-agua">
+  <h2><span class="n">3</span>Gerar ou melhorar?</h2>
+  <table>
+    <tr><th>O que você mudou</th><th>O que usar no Modo Experimental</th></tr>
+    <tr><td>Só trocou aulas<br>ou o professor</td><td>Nada. Confira em “Ver mudanças” e aplique.</td></tr>
+    <tr><td>Quer tirar janelas</td><td><strong>Melhorar</strong> (na janela do Turno inteiro): parte da grade do rascunho, com as suas trocas, e só mexe onde ajuda.</td></tr>
+    <tr><td>Disponibilidade nova<br>em cima de aula</td><td><strong>Turma</strong> ou <strong>Turno parcial</strong>, só nas turmas afetadas. Elas são refeitas do zero; as trocas feitas à mão nelas se perdem.</td></tr>
+    <tr><td>Refazer o período</td><td><strong>Turno inteiro</strong>.</td></tr>
+  </table>
+</section>
+
+<section class="secao s-verde">
+  <h2><span class="n">4</span>O que acontece ao aplicar uma troca de professor</h2>
+  <ul class="marcas">
+    <li>O <strong>professor novo</strong> passa a ser o professor da disciplina na turma (tela Turmas) e recebe as aulas dela na grade.</li>
+    <li>O <strong>professor que saiu</strong> perde só as aulas daquela disciplina naquela turma; as outras aulas dele continuam.</li>
+    <li>A <strong>hora-atividade</strong> dos dois é recalculada pela tabela da SEED.</li>
+    <li>A <strong>disponibilidade</strong> deles não muda, a não ser que você tenha mudado no rascunho.</li>
+  </ul>
+  <div class="dica"><b>Tem volta:</b> antes de aplicar, o sistema guarda uma cópia da escola. Em <strong>Modo Experimental → Voltar à grade anterior</strong>, grade, disponibilidade e professores voltam de uma vez.</div>
+</section>
+
+<section class="secao s-laranja">
+  <h2><span class="n">5</span>Sair, voltar e descartar</h2>
+  <table>
+    <tr><th>Botão</th><th>O que faz</th><th>O rascunho continua?</th></tr>
+    <tr><td>Sair do rascunho</td><td>Volta a mostrar a escola como está. Para continuar, clique em “Entrar no rascunho”.</td><td>Sim, guardado</td></tr>
+    <tr><td>Aplicar na escola</td><td>As mudanças passam a valer, com cópia de segurança.</td><td>Não, termina</td></tr>
+    <tr><td>Descartar</td><td>Apaga o rascunho e tudo o que foi mudado nele. A escola fica como estava.</td><td>Não, termina</td></tr>
+  </table>
+</section>
+
+<section class="secao s-vermelho">
+  <h2><span class="n">6</span>Bom saber</h2>
+  <ul class="marcas">
+    <li><strong>Um rascunho por vez</strong> na escola. Direção, coordenação e secretaria veem o mesmo rascunho; cada pessoa entra ou sai dele no próprio navegador.</li>
+    <li>O rascunho fica salvo até ser aplicado ou descartado: dá para fechar o sistema e continuar outro dia.</li>
+    <li>Professores, pedagogia e gestor de reservas não veem nem mexem no rascunho.</li>
+    <li>Em <strong>Turmas</strong>, só a troca de professor vai para o rascunho. Co-docência, trio e quantidade de aulas assíncronas ainda mudam a escola direto, mesmo com o rascunho ligado (a tela avisa).</li>
+  </ul>
+</section>
+
+<div class="ajuda">
+  <img src="logo.png" alt="">
+  <div>
+    <h3>Precisa de ajuda?</h3>
+    <p>Dúvidas sobre o rascunho ou a grade: fale com <strong>Simone Barros</strong> — NexGrade (Nexus Core Tecnologia).</p>
+    <p class="contato">WhatsApp (41) 99818-0353 · simone@nexuscoretecnologia.com.br · nexuscoretecnologia.com.br</p>
+  </div>
+</div>
+<div class="rodape-versao">NexGrade · Modo Rascunho · versão de 06/11/2026</div>
+
+</body>
+</html>

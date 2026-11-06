@@ -157,21 +157,36 @@
     <li><strong>Calendário e Turnos</strong>: horário de início e fim de cada aula, por turno. O calendário letivo oficial da SEED-PR já vem carregado.</li>
     <li><strong>Cursos e Disciplinas</strong>: em <em>Catálogo SEED-PR</em>, marque os cursos que a escola oferta. Entram as matrizes e as disciplinas com os códigos do RCO.</li>
     <li><strong>Professores</strong>: nome, e-mail e telefone. Para muitos de uma vez, use <em>Importar planilhas</em> (colunas nome; email; telefone; cargaHorariaTotal).</li>
-    <li><strong>Turmas</strong>: o código SERE de cada turma, as disciplinas da matriz e quem dá cada uma.</li>
+    <li><strong>Turmas</strong>: o código SERE de cada turma, as disciplinas da matriz e quem dá cada uma. Os botões Manhã, Tarde e Noite mostram só as turmas daquele período.</li>
     <li><strong>Regras de Distribuição</strong>: aulas duplas, limite por dia e outras preferências da escola.</li>
   </ol>
   <div class="etapa">Etapa 2 · Grade de Horário</div>
   <ol class="passos">
-    <li><strong>Disponibilidade</strong>: os horários em que cada professor não pode dar aula (outra escola, compromissos fixos) e a hora-atividade.</li>
+    <li><strong>Disponibilidade</strong>: os horários em que cada professor não pode dar aula (outra escola, compromissos fixos) e a hora-atividade. Escolha a turma para achar o professor mais rápido; as células com aula mostram a disciplina e a turma.</li>
     <li><strong>Gerar Grade</strong>, sempre no <strong>Modo Experimental</strong>: gere a escola inteira ou só uma turma, revise o resultado e, se estiver bom, clique em <strong>Promover para oficial</strong>.</li>
     <li>Confira os avisos em <strong>Conflitos</strong>. Se a grade não sair, o quadro “Por que não gerou” mostra o que impede.</li>
-    <li><strong>Imprimir Grade</strong>: PDF por turma ou por professor (paisagem ou retrato) e planilha em Excel.</li>
+    <li><strong>Imprimir Grade</strong>: PDF por turma ou por professor (paisagem ou retrato), planilha em Excel e o <strong>calendário trimestral das aulas assíncronas</strong> (por período, uma turma por folha ou três lado a lado). Na tela Horário, o botão <strong>Imprimir</strong> imprime a grade como está na tela.</li>
   </ol>
-  <div class="dica"><b>Para mudar uma grade pronta:</b> restrição do professor → Disponibilidade; quem dá ou quantas aulas → Turmas; depois gere de novo no Modo Experimental e promova. Assim a hora-atividade é recalculada.</div>
+  <div class="dica"><b>Para mudar uma grade pronta</b> (trocar professor, mudar a disponibilidade, trocar aulas de lugar), use o <strong>Modo Rascunho</strong> da seção 7: testa tudo sem mexer na escola e aplica de uma vez, com a hora-atividade recalculada.</div>
+</section>
+
+<section class="secao s-roxo">
+  <h2><span class="n">7</span>Testar mudanças: Modo Rascunho</h2>
+  <p>O rascunho é uma cópia da escola para testar mudanças. Você usa as telas de sempre e <strong>nada vale até clicar em “Aplicar na escola”</strong>. Enquanto ele está ligado, aparece uma <strong>faixa roxa</strong> no topo de todas as telas.</p>
+  <ol class="passos">
+    <li>Em <strong>Gerar Grade</strong>, <strong>Disponibilidade</strong> ou <strong>Turmas</strong>, clique em <strong>Começar rascunho</strong> e dê um nome (ex.: “Ana sem sexta”).</li>
+    <li><strong>Trocar aulas de lugar</strong>: em Horário → Grade, escolha o período e a turma (ou todas), clique numa aula e depois em outra. <span class="onde">Grade</span></li>
+    <li><strong>Trocar o professor</strong>: lápis na aula → escolha o professor (só os credenciados para a disciplina) → <strong>Salvar no rascunho</strong>. Vale para todas as aulas da disciplina na turma. <span class="onde">Grade ou Turmas</span></li>
+    <li><strong>Mudar a disponibilidade</strong>: a tela de sempre, gravando no rascunho. <span class="onde">Disponibilidade</span></li>
+    <li>Se precisar, use o motor no Modo Experimental (o nome do rascunho já vem preenchido): <strong>Melhorar</strong> para tirar janelas a partir do rascunho, ou <strong>Turma / Turno parcial</strong> nas turmas afetadas por uma disponibilidade nova.</li>
+    <li>Confira em <strong>Ver mudanças</strong> (professores, disponibilidade e aulas, com desfazer) e clique em <strong>Aplicar na escola</strong>.</li>
+  </ol>
+  <div class="dica"><b>Avisos e segurança:</b> se o professor já tiver aula em outra turma, bloqueio ou hora-atividade no horário, o sistema avisa antes de trocar. Antes de aplicar, guarda uma cópia: <strong>Voltar à grade anterior</strong> (Modo Experimental) desfaz grade, disponibilidade e professores. <strong>Descartar</strong> apaga o rascunho sem mexer na escola. Há um rascunho por vez, e toda a direção vê o mesmo.</div>
+  <p class="nota">Ao aplicar uma troca de professor, o novo passa a ser o professor da disciplina e recebe as aulas; quem saiu perde só as aulas daquela disciplina naquela turma. Passo a passo completo: “NexGrade — Modo Rascunho”.</p>
 </section>
 
 <section class="secao s-agua">
-  <h2><span class="n">7</span>RCO</h2>
+  <h2><span class="n">8</span>RCO</h2>
   <div class="etapa">Arquivo do RCO · o cadastro oficial da escola</div>
   <p>É o arquivo que o RCO gera na tela Grade de Horário. Ele traz as disciplinas, as turmas e a matriz de cada turma, e evita digitar códigos à mão. Normalmente é pedido uma vez, na implantação.</p>
   <ol class="passos">
@@ -190,11 +205,11 @@
 </section>
 
 <section class="secao s-roxo">
-  <h2><span class="n">8</span>No dia a dia</h2>
+  <h2><span class="n">9</span>No dia a dia</h2>
   <table>
     <tr><th>Tela</th><th>Para que serve</th></tr>
     <tr><td>Reservas e Salas</td><td>Agenda de salas e equipamentos. O gestor de reservas cadastra as salas e confirma os pedidos; o professor reserva pela Minha Agenda.</td></tr>
-    <tr><td>Presença dos professores</td><td>Registro diário de cada aula: presente, atraso, falta ou substituído (com o nome de quem substituiu).</td></tr>
+    <tr><td>Presença dos professores</td><td>Registro diário de cada aula, inclusive assíncronas e hora-atividade: presente, atraso, falta ou substituído (com o nome de quem substituiu), e uma observação do dia por professor. O <strong>Relatório por período</strong> sai em PDF ou Excel: Geral, Individual, Total (com quem faltou) e a agenda das Assíncronas.</td></tr>
     <tr><td>Licenças</td><td>Período do afastamento e substituto. Os substitutos habilitados na mesma disciplina aparecem primeiro.</td></tr>
     <tr><td>Comunicados</td><td>Avisos para a equipe. A licença gera um comunicado com o período e o substituto.</td></tr>
     <tr><td>Relatórios Pedagógicos</td><td>Controle de ponto do mês e carga horária, em PDF e Excel.</td></tr>
@@ -203,7 +218,7 @@
 </section>
 
 <section class="secao s-laranja">
-  <h2><span class="n">9</span>Privacidade (LGPD)</h2>
+  <h2><span class="n">10</span>Privacidade (LGPD)</h2>
   <p>O NexGrade guarda só o necessário para a grade funcionar.</p>
   <ul class="marcas">
     <li>Do professor, o cadastro guarda só <strong>nome, e-mail e telefone</strong>. Não registre CPF, matrícula nem documentos.</li>
@@ -213,7 +228,7 @@
 </section>
 
 <section class="secao s-vermelho">
-  <h2><span class="n">10</span>Segurança</h2>
+  <h2><span class="n">11</span>Segurança</h2>
   <p>O acesso de cada pessoa é pessoal e intransferível. Estes cuidados mantêm os dados da escola protegidos:</p>
   <ul class="marcas">
     <li>Não compartilhe sua senha nem use o login de outra pessoa.</li>
@@ -230,7 +245,7 @@
     <p class="contato">WhatsApp (41) 99818-0353 · simone@nexuscoretecnologia.com.br · nexuscoretecnologia.com.br</p>
   </div>
 </div>
-<div class="rodape-versao">NexGrade · Manual de uso da escola · versão de 03/11/2026</div>
+<div class="rodape-versao">NexGrade · Manual de uso da escola · versão de 06/11/2026</div>
 
 </body>
 </html>
