@@ -29,6 +29,9 @@ export function RascunhoBarra() {
   const [novoAberto, setNovoAberto] = useState(false);
   const [nome, setNome] = useState("");
   const [ocupado, setOcupado] = useState<string | null>(null);
+  // [RASCUNHO-EVIDENTE] convite grande para comecar um rascunho (a pessoa pode ocultar; lembra no navegador)
+  const [convite, setConvite] = useState<boolean>(() => { try { return localStorage.getItem("nexgrade.conviteRascunho") !== "0"; } catch { return true; } });
+  const mudarConvite = (v: boolean) => { setConvite(v); try { localStorage.setItem("nexgrade.conviteRascunho", v ? "1" : "0"); } catch { /* sem armazenamento */ } };
   const [mudancas, setMudancas] = useState<null | "carregando" | { disp: MudancaDisp[]; atrib: MudancaAtrib[]; aulas: DifTurma[]; profs: Map<number, string> }>(null);
 
   if (papel.carregando || papel.ehProfessor || papel.ehGestor || papel.ehPedagogia) return null;
@@ -102,34 +105,60 @@ export function RascunhoBarra() {
   const nm = mudancas && mudancas !== "carregando" ? mudancas : null;
   return (
     <>
+      {/* [RASCUNHO-EVIDENTE] (06/11/2026) pedido da dona: rascunho bem visivel. Dentro dele: faixa roxa cheia, presa no topo */}
       {ligado && rascunho && (
-        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-md border border-violet-300 bg-violet-50 px-3 py-2 text-sm text-violet-900">
-          <FileEdit className="w-4 h-4 shrink-0" />
-          <span className="flex-1 min-w-[14rem]">
-            Rascunho <strong>{rascunho.nome}</strong>: o que você mudar na Grade, na Disponibilidade e em Turmas fica só no rascunho. <strong>Nada vale para a escola ainda.</strong>
-          </span>
-          <Button size="sm" variant="outline" className="h-8 border-violet-300" onClick={() => void verMudancas()}>Ver mudanças</Button>
-          <Button size="sm" className="h-8 bg-violet-700 hover:bg-violet-800" disabled={ocupado !== null} onClick={() => void aplicar()}>
-            {ocupado === "aplicar" && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}Aplicar na escola
-          </Button>
-          <Button size="sm" variant="ghost" className="h-8" onClick={() => ligarRascunho(null)} title="Volta a mostrar a escola como está (o rascunho continua guardado)">Sair do rascunho</Button>
-          <Button size="sm" variant="ghost" className="h-8 text-destructive" disabled={ocupado !== null} onClick={() => void descartar()}>Descartar</Button>
+        <div className="sticky top-0 z-30 -mt-1 mb-4 rounded-lg bg-violet-700 px-4 py-3 text-white shadow-md ring-2 ring-violet-300">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider">
+              <FileEdit className="w-3.5 h-3.5" />Modo rascunho
+            </span>
+            <span className="flex-1 min-w-[14rem] text-sm">
+              <strong className="text-base">{rascunho.nome}</strong>
+              <span className="block text-violet-100">O que você mudar na Grade, na Disponibilidade e em Turmas fica só no rascunho. Nada vale para a escola ainda.</span>
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" variant="secondary" className="h-9 bg-white text-violet-800 hover:bg-violet-50" onClick={() => void verMudancas()}>Ver mudanças</Button>
+              <Button size="sm" className="h-9 bg-emerald-500 text-white hover:bg-emerald-600" disabled={ocupado !== null} onClick={() => void aplicar()}>
+                {ocupado === "aplicar" && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}Aplicar na escola
+              </Button>
+              <Button size="sm" variant="ghost" className="h-9 text-white hover:bg-white/15 hover:text-white" onClick={() => ligarRascunho(null)} title="Volta a mostrar a escola como está (o rascunho continua guardado)">Sair do rascunho</Button>
+              <Button size="sm" variant="ghost" className="h-9 text-rose-100 hover:bg-white/15 hover:text-white" disabled={ocupado !== null} onClick={() => void descartar()}>Descartar</Button>
+            </div>
+          </div>
         </div>
       )}
       {!ligado && rascunho && naPagina && (
-        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-md border border-dashed border-violet-300 px-3 py-1.5 text-sm text-violet-900">
-          <FileEdit className="w-4 h-4 shrink-0" />
-          <span className="flex-1">Existe o rascunho <strong>{rascunho.nome}</strong>{rascunho.criadoPor ? ` (de ${rascunho.criadoPor})` : ""}. Você está vendo a escola como está.</span>
-          <Button size="sm" variant="outline" className="h-8 border-violet-300" onClick={() => ligarRascunho(rascunho.nome)}>Entrar no rascunho</Button>
-        </div>
-      )}
-      {!rascunho && naPagina && (
-        <div className="mb-4 flex justify-end">
-          <Button size="sm" variant="outline" className="h-8 border-violet-300 text-violet-800" onClick={() => setNovoAberto(true)} title="Testar mudanças de grade, disponibilidade e professores sem mexer na escola">
-            <FileEdit className="w-4 h-4 mr-1" />Começar rascunho
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border-2 border-violet-300 bg-violet-50 px-4 py-3 text-violet-900">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-700 text-white"><FileEdit className="w-4 h-4" /></span>
+          <span className="flex-1 min-w-[14rem] text-sm">
+            <strong className="block text-base">Existe o rascunho “{rascunho.nome}”</strong>
+            {rascunho.criadoPor ? `Começado por ${rascunho.criadoPor}. ` : ""}Agora você está vendo a escola como está.
+          </span>
+          <Button className="h-9 bg-violet-700 text-white hover:bg-violet-800" onClick={() => ligarRascunho(rascunho.nome)}>
+            <FileEdit className="w-4 h-4 mr-1.5" />Entrar no rascunho
           </Button>
         </div>
       )}
+      {!rascunho && naPagina && (convite ? (
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border-2 border-dashed border-violet-300 bg-violet-50/70 px-4 py-3 text-violet-900">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-700 text-white"><FileEdit className="w-5 h-5" /></span>
+          <span className="flex-1 min-w-[14rem] text-sm">
+            <strong className="block text-base">Quer testar uma mudança sem mexer na escola?</strong>
+            Comece um rascunho: troque professores, aulas e disponibilidade, veja como fica e só depois aplique.
+          </span>
+          <Button className="h-10 bg-violet-700 px-5 text-white hover:bg-violet-800" onClick={() => setNovoAberto(true)}>
+            <FileEdit className="w-4 h-4 mr-1.5" />Começar rascunho
+          </Button>
+          <button type="button" className="text-xs text-violet-700 underline" onClick={() => mudarConvite(false)} title="Mostrar só um botão pequeno">ocultar</button>
+        </div>
+      ) : (
+        <div className="mb-4 flex justify-end">
+          <Button size="sm" className="h-8 bg-violet-700 text-white hover:bg-violet-800" onClick={() => setNovoAberto(true)} title="Testar mudanças de grade, disponibilidade e professores sem mexer na escola">
+            <FileEdit className="w-4 h-4 mr-1" />Começar rascunho
+          </Button>
+          <button type="button" className="ml-2 text-xs text-violet-700 underline" onClick={() => mudarConvite(true)}>o que é?</button>
+        </div>
+      ))}
 
       <Dialog open={novoAberto} onOpenChange={setNovoAberto}>
         <DialogContent className="max-w-md">
