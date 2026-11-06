@@ -10,7 +10,7 @@
 - [`passagem-2026-10-17.md`](./passagem-2026-10-17.md) — nota de passagem: Reservas (tablets por quantidade, gestor agendando por professor, cards da semana, permissões), como testar e o que está em aberto.
 
 ### Materiais da escola e comerciais (03/11/2026)
-- [`manual-escola/`](./manual-escola/) — para entregar à escola: `manual-uso-escola.html` (manual de uso) e `cadastro-de-escola.html` (o que a escola precisa enviar para a implantação).
+- [`manual-escola/`](./manual-escola/) — para entregar à escola: `manual-uso-escola.html` (manual de uso), `modo-rascunho.html` (passo a passo do Modo Rascunho, 06/11/2026) e `cadastro-de-escola.html` (o que a escola precisa enviar para a implantação). Os PDFs (`NexGrade-*.pdf`) saem do HTML pelo Edge (comando no topo de cada arquivo).
 - [`apresentacao/`](./apresentacao/) — apresentação para escolas 2027: `slides-novos.html` (slides novos) + `base-2026-10-22.pdf`; `montar-apresentacao.py` junta os dois no PDF final.
 - [`relatorio-executivo/`](./relatorio-executivo/) — **interno**: relatório executivo com preços e projeção financeira.
 - [`treinamento/`](./treinamento/) — **interno**: treinamento comercial (playbook de vendas para escolas públicas).
