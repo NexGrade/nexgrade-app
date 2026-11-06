@@ -15,7 +15,8 @@ export const ROTULO_STATUS: Record<Status, string> = { presente: "Presente", fal
 export type Marca = { status: Status; substitutoId: number | null; substitutoNome: string | null; observacao: string | null };
 // [PRESENCA-ASS-HA] (06/11/2026) a lista traz tambem as assincronas e a hora-atividade (disciplinas = "HA" ou "HA*")
 export type TipoAula = "aula" | "assincrona" | "ha";
-export type AulaDoDia = { numeroAula: number; hora: string; fim: string; tipo?: TipoAula; turmas: string; disciplinas: string; sala: string; marca: Marca | null };
+// [PRESENCA-HIBRIDA] (06/11/2026) aula de trio (Hibrida): presencial ou suporte na semana da data
+export type AulaDoDia = { numeroAula: number; hora: string; fim: string; tipo?: TipoAula; trio?: "presencial" | "suporte" | null; turmas: string; disciplinas: string; sala: string; marca: Marca | null };
 // [PRESENCA-OBS-GERAL] (06/11/2026) observacao geral do professor no dia/turno (antes era por aula)
 export type ProfessorDoDia = { professorId: number; nome: string; licenca: string | null; observacao?: string | null; aulas: AulaDoDia[] };
 export type Presenca = {
@@ -27,7 +28,8 @@ export type ObservacaoEnvio = { professorId: number; observacao: string | null }
 /** Turma da linha nos relatorios: "1ºA (assíncrona)", "HA" etc. */
 export function rotuloTurmas(a: AulaDoDia): string {
   if (a.tipo === "ha") return a.disciplinas || "HA";
-  return a.tipo === "assincrona" ? `${a.turmas} (assíncrona)` : a.turmas;
+  if (a.tipo === "assincrona") return `${a.turmas} (assíncrona)`;
+  return a.trio ? `${a.turmas} (híbrida, ${a.trio})` : a.turmas;
 }
 export type MarcaEnvio = { professorId: number; numeroAula: number; status: Status | null; substitutoId?: number | null; substitutoNome?: string | null; observacao?: string | null };
 

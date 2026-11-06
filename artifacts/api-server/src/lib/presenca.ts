@@ -10,9 +10,12 @@ export const TURNOS_DIA = ["matutino", "vespertino", "noturno"] as const;
 export type Marca = { status: Status; substitutoId: number | null; substitutoNome: string | null; observacao: string | null };
 /** [PRESENCA-ASS-HA] (06/11/2026) a lista mostra tambem as assincronas e a hora-atividade do professor. */
 export type TipoAula = "aula" | "assincrona" | "ha";
+/** [PRESENCA-HIBRIDA] (06/11/2026) aula de trio com revezamento (Hibrida): presencial ou suporte na semana da data. */
+export type SituacaoTrio = "presencial" | "suporte";
 export type AulaDoDia = {
   numeroAula: number; hora: string; fim: string;
   tipo: TipoAula;
+  trio: SituacaoTrio | null;
   turmas: string; disciplinas: string; sala: string;
   marca: Marca | null;
 };
@@ -39,7 +42,7 @@ export function slotDaTurma(slots: SlotEsquema[], turno: string, nivelEnsino: st
 
 /** Uma aula do professor no dia (ja com a turma integral projetada). tipo ausente = aula presencial.
  *  [PRESENCA-ASS-HA] HA: turma vazia, disciplina "HA" ou "HA*", nivelEnsino null (usa o horario das aulas dele no turno). */
-export type AulaGrade = { professorId: number; numeroAula: number; turno: string; nivelEnsino: string | null; turma: string; disciplina: string; sala: string; tipo?: TipoAula };
+export type AulaGrade = { professorId: number; numeroAula: number; turno: string; nivelEnsino: string | null; turma: string; disciplina: string; sala: string; tipo?: TipoAula; trio?: SituacaoTrio | null };
 
 const PRIORIDADE: Record<TipoAula, number> = { aula: 0, assincrona: 1, ha: 2 };
 export const tipoDe = (a: AulaGrade): TipoAula => a.tipo ?? "aula";
@@ -75,6 +78,8 @@ export function montarDia(
         hora: ini != null ? hhmm(ini) : "",
         fim: ini != null && s ? hhmm(ini + (s.duracaoMinutos ?? 50)) : "",
         tipo,
+        // [PRESENCA-HIBRIDA] turmas juntas: presencial se for presencial em alguma
+        trio: grupo.some((g) => g.trio === "presencial") ? "presencial" : grupo.some((g) => g.trio === "suporte") ? "suporte" : null,
         turmas: unicos(grupo.map((g) => g.turma)),
         disciplinas: unicos(grupo.map((g) => g.disciplina)),
         sala: unicos(grupo.map((g) => g.sala)),
@@ -87,9 +92,10 @@ export function montarDia(
 }
 
 /** Rotulo da linha nos relatorios: "1ºA (assíncrona)", "HA" etc. */
-export function rotuloTurmas(a: Pick<AulaDoDia, "tipo" | "turmas" | "disciplinas">): string {
+export function rotuloTurmas(a: Pick<AulaDoDia, "tipo" | "turmas" | "disciplinas"> & { trio?: SituacaoTrio | null }): string {
   if (a.tipo === "ha") return a.disciplinas || "HA";
-  return a.tipo === "assincrona" ? `${a.turmas} (assíncrona)` : a.turmas;
+  if (a.tipo === "assincrona") return `${a.turmas} (assíncrona)`;
+  return a.trio ? `${a.turmas} (híbrida, ${a.trio})` : a.turmas;
 }
 
 export function chaveMarca(professorId: number, numeroAula: number): string {

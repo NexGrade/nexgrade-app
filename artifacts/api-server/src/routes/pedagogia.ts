@@ -22,6 +22,7 @@ import { getAuth } from "@clerk/express";
 import { projetarIntegral, mapaIntegralDosSlots } from "../lib/turno-integral";
 import { carregarAssSoTurma } from "../lib/assincrona-so-turma";
 import { ehHAOutroTurno, turnosComAulaPorProfessor } from "../lib/ha-contraturno";
+import { mapaRevezamento } from "../lib/revezamento-trio";
 import {
   STATUS, ROTULO_STATUS, ROTULO_TURNO, TURNOS_DIA, montarDia, resumirMes, chaveMarca, rotuloTurmas,
   type AulaGrade, type Marca, type SlotEsquema, type Status,
@@ -71,6 +72,9 @@ async function carregarDia(escolaId: string, dataISO: string): Promise<Dia | { e
     db.select().from(calendarioEscolarTable).where(and(eq(calendarioEscolarTable.escolaId, escolaId), eq(calendarioEscolarTable.data, dataISO))),
   ]);
   const { turmas, aulas } = projetarIntegral(turmasDoBanco, horariosDoBanco, mapaIntegralDosSlots(slotsBanco));
+  // [PRESENCA-HIBRIDA] revezamento do trio na semana da data, pela turma original (antes do espelho da integral)
+  const revez = await mapaRevezamento([...new Set(horariosDoBanco.map((h) => h.turmaId))], new Date(`${dataISO}T12:00:00Z`));
+  const trioDoHorario = new Map(horariosDoBanco.map((h) => [h.id, revez.get(`${h.turmaId}|${h.disciplinaId}|${h.professorId}`)]));
   const ehAssSoTurma = await carregarAssSoTurma(escolaId);
   const turmaMap = new Map(turmas.map((t) => [t.id, t]));
   const discMap = new Map(disciplinas.map((x) => [x.id, x]));
@@ -87,6 +91,7 @@ async function carregarDia(escolaId: string, dataISO: string): Promise<Dia | { e
       turma: t.nome, disciplina: disc?.sigla || disc?.nome || "",
       sala: assincrona ? "" : salaReservada(h.professorId, h.numeroAula, t.turno) ?? h.sala ?? "",
       tipo: assincrona ? "assincrona" : "aula",
+      trio: assincrona ? null : (() => { const r = trioDoHorario.get(h.id); return r ? (r.presencial ? "presencial" : "suporte") : null; })(),
     });
   }
   // [PRESENCA-ASS-HA] HA do professor neste dia da semana (HA* = de outro turno ou em turno sem aula, como nas telas)

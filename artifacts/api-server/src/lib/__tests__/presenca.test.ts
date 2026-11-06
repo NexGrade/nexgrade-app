@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { montarDia, resumirMes, slotDaTurma, chaveMarca, type AulaGrade, type SlotEsquema } from "../presenca";
+import { montarDia, resumirMes, slotDaTurma, chaveMarca, rotuloTurmas, type AulaGrade, type SlotEsquema } from "../presenca";
 
 const slots: SlotEsquema[] = [
   { turno: "matutino", nivelEnsino: "medio_tecnico", numeroAula: 1, horaInicio: "07:30:00", duracaoMinutos: 50, letivo: true },
@@ -43,6 +43,16 @@ describe("presenca dos professores [PRESENCA-PEDAGOGIA]", () => {
       expect.objectContaining({ numeroAula: 1, tipo: "aula", turmas: "6ºA", hora: "07:40" }),
       expect.objectContaining({ numeroAula: 2, tipo: "assincrona", turmas: "7ºA" }),
     ]);
+  });
+
+  it("[PRESENCA-HIBRIDA] traz presencial/suporte do trio; turmas juntas: presencial se for em alguma", () => {
+    const dia = montarDia(profs, [
+      aula(1, 1, "1ºA", { trio: "suporte" }), aula(1, 1, "1ºB", { trio: "presencial" }),
+      aula(1, 2, "2ºA", { trio: "suporte" }),
+      aula(1, 3, "3ºA"),
+    ], slots, new Map(), new Map(), "matutino");
+    expect(dia[0]!.aulas.map((a) => [a.numeroAula, a.trio])).toEqual([[1, "presencial"], [2, "suporte"], [3, null]]);
+    expect(rotuloTurmas(dia[0]!.aulas[1]!)).toBe("2ºA (híbrida, suporte)");
   });
 
   it("resume o mes por professor e conta quem substituiu", () => {

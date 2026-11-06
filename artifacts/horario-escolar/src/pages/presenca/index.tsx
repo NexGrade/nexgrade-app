@@ -3,6 +3,7 @@
 // professor, botoes grandes e o Salvar fixo embaixo. As aulas vem da grade oficial do dia.
 // [PRESENCA-ASS-HA] (06/11/2026) aparecem tambem as assincronas e a HA (sem o S na HA).
 // [PRESENCA-OBS-GERAL] (06/11/2026) observacao geral por professor, no lugar da observacao por aula.
+// [PRESENCA-HIBRIDA] (06/11/2026) aula de trio (Hibrida) com "presencial" ou "suporte" na semana do dia.
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -212,6 +213,12 @@ export default function PresencaPage() {
                         <div className="text-sm font-medium">{a.numeroAula}ª aula
                           {ha && <Badge variant="outline" className="ml-1.5 align-middle border-violet-300 text-violet-700">{a.disciplinas || "HA"}</Badge>}
                           {a.tipo === "assincrona" && <Badge variant="outline" className="ml-1.5 align-middle border-slate-300 text-slate-600">Assíncrona</Badge>}
+                          {a.trio && (
+                            <Badge variant="outline" title={a.trio === "presencial" ? "Aula de trio: nesta semana este professor dá a aula na sala" : "Aula de trio: nesta semana este professor fica no suporte"}
+                              className={cn("ml-1.5 align-middle", a.trio === "presencial" ? "border-emerald-300 text-emerald-700" : "border-slate-300 text-slate-600")}>
+                              Híbrida · {a.trio}
+                            </Badge>
+                          )}
                           {a.hora && <span className="text-muted-foreground font-normal"><span className="hidden sm:inline"> · </span><br className="sm:hidden" />{a.hora}–{a.fim}</span>}</div>
                         <div className="text-xs text-muted-foreground break-words sm:truncate">{ha ? "Hora-atividade" : <>{a.turmas}{a.disciplinas && ` · ${a.disciplinas}`}{a.sala && ` · ${a.sala}`}</>}</div>
                       </div>

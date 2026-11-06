@@ -3,7 +3,7 @@ import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { sql } from "drizzle-orm";
-import { db, disciplinasTable, disponibilidadeTable, horariosTable, horarioSlotsTable, professoresTable, reservasTable, salasTable, turmasTable } from "@workspace/db";
+import { db, disciplinasTable, disponibilidadeTable, turmaDisciplinasTable, horariosTable, horarioSlotsTable, professoresTable, reservasTable, salasTable, turmasTable } from "@workspace/db";
 import { exigirAdminParaAlterar } from "../../lib/permissao";
 import pedagogiaRouter from "../pedagogia";
 
@@ -61,6 +61,9 @@ describe.skipIf(!TEM_BANCO)("presenca dos professores: integracao com banco real
     await db.insert(horariosTable).values({ escolaId: E, turmaId: turma!.id, disciplinaId: disc!.id, professorId: ids.prof[1]!, diaSemana: 0, numeroAula: 2 } as any);
     // [PRESENCA-ASS-HA] assincrona da Bruna na 2a aula e HA da Ana na 3a
     await db.insert(horariosTable).values({ escolaId: E, turmaId: turma!.id, disciplinaId: disc!.id, professorId: ids.prof[0]!, diaSemana: 0, numeroAula: 2, assincrona: true } as any);
+    // [PRESENCA-HIBRIDA] trio comecando na semana do DIA: ordem 1 (Ana) presencial, ordem 2 (Bruna) suporte
+    for (const [prof, ordem] of [[ids.prof[1]!, 1], [ids.prof[0]!, 2]] as const)
+      await db.insert(turmaDisciplinasTable).values({ turmaId: turma!.id, disciplinaId: disc!.id, professorId: prof, grupoTrio: "T1", trioOrdem: ordem, trioInicio: DIA } as any);
     await db.insert(disponibilidadeTable).values({ professorId: ids.prof[1]!, diaSemana: 0, horarioSlot: 3, turno: "matutino", disponivel: false, horaAtividadeObrigatoria: true, motivo: "HA manual (definida na tela)" });
     const [lab] = await db.insert(salasTable).values({ escolaId: E, nome: "Laboratório", tipo: "laboratorio" }).returning();
     await db.insert(reservasTable).values({ escolaId: E, salaId: lab!.id, professorId: ids.prof[1]!, data: DIA, diaSemana: 0, numeroAula: 2, turno: "matutino", titulo: "Aula prática" } as any);
@@ -87,6 +90,17 @@ describe.skipIf(!TEM_BANCO)("presenca dos professores: integracao com banco real
     const porNome = Object.fromEntries(r.body.professores.map((p: any) => [p.nome, p.aulas.map((a: any) => [a.numeroAula, a.tipo, a.disciplinas])]));
     expect(porNome.Ana).toEqual([[2, "aula", "MAT"], [3, "ha", "HA"]]);
     expect(porNome.Bruna).toEqual([[1, "aula", "MAT"], [2, "assincrona", "MAT"]]);
+  });
+
+  it("[PRESENCA-HIBRIDA] aula de trio vem com presencial ou suporte na semana da data", async () => {
+    const r = await chamar("GET", `/pedagogia/presenca?data=${DIA}&turno=matutino`);
+    const porNome = Object.fromEntries(r.body.professores.map((p: any) => [p.nome, p.aulas.map((a: any) => [a.numeroAula, a.trio])]));
+    expect(porNome.Ana).toEqual([[2, "presencial"], [3, null]]);
+    expect(porNome.Bruna).toEqual([[1, "suporte"], [2, null]]); // a assincrona nao entra no revezamento
+    const semanaSeguinte = new Date(Date.parse(`${DIA}T12:00:00Z`) + 7 * 86_400_000).toISOString().slice(0, 10);
+    const r2 = await chamar("GET", `/pedagogia/presenca?data=${semanaSeguinte}&turno=matutino`);
+    const ana = r2.body.professores.find((p: any) => p.nome === "Ana");
+    expect(ana.aulas[0].trio).toBe("suporte");
   });
 
   it("[PRESENCA-OBS-GERAL] grava, mostra e apaga a observacao geral do professor", async () => {
