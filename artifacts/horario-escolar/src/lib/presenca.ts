@@ -97,6 +97,37 @@ export function excelDoDia(p: Presenca) {
   }], `presenca_${p.data}_${p.turno}.xlsx`);
 }
 
+// [PRESENCA-PERIODO] (06/11/2026) relatorio por periodo: geral, individual (um ou todos os professores) e total
+export type TipoRelatorio = "geral" | "individual" | "total";
+export const TIPOS_RELATORIO: Array<{ valor: TipoRelatorio; rotulo: string; dica: string }> = [
+  { valor: "geral", rotulo: "Geral", dica: "Todos os professores: presenças, faltas, atrasos e % de presença, com o total e as ocorrências" },
+  { valor: "individual", rotulo: "Individual", dica: "Aula a aula de cada professor (ou só do escolhido), com a observação do dia" },
+  { valor: "total", rotulo: "Total", dica: "Números da escola no período" },
+];
+export type RelatorioPeriodo = {
+  tipo: TipoRelatorio; de: string; ate: string; semTabela: boolean; arquivo: string;
+  titulo: string; subtitulo: string; vazio: string;
+  colunas: Array<{ titulo: string; peso: number; alinhar?: "centro" }>;
+  linhas: Array<{ celulas: string[]; destaque?: boolean; grupo?: boolean; cabecalho?: boolean }>;
+};
+export type FiltroPeriodo = { de: string; ate: string; tipo: TipoRelatorio; professorId?: string };
+export const parametrosPeriodo = (f: FiltroPeriodo) => ({ de: f.de, ate: f.ate, tipo: f.tipo, ...(f.tipo === "individual" && f.professorId ? { professorId: f.professorId } : {}) });
+export const buscarPeriodo = (f: FiltroPeriodo) =>
+  customFetch<RelatorioPeriodo>(`/api/pedagogia/presenca/periodo?${new URLSearchParams(parametrosPeriodo(f)).toString()}`);
+export function inicioDoMes(): string { return `${hojeLocal().slice(0, 8)}01`; }
+
+export function excelDoPeriodo(r: RelatorioPeriodo) {
+  return baixarExcel([{
+    nome: TIPOS_RELATORIO.find((t) => t.valor === r.tipo)?.rotulo ?? "Relatório",
+    titulo: r.titulo,
+    subtitulo: r.subtitulo,
+    colunas: r.colunas.map((c) => ({ titulo: c.titulo, largura: Math.max(8, Math.round(c.peso * 1.2)), ...(c.alinhar === "centro" ? { tipo: "centro" as const } : {}) })),
+    linhas: r.linhas.map((l) => l.celulas),
+    vazio: r.vazio,
+    destaque: (_v, c, _l, i) => (c === 0 && r.linhas[i]?.destaque ? "vermelho" : r.linhas[i]?.grupo || r.linhas[i]?.cabecalho ? (c === 0 ? "azul" : undefined) : undefined),
+  }], `${r.arquivo}.xlsx`);
+}
+
 export function excelDoMes(r: ResumoMes) {
   const resumo: Valor[][] = r.resumo.map((x) => [x.professor, x.presente, x.falta, x.atraso, x.substituido, x.substituiu, x.marcadas]);
   if (resumo.length) resumo.push(["TOTAL", ...[1, 2, 3, 4, 5, 6].map((i) => resumo.reduce((s, l) => s + Number(l[i] ?? 0), 0))]);

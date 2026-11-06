@@ -4,6 +4,7 @@
 // [PRESENCA-ASS-HA] (06/11/2026) aparecem tambem as assincronas e a HA (sem o S na HA).
 // [PRESENCA-OBS-GERAL] (06/11/2026) observacao geral por professor, no lugar da observacao por aula.
 // [PRESENCA-HIBRIDA] (06/11/2026) aula de trio (Hibrida) com "presencial" ou "suporte" na semana do dia.
+// [PRESENCA-PERIODO] (06/11/2026) relatorio por periodo (geral, individual e total) em PDF e Excel.
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,11 +13,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, CheckCheck, ClipboardCheck, FileDown, FileSpreadsheet, Loader2, MessageSquareText, Save, Search } from "lucide-react";
+import { AlertTriangle, CalendarRange, CheckCheck, ClipboardCheck, FileDown, FileSpreadsheet, Loader2, MessageSquareText, Save, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBaixarArquivo, montarUrl } from "@/hooks/use-baixar-arquivo";
 import {
-  STATUS, TURNOS, buscarPresenca, salvarPresenca, excelDoDia, hojeLocal, turnoAgora, mensagemErro,
+  STATUS, TURNOS, TIPOS_RELATORIO, buscarPresenca, salvarPresenca, excelDoDia, hojeLocal, turnoAgora, mensagemErro,
+  buscarPeriodo, excelDoPeriodo, parametrosPeriodo, inicioDoMes, type FiltroPeriodo,
   type Marca, type MarcaEnvio, type ObservacaoEnvio, type Presenca, type Status,
 } from "@/lib/presenca";
 
@@ -36,6 +38,18 @@ export default function PresencaPage() {
   const [obsPendentes, setObsPendentes] = useState<Map<number, string>>(new Map());
   const [obsAberta, setObsAberta] = useState<Set<number>>(new Set());
   const [salvando, setSalvando] = useState(false);
+  // [PRESENCA-PERIODO] painel do relatorio por periodo
+  const [relAberto, setRelAberto] = useState(false);
+  const [rel, setRel] = useState<FiltroPeriodo>({ de: inicioDoMes(), ate: hojeLocal(), tipo: "geral", professorId: "" });
+  const [gerandoExcel, setGerandoExcel] = useState(false);
+  const relInvalido = !rel.de || !rel.ate || rel.de > rel.ate;
+  const nomeRel = `presenca_${rel.tipo}_${rel.de}_a_${rel.ate}`;
+  const excelPeriodo = async () => {
+    setGerandoExcel(true);
+    try { await excelDoPeriodo(await buscarPeriodo(rel)); }
+    catch (e) { toast({ title: "Não foi possível gerar a planilha", description: mensagemErro(e), variant: "destructive" }); }
+    finally { setGerandoExcel(false); }
+  };
 
   const q = useQuery({
     queryKey: ["presenca", data, turno],
@@ -137,6 +151,9 @@ export default function PresencaPage() {
               <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar professor" className="pl-8" />
             </div>
+            <Button variant={relAberto ? "secondary" : "outline"} className="h-10" onClick={() => setRelAberto((v) => !v)} aria-expanded={relAberto}>
+              <CalendarRange className="w-4 h-4 mr-1" /> Relatório por período
+            </Button>
           </div>
           {p && (
             <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -158,6 +175,49 @@ export default function PresencaPage() {
                 title={totalPendentes ? "Salve antes de gerar o relatório" : undefined}>
                 <FileSpreadsheet className="w-4 h-4 mr-1" /> Excel
               </Button>
+            </div>
+          )}
+          {relAberto && (
+            <div className="rounded-md border bg-muted/30 p-3 space-y-3">
+              <div className="flex flex-wrap gap-2 items-end">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">De</label>
+                  <Input type="date" value={rel.de} onChange={(e) => setRel((r) => ({ ...r, de: e.target.value }))} className="w-[10.5rem]" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">Até</label>
+                  <Input type="date" value={rel.ate} onChange={(e) => setRel((r) => ({ ...r, ate: e.target.value }))} className="w-[10.5rem]" />
+                </div>
+                <div className="flex rounded-md border overflow-hidden">
+                  {TIPOS_RELATORIO.map((t) => (
+                    <button key={t.valor} type="button" title={t.dica} onClick={() => setRel((r) => ({ ...r, tipo: t.valor }))}
+                      className={cn("px-3 py-2 text-sm font-medium", rel.tipo === t.valor ? "bg-primary text-primary-foreground" : "bg-background hover:bg-accent")}>
+                      {t.rotulo}
+                    </button>
+                  ))}
+                </div>
+                {rel.tipo === "individual" && (
+                  <Select value={rel.professorId || "todos"} onValueChange={(v) => setRel((r) => ({ ...r, professorId: v === "todos" ? "" : v }))}>
+                    <SelectTrigger className="h-10 w-64 max-w-full"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todos">Todos (um bloco por professor)</SelectItem>
+                      {(p?.substitutos ?? []).map((s) => <SelectItem key={s.id} value={String(s.id)}>{s.nome}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                )}
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="h-10" disabled={relInvalido || baixando["pdf-periodo"]}
+                    onClick={() => baixar(montarUrl("/api/pedagogia/presenca/periodo", { ...parametrosPeriodo(rel), formato: "pdf" }), `${nomeRel}.pdf`, "pdf-periodo")}>
+                    {baixando["pdf-periodo"] ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <FileDown className="w-4 h-4 mr-1" />} PDF
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-10" disabled={relInvalido || gerandoExcel} onClick={excelPeriodo}>
+                    {gerandoExcel ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-1" />} Excel
+                  </Button>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {relInvalido ? "A data inicial tem que ser antes da final." : TIPOS_RELATORIO.find((t) => t.valor === rel.tipo)?.dica}. Usa só o que já foi salvo.
+              </p>
             </div>
           )}
         </CardContent>

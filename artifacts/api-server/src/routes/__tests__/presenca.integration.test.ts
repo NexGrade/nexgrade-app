@@ -164,6 +164,28 @@ describe.skipIf(!TEM_BANCO)("presenca dos professores: integracao com banco real
     expect(Buffer.from(dia.body).subarray(0, 4).toString()).toBe("%PDF");
   });
 
+  it("[PRESENCA-PERIODO] relatorio por periodo: geral, individual e total (JSON e PDF) e periodo invalido", async () => {
+    const [bruna, ana] = ids.prof as [number, number];
+    await chamar("PUT", "/pedagogia/presenca", { data: DIA, turno: "matutino", marcas: [{ professorId: bruna, numeroAula: 1, status: "falta" }], observacoes: [{ professorId: bruna, observacao: "atestado" }] });
+    const g = await chamar("GET", `/pedagogia/presenca/periodo?de=${DIA}&ate=${DIA}&tipo=geral`);
+    expect(g.status).toBe(200);
+    expect(g.body.linhas.find((l: any) => l.celulas[0] === "Bruna").celulas.slice(1, 3)).toEqual(["0", "1"]);
+    const i = await chamar("GET", `/pedagogia/presenca/periodo?de=${DIA}&ate=${DIA}&tipo=individual&professorId=${bruna}`);
+    expect(i.body.linhas[1].celulas.slice(3)).toEqual(["Falta", "", "atestado"]);
+    const so = await chamar("GET", `/pedagogia/presenca/periodo?de=${DIA}&ate=${DIA}&tipo=individual&professorId=${ana}`);
+    expect(so.body.linhas.every((l: any) => !String(l.celulas[0]).startsWith("Bruna"))).toBe(true);
+    const t = await chamar("GET", `/pedagogia/presenca/periodo?de=${DIA}&ate=${DIA}&tipo=total`);
+    expect(t.body.linhas.find((l: any) => l.celulas[0] === "Falta").celulas[1]).toBe("1");
+    for (const tipo of ["geral", "individual", "total"]) {
+      const pdf = await chamar("GET", `/pedagogia/presenca/periodo?de=${DIA}&ate=${DIA}&tipo=${tipo}&formato=pdf`);
+      expect(Buffer.from(pdf.body).subarray(0, 4).toString()).toBe("%PDF");
+    }
+    expect((await chamar("GET", `/pedagogia/presenca/periodo?de=${DIA}&ate=2020-01-01&tipo=geral`)).status).toBe(400);
+    expect((await chamar("GET", `/pedagogia/presenca/periodo?de=2020-01-01&ate=${DIA}&tipo=geral`)).status).toBe(400);
+    expect((await chamar("GET", `/pedagogia/presenca/periodo?de=${DIA}&ate=${DIA}&tipo=individual&professorId=999999999`)).status).toBe(400);
+    expect((await chamar("GET", `/pedagogia/presenca/periodo?de=${DIA}&ate=${DIA}&tipo=geral`, undefined, "professor")).status).toBe(403);
+  });
+
   it("professor e gestor de reservas nao leem nem gravam a presenca", async () => {
     for (const cargo of ["professor", "reservas"]) {
       expect((await chamar("GET", `/pedagogia/presenca?data=${DIA}&turno=matutino`, undefined, cargo)).status).toBe(403);

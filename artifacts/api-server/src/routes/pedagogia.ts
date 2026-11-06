@@ -3,6 +3,8 @@
 //  PUT  /pedagogia/presenca                                  salva as marcacoes (status null = desmarcar)
 //  GET  /pedagogia/presenca/pdf?data=&turno=                 presenca do dia em PDF
 //  GET  /pedagogia/presenca/mes?mes=&ano=[&formato=pdf]      faltas do mes por professor (JSON ou PDF)
+//  GET  /pedagogia/presenca/periodo?de=&ate=&tipo=geral|individual|total[&professorId=][&formato=pdf]
+//       [PRESENCA-PERIODO] (06/11/2026) relatorio por periodo (JSON = tabela para o Excel da tela, ou PDF)
 // Leitura: so direcao, coordenacao, secretaria e pedagogia (lib/permissao.ts). Alteracao: as mesmas.
 // Sem a migracao 0004 (tabela presencas_professores) a lista abre sem marcacoes e o Salvar avisa.
 // [PRESENCA-ASS-HA] (06/11/2026) a lista traz tambem as assincronas e a HA do professor no dia.
@@ -24,7 +26,7 @@ import { carregarAssSoTurma } from "../lib/assincrona-so-turma";
 import { ehHAOutroTurno, turnosComAulaPorProfessor } from "../lib/ha-contraturno";
 import { mapaRevezamento } from "../lib/revezamento-trio";
 import {
-  STATUS, ROTULO_STATUS, ROTULO_TURNO, TURNOS_DIA, montarDia, resumirMes, chaveMarca, rotuloTurmas,
+  STATUS, ROTULO_STATUS, ROTULO_TURNO, TURNOS_DIA, TIPOS_RELATORIO, montarDia, resumirMes, chaveMarca, rotuloTurmas, relatorioPeriodo,
   type AulaGrade, type Marca, type SlotEsquema, type Status,
 } from "../lib/presenca";
 import { gerarPdfTabela } from "../lib/pdf-tabela";
@@ -329,6 +331,65 @@ router.get("/presenca/mes", async (req, res) => {
   });
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", `attachment; filename="faltas_professores_${mes}_${ano}.pdf"`);
+  res.send(Buffer.from(bytes));
+});
+
+// [PRESENCA-PERIODO] periodo de ate um ano (de <= ate)
+const PeriodoInput = z.object({
+  de: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inicial inválida."),
+  ate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data final inválida."),
+  tipo: z.enum(TIPOS_RELATORIO).default("geral"),
+  professorId: z.coerce.number().int().positive().optional(),
+  formato: z.enum(["json", "pdf"]).default("json"),
+});
+
+router.get("/presenca/periodo", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const q = PeriodoInput.safeParse({ ...req.query, professorId: req.query.professorId || undefined });
+  if (!q.success) { res.status(400).json({ error: q.error.issues.map((i) => i.message).join("; ") }); return; }
+  const { de, ate, tipo, formato } = q.data;
+  const dias = (Date.parse(`${ate}T12:00:00Z`) - Date.parse(`${de}T12:00:00Z`)) / 86_400_000;
+  if (!(dias >= 0)) { res.status(400).json({ error: "A data inicial tem que ser antes da final." }); return; }
+  if (dias > 366) { res.status(400).json({ error: "Escolha um período de até um ano." }); return; }
+  const professores = await db.select({ id: professoresTable.id, nome: professoresTable.nome }).from(professoresTable).where(eq(professoresTable.escolaId, escolaId));
+  const nomes = new Map(professores.map((p) => [p.id, p.nome]));
+  const professorId = tipo === "individual" ? q.data.professorId ?? null : null;
+  if (professorId != null && !nomes.has(professorId)) { res.status(400).json({ error: "Professor que não é desta escola." }); return; }
+
+  let registros: Array<typeof presencasProfessoresTable.$inferSelect> = [], faltaTabela = false;
+  try {
+    registros = await db.select().from(presencasProfessoresTable).where(and(
+      eq(presencasProfessoresTable.escolaId, escolaId), gte(presencasProfessoresTable.data, de), lte(presencasProfessoresTable.data, ate),
+      ...(professorId != null ? [eq(presencasProfessoresTable.professorId, professorId)] : []),
+    ));
+  } catch (e) { if (semTabela(e)) faltaTabela = true; else throw e; }
+  // "substituiu" do individual: as aulas que ele deu no lugar de outro tambem entram na conta
+  if (professorId != null && !faltaTabela) {
+    const deuNoLugar = await db.select().from(presencasProfessoresTable).where(and(
+      eq(presencasProfessoresTable.escolaId, escolaId), gte(presencasProfessoresTable.data, de), lte(presencasProfessoresTable.data, ate),
+      eq(presencasProfessoresTable.substitutoId, professorId),
+    ));
+    registros = [...registros, ...deuNoLugar.filter((x) => x.professorId !== professorId)];
+  }
+  let observacoes: Array<{ data: string; turno: string; professorId: number; observacao: string }> = [];
+  try {
+    observacoes = await db.select({ data: presencasObservacoesTable.data, turno: presencasObservacoesTable.turno, professorId: presencasObservacoesTable.professorId, observacao: presencasObservacoesTable.observacao })
+      .from(presencasObservacoesTable).where(and(
+        eq(presencasObservacoesTable.escolaId, escolaId), gte(presencasObservacoesTable.data, de), lte(presencasObservacoesTable.data, ate),
+        ...(professorId != null ? [eq(presencasObservacoesTable.professorId, professorId)] : []),
+      ));
+  } catch (e) { if (!semTabela(e)) throw e; }
+
+  const tabela = relatorioPeriodo({
+    tipo, de, ate, nomes, professorId,
+    registros: registros.map((x) => ({ data: x.data, turno: x.turno, numeroAula: x.numeroAula, professorId: x.professorId, status: x.status as Status, substitutoId: x.substitutoId ?? null, substitutoNome: x.substitutoNome ?? null, observacao: x.observacao ?? null })),
+    observacoes,
+  });
+  const arquivo = `presenca_${tipo}_${de}_a_${ate}`;
+  if (formato !== "pdf") { res.json({ ...tabela, tipo, de, ate, semTabela: faltaTabela, arquivo }); return; }
+  const bytes = await gerarPdfTabela({ escola: await nomeEscola(escolaId), titulo: tabela.titulo, subtitulo: tabela.subtitulo, colunas: tabela.colunas, linhas: tabela.linhas, vazio: tabela.vazio });
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="${arquivo}.pdf"`);
   res.send(Buffer.from(bytes));
 });
 
