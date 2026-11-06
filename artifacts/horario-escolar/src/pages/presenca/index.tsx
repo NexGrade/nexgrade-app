@@ -1,6 +1,8 @@
 // [PRESENCA-PEDAGOGIA] (28/10/2026) Lista de presenca dos professores, marcada aula a aula pela
 // pedagogia (P / F / A / S), com substituto e observacao. Feita para o celular: um cartao por
 // professor, botoes grandes e o Salvar fixo embaixo. As aulas vem da grade oficial do dia.
+// [PRESENCA-ASS-HA] (06/11/2026) aparecem tambem as assincronas e a HA (sem o S na HA).
+// [PRESENCA-OBS-GERAL] (06/11/2026) observacao geral por professor, no lugar da observacao por aula.
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { useBaixarArquivo, montarUrl } from "@/hooks/use-baixar-arquivo";
 import {
   STATUS, TURNOS, buscarPresenca, salvarPresenca, excelDoDia, hojeLocal, turnoAgora, mensagemErro,
-  type Marca, type MarcaEnvio, type Presenca, type Status,
+  type Marca, type MarcaEnvio, type ObservacaoEnvio, type Presenca, type Status,
 } from "@/lib/presenca";
 
 const chave = (professorId: number, numeroAula: number) => `${professorId}|${numeroAula}`;
@@ -29,7 +31,9 @@ export default function PresencaPage() {
   const [busca, setBusca] = useState("");
   // alteracoes ainda nao salvas: chave -> marca (null = desmarcar)
   const [pendentes, setPendentes] = useState<Map<string, Marca | null>>(new Map());
-  const [obsAberta, setObsAberta] = useState<Set<string>>(new Set());
+  // observacao geral ainda nao salva: professorId -> texto
+  const [obsPendentes, setObsPendentes] = useState<Map<number, string>>(new Map());
+  const [obsAberta, setObsAberta] = useState<Set<number>>(new Set());
   const [salvando, setSalvando] = useState(false);
 
   const q = useQuery({
@@ -40,14 +44,16 @@ export default function PresencaPage() {
   });
   const p: Presenca | undefined = q.data;
 
-  useEffect(() => { setPendentes(new Map()); setObsAberta(new Set()); }, [data, turno]);
+  useEffect(() => { setPendentes(new Map()); setObsPendentes(new Map()); setObsAberta(new Set()); }, [data, turno]);
+  const totalPendentes = pendentes.size + obsPendentes.size;
   // aviso ao sair com alteracao sem salvar
   useEffect(() => {
-    if (!pendentes.size) return;
+    if (!totalPendentes) return;
     const f = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
     window.addEventListener("beforeunload", f);
     return () => window.removeEventListener("beforeunload", f);
-  }, [pendentes.size]);
+  }, [totalPendentes]);
+  const obsAtual = (professorId: number, salva: string | null | undefined) => obsPendentes.has(professorId) ? obsPendentes.get(professorId)! : (salva ?? "");
 
   const marcaAtual = (professorId: number, numeroAula: number, salva: Marca | null): Marca | null => {
     const k = chave(professorId, numeroAula);
@@ -84,16 +90,18 @@ export default function PresencaPage() {
   };
 
   const salvar = async () => {
-    if (!pendentes.size) return;
+    if (!totalPendentes) return;
     const marcas: MarcaEnvio[] = [...pendentes.entries()].map(([k, m]) => {
       const [professorId, numeroAula] = k.split("|").map(Number) as [number, number];
       return { professorId, numeroAula, status: m?.status ?? null, substitutoId: m?.substitutoId ?? null, substitutoNome: m?.substitutoNome ?? null, observacao: m?.observacao ?? null };
     });
+    const observacoes: ObservacaoEnvio[] = [...obsPendentes.entries()].map(([professorId, texto]) => ({ professorId, observacao: texto.trim() || null }));
     setSalvando(true);
     try {
-      await salvarPresenca(data, turno, marcas);
-      toast({ title: "Presença salva", description: `${marcas.length} aula(s) atualizada(s).` });
+      await salvarPresenca(data, turno, marcas, observacoes);
+      toast({ title: "Presença salva", description: [marcas.length && `${marcas.length} aula(s)`, observacoes.length && `${observacoes.length} observação(ões)`].filter(Boolean).join(" e ") + " atualizada(s)." });
       setPendentes(new Map());
+      setObsPendentes(new Map());
       await qc.invalidateQueries({ queryKey: ["presenca", data, turno] });
     } catch (e) {
       toast({ title: "Não foi possível salvar", description: mensagemErro(e), variant: "destructive" });
@@ -140,13 +148,13 @@ export default function PresencaPage() {
               <Button size="sm" variant="outline" onClick={marcarRestantesPresente} disabled={contagem.marcadas === contagem.total}>
                 <CheckCheck className="w-4 h-4 mr-1" /> Restantes = Presente
               </Button>
-              <Button size="sm" variant="outline" disabled={baixando["pdf-dia"] || pendentes.size > 0}
-                title={pendentes.size ? "Salve antes de gerar o relatório" : undefined}
+              <Button size="sm" variant="outline" disabled={baixando["pdf-dia"] || totalPendentes > 0}
+                title={totalPendentes ? "Salve antes de gerar o relatório" : undefined}
                 onClick={() => baixar(montarUrl("/api/pedagogia/presenca/pdf", { data, turno }), `presenca_${data}_${turno}.pdf`, "pdf-dia")}>
                 {baixando["pdf-dia"] ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <FileDown className="w-4 h-4 mr-1" />} PDF
               </Button>
-              <Button size="sm" variant="outline" disabled={pendentes.size > 0} onClick={() => p && excelDoDia(p).catch((e) => toast({ title: "Não foi possível gerar a planilha", description: mensagemErro(e), variant: "destructive" }))}
-                title={pendentes.size ? "Salve antes de gerar o relatório" : undefined}>
+              <Button size="sm" variant="outline" disabled={totalPendentes > 0} onClick={() => p && excelDoDia(p).catch((e) => toast({ title: "Não foi possível gerar a planilha", description: mensagemErro(e), variant: "destructive" }))}
+                title={totalPendentes ? "Salve antes de gerar o relatório" : undefined}>
                 <FileSpreadsheet className="w-4 h-4 mr-1" /> Excel
               </Button>
             </div>
@@ -168,38 +176,53 @@ export default function PresencaPage() {
       {p && !p.professores.length && <p className="text-muted-foreground text-sm">Nenhuma aula na grade neste turno.</p>}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        {filtrados.map((prof) => (
+        {filtrados.map((prof) => {
+          const obsTexto = obsAtual(prof.professorId, prof.observacao);
+          const obsVisivel = obsAberta.has(prof.professorId) || !!obsTexto;
+          const semObs = !!p?.semTabelaObservacoes;
+          return (
           <Card key={prof.professorId} className="overflow-hidden">
             <div className="px-4 py-2.5 border-b bg-muted/40 flex items-center gap-2">
               <span className="font-semibold text-sm flex-1">{prof.nome}</span>
               {prof.licenca && <Badge variant="outline" className="border-amber-400 text-amber-800">{prof.licenca}</Badge>}
+              <button type="button" title="Observação do dia" aria-label="Observação do dia" aria-expanded={obsVisivel}
+                onClick={() => setObsAberta((o) => { const n = new Set(o); n.has(prof.professorId) ? n.delete(prof.professorId) : n.add(prof.professorId); return n; })}
+                className={cn("w-9 h-9 rounded-md border bg-background flex items-center justify-center text-muted-foreground", obsVisivel && "text-primary border-primary/40")}>
+                <MessageSquareText className="w-4 h-4" />
+              </button>
             </div>
+            {obsVisivel && (
+              <div className={cn("px-4 py-2.5 border-b", obsPendentes.has(prof.professorId) && "bg-primary/5")}>
+                <Input className="h-9" maxLength={500} disabled={semObs}
+                  placeholder={semObs ? "A observação ainda não pode ser salva: falta a atualização do sistema no banco" : "Observação do dia (ex.: atestado, saiu mais cedo)"}
+                  value={obsTexto}
+                  onChange={(e) => { const v = e.target.value; setObsPendentes((m) => new Map(m).set(prof.professorId, v)); }} />
+              </div>
+            )}
             <div className="divide-y">
               {prof.aulas.map((a) => {
                 const k = chave(prof.professorId, a.numeroAula);
                 const m = marcaAtual(prof.professorId, a.numeroAula, a.marca);
                 const alterada = pendentes.has(k);
-                const obs = obsAberta.has(k) || !!m?.observacao;
+                const ha = a.tipo === "ha";
                 return (
                   <div key={a.numeroAula} className={cn("px-4 py-3 space-y-2", alterada && "bg-primary/5")}>
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-start">{/* [CELULAR-PEDAGOGIA] (01/11/2026) no celular os botoes vao para baixo do texto da aula */}
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium">{a.numeroAula}ª aula{a.hora && <span className="text-muted-foreground font-normal"><span className="hidden sm:inline"> · </span><br className="sm:hidden" />{a.hora}–{a.fim}</span>}</div>
-                        <div className="text-xs text-muted-foreground break-words sm:truncate">{a.turmas}{a.disciplinas && ` · ${a.disciplinas}`}{a.sala && ` · ${a.sala}`}</div>
+                        <div className="text-sm font-medium">{a.numeroAula}ª aula
+                          {ha && <Badge variant="outline" className="ml-1.5 align-middle border-violet-300 text-violet-700">{a.disciplinas || "HA"}</Badge>}
+                          {a.tipo === "assincrona" && <Badge variant="outline" className="ml-1.5 align-middle border-slate-300 text-slate-600">Assíncrona</Badge>}
+                          {a.hora && <span className="text-muted-foreground font-normal"><span className="hidden sm:inline"> · </span><br className="sm:hidden" />{a.hora}–{a.fim}</span>}</div>
+                        <div className="text-xs text-muted-foreground break-words sm:truncate">{ha ? "Hora-atividade" : <>{a.turmas}{a.disciplinas && ` · ${a.disciplinas}`}{a.sala && ` · ${a.sala}`}</>}</div>
                       </div>
                       <div className="flex gap-1.5 shrink-0">
-                        {STATUS.map((s) => (
+                        {STATUS.filter((s) => !(ha && s.valor === "substituido")).map((s) => (
                           <button key={s.valor} type="button" title={s.rotulo} aria-label={s.rotulo} aria-pressed={m?.status === s.valor}
                             onClick={() => mudar(prof.professorId, a.numeroAula, m?.status === s.valor ? null : { status: s.valor, substitutoId: s.valor === "substituido" ? m?.substitutoId ?? null : null, substitutoNome: s.valor === "substituido" ? m?.substitutoNome ?? null : null, observacao: m?.observacao ?? null })}
                             className={cn("w-10 h-10 rounded-md border-2 text-sm font-bold transition-colors", m?.status === s.valor ? s.corAtiva : cn("bg-background", s.cor))}>
                             {s.curto}
                           </button>
                         ))}
-                        <button type="button" title="Observação" aria-label="Observação"
-                          onClick={() => setObsAberta((o) => { const n = new Set(o); n.has(k) ? n.delete(k) : n.add(k); return n; })}
-                          className={cn("w-10 h-10 rounded-md border flex items-center justify-center text-muted-foreground", obs && "text-primary border-primary/40")}>
-                          <MessageSquareText className="w-4 h-4" />
-                        </button>
                       </div>
                     </div>
                     {m?.status === "substituido" && (
@@ -219,22 +242,21 @@ export default function PresencaPage() {
                         )}
                       </div>
                     )}
-                    {obs && (
-                      <Input className="h-9" placeholder={m ? "Observação (ex.: atestado, saiu mais cedo)" : "Marque P, F, A ou S para anotar a observação"} disabled={!m}
-                        value={m?.observacao ?? ""} onChange={(e) => m && mudar(prof.professorId, a.numeroAula, { ...m, observacao: e.target.value })} />
-                    )}
+                    {/* observacao antiga, de quando era por aula: so leitura */}
+                    {m?.observacao && <div className="text-xs text-muted-foreground italic">Obs.: {m.observacao}</div>}
                   </div>
                 );
               })}
             </div>
           </Card>
-        ))}
+          );
+        })}
       </div>
 
-      {pendentes.size > 0 && (
+      {totalPendentes > 0 && (
         <div className="fixed bottom-0 inset-x-0 md:left-64 z-40 border-t bg-card/95 backdrop-blur px-4 py-3 flex items-center gap-3 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
-          <span className="text-sm flex-1">{pendentes.size} alteração(ões) sem salvar</span>
-          <Button variant="ghost" onClick={() => setPendentes(new Map())} disabled={salvando}>Descartar</Button>
+          <span className="text-sm flex-1">{totalPendentes} alteração(ões) sem salvar</span>
+          <Button variant="ghost" onClick={() => { setPendentes(new Map()); setObsPendentes(new Map()); }} disabled={salvando}>Descartar</Button>
           <Button onClick={salvar} disabled={salvando || p?.semTabela}>
             {salvando ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} Salvar
           </Button>

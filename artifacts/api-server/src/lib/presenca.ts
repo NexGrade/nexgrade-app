@@ -8,12 +8,16 @@ export const ROTULO_TURNO: Record<string, string> = { matutino: "Manhã", vesper
 export const TURNOS_DIA = ["matutino", "vespertino", "noturno"] as const;
 
 export type Marca = { status: Status; substitutoId: number | null; substitutoNome: string | null; observacao: string | null };
+/** [PRESENCA-ASS-HA] (06/11/2026) a lista mostra tambem as assincronas e a hora-atividade do professor. */
+export type TipoAula = "aula" | "assincrona" | "ha";
 export type AulaDoDia = {
   numeroAula: number; hora: string; fim: string;
+  tipo: TipoAula;
   turmas: string; disciplinas: string; sala: string;
   marca: Marca | null;
 };
-export type ProfessorDoDia = { professorId: number; nome: string; licenca: string | null; aulas: AulaDoDia[] };
+/** [PRESENCA-OBS-GERAL] (06/11/2026) observacao geral do professor no dia/turno (antes era por aula). */
+export type ProfessorDoDia = { professorId: number; nome: string; licenca: string | null; observacao: string | null; aulas: AulaDoDia[] };
 
 export type SlotEsquema = { turno: string; nivelEnsino: string | null; numeroAula: number; horaInicio: string; duracaoMinutos: number; letivo: boolean };
 
@@ -33,10 +37,15 @@ export function slotDaTurma(slots: SlotEsquema[], turno: string, nivelEnsino: st
   return doTurno.find((s) => s.nivelEnsino === (nivelEnsino ?? "medio_tecnico")) ?? doTurno.find((s) => !s.nivelEnsino) ?? doTurno[0];
 }
 
-/** Uma aula de verdade do professor no dia (ja com a turma integral projetada e sem as assincronas). */
-export type AulaGrade = { professorId: number; numeroAula: number; turno: string; nivelEnsino: string | null; turma: string; disciplina: string; sala: string };
+/** Uma aula do professor no dia (ja com a turma integral projetada). tipo ausente = aula presencial.
+ *  [PRESENCA-ASS-HA] HA: turma vazia, disciplina "HA" ou "HA*", nivelEnsino null (usa o horario das aulas dele no turno). */
+export type AulaGrade = { professorId: number; numeroAula: number; turno: string; nivelEnsino: string | null; turma: string; disciplina: string; sala: string; tipo?: TipoAula };
 
-/** Junta as aulas do mesmo professor na mesma aula (co-docencia, turmas juntas) e ordena. */
+const PRIORIDADE: Record<TipoAula, number> = { aula: 0, assincrona: 1, ha: 2 };
+export const tipoDe = (a: AulaGrade): TipoAula => a.tipo ?? "aula";
+
+/** Junta as aulas do mesmo professor na mesma aula (co-docencia, turmas juntas) e ordena.
+ *  [PRESENCA-ASS-HA] Se no mesmo horario houver aula e assincrona (ou HA), a linha e da aula presencial. */
 export function montarDia(
   professores: Array<{ id: number; nome: string }>,
   aulas: AulaGrade[],
@@ -44,31 +53,43 @@ export function montarDia(
   marcas: Map<string, Marca>,
   licencas: Map<number, string>,
   turno: string,
+  observacoes: Map<number, string> = new Map(),
 ): ProfessorDoDia[] {
   const doTurno = aulas.filter((a) => a.turno === turno);
   const saida: ProfessorDoDia[] = [];
   for (const p of [...professores].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))) {
     const minhas = doTurno.filter((a) => a.professorId === p.id);
     if (!minhas.length) continue;
+    // a HA nao tem turma: usa o nivel das aulas do professor no turno (no matutino o horario muda com o nivel)
+    const nivelDoProfessor = minhas.find((a) => tipoDe(a) !== "ha")?.nivelEnsino ?? null;
     const porAula = new Map<number, AulaGrade[]>();
     for (const a of minhas) porAula.set(a.numeroAula, [...(porAula.get(a.numeroAula) ?? []), a]);
-    const lista: AulaDoDia[] = [...porAula.entries()].sort((a, b) => a[0] - b[0]).map(([numeroAula, grupo]) => {
-      const s = slotDaTurma(slots, turno, grupo[0]!.nivelEnsino, numeroAula);
+    const lista: AulaDoDia[] = [...porAula.entries()].sort((a, b) => a[0] - b[0]).map(([numeroAula, todos]) => {
+      const tipo = todos.map(tipoDe).sort((x, y) => PRIORIDADE[x] - PRIORIDADE[y])[0]!;
+      const grupo = todos.filter((g) => tipoDe(g) === tipo);
+      const s = slotDaTurma(slots, turno, tipo === "ha" ? nivelDoProfessor : grupo[0]!.nivelEnsino, numeroAula);
       const ini = s ? minutosDe(s.horaInicio) : null;
       const unicos = (xs: string[]) => [...new Set(xs.filter(Boolean))].join(" + ");
       return {
         numeroAula,
         hora: ini != null ? hhmm(ini) : "",
         fim: ini != null && s ? hhmm(ini + (s.duracaoMinutos ?? 50)) : "",
+        tipo,
         turmas: unicos(grupo.map((g) => g.turma)),
         disciplinas: unicos(grupo.map((g) => g.disciplina)),
         sala: unicos(grupo.map((g) => g.sala)),
         marca: marcas.get(chaveMarca(p.id, numeroAula)) ?? null,
       };
     });
-    saida.push({ professorId: p.id, nome: p.nome, licenca: licencas.get(p.id) ?? null, aulas: lista });
+    saida.push({ professorId: p.id, nome: p.nome, licenca: licencas.get(p.id) ?? null, observacao: observacoes.get(p.id) ?? null, aulas: lista });
   }
   return saida;
+}
+
+/** Rotulo da linha nos relatorios: "1ºA (assíncrona)", "HA" etc. */
+export function rotuloTurmas(a: Pick<AulaDoDia, "tipo" | "turmas" | "disciplinas">): string {
+  if (a.tipo === "ha") return a.disciplinas || "HA";
+  return a.tipo === "assincrona" ? `${a.turmas} (assíncrona)` : a.turmas;
 }
 
 export function chaveMarca(professorId: number, numeroAula: number): string {

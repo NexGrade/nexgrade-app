@@ -5,20 +5,25 @@
 //  GET  /pedagogia/presenca/mes?mes=&ano=[&formato=pdf]      faltas do mes por professor (JSON ou PDF)
 // Leitura: so direcao, coordenacao, secretaria e pedagogia (lib/permissao.ts). Alteracao: as mesmas.
 // Sem a migracao 0004 (tabela presencas_professores) a lista abre sem marcacoes e o Salvar avisa.
+// [PRESENCA-ASS-HA] (06/11/2026) a lista traz tambem as assincronas e a HA do professor no dia.
+// [PRESENCA-OBS-GERAL] (06/11/2026) observacao geral por professor/dia/turno (migracao 0007,
+// presencas_observacoes). Sem ela a lista abre sem as observacoes e so o salvar de observacao avisa.
 import { Router, type Request } from "express";
 import { z } from "zod";
-import { and, eq, gte, lte, sql, ne } from "drizzle-orm";
+import { and, eq, gte, lte, sql, ne, inArray } from "drizzle-orm";
 import {
   db, horariosTable, turmasTable, disciplinasTable, professoresTable, horarioSlotsTable,
   reservasTable, salasTable, licencasTable, calendarioEscolarTable, escolasTable, presencasProfessoresTable,
+  presencasObservacoesTable, disponibilidadeTable,
 } from "@workspace/db";
 import { getEscolaId } from "../lib/escola-id";
 import { acessoDe } from "../lib/acesso";
 import { getAuth } from "@clerk/express";
 import { projetarIntegral, mapaIntegralDosSlots } from "../lib/turno-integral";
 import { carregarAssSoTurma } from "../lib/assincrona-so-turma";
+import { ehHAOutroTurno, turnosComAulaPorProfessor } from "../lib/ha-contraturno";
 import {
-  STATUS, ROTULO_STATUS, ROTULO_TURNO, TURNOS_DIA, montarDia, resumirMes, chaveMarca,
+  STATUS, ROTULO_STATUS, ROTULO_TURNO, TURNOS_DIA, montarDia, resumirMes, chaveMarca, rotuloTurmas,
   type AulaGrade, type Marca, type SlotEsquema, type Status,
 } from "../lib/presenca";
 import { gerarPdfTabela } from "../lib/pdf-tabela";
@@ -44,7 +49,8 @@ type Dia = {
   aulas: AulaGrade[]; slots: SlotEsquema[]; licencas: Map<number, string>;
 };
 
-/** Aulas de verdade do dia (grade oficial, integral no turno real, sem assincronas) com a sala de cada uma. */
+/** Aulas do dia (grade oficial, integral no turno real) com a sala de cada uma, as assincronas e a HA.
+ *  Fica de fora so a assincrona da 7a aula nao letiva, que e da turma e nao do professor ([ASS-SO-TURMA]). */
 async function carregarDia(escolaId: string, dataISO: string): Promise<Dia | { erro: string }> {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dataISO)) return { erro: "Data inválida." };
   const dow = new Date(`${dataISO}T12:00:00Z`).getUTCDay();
@@ -73,13 +79,28 @@ async function carregarDia(escolaId: string, dataISO: string): Promise<Dia | { e
   const lista: AulaGrade[] = [];
   for (const h of aulas) {
     const t = turmaMap.get(h.turmaId);
-    if (!t || h.assincrona || ehAssSoTurma(h, t)) continue; // assincrona nao e presencial
+    if (!t || ehAssSoTurma(h, t)) continue;
     const disc = discMap.get(h.disciplinaId);
+    const assincrona = !!h.assincrona; // [PRESENCA-ASS-HA] aparece, marcada como assincrona (sem sala)
     lista.push({
       professorId: h.professorId, numeroAula: h.numeroAula, turno: t.turno, nivelEnsino: t.nivelEnsino ?? null,
       turma: t.nome, disciplina: disc?.sigla || disc?.nome || "",
-      sala: salaReservada(h.professorId, h.numeroAula, t.turno) ?? h.sala ?? "",
+      sala: assincrona ? "" : salaReservada(h.professorId, h.numeroAula, t.turno) ?? h.sala ?? "",
+      tipo: assincrona ? "assincrona" : "aula",
     });
+  }
+  // [PRESENCA-ASS-HA] HA do professor neste dia da semana (HA* = de outro turno ou em turno sem aula, como nas telas)
+  const idsProf = professores.map((p) => p.id);
+  if (idsProf.length) {
+    const has = await db.select({ professorId: disponibilidadeTable.professorId, numeroAula: disponibilidadeTable.horarioSlot, turno: disponibilidadeTable.turno, motivo: disponibilidadeTable.motivo })
+      .from(disponibilidadeTable)
+      .where(and(inArray(disponibilidadeTable.professorId, idsProf), eq(disponibilidadeTable.diaSemana, diaSemana), eq(disponibilidadeTable.horaAtividadeObrigatoria, true)));
+    const turnosComAula = has.length ? await turnosComAulaPorProfessor(escolaId, [...new Set(has.map((x) => x.professorId))]) : new Map<number, Set<string>>();
+    for (const x of has) {
+      if (!x.turno) continue; // registro antigo sem turno: nao da para saber o horario
+      const estrela = ehHAOutroTurno(x.motivo) || !turnosComAula.get(x.professorId)?.has(x.turno);
+      lista.push({ professorId: x.professorId, numeroAula: x.numeroAula, turno: x.turno, nivelEnsino: null, turma: "", disciplina: estrela ? "HA*" : "HA", sala: "", tipo: "ha" });
+    }
   }
   const semAula = eventos.find((e) => !e.diaLetivo && ["feriado", "recesso", "ponto_facultativo", "estudo_planejamento"].includes(e.tipo));
   return {
@@ -104,6 +125,19 @@ async function carregarMarcas(escolaId: string, dataISO: string, turno?: string)
   }
 }
 
+/** [PRESENCA-OBS-GERAL] observacoes gerais do dia (por professor); sem a migracao 0007 volta vazio. */
+async function carregarObservacoes(escolaId: string, dataISO: string, turno: string): Promise<{ obs: Map<number, string>; semTabela: boolean }> {
+  try {
+    const linhas = await db.select({ professorId: presencasObservacoesTable.professorId, observacao: presencasObservacoesTable.observacao })
+      .from(presencasObservacoesTable)
+      .where(and(eq(presencasObservacoesTable.escolaId, escolaId), eq(presencasObservacoesTable.data, dataISO), eq(presencasObservacoesTable.turno, turno)));
+    return { obs: new Map(linhas.map((l) => [l.professorId, l.observacao])), semTabela: false };
+  } catch (e) {
+    if (semTabela(e)) return { obs: new Map(), semTabela: true };
+    throw e;
+  }
+}
+
 const marcaDe = (m: typeof presencasProfessoresTable.$inferSelect): Marca => ({
   status: m.status as Status, substitutoId: m.substitutoId ?? null, substitutoNome: m.substitutoNome ?? null, observacao: m.observacao ?? null,
 });
@@ -113,11 +147,12 @@ async function montarPresenca(escolaId: string, dataISO: string, turno: string) 
   const dia = await carregarDia(escolaId, dataISO);
   if ("erro" in dia) return dia;
   const { marcas, semTabela } = await carregarMarcas(escolaId, dataISO, turno);
+  const observacoes = await carregarObservacoes(escolaId, dataISO, turno);
   const mapa = new Map(marcas.map((m) => [chaveMarca(m.professorId, m.numeroAula), marcaDe(m)]));
-  const professores = montarDia(dia.professores, dia.aulas, dia.slots, mapa, dia.licencas, turno);
+  const professores = montarDia(dia.professores, dia.aulas, dia.slots, mapa, dia.licencas, turno, observacoes.obs);
   return {
     data: dataISO, dataBR: dia.dataBR, diaSemana: dia.diaSemana, aviso: dia.aviso, turno, rotuloTurno: ROTULO_TURNO[turno] ?? turno,
-    semTabela, professores,
+    semTabela, semTabelaObservacoes: observacoes.semTabela, professores,
     substitutos: [...dia.professores].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")),
   };
 }
@@ -140,6 +175,8 @@ const SalvarInput = z.object({
   data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   turno: z.enum(TURNOS_DIA),
   marcas: z.array(MarcaInput).max(2000),
+  // [PRESENCA-OBS-GERAL] texto vazio ou null = apagar a observacao do professor
+  observacoes: z.array(z.object({ professorId: z.number().int(), observacao: z.string().max(500).nullable() })).max(500).optional(),
 });
 
 function quemRegistrou(req: Request): string | null {
@@ -151,8 +188,10 @@ router.put("/presenca", async (req, res) => {
   const p = SalvarInput.safeParse(req.body);
   if (!p.success) { res.status(400).json({ error: "Dados inválidos: " + p.error.issues.map((i) => i.message).join("; ") }); return; }
   const { data, turno, marcas } = p.data;
+  const observacoes = p.data.observacoes ?? [];
   const ids = new Set((await db.select({ id: professoresTable.id }).from(professoresTable).where(eq(professoresTable.escolaId, escolaId))).map((x) => x.id));
-  const fora = marcas.find((m) => !ids.has(m.professorId) || (m.substitutoId != null && !ids.has(m.substitutoId)));
+  const fora = marcas.find((m) => !ids.has(m.professorId) || (m.substitutoId != null && !ids.has(m.substitutoId)))
+    ?? observacoes.find((o) => !ids.has(o.professorId));
   if (fora) { res.status(400).json({ error: "Professor que não é desta escola." }); return; }
   const quem = quemRegistrou(req);
   try {
@@ -180,6 +219,20 @@ router.put("/presenca", async (req, res) => {
           });
         gravadas++;
       }
+      for (const o of observacoes) {
+        const texto = o.observacao?.trim() || null;
+        const onde = and(
+          eq(presencasObservacoesTable.escolaId, escolaId), eq(presencasObservacoesTable.data, data), eq(presencasObservacoesTable.turno, turno),
+          eq(presencasObservacoesTable.professorId, o.professorId),
+        );
+        if (!texto) { await tx.delete(presencasObservacoesTable).where(onde); continue; }
+        await tx.insert(presencasObservacoesTable)
+          .values({ escolaId, data, turno, professorId: o.professorId, observacao: texto, registradoPor: quem })
+          .onConflictDoUpdate({
+            target: [presencasObservacoesTable.escolaId, presencasObservacoesTable.data, presencasObservacoesTable.turno, presencasObservacoesTable.professorId],
+            set: { observacao: texto, registradoPor: quem, atualizadoEm: new Date() },
+          });
+      }
     });
     res.json({ ok: true, gravadas, apagadas });
   } catch (e) {
@@ -203,9 +256,10 @@ router.get("/presenca/pdf", async (req, res) => {
     destaque: a.marca?.status === "falta",
     celulas: [
       i === 0 ? p.nome + (p.licenca ? ` (${p.licenca})` : "") : "",
-      `${a.numeroAula}ª ${a.hora}`, a.turmas, a.sala || "—", rotuloMarca(a.marca),
+      `${a.numeroAula}ª ${a.hora}`, rotuloTurmas(a), a.sala || "—", rotuloMarca(a.marca),
       a.marca?.status === "substituido" ? (a.marca.substitutoId != null ? nomes.get(a.marca.substitutoId) ?? "" : a.marca.substitutoNome ?? "") : "",
-      a.marca?.observacao ?? "",
+      // [PRESENCA-OBS-GERAL] a observacao geral sai na primeira linha do professor; a antiga (por aula) na linha dela
+      [i === 0 ? p.observacao : null, a.marca?.observacao].filter(Boolean).join(" · "),
     ],
   })));
   const marcadas = r.professores.reduce((s, p) => s + p.aulas.filter((a) => a.marca).length, 0);
@@ -238,11 +292,19 @@ router.get("/presenca/mes", async (req, res) => {
       eq(presencasProfessoresTable.escolaId, escolaId), gte(presencasProfessoresTable.data, ini), lte(presencasProfessoresTable.data, fim),
     )).orderBy(presencasProfessoresTable.data, presencasProfessoresTable.turno, presencasProfessoresTable.numeroAula);
   } catch (e) { if (semTabela(e)) faltaTabela = true; else throw e; }
+  // [PRESENCA-OBS-GERAL] a observacao geral do dia acompanha cada ocorrencia do professor
+  const obsGeral = new Map<string, string>();
+  try {
+    const obs = await db.select().from(presencasObservacoesTable).where(and(
+      eq(presencasObservacoesTable.escolaId, escolaId), gte(presencasObservacoesTable.data, ini), lte(presencasObservacoesTable.data, fim),
+    ));
+    for (const o of obs) obsGeral.set(`${o.data}|${o.turno}|${o.professorId}`, o.observacao);
+  } catch (e) { if (!semTabela(e)) throw e; }
   const resumo = resumirMes(registros.map((x) => ({ professorId: x.professorId, status: x.status as Status, substitutoId: x.substitutoId ?? null })), nomes);
   const detalhes = registros.filter((x) => x.status !== "presente").map((x) => ({
     data: x.data, dataBR: x.data.split("-").reverse().join("/"), turno: ROTULO_TURNO[x.turno] ?? x.turno, aula: x.numeroAula,
     professor: nomes.get(x.professorId) ?? `#${x.professorId}`, situacao: ROTULO_STATUS[x.status as Status] ?? x.status,
-    substituto: x.substitutoId != null ? nomes.get(x.substitutoId) ?? "" : x.substitutoNome ?? "", observacao: x.observacao ?? "",
+    substituto: x.substitutoId != null ? nomes.get(x.substitutoId) ?? "" : x.substitutoNome ?? "", observacao: [obsGeral.get(`${x.data}|${x.turno}|${x.professorId}`), x.observacao].filter(Boolean).join(" · "),
   }));
   const titulo = `Faltas do mês por professor — ${MESES[mes - 1]} de ${ano}`;
   if (req.query.formato !== "pdf") { res.json({ mes, ano, titulo, semTabela: faltaTabela, resumo, detalhes }); return; }
