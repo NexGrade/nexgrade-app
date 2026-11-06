@@ -34,7 +34,7 @@ import { carregarAssSoTurma, carregarPeriodosExtrasFinais, podarLinhasExtras } f
 import { gerarPdfPontoDiario, type PontoDiario, type CelulaPonto, type LinhaPonto } from "../lib/pdf-ponto-diario"; // [PONTO-DIARIO]
 import { carregarDadosAgenda, agendaDoPeriodo, presenciaisDoTrio } from "../lib/agenda-assincronas-dados"; // [CALENDARIO-ASSINCRONAS]
 import { calendarioPorTurma } from "../lib/agenda-assincronas";
-import { gerarPdfCalendarioAssincronas } from "../lib/pdf-calendario-assincronas";
+import { gerarPdfCalendarioAssincronas, gerarPdfCalendarioLadoALado } from "../lib/pdf-calendario-assincronas";
 
 // [RCO-HORARIO-NOTURNO] (15/10/2026) o RCO do noturno usa a grade de horarios fixa da SEED
 // (18:40, 19:30, 20:30, 21:20, 22:10); a escola pode ter o horario real um pouco diferente
@@ -903,7 +903,9 @@ router.get("/grade-pdf/assincronas", async (req, res) => {
   const nomesFiltro = new Set(dados.turmas.filter((t) => (!turno || t.turno === turno) && (turmaId == null || t.id === turmaId)).map((t) => t.nome));
   const linhas = agendaDoPeriodo(dados).filter((l) => nomesFiltro.has(l.turma));
   const br = (iso: string) => iso.split("-").reverse().join("/");
-  const bytes = await gerarPdfCalendarioAssincronas({
+  // [CALENDARIO-LADO-A-LADO] ?modelo=lado-a-lado: 3 turmas do mesmo periodo por folha
+  const gerar = req.query.modelo === "lado-a-lado" ? gerarPdfCalendarioLadoALado : gerarPdfCalendarioAssincronas;
+  const bytes = await gerar({
     escola: await buscarNomeEscola(escolaId),
     titulo: `Calendário das aulas assíncronas — ${trimestre}º trimestre (${br(de)} a ${br(ate)})`,
     subtitulo: "Pela grade oficial. Na Híbrida (trio), o professor presencial da semana é quem dá a assíncrona (em roxo).",

@@ -131,6 +131,10 @@ describe.skipIf(!TEM_BANCO)("presenca dos professores: integracao com banco real
     expect(pdf.status).toBe(200);
     expect(Buffer.from(pdf.body).subarray(0, 4).toString()).toBe("%PDF");
     if (process.env.SALVAR_PDF_TESTE) writeFileSync(process.env.SALVAR_PDF_TESTE, Buffer.from(pdf.body));
+    // [CALENDARIO-LADO-A-LADO] turmas lado a lado e filtro de periodo
+    const lado = await chamar("GET", `/export/grade-pdf/assincronas?trimestre=1&ano=${ano}&modelo=lado-a-lado&turno=matutino`, undefined, "direcao");
+    expect(Buffer.from(lado.body).subarray(0, 4).toString()).toBe("%PDF");
+    if (process.env.SALVAR_PDF_TESTE) writeFileSync(process.env.SALVAR_PDF_TESTE.replace(".pdf", "-lado.pdf"), Buffer.from(lado.body));
   });
 
   it("[PRESENCA-OBS-GERAL] grava, mostra e apaga a observacao geral do professor", async () => {
