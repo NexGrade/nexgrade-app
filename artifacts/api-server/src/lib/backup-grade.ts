@@ -5,6 +5,7 @@
 // não é feita e quem chamou recebe um aviso.
 import { db, gradeBackupsTable, horariosTable, disponibilidadeTable, professoresTable } from "@workspace/db";
 import { and, eq, desc, inArray, notInArray, sql } from "drizzle-orm";
+import { voltarChaves, type DispAntes } from "./disponibilidade-experimento"; // [DISP-EXPERIMENTAL]
 
 const MANTER_POR_ESCOLA = 10;
 
@@ -17,6 +18,8 @@ export interface DadosBackup {
   }>;
   // disponivel=false + HA = HA fixa / probatório (o motor não move); cópias antigas não têm o campo (= true)
   ha: Array<{ professorId: number; turno: string | null; diaSemana: number; horarioSlot: number; motivo: string | null; disponivel?: boolean }>;
+  // [DISP-EXPERIMENTAL] (06/11/2026) promocao de experimento com disponibilidade: como estavam as linhas que ele mudou
+  disponibilidade?: DispAntes;
 }
 
 function tabelaAusente(err: unknown): boolean {
@@ -42,9 +45,9 @@ async function lerGradeOficial(escolaId: string): Promise<DadosBackup> {
 }
 
 /** Guarda a grade oficial atual. Devolve { ok: true, id } ou { ok: false, aviso }. */
-export async function salvarBackupGrade(escolaId: string, motivo: string, usuarioNome?: string | null):
+export async function salvarBackupGrade(escolaId: string, motivo: string, usuarioNome?: string | null, disponibilidade?: DispAntes):
   Promise<{ ok: true; id: number } | { ok: false; aviso: string }> {
-  const dados = await lerGradeOficial(escolaId);
+  const dados: DadosBackup = { ...(await lerGradeOficial(escolaId)), ...(disponibilidade ? { disponibilidade } : {}) };
   try {
     const [b] = await db.insert(gradeBackupsTable).values({
       escolaId, motivo, qtdAulas: dados.horarios.length, qtdHa: dados.ha.length, dados, usuarioNome: usuarioNome ?? null,
@@ -93,6 +96,9 @@ export async function restaurarBackupGrade(
     await travar(tx);
     await tx.delete(horariosTable)
       .where(and(eq(horariosTable.escolaId, escolaId), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`));
+    // [DISP-EXPERIMENTAL] antes da HA: a disponibilidade que o experimento promovido mudou volta ao que era
+    // (a HA da copia vem depois e tem a palavra final no mesmo horario)
+    if (dados.disponibilidade) await voltarChaves(tx, dados.disponibilidade, new Set(profIds));
     for (let i = 0; i < dados.horarios.length; i += 500) {
       const lote = dados.horarios.slice(i, i + 500).map((h) => ({ escolaId, ...h, versaoGrade: "oficial" }));
       if (lote.length) await tx.insert(horariosTable).values(lote);

@@ -2216,7 +2216,25 @@ function AbaExperimental() {
   // no tipo DetalheTurmaLote acima.
   const [detalhesLote, setDetalhesLote] = useState<{ nomeExperimental: string; resultados: DetalheTurmaLote[] } | null>(null);
 
-  const nomes = [...new Set(expSlots.map((s) => s.nome))];
+  // [DISP-EXPERIMENTAL] (06/11/2026) experimentos com disponibilidade propria (tela Disponibilidade → "Editando: experimento")
+  type MudancaDisp = { professorId: number; professor: string; turno: string; diaSemana: number; horarioSlot: number; antes: string; depois: string };
+  const { data: dispExpLista } = useQuery({
+    queryKey: ["disp-exp-lista"],
+    queryFn: () => customFetch<{ semTabela: boolean; experimentos: Array<{ nome: string; mudancas: number; professores: number }> }>("/api/disponibilidade/experimentos"),
+  });
+  const dispDoExp = new Map((dispExpLista?.experimentos ?? []).map((e) => [e.nome, e]));
+  const [mudancasAbertas, setMudancasAbertas] = useState<Record<string, MudancaDisp[] | "carregando" | { erro: string }>>({});
+  const verMudancasDisp = async (nome: string) => {
+    if (mudancasAbertas[nome] && mudancasAbertas[nome] !== "carregando") { setMudancasAbertas((m) => { const n = { ...m }; delete n[nome]; return n; }); return; }
+    setMudancasAbertas((m) => ({ ...m, [nome]: "carregando" }));
+    try {
+      const r = await customFetch<{ mudancas: MudancaDisp[] }>(`/api/disponibilidade/experimentos/${encodeURIComponent(nome)}`);
+      setMudancasAbertas((m) => ({ ...m, [nome]: r.mudancas }));
+    } catch (e) {
+      setMudancasAbertas((m) => ({ ...m, [nome]: { erro: e instanceof Error ? e.message : "Não foi possível carregar as mudanças." } }));
+    }
+  };
+  const nomes = [...new Set([...expSlots.map((s) => s.nome), ...dispDoExp.keys()])];
   const diasSemanaExp = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
 
   const handleGerarLote = async () => {
@@ -2690,18 +2708,23 @@ function AbaExperimental() {
     const aviso = simAviso?.veredito === "pior"
       ? `ATENÇÃO: a simulação recomenda NÃO promover (${simAviso.experimento.janelas} janela(s) de professor depois de promover, contra ${(simAviso.oficialHoje ?? simAviso.oficial).janelas} na oficial de hoje).\n\n`
       : "";
-    if (!confirm(`${aviso}Promover "${nome}" para horário oficial? Isso substituirá o horário atual de ${qtdTurmas} turma(s) envolvida(s).\n\nAntes de trocar, o sistema guarda uma cópia da grade oficial atual (aulas e HA). Se precisar, use "Voltar à grade anterior".`)) return;
+    const disp = dispDoExp.get(nome); // [DISP-EXPERIMENTAL]
+    const avisoDisp = disp ? `\n\nA disponibilidade deste experimento (${disp.mudancas} mudança(s) de ${disp.professores} professor(es)) também passa a valer na oficial.` : "";
+    if (!confirm(`${aviso}Promover "${nome}" para horário oficial? Isso substituirá o horário atual de ${qtdTurmas} turma(s) envolvida(s).${avisoDisp}\n\nAntes de trocar, o sistema guarda uma cópia da grade oficial atual (aulas, HA${disp ? " e a disponibilidade que muda" : ""}). Se precisar, use "Voltar à grade anterior".`)) return;
     setPromovendo(nome);
     try {
       const r: any = await promover({ nome: encodeURIComponent(nome) }); // [NOME-EXPERIMENTO] espaço no fim do nome sumia do endereço
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios"] });
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/backups"] }); // [BACKUP-GRADE]
+      await queryClient.invalidateQueries({ queryKey: ["disp-exp-lista"] }); // [DISP-EXPERIMENTAL]
+      await queryClient.invalidateQueries({ queryKey: ["/api/disponibilidade"] });
       toast({
         title: `"${nome}" promovido para horário oficial!`,
         description: [
           r?.avisoBackup ? String(r.avisoBackup) : "A grade anterior foi guardada em \"Voltar à grade anterior\".",
           r?.haReposicionadas ? `${r.haReposicionadas} HA mudaram de lugar para tirar janela.` : "", // [HA-MOVEL-MELHORIA]
+          r?.disponibilidadeAplicada ? `${r.disponibilidadeAplicada} mudança(s) de disponibilidade aplicada(s).` : "", // [DISP-EXPERIMENTAL]
         ].filter(Boolean).join(" "),
       });
       // [HA-FALHOU-AVISA] promoveu, mas a HA nao foi recalculada
@@ -2820,7 +2843,7 @@ function AbaExperimental() {
   };
 
   const handleDelete = async (nome: string) => {
-    if (!confirm(`Remover o experimento "${nome}"?`)) return;
+    if (!confirm(`Remover o experimento "${nome}"?${dispDoExp.has(nome) ? " As mudanças de disponibilidade dele também são apagadas (a oficial não muda)." : ""}`)) return;
     try {
       await deleteExp({ nome: encodeURIComponent(nome) }); // [NOME-EXPERIMENTO] espaço no fim do nome sumia do endereço
     } catch {
@@ -2828,6 +2851,7 @@ function AbaExperimental() {
       return;
     }
     await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
+    await queryClient.invalidateQueries({ queryKey: ["disp-exp-lista"] }); // [DISP-EXPERIMENTAL]
     toast({ title: `Experimento "${nome}" removido` });
   };
 
@@ -2902,6 +2926,14 @@ function AbaExperimental() {
               </Button>
             </div>
           </div>
+          {/* [DISP-EXPERIMENTAL] testar mudanca de disponibilidade sem mexer na oficial */}
+          <div className="pt-2 border-t space-y-1.5">
+            <Button variant="outline" className="w-full justify-start border-purple-300 text-purple-800" onClick={() => { window.location.href = "/disponibilidade?novoExperimento=1"; }}>
+              <FlaskConical className="w-4 h-4 mr-2" />Disponibilidade
+            </Button>
+            <p className="text-[10px] text-muted-foreground">Mude a disponibilidade só dentro de um experimento e depois gere a grade com o <strong>mesmo nome</strong>.</p>
+          </div>
+          <datalist id="nomes-experimentos-disp">{[...dispDoExp.keys()].map((n) => <option key={n} value={n} />)}</datalist>
           {geradorSimplesVisivel ? (
           <div className="pt-2 border-t">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Motor heurístico (rápido, menos preciso)</p>
@@ -3005,11 +3037,30 @@ function AbaExperimental() {
                         {nome}
                       </CardTitle>
                       <CardDescription className="mt-1">
+                        {slots.length ? <>
                         {slots.length} aulas · {turmaIdsDoLote.length} turma{turmaIdsDoLote.length > 1 ? "s" : ""}
                         {turmaIdsDoLote.length <= 6 ? `: ${turmasNome.join(", ")}` : ""}
+                        </> : "Grade ainda não gerada: gere com este mesmo nome para usar a disponibilidade dele."}
                       </CardDescription>
+                      {dispDoExp.get(nome) && (
+                        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
+                          <Badge variant="outline" className="border-purple-300 text-purple-800">
+                            Disponibilidade: {dispDoExp.get(nome)!.mudancas} mudança{dispDoExp.get(nome)!.mudancas === 1 ? "" : "s"} · {dispDoExp.get(nome)!.professores} professor{dispDoExp.get(nome)!.professores === 1 ? "" : "es"}
+                          </Badge>
+                          <button type="button" className="underline text-purple-800" onClick={() => verMudancasDisp(nome)}>
+                            {mudancasAbertas[nome] && mudancasAbertas[nome] !== "carregando" ? "Ocultar mudanças" : mudancasAbertas[nome] === "carregando" ? "Carregando..." : "Ver mudanças"}
+                          </button>
+                          <a className="underline text-purple-800" href={`/disponibilidade?experimento=${encodeURIComponent(nome)}`}>Editar disponibilidade</a>
+                        </div>
+                      )}{/* [DISP-EXPERIMENTAL] */}
                     </div>
                     <div className="flex gap-2">
+                      {!slots.length && (
+                        <Button size="sm" className="gap-1.5" onClick={() => { setCpsatForm((f) => ({ ...f, nomeExperimental: nome })); setOpenGerarCpsat(true); }}>
+                          <Sparkles className="w-3.5 h-3.5" />Gerar turno com esta disponibilidade
+                        </Button>
+                      )}{/* [DISP-EXPERIMENTAL] */}
+                      {slots.length > 0 && <>
                       <Button
                         size="sm" variant="outline" className="gap-1.5"
                         onClick={() => {
@@ -3062,6 +3113,7 @@ function AbaExperimental() {
                           ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Promovendo...</>
                           : <><ArrowUpCircle className="w-3.5 h-3.5" />Promover para oficial</>}
                       </Button>
+                      </>}
                       <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDelete(nome)}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
@@ -3069,6 +3121,24 @@ function AbaExperimental() {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
+                  {(() => { // [DISP-EXPERIMENTAL] lista do que muda na disponibilidade
+                    const m = mudancasAbertas[nome];
+                    if (!m || m === "carregando") return null;
+                    if ("erro" in m) return <div className="mb-3 text-sm text-destructive">{m.erro}</div>;
+                    const rotTurno: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
+                    return (
+                      <div className="mb-3 rounded-md border border-purple-200 bg-purple-50/50 p-3 text-xs">
+                        <p className="font-medium text-purple-900 mb-1.5">Mudanças de disponibilidade neste experimento (a oficial ainda não mudou)</p>
+                        {m.length === 0 ? <p className="text-muted-foreground">Nenhuma mudança.</p> : (
+                          <div className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2">
+                            {m.map((x, i) => (
+                              <div key={i}><strong>{x.professor}</strong> · {rotTurno[x.turno] ?? x.turno} · {diasSemanaExp[x.diaSemana] ?? x.diaSemana} {x.horarioSlot}ª: <span className="text-muted-foreground">{x.antes}</span> → <strong>{x.depois}</strong></div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                   {(() => { // [SIMULAR-PROMOCAO]
                     const sim = simulacoes[nome];
                     if (!sim || sim === "carregando") return null;
@@ -3337,7 +3407,7 @@ function AbaExperimental() {
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label>Nome do experimento *</Label>
-              <Input value={gerarForm.nomeExperimental} onChange={(e) => setGerarForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex: Grade-Alternativa-2026" />
+              <Input value={gerarForm.nomeExperimental} onChange={(e) => setGerarForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex: Grade-Alternativa-2026" list="nomes-experimentos-disp" />{/* [DISP-EXPERIMENTAL] */}
             </div>
             <div className="space-y-1.5">
               <Label>Turma *</Label>
@@ -3380,7 +3450,7 @@ function AbaExperimental() {
             </div>
             <div className="space-y-1.5">
               <Label>Nome do lote *</Label>
-              <Input value={loteForm.nomeExperimental} onChange={(e) => setLoteForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex: Grade-Semana-2026-07-27" />
+              <Input value={loteForm.nomeExperimental} onChange={(e) => setLoteForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex: Grade-Semana-2026-07-27" list="nomes-experimentos-disp" />{/* [DISP-EXPERIMENTAL] */}
             </div>
             <div className="space-y-1.5">
               <Label>Turno</Label>
@@ -3421,7 +3491,7 @@ function AbaExperimental() {
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label>Nome do experimento *</Label>
-              <Input value={cpsatTurmaForm.nomeExperimental} onChange={(e) => setCpsatTurmaForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex.: Grade-Turma-2026-07-27" />
+              <Input value={cpsatTurmaForm.nomeExperimental} onChange={(e) => setCpsatTurmaForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex.: Grade-Turma-2026-07-27" list="nomes-experimentos-disp" />{/* [DISP-EXPERIMENTAL] */}
             </div>
             <div className="space-y-1.5">
               <Label>Turma *</Label>
@@ -3472,7 +3542,7 @@ function AbaExperimental() {
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label>Nome do experimento *</Label>
-              <Input value={cpsatTurnoParcialForm.nomeExperimental} onChange={(e) => setCpsatTurnoParcialForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex.: Grade-Parcial-2026-08-13" />
+              <Input value={cpsatTurnoParcialForm.nomeExperimental} onChange={(e) => setCpsatTurnoParcialForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex.: Grade-Parcial-2026-08-13" list="nomes-experimentos-disp" />{/* [DISP-EXPERIMENTAL] */}
             </div>
             <div className="space-y-1.5">
               <Label>Turno *</Label>
@@ -3543,7 +3613,7 @@ function AbaExperimental() {
             </div>
             <div className="space-y-1.5">
               <Label>Nome do experimento *</Label>
-              <Input value={cpsatForm.nomeExperimental} onChange={(e) => setCpsatForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex.: Grade-Teste-2026-07-24" />
+              <Input value={cpsatForm.nomeExperimental} onChange={(e) => setCpsatForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex.: Grade-Teste-2026-07-24" list="nomes-experimentos-disp" />{/* [DISP-EXPERIMENTAL] */}
             </div>
             <div className="space-y-1.5">
               <Label>Turno</Label>

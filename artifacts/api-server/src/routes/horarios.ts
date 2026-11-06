@@ -1,4 +1,8 @@
 import { Router } from "express";
+import {
+  sobreporExperimento, middlewareDisponibilidadeExperimental, carregarMudancas, oficialNasChaves, paraDispAntes,
+  aplicarMudancasNaOficial, voltarChaves, apagarMudancas,
+} from "../lib/disponibilidade-experimento"; // [DISP-EXPERIMENTAL]
 import axios from "axios";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { db } from "@workspace/db";
@@ -51,6 +55,8 @@ import { diagnosticarGeracao, diagnosticarViolacoesPromocao, explicarBloqueiosNa
 import { tempoDoMotor, TEMPO_TOTAL_PADRAO_S, TEMPO_MINIMO_CHAMADA_S } from "../lib/tempo-geracao"; // [TEMPO-TOTAL]
 
 const router = Router();
+// [DISP-EXPERIMENTAL] rotas de experimento enxergam a disponibilidade do experimento (lib/disponibilidade-experimento.ts)
+router.use(middlewareDisponibilidadeExperimental);
 
 async function enrichSlot(slot: typeof horariosTable.$inferSelect) {
   const [disciplina, professor, turma] = await Promise.all([
@@ -157,6 +163,7 @@ export async function gerarAlgoritmo(opts: GerarOpts) {
   const professorIds = professores.map(p => p.id);
   const disponibilidades = professorIds.length
     ? await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, professorIds))
+      .then((r) => sobreporExperimento(r, (d) => professorIds.includes(d.professorId))) // [DISP-EXPERIMENTAL]
     : [];
 
   const indisponivelProf: Record<string, boolean> = {};
@@ -1038,6 +1045,9 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     .where(and(eq(horariosExperimentaisTable.nome, nome), eq(horariosExperimentaisTable.escolaId, escolaId)));
 
   if (expSlots.length === 0) {
+    // [DISP-EXPERIMENTAL] experimento so com disponibilidade: falta gerar a grade com ela
+    const { linhas } = await carregarMudancas(escolaId, nome);
+    if (linhas.length) { res.status(400).json({ error: "Este experimento só tem mudanças de disponibilidade. Gere a grade com este nome antes de promover." }); return; }
     res.status(404).json({ error: "Horário experimental não encontrado" });
     return;
   }
@@ -1102,15 +1112,32 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
   const turmaProfessorPares = [...new Set(expSlots.map((s) => `${s.turmaId}|${s.professorId}`))]
     .map((k) => { const [t, p] = k.split("|"); return { turmaId: Number(t), professorId: Number(p) }; });
 
+  // [DISP-EXPERIMENTAL] mudancas de disponibilidade do experimento e o que a oficial tem hoje nessas chaves
+  // (vai na copia de seguranca: "Voltar a grade anterior" desfaz tambem a disponibilidade)
+  const { linhas: mudancasDisp } = await carregarMudancas(escolaId, nome);
+  const dispAntes = paraDispAntes(mudancasDisp, await oficialNasChaves(mudancasDisp));
+
   // [BACKUP-GRADE] cópia da oficial (aulas + HA) antes de trocar, para "Voltar à grade anterior"
   let avisoBackup: string | null = null;
   let backupId: number | null = null;
   try {
-    const b = await salvarBackupGrade(escolaId, `Antes de promover "${nome}"`);
+    const b = await salvarBackupGrade(escolaId, `Antes de promover "${nome}"`, null, mudancasDisp.length ? dispAntes : undefined);
     if (b.ok) backupId = b.id; else avisoBackup = b.aviso;
   } catch (err) {
     res.status(500).json({ error: "Não foi possível guardar a cópia de segurança da grade. Nada foi promovido.", detalhe: err instanceof Error ? err.message : String(err) });
     return;
+  }
+
+  // [DISP-EXPERIMENTAL] a disponibilidade do experimento vai para a oficial ANTES do resto: a HA de quem nao mudou,
+  // o recalculo e o "HA no buraco" abaixo enxergam a disponibilidade nova, como a simulacao enxergou.
+  // Se a troca das aulas falhar, a disponibilidade volta ao que era.
+  if (mudancasDisp.length) {
+    try {
+      await aplicarMudancasNaOficial(mudancasDisp);
+    } catch (err) {
+      res.status(500).json({ error: "Não foi possível aplicar a disponibilidade do experimento. Nada foi promovido.", detalhe: err instanceof Error ? err.message : String(err) });
+      return;
+    }
   }
 
   // [HA-SO-QUEM-MUDOU] (21/10/2026) quem nao teve nenhuma aula mexida fica com a HA
@@ -1183,7 +1210,9 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     haMantida = haMantidaHoje;
   }
 
-  const inserted = await db.transaction(async (tx) => {
+  let inserted: Array<typeof horariosTable.$inferSelect>;
+  try {
+  inserted = await db.transaction(async (tx) => {
     await travarGradeOficial(tx, escolaId); // [TRAVA-GRADE-OFICIAL]
     for (const { turmaId, professorId } of turmaProfessorPares) {
       await tx.delete(horariosTable)
@@ -1197,6 +1226,14 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
       .where(and(eq(horariosExperimentaisTable.nome, nome), eq(horariosExperimentaisTable.escolaId, escolaId)));
     return gravados;
   });
+  } catch (err) {
+    if (mudancasDisp.length) { // [DISP-EXPERIMENTAL] desfaz a disponibilidade aplicada acima
+      try { await db.transaction((tx) => voltarChaves(tx, dispAntes)); }
+      catch (e2) { console.error("[DISP-EXPERIMENTAL] falhou ao desfazer a disponibilidade depois da promocao falhar:", e2); }
+    }
+    throw err;
+  }
+  if (mudancasDisp.length) await apagarMudancas(escolaId, nome); // [DISP-EXPERIMENTAL] ja estao na oficial
 
   // [HA-SO-NO-TURNO-DO-EXPERIMENTO] HA de hoje de quem teve aula mexida (o recalculo abaixo refaz todos os turnos) e o
   // recalculo da grade de ANTES (a base: fora do turno do experimento so muda o que o experimento mudar na conta)
@@ -1323,7 +1360,7 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     console.error("[HA-BURACO-QUEM-MUDOU] Falha ao levar a HA de quem mudou para os buracos; a HA do recalculo fica:", err);
   }
 
-  res.json({ slotsGerados: inserted.length, conflitos: [], horario: [], backupId, avisoBackup, avisoHA, professoresComAulaMexida: profsMudaram.size, haReposicionadas });
+  res.json({ slotsGerados: inserted.length, conflitos: [], horario: [], backupId, avisoBackup, avisoHA, professoresComAulaMexida: profsMudaram.size, haReposicionadas, disponibilidadeAplicada: mudancasDisp.length });
 });
 
 // [BACKUP-GRADE] cópias da grade oficial guardadas antes de promover (mais nova primeiro)
@@ -1349,9 +1386,11 @@ router.post("/backups/:id/restaurar", async (req, res) => {
 
 router.delete("/experimentais/:nome", async (req, res) => {
   const escolaId = getEscolaId(req);
-  const apagadas = await db.delete(horariosExperimentaisTable)
+  const aulasApagadas = await db.delete(horariosExperimentaisTable)
     .where(and(eq(horariosExperimentaisTable.nome, req.params.nome), eq(horariosExperimentaisTable.escolaId, escolaId)))
     .returning({ id: horariosExperimentaisTable.id });
+  const dispApagadas = await apagarMudancas(escolaId, req.params.nome); // [DISP-EXPERIMENTAL]
+  const apagadas = [...aulasApagadas, ...Array(dispApagadas).fill(null)];
   // [NOME-EXPERIMENTO] (21/10/2026) antes respondia 204 mesmo sem apagar nada (nome com espaco no fim
   // chegava cortado): a tela dizia "removido" e o experimento continuava la
   if (apagadas.length === 0) { res.status(404).json({ error: "Experimento não encontrado. Nada foi apagado." }); return; }
@@ -1977,7 +2016,7 @@ async function runCpsatGeneracaoUnica(
     db.select().from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, turmaIds)),
     db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
-    db.select().from(disponibilidadeTable),
+    db.select().from(disponibilidadeTable).then((r) => sobreporExperimento(r)), // [DISP-EXPERIMENTAL]
     db.select().from(horarioSlotsTable).where(and(eq(horarioSlotsTable.escolaId, escolaId), eq(horarioSlotsTable.turno, turno))),
     db.select().from(professorDisciplinasTable),
     matrizIdsAlvo.length > 0 ? db.select().from(itensMatrizTable).where(inArray(itensMatrizTable.matrizCurricularId, matrizIdsAlvo)) : Promise.resolve([]),
@@ -2475,7 +2514,7 @@ async function runCpsatGeneracaoUnica(
           inArray(disponibilidadeTable.professorId, [...professorIdsUsados]),
           eq(disponibilidadeTable.turno, turno),
           eq(disponibilidadeTable.horaAtividadeObrigatoria, true),
-        ))
+        )).then((r) => sobreporExperimento(r, (d) => professorIdsUsados.has(d.professorId) && d.turno === turno && d.horaAtividadeObrigatoria)) // [DISP-EXPERIMENTAL]
       : [];
     // [HA-MOVEL-MELHORIA] (21/10/2026) antes de mexer em aula, a HA movel vai para onde tira janela;
     // o motor recebe a HA ja reposicionada e so move aula se ainda sobrar janela
@@ -2486,7 +2525,8 @@ async function runCpsatGeneracaoUnica(
         const { slotsEscola: slotsEsc, posicao } = await ocupacaoReal(escolaId); // [INTEGRAL-NA-OCUPACAO]
         const aulasProfs = await db.select().from(horariosTable).where(and(
           eq(horariosTable.escolaId, escolaId), inArray(horariosTable.professorId, profsT), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`));
-        const dispProfs = await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, profsT));
+        const dispProfs = await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, profsT))
+          .then((r) => sobreporExperimento(r, (d) => profsT.includes(d.professorId))); // [DISP-EXPERIMENTAL]
         const movs = reposicionarHAMovel({
           aulas: aulasProfs.flatMap((h) => { const r = posicao(h); return r ? [{ professorId: h.professorId, turno: r.turno, diaSemana: h.diaSemana, numeroAula: r.numeroAula }] : []; }),
           disp: dispProfs, slotsLetivos: slotsLetivosPorTurno(slotsEsc), turnos: [turno], professores: profsT,
@@ -2522,7 +2562,7 @@ async function runCpsatGeneracaoUnica(
         eq(disponibilidadeTable.turno, turno),
         eq(disponibilidadeTable.horaAtividadeObrigatoria, false),
         eq(disponibilidadeTable.disponivel, false),
-      ));
+      )).then((r) => sobreporExperimento(r, (d) => professorIdsUsados.has(d.professorId) && d.turno === turno && !d.horaAtividadeObrigatoria && !d.disponivel)); // [DISP-EXPERIMENTAL]
       for (const d of atividades) {
         if (!/\(ocupado:\s*[^)]+\)/.test(d.motivo ?? "")) continue;
         const nomeP = professorMap.get(d.professorId)?.nome;

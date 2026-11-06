@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { disponibilidadeTable, professoresTable } from "@workspace/db";
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { disponibilidadeTable, professoresTable, disponibilidadeExperimentalTable } from "@workspace/db";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { carregarMudancas, comoLinhaDisp, sobrepor, chaveDisp, semTabelaExperimental, type LinhaDisp } from "../lib/disponibilidade-experimento"; // [DISP-EXPERIMENTAL]
 import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 import { turnosComAulaPorProfessor, marcarContraturno } from "../lib/ha-contraturno"; // [HA-CONTRATURNO-ASTERISCO]
@@ -28,6 +29,20 @@ import { carregarAulasIntegraisNoTurno } from "../lib/turno-integral"; // [DOC-T
 // pode sobrescrever silenciosamente um bloqueio já existente no turno
 // matutino para o mesmo dia/slot.
 const router = Router();
+
+// [DISP-EXPERIMENTAL] (06/11/2026) ?experimento=<nome> nas rotas GET / e POST /lote: le e grava a disponibilidade
+// DENTRO do experimento (tabela disponibilidade_experimental), sem mexer na oficial. Ver lib/disponibilidade-experimento.ts.
+const AVISO_SEM_TABELA = "A disponibilidade em experimento ainda não está pronta no banco (falta a atualização do sistema). Avise o suporte NexGrade.";
+function experimentoDaUrl(q: unknown): string | null {
+  return typeof q === "string" && q.trim() ? q.trim().slice(0, 120) : null;
+}
+/** Estado de um horario, para comparar e mostrar ("Livre", "Bloqueio", "HA", "HA fixa", "Atividade: COORD"). */
+export function estadoDisp(r: { disponivel: boolean; horaAtividadeObrigatoria: boolean; motivo?: string | null } | null | undefined): string {
+  if (!r || (r.disponivel && !r.horaAtividadeObrigatoria)) return "Livre";
+  if (r.horaAtividadeObrigatoria) return (r.motivo ?? "").startsWith("HA fixa") ? "HA fixa" : "HA";
+  const atividade = /\(ocupado:\s*([^)]+)\)/.exec(r.motivo ?? "");
+  return atividade ? `Atividade: ${atividade[1]!.trim()}` : "Bloqueio";
+}
 
 const DisponibilidadeInput = z.object({
   professorId: z.number().int(),
@@ -86,7 +101,15 @@ router.get("/", async (req, res) => {
       res.status(404).json({ error: "Professor não encontrado" });
       return;
     }
-    const rows = await db.select().from(disponibilidadeTable).where(eq(disponibilidadeTable.professorId, professorId));
+    const oficial = await db.select().from(disponibilidadeTable).where(eq(disponibilidadeTable.professorId, professorId));
+    // [DISP-EXPERIMENTAL] dentro de um experimento: a oficial com as mudancas dele por cima (marcadas noExperimento)
+    const experimento = experimentoDaUrl(req.query.experimento);
+    let rows: Array<LinhaDisp & { noExperimento?: boolean }> = oficial;
+    if (experimento) {
+      const { linhas, semTabela } = await carregarMudancas(escolaId, experimento);
+      if (semTabela) { res.status(503).json({ error: AVISO_SEM_TABELA }); return; }
+      rows = sobrepor(oficial, linhas.filter((l) => l.professorId === professorId).map((l) => ({ ...comoLinhaDisp(l), noExperimento: true })));
+    }
     // [HA-CONTRATURNO-ASTERISCO] marca HA fora dos turnos de aula (tela mostra "HA*")
     res.json(marcarContraturno(rows, await turnosComAulaPorProfessor(escolaId, [professorId])));
     return;
@@ -186,6 +209,44 @@ router.post("/lote", async (req, res) => {
   }
   if (docLiberados) console.log(`[DOC-TRAVADA] professor ${parsed.data.professorId}: ${docLiberados} horario(s) de aula DOC gravados como livres`);
 
+  // [DISP-EXPERIMENTAL] grava no experimento. Horario que volta a ficar igual a oficial sai do experimento.
+  const experimento = experimentoDaUrl(req.query.experimento);
+  if (experimento) {
+    if (parsed.data.itens.some((i) => !i.turno)) { res.status(400).json({ error: "Escolha o turno para editar a disponibilidade do experimento." }); return; }
+    const professorId = parsed.data.professorId;
+    const oficial = await db.select().from(disponibilidadeTable).where(eq(disponibilidadeTable.professorId, professorId));
+    const oficialPorChave = new Map(oficial.map((o) => [chaveDisp(o), o]));
+    try {
+      await db.transaction(async (tx) => {
+        for (const item of parsed.data.itens) {
+          const chave = { professorId, diaSemana: item.diaSemana, horarioSlot: item.horarioSlot, turno: item.turno! };
+          const o = oficialPorChave.get(chaveDisp(chave));
+          const igual = estadoDisp(o) === estadoDisp(item) && (estadoDisp(item) === "Livre" || (o?.motivo ?? "") === (item.motivo ?? ""));
+          const onde = and(
+            eq(disponibilidadeExperimentalTable.escolaId, escolaId), eq(disponibilidadeExperimentalTable.nome, experimento),
+            eq(disponibilidadeExperimentalTable.professorId, professorId), eq(disponibilidadeExperimentalTable.diaSemana, item.diaSemana),
+            eq(disponibilidadeExperimentalTable.horarioSlot, item.horarioSlot), eq(disponibilidadeExperimentalTable.turno, item.turno!),
+          );
+          if (igual) { await tx.delete(disponibilidadeExperimentalTable).where(onde); continue; }
+          const valores = { disponivel: item.disponivel, motivo: item.motivo ?? null, horaAtividadeObrigatoria: item.horaAtividadeObrigatoria };
+          await tx.insert(disponibilidadeExperimentalTable)
+            .values({ escolaId, nome: experimento, ...chave, ...valores, criadoPor: null })
+            .onConflictDoUpdate({
+              target: [disponibilidadeExperimentalTable.escolaId, disponibilidadeExperimentalTable.nome, disponibilidadeExperimentalTable.professorId,
+                disponibilidadeExperimentalTable.diaSemana, disponibilidadeExperimentalTable.horarioSlot, disponibilidadeExperimentalTable.turno],
+              set: { ...valores, atualizadoEm: new Date() },
+            });
+        }
+      });
+    } catch (e) {
+      if (semTabelaExperimental(e)) { res.status(503).json({ error: AVISO_SEM_TABELA }); return; }
+      throw e;
+    }
+    const { linhas } = await carregarMudancas(escolaId, experimento);
+    res.status(201).json(linhas.filter((l) => l.professorId === professorId).map((l) => ({ ...comoLinhaDisp(l), noExperimento: true })));
+    return;
+  }
+
   const existentes = await db.select().from(disponibilidadeTable)
     .where(eq(disponibilidadeTable.professorId, parsed.data.professorId));
   const existentesPorChave = new Map(
@@ -228,6 +289,62 @@ router.post("/lote", async (req, res) => {
   });
 
   res.status(201).json(resultado);
+});
+
+// [DISP-EXPERIMENTAL] experimentos com disponibilidade da escola: nome, quantas mudancas e de quantos professores
+router.get("/experimentos", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  try {
+    const rows = await db.select({
+      nome: disponibilidadeExperimentalTable.nome,
+      mudancas: sql<number>`count(*)::int`,
+      professores: sql<number>`count(distinct ${disponibilidadeExperimentalTable.professorId})::int`,
+    }).from(disponibilidadeExperimentalTable).where(eq(disponibilidadeExperimentalTable.escolaId, escolaId))
+      .groupBy(disponibilidadeExperimentalTable.nome).orderBy(disponibilidadeExperimentalTable.nome);
+    res.json({ semTabela: false, experimentos: rows });
+  } catch (e) {
+    if (semTabelaExperimental(e)) { res.json({ semTabela: true, experimentos: [] }); return; }
+    throw e;
+  }
+});
+
+// [DISP-EXPERIMENTAL] o que o experimento muda na disponibilidade, horario a horario (antes = oficial de hoje)
+router.get("/experimentos/:nome", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const { linhas, semTabela } = await carregarMudancas(escolaId, req.params.nome);
+  if (semTabela) { res.status(503).json({ error: AVISO_SEM_TABELA }); return; }
+  const profIds = [...new Set(linhas.map((l) => l.professorId))];
+  const [profs, oficial] = profIds.length
+    ? await Promise.all([
+        db.select({ id: professoresTable.id, nome: professoresTable.nome }).from(professoresTable).where(and(inArray(professoresTable.id, profIds), eq(professoresTable.escolaId, escolaId))),
+        db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, profIds)),
+      ])
+    : [[], []];
+  const nomes = new Map(profs.map((p) => [p.id, p.nome]));
+  const oficialPorChave = new Map(oficial.map((o) => [chaveDisp(o), o]));
+  const ordemTurno: Record<string, number> = { matutino: 0, vespertino: 1, noturno: 2 };
+  const mudancas = linhas.filter((l) => nomes.has(l.professorId)).map((l) => ({
+    professorId: l.professorId, professor: nomes.get(l.professorId)!, turno: l.turno, diaSemana: l.diaSemana, horarioSlot: l.horarioSlot,
+    antes: estadoDisp(oficialPorChave.get(chaveDisp(l))), depois: estadoDisp(l),
+  })).sort((a, b) => a.professor.localeCompare(b.professor, "pt-BR") || (ordemTurno[a.turno] ?? 9) - (ordemTurno[b.turno] ?? 9) || a.diaSemana - b.diaSemana || a.horarioSlot - b.horarioSlot);
+  res.json({ nome: req.params.nome, mudancas });
+});
+
+// [DISP-EXPERIMENTAL] desfaz as mudancas de um professor no experimento (volta a valer a oficial)
+router.delete("/experimentos/:nome/professores/:professorId", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const professorId = Number(req.params.professorId);
+  if (!Number.isInteger(professorId)) { res.status(400).json({ error: "Professor inválido" }); return; }
+  try {
+    const r = await db.delete(disponibilidadeExperimentalTable).where(and(
+      eq(disponibilidadeExperimentalTable.escolaId, escolaId), eq(disponibilidadeExperimentalTable.nome, req.params.nome),
+      eq(disponibilidadeExperimentalTable.professorId, professorId),
+    )).returning({ id: disponibilidadeExperimentalTable.id });
+    res.json({ apagadas: r.length });
+  } catch (e) {
+    if (semTabelaExperimental(e)) { res.status(503).json({ error: AVISO_SEM_TABELA }); return; }
+    throw e;
+  }
 });
 
 router.delete("/:id", async (req, res) => {

@@ -6,6 +6,7 @@
 // e conta as janelas de professor dos turnos envolvidos do jeito da tela de
 // Conflitos: aula, HA e atividade do sistema anterior ("(ocupado: FORM)"...) ocupam o
 // horario. Compara com a oficial atual. Nada e gravado.
+import { sobreporExperimento } from "./disponibilidade-experimento"; // [DISP-EXPERIMENTAL]
 import { regraDeSubstituicao, vinculosDasTurmas } from "./promocao-substitui"; // [PROMOVER-PROFESSOR-TROCADO]
 import { db, professoresTable, turmasTable, horariosTable, horariosExperimentaisTable, disponibilidadeTable, disciplinasTable, horarioSlotsTable } from "@workspace/db";
 import { and, eq, inArray } from "drizzle-orm";
@@ -78,7 +79,7 @@ export async function simularPromocao(
     db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
     db.select().from(horariosExperimentaisTable)
       .where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome))),
-    db.select().from(disponibilidadeTable),
+    db.select().from(disponibilidadeTable).then((r) => sobreporExperimento(r)), // [DISP-EXPERIMENTAL]
     db.select({ id: disciplinasTable.id, nome: disciplinasTable.nome }).from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
     db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId)),
   ]);

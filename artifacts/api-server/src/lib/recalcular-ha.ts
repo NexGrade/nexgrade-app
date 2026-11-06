@@ -24,6 +24,7 @@
 // Chamado automaticamente apos: promover experimento pra oficial,
 // geracao direta (nao-experimental) pelo heuristico, e correcao
 // cirurgica de professor -- ver pontos de chamada em horarios.ts.
+import { sobreporExperimento } from "./disponibilidade-experimento"; // [DISP-EXPERIMENTAL]
 import { db } from "@workspace/db";
 import {
   professoresTable,
@@ -166,7 +167,8 @@ export async function calcularHAIdeal(
     db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
     aulasOverride ? Promise.resolve([]) : db.select().from(horariosTable).where(eq(horariosTable.escolaId, escolaId)),
     db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId)),
-    db.select().from(disponibilidadeTable),
+    // [DISP-EXPERIMENTAL] so nesta conta (leitura); o recalculo que grava (mais abaixo) usa sempre a oficial
+    db.select().from(disponibilidadeTable).then((r) => sobreporExperimento(r)),
   ]);
   // [PAEE-SEM-HA] (04/11/2026, decisao da dona) aula de disciplina "sem turma" (PAEE) nao conta na tabela de HA
   // (Res. 7.863/2024, como a tela de Conflitos ja fazia); continua ocupando o horario do professor

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { sobreporExperimento, middlewareDisponibilidadeExperimental } from "../lib/disponibilidade-experimento"; // [DISP-EXPERIMENTAL]
 import { db } from "@workspace/db";
 import {
   horariosTable, professoresTable, disciplinasTable, turmasTable, disponibilidadeTable,
@@ -51,6 +52,8 @@ export function horarioRco(turno: string, inicio: string, fim: string, horarioDa
 }
 
 const router = Router();
+// [DISP-EXPERIMENTAL] rotas de experimento enxergam a disponibilidade do experimento (lib/disponibilidade-experimento.ts)
+router.use(middlewareDisponibilidadeExperimental);
 
 const DIAS = ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira"];
 
@@ -898,7 +901,7 @@ router.get("/grade-pdf/professor", async (req, res) => {
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
     db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
     db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
-    db.select().from(disponibilidadeTable),
+    db.select().from(disponibilidadeTable).then((r) => sobreporExperimento(r)), // [DISP-EXPERIMENTAL] previa do experimento
     carregarMapaIntegral(escolaId),
   ]);
   type AulaPdfProf = { turmaId: number; disciplinaId: number; professorId: number; diaSemana: number; numeroAula: number; assincrona?: boolean | null; foraDoExperimento?: boolean };
