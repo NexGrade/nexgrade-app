@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { customFetch } from "@workspace/api-client-react";
+import { customFetch, useListTurmas } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +18,20 @@ type MudancaDisp = { professorId: number; professor: string; turno: string; diaS
 type MudancaAtrib = { turmaDisciplinaId: number; turma: string; disciplina: string; professorOficialId: number | null; professorId: number | null; mudou: boolean };
 type DifTurma = { turmaId: number; turma: string; mudancas: Array<{ quando: string; antes: string; depois: string }> };
 const DIA = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-const TURNO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
+const TURNO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite", integral: "Integral" };
+// [RASCUNHO-ALCANCE] (09/11/2026) o que o rascunho copia da escola
+const ALCANCES = [
+  { v: "matutino", r: "Só a Manhã" }, { v: "vespertino", r: "Só a Tarde" }, { v: "noturno", r: "Só a Noite" }, { v: "integral", r: "Só o Integral" },
+  { v: "turmas", r: "Só as turmas que eu escolher" }, { v: "todos", r: "A escola toda (todos os turnos)" },
+];
+export function descreverAlcance(r: { alcance?: string; turmaIds?: number[] }, nomeTurma?: (id: number) => string | undefined): string {
+  if (!r.alcance || r.alcance === "todos") return "escola toda";
+  if (r.alcance === "turmas") {
+    const nomes = (r.turmaIds ?? []).map((id) => nomeTurma?.(id)).filter(Boolean);
+    return nomes.length ? `turmas ${nomes.join(", ")}` : `${r.turmaIds?.length ?? 0} turma(s)`;
+  }
+  return TURNO[r.alcance] ?? r.alcance;
+}
 
 export function RascunhoBarra() {
   const papel = usePapelEfetivo();
@@ -28,6 +41,13 @@ export function RascunhoBarra() {
   const { toast } = useToast();
   const [novoAberto, setNovoAberto] = useState(false);
   const [nome, setNome] = useState("");
+  const [alcance, setAlcance] = useState("matutino"); // [RASCUNHO-ALCANCE]
+  const [turmasEscolhidas, setTurmasEscolhidas] = useState<number[]>([]);
+  const { data: turmasEscola = [] } = useListTurmas();
+  const turmasOrdenadas = [...turmasEscola].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { numeric: true }));
+  const turnosDaEscola = new Set<string>(turmasEscola.map((t) => t.turno));
+  const nomeTurma = (id: number) => turmasEscola.find((t) => t.id === id)?.nome;
+  const abrirNovo = () => { setAlcance(["matutino", "vespertino", "noturno", "integral"].find((t) => turnosDaEscola.has(t)) ?? "todos"); setNovoAberto(true); };
   const [ocupado, setOcupado] = useState<string | null>(null);
   // [RASCUNHO-EVIDENTE] convite grande para comecar um rascunho (a pessoa pode ocultar; lembra no navegador)
   const [convite, setConvite] = useState<boolean>(() => { try { return localStorage.getItem("nexgrade.conviteRascunho") !== "0"; } catch { return true; } });
@@ -41,11 +61,14 @@ export function RascunhoBarra() {
   const criar = async () => {
     setOcupado("criar");
     try {
-      const r = await customFetch<{ nome: string; aulas: number }>("/api/horarios/rascunho/atual", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nome: nome.trim() }) });
+      const r = await customFetch<{ nome: string; aulas: number; alcance?: string; turmaIds?: number[] | null }>("/api/horarios/rascunho/atual", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nome: nome.trim(), alcance, ...(alcance === "turmas" ? { turmaIds: turmasEscolhidas } : {}) }),
+      });
       ligarRascunho(r.nome);
-      setNovoAberto(false); setNome("");
+      setNovoAberto(false); setNome(""); setTurmasEscolhidas([]);
       await atualizarTudo();
-      toast({ title: `Rascunho "${r.nome}" criado`, description: `A grade oficial (${r.aulas} aulas) foi copiada para o rascunho. Mexa à vontade: nada vale para a escola até "Aplicar na escola".` });
+      toast({ title: `Rascunho "${r.nome}" criado`, description: `A grade oficial de ${descreverAlcance({ alcance: r.alcance, turmaIds: r.turmaIds ?? undefined }, nomeTurma)} (${r.aulas} aulas) foi copiada para o rascunho. Mexa à vontade: nada vale para a escola até "Aplicar na escola".` });
     } catch (e) {
       toast({ title: "Não foi possível criar o rascunho", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
     } finally { setOcupado(null); }
@@ -76,6 +99,16 @@ export function RascunhoBarra() {
 
   const aplicar = async () => {
     if (!rascunho) return;
+    // [CHOQUE-ANTES-DE-GRAVAR] (09/11/2026) professor em duas turmas no mesmo horario: o banco recusaria; avisa antes
+    setOcupado("aplicar");
+    try {
+      const { choques } = await customFetch<{ choques: string[] }>(`/api/horarios/experimentais/${encodeURIComponent(rascunho.nome)}/choques`);
+      if (choques.length) {
+        alert(`O rascunho tem ${choques.length} choque(s) de professor e ainda não pode ser aplicado:\n\n${choques.slice(0, 15).map((c) => `• ${c}`).join("\n")}${choques.length > 15 ? `\n• ... e mais ${choques.length - 15}` : ""}\n\nMude uma das aulas de horário na Grade (ou troque o professor) e tente de novo.`);
+        return;
+      }
+    } catch { /* a conferencia falhou: o servidor confere de novo ao aplicar */ }
+    finally { setOcupado(null); }
     if (!confirm(`Aplicar o rascunho "${rascunho.nome}" na escola?\n\nA grade, a disponibilidade e os professores do rascunho passam a valer. Antes, o sistema guarda uma cópia da grade atual ("Voltar à grade anterior", em Gerar Grade → Modo Experimental).`)) return;
     setOcupado("aplicar");
     try {
@@ -114,6 +147,7 @@ export function RascunhoBarra() {
             </span>
             <span className="flex-1 min-w-[14rem] text-sm">
               <strong className="text-base">{rascunho.nome}</strong>
+              <span className="ml-2 rounded bg-white/20 px-1.5 py-0.5 text-[11px] font-semibold">{descreverAlcance(rascunho, nomeTurma)}</span>
               <span className="block text-violet-100">O que você mudar na Grade, na Disponibilidade e em Turmas fica só no rascunho. Nada vale para a escola ainda.</span>
             </span>
             <div className="flex flex-wrap items-center gap-2">
@@ -146,14 +180,14 @@ export function RascunhoBarra() {
             <strong className="block text-base">Quer testar uma mudança sem mexer na escola?</strong>
             Comece um rascunho: troque professores, aulas e disponibilidade, veja como fica e só depois aplique.
           </span>
-          <Button className="h-10 bg-violet-700 px-5 text-white hover:bg-violet-800" onClick={() => setNovoAberto(true)}>
+          <Button className="h-10 bg-violet-700 px-5 text-white hover:bg-violet-800" onClick={abrirNovo}>
             <FileEdit className="w-4 h-4 mr-1.5" />Começar rascunho
           </Button>
           <button type="button" className="text-xs text-violet-700 underline" onClick={() => mudarConvite(false)} title="Mostrar só um botão pequeno">ocultar</button>
         </div>
       ) : (
         <div className="mb-4 flex justify-end">
-          <Button size="sm" className="h-8 bg-violet-700 text-white hover:bg-violet-800" onClick={() => setNovoAberto(true)} title="Testar mudanças de grade, disponibilidade e professores sem mexer na escola">
+          <Button size="sm" className="h-8 bg-violet-700 text-white hover:bg-violet-800" onClick={abrirNovo} title="Testar mudanças de grade, disponibilidade e professores sem mexer na escola">
             <FileEdit className="w-4 h-4 mr-1" />Começar rascunho
           </Button>
           <button type="button" className="ml-2 text-xs text-violet-700 underline" onClick={() => mudarConvite(true)}>o que é?</button>
@@ -165,9 +199,27 @@ export function RascunhoBarra() {
           <DialogHeader><DialogTitle>Começar rascunho</DialogTitle></DialogHeader>
           <div className="space-y-3 text-sm">
             <p className="text-muted-foreground">
-              O rascunho começa como uma cópia da escola de hoje. Dentro dele você troca aulas na Grade, muda a Disponibilidade e o professor das disciplinas em Turmas,
+              O rascunho começa como uma cópia da grade de hoje (só do turno ou das turmas que você escolher). Dentro dele você troca aulas na Grade, muda a Disponibilidade e o professor das disciplinas em Turmas,
               e gera a grade de novo se quiser. <strong>Nada vale para a escola até "Aplicar na escola".</strong>
             </p>
+            <div className="space-y-1.5">
+              <Label>O que entra no rascunho</Label>
+              <select className="w-full rounded-md border bg-background px-3 py-2 text-sm" value={alcance} onChange={(e) => setAlcance(e.target.value)}>
+                {ALCANCES.filter((a) => a.v === "todos" || a.v === "turmas" || turnosDaEscola.has(a.v)).map((a) => <option key={a.v} value={a.v}>{a.r}</option>)}
+              </select>
+              <p className="text-xs text-muted-foreground">Só essa parte da grade é copiada, gerada e aplicada. O resto da escola não muda.</p>
+              {alcance === "turmas" && (
+                <div className="max-h-48 overflow-y-auto rounded-md border p-2 space-y-1">
+                  {turmasOrdenadas.map((t) => (
+                    <label key={t.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded px-1 py-0.5">
+                      <input type="checkbox" className="h-3.5 w-3.5" checked={turmasEscolhidas.includes(t.id)}
+                        onChange={(e) => setTurmasEscolhidas((xs) => e.target.checked ? [...xs, t.id] : xs.filter((x) => x !== t.id))} />
+                      {t.nome} <span className="text-xs text-muted-foreground">{TURNO[t.turno] ?? t.turno}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
             <div className="space-y-1.5">
               <Label>Nome do rascunho</Label>
               <Input autoFocus value={nome} maxLength={80} placeholder="Ex.: Ana sem sexta-feira" onChange={(e) => setNome(e.target.value)}
@@ -176,7 +228,7 @@ export function RascunhoBarra() {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setNovoAberto(false)}>Cancelar</Button>
-            <Button disabled={!nome.trim() || ocupado !== null} onClick={() => void criar()}>{ocupado === "criar" && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Começar</Button>
+            <Button disabled={!nome.trim() || ocupado !== null || (alcance === "turmas" && !turmasEscolhidas.length)} onClick={() => void criar()}>{ocupado === "criar" && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Começar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

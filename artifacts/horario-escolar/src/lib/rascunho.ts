@@ -7,6 +7,8 @@ import { customFetch } from "@workspace/api-client-react";
 
 export type Rascunho = {
   nome: string; criadoEm: string; criadoPor: string | null;
+  /** [RASCUNHO-ALCANCE] "todos", um turno ou "turmas" (turmaIds); rascunhos antigos nao tem (= escola toda) */
+  alcance?: string; turmaIds?: number[];
   aulas: number; mudancasDisponibilidade: number; mudancasAtribuicao: number;
 };
 

@@ -7,6 +7,7 @@ import {
 import { experimentosTable, atribuicaoExperimentalTable, disponibilidadeExperimentalTable } from "@workspace/db"; // [EXPERIMENTO-COMPLETO]
 import { lerRascunho, gravarRascunho, limparRascunho } from "../lib/rascunho"; // [MODO-RASCUNHO]
 import { aulasDePartidaDoMelhorar } from "../lib/rascunho-melhorar"; // [RASCUNHO-MELHORAR]
+import { choquesDeProfessor, descreverChoques, mensagemDaTravaDeChoque, type TurmaHora } from "../lib/choques-professor"; // [CHOQUE-ANTES-DE-GRAVAR]
 import axios from "axios";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { db } from "@workspace/db";
@@ -56,7 +57,7 @@ import { aulasFixasTable } from "@workspace/db"; // [AULA-FIXA-CADASTRO]
 import { validarCapacidadeProfessores, calcularCotaHaPorTurno, capacidadeDoProfessor } from "../lib/capacidade-professor";
 import { carregarMapaIntegral, slotReal, TURNO_INTEGRAL, carregarAulasIntegraisNoTurno, mapaIntegralDosSlots, posicaoReal } from "../lib/turno-integral"; // [TURNO-INTEGRAL] [INTEGRAL-NO-MOTOR]
 import { diagnosticarGeracao, diagnosticarViolacoesPromocao, explicarBloqueiosNaCausa, type OrigemBloqueio } from "../lib/diagnostico-geracao"; // [DIAGNOSTICO-GERACAO] [ORIGEM-BLOQUEIO]
-import { tempoDoMotor, TEMPO_TOTAL_PADRAO_S, TEMPO_MINIMO_CHAMADA_S } from "../lib/tempo-geracao"; // [TEMPO-TOTAL]
+import { tempoDoMotor, tempoDoMelhorar, TEMPO_TOTAL_PADRAO_S, TEMPO_MINIMO_CHAMADA_S } from "../lib/tempo-geracao"; // [TEMPO-TOTAL] [MELHORAR-120S]
 
 const router = Router();
 // [DISP-EXPERIMENTAL] rotas de experimento enxergam a disponibilidade do experimento (lib/disponibilidade-experimento.ts)
@@ -830,7 +831,33 @@ router.post("/", async (req, res) => {
     return;
   }
 
-  const [slot] = await db.insert(horariosTable).values({ ...data, escolaId }).returning();
+  // [CHOQUE-ANTES-DE-GRAVAR] (09/11/2026) professor ja com aula em outra turma no mesmo horario real: mesma regra da trava
+  // do banco, conferida antes (a mensagem chega na tela e vale tambem onde a trava nao esta instalada)
+  {
+    const [turmasE, slotsE, doProf, profE] = await Promise.all([
+      db.select({ id: turmasTable.id, nome: turmasTable.nome, turno: turmasTable.turno, nivelEnsino: turmasTable.nivelEnsino }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
+      db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId)),
+      db.select().from(horariosTable).where(and(eq(horariosTable.escolaId, escolaId), eq(horariosTable.professorId, data.professorId),
+        eq(horariosTable.diaSemana, data.diaSemana), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`)),
+      db.select({ nome: professoresTable.nome }).from(professoresTable).where(eq(professoresTable.id, data.professorId)).then((r) => r[0]),
+    ]);
+    const tm = new Map<number, TurmaHora>(turmasE.map((t) => [t.id, { ...t, nivelEnsino: t.nivelEnsino ?? null }]));
+    const nova = { turmaId: data.turmaId, professorId: data.professorId, diaSemana: data.diaSemana, numeroAula: data.numeroAula, assincrona: !!(data as { assincrona?: boolean }).assincrona };
+    const choques = choquesDeProfessor([nova, ...doProf], tm, slotsE.map((x) => ({ ...x, nivelEnsino: x.nivelEnsino ?? null })), (a) => a === nova);
+    if (choques.length) {
+      res.status(409).json({ error: `Choque de horário: ${descreverChoques(choques, tm, () => profE?.nome ?? "o professor").join("; ")}.` });
+      return;
+    }
+  }
+  // [CHOQUE-ANTES-DE-GRAVAR] a trava do banco recusou mesmo assim (corrida): a mensagem dela, nao um 500
+  let slot: typeof horariosTable.$inferSelect;
+  try {
+    [slot] = await db.insert(horariosTable).values({ ...data, escolaId }).returning();
+  } catch (err) {
+    const trava = mensagemDaTravaDeChoque(err);
+    if (trava) { res.status(409).json({ error: trava.replace(/^IMPOSS[IÍ]VEL SALVAR:\s*/, "") }); return; }
+    throw err;
+  }
 
   // [FIX-SYNC-TURMA-DISCIPLINAS] Ao adicionar aula manual (clique na
   // grade), o professor escolhido precisa refletir em
@@ -1128,6 +1155,16 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
         .where(inArray(turmaDisciplinasTable.id, [...atribuicoesExp.keys()]))).map((r) => ({ turmaDisciplinaId: r.id, professorId: r.professorId ?? null }))
     : [];
 
+  // [CHOQUE-ANTES-DE-GRAVAR] (09/11/2026) professor em duas turmas no mesmo horario: antes, so a trava do banco pegava,
+  // depois de 50+ s e com a mensagem de um choque so (a tela nem mostrava). Agora a lista inteira, antes de mudar nada.
+  {
+    const choques = await choquesAoPromover(escolaId, nome, expSlots);
+    if (choques.length) {
+      res.status(409).json({ error: `O rascunho tem ${choques.length} choque(s) de professor e não pode ser aplicado. Mude uma das aulas de horário: ${choques.slice(0, 5).join("; ")}${choques.length > 5 ? "; ..." : ""}`, choques });
+      return;
+    }
+  }
+
   // [BACKUP-GRADE] cópia da oficial (aulas + HA) antes de trocar, para "Voltar à grade anterior"
   let avisoBackup: string | null = null;
   let backupId: number | null = null;
@@ -1257,6 +1294,8 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
       try { await db.transaction((tx) => voltarAtribuicoes(tx, atribAntes)); }
       catch (e2) { console.error("[EXPERIMENTO-COMPLETO] falhou ao desfazer a atribuicao depois da promocao falhar:", e2); }
     }
+    const trava = mensagemDaTravaDeChoque(err); // [CHOQUE-ANTES-DE-GRAVAR] o que a conferencia acima nao pegou
+    if (trava) { res.status(409).json({ error: `Nada foi aplicado: ${trava.replace(/^IMPOSS[IÍ]VEL SALVAR:\s*/, "")}` }); return; }
     throw err;
   }
   await apagarExtrasDoExperimento(escolaId, nome); // [DISP-EXPERIMENTAL] [EXPERIMENTO-COMPLETO] ja estao na oficial
@@ -1474,9 +1513,10 @@ router.post("/experimentos", async (req, res) => {
 
 /** Copia a grade oficial (um turno, ou "todos") para o experimento. Com turmaId, so essa turma (apaga a dela antes).
  *  O professor de cada aula segue a atribuicao do experimento, se houver. */
-async function copiarOficialParaExperimento(escolaId: string, nome: string, copiar: string, turmaId?: number): Promise<number> {
+async function copiarOficialParaExperimento(escolaId: string, nome: string, copiar: string, turmaId?: number | number[]): Promise<number> {
   const turmas = await db.select({ id: turmasTable.id, turno: turmasTable.turno }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
-  const ids = turmas.filter((t) => (turmaId != null ? t.id === turmaId : copiar === "todos" || t.turno === copiar)).map((t) => t.id);
+  const soEstas = turmaId == null ? null : new Set(Array.isArray(turmaId) ? turmaId : [turmaId]); // [RASCUNHO-ALCANCE] uma ou varias turmas
+  const ids = turmas.filter((t) => (soEstas ? soEstas.has(t.id) : copiar === "todos" || t.turno === copiar)).map((t) => t.id);
   if (!ids.length) return 0;
   const oficial = await db.select().from(horariosTable).where(and(
     eq(horariosTable.escolaId, escolaId), inArray(horariosTable.turmaId, ids), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`));
@@ -1492,7 +1532,7 @@ async function copiarOficialParaExperimento(escolaId: string, nome: string, copi
     };
   });
   await db.transaction(async (tx) => {
-    if (turmaId != null) await tx.delete(horariosExperimentaisTable).where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome), eq(horariosExperimentaisTable.turmaId, turmaId)));
+    if (soEstas) await tx.delete(horariosExperimentaisTable).where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome), inArray(horariosExperimentaisTable.turmaId, ids)));
     for (let i = 0; i < linhas.length; i += 500) await tx.insert(horariosExperimentaisTable).values(linhas.slice(i, i + 500));
   });
   return linhas.length;
@@ -1515,11 +1555,33 @@ router.get("/rascunho/atual", async (req, res) => {
   res.json({ rascunho: { ...r, aulas: aulas?.n ?? 0, mudancasDisponibilidade: disp, mudancasAtribuicao: atrib } });
 });
 
-/** Cria o rascunho da escola: um experimento com a grade oficial inteira copiada. */
+// [RASCUNHO-ALCANCE] (09/11/2026) pedido da dona depois dos testes no Romario Martins (06/11): o rascunho copiava a escola
+// inteira -- a tela mostrava todos os turnos misturados, o "Aplicar" regravava todas as turmas e refazia a HA de todos os
+// turnos (55 a 110 s). Agora o rascunho e de um turno, de turmas escolhidas ou (se pedir) da escola toda. Sem alcance,
+// continua a escola toda (telas antigas). Trocar o professor de uma turma de fora poe essa turma no rascunho.
+const NovoRascunhoBody = z.object({
+  nome: z.string().trim().min(1).max(80),
+  alcance: z.enum(["todos", "matutino", "vespertino", "noturno", "integral", "turmas"]).optional(),
+  turmaIds: z.array(z.number().int()).max(200).optional(),
+});
+
+/** Cria o rascunho da escola: um experimento com a grade oficial copiada (turno, turmas escolhidas ou a escola toda). */
 router.post("/rascunho/atual", async (req, res) => {
   const escolaId = getEscolaId(req);
-  const nome = typeof req.body?.nome === "string" ? req.body.nome.trim().slice(0, 80) : "";
-  if (!nome) { res.status(400).json({ error: "Dê um nome ao rascunho." }); return; }
+  const b = NovoRascunhoBody.safeParse({ ...req.body, nome: typeof req.body?.nome === "string" ? req.body.nome.trim().slice(0, 80) : "" });
+  if (!b.success) { res.status(400).json({ error: "Dê um nome ao rascunho." }); return; }
+  const nome = b.data.nome;
+  const alcance = b.data.alcance ?? "todos";
+  let turmaIds: number[] | undefined;
+  if (alcance === "turmas") {
+    const pedidas = [...new Set(b.data.turmaIds ?? [])];
+    turmaIds = pedidas.length ? (await db.select({ id: turmasTable.id }).from(turmasTable)
+      .where(and(eq(turmasTable.escolaId, escolaId), inArray(turmasTable.id, pedidas)))).map((t) => t.id) : [];
+    if (!turmaIds.length) { res.status(400).json({ error: "Escolha pelo menos uma turma para o rascunho." }); return; }
+  } else if (alcance !== "todos") {
+    const [uma] = await db.select({ id: turmasTable.id }).from(turmasTable).where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.turno, alcance))).limit(1);
+    if (!uma) { res.status(400).json({ error: "A escola não tem turmas nesse turno." }); return; }
+  }
   const atual = await lerRascunho(escolaId);
   if (atual) { res.status(409).json({ error: `A escola já tem o rascunho "${atual.nome}". Aplique ou descarte antes de começar outro.` }); return; }
   const [existe] = await db.select({ id: horariosExperimentaisTable.id }).from(horariosExperimentaisTable)
@@ -1531,10 +1593,43 @@ router.post("/rascunho/atual", async (req, res) => {
     if (semTabelaExperimental(e)) { res.status(503).json({ error: "O rascunho ainda não está pronto no banco (falta a atualização do sistema). Avise o suporte NexGrade." }); return; }
     throw e;
   }
-  const aulas = await copiarOficialParaExperimento(escolaId, nome, "todos");
+  const aulas = await copiarOficialParaExperimento(escolaId, nome, alcance === "turmas" ? "todos" : alcance, turmaIds);
   const quem = (req as unknown as { acesso?: { email?: string } }).acesso?.email ?? null;
-  await gravarRascunho(escolaId, { nome, criadoEm: new Date().toISOString(), criadoPor: quem });
-  res.status(201).json({ nome, aulas });
+  await gravarRascunho(escolaId, { nome, criadoEm: new Date().toISOString(), criadoPor: quem, alcance, ...(turmaIds ? { turmaIds } : {}) });
+  res.status(201).json({ nome, aulas, alcance, turmaIds: turmaIds ?? null });
+});
+
+// [CHOQUE-ANTES-DE-GRAVAR] (09/11/2026) como a grade oficial ficaria depois de aplicar o experimento (sai o que o promover
+// apaga: os pares turma+professor dele e o professor que deixou a disciplina, ja com a atribuicao do experimento) e os
+// choques de professor que envolvem aulas do experimento. Mesma regra da trava do banco.
+async function choquesAoPromover(escolaId: string, nome: string, expSlots: Array<typeof horariosExperimentaisTable.$inferSelect>): Promise<string[]> {
+  if (!expSlots.length) return [];
+  const turmaIds = [...new Set(expSlots.map((s) => s.turmaId))];
+  const [atrib, tds, oficial, turmas, slots, profs] = await Promise.all([
+    carregarAtribuicoes(escolaId, nome),
+    db.select({ id: turmaDisciplinasTable.id, turmaId: turmaDisciplinasTable.turmaId, disciplinaId: turmaDisciplinasTable.disciplinaId, professorId: turmaDisciplinasTable.professorId, professorApoioId: turmaDisciplinasTable.professorApoioId })
+      .from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, turmaIds)),
+    db.select().from(horariosTable).where(and(eq(horariosTable.escolaId, escolaId), sql`COALESCE(${horariosTable.versaoGrade}, 'oficial') = 'oficial'`)),
+    db.select({ id: turmasTable.id, nome: turmasTable.nome, turno: turmasTable.turno, nivelEnsino: turmasTable.nivelEnsino }).from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
+    db.select().from(horarioSlotsTable).where(eq(horarioSlotsTable.escolaId, escolaId)),
+    db.select({ id: professoresTable.id, nome: professoresTable.nome }).from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
+  ]);
+  const vinculos = tds.map((td) => ({ turmaId: td.turmaId, disciplinaId: td.disciplinaId, professorId: atrib.has(td.id) ? atrib.get(td.id)! : td.professorId, professorApoioId: td.professorApoioId }));
+  const sai = regraDeSubstituicao(expSlots, vinculos);
+  const doExp = new Set<object>(expSlots);
+  const tm = new Map<number, TurmaHora>(turmas.map((t) => [t.id, { ...t, nivelEnsino: t.nivelEnsino ?? null }]));
+  const nomeProf = new Map(profs.map((p) => [p.id, p.nome]));
+  type Aula = { turmaId: number; professorId: number | null; diaSemana: number; numeroAula: number; assincrona?: boolean | null };
+  const aulas: Aula[] = [...oficial.filter((h) => !sai(h)), ...expSlots];
+  const choques = choquesDeProfessor(aulas, tm, slots.map((x) => ({ ...x, nivelEnsino: x.nivelEnsino ?? null })), (a) => doExp.has(a));
+  return descreverChoques(choques, tm, (id) => nomeProf.get(id) ?? `Professor #${id}`);
+}
+
+/** Choques de professor que impedem aplicar o experimento (a tela confere antes de "Aplicar na escola"). */
+router.get("/experimentais/:nome/choques", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const exp = await db.select().from(horariosExperimentaisTable).where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, req.params.nome)));
+  res.json({ choques: await choquesAoPromover(escolaId, req.params.nome, exp) });
 });
 
 /** Descarta o rascunho: apaga tudo o que ele guardava. A oficial nao muda. */
@@ -1635,11 +1730,22 @@ router.put("/experimentais/:nome/atribuicoes", async (req, res) => {
   }
   const atual = await carregarAtribuicoes(escolaId, nome);
   const professorAntes = atual.has(linha.td.id) ? atual.get(linha.td.id)! : linha.td.professorId ?? null;
+  // [RASCUNHO-ALCANCE] (09/11/2026) turma fora do rascunho (rascunho de um turno ou de turmas escolhidas): entra nele com a
+  // grade oficial copiada, para as aulas acompanharem o professor novo (sem isso, ao aplicar, so o vinculo mudaria)
+  if (b.data.professorId !== professorAntes && (await lerRascunho(escolaId).catch(() => null))?.nome === nome) {
+    const [temNoExp] = await db.select({ id: horariosExperimentaisTable.id }).from(horariosExperimentaisTable).where(and(
+      eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome), eq(horariosExperimentaisTable.turmaId, linha.td.turmaId))).limit(1);
+    if (!temNoExp) await copiarOficialParaExperimento(escolaId, nome, "todos", linha.td.turmaId);
+  }
   // [RASCUNHO-AVISO-PROFESSOR] (06/11/2026) antes de trocar: o professor novo ja tem aula em outra turma, bloqueio ou HA
   // nos horarios desta disciplina? Sem confirmar, so devolve os avisos (como a troca de aulas).
   if (b.data.professorId != null && b.data.professorId !== professorAntes && !b.data.confirmar) {
     const avisos = await avisosDoProfessorNovo(escolaId, nome, linha.td.turmaId, linha.td.disciplinaId, professorAntes, b.data.professorId);
-    if (avisos.length) { res.json({ ok: false, aplicado: false, avisos }); return; }
+    if (avisos.length) {
+      // [CHOQUE-ANTES-DE-GRAVAR] choque com outra turma deixa o rascunho sem poder ser aplicado ate alguem mudar a aula
+      if (avisos.some((a) => a.includes("já tem aula"))) avisos.push("Com esse choque o rascunho não pode ser aplicado na escola até uma das aulas mudar de horário.");
+      res.json({ ok: false, aplicado: false, avisos }); return;
+    }
   }
   try {
     const onde = and(eq(atribuicaoExperimentalTable.escolaId, escolaId), eq(atribuicaoExperimentalTable.nome, nome), eq(atribuicaoExperimentalTable.turmaDisciplinaId, linha.td.id));
@@ -3283,7 +3389,7 @@ router.post("/melhorar-grade-async", async (req, res) => {
   const progresso: ProgressoGeracao = { etapas: [], jobId }; // [PROGRESSO-GERACAO] [PROGRESSO-MOTOR]
   cpsatJobs.set(jobId, { status: "running", escolaId, startedAt: Date.now(), abortController, etapas: progresso.etapas, progresso });
 
-  void progressoGeracao.run(progresso, () => runCpsatGeneracaoUnica(escolaId, turno, undefined, undefined, nomeExperimental, tempoLimiteS ?? 120, abortController.signal, false, true))
+  void progressoGeracao.run(progresso, () => runCpsatGeneracaoUnica(escolaId, turno, undefined, undefined, nomeExperimental, tempoDoMelhorar(tempoLimiteS), abortController.signal, false, true)) // [MELHORAR-120S]
     .then((resultado) => {
       const jobAtual = cpsatJobs.get(jobId);
       if (jobAtual?.status === "cancelado") return;

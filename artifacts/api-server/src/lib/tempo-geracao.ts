@@ -5,6 +5,15 @@
 
 export const TEMPO_TOTAL_PADRAO_S = 300;
 export const TEMPO_MINIMO_CHAMADA_S = 30;
+// [MELHORAR-120S] (09/11/2026) O Melhorar parte da grade atual e o motor usa TODO o tempo pedido (warm start, solver.py),
+// mais ~20-40 s de trocas finais. Com o "Tempo total" padrao de 300 s (01/11), todo Melhorar passou a levar 300-340 s
+// (logs do Render de 03 a 06/11), sem ganho medido com mais tempo (03/11). Volta ao teto de antes: 120 s.
+export const MELHORAR_MAXIMO_S = 120;
+
+/** Tempo do Melhorar: o da tela, sem passar de MELHORAR_MAXIMO_S. */
+export function tempoDoMelhorar(pedidoS?: number): number {
+  return Math.max(TEMPO_MINIMO_CHAMADA_S, Math.min(MELHORAR_MAXIMO_S, Math.floor(pedidoS ?? MELHORAR_MAXIMO_S)));
+}
 const TROCAS_FINAIS_S = 20; // reduzir_janelas no fim de cada gerar_grade do motor
 
 export type TempoDoMotor = {

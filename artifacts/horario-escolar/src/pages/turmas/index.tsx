@@ -156,6 +156,39 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
     }
   }
 
+  // [TROCA-LEVA-AULAS] (09/11/2026) trocar o professor leva junto as aulas da grade. Com choque, bloqueio ou HA do
+  // professor novo nesses horarios, o servidor avisa antes; com choque com outra turma, as aulas ficam com o anterior.
+  async function trocarProfessorDaLinha(linhaId: number, professorId: number | null) {
+    const url = `/api/turmas/${turmaId}/disciplinas/linha/${linhaId}`;
+    setSalvando(url);
+    try {
+      type Resp = { aplicado?: boolean; choques?: string[]; avisos?: string[]; aulasNaGrade?: number; aulasPassadas?: number; aviso?: string | null };
+      const enviar = (confirmar: boolean) => customFetch<Resp>(url, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ professorId, confirmar }) });
+      let r = await enviar(false);
+      if (r.aplicado === false) {
+        const choques = r.choques ?? [], avisos = r.avisos ?? [];
+        const texto = [
+          ...(choques.length ? [`O professor novo já tem aula em outra turma em horário(s) desta disciplina:`, ...choques.map((x) => `• ${x}`),
+            ``, `Se trocar, as ${r.aulasNaGrade ?? ""} aula(s) da grade CONTINUAM com o professor anterior até você mudar esses horários (ou gerar a grade de novo).`] : []),
+          ...(avisos.length ? [``, ...avisos.map((x) => `• ${x}`)] : []),
+        ].join("\n");
+        if (!confirm(`Atenção:\n\n${texto.trim()}\n\nTrocar o professor mesmo assim?`)) return;
+        r = await enviar(true);
+      }
+      await queryClient.invalidateQueries({ queryKey: getGetTurmaQueryKey(turmaId) });
+      await queryClient.invalidateQueries(); // a grade tambem mudou
+      toast({
+        title: professorId == null ? "Professor removido" : r.aulasPassadas ? `Professor trocado: ${r.aulasPassadas} aula(s) da grade passaram para ele` : "Professor definido",
+        description: r.aviso ?? undefined,
+        variant: r.aviso && !r.aulasPassadas ? "destructive" : undefined,
+      });
+    } catch (err) {
+      toast({ title: "Não foi possível salvar", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
+    } finally {
+      setSalvando(null);
+    }
+  }
+
   const semEnter = (e: any) => { if (e.key === "Enter") { e.preventDefault(); (e.target as HTMLInputElement).blur(); } };
 
   function seletor(disciplinaId: number, valor: number | null, onEscolher: (v: string) => void, permitirRemover: boolean, chave: string) {
@@ -300,7 +333,7 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
                     {seletor(g.disciplinaId, l.professorId ?? null,
                       (v) => rascunho
                         ? atribuirNoRascunho(l.turmaDisciplinaId, v === "__nenhum__" ? null : Number(v)) // [MODO-RASCUNHO]
-                        : chamar(`/api/turmas/${turmaId}/disciplinas/linha/${l.turmaDisciplinaId}`, "PATCH", { professorId: v === "__nenhum__" ? null : Number(v) }, v === "__nenhum__" ? "Professor removido" : "Professor definido"),
+                        : trocarProfessorDaLinha(l.turmaDisciplinaId, v === "__nenhum__" ? null : Number(v)), // [TROCA-LEVA-AULAS]
                       !!l.professorId && i === 0 && g.linhas.length === 1, `prof-${l.turmaDisciplinaId}`)}
                     {l.mudouNoRascunho && <span className="text-[11px] font-semibold rounded bg-violet-100 text-violet-800 px-1.5 py-0.5">no rascunho</span>}
                     {i > 0 && (

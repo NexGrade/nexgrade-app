@@ -2222,7 +2222,11 @@ function AbaExperimental() {
 
   // [DISP-EXPERIMENTAL] (06/11/2026) experimentos com disponibilidade propria (tela Disponibilidade → "Editando: experimento")
   type MudancaDisp = { professorId: number; professor: string; turno: string; diaSemana: number; horarioSlot: number; antes: string; depois: string };
-  const { nomeAtivo: rascunhoNome } = useRascunho(); // [MODO-RASCUNHO] com o rascunho ligado, gerar ja vem com o nome dele
+  const { nomeAtivo: rascunhoNome, rascunho: rascunhoInfo } = useRascunho(); // [MODO-RASCUNHO] com o rascunho ligado, gerar ja vem com o nome dele
+  // [RASCUNHO-NOME-FIXO] (09/11/2026) com o rascunho ligado o nome nao muda (antes, trocar o turno na janela trocava o nome
+  // e a grade ia para outro experimento -- visto no Romario Martins em 06/11); rascunho de um turno ja abre nesse turno
+  const turnoDoRascunho = rascunhoNome && rascunhoInfo?.alcance && ["matutino", "vespertino", "noturno"].includes(rascunhoInfo.alcance)
+    ? (rascunhoInfo.alcance as "matutino" | "vespertino" | "noturno") : null;
   // [EXPERIMENTO-COMPLETO] (06/11/2026) resumo de todos os experimentos (com aula, disponibilidade e/ou atribuicao)
   type ResumoExp = { nome: string; aulas: number; turmas: number; disponibilidade: number; professoresDisp: number; atribuicoes: number };
   const { data: resumoExp } = useQuery({
@@ -2628,8 +2632,11 @@ function AbaExperimental() {
   // por trocas (sem gerar do zero). Mesmo acompanhamento de job da geracao
   // CP-SAT; o resultado vira experimento com prefixo MELHORIA-.
   const handleMelhorarGradeOficial = async () => {
-    const nome = (cpsatForm.nomeExperimental.trim() || `CPSAT-${cpsatForm.turno}`).replace(/^(CPSAT|Grade)-/, "MELHORIA-");
-    if (!confirm(`Melhorar a grade OFICIAL do ${cpsatForm.turno} por trocas de aulas?\n\nO resultado vira o experimento "${nome}". A grade oficial nao muda ate voce promover.`)) return;
+    // [RASCUNHO-NOME-FIXO] no rascunho, melhora o proprio rascunho (parte da grade dele)
+    const nome = rascunhoNome ?? (cpsatForm.nomeExperimental.trim() || `CPSAT-${cpsatForm.turno}`).replace(/^(CPSAT|Grade)-/, "MELHORIA-");
+    if (!confirm(rascunhoNome
+      ? `Melhorar o rascunho "${nome}" no turno ${cpsatForm.turno} por trocas de aulas?\n\nParte da grade do rascunho; a escola nao muda ate "Aplicar na escola".`
+      : `Melhorar a grade OFICIAL do ${cpsatForm.turno} por trocas de aulas?\n\nO resultado vira o experimento "${nome}". A grade oficial nao muda ate voce promover.`)) return;
     setMelhorandoCpsat(true);
     setGerandoCpsat(true);
     try {
@@ -2933,10 +2940,10 @@ function AbaExperimental() {
               <Button className="w-full justify-start" onClick={() => { if (rascunhoNome) setCpsatTurmaForm((f) => ({ ...f, nomeExperimental: rascunhoNome })); setOpenGerarCpsatTurma(true); }}>
                 <Sparkles className="w-4 h-4 mr-2" />Turma
               </Button>
-              <Button className="w-full justify-start" onClick={() => { if (rascunhoNome) setCpsatTurnoParcialForm((f) => ({ ...f, nomeExperimental: rascunhoNome })); setOpenGerarCpsatTurnoParcial(true); }}>
+              <Button className="w-full justify-start" onClick={() => { if (rascunhoNome) setCpsatTurnoParcialForm((f) => ({ ...f, nomeExperimental: rascunhoNome, ...(turnoDoRascunho && f.turno !== turnoDoRascunho ? { turno: turnoDoRascunho, turmaIds: [] } : {}) })); setOpenGerarCpsatTurnoParcial(true); }}>
                 <Sparkles className="w-4 h-4 mr-2" />Turno Parcial
               </Button>
-              <Button className="w-full justify-start" onClick={() => { setCpsatForm((f) => ({ ...f, nomeExperimental: rascunhoNome ?? nomeCpsatAuto(f.turno) })); setOpenGerarCpsat(true); }}>
+              <Button className="w-full justify-start" onClick={() => { setCpsatForm((f) => ({ ...f, ...(turnoDoRascunho ? { turno: turnoDoRascunho } : {}), nomeExperimental: rascunhoNome ?? nomeCpsatAuto(f.turno) })); setOpenGerarCpsat(true); }}>
                 <Sparkles className="w-4 h-4 mr-2" />Turno inteiro
               </Button>
             </div>
@@ -3504,7 +3511,7 @@ function AbaExperimental() {
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label>Nome do experimento *</Label>
-              <Input value={cpsatTurmaForm.nomeExperimental} onChange={(e) => setCpsatTurmaForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex.: Grade-Turma-2026-07-27" />
+              <Input disabled={!!rascunhoNome} title={rascunhoNome ? "Com o rascunho ligado, a grade vai para o rascunho" : undefined} value={cpsatTurmaForm.nomeExperimental} onChange={(e) => setCpsatTurmaForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex.: Grade-Turma-2026-07-27" />
             </div>
             <div className="space-y-1.5">
               <Label>Turma *</Label>
@@ -3555,7 +3562,7 @@ function AbaExperimental() {
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label>Nome do experimento *</Label>
-              <Input value={cpsatTurnoParcialForm.nomeExperimental} onChange={(e) => setCpsatTurnoParcialForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex.: Grade-Parcial-2026-08-13" />
+              <Input disabled={!!rascunhoNome} title={rascunhoNome ? "Com o rascunho ligado, a grade vai para o rascunho" : undefined} value={cpsatTurnoParcialForm.nomeExperimental} onChange={(e) => setCpsatTurnoParcialForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex.: Grade-Parcial-2026-08-13" />
             </div>
             <div className="space-y-1.5">
               <Label>Turno *</Label>
@@ -3626,11 +3633,11 @@ function AbaExperimental() {
             </div>
             <div className="space-y-1.5">
               <Label>Nome do experimento *</Label>
-              <Input value={cpsatForm.nomeExperimental} onChange={(e) => setCpsatForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex.: Grade-Teste-2026-07-24" />
+              <Input disabled={!!rascunhoNome} title={rascunhoNome ? "Com o rascunho ligado, a grade vai para o rascunho" : undefined} value={cpsatForm.nomeExperimental} onChange={(e) => setCpsatForm((f) => ({ ...f, nomeExperimental: e.target.value }))} placeholder="Ex.: Grade-Teste-2026-07-24" />
             </div>
             <div className="space-y-1.5">
               <Label>Turno</Label>
-              <Select value={cpsatForm.turno} onValueChange={(v) => setCpsatForm((f) => ({ ...f, turno: v, nomeExperimental: nomeCpsatAuto(v) }))}>
+              <Select value={cpsatForm.turno} onValueChange={(v) => setCpsatForm((f) => ({ ...f, turno: v, nomeExperimental: rascunhoNome ?? nomeCpsatAuto(v) }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="matutino">Matutino</SelectItem>

@@ -27,18 +27,23 @@ export function GradeRascunho({ nome }: { nome: string }) {
   const { data: turmas = [] } = useListTurmas();
   const { data: disciplinas = [] } = useListDisciplinas();
   const { data: professores = [] } = useListProfessores();
-  const periodosDaEscola = PERIODOS.filter((p) => turmas.some((t) => t.turno === p.v));
-  const [periodoEscolhido, setPeriodo] = useState<string | null>(null);
-  const periodo = periodoEscolhido ?? periodosDaEscola[0]?.v ?? "matutino";
-  const [turmaSel, setTurmaSel] = useState<string>("");
-  const turmasDoPeriodo = useMemo(() => [...turmas].filter((t) => t.turno === periodo).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { numeric: true })), [turmas, periodo]);
-  const mostrar = turmaSel === TODAS ? turmasDoPeriodo : turmasDoPeriodo.filter((t) => String(t.id) === turmaSel);
-
   const q = useQuery({
     queryKey: ["grade-rascunho", nome],
     queryFn: () => customFetch<Linha[]>("/api/horarios/experimentais"),
   });
   const linhasRascunho = useMemo(() => (q.data ?? []).filter((l) => l.nome === nome), [q.data, nome]);
+  // [RASCUNHO-ALCANCE] (09/11/2026) so os turnos e as turmas que estao no rascunho (rascunho de um turno ou de turmas
+  // escolhidas); sem nenhuma aula ainda, todas
+  const turmasDoRascunho = useMemo(() => {
+    const ids = new Set(linhasRascunho.map((l) => l.turmaId));
+    return ids.size ? turmas.filter((t) => ids.has(t.id)) : turmas;
+  }, [turmas, linhasRascunho]);
+  const periodosDaEscola = PERIODOS.filter((p) => turmasDoRascunho.some((t) => t.turno === p.v));
+  const [periodoEscolhido, setPeriodo] = useState<string | null>(null);
+  const periodo = periodoEscolhido && periodosDaEscola.some((p) => p.v === periodoEscolhido) ? periodoEscolhido : periodosDaEscola[0]?.v ?? "matutino";
+  const [turmaSel, setTurmaSel] = useState<string>("");
+  const turmasDoPeriodo = useMemo(() => [...turmasDoRascunho].filter((t) => t.turno === periodo).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { numeric: true })), [turmasDoRascunho, periodo]);
+  const mostrar = turmaSel === TODAS ? turmasDoPeriodo : turmasDoPeriodo.filter((t) => String(t.id) === turmaSel);
   const [sel, setSel] = useState<{ turmaId: number; diaSemana: number; numeroAula: number } | null>(null);
   const [trocando, setTrocando] = useState(false);
 
