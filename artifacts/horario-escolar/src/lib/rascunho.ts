@@ -1,6 +1,6 @@
 // [MODO-RASCUNHO] (06/11/2026) Estado do rascunho da escola na tela. Um rascunho por escola (servidor) e, em cada
 // navegador, se a pessoa esta com ele ligado (localStorage). Ligado, as telas Grade, Disponibilidade e Turmas leem e
-// gravam no rascunho; nada vale para a escola ate "Aplicar na escola".
+// gravam no rascunho; nada vale para a escola ate o "Promover para oficial" (Modo Experimental).
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { customFetch } from "@workspace/api-client-react";

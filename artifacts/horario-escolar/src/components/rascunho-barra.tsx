@@ -1,5 +1,6 @@
-// [MODO-RASCUNHO] (06/11/2026) Faixa do rascunho no topo das telas: comecar, abrir, ver mudancas, aplicar na escola,
-// desligar e descartar. So para quem edita a grade (direcao/coordenacao/secretaria).
+// [MODO-RASCUNHO] (06/11/2026) Faixa do rascunho no topo das telas: comecar, abrir, ver mudancas, desligar e descartar.
+// [SO-PROMOVER] (09/11/2026) pedido da dona: sem "Aplicar na escola" na faixa; o rascunho vale pela escola so pelo
+// "Promover para oficial" do Modo Experimental (que confere os choques antes). So para quem edita a grade (direcao/coordenacao/secretaria).
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
@@ -14,6 +15,7 @@ import { useRascunho, ligarRascunho } from "@/lib/rascunho";
 import { FileEdit, Loader2, RotateCcw } from "lucide-react";
 
 const PAGINAS_DO_RASCUNHO = ["/horario", "/disponibilidade", "/turmas"];
+export const PROMOVER_TEXTO = 'o "Promover para oficial" (Gerar Grade → Modo Experimental)'; // [SO-PROMOVER]
 type MudancaDisp = { professorId: number; professor: string; turno: string; diaSemana: number; horarioSlot: number; antes: string; depois: string };
 type MudancaAtrib = { turmaDisciplinaId: number; turma: string; disciplina: string; professorOficialId: number | null; professorId: number | null; mudou: boolean };
 type DifTurma = { turmaId: number; turma: string; mudancas: Array<{ quando: string; antes: string; depois: string }> };
@@ -35,7 +37,7 @@ export function descreverAlcance(r: { alcance?: string; turmaIds?: number[] }, n
 
 export function RascunhoBarra() {
   const papel = usePapelEfetivo();
-  const [local] = useLocation();
+  const [local, navegar] = useLocation();
   const { rascunho, ligado, recarregar } = useRascunho();
   const qc = useQueryClient();
   const { toast } = useToast();
@@ -68,7 +70,7 @@ export function RascunhoBarra() {
       ligarRascunho(r.nome);
       setNovoAberto(false); setNome(""); setTurmasEscolhidas([]);
       await atualizarTudo();
-      toast({ title: `Rascunho "${r.nome}" criado`, description: `A grade oficial de ${descreverAlcance({ alcance: r.alcance, turmaIds: r.turmaIds ?? undefined }, nomeTurma)} (${r.aulas} aulas) foi copiada para o rascunho. Mexa à vontade: nada vale para a escola até "Aplicar na escola".` });
+      toast({ title: `Rascunho "${r.nome}" criado`, description: `A grade oficial de ${descreverAlcance({ alcance: r.alcance, turmaIds: r.turmaIds ?? undefined }, nomeTurma)} (${r.aulas} aulas) foi copiada para o rascunho. Mexa à vontade: nada vale para a escola até ${PROMOVER_TEXTO}.` });
     } catch (e) {
       toast({ title: "Não foi possível criar o rascunho", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
     } finally { setOcupado(null); }
@@ -97,31 +99,6 @@ export function RascunhoBarra() {
     catch (e) { toast({ title: "Não foi possível desfazer", description: e instanceof Error ? e.message : undefined, variant: "destructive" }); }
   };
 
-  const aplicar = async () => {
-    if (!rascunho) return;
-    // [CHOQUE-ANTES-DE-GRAVAR] (09/11/2026) professor em duas turmas no mesmo horario: o banco recusaria; avisa antes
-    setOcupado("aplicar");
-    try {
-      const { choques } = await customFetch<{ choques: string[] }>(`/api/horarios/experimentais/${encodeURIComponent(rascunho.nome)}/choques`);
-      if (choques.length) {
-        alert(`O rascunho tem ${choques.length} choque(s) de professor e ainda não pode ser aplicado:\n\n${choques.slice(0, 15).map((c) => `• ${c}`).join("\n")}${choques.length > 15 ? `\n• ... e mais ${choques.length - 15}` : ""}\n\nMude uma das aulas de horário na Grade (ou troque o professor) e tente de novo.`);
-        return;
-      }
-    } catch { /* a conferencia falhou: o servidor confere de novo ao aplicar */ }
-    finally { setOcupado(null); }
-    if (!confirm(`Aplicar o rascunho "${rascunho.nome}" na escola?\n\nA grade, a disponibilidade e os professores do rascunho passam a valer. Antes, o sistema guarda uma cópia da grade atual ("Voltar à grade anterior", em Gerar Grade → Modo Experimental).`)) return;
-    setOcupado("aplicar");
-    try {
-      const r = await customFetch<{ avisoHA?: string; avisoBackup?: string }>(`/api/horarios/experimentais/${encodeURIComponent(rascunho.nome)}/promover`, { method: "POST" });
-      ligarRascunho(null);
-      await atualizarTudo();
-      toast({ title: "Rascunho aplicado na escola", description: r?.avisoBackup ?? "A grade anterior foi guardada em \"Voltar à grade anterior\"." });
-      if (r?.avisoHA) toast({ title: "Atenção: a hora-atividade não foi recalculada", description: r.avisoHA, variant: "destructive" });
-    } catch (e) {
-      toast({ title: "Não foi possível aplicar", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
-    } finally { setOcupado(null); }
-  };
-
   const descartar = async () => {
     if (!rascunho || !confirm(`Descartar o rascunho "${rascunho.nome}"? Tudo o que foi mudado nele é apagado. A escola continua como está.`)) return;
     setOcupado("descartar");
@@ -148,12 +125,14 @@ export function RascunhoBarra() {
             <span className="flex-1 min-w-[14rem] text-sm">
               <strong className="text-base">{rascunho.nome}</strong>
               <span className="ml-2 rounded bg-white/20 px-1.5 py-0.5 text-[11px] font-semibold">{descreverAlcance(rascunho, nomeTurma)}</span>
-              <span className="block text-violet-100">O que você mudar na Grade, na Disponibilidade e em Turmas fica só no rascunho. Nada vale para a escola ainda.</span>
+              <span className="block text-violet-100">O que você mudar na Grade, na Disponibilidade e em Turmas fica só no rascunho. Nada vale para a escola até {PROMOVER_TEXTO}.</span>
             </span>
             <div className="flex flex-wrap items-center gap-2">
               <Button size="sm" variant="secondary" className="h-9 bg-white text-violet-800 hover:bg-violet-50" onClick={() => void verMudancas()}>Ver mudanças</Button>
-              <Button size="sm" className="h-9 bg-emerald-500 text-white hover:bg-emerald-600" disabled={ocupado !== null} onClick={() => void aplicar()}>
-                {ocupado === "aplicar" && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}Aplicar na escola
+              {/* [IR-PROMOVER] (09/11/2026) leva ao Modo Experimental com o rascunho em destaque e a simulacao pronta; quem decide e o Promover de la */}
+              <Button size="sm" className="h-9 bg-emerald-500 text-white hover:bg-emerald-600" title="Abre o Modo Experimental com o rascunho e a simulação, para conferir e promover"
+                onClick={() => navegar(`/horario?tab=experimental&experimento=${encodeURIComponent(rascunho.nome)}`)}>
+                Promover para oficial…
               </Button>
               <Button size="sm" variant="ghost" className="h-9 text-white hover:bg-white/15 hover:text-white" onClick={() => ligarRascunho(null)} title="Volta a mostrar a escola como está (o rascunho continua guardado)">Sair do rascunho</Button>
               <Button size="sm" variant="ghost" className="h-9 text-rose-100 hover:bg-white/15 hover:text-white" disabled={ocupado !== null} onClick={() => void descartar()}>Descartar</Button>
@@ -200,7 +179,7 @@ export function RascunhoBarra() {
           <div className="space-y-3 text-sm">
             <p className="text-muted-foreground">
               O rascunho começa como uma cópia da grade de hoje (só do turno ou das turmas que você escolher). Dentro dele você troca aulas na Grade, muda a Disponibilidade e o professor das disciplinas em Turmas,
-              e gera a grade de novo se quiser. <strong>Nada vale para a escola até "Aplicar na escola".</strong>
+              e gera a grade de novo se quiser. <strong>Nada vale para a escola até {PROMOVER_TEXTO}.</strong>
             </p>
             <div className="space-y-1.5">
               <Label>O que entra no rascunho</Label>

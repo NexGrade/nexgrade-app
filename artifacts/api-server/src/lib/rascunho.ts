@@ -1,6 +1,6 @@
 // [MODO-RASCUNHO] (06/11/2026) Pedido da dona: o experimento virou "rascunho" — um por escola, visivel para toda a
 // direcao. Com o rascunho ligado (cada pessoa liga no proprio navegador), as telas de sempre (Grade, Disponibilidade,
-// Turmas) leem e gravam nele; "Aplicar na escola" e o Promover do experimento. Por baixo o rascunho e um experimento
+// Turmas) leem e gravam nele; ele vale para a escola pelo Promover do experimento. Por baixo o rascunho e um experimento
 // comum (horarios_experimentais, disponibilidade_experimental, atribuicao_experimental); aqui so fica qual e o
 // rascunho da escola, guardado em configuracoes (chave "rascunho.ativo"), sem migracao.
 import { and, eq } from "drizzle-orm";

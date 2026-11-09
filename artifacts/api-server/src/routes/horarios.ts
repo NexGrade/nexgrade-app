@@ -1625,7 +1625,7 @@ async function choquesAoPromover(escolaId: string, nome: string, expSlots: Array
   return descreverChoques(choques, tm, (id) => nomeProf.get(id) ?? `Professor #${id}`);
 }
 
-/** Choques de professor que impedem aplicar o experimento (a tela confere antes de "Aplicar na escola"). */
+/** Choques de professor que impedem aplicar o experimento (a tela confere antes do "Promover para oficial"). */
 router.get("/experimentais/:nome/choques", async (req, res) => {
   const escolaId = getEscolaId(req);
   const exp = await db.select().from(horariosExperimentaisTable).where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, req.params.nome)));
