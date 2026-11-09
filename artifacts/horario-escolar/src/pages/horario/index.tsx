@@ -2635,7 +2635,7 @@ function AbaExperimental() {
     // [RASCUNHO-NOME-FIXO] no rascunho, melhora o proprio rascunho (parte da grade dele)
     const nome = rascunhoNome ?? (cpsatForm.nomeExperimental.trim() || `CPSAT-${cpsatForm.turno}`).replace(/^(CPSAT|Grade)-/, "MELHORIA-");
     if (!confirm(rascunhoNome
-      ? `Melhorar o rascunho "${nome}" no turno ${cpsatForm.turno} por trocas de aulas?\n\nParte da grade do rascunho; a escola nao muda ate "Aplicar na escola".`
+      ? `Melhorar o rascunho "${nome}" no turno ${cpsatForm.turno} por trocas de aulas?\n\nParte da grade do rascunho; a escola nao muda ate "Promover para oficial".`
       : `Melhorar a grade OFICIAL do ${cpsatForm.turno} por trocas de aulas?\n\nO resultado vira o experimento "${nome}". A grade oficial nao muda ate voce promover.`)) return;
     setMelhorandoCpsat(true);
     setGerandoCpsat(true);
@@ -2720,6 +2720,15 @@ function AbaExperimental() {
   };
 
   const handlePromover = async (nome: string) => {
+    // [CHOQUE-ANTES-DE-GRAVAR] [SO-PROMOVER] (09/11/2026) professor em duas turmas no mesmo horario: o servidor recusaria;
+    // mostra a lista antes de perguntar (era o "Aplicar na escola" da faixa roxa, que saiu)
+    try {
+      const { choques } = await customFetch<{ choques: string[] }>(`/api/horarios/experimentais/${encodeURIComponent(nome)}/choques`);
+      if (choques.length) {
+        alert(`"${nome}" tem ${choques.length} choque(s) de professor e ainda não pode ser promovido:\n\n${choques.slice(0, 15).map((c) => `• ${c}`).join("\n")}${choques.length > 15 ? `\n• ... e mais ${choques.length - 15}` : ""}\n\nMude uma das aulas de horário (ou troque o professor) e tente de novo.`);
+        return;
+      }
+    } catch { /* a conferencia falhou: o servidor confere de novo ao promover */ }
     const qtdTurmas = new Set(expSlots.filter((s) => s.nome === nome).map((s) => s.turmaId)).size;
     const simAviso = simDe(nome);
     const aviso = simAviso?.veredito === "pior"
@@ -2740,7 +2749,7 @@ function AbaExperimental() {
       await queryClient.invalidateQueries({ queryKey: ["/api/turmas"] });
       await queryClient.invalidateQueries({ queryKey: ["/api/disponibilidade"] });
       // [RASCUNHO-SAI-AO-APLICAR] (09/11/2026) promover o rascunho por aqui tambem o encerra (o servidor ja apaga): a faixa
-      // roxa sai na hora, em vez de ficar ate recarregar (no teste de 09/11 o "Aplicar" da faixa foi clicado de novo e deu 404)
+      // roxa sai na hora, em vez de ficar ate recarregar
       try { if (localStorage.getItem("nexgrade.rascunhoLigado") === nome) ligarRascunho(null); } catch { /* sem armazenamento */ }
       await queryClient.invalidateQueries({ queryKey: ["rascunho"] });
       toast({

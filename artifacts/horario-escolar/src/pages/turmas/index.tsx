@@ -87,7 +87,7 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
       }
       await queryClient.invalidateQueries({ queryKey: ["atribuicoes-exp", rascunho] });
       await queryClient.invalidateQueries({ queryKey: ["rascunho"] });
-      toast({ title: "Professor trocado no rascunho", description: "A escola não mudou. Para valer, use \"Aplicar na escola\"." });
+      toast({ title: "Professor trocado no rascunho", description: "A escola não mudou. Para valer, use o \"Promover para oficial\" (Gerar Grade → Modo Experimental)." });
     } catch (e) {
       toast({ title: "Não foi possível trocar o professor", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
     } finally { setSalvando(null); }
