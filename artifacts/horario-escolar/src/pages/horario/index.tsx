@@ -1,5 +1,5 @@
 import { useSomenteConsultaGrade } from "@/lib/papeis"; // [CONSULTA-GESTOR] [PEDAGOGIA]
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { mapaIntegralDosSlots, projetarAulasIntegral } from "@/lib/turno-integral"; // [TURNO-INTEGRAL-PROFESSOR]
 import { useSearch, Link, useLocation } from "wouter";
 import {
@@ -2842,6 +2842,19 @@ function AbaExperimental() {
     }
   };
 
+  // [IR-PROMOVER] (09/11/2026) "Promover para oficial…" da faixa roxa chega aqui com ?experimento=: o cartao do rascunho
+  // fica em destaque, rola ate ele e a simulacao ja vem calculada (a decisao continua no Promover, depois de ver os numeros)
+  const experimentoNaUrl = new URLSearchParams(useSearch()).get("experimento");
+  const jaFoiAoExperimento = useRef<string | null>(null);
+  useEffect(() => {
+    if (!experimentoNaUrl || jaFoiAoExperimento.current === experimentoNaUrl) return;
+    if (!expSlots.some((s) => s.nome === experimentoNaUrl)) return; // ainda carregando (ou ja promovido)
+    jaFoiAoExperimento.current = experimentoNaUrl;
+    void simularPromocao(experimentoNaUrl);
+    setTimeout(() => document.getElementById(`exp-${experimentoNaUrl}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [experimentoNaUrl, expSlots]);
+
   // [FECHAR-JANELA] (22/10/2026) trocas de aula, só dentro do experimento, para fechar a janela de um professor num dia
   type OpcaoTroca = { ids: number[]; turma: string; passos: string[]; janelasDepois: number };
   const [trocas, setTrocas] = useState<Record<string, { janelasAntes: number; opcoes: OpcaoTroca[] } | "carregando" | { erro: string }>>({});
@@ -3055,7 +3068,7 @@ function AbaExperimental() {
               ? slots.filter((s) => s.turmaId === turmaExpandidaId)
               : slots;
             return (
-              <Card key={nome} className="border-purple-200">
+              <Card key={nome} id={`exp-${nome}`} className={`border-purple-200 scroll-mt-24 ${nome === experimentoNaUrl ? "ring-2 ring-violet-500" : ""}`}>{/* [IR-PROMOVER] */}
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div>
