@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { tempoDoMotor, TEMPO_TOTAL_PADRAO_S } from "../tempo-geracao";
+import { tempoDoMotor, tempoDoMelhorar, TEMPO_TOTAL_PADRAO_S } from "../tempo-geracao";
 
 // [TEMPO-TOTAL] (01/11/2026) o tempo da tela vale para a geracao inteira, nao para cada etapa
 describe("divisao do tempo total da geracao", () => {
@@ -28,5 +28,15 @@ describe("divisao do tempo total da geracao", () => {
   it("o servidor espera a resposta do motor um pouco alem do tempo das etapas", () => {
     const t = tempoDoMotor(TEMPO_TOTAL_PADRAO_S, true);
     expect(t.esperaMaximaS).toBeGreaterThan(t.tempoCoordenacaoS + 2 * (t.tempoFaseS + 20));
+  });
+});
+
+// [MELHORAR-120S] (09/11/2026) o Melhorar usa todo o tempo pedido: teto de 120 s
+describe("tempoDoMelhorar", () => {
+  it("nunca passa de 120 s, nem fica abaixo do minimo", () => {
+    expect(tempoDoMelhorar(300)).toBe(120);
+    expect(tempoDoMelhorar(undefined)).toBe(120);
+    expect(tempoDoMelhorar(90)).toBe(90);
+    expect(tempoDoMelhorar(10)).toBe(30);
   });
 });

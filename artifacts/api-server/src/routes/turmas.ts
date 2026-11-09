@@ -13,6 +13,9 @@ import {
 import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 import { registrarAuditoria } from "../lib/audit";
+import { planejarTrocaNaGrade, passarAulasParaProfessor } from "../lib/troca-professor-grade"; // [TROCA-LEVA-AULAS]
+import { salvarBackupGrade } from "../lib/backup-grade"; // [TROCA-LEVA-AULAS]
+import { mensagemDaTravaDeChoque } from "../lib/choques-professor"; // [TROCA-LEVA-AULAS]
 
 const router = Router();
 
@@ -375,6 +378,7 @@ router.post("/:id/aplicar-matriz", async (req, res) => {
 // individualmente sem afetar o outro).
 const DefinirProfessorLinhaInput = z.object({
   professorId: z.number().int().nullable(),
+  confirmar: z.boolean().optional(), // [TROCA-LEVA-AULAS] sem confirmar, so devolve os avisos
 });
 
 router.patch("/:turmaId/disciplinas/linha/:linhaId", async (req, res) => {
@@ -413,15 +417,45 @@ router.patch("/:turmaId/disciplinas/linha/:linhaId", async (req, res) => {
       return;
     }
   }
+  // [TROCA-LEVA-AULAS] (09/11/2026) as aulas da grade oficial dessa disciplina nesta turma passam para o professor novo
+  const novo = parsed.data.professorId;
+  const plano = novo != null && linha.professorId != null && novo !== linha.professorId
+    ? await planejarTrocaNaGrade(escolaId, turmaId, linha.disciplinaId, linha.professorId, novo)
+    : null;
+  if (plano && plano.aulaIds.length && (plano.choques.length || plano.avisos.length) && !parsed.data.confirmar) {
+    res.json({
+      aplicado: false, choques: plano.choques, avisos: plano.avisos,
+      aulasNaGrade: plano.aulaIds.length,
+    });
+    return;
+  }
   await db.update(turmaDisciplinasTable)
-    .set({ professorId: parsed.data.professorId })
+    .set({ professorId: novo })
     .where(eq(turmaDisciplinasTable.id, linhaId));
+  let aulasPassadas = 0;
+  let aviso: string | null = null;
+  if (plano && plano.aulaIds.length) {
+    if (plano.choques.length) {
+      aviso = `As ${plano.aulaIds.length} aula(s) da grade continuam com o professor anterior por causa de choque de horário. Mude essas aulas de horário (ou gere a grade de novo) para passar ao professor novo.`;
+    } else {
+      try {
+        const b = await salvarBackupGrade(escolaId, `Antes de trocar o professor de uma disciplina na turma ${turma.nome}`);
+        if (!b.ok) console.warn("[TROCA-LEVA-AULAS]", b.aviso);
+        aulasPassadas = await passarAulasParaProfessor(escolaId, plano.aulaIds, novo!);
+        aviso = "Confira a hora-atividade dos dois professores: as aulas mudaram de dono, a HA não foi recalculada.";
+      } catch (err) {
+        const trava = mensagemDaTravaDeChoque(err);
+        if (!trava) throw err;
+        aviso = `O vínculo foi trocado, mas as aulas da grade continuam com o professor anterior: ${trava}`;
+      }
+    }
+  }
   const result = await getTurmaWithDisciplinas(turmaId, escolaId);
   await registrarAuditoria({
     req, escolaId, entidade: "turma_disciplinas", entidadeId: linhaId,
-    acao: "alteracao", dadosAnteriores: linha, dadosNovos: { ...linha, professorId: parsed.data.professorId },
+    acao: "alteracao", dadosAnteriores: linha, dadosNovos: { ...linha, professorId: novo, aulasPassadas },
   });
-  res.json(result);
+  res.json({ ...result, aplicado: true, aulasPassadas, aviso });
 });
 
 // [DUPLA-DOCENCIA] Adiciona um SEGUNDO professor pra mesma disciplina

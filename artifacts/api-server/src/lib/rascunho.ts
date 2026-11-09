@@ -7,7 +7,8 @@ import { and, eq } from "drizzle-orm";
 import { db, configuracoesTable } from "@workspace/db";
 
 const CHAVE = "rascunho.ativo";
-export type RascunhoAtivo = { nome: string; criadoEm: string; criadoPor: string | null };
+// [RASCUNHO-ALCANCE] (09/11/2026) alcance: "todos", um turno ou "turmas" (turmaIds). Rascunhos antigos nao tem: a escola toda.
+export type RascunhoAtivo = { nome: string; criadoEm: string; criadoPor: string | null; alcance?: string; turmaIds?: number[] };
 
 export async function lerRascunho(escolaId: string): Promise<RascunhoAtivo | null> {
   const [r] = await db.select({ valor: configuracoesTable.valor }).from(configuracoesTable)

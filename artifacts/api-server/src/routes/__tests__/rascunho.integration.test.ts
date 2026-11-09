@@ -10,6 +10,7 @@ import {
 import { exigirAdminParaAlterar } from "../../lib/permissao";
 import disponibilidadeRouter from "../disponibilidade";
 import horariosRouter from "../horarios";
+import turmasRouter from "../turmas";
 
 // [MODO-RASCUNHO] (06/11/2026) Fluxo completo do rascunho com Postgres de verdade e os casos de erro: permissoes,
 // nomes repetidos, trocas invalidas, professor/disciplina de fora, aplicar com tudo junto e voltar pela copia,
@@ -48,6 +49,7 @@ describe.skipIf(!TEM_BANCO)("modo rascunho: fluxo completo e casos de erro", () 
     app.use(exigirAdminParaAlterar);
     app.use("/disponibilidade", disponibilidadeRouter);
     app.use("/horarios", horariosRouter);
+    app.use("/turmas", turmasRouter);
     server = app.listen(0);
     porta = (server.address() as AddressInfo).port;
 
@@ -130,7 +132,7 @@ describe.skipIf(!TEM_BANCO)("modo rascunho: fluxo completo e casos de erro", () 
     // e a Bia esta bloqueada na segunda 2a, so no rascunho
     await chamar("POST", `/disponibilidade/lote?experimento=${enc("Plano G")}`, { professorId: ids.bia, itens: [{ diaSemana: 0, horarioSlot: 2, turno: "matutino", disponivel: false, motivo: "Bloqueio (definido na tela)", horaAtividadeObrigatoria: false }] });
     let r = await chamar("PUT", `${url}/atribuicoes`, { turmaDisciplinaId: ids.tdMat1, professorId: ids.caio });
-    expect(r.body).toMatchObject({ aplicado: false, avisos: ["Caio já tem aula na 1B na segunda, 1ª aula."] });
+    expect(r.body).toMatchObject({ aplicado: false, avisos: ["Caio já tem aula na 1B na segunda, 1ª aula.", "Com esse choque o rascunho não pode ser aplicado na escola até uma das aulas mudar de horário."] });
     r = await chamar("PUT", `${url}/atribuicoes`, { turmaDisciplinaId: ids.tdMat1, professorId: ids.bia });
     expect(r.body).toMatchObject({ aplicado: false, avisos: ["Bia tem bloqueio na segunda, 2ª aula."] });
     // sem confirmar, nada mudou
@@ -213,5 +215,76 @@ describe.skipIf(!TEM_BANCO)("modo rascunho: fluxo completo e casos de erro", () 
     expect(volta!.professorId).toBe(ids.ana);
     const bloqueiosAna = (await db.select().from(disponibilidadeTable).where(eq(disponibilidadeTable.professorId, ids.ana))).filter((d) => !d.disponivel && !d.horaAtividadeObrigatoria);
     expect(bloqueiosAna).toEqual([]);
+  });
+
+  it("[RASCUNHO-ALCANCE] rascunho so de turmas escolhidas; turma de fora entra ao trocar o professor", async () => {
+    expect((await chamar("POST", "/horarios/rascunho/atual", { nome: "So 1A", alcance: "turmas", turmaIds: [] })).status).toBe(400);
+    expect((await chamar("POST", "/horarios/rascunho/atual", { nome: "So tarde", alcance: "vespertino" })).status).toBe(400); // a escola nao tem tarde
+    const r = await chamar("POST", "/horarios/rascunho/atual", { nome: "So 1A", alcance: "turmas", turmaIds: [ids.t1] });
+    expect(r.status).toBe(201);
+    expect(r.body).toMatchObject({ aulas: 3, alcance: "turmas", turmaIds: [ids.t1] });
+    expect((await chamar("GET", "/horarios/rascunho/atual")).body.rascunho).toMatchObject({ alcance: "turmas", turmaIds: [ids.t1], aulas: 3 });
+    expect(new Set((await doRascunho("So 1A")).map((h) => h.turmaId))).toEqual(new Set([ids.t1]));
+    // Portugues da 1B (fora do rascunho): Caio -> Bia; a 1B entra no rascunho e a aula passa para a Bia
+    const t = await chamar("PUT", `/horarios/experimentais/${enc("So 1A")}/atribuicoes`, { turmaDisciplinaId: ids.tdPor2, professorId: ids.bia, confirmar: true });
+    expect(t.body).toMatchObject({ aplicado: true, aulasAtualizadas: 1 });
+    expect((await doRascunho("So 1A")).filter((h) => h.turmaId === ids.t2).map((h) => [h.disciplinaId, h.professorId]).sort())
+      .toEqual([[ids.mat, ids.ana], [ids.por, ids.bia]].sort());
+    await chamar("DELETE", "/horarios/rascunho/atual");
+    expect((await oficialDe(ids.t2)).map((h) => h.professorId).sort()).toEqual([ids.ana, ids.caio].sort()); // a escola nao mudou
+  });
+
+  it("[CHOQUE-ANTES-DE-GRAVAR] rascunho com professor em duas turmas no mesmo horario nao e aplicado, e diz qual", async () => {
+    await chamar("POST", "/horarios/rascunho/atual", { nome: "Plano H", alcance: "matutino" });
+    const url = `/horarios/experimentais/${enc("Plano H")}`;
+    // Caio com Portugues na 1B na segunda 1a e, confirmando o aviso, a Matematica da 1A (segunda 1a e 2a) tambem
+    await db.insert(horariosExperimentaisTable).values({ escolaId: E, nome: "Plano H", turmaId: ids.t2, disciplinaId: ids.por, professorId: ids.caio, diaSemana: 0, numeroAula: 1 });
+    await chamar("PUT", `${url}/atribuicoes`, { turmaDisciplinaId: ids.tdMat1, professorId: ids.caio, confirmar: true });
+    const c = await chamar("GET", `${url}/choques`);
+    expect(c.body.choques).toHaveLength(1);
+    expect(c.body.choques[0]).toContain("Caio: segunda, 1ª aula");
+    const antes = (await oficialDe(ids.t1)).map((h) => `${lugar(h)}|${h.professorId}`).sort();
+    const r = await chamar("POST", `${url}/promover`);
+    expect(r.status).toBe(409);
+    expect(r.body.choques).toHaveLength(1);
+    expect((await oficialDe(ids.t1)).map((h) => `${lugar(h)}|${h.professorId}`).sort()).toEqual(antes); // nada aplicado
+    const [td] = await db.select().from(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.id, ids.tdMat1));
+    expect(td!.professorId).toBe(ids.ana); // nem a atribuicao
+    expect((await chamar("GET", "/horarios/rascunho/atual")).body.rascunho?.nome).toBe("Plano H"); // o rascunho continua
+    await chamar("DELETE", "/horarios/rascunho/atual");
+  });
+
+  it("[CHOQUE-ANTES-DE-GRAVAR] lancar aula com choque na grade oficial responde 409 com a mensagem da trava", async () => {
+    // Ana ja da Matematica na 1A na segunda 1a
+    const r = await chamar("POST", "/horarios", { turmaId: ids.t2, disciplinaId: ids.mat, professorId: ids.ana, diaSemana: 0, numeroAula: 1 });
+    expect(r.status).toBe(409);
+    expect(r.body.error).toContain("1A");
+  });
+
+  it("[TROCA-LEVA-AULAS] trocar o professor em Turmas passa as aulas da grade; com choque, avisa e as aulas ficam", async () => {
+    const urlMat1 = `/turmas/${ids.t1}/disciplinas/linha/${ids.tdMat1}`;
+    // Ana -> Bia: sem choque, as 2 aulas de Matematica da 1A passam para a Bia
+    let r = await chamar("PATCH", urlMat1, { professorId: ids.bia });
+    expect(r.body).toMatchObject({ aplicado: true, aulasPassadas: 2 });
+    expect((await oficialDe(ids.t1)).filter((h) => h.disciplinaId === ids.mat).map((h) => h.professorId)).toEqual([ids.bia, ids.bia]);
+    // Bia -> Caio, mas o Caio tem aula na 1B na segunda 1a: avisa e, sem confirmar, nada muda
+    const [extra] = await db.insert(horariosTable).values({ escolaId: E, turmaId: ids.t2, disciplinaId: ids.por, professorId: ids.caio, diaSemana: 0, numeroAula: 1 } as any).returning();
+    r = await chamar("PATCH", urlMat1, { professorId: ids.caio });
+    expect(r.body).toMatchObject({ aplicado: false, aulasNaGrade: 2 });
+    expect(r.body.choques).toHaveLength(1);
+    let [td] = await db.select().from(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.id, ids.tdMat1));
+    expect(td!.professorId).toBe(ids.bia);
+    // confirmando: troca o vinculo, as aulas ficam com a Bia e a resposta explica
+    r = await chamar("PATCH", urlMat1, { professorId: ids.caio, confirmar: true });
+    expect(r.body).toMatchObject({ aplicado: true, aulasPassadas: 0 });
+    expect(r.body.aviso).toContain("continuam com o professor anterior");
+    [td] = await db.select().from(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.id, ids.tdMat1));
+    expect(td!.professorId).toBe(ids.caio);
+    expect((await oficialDe(ids.t1)).filter((h) => h.disciplinaId === ids.mat).map((h) => h.professorId)).toEqual([ids.bia, ids.bia]);
+    // volta como estava
+    await db.delete(horariosTable).where(eq(horariosTable.id, extra!.id));
+    await chamar("PATCH", urlMat1, { professorId: ids.bia, confirmar: true });
+    r = await chamar("PATCH", urlMat1, { professorId: ids.ana });
+    expect(r.body).toMatchObject({ aplicado: true, aulasPassadas: 2 });
   });
 });
