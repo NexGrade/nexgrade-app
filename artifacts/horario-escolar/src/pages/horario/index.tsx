@@ -33,7 +33,7 @@ import { PainelCapacidade } from "@/components/painel-capacidade";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"; // [EDITAR-CELULA-GRADE]
 import { ProgressoGeracao, type EtapaGeracao, type ProgressoGeracaoDados, type ProgressoMotor } from "@/components/progresso-geracao"; // [PROGRESSO-GERACAO]
 import { DiagnosticoGeracaoDialog, diagnosticoDe, type DiagnosticoGeracao } from "@/components/diagnostico-geracao"; // [DIAGNOSTICO-GERACAO]
-import { useRascunho } from "@/lib/rascunho"; // [MODO-RASCUNHO]
+import { useRascunho, ligarRascunho } from "@/lib/rascunho"; // [MODO-RASCUNHO]
 import { GradeRascunho } from "@/components/grade-rascunho"; // [MODO-RASCUNHO]
 import {
   Check, ArrowRight, ArrowLeft, Lock, ChevronDown, ChevronRight, Plus,
@@ -2739,6 +2739,10 @@ function AbaExperimental() {
       await queryClient.invalidateQueries({ queryKey: ["experimentos-resumo"] }); // [DISP-EXPERIMENTAL] [EXPERIMENTO-COMPLETO]
       await queryClient.invalidateQueries({ queryKey: ["/api/turmas"] });
       await queryClient.invalidateQueries({ queryKey: ["/api/disponibilidade"] });
+      // [RASCUNHO-SAI-AO-APLICAR] (09/11/2026) promover o rascunho por aqui tambem o encerra (o servidor ja apaga): a faixa
+      // roxa sai na hora, em vez de ficar ate recarregar (no teste de 09/11 o "Aplicar" da faixa foi clicado de novo e deu 404)
+      try { if (localStorage.getItem("nexgrade.rascunhoLigado") === nome) ligarRascunho(null); } catch { /* sem armazenamento */ }
+      await queryClient.invalidateQueries({ queryKey: ["rascunho"] });
       toast({
         title: `"${nome}" promovido para horário oficial!`,
         description: [

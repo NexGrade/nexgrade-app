@@ -102,6 +102,14 @@ export function RascunhoBarra() {
     // [CHOQUE-ANTES-DE-GRAVAR] (09/11/2026) professor em duas turmas no mesmo horario: o banco recusaria; avisa antes
     setOcupado("aplicar");
     try {
+      // [RASCUNHO-SAI-AO-APLICAR] o rascunho pode ja ter sido aplicado ou descartado (outra tela, outra pessoa)
+      const atual = await customFetch<{ rascunho: { nome: string } | null }>("/api/horarios/rascunho/atual");
+      if (atual.rascunho?.nome !== rascunho.nome) {
+        ligarRascunho(null);
+        await atualizarTudo();
+        toast({ title: `O rascunho "${rascunho.nome}" já foi aplicado ou descartado`, description: "A tela foi atualizada: você está vendo a escola como está." });
+        return;
+      }
       const { choques } = await customFetch<{ choques: string[] }>(`/api/horarios/experimentais/${encodeURIComponent(rascunho.nome)}/choques`);
       if (choques.length) {
         alert(`O rascunho tem ${choques.length} choque(s) de professor e ainda não pode ser aplicado:\n\n${choques.slice(0, 15).map((c) => `• ${c}`).join("\n")}${choques.length > 15 ? `\n• ... e mais ${choques.length - 15}` : ""}\n\nMude uma das aulas de horário na Grade (ou troque o professor) e tente de novo.`);
