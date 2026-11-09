@@ -58,6 +58,8 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
   const { data: turma, isLoading } = useGetTurma(turmaId, { query: { queryKey: getGetTurmaQueryKey(turmaId) } });
   const { data: professores = [] } = useListProfessores();
   const [salvando, setSalvando] = useState<string | null>(null);
+  // [SO-HABILITADOS] (09/11/2026) pedido da dona: a lista mostra so os habilitados na disciplina; os outros so a pedido
+  const [verTodos, setVerTodos] = useState<Set<string>>(new Set());
   const [abrirCodoc, setAbrirCodoc] = useState<number | null>(null);
   const [criandoTrio, setCriandoTrio] = useState(false); // [CRIAR-TRIO]
   const [selTrio, setSelTrio] = useState<number[]>([]);
@@ -194,9 +196,16 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
   function seletor(disciplinaId: number, valor: number | null, onEscolher: (v: string) => void, permitirRemover: boolean, chave: string) {
     const ativos = professores.filter((p) => p.ativo !== false);
     const habilitados = ativos.filter((p) => (p.disciplinaIds ?? []).includes(disciplinaId));
-    const outros = ativos.filter((p) => !(p.disciplinaIds ?? []).includes(disciplinaId));
+    const todosOutros = ativos.filter((p) => !(p.disciplinaIds ?? []).includes(disciplinaId));
+    // [SO-HABILITADOS] os nao habilitados so aparecem a pedido (ou sem nenhum habilitado); o professor atual sempre aparece
+    const mostrarTodos = verTodos.has(chave) || habilitados.length === 0;
+    const outros = mostrarTodos ? todosOutros : todosOutros.filter((p) => p.id === valor);
+    const escolher = (v: string) => {
+      if (v === "__ver_todos__") { setVerTodos((s) => new Set(s).add(chave)); return; }
+      onEscolher(v);
+    };
     return (
-      <Select key={chave} value={valor ? String(valor) : ""} onValueChange={onEscolher} disabled={salvando !== null}>
+      <Select key={chave} value={valor ? String(valor) : ""} onValueChange={escolher} disabled={salvando !== null}>
         <SelectTrigger className="w-60 h-8"><SelectValue placeholder="Escolher professor" /></SelectTrigger>
         <SelectContent>
           {habilitados.length > 0 && (
@@ -205,10 +214,15 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
               {habilitados.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
             </SelectGroup>
           )}
-          <SelectGroup>
-            <SelectLabel>Outros professores</SelectLabel>
-            {outros.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
-          </SelectGroup>
+          {outros.length > 0 && (
+            <SelectGroup>
+              <SelectLabel>{mostrarTodos ? "Outros professores" : "Atual (não habilitado nesta disciplina)"}</SelectLabel>
+              {outros.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.nome}</SelectItem>)}
+            </SelectGroup>
+          )}
+          {!mostrarTodos && todosOutros.length > outros.length && (
+            <SelectItem value="__ver_todos__" className="text-muted-foreground italic">Mostrar também os não habilitados…</SelectItem>
+          )}
           {permitirRemover && <SelectItem value="__nenhum__">— remover professor —</SelectItem>}
         </SelectContent>
       </Select>
