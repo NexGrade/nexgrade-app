@@ -126,7 +126,8 @@ LISTA
 4. Código da turma no SERE (para o RCO) e Código SERE da parte IF (só 3º ano com duas turmas no RCO): também dá para preencher depois, em Cursos e Disciplinas → aba Códigos do RCO.
 
 DEFINIR OS PROFESSORES (abrir a turma para editar)
-- Na seção "Professores, co-docência e trio", escolha o professor de cada disciplina. Os "Habilitados nesta disciplina" aparecem primeiro. Tudo grava na hora.
+- Na seção "Professores, co-docência e trio", escolha o professor de cada disciplina. A lista mostra só os "Habilitados nesta disciplina"; "Mostrar também os não habilitados…" (no fim da lista) abre os outros. Tudo grava na hora.
+- Com a grade pronta, trocar o professor aqui passa as aulas da disciplina nessa turma para o novo professor (o sistema guarda uma cópia da grade antes). Se o novo já tiver aula em outra turma nesses horários, o sistema avisa e as aulas ficam com o anterior até alguém mudar esses horários; bloqueio ou HA do novo é só aviso. Para testar antes, use o Modo rascunho.
 - Co-docência (dois professores dando a mesma aula juntos): botão "+ co-docência" na disciplina.
 - Trio (3 disciplinas, cada uma com seu professor, sempre no mesmo dia e horário): "+ Criar trio" e marque as 3 disciplinas. Elas precisam ter a mesma carga semanal e já ter professor definido. Para desfazer, use "desfazer" no trio.
 - Assíncronas/sem.: quantas aulas semanais da disciplina são assíncronas (a aula assíncrona ocupa o professor, não a turma).
@@ -321,28 +322,33 @@ QUEM FAZ O QUÊ
 
   rascunho: { // [MODO-RASCUNHO]
     titulo: "Modo rascunho (testar mudanças sem mexer na escola)",
-    palavras: ["rascunho", "modo rascunho", "testar", "simular", "simulação", "experimento", "experimental", "trocar professor", "trocar aula", "mudar professor", "aplicar na escola", "descartar", "ver mudanças", "sair do rascunho", "começar rascunho"],
-    texto: `O rascunho serve para testar mudanças (professor, disponibilidade e aulas) sem mexer na escola. Você usa as telas de sempre; nada vale até "Aplicar na escola".
+    palavras: ["rascunho", "modo rascunho", "testar", "simular", "simulação", "experimento", "experimental", "trocar professor", "trocar aula", "mudar professor", "promover", "promover para oficial", "aplicar na escola", "descartar", "ver mudanças", "sair do rascunho", "começar rascunho", "choque", "choque de professor"],
+    texto: `O rascunho serve para testar mudanças (professor, disponibilidade e aulas) sem mexer na escola. Você usa as telas de sempre; nada vale até o "Promover para oficial". (O antigo botão "Aplicar na escola" saiu da faixa roxa em 09/11/2026: o caminho agora é só o Promover.)
 COMEÇAR
-1. Em Gerar Grade (tela Horário), Disponibilidade ou Turmas, clique em "Começar rascunho" (canto direito, acima do título) e dê um nome (ex.: "Ana sem sexta"). O sistema copia a escola de hoje para o rascunho.
-2. Aparece a faixa roxa no topo: "o que você mudar fica só no rascunho. Nada vale para a escola ainda." Sem a faixa, você está mexendo na escola de verdade.
+1. Em Gerar Grade (tela Horário), Disponibilidade ou Turmas, no quadro roxo do alto da tela ("Quer testar uma mudança sem mexer na escola?"), clique em "Começar rascunho". Escolha o que entra no rascunho: "Só a Manhã", "Só a Tarde", "Só a Noite", "Só o Integral", "Só as turmas que eu escolher" ou "A escola toda". Dê um nome (ex.: "Ana sem sexta"). Só essa parte da grade é copiada, gerada e promovida; o resto da escola não muda. Se o quadro foi ocultado, fica só um botão roxo pequeno "Começar rascunho" (o link "o que é?" traz o quadro de volta). Se já existe um rascunho, o quadro mostra "Entrar no rascunho".
+2. Aparece a faixa roxa cheia no topo, com a etiqueta MODO RASCUNHO, o nome do rascunho e o que entrou nele (ex.: Manhã): "o que você mudar fica só no rascunho. Nada vale para a escola até o Promover para oficial." Ela fica presa no topo quando a página rola. Sem a faixa, você está mexendo na escola de verdade.
 MEXER NO RASCUNHO
-- Trocar aulas de lugar: Horário → Grade. Escolha o período (Manhã, Tarde, Noite, Integral) e a turma, ou "Todas as turmas" do período. Clique numa aula e depois em outra da mesma turma (ou num "Vago"). Se o professor já tiver aula em outra turma, bloqueio ou HA no novo horário, o sistema avisa e só troca confirmando.
-- Trocar o professor: lápis na aula (na mesma grade) → escolha o professor → "Salvar no rascunho". A lista mostra só os professores credenciados para a disciplina (desmarque a caixa para ver todos). Vale para todas as aulas daquela disciplina na turma. Se o professor novo já tiver aula em outra turma, bloqueio ou HA nesses horários, o sistema avisa e só troca confirmando. Também dá para trocar em Turmas.
+- Trocar o professor (o jeito mais prático é pela grade colorida): Horário → Grade, escolha a turma, lápis na aula → escolha o professor → "Salvar no rascunho". Vale para todas as aulas daquela disciplina na turma, e você vê em que dias e horários elas caem. A lista mostra só os professores credenciados para a disciplina (desmarque a caixa para ver todos). Também dá para trocar em Turmas (a lista ali mostra só os habilitados; "Mostrar também os não habilitados…" abre o resto).
+- Avisos ao trocar: bloqueio ou HA do professor novo nesses horários é só aviso. Se ele já tiver aula em outra turma no mesmo horário, o aviso diz que o rascunho não poderá ser promovido até uma das aulas mudar de horário.
+- Trocar aulas de lugar (é assim que se resolve um choque): na mesma grade, escolha o período e a turma, ou "Todas as turmas" do período. Clique numa aula e depois em outra da mesma turma (ou num "Vago"). Se o professor já tiver aula em outra turma, bloqueio ou HA no novo horário, o sistema avisa e só troca confirmando.
 - Disponibilidade: a tela de sempre grava no rascunho (horários com contorno roxo).
-GERAR OU MELHORAR (aba Modo Experimental; o nome do rascunho já vem preenchido)
+- Rascunho de um turno ou de algumas turmas: trocar o professor de uma turma de fora coloca essa turma no rascunho.
+GERAR OU MELHORAR (aba Modo Experimental; o nome e o turno do rascunho já vêm preenchidos)
 - Só trocou aulas de lugar ou o professor: não precisa gerar.
-- Quer tirar janelas sem refazer: "Melhorar" (na janela do Turno inteiro) parte da grade do rascunho, com as suas trocas.
+- Quer tirar janelas sem refazer: "Melhorar" (na janela do Turno inteiro) parte da grade do rascunho, com as suas trocas. Leva cerca de 2 minutos e pode rodar de novo.
+- Janela que o Melhorar e o "Fechar esta janela" não tiram costuma vir da disponibilidade do professor (dias inteiros bloqueados, HA no meio do dia): mais tempo não resolve; libere um horário dele no rascunho e melhore de novo.
 - Mudou a disponibilidade e aulas caíram em cima de bloqueio: "Turma" ou "Turno parcial" só nas turmas afetadas (elas são refeitas do zero; as trocas feitas à mão nelas se perdem). "Turno inteiro" refaz o período todo.
-- Ordem recomendada: disponibilidade e professores → gerar ou melhorar → trocas finas → "Simular promoção" → aplicar.
-VER, APLICAR, SAIR E DESCARTAR (botões da faixa roxa)
+- Ordem recomendada: disponibilidade e professores → gerar ou melhorar → trocas finas → simulação → Promover para oficial.
+VER, PROMOVER, SAIR E DESCARTAR (botões da faixa roxa)
 - "Ver mudanças": lista única com professores, disponibilidade e aulas (antes → depois), com "desfazer" em cada item e "voltar como está na escola" por turma.
-- "Aplicar na escola": a grade, a disponibilidade e os professores do rascunho passam a valer. O professor novo passa a ser o da disciplina (tela Turmas) e recebe as aulas; quem saiu perde só as aulas daquela disciplina naquela turma; a HA dos dois é recalculada. Antes, o sistema guarda uma cópia: "Voltar à grade anterior" (Modo Experimental) desfaz tudo, inclusive professores e disponibilidade.
+- "Promover para oficial…": abre o Modo Experimental com o rascunho em destaque e a simulação já calculada (janelas e HA). Confira e clique em "Promover para oficial" no cartão do rascunho. Se houver choque de professor (o mesmo professor em duas turmas no mesmo horário), aparece a lista de choques e nada vai para a escola. Ao promover, a grade, a disponibilidade e os professores do rascunho passam a valer: o professor novo passa a ser o da disciplina (tela Turmas) e recebe as aulas; quem saiu perde só as aulas daquela disciplina naquela turma; a HA é refeita só no turno do rascunho. Antes, o sistema guarda uma cópia: "Voltar à grade anterior" (Modo Experimental) desfaz tudo, inclusive professores e disponibilidade.
 - "Sair do rascunho": volta a mostrar a escola como está; o rascunho fica guardado ("Entrar no rascunho" para continuar).
-- "Descartar": apaga o rascunho e tudo o que foi mudado nele.
+- "Descartar": apaga o rascunho e tudo o que foi mudado nele (aulas, professores e disponibilidade). A escola fica como estava.
 BOM SABER
 - Um rascunho por vez na escola; toda a direção, coordenação e secretaria vê o mesmo, e cada pessoa entra ou sai dele no próprio navegador. Professores, pedagogia e gestor de reservas não veem o rascunho.
-- O rascunho também aparece na lista do Modo Experimental (com Simular promoção); apagar por ali também encerra o rascunho.`,
+- O rascunho também aparece na lista do Modo Experimental; apagar por ali também encerra o rascunho.
+- Em Turmas, co-docência, trio e quantidade de aulas assíncronas mudam a escola direto, mesmo com o rascunho ligado (a tela avisa).
+- Fora do rascunho, trocar o professor em Turmas passa as aulas da grade para o novo professor na hora (com cópia de segurança). Se ele já tiver aula em outra turma nesses horários, o sistema avisa e as aulas ficam com o professor anterior até alguém mudar esses horários.`,
   },
 
   importar: {
