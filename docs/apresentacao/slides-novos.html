@@ -3,8 +3,11 @@
 <head>
 <meta charset="utf-8">
 <title>NexGrade — slides novos da Apresentação Escola 2027</title>
-<!-- Slides novos e atualizados da "NexGrade — Apresentação Escola 2027.pdf" (03/11/2026).
-     Os demais slides vêm do PDF anterior; montar-apresentacao.py junta tudo na ordem certa. -->
+<!-- Slides novos e atualizados da "NexGrade — Apresentação Escola 2027.pdf" (03/11/2026; texto jurídico e Modo
+     Rascunho em 09/11/2026). Os demais slides vêm do PDF anterior; montar-apresentacao.py junta tudo na ordem certa.
+     [TEXTO-JURIDICO] Regra de texto do site (nexus-core-site, 06/11/2026): sem "oficial", "integrado" ou "gravado no
+     RCO"; usar "compatível com o RCO", "alinhado à tabela da SEED-PR" e "passa a valer na escola". Os slides do PDF
+     base com frases antigas foram refeitos com corrigir-base.py (imagem bNN.png + tampa + texto novo). -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400&display=swap" rel="stylesheet">
 <style>
   @page { size: 1920px 1080px; margin: 0; }
@@ -35,6 +38,8 @@
   .escuro .rodape { color: #6b7483; }
   /* legendas por cima da imagem original (slides 20, 23 e 25) */
   .tampa { position: absolute; background: #f6f6f4; }
+  .troca { position: absolute; white-space: nowrap; letter-spacing: -.003em; } /* [TEXTO-JURIDICO] linha trocada por cima da imagem */
+  .aviso-indep { position: absolute; left: 128px; top: 990px; width: 1180px; font-size: 18px; line-height: 1.38; color: #8b93a1; } /* [TEXTO-JURIDICO] mesmo aviso do rodapé do site */
   .legenda { position: absolute; top: 722px; width: 812px; }
   .legenda h3 { margin: 0 0 22px; font-size: 32px; font-weight: 600; color: #2f6fed; }
   .legenda p { margin: 0; font-size: 25px; line-height: 1.42; color: #5b6169; }
@@ -49,17 +54,19 @@
 <section class="slide img" style="background-image:url(s01.png)">
   <div class="tampa" style="left:118px; top:198px; width:140px; height:140px; background:#101a2b"></div>
   <img class="logo" src="logo.png" alt="NexGrade" style="left:128px; top:208px; width:120px; height:120px">
+  <div class="tampa" style="left:122px; width:1110px; top:748px; height:90px; background:#101a2b"></div><!-- [TEXTO-JURIDICO] -->
+  <div class="troca" style="left:128px; top:750px; font-size:33px; line-height:46px; color:#a7aeb8">IA e arquivo compatível com o RCO — tudo em um só lugar, pensado para<br>a realidade das escolas do Paraná.</div>
 </section>
 
 <!-- 11 · RCO (substitui o anterior) -->
 <section class="slide escuro">
   <div class="conteudo">
     <div class="novo">NOVO</div>
-    <h1>Do RCO para o NexGrade, e de volta para o RCO</h1>
+    <h1>Compatível com o RCO, na entrada e na saída</h1>
     <div class="grade g3">
-      <div class="card"><h3>O cadastro vem do RCO</h3><p>O arquivo da tela Grade de Horário do próprio RCO traz as turmas com o código SERE, as disciplinas com o Código Externo e a matriz de cada turma. Ninguém digita código.</p></div>
-      <div class="card"><h3>Arquivo de importação por turno</h3><p>A grade oficial vira o arquivo que a secretaria inclui no RCO, sem redigitar aula por aula. Se faltar algum código, o sistema mostra onde corrigir.</p></div>
-      <div class="card"><h3>De acordo com a grade SEED</h3><p>Cada disciplina é conferida com a grade SEED da turma, inclusive horários com trio, dupla e assíncrona.</p></div>
+      <div class="card"><h3>O cadastro vem do arquivo do RCO</h3><p>O arquivo da tela Grade de Horário do próprio RCO traz as turmas com o código SERE, as disciplinas com o Código Externo e a matriz de cada turma. Ninguém digita código.</p></div>
+      <div class="card"><h3>Arquivo de importação por turno</h3><p>A grade da escola vira um arquivo no formato que o RCO importa. A secretaria faz a importação com o próprio acesso, sem redigitar aula por aula. Se faltar algum código, o sistema mostra onde corrigir.</p></div>
+      <div class="card"><h3>De acordo com a grade SEED</h3><p>Cada disciplina é conferida com a grade SEED da turma. Trio e dupla têm uma etapa a mais, feita pela secretaria com orientação do suporte.</p></div>
     </div>
   </div>
   <div class="rodape">Confidencial · Nexus Core Tecnologia</div>
@@ -117,7 +124,7 @@
     <h1>Seus dados, suas regras, sua decisão final</h1>
     <div class="grade g3 compacto">
       <div class="card"><h3>Cada escola tem sua própria base</h3><p>Professores, turmas e disponibilidade de uma escola nunca se misturam com os de outra.</p></div>
-      <div class="card"><h3>Nada é aplicado sem revisão</h3><p>Toda grade gerada fica em modo de teste até a coordenação aprovar.</p></div>
+      <div class="card"><h3>Nada é aplicado sem revisão</h3><p>Toda grade gerada e toda troca do dia a dia ficam em teste (rascunho) até a coordenação decidir que passam a valer.</p></div>
       <div class="card"><h3>Sempre reversível</h3><p>Se algo não ficar bom, é possível voltar para a grade anterior a qualquer momento.</p></div>
       <div class="card"><h3>Só o dado necessário (LGPD)</h3><p>Do professor, só nome, e-mail e telefone. Sem CPF, sem matrícula.</p></div>
       <div class="card"><h3>Licença sem dado de saúde</h3><p>Tipo neutro e nenhum campo de motivo: diagnóstico não entra no sistema.</p></div>
@@ -137,7 +144,7 @@
 <!-- 23 · gerar e imprimir (legenda atualizada) -->
 <section class="slide img" style="background-image:url(s23.png)">
   <div class="tampa" style="left:0; right:0; top:715px; height:200px"></div>
-  <div class="legenda" style="left:128px"><h3>Gerar Grade</h3><p>Grade por turno, turma ou professor, conflitos e Modo Experimental para gerar, comparar e promover.</p></div>
+  <div class="legenda" style="left:128px"><h3>Gerar Grade</h3><p>Grade por turno, turma ou professor, conflitos e Modo Rascunho para testar trocas antes de valerem na escola.</p></div>
   <div class="legenda" style="left:980px"><h3>Imprimir Grade</h3><p>PDF por turma e por professor, em paisagem ou retrato, e planilha em Excel com o cabeçalho da escola.</p></div>
 </section>
 
@@ -158,13 +165,15 @@
   </div>
   <div class="tampa" style="left:960px; right:0; top:715px; height:200px"></div>
   <div class="legenda" style="left:128px"><h3>Relatórios</h3><p>Prontos para conferir e homologar, sem montar planilha à mão.</p></div>
-  <div class="legenda" style="left:980px"><h3>Escola</h3><p>Dados da escola, configurações e conformidade SEED-PR numa só página.</p></div>
+  <div class="legenda" style="left:980px"><h3>Escola</h3><p>Dados da escola, configurações e regras da SEED-PR numa só página.</p></div>
 </section>
 
 <!-- 26 · chamada final: logo do NexGrade e contato -->
 <section class="slide img" style="background-image:url(s26.png)">
   <div class="tampa" style="left:880px; top:290px; width:160px; height:160px; background:#f6f7f5"></div>
   <img class="logo" src="logo.png" alt="NexGrade" style="left:910px; top:304px; width:100px; height:100px">
+  <div class="tampa" style="left:300px; width:1320px; top:686px; height:82px; background:#f6f6f4"></div><!-- [TEXTO-JURIDICO] -->
+  <div class="troca" style="left:0; right:0; text-align:center; top:688px; font-size:30.8px; line-height:42px; color:#464749">de IA e arquivo compatível com o RCO ficam prontos em dias, com você revisando<br>cada passo. Em implantação em três colégios estaduais do Paraná.</div>
   <div class="contato" style="top:840px">Fale com <b>Simone Barros</b> · WhatsApp <b>(41) 99818-0353</b> · simone@nexuscoretecnologia.com.br</div>
 </section>
 
@@ -173,6 +182,74 @@
   <div class="tampa" style="left:166px; top:518px; width:700px; height:46px; background:#192741"></div>
   <div style="position:absolute; left:168px; top:520px; font-size:31px; font-weight:600; color:#fff">Simone Barros</div>
   <img class="logo" src="logo.png" alt="NexGrade" style="left:1640px; top:478px; width:110px; height:110px">
+  <div class="aviso-indep">O NexGrade é um sistema independente da Nexus Core Tecnologia, sem vínculo, parceria ou endosso da Secretaria de Estado da Educação do Paraná (SEED-PR). RCO, SERE e SEED-PR são sistemas e marcas do Governo do Estado do Paraná, citados apenas para indicar compatibilidade.</div>
+</section>
+
+<!-- 2 · texto jurídico (regra do site de 06/11): slide do PDF base com as frases trocadas -->
+<section class="slide img" style="background-image:url(b02.png)">
+  <div class="tampa" style="left:733px; width:415px; top:634px; height:31px; background:#ffffff"></div>
+  <div class="troca" style="left:737px; top:635px; font-size:24.9px; line-height:29px; font-weight:400; color:#5b6169">professor pela tabela da SEED-PR vira</div>
+</section>
+
+<!-- 8 · texto jurídico (regra do site de 06/11): slide do PDF base com as frases trocadas -->
+<section class="slide img" style="background-image:url(b08.png)">
+  <div class="tampa" style="left:1303px; width:271px; top:552px; height:31px; background:#ffffff"></div>
+  <div class="troca" style="left:1307px; top:553px; font-size:24.9px; line-height:29px; font-weight:400; color:#5b6169">faz a grade valer na escola.</div>
+</section>
+
+<!-- 9 · texto jurídico (regra do site de 06/11): slide do PDF base com as frases trocadas -->
+<section class="slide img" style="background-image:url(b09.png)">
+  <div class="tampa" style="left:168px; width:494px; top:451px; height:35px; background:#1a2740"></div>
+  <div class="troca" style="left:172px; top:452px; font-size:29.3px; line-height:33px; font-weight:600; color:#6fa8ff">Catálogo SEED-PR pronto para usar</div>
+  <div class="tampa" style="left:168px; width:495px; top:502px; height:30px; background:#1a2740"></div>
+  <div class="troca" style="left:172px; top:503px; font-size:23.9px; line-height:28px; font-weight:400; color:#a7aeb8">78 cursos SEED-PR — Ensino Regular e 63</div>
+  <div class="tampa" style="left:733px; width:482px; top:451px; height:35px; background:#1a2740"></div>
+  <div class="troca" style="left:737px; top:452px; font-size:29.0px; line-height:33px; font-weight:600; color:#6fa8ff">Alinhado à Resolução</div>
+  <div class="tampa" style="left:1299px; width:370px; top:451px; height:35px; background:#1a2740"></div>
+  <div class="troca" style="left:1303px; top:452px; font-size:29.4px; line-height:33px; font-weight:600; color:#6fa8ff">Calendário letivo da SEED-PR</div>
+</section>
+
+<!-- 12 · texto jurídico (regra do site de 06/11): slide do PDF base com as frases trocadas -->
+<section class="slide img" style="background-image:url(b12.png)">
+  <div class="tampa" style="left:168px; width:372px; top:507px; height:35px; background:#f6f7f5"></div>
+  <div class="troca" style="left:172px; top:508px; font-size:29.3px; line-height:33px; font-weight:600; color:#2f6fed">Melhorar a grade em uso</div>
+</section>
+
+<!-- 15 · texto jurídico (regra do site de 06/11): slide do PDF base com as frases trocadas -->
+<section class="slide img" style="background-image:url(b15.png)">
+  <div class="tampa" style="left:376px; width:1168px; top:751px; height:35px; background:#f6f7f5"></div>
+  <div class="troca" style="left:0; right:0; text-align:center; top:752px; font-size:28.7px; line-height:33px; font-weight:400; color:#5b6169">Hora-atividade alinhada à tabela da SEED-PR e distribuída automaticamente,</div>
+</section>
+
+<!-- 16 · texto jurídico (regra do site de 06/11): slide do PDF base com as frases trocadas -->
+<section class="slide img" style="background-image:url(b16.png)">
+  <div class="tampa" style="left:1016px; width:728px; top:336px; height:31px; background:#f6f7f5"></div>
+  <div class="troca" style="left:1020px; top:337px; font-size:24.6px; line-height:29px; font-weight:400; color:#5b6169">Alinhada à tabela da SEED-PR, sempre conferida</div>
+  <div class="tampa" style="left:1016px; width:379px; top:727px; height:31px; background:#f6f7f5"></div>
+  <div class="troca" style="left:1020px; top:728px; font-size:24.8px; line-height:29px; font-weight:400; color:#5b6169">quando (e se) ela passa a valer.</div>
+</section>
+
+<!-- 19 · texto jurídico (regra do site de 06/11): slide do PDF base com as frases trocadas -->
+<section class="slide img" style="background-image:url(b19.png)">
+  <div class="tampa" style="left:976px; width:788px; top:782px; height:30px; background:#f6f6f4"></div>
+  <div class="troca" style="left:980px; top:783px; font-size:23.7px; line-height:28px; font-weight:400; color:#484c4d">Cursos da SEED-PR com matrizes e cargas; a escola só marca os cursos</div>
+</section>
+
+<!-- novo, depois de "quando a grade nao fecha" · Modo Rascunho (09/11/2026) -->
+<section class="slide escuro">
+  <div class="conteudo">
+    <div class="novo">NOVO</div>
+    <h1>Testar a mudança antes de ela valer na escola</h1>
+    <div class="grade g3 compacto">
+      <div class="card"><h3>Rascunho do que precisa</h3><p>Um turno, algumas turmas ou a escola toda. O resto da grade não é tocado.</p></div>
+      <div class="card"><h3>Nas telas de sempre</h3><p>Troca de professor direto na grade colorida, aulas de lugar e disponibilidade, tudo só no rascunho.</p></div>
+      <div class="card"><h3>Aviso antes do erro</h3><p>Professor em duas turmas no mesmo horário: o sistema avisa na troca e não deixa passar.</p></div>
+      <div class="card"><h3>Melhorar em minutos</h3><p>O motor parte do rascunho, com as trocas feitas, e tira janelas em cerca de 2 minutos.</p></div>
+      <div class="card"><h3>Simulação antes de decidir</h3><p>Janelas e hora-atividade como vão ficar, lado a lado com a grade de hoje.</p></div>
+      <div class="card"><h3>Sempre reversível</h3><p>A coordenação decide quando a mudança passa a valer; a grade anterior fica guardada.</p></div>
+    </div>
+  </div>
+  <div class="rodape">Confidencial · Nexus Core Tecnologia</div>
 </section>
 
 </body>
