@@ -10,8 +10,10 @@ novos = pymupdf.open(sys.argv[1])
 # [TEXTO-JURIDICO] (09/11/2026) os slides 2, 8, 9, 12, 15, 16 e 19 do PDF base saem refeitos (paginas 11 a 17 de
 # slides-novos: imagem do slide + frase nova, ver corrigir-base.py) e o Modo Rascunho entra depois de "quando a grade
 # nao fecha" (pagina 18)
+# (09/11/2026) sem os slides 13 e 14 do PDF base (graficos por turno contra a grade anterior da escola e "segunda escola"):
+# a reducao de janelas fica so no slide do total (-93%, pagina 15), sem comparacao detalhada com outro sistema
 ORDEM = [("n", 0), ("n", 11)] + [("b", n) for n in range(3, 8)] + [("n", 12), ("n", 13), ("b", 10), ("n", 1), ("n", 14),
-         ("n", 2), ("n", 18), ("b", 13), ("b", 14), ("n", 15), ("n", 16), ("n", 3), ("n", 4), ("n", 5), ("n", 17), ("n", 6),
+         ("n", 2), ("n", 18), ("n", 15), ("n", 16), ("n", 3), ("n", 4), ("n", 5), ("n", 17), ("n", 6),
          ("b", 21), ("b", 22), ("n", 7), ("b", 24), ("n", 8), ("n", 9), ("n", 10)]
 saida = pymupdf.open()
 for origem, n in ORDEM:

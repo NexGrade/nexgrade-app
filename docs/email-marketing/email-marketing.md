@@ -21,7 +21,7 @@ Corpo pronto para colar: [email-opcao-2.html](email-opcao-2.html). Só usa estil
 
 1. **Grade 2026 pelas regras da SEED, pronta para o RCO**
 2. **Hora-atividade, assíncronas e trios: a grade da sua escola sem retrabalho**
-3. **Até 93% menos janelas na grade dos professores**
+3. **Menos janelas na grade dos professores**
 
 Texto de pré-visualização (aparece ao lado do assunto na caixa de entrada):
 > Grade pelas regras SEED-PR, HA pela tabela oficial e arquivo para o RCO. 30 dias de avaliação.
@@ -36,7 +36,7 @@ O **NexGrade** foi feito para as escolas estaduais do Paraná:
 
 - **Regras SEED-PR 2026:** aulas assíncronas, trio e co-docência, com o catálogo oficial (78 cursos com matrizes) e o calendário letivo da SEED.
 - **Hora-atividade pela tabela oficial** (Res. 7.200/2025), colocada nos buracos entre as aulas.
-- **Menos janelas:** numa escola real, as janelas dos professores caíram de 184 para 12 (−93%).
+- **Menos janelas:** o motor monta a grade buscando o menor número de janelas para os professores, sem mudar a carga horária de ninguém.
 - **Do RCO para o RCO:** o cadastro vem do arquivo do próprio RCO, e a grade sai em arquivo por turno, que a secretaria inclui no RCO — sem redigitar aula por aula.
 - **O ano inteiro:** agenda no celular do professor, presença, licenças com substituto, reservas de salas e relatórios em PDF e Excel.
 
