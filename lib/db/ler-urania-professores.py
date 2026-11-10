@@ -4,15 +4,21 @@ import pdfplumber, sys, json, re
 DIAS=["Seg","Ter","Qua","Qui","Sex"]
 RE_H=re.compile(r"^\d{1,2}:\d{2}$")
 out={}; avisos=[]
+# Uso: python ler-urania-professores.py <pdf> <saida.json> [turno=vespertino] [data-do-cabecalho=02/11] [fonte]
+TURNO=sys.argv[3] if len(sys.argv)>3 else "vespertino"
+CAB=sys.argv[4] if len(sys.argv)>4 else "02/11"
+FONTE=sys.argv[5] if len(sys.argv)>5 else "Urania - Relatorio de Professores TARDE 02 a 06/11/2026 (CORRETO, recebido 03/11), lido pelas coordenadas do PDF"
 pdf=pdfplumber.open(sys.argv[1])
 for pn,p in enumerate(pdf.pages):
     ws=p.extract_words(x_tolerance=1.5)
     mid=p.width/2
-    for metade in (0,1):
-        W=[w for w in ws if (w['x0']<mid)==(metade==0)]
+    # pagina com um professor por linha (manha): nenhum cabecalho na metade direita -> pagina inteira
+    duas=any(w['text']==CAB and w['x0']>=mid for w in ws)
+    for metade in ((0,1) if duas else (0,)):
+        W=[w for w in ws if (not duas) or (w['x0']<mid)==(metade==0)]
         W.sort(key=lambda w:(round(w['top']),w['x0']))
         # cabecalhos de professor
-        heads=[w for w in W if w['text']=='02/11']
+        heads=[w for w in W if w['text']==CAB]
         heads.sort(key=lambda w:w['top'])
         for hi,h in enumerate(heads):
             top=h['top']; bot=heads[hi+1]['top'] if hi+1<len(heads) else 1e9
@@ -37,7 +43,7 @@ for pn,p in enumerate(pdf.pages):
                     grade[d][i]=txt
             if nome in out: avisos.append(f"nome repetido {nome}")
             out[nome]={"slots":slots,"grade":grade}
-json.dump({"fonte":"Urania - Relatorio de Professores TARDE 02 a 06/11/2026 (CORRETO, recebido 03/11), lido pelas coordenadas do PDF","vespertino":out},open(sys.argv[2],"w",encoding="utf8"),ensure_ascii=False,indent=1)
+json.dump({"fonte":FONTE,TURNO:out},open(sys.argv[2],"w",encoding="utf8"),ensure_ascii=False,indent=1)
 print(len(out),"professores", avisos)
 from collections import Counter
 print(Counter(tuple(v["slots"]) for v in out.values()))
