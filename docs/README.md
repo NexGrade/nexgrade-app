@@ -12,7 +12,7 @@
 
 ### Materiais da escola e comerciais (03/11/2026)
 - [`manual-escola/`](./manual-escola/) — para entregar à escola: `manual-uso-escola.html` (manual de uso), `modo-rascunho.html` (passo a passo do Modo Rascunho, 06/11/2026) e `cadastro-de-escola.html` (o que a escola precisa enviar para a implantação). Os PDFs (`NexGrade-*.pdf`) saem do HTML pelo Edge (comando no topo de cada arquivo).
-- [`apresentacao/`](./apresentacao/) — apresentação para escolas 2027: `slides-novos.html` (slides novos) + `base-2026-10-22.pdf`; `montar-apresentacao.py` junta os dois no PDF final. Em 09/11/2026: `NexGrade-Apresentacao.pdf` (30 slides) com o texto jurídico do site (`corrigir-base.py` refaz os slides do PDF base com frases antigas) e o slide do Modo Rascunho.
+- [`apresentacao/`](./apresentacao/) — apresentação para escolas 2027: `slides-novos.html` (slides novos) + `base-2026-10-22.pdf`; `montar-apresentacao.py` junta os dois no PDF final. Em 09/11/2026: `NexGrade-Apresentacao.pdf` (30 slides) com o texto jurídico do site (`corrigir-base.py` refaz os slides do PDF base com frases antigas) e o slide do Modo Rascunho. Também em PowerPoint (`NexGrade-Apresentacao.pptx`, 30 slides 16:9) e em imagens (`slides/slide-01.png` a `slide-30.png`), gerados do PDF por `gerar-pptx.py`.
 - [`relatorio-executivo/`](./relatorio-executivo/) — **interno**: relatório executivo com preços e projeção financeira.
 - [`treinamento/`](./treinamento/) — **interno**: treinamento comercial (playbook de vendas para escolas públicas).
 - [`email-marketing/`](./email-marketing/) — e-mail de divulgação para as escolas estaduais: `email-opcao-2.html` (versão escolhida, pronta para colar no Gmail/Outlook) e `email-marketing.md` (texto, assuntos e o que conferir antes de enviar). Sem preços.
