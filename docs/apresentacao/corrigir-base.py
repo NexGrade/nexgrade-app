@@ -15,7 +15,7 @@ TROCAS = [
     (9, "Conformidade com a Resolução", "Alinhado à Resolução", 600, "left"),
     (9, "Calendário letivo oficial", "Calendário letivo da SEED-PR", 600, "left"),
     (12, "Melhorar a grade oficial", "Melhorar a grade em uso", 600, "left"),
-    (15, "Hora-atividade calculada pela tabela oficial", "Hora-atividade alinhada à tabela da SEED-PR e distribuída automaticamente,", 400, "center"),
+    # (15) saiu: o slide do "-93%" foi refeito sem numero em slides-novos.html
     (16, "Calculada pela tabela oficial da SEED-PR", "Alinhada à tabela da SEED-PR, sempre conferida", 400, "left"),
     (16, "quando (e se) ela vira oficial.", "quando (e se) ela passa a valer.", 400, "left"),
     (19, "Cursos oficiais com matrizes", "Cursos da SEED-PR com matrizes e cargas; a escola só marca os cursos", 400, "left"),

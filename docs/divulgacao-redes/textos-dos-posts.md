@@ -15,7 +15,7 @@ Peças em `folders.html` (abrir no navegador mostra todas). Imagens prontas nest
 ## Legendas para o feed
 
 **01 · Menos janelas**
-> Numa escola estadual em implantação, as janelas na agenda dos professores caíram de 184 para 12 por semana, sem mudar a carga horária de ninguém. 📉
+> Menos janelas na agenda dos professores, sem mudar a carga horária de ninguém. 📉 O motor monta a grade buscando o menor número de janelas possível, e o Melhorar tira as que sobraram na grade pronta.
 > O NexGrade monta a grade com a hora-atividade alinhada à tabela da SEED-PR, já com aulas assíncronas, trio e co-docência, e entrega o arquivo compatível com o RCO para a secretaria importar.
 > Quer ver na sua escola? Demonstração online de 20 minutos pelo WhatsApp (41) 99818-0353.
 > #gestãoescolar #gradehorária #escolapública #paraná #coordenaçãopedagógica #NexGrade
@@ -44,5 +44,5 @@ Peças em `folders.html` (abrir no navegador mostra todas). Imagens prontas nest
 ## Antes de publicar
 
 1. Conferir as imagens no celular (texto legível, nada cortado).
-2. O número "184 para 12" é da escola em implantação citada no relatório executivo; o nome da escola **não** aparece de propósito.
+2. **Sem números de redução de janelas** (09/11/2026): o "184 para 12 / −93%" que estava no material antigo não é um dado real. Falar só em "menos janelas".
 3. Mandar a mensagem de WhatsApp só para contatos institucionais que já conversaram com a Nexus Core ou pediram informação (evita bloqueio por spam).
