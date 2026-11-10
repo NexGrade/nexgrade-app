@@ -11,10 +11,11 @@
 
 ### Materiais da escola e comerciais (03/11/2026)
 - [`manual-escola/`](./manual-escola/) — para entregar à escola: `manual-uso-escola.html` (manual de uso), `modo-rascunho.html` (passo a passo do Modo Rascunho, 06/11/2026) e `cadastro-de-escola.html` (o que a escola precisa enviar para a implantação). Os PDFs (`NexGrade-*.pdf`) saem do HTML pelo Edge (comando no topo de cada arquivo).
-- [`apresentacao/`](./apresentacao/) — apresentação para escolas 2027: `slides-novos.html` (slides novos) + `base-2026-10-22.pdf`; `montar-apresentacao.py` junta os dois no PDF final.
+- [`apresentacao/`](./apresentacao/) — apresentação para escolas 2027: `slides-novos.html` (slides novos) + `base-2026-10-22.pdf`; `montar-apresentacao.py` junta os dois no PDF final. Em 09/11/2026: `NexGrade-Apresentacao.pdf` (30 slides) com o texto jurídico do site (`corrigir-base.py` refaz os slides do PDF base com frases antigas) e o slide do Modo Rascunho.
 - [`relatorio-executivo/`](./relatorio-executivo/) — **interno**: relatório executivo com preços e projeção financeira.
 - [`treinamento/`](./treinamento/) — **interno**: treinamento comercial (playbook de vendas para escolas públicas).
 - [`email-marketing/`](./email-marketing/) — e-mail de divulgação para as escolas estaduais: `email-opcao-2.html` (versão escolhida, pronta para colar no Gmail/Outlook) e `email-marketing.md` (texto, assuntos e o que conferir antes de enviar). Sem preços.
+- [`divulgacao-redes/`](./divulgacao-redes/) — folders para redes sociais e WhatsApp (09/11/2026): 5 peças em `folders.html` (feed 1080×1350, status 1080×1920, WhatsApp 1080×1080), PNGs gerados por `gerar-imagens.sh` e `textos-dos-posts.md` com as legendas e a mensagem do WhatsApp. Seguem a regra de texto do site (ver `passagem-2026-11-09.md`).
 - [`propostas/`](./propostas/) — **interno**: propostas comerciais enviadas a escolas (HTML e PDF). O modelo atual fica no Painel Master → Simulador de proposta (`artifacts/horario-escolar/src/pages/master/proposta-pdf.ts`).
 
 - [`../CLAUDE.md`](../CLAUDE.md) — instruções que o Claude Code carrega ao abrir o projeto (onde ler primeiro, regras de trabalho, banco, verificação e git).
