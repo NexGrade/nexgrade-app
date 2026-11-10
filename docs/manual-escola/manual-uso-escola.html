@@ -157,7 +157,7 @@
     <li><strong>Calendário e Turnos</strong>: horário de início e fim de cada aula, por turno. O calendário letivo oficial da SEED-PR já vem carregado.</li>
     <li><strong>Cursos e Disciplinas</strong>: em <em>Catálogo SEED-PR</em>, marque os cursos que a escola oferta. Entram as matrizes e as disciplinas com os códigos do RCO.</li>
     <li><strong>Professores</strong>: nome, e-mail e telefone. Para muitos de uma vez, use <em>Importar planilhas</em> (colunas nome; email; telefone; cargaHorariaTotal).</li>
-    <li><strong>Turmas</strong>: o código SERE de cada turma, as disciplinas da matriz e quem dá cada uma. Os botões Manhã, Tarde e Noite mostram só as turmas daquele período.</li>
+    <li><strong>Turmas</strong>: o código SERE de cada turma, as disciplinas da matriz e quem dá cada uma. Os botões Manhã, Tarde e Noite mostram só as turmas daquele período. A lista de professores de cada disciplina mostra só os <strong>habilitados</strong> nela (“Mostrar também os não habilitados…” abre o resto). Com a grade pronta, trocar o professor aqui passa as aulas dele na grade para o novo (o sistema avisa se o novo já tiver aula em outra turma nesses horários).</li>
     <li><strong>Regras de Distribuição</strong>: aulas duplas, limite por dia e outras preferências da escola.</li>
   </ol>
   <div class="etapa">Etapa 2 · Grade de Horário</div>
@@ -167,22 +167,22 @@
     <li>Confira os avisos em <strong>Conflitos</strong>. Se a grade não sair, o quadro “Por que não gerou” mostra o que impede.</li>
     <li><strong>Imprimir Grade</strong>: PDF por turma ou por professor (paisagem ou retrato), planilha em Excel e o <strong>calendário trimestral das aulas assíncronas</strong> (por período, uma turma por folha ou três lado a lado). Na tela Horário, o botão <strong>Imprimir</strong> imprime a grade como está na tela.</li>
   </ol>
-  <div class="dica"><b>Para mudar uma grade pronta</b> (trocar professor, mudar a disponibilidade, trocar aulas de lugar), use o <strong>Modo Rascunho</strong> da seção 7: testa tudo sem mexer na escola e aplica de uma vez, com a hora-atividade recalculada.</div>
+  <div class="dica"><b>Para mudar uma grade pronta</b> (trocar professor, mudar a disponibilidade, trocar aulas de lugar), use o <strong>Modo Rascunho</strong> da seção 7: testa tudo sem mexer na escola e promove de uma vez, com a hora-atividade recalculada.</div>
 </section>
 
 <section class="secao s-roxo">
   <h2><span class="n">7</span>Testar mudanças: Modo Rascunho</h2>
-  <p>O rascunho é uma cópia da escola para testar mudanças. Você usa as telas de sempre e <strong>nada vale até clicar em “Aplicar na escola”</strong>. Enquanto ele está ligado, aparece uma <strong>faixa roxa</strong> no topo de todas as telas.</p>
+  <p>O rascunho é uma cópia de <strong>um turno, de algumas turmas ou da escola toda</strong> para testar mudanças. Você usa as telas de sempre e <strong>nada vale até o “Promover para oficial”</strong>. Enquanto ele está ligado, aparece uma <strong>faixa roxa</strong> com a etiqueta MODO RASCUNHO e o que entrou nele (ex.: Manhã), presa no topo de todas as telas.</p>
   <ol class="passos">
-    <li>Em <strong>Gerar Grade</strong>, <strong>Disponibilidade</strong> ou <strong>Turmas</strong>, clique em <strong>Começar rascunho</strong> e dê um nome (ex.: “Ana sem sexta”).</li>
-    <li><strong>Trocar aulas de lugar</strong>: em Horário → Grade, escolha o período e a turma (ou todas), clique numa aula e depois em outra. <span class="onde">Grade</span></li>
-    <li><strong>Trocar o professor</strong>: lápis na aula → escolha o professor (só os credenciados para a disciplina) → <strong>Salvar no rascunho</strong>. Vale para todas as aulas da disciplina na turma. <span class="onde">Grade ou Turmas</span></li>
+    <li>Em <strong>Gerar Grade</strong>, <strong>Disponibilidade</strong> ou <strong>Turmas</strong>, clique em <strong>Começar rascunho</strong> no quadro roxo do alto da tela, escolha <strong>o que entra</strong> (só a Manhã, só a Tarde, só a Noite, turmas escolhidas ou a escola toda) e dê um nome (ex.: “Ana sem sexta”). Se já existe um rascunho, o quadro mostra <strong>Entrar no rascunho</strong>.</li>
+    <li><strong>Trocar o professor</strong>, pela <strong>grade colorida</strong> (o mais prático): lápis na aula → escolha o professor (só os credenciados para a disciplina) → <strong>Salvar no rascunho</strong>. Vale para todas as aulas da disciplina na turma, e você vê onde elas caem. Também dá em Turmas. <span class="onde">Horário → Grade</span></li>
+    <li><strong>Trocar aulas de lugar</strong>: na mesma grade, clique numa aula e depois em outra da mesma turma (ou num vago). <span class="onde">Horário → Grade</span></li>
     <li><strong>Mudar a disponibilidade</strong>: a tela de sempre, gravando no rascunho. <span class="onde">Disponibilidade</span></li>
-    <li>Se precisar, use o motor no Modo Experimental (o nome do rascunho já vem preenchido): <strong>Melhorar</strong> para tirar janelas a partir do rascunho, ou <strong>Turma / Turno parcial</strong> nas turmas afetadas por uma disponibilidade nova.</li>
-    <li>Confira em <strong>Ver mudanças</strong> (professores, disponibilidade e aulas, com desfazer) e clique em <strong>Aplicar na escola</strong>.</li>
+    <li>Se precisar, use o motor no Modo Experimental (o nome e o turno do rascunho já vêm preenchidos): <strong>Melhorar</strong> para tirar janelas a partir do rascunho (cerca de 2 minutos), ou <strong>Turma / Turno parcial</strong> nas turmas afetadas por uma disponibilidade nova.</li>
+    <li>Confira em <strong>Ver mudanças</strong> (professores, disponibilidade e aulas, com desfazer). Depois, na faixa roxa, <strong>Promover para oficial…</strong>: abre o rascunho com a simulação pronta; confira e clique em <strong>Promover para oficial</strong>.</li>
   </ol>
-  <div class="dica"><b>Avisos e segurança:</b> se o professor já tiver aula em outra turma, bloqueio ou hora-atividade no horário, o sistema avisa antes de trocar. Antes de aplicar, guarda uma cópia: <strong>Voltar à grade anterior</strong> (Modo Experimental) desfaz grade, disponibilidade e professores. <strong>Descartar</strong> apaga o rascunho sem mexer na escola. Há um rascunho por vez, e toda a direção vê o mesmo.</div>
-  <p class="nota">Ao aplicar uma troca de professor, o novo passa a ser o professor da disciplina e recebe as aulas; quem saiu perde só as aulas daquela disciplina naquela turma. Passo a passo completo: “NexGrade — Modo Rascunho”.</p>
+  <div class="dica"><b>Avisos e segurança:</b> se o professor novo tiver bloqueio ou hora-atividade no horário, o sistema avisa. Se ele <strong>já tiver aula em outra turma</strong> no mesmo horário, o rascunho <strong>não é promovido</strong>: aparece a lista de choques até uma das aulas mudar de horário. Antes de promover, o sistema guarda uma cópia: <strong>Voltar à grade anterior</strong> (Modo Experimental) desfaz grade, disponibilidade e professores. <strong>Descartar</strong> apaga o rascunho sem mexer na escola. Há um rascunho por vez, e toda a direção vê o mesmo.</div>
+  <p class="nota">Ao promover uma troca de professor, o novo passa a ser o professor da disciplina e recebe as aulas; quem saiu perde só as aulas daquela disciplina naquela turma; a hora-atividade é refeita só no turno do rascunho. Passo a passo completo: “NexGrade — Modo Rascunho”.</p>
 </section>
 
 <section class="secao s-agua">
@@ -245,7 +245,7 @@
     <p class="contato">WhatsApp (41) 99818-0353 · simone@nexuscoretecnologia.com.br · nexuscoretecnologia.com.br</p>
   </div>
 </div>
-<div class="rodape-versao">NexGrade · Manual de uso da escola · versão de 06/11/2026</div>
+<div class="rodape-versao">NexGrade · Manual de uso da escola · versão de 09/11/2026</div>
 
 </body>
 </html>
