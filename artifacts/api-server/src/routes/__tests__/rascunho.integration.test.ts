@@ -243,6 +243,10 @@ describe.skipIf(!TEM_BANCO)("modo rascunho: fluxo completo e casos de erro", () 
     const c = await chamar("GET", `${url}/choques`);
     expect(c.body.choques).toHaveLength(1);
     expect(c.body.choques[0]).toContain("Caio: segunda, 1ª aula");
+    // [CHOQUE-NA-SIMULACAO] a simulacao tambem traz os choques (o veredito so compara janelas)
+    const sim = await chamar("GET", `${url}/simulacao`);
+    expect(sim.status).toBe(200);
+    expect(sim.body.choques).toEqual(c.body.choques);
     const antes = (await oficialDe(ids.t1)).map((h) => `${lugar(h)}|${h.professorId}`).sort();
     const r = await chamar("POST", `${url}/promover`);
     expect(r.status).toBe(409);

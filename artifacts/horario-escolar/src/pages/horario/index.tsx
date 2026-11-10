@@ -2810,6 +2810,7 @@ function AbaExperimental() {
     aulasMovidas?: Array<{ professorNome: string; turma: string; disciplina: string; sai: string[]; entra: string[] }>;
     haMovidas?: Array<{ professorNome: string; sai: string[]; entra: string[] }>;
     veredito: "melhor" | "empate" | "pior" | "primeira"; // [PRIMEIRA-GRADE]
+    choques?: string[]; // [CHOQUE-NA-SIMULACAO] professor em duas turmas no mesmo horario: nao pode ser promovido
   };
   const [simulacoes, setSimulacoes] = useState<Record<string, ResultadoSim | "carregando" | { erro: string }>>({});
   // "1:aula 2:HA 6:aula" -> "1º aula · 2º HA · 3º-5º sem aula/HA · 6º aula"
@@ -3217,6 +3218,16 @@ function AbaExperimental() {
                             <button type="button" className="opacity-60 hover:opacity-100" title="Fechar" onClick={() => setSimulacoes((s) => { const n = { ...s }; delete n[nome]; return n; })}><X className="w-4 h-4" /></button>
                           </div>
                         </div>
+                        {(sim.choques?.length ?? 0) > 0 && ( /* [CHOQUE-NA-SIMULACAO] */
+                          <div className="mt-2 rounded-md border border-red-300 bg-red-50 p-3 text-red-900">
+                            <div className="font-semibold">⚠ {sim.choques!.length} choque(s) de professor: não pode ser promovido assim</div>
+                            <ul className="mt-1 ml-4 list-disc text-xs space-y-0.5">
+                              {sim.choques!.slice(0, 10).map((c) => <li key={c}>{c}</li>)}
+                              {sim.choques!.length > 10 && <li>... e mais {sim.choques!.length - 10}</li>}
+                            </ul>
+                            <p className="mt-1 text-xs">Mude uma das aulas de horário (ou troque o professor) e simule de novo.</p>
+                          </div>
+                        )}
                         <p className="mt-1 text-xs opacity-80">
                           <strong>Janela</strong> é um horário vago entre duas atividades do mesmo professor no mesmo turno
                           (conta aula, HA e atividade fora de sala). Turno comparado: {sim.turnos.join(", ")}.

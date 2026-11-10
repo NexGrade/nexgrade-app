@@ -1016,7 +1016,14 @@ router.get("/experimentais/:nome/simulacao", async (req, res) => {
     const r = await simularPromocao(escolaId, req.params.nome);
     if (!r) { res.status(404).json({ error: "Horário experimental não encontrado" }); return; }
     const { haDepoisPromover: _soParaOPdf, ...resposta } = r; // [PDF-HA-DA-SIMULACAO]
-    res.json(resposta);
+    // [CHOQUE-NA-SIMULACAO] (09/11/2026) o veredito so compara janelas; os choques de professor vao junto para a tela
+    // avisar antes de alguem clicar em Promover (teste na Demonstracao: "Tanto faz" com 2 choques)
+    let choques: string[] = [];
+    try {
+      const exp = await db.select().from(horariosExperimentaisTable).where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, req.params.nome)));
+      choques = await choquesAoPromover(escolaId, req.params.nome, exp);
+    } catch (err) { console.error("[CHOQUE-NA-SIMULACAO] falhou ao conferir choques:", err); }
+    res.json({ ...resposta, choques });
   } catch (err) {
     res.status(500).json({ error: "Erro ao simular a promoção.", detalhe: err instanceof Error ? err.message : String(err) });
   }
