@@ -28,7 +28,7 @@ async function chamar(metodo: string, caminho: string, corpo?: unknown) {
   });
   return { status: r.status, body: (await r.json()) as any };
 }
-const ids = { nicolas: 0, ione: 0, roberto: 0, me: 0, mf: 0 };
+const ids = { nicolas: 0, ione: 0, roberto: 0, me: 0, mf: 0, andre: 0 };
 
 describe.skipIf(!TEM_BANCO)("resolver choque do experimento", () => {
   beforeAll(async () => {
@@ -73,7 +73,7 @@ describe.skipIf(!TEM_BANCO)("resolver choque do experimento", () => {
 
   afterAll(async () => {
     await new Promise<void>((ok) => (server ? server.close(() => ok()) : ok()));
-    if (ids.ione) await db.delete(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, [ids.nicolas, ids.ione, ids.roberto]));
+    if (ids.ione) await db.delete(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, [ids.nicolas, ids.ione, ids.roberto, ids.andre].filter(Boolean)));
     for (const t of ["configuracoes", "experimentos", "disponibilidade_experimental", "horarios_experimentais", "horarios", "horario_slots", "turmas", "disciplinas", "professores"]) {
       await db.execute(sql.raw(`delete from ${t} where escola_id = '${E}'`));
     }
@@ -98,5 +98,47 @@ describe.skipIf(!TEM_BANCO)("resolver choque do experimento", () => {
     expect(t.body).toMatchObject({ aplicado: true, avisos: [] });
     expect((await chamar("GET", `${url}/choques`)).body.choques).toEqual([]);
     expect((await chamar("GET", `${url}/resolver-choques`)).body.choques).toEqual([]);
+  });
+
+  it("[RESOLVER-CHOQUE-HA] aplica a troca que muda a HA de lugar, so no rascunho, e recusa opcao que nao vale", async () => {
+    const N2 = "Plano HA";
+    const url2 = `/horarios/experimentais/${encodeURIComponent(N2)}`;
+    const [andre] = await db.insert(professoresTable).values({ escolaId: E, nome: "André", email: `andre.${E}@escola.test` }).returning();
+    const [ef] = await db.insert(disciplinasTable).values({ escolaId: E, nome: "Educação Física", sigla: "EF" } as any).returning();
+    const MOTIVO = "Hora-atividade institucional (recalculada automaticamente)";
+    await db.insert(disponibilidadeTable).values({ professorId: andre!.id, diaSemana: 1, horarioSlot: 3, turno: "matutino", disponivel: true, horaAtividadeObrigatoria: true, motivo: MOTIVO } as any);
+    // como no Romario, sem troca simples: o Nicolas so esta livre na segunda 3a (e na terca 3a, do choque)
+    for (let d = 0; d < 5; d++) for (let s = 1; s <= 4; s++) {
+      if ((d === 0 && s === 3) || (d === 1 && s === 3)) continue;
+      await db.insert(disponibilidadeTable).values({ professorId: ids.nicolas, diaSemana: d, horarioSlot: s, turno: "matutino", disponivel: false, motivo: "Bloqueio" } as any);
+    }
+    const [mat] = await db.select().from(disciplinasTable).where(sql`escola_id = ${E} and nome = 'Matemática'`);
+    // 9ME: Nicolas terca 3a, Andre segunda 3a; 9MF: Nicolas terca 3a (fixa) = choque
+    await db.insert(horariosExperimentaisTable).values([
+      { escolaId: E, nome: N2, turmaId: ids.me, disciplinaId: mat!.id, professorId: ids.nicolas, diaSemana: 1, numeroAula: 3 },
+      { escolaId: E, nome: N2, turmaId: ids.me, disciplinaId: ef!.id, professorId: andre!.id, diaSemana: 0, numeroAula: 3 },
+      // o Andre continua vindo na segunda (a HA prefere dia em que o professor ja vem)
+      { escolaId: E, nome: N2, turmaId: ids.me, disciplinaId: ef!.id, professorId: andre!.id, diaSemana: 0, numeroAula: 4 },
+      { escolaId: E, nome: N2, turmaId: ids.mf, disciplinaId: mat!.id, professorId: ids.nicolas, diaSemana: 1, numeroAula: 3, fixa: true },
+    ]);
+    const r = await chamar("GET", `${url2}/resolver-choques`);
+    const opcoes = r.body.choques[0].opcoes as any[];
+    const comHa = opcoes.find((o) => o.moverHa?.length);
+    expect(comHa).toMatchObject({ turmaId: ids.me, de: { diaSemana: 1, numeroAula: 3 }, para: { diaSemana: 0, numeroAula: 3 } });
+    expect(comHa.texto).toContain("e a HA de André vai da terça 3ª para a segunda 3ª");
+
+    // opcao inventada (HA para outro lugar) e recusada sem mexer em nada
+    const falsa = { ...comHa, moverHa: [{ ...comHa.moverHa[0], para: { diaSemana: 4, numeroAula: 1 } }] };
+    expect((await chamar("POST", `${url2}/resolver-choques/aplicar`, falsa)).status).toBe(409);
+
+    const a = await chamar("POST", `${url2}/resolver-choques/aplicar`, comHa);
+    expect(a.status).toBe(200);
+    expect((await chamar("GET", `${url2}/choques`)).body.choques).toEqual([]);
+    // a HA mudou so no rascunho: a oficial continua com a HA na terca 3a
+    const dispExp = await db.execute(sql`select dia_semana, horario_slot, hora_atividade_obrigatoria, motivo from disponibilidade_experimental where escola_id = ${E} and nome = ${N2} order by dia_semana`);
+    expect((dispExp as any).rows.map((x: any) => [x.dia_semana, x.horario_slot, x.hora_atividade_obrigatoria, x.motivo])).toEqual([[0, 3, true, MOTIVO], [1, 3, false, null]]);
+    const oficialAndre = await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, [andre!.id]));
+    expect(oficialAndre.map((x) => [x.diaSemana, x.horarioSlot, x.horaAtividadeObrigatoria])).toEqual([[1, 3, true]]);
+    ids.andre = andre!.id;
   });
 });

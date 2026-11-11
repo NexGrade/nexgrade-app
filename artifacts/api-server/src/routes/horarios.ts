@@ -62,7 +62,8 @@ import {
   recusaTravaIntegral, recusaSeMudaIntegral, situacaoTravaIntegral, destravarIntegral, travarIntegral, turmasIntegrais, lerDestrava,
   STATUS_TRAVA_INTEGRAL, HORAS_DESTRAVA_PADRAO, HORAS_DESTRAVA_MAX,
 } from "../lib/trava-integral"; // [TRAVA-INTEGRAL]
-import { sugerirTrocasParaChoques } from "../lib/resolver-choque"; // [RESOLVER-CHOQUE]
+import { sugerirTrocasParaChoques, mesmaOpcao } from "../lib/resolver-choque"; // [RESOLVER-CHOQUE]
+import { estadoDisp } from "./disponibilidade"; // [RESOLVER-CHOQUE-HA]
 
 const router = Router();
 // [DISP-EXPERIMENTAL] rotas de experimento enxergam a disponibilidade do experimento (lib/disponibilidade-experimento.ts)
@@ -1718,9 +1719,81 @@ async function baseDosChoques(escolaId: string, nome: string, expSlots: Array<ty
  *  problema (bloqueio, HA, aula fixa ou novo choque). A tela aplica a escolhida pela rota trocar-aulas. */
 router.get("/experimentais/:nome/resolver-choques", async (req, res) => {
   const escolaId = getEscolaId(req);
+  const exp = await db.select().from(horariosExperimentaisTable).where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, req.params.nome)));
+  res.json({ choques: await sugestoesDeChoque(escolaId, req.params.nome, exp) });
+});
+
+/** [RESOLVER-CHOQUE] [RESOLVER-CHOQUE-HA] aplica uma opcao do "Ver como resolver": so se ela ainda for sugerida agora
+ *  (confere de novo com o experimento atual). Muda a HA (na disponibilidade do experimento) e troca as aulas juntas. */
+const AplicarResolucaoBody = z.object({
+  turmaId: z.number().int(),
+  de: z.object({ diaSemana: z.number().int(), numeroAula: z.number().int() }),
+  para: z.object({ diaSemana: z.number().int(), numeroAula: z.number().int() }),
+  moverHa: z.array(z.object({
+    professorId: z.number().int(), turno: z.string(),
+    de: z.object({ diaSemana: z.number().int(), numeroAula: z.number().int() }),
+    para: z.object({ diaSemana: z.number().int(), numeroAula: z.number().int() }),
+    motivo: z.string().nullable().optional(),
+  })).optional(),
+});
+router.post("/experimentais/:nome/resolver-choques/aplicar", async (req, res) => {
+  const escolaId = getEscolaId(req);
   const nome = req.params.nome;
-  const exp = await db.select().from(horariosExperimentaisTable).where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome)));
-  if (!exp.length) { res.json({ choques: [] }); return; }
+  const b = AplicarResolucaoBody.safeParse(req.body);
+  if (!b.success) { res.status(400).json({ error: "Dados inválidos." }); return; }
+  const travaInt = await recusaTravaIntegral(escolaId, [b.data.turmaId], "trocar aula de lugar"); // [TRAVA-INTEGRAL]
+  if (travaInt) { res.status(STATUS_TRAVA_INTEGRAL).json({ error: travaInt }); return; }
+  const doExp = and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome));
+  const exp = await db.select().from(horariosExperimentaisTable).where(doExp);
+  const opcao = (await comExperimento(escolaId, nome, () => sugestoesDeChoque(escolaId, nome, exp)))
+    .flatMap((c) => c.opcoes).find((o) => mesmaOpcao(o, { ...b.data, moverHa: b.data.moverHa?.map((m) => ({ ...m, motivo: m.motivo ?? null })) }));
+  if (!opcao) { res.status(409).json({ error: "Essa troca não resolve mais (o rascunho mudou). Clique em Ver como resolver de novo." }); return; }
+  const naCelula = (c: { diaSemana: number; numeroAula: number }) => exp.filter((h) => h.turmaId === opcao.turmaId && h.diaSemana === c.diaSemana && h.numeroAula === c.numeroAula).map((h) => h.id);
+  const idsA = naCelula(opcao.de), idsB = naCelula(opcao.para);
+  try {
+    await db.transaction(async (tx) => {
+      for (const m of opcao.moverHa ?? []) {
+        // a HA sai do horario antigo (fica livre) e vai para o novo, com o mesmo texto
+        await gravarDispNoExperimento(tx, escolaId, nome, m.professorId, m.turno, m.de, { disponivel: true, horaAtividadeObrigatoria: false, motivo: null });
+        await gravarDispNoExperimento(tx, escolaId, nome, m.professorId, m.turno, m.para, { disponivel: true, horaAtividadeObrigatoria: true, motivo: m.motivo });
+      }
+      if (idsA.length) await tx.update(horariosExperimentaisTable).set({ diaSemana: opcao.para.diaSemana, numeroAula: opcao.para.numeroAula }).where(inArray(horariosExperimentaisTable.id, idsA));
+      if (idsB.length) await tx.update(horariosExperimentaisTable).set({ diaSemana: opcao.de.diaSemana, numeroAula: opcao.de.numeroAula }).where(inArray(horariosExperimentaisTable.id, idsB));
+    });
+  } catch (e) {
+    if (semTabelaExperimental(e)) { res.status(503).json({ error: "O rascunho ainda não está pronto no banco (falta a atualização do sistema). Avise o suporte NexGrade." }); return; }
+    throw e;
+  }
+  res.json({ aplicado: true, opcao });
+});
+
+/** Grava um horario da disponibilidade no experimento; igual a oficial, a linha do experimento sai (como a tela faz). */
+async function gravarDispNoExperimento(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0], escolaId: string, nome: string, professorId: number, turno: string,
+  c: { diaSemana: number; numeroAula: number }, valores: { disponivel: boolean; horaAtividadeObrigatoria: boolean; motivo: string | null },
+) {
+  const [o] = await tx.select().from(disponibilidadeTable).where(and(
+    eq(disponibilidadeTable.professorId, professorId), eq(disponibilidadeTable.diaSemana, c.diaSemana),
+    eq(disponibilidadeTable.horarioSlot, c.numeroAula), eq(disponibilidadeTable.turno, turno)));
+  const igual = estadoDisp(o) === estadoDisp(valores) && (estadoDisp(valores) === "Livre" || (o?.motivo ?? "") === (valores.motivo ?? ""));
+  const onde = and(
+    eq(disponibilidadeExperimentalTable.escolaId, escolaId), eq(disponibilidadeExperimentalTable.nome, nome),
+    eq(disponibilidadeExperimentalTable.professorId, professorId), eq(disponibilidadeExperimentalTable.diaSemana, c.diaSemana),
+    eq(disponibilidadeExperimentalTable.horarioSlot, c.numeroAula), eq(disponibilidadeExperimentalTable.turno, turno),
+  );
+  if (igual) { await tx.delete(disponibilidadeExperimentalTable).where(onde); return; }
+  await tx.insert(disponibilidadeExperimentalTable)
+    .values({ escolaId, nome, professorId, diaSemana: c.diaSemana, horarioSlot: c.numeroAula, turno, ...valores, criadoPor: null })
+    .onConflictDoUpdate({
+      target: [disponibilidadeExperimentalTable.escolaId, disponibilidadeExperimentalTable.nome, disponibilidadeExperimentalTable.professorId,
+        disponibilidadeExperimentalTable.diaSemana, disponibilidadeExperimentalTable.horarioSlot, disponibilidadeExperimentalTable.turno],
+      set: { ...valores, atualizadoEm: new Date() },
+    });
+}
+
+/** As sugestoes do "Ver como resolver" para o experimento como esta agora (precisa do contexto da disponibilidade dele). */
+async function sugestoesDeChoque(escolaId: string, nome: string, exp: Array<typeof horariosExperimentaisTable.$inferSelect>) {
+  if (!exp.length) return [];
   const { fora, tm, slots, nomeProf } = await baseDosChoques(escolaId, nome, exp);
   const turmaIds = [...new Set(exp.map((s) => s.turmaId))];
   const aulasValidas = new Map<number, number[]>();
@@ -1729,15 +1802,18 @@ router.get("/experimentais/:nome/resolver-choques", async (req, res) => {
   const disp = sobreporExperimento(await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, profIds)));
   const discs = new Map((await db.select({ id: disciplinasTable.id, nome: disciplinasTable.nome }).from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId))).map((d) => [d.id, d.nome]));
   const travadas = (await lerDestrava(escolaId)) ? new Set<number>() : new Set((await turmasIntegrais(escolaId)).map((t) => t.id)); // [TRAVA-INTEGRAL]
-  const choques = sugerirTrocasParaChoques({
+  return sugerirTrocasParaChoques({
     exp, fora, turmas: tm, slots, aulasValidas, turmasTravadas: travadas,
     indisponiveis: disp.filter((d) => !d.disponivel || d.horaAtividadeObrigatoria)
-      .map((d) => ({ professorId: d.professorId, turno: d.turno, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, ha: d.horaAtividadeObrigatoria })),
+      .map((d) => ({
+        professorId: d.professorId, turno: d.turno, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, ha: d.horaAtividadeObrigatoria,
+        // [RESOLVER-CHOQUE-HA] so HA movel (automatica, importada, manual da tela) muda de lugar; fixa e probatorio nunca
+        movel: d.horaAtividadeObrigatoria && d.disponivel !== false && ehHAMovel(d.motivo), motivo: d.motivo,
+      })),
     nomeProfessor: (id) => nomeProf.get(id) ?? `Professor #${id}`,
     nomeDisciplina: (id) => discs.get(id) ?? `Disciplina #${id}`,
   });
-  res.json({ choques });
-});
+}
 
 /** Choques de professor que impedem aplicar o experimento (a tela confere antes do "Promover para oficial"). */
 router.get("/experimentais/:nome/choques", async (req, res) => {

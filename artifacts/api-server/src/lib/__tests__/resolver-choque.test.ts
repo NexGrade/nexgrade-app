@@ -71,6 +71,29 @@ describe("sugerirTrocasParaChoques", () => {
     expect(l).not.toContain("2:1-3>1-4"); // Roberto tem HA na 3a
   });
 
+  it("[RESOLVER-CHOQUE-HA] HA movel no caminho: a troca vem com a HA indo para o horario que a aula deixou", () => {
+    // caso do Romario: Andre (Ed. Fisica da 9ME na segunda 3a) tem HA na terca 3a; a 9MF esta fixa (so a 9ME pode mudar)
+    const TER = 1, SEG = 0, andre = 6;
+    nomes[andre] = "André";
+    const exp = [
+      aula(1, D.mat, P.nicolas, TER, 3), aula(1, D.cie, andre, SEG, 3),
+      aula(2, D.mat, P.nicolas, TER, 3, { fixa: true }),
+    ];
+    const base = { professorId: andre, turno: "matutino", diaSemana: TER, horarioSlot: 3, ha: true };
+    const comHa = (movel: boolean) => sugerirTrocasParaChoques({
+      exp, fora: [], turmas, slots, aulasValidas: new Map([[1, [3]], [2, [3]]]), limite: 20,
+      indisponiveis: [{ ...base, movel, motivo: "Hora-atividade institucional (recalculada automaticamente)" }],
+      nomeProfessor: (i) => nomes[i] ?? `#${i}`, nomeDisciplina: (i) => discs[i] ?? `#${i}`,
+    });
+    const op = comHa(true)[0]!.opcoes.find((o) => o.para.diaSemana === SEG && o.para.numeroAula === 3)!;
+    expect(op.moverHa).toEqual([{ professorId: andre, turno: "matutino", de: { diaSemana: TER, numeroAula: 3 }, para: { diaSemana: SEG, numeroAula: 3 }, motivo: "Hora-atividade institucional (recalculada automaticamente)" }]);
+    expect(op.texto).toBe("9ME: trocar Matemática (Nicolas) da terça 3ª com Ciências (André) da segunda 3ª, e a HA de André vai da terça 3ª para a segunda 3ª");
+    // as trocas simples (horario vago) vem antes das que mexem em HA
+    expect(comHa(true)[0]!.opcoes[0]!.moverHa).toBeUndefined();
+    // HA presa (fixa, probatorio): a troca com o Andre nao aparece
+    expect(comHa(false)[0]!.opcoes.some((o) => o.para.diaSemana === SEG)).toBe(false);
+  });
+
   it("sem choque, lista vazia", () => {
     const TER = 1;
     expect(cenario({ exp: [aula(1, D.mat, P.nicolas, TER, 1), aula(2, D.mat, P.nicolas, TER, 2)] })).toEqual([]);

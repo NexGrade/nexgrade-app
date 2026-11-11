@@ -2896,7 +2896,10 @@ function AbaExperimental() {
   // [RESOLVER-CHOQUE] (11/11/2026) "Ver como resolver" na caixa de choques: trocas na mesma turma que tiram o choque sem
   // criar outro problema; "Aplicar" troca no experimento (rota trocar-aulas) e refaz a simulacao com o quadro aberto
   type CelulaTroca = { diaSemana: number; numeroAula: number };
-  type OpcaoChoque = { turmaId: number; de: CelulaTroca; para: CelulaTroca; texto: string };
+  type OpcaoChoque = {
+    turmaId: number; de: CelulaTroca; para: CelulaTroca; texto: string;
+    moverHa?: { professorId: number; turno: string; de: CelulaTroca; para: CelulaTroca; motivo: string | null }[]; // [RESOLVER-CHOQUE-HA]
+  };
   const [resolucoes, setResolucoes] = useState<Record<string, "carregando" | { erro: string } | { texto: string; opcoes: OpcaoChoque[] }[]>>({});
   const [aplicandoChoque, setAplicandoChoque] = useState<string | null>(null);
   const verComoResolver = async (nome: string) => {
@@ -2912,16 +2915,13 @@ function AbaExperimental() {
     const k = `${nome}|${o.turmaId}|${o.de.diaSemana}-${o.de.numeroAula}|${o.para.diaSemana}-${o.para.numeroAula}`;
     setAplicandoChoque(k);
     try {
-      const r = await customFetch<{ aplicado: boolean; avisos: string[] }>(`/api/horarios/experimentais/${encodeURIComponent(nome)}/trocar-aulas`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ turmaId: o.turmaId, de: o.de, para: o.para }),
+      // [RESOLVER-CHOQUE-HA] a rota confere de novo e faz junto a troca e a mudanca da HA (na disponibilidade do rascunho)
+      await customFetch(`/api/horarios/experimentais/${encodeURIComponent(nome)}/resolver-choques/aplicar`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(o),
       });
-      if (!r.aplicado) {
-        toast({ title: "A troca não foi feita", description: `${r.avisos.join(" ")} Clique em Ver como resolver de novo.`, variant: "destructive" });
-      } else {
-        toast({ title: "Aulas trocadas no experimento", description: `${o.texto}. A escola não mudou.` });
-      }
+      toast({ title: o.moverHa?.length ? "Aulas trocadas e HA mudada no experimento" : "Aulas trocadas no experimento", description: `${o.texto}. A escola não mudou.` });
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/disponibilidade"] });
       await queryClient.invalidateQueries({ queryKey: ["grade-rascunho", nome] });
       await queryClient.invalidateQueries({ queryKey: ["rascunho"] });
       await simularPromocao(nome, true);
