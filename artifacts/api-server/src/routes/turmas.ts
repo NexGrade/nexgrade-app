@@ -16,6 +16,14 @@ import { registrarAuditoria } from "../lib/audit";
 import { planejarTrocaNaGrade, passarAulasParaProfessor } from "../lib/troca-professor-grade"; // [TROCA-LEVA-AULAS]
 import { salvarBackupGrade } from "../lib/backup-grade"; // [TROCA-LEVA-AULAS]
 import { mensagemDaTravaDeChoque } from "../lib/choques-professor"; // [TROCA-LEVA-AULAS]
+import { recusaTravaIntegral, STATUS_TRAVA_INTEGRAL } from "../lib/trava-integral"; // [TRAVA-INTEGRAL]
+
+/** [TRAVA-INTEGRAL] responde 423 e devolve true se a turma for integral e a integral estiver travada. */
+async function barradoPelaTravaIntegral(res: import("express").Response, escolaId: string, turmaId: number, oQue: string): Promise<boolean> {
+  const recusa = await recusaTravaIntegral(escolaId, [turmaId], oQue);
+  if (recusa) res.status(STATUS_TRAVA_INTEGRAL).json({ error: recusa });
+  return !!recusa;
+}
 
 const router = Router();
 
@@ -219,6 +227,9 @@ router.patch("/:id", async (req, res) => {
     res.status(404).json({ error: "Turma não encontrada" });
     return;
   }
+  // [TRAVA-INTEGRAL] mudar turno, disciplinas ou configuracao da integral (renomear continua livre)
+  const mexeNaGrade = data.turno !== undefined && data.turno !== anterior.turno || disciplinaIds !== undefined || disciplinasConfig !== undefined;
+  if (mexeNaGrade && await barradoPelaTravaIntegral(res, escolaId, id, "mudar o turno, as disciplinas ou as aulas dela")) return;
   await db.transaction(async (tx) => {
     if (Object.keys(data).length > 0) {
       await tx
@@ -266,6 +277,7 @@ router.delete("/:id", async (req, res) => {
     res.status(204).send();
     return;
   }
+  if (await barradoPelaTravaIntegral(res, escolaId, parsed.data.id, "excluir a turma")) return; // [TRAVA-INTEGRAL]
   await db
     .delete(turmasTable)
     .where(and(eq(turmasTable.id, parsed.data.id), eq(turmasTable.escolaId, escolaId)));
@@ -307,6 +319,7 @@ router.post("/:id/aplicar-matriz", async (req, res) => {
     res.status(404).json({ error: "Turma não encontrada" });
     return;
   }
+  if (await barradoPelaTravaIntegral(res, escolaId, turmaId, "aplicar outra matriz")) return; // [TRAVA-INTEGRAL]
 
   const matriz = await db.select().from(matrizesCurricularesTable)
     .where(and(
@@ -417,6 +430,8 @@ router.patch("/:turmaId/disciplinas/linha/:linhaId", async (req, res) => {
       return;
     }
   }
+  // [TRAVA-INTEGRAL] trocar (ou tirar) o professor de uma disciplina da integral
+  if (parsed.data.professorId !== linha.professorId && await barradoPelaTravaIntegral(res, escolaId, turmaId, "trocar o professor de uma disciplina")) return;
   // [TROCA-LEVA-AULAS] (09/11/2026) as aulas da grade oficial dessa disciplina nesta turma passam para o professor novo
   const novo = parsed.data.professorId;
   const plano = novo != null && linha.professorId != null && novo !== linha.professorId
@@ -487,6 +502,7 @@ router.post("/:turmaId/disciplinas/:disciplinaId/dupla", async (req, res) => {
     res.status(404).json({ error: "Turma não encontrada" });
     return;
   }
+  if (await barradoPelaTravaIntegral(res, escolaId, turmaId, "pôr um segundo professor numa disciplina")) return; // [TRAVA-INTEGRAL]
   const linhaExistente = await db.select().from(turmaDisciplinasTable)
     .where(and(eq(turmaDisciplinasTable.turmaId, turmaId), eq(turmaDisciplinasTable.disciplinaId, disciplinaId)))
     .then((r) => r[0]);
@@ -550,6 +566,7 @@ router.delete("/:turmaId/disciplinas/linha/:linhaId", async (req, res) => {
     res.status(404).json({ error: "Vínculo turma+disciplina não encontrado" });
     return;
   }
+  if (await barradoPelaTravaIntegral(res, escolaId, turmaId, "tirar um professor de uma disciplina")) return; // [TRAVA-INTEGRAL]
   const outrasLinhasMesmaDisciplina = await db.select().from(turmaDisciplinasTable)
     .where(and(eq(turmaDisciplinasTable.turmaId, turmaId), eq(turmaDisciplinasTable.disciplinaId, linha.disciplinaId)));
   if (outrasLinhasMesmaDisciplina.length <= 1) {
@@ -625,6 +642,7 @@ router.patch("/:id/disciplinas/:disciplinaId/modalidade", async (req, res) => {
     res.status(404).json({ error: "Turma nao encontrada nesta escola" });
     return;
   }
+  if (await barradoPelaTravaIntegral(res, escolaId, turmaId, "mudar trio ou aulas assíncronas")) return; // [TRAVA-INTEGRAL]
   const patch: Partial<typeof turmaDisciplinasTable.$inferInsert> = {};
   if (parsed.data.aulasAssincronas !== undefined) patch.aulasAssincronas = parsed.data.aulasAssincronas;
   if (parsed.data.grupoTrio !== undefined) patch.grupoTrio = parsed.data.grupoTrio ? parsed.data.grupoTrio : null;

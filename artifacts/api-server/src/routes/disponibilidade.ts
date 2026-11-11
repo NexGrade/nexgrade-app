@@ -7,6 +7,7 @@ import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 import { turnosComAulaPorProfessor, marcarContraturno } from "../lib/ha-contraturno"; // [HA-CONTRATURNO-ASTERISCO]
 import { carregarAulasIntegraisNoTurno } from "../lib/turno-integral"; // [DOC-TRAVADA]
+import { aulaDOCNoHorario, STATUS_TRAVA_INTEGRAL } from "../lib/trava-integral"; // [DOC-TRAVADA] [TRAVA-INTEGRAL]
 
 // RF-DISP-01 a RF-DISP-03, RF-PROF-04: CRUD da disponibilidade semanal do
 // professor, consumida pelo algoritmo de geração de horário
@@ -139,6 +140,16 @@ router.post("/", async (req, res) => {
   if (!professor) {
     res.status(404).json({ error: "Professor não encontrado" });
     return;
+  }
+
+  // [DOC-TRAVADA] [TRAVA-INTEGRAL] (11/11/2026) esta rota (um horario so) escapava da trava: o horario de aula DOC
+  // nao pode ser bloqueado nem receber HA/atividade
+  if (!parsed.data.disponivel || parsed.data.horaAtividadeObrigatoria) {
+    const doc = await aulaDOCNoHorario(escolaId, parsed.data.professorId, parsed.data.turno, parsed.data.diaSemana, parsed.data.horarioSlot);
+    if (doc) {
+      res.status(STATUS_TRAVA_INTEGRAL).json({ error: `Nesse horário o professor dá aula na ${doc} (turma integral): ele não pode ser bloqueado nem receber HA.` });
+      return;
+    }
   }
 
   const existente = await db.select().from(disponibilidadeTable)

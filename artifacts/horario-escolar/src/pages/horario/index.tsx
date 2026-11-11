@@ -35,6 +35,7 @@ import { ProgressoGeracao, type EtapaGeracao, type ProgressoGeracaoDados, type P
 import { DiagnosticoGeracaoDialog, diagnosticoDe, type DiagnosticoGeracao } from "@/components/diagnostico-geracao"; // [DIAGNOSTICO-GERACAO]
 import { useRascunho, ligarRascunho } from "@/lib/rascunho"; // [MODO-RASCUNHO]
 import { GradeRascunho } from "@/components/grade-rascunho"; // [MODO-RASCUNHO]
+import { TravaIntegral } from "@/components/trava-integral"; // [TRAVA-INTEGRAL]
 import {
   Check, ArrowRight, ArrowLeft, Lock, ChevronDown, ChevronRight, Plus,
   Calendar, ListChecks, AlertTriangle, FlaskConical,
@@ -1297,6 +1298,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
           </span>
         </div>
       )}{/* [CONFLITO-VAI-AO-PROBLEMA] */}
+      <TravaIntegral />{/* [TRAVA-INTEGRAL] */}
       <Card>
         <CardContent className="p-4 flex flex-col md:flex-row gap-4 items-end">
           <div className="space-y-2 w-full md:w-44">

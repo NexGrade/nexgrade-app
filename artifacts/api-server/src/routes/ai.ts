@@ -11,6 +11,7 @@ import { getEscolaId } from "../lib/escola-id";
 import { limitadorIA } from "../middlewares/rateLimit";
 import { GUIA_NEXGRADE, TOPICOS_GUIA, buscarNoGuia } from "../lib/guia-nexgrade"; // [GUIA-IA]
 import { ehHAOutroTurno } from "../lib/ha-contraturno"; // [HA-OUTRO-TURNO]
+import { aulaDOCNoHorario, STATUS_TRAVA_INTEGRAL } from "../lib/trava-integral"; // [DOC-TRAVADA] [TRAVA-INTEGRAL]
 // [IA-AMPLIADA] gerarAlgoritmo (motor simples antigo) nao e mais usado aqui:
 // a geracao de grade saiu do assistente -- ver "gerar_horario_turma" abaixo.
 
@@ -1043,6 +1044,15 @@ router.post("/executar-acao", async (req, res) => {
   if (!professor) {
     res.status(404).json({ error: "Professor não encontrado" });
     return;
+  }
+
+  // [DOC-TRAVADA] [TRAVA-INTEGRAL] (11/11/2026) o Assistente tambem nao bloqueia horario de aula da turma integral
+  if (!disponivel) {
+    const doc = await aulaDOCNoHorario(escolaId, professorId, turno, diaSemana, horarioSlot);
+    if (doc) {
+      res.status(STATUS_TRAVA_INTEGRAL).json({ error: `Nesse horário ${professor.nome} dá aula na ${doc} (turma integral): o horário não pode ser bloqueado.` });
+      return;
+    }
   }
 
   // Mesma chave da tela Disponibilidade: professor + dia + aula + TURNO

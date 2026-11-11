@@ -42,7 +42,7 @@ import { opcoesFecharJanela } from "../lib/fechar-janela"; // [FECHAR-JANELA]
 import { carregarLimitesPorDisciplina, limiteAulasDia } from "../lib/limite-disciplina"; // [LIMITE-DISCIPLINA]
 import { REGRAS_REDE } from "../lib/regras-rede"; // [REGRAS-REDE]
 import { CHAVE_TETO_LIBERADO } from "./conflitos"; // [TETO-AUTORIZADO]
-import { salvarBackupGrade, listarBackupsGrade, restaurarBackupGrade } from "../lib/backup-grade"; // [BACKUP-GRADE]
+import { salvarBackupGrade, listarBackupsGrade, restaurarBackupGrade, aulasDoBackupGrade } from "../lib/backup-grade"; // [BACKUP-GRADE] [TRAVA-INTEGRAL]
 import { professoresComHAIncompleta, completarHA, gravarHACompletada } from "../lib/ha-incompleta"; // [HA-INCOMPLETA-REFAZ] [HA-SO-COMPLETAR]
 import { montarMapaPrincipal } from "../lib/professor-principal"; // [MESMA-PESSOA-HA]
 import { fotografarGradeEHA, recalcularHASoDeQuemMudou } from "../lib/ha-so-quem-mudou"; // [HA-SO-QUEM-MUDOU-GERAL]
@@ -58,6 +58,10 @@ import { validarCapacidadeProfessores, calcularCotaHaPorTurno, capacidadeDoProfe
 import { carregarMapaIntegral, slotReal, TURNO_INTEGRAL, carregarAulasIntegraisNoTurno, mapaIntegralDosSlots, posicaoReal } from "../lib/turno-integral"; // [TURNO-INTEGRAL] [INTEGRAL-NO-MOTOR]
 import { diagnosticarGeracao, diagnosticarViolacoesPromocao, explicarBloqueiosNaCausa, type OrigemBloqueio } from "../lib/diagnostico-geracao"; // [DIAGNOSTICO-GERACAO] [ORIGEM-BLOQUEIO]
 import { tempoDoMotor, tempoDoMelhorar, TEMPO_TOTAL_PADRAO_S, TEMPO_MINIMO_CHAMADA_S } from "../lib/tempo-geracao"; // [TEMPO-TOTAL] [MELHORAR-120S]
+import {
+  recusaTravaIntegral, recusaSeMudaIntegral, situacaoTravaIntegral, destravarIntegral, travarIntegral, turmasIntegrais, lerDestrava,
+  STATUS_TRAVA_INTEGRAL, HORAS_DESTRAVA_PADRAO, HORAS_DESTRAVA_MAX,
+} from "../lib/trava-integral"; // [TRAVA-INTEGRAL]
 
 const router = Router();
 // [DISP-EXPERIMENTAL] rotas de experimento enxergam a disponibilidade do experimento (lib/disponibilidade-experimento.ts)
@@ -684,6 +688,8 @@ router.post("/gerar", async (req, res) => {
 
   const recusa = await motivoRecusaHeuristico(escolaId, [data.turmaId]); // [HEURISTICO-TRAVA]
   if (recusa) { res.status(409).json({ error: recusa }); return; }
+  const travaInt = await recusaTravaIntegral(escolaId, [data.turmaId], "gerar a grade dela"); // [TRAVA-INTEGRAL]
+  if (travaInt) { res.status(STATUS_TRAVA_INTEGRAL).json({ error: travaInt }); return; }
 
   try {
     // [HA-SO-QUEM-MUDOU-GERAL] fotografia antes de gerar: depois, a HA so muda para quem teve aula mexida
@@ -786,6 +792,8 @@ router.post("/", async (req, res) => {
     res.status(404).json({ error: "Turma não encontrada" });
     return;
   }
+  const travaInt = await recusaTravaIntegral(escolaId, [turma.id], "lançar aula à mão"); // [TRAVA-INTEGRAL]
+  if (travaInt) { res.status(STATUS_TRAVA_INTEGRAL).json({ error: travaInt }); return; }
 
   const existing = await db.select().from(horariosTable)
     .where(and(
@@ -883,6 +891,13 @@ router.delete("/:id", async (req, res) => {
   if (!parsed.success) {
     res.status(400).json({ error: "ID inválido" });
     return;
+  }
+  // [TRAVA-INTEGRAL] aula da turma integral nao sai com a integral travada
+  const [aulaApagar] = await db.select({ turmaId: horariosTable.turmaId }).from(horariosTable)
+    .where(and(eq(horariosTable.id, parsed.data.id), eq(horariosTable.escolaId, escolaId)));
+  if (aulaApagar) {
+    const travaInt = await recusaTravaIntegral(escolaId, [aulaApagar.turmaId], "excluir aula");
+    if (travaInt) { res.status(STATUS_TRAVA_INTEGRAL).json({ error: travaInt }); return; }
   }
   await db.delete(horariosTable)
     .where(and(eq(horariosTable.id, parsed.data.id), eq(horariosTable.escolaId, escolaId)));
@@ -988,6 +1003,8 @@ router.post("/experimentais", async (req, res) => {
     res.status(404).json({ error: "Turma não encontrada" });
     return;
   }
+  const travaInt = await recusaTravaIntegral(escolaId, [turma.id], "lançar aula"); // [TRAVA-INTEGRAL]
+  if (travaInt) { res.status(STATUS_TRAVA_INTEGRAL).json({ error: travaInt }); return; }
 
   const validacaoExp = await assertPeriodoValido(parsed.data.turmaId, parsed.data.numeroAula, escolaId);
   if (!validacaoExp.ok) {
@@ -1058,6 +1075,12 @@ router.post("/experimentais/:nome/trocar", async (req, res) => {
   const v = await opcoesFecharJanela(escolaId, nome, b.data.professorId, b.data.turno, b.data.dia, 0, { ids: b.data.ids });
   if (!v) { res.status(404).json({ error: "Horário experimental não encontrado" }); return; }
   if (!v.valida) { res.status(409).json({ error: "Essa troca não vale mais (o experimento mudou). Simule de novo." }); return; }
+  { // [TRAVA-INTEGRAL]
+    const turmasDaTroca = (await db.select({ turmaId: horariosExperimentaisTable.turmaId }).from(horariosExperimentaisTable)
+      .where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome), inArray(horariosExperimentaisTable.id, b.data.ids.concat(-1))))).map((r) => r.turmaId);
+    const travaInt = await recusaTravaIntegral(escolaId, turmasDaTroca, "trocar aula de lugar");
+    if (travaInt) { res.status(STATUS_TRAVA_INTEGRAL).json({ error: travaInt }); return; }
+  }
   await db.transaction(async (tx) => {
     // cada BLOCO (todas as linhas da turma naquele horário: dupla docência vai junta) vai para o lugar do seguinte
     const doExp = and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome));
@@ -1169,6 +1192,21 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     if (choques.length) {
       res.status(409).json({ error: `O rascunho tem ${choques.length} choque(s) de professor e não pode ser aplicado. Mude uma das aulas de horário: ${choques.slice(0, 5).join("; ")}${choques.length > 5 ? "; ..." : ""}`, choques });
       return;
+    }
+  }
+
+  // [TRAVA-INTEGRAL] (11/11/2026) com a integral travada, o experimento so promove se as aulas e os professores da
+  // turma integral forem iguais aos da oficial (rascunho da escola toda que nao mexeu na integral passa)
+  {
+    const travaInt = await recusaSeMudaIntegral(escolaId, expSlots, "promover mudanças nela", turmaIds);
+    if (travaInt) { res.status(STATUS_TRAVA_INTEGRAL).json({ error: travaInt }); return; }
+    if (atribuicoesExp.size) {
+      const antesPorId = new Map(atribAntes.map((a) => [a.turmaDisciplinaId, a.professorId]));
+      const linhasMudam = [...atribuicoesExp.entries()].filter(([id, prof]) => antesPorId.get(id) !== prof).map(([id]) => id);
+      const turmasAtrib = linhasMudam.length ? (await db.select({ turmaId: turmaDisciplinasTable.turmaId }).from(turmaDisciplinasTable)
+        .where(inArray(turmaDisciplinasTable.id, linhasMudam))).map((r) => r.turmaId) : [];
+      const travaAtrib = await recusaTravaIntegral(escolaId, turmasAtrib, "trocar o professor de uma disciplina");
+      if (travaAtrib) { res.status(STATUS_TRAVA_INTEGRAL).json({ error: travaAtrib }); return; }
     }
   }
 
@@ -1448,6 +1486,14 @@ router.post("/backups/:id/restaurar", async (req, res) => {
   const escolaId = getEscolaId(req);
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) { res.status(400).json({ error: "Cópia inválida" }); return; }
+  { // [TRAVA-INTEGRAL] voltar a copia apaga e regrava a oficial inteira: com a integral travada, so se ela nao mudar
+    const aulasCopia = await aulasDoBackupGrade(escolaId, id);
+    if (aulasCopia) {
+      const integrais = (await turmasIntegrais(escolaId)).map((t) => t.id);
+      const travaInt = await recusaSeMudaIntegral(escolaId, aulasCopia, "voltar a uma cópia que muda a grade dela", integrais);
+      if (travaInt) { res.status(STATUS_TRAVA_INTEGRAL).json({ error: travaInt }); return; }
+    }
+  }
   try {
     const r = await restaurarBackupGrade(escolaId, id, (tx) => travarGradeOficial(tx, escolaId));
     if (!r) { res.status(404).json({ error: "Cópia não encontrada" }); return; }
@@ -1548,6 +1594,29 @@ async function copiarOficialParaExperimento(escolaId: string, nome: string, copi
 // ── [MODO-RASCUNHO] (06/11/2026) um rascunho por escola; as telas de sempre leem e gravam nele quando ligado ──
 
 /** O rascunho da escola (ou null) e quanto ele ja mudou. */
+// [TRAVA-INTEGRAL] situacao da trava da turma integral; destravar (por pouco tempo) e travar de novo
+router.get("/trava-integral", async (req, res) => {
+  res.json(await situacaoTravaIntegral(getEscolaId(req)));
+});
+router.post("/trava-integral/destravar", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const horas = Number(req.body?.horas ?? HORAS_DESTRAVA_PADRAO);
+  if (!Number.isFinite(horas) || horas <= 0 || horas > HORAS_DESTRAVA_MAX) {
+    res.status(400).json({ error: `Escolha de 15 minutos a ${HORAS_DESTRAVA_MAX} horas.` }); return;
+  }
+  const situacao = await situacaoTravaIntegral(escolaId);
+  if (!situacao.temIntegral) { res.status(400).json({ error: "A escola não tem turma de período integral." }); return; }
+  const quem = (req as unknown as { acesso?: { email?: string } }).acesso?.email ?? null;
+  const destrava = await destravarIntegral(escolaId, horas, quem);
+  console.log(`[TRAVA-INTEGRAL] escola ${escolaId}: destravada ate ${destrava.ate} por ${quem ?? "?"}`);
+  res.json(await situacaoTravaIntegral(escolaId));
+});
+router.post("/trava-integral/travar", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  await travarIntegral(escolaId);
+  res.json(await situacaoTravaIntegral(escolaId));
+});
+
 router.get("/rascunho/atual", async (req, res) => {
   const escolaId = getEscolaId(req);
   const r = await lerRascunho(escolaId);
@@ -1588,6 +1657,11 @@ router.post("/rascunho/atual", async (req, res) => {
   } else if (alcance !== "todos") {
     const [uma] = await db.select({ id: turmasTable.id }).from(turmasTable).where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.turno, alcance))).limit(1);
     if (!uma) { res.status(400).json({ error: "A escola não tem turmas nesse turno." }); return; }
+  }
+  { // [TRAVA-INTEGRAL] rascunho so da integral (ou com turma integral escolhida) nao comeca com ela travada
+    const alvoInt = alcance === TURNO_INTEGRAL ? (await turmasIntegrais(escolaId)).map((t) => t.id) : (turmaIds ?? []);
+    const travaInt = await recusaTravaIntegral(escolaId, alvoInt, "colocá-la num rascunho");
+    if (travaInt) { res.status(STATUS_TRAVA_INTEGRAL).json({ error: travaInt }); return; }
   }
   const atual = await lerRascunho(escolaId);
   if (atual) { res.status(409).json({ error: `A escola já tem o rascunho "${atual.nome}". Aplique ou descarte antes de começar outro.` }); return; }
@@ -1731,6 +1805,10 @@ router.put("/experimentais/:nome/atribuicoes", async (req, res) => {
   const [linha] = await db.select({ td: turmaDisciplinasTable, escolaId: turmasTable.escolaId }).from(turmaDisciplinasTable)
     .innerJoin(turmasTable, eq(turmasTable.id, turmaDisciplinasTable.turmaId)).where(eq(turmaDisciplinasTable.id, b.data.turmaDisciplinaId));
   if (!linha || linha.escolaId !== escolaId) { res.status(404).json({ error: "Disciplina da turma não encontrada." }); return; }
+  { // [TRAVA-INTEGRAL]
+    const travaInt = await recusaTravaIntegral(escolaId, [linha.td.turmaId], "trocar o professor de uma disciplina");
+    if (travaInt) { res.status(STATUS_TRAVA_INTEGRAL).json({ error: travaInt }); return; }
+  }
   if (b.data.professorId != null) {
     const [p] = await db.select({ id: professoresTable.id }).from(professoresTable).where(and(eq(professoresTable.id, b.data.professorId), eq(professoresTable.escolaId, escolaId)));
     if (!p) { res.status(400).json({ error: "Professor que não é desta escola." }); return; }
@@ -1818,6 +1896,10 @@ router.post("/experimentais/:nome/trocar-aulas", async (req, res) => {
   if (!b.success) { res.status(400).json({ error: "Dados inválidos." }); return; }
   const { turmaId, de, para } = b.data;
   if (de.diaSemana === para.diaSemana && de.numeroAula === para.numeroAula) { res.status(400).json({ error: "Escolha dois horários diferentes." }); return; }
+  { // [TRAVA-INTEGRAL]
+    const travaInt = await recusaTravaIntegral(escolaId, [turmaId], "trocar aula de lugar");
+    if (travaInt) { res.status(STATUS_TRAVA_INTEGRAL).json({ error: travaInt }); return; }
+  }
   const doExp = and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome));
   const exp = await db.select().from(horariosExperimentaisTable).where(doExp);
   const naCelula = (c: { diaSemana: number; numeroAula: number }) => exp.filter((h) => h.turmaId === turmaId && h.diaSemana === c.diaSemana && h.numeroAula === c.numeroAula);
@@ -1897,6 +1979,8 @@ router.post("/gerar-lote", async (req, res) => {
 
   let turmasAlvo = await db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId));
   if (turno) turmasAlvo = turmasAlvo.filter(t => t.turno === turno);
+  // [TRAVA-INTEGRAL] escola toda: com a integral travada, ela fica de fora (o turno do lote nunca e o integral)
+  if (!(await lerDestrava(escolaId))) turmasAlvo = turmasAlvo.filter((t) => t.turno !== TURNO_INTEGRAL);
   // [INTERCALAR-NIVEIS] Sem isso, turmas eram processadas na ordem crua
   // do banco (sem ORDER BY) -- cada turma consome a disponibilidade dos
   // professores conforme avanca, entao o nivel de ensino processado por
@@ -1988,7 +2072,9 @@ router.post("/gerar-professor", async (req, res) => {
     db.select().from(turmasTable).where(eq(turmasTable.escolaId, escolaId)),
   ]);
 
-  const turmaIdsValidosDaEscola = new Set(turmasDaEscola.map((t) => t.id));
+  // [TRAVA-INTEGRAL] com a integral travada, a turma integral fica de fora da regeracao do professor
+  const integralTravadaGP = !(await lerDestrava(escolaId));
+  const turmaIdsValidosDaEscola = new Set(turmasDaEscola.filter((t) => !(integralTravadaGP && t.turno === TURNO_INTEGRAL)).map((t) => t.id));
   const turmaIds = [...new Set([...slotsAtuais.map((s) => s.turmaId), ...vinculos.map((v) => v.turmaId)])]
     .filter((id) => turmaIdsValidosDaEscola.has(id));
 
@@ -2097,9 +2183,14 @@ router.post("/corrigir-professor", async (req, res) => {
 
   const DIAS = [0, 1, 2, 3, 4];
 
+  const integralTravadaCP = !(await lerDestrava(escolaId)); // [TRAVA-INTEGRAL]
   for (const slot of conflitantes) {
     const turma = turmasDaEscola.find((t) => t.id === slot.turmaId);
     const turno = turnoPorTurmaId.get(slot.turmaId) ?? "desconhecido";
+    if (integralTravadaCP && turno === TURNO_INTEGRAL) { // [TRAVA-INTEGRAL] aula da integral nao muda de lugar
+      naoResolvidas.push({ turmaId: slot.turmaId, turmaNome: turma?.nome ?? String(slot.turmaId), disciplinaId: slot.disciplinaId, dia: slot.diaSemana, aula: slot.numeroAula, motivo: "Turma integral travada: libere o horário na Disponibilidade do professor (a aula da integral não muda de lugar)." });
+      continue;
+    }
     const nivel = turma?.nivelEnsino ?? null;
     const aulasDoTurno = horarioSlotsTodos
       .filter((hs) => hs.turno === turno && (turno !== "matutino" || hs.nivelEnsino === nivel) && hs.letivo)
@@ -3283,6 +3374,8 @@ router.post("/gerar-cpsat", async (req, res) => {
     return;
   }
   const { turno, turmaId, turmaIds, nomeExperimental, tempoLimiteS } = parsed.data;
+  const travaInt = await recusaTravaIntegral(escolaId, [...(turmaId != null ? [turmaId] : []), ...(turmaIds ?? [])], "gerar a grade dela"); // [TRAVA-INTEGRAL]
+  if (travaInt) { res.status(STATUS_TRAVA_INTEGRAL).json({ error: travaInt }); return; }
   const resultado = await runCpsatGeneration(escolaId, turno, turmaId, turmaIds, nomeExperimental, tempoLimiteS);
   res.status(resultado.httpStatus).json({ ...resultado.body, diagnostico: diagnosticarGeracao(resultado.httpStatus, resultado.body) }); // [DIAGNOSTICO-GERACAO]
 });
@@ -3329,6 +3422,8 @@ router.post("/gerar-cpsat-async", async (req, res) => {
     return;
   }
   const { turno, turmaId, turmaIds, nomeExperimental, tempoLimiteS } = parsed.data;
+  const travaInt = await recusaTravaIntegral(escolaId, [...(turmaId != null ? [turmaId] : []), ...(turmaIds ?? [])], "gerar a grade dela"); // [TRAVA-INTEGRAL]
+  if (travaInt) { res.status(STATUS_TRAVA_INTEGRAL).json({ error: travaInt }); return; }
 
   limparJobsCpsatAntigos();
   const jobId = randomUUID();
