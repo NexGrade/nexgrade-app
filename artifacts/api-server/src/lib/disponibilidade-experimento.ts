@@ -98,7 +98,7 @@ export async function comExperimento<T>(escolaId: string, nome: string, fn: () =
   return ctx ? contexto.run(ctx, fn) : fn();
 }
 
-const ROTA_DO_EXPERIMENTO = /^\/experimentais\/([^/]+)\/(simulacao|fechar-janela|trocar|trocar-aulas)\/?$/;
+const ROTA_DO_EXPERIMENTO = /^\/experimentais\/([^/]+)\/(simulacao|fechar-janela|trocar|trocar-aulas|resolver-choques)\/?$/; // [RESOLVER-CHOQUE]
 
 /** Nome do experimento que a requisicao usa: nomeExperimental no corpo ou na URL, ou /experimentais/:nome/... */
 export function nomeDaRequisicao(req: Pick<Request, "body" | "query" | "path">): string | null {

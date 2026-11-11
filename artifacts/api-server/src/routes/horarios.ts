@@ -62,6 +62,7 @@ import {
   recusaTravaIntegral, recusaSeMudaIntegral, situacaoTravaIntegral, destravarIntegral, travarIntegral, turmasIntegrais, lerDestrava,
   STATUS_TRAVA_INTEGRAL, HORAS_DESTRAVA_PADRAO, HORAS_DESTRAVA_MAX,
 } from "../lib/trava-integral"; // [TRAVA-INTEGRAL]
+import { sugerirTrocasParaChoques } from "../lib/resolver-choque"; // [RESOLVER-CHOQUE]
 
 const router = Router();
 // [DISP-EXPERIMENTAL] rotas de experimento enxergam a disponibilidade do experimento (lib/disponibilidade-experimento.ts)
@@ -1685,6 +1686,13 @@ router.post("/rascunho/atual", async (req, res) => {
 // choques de professor que envolvem aulas do experimento. Mesma regra da trava do banco.
 async function choquesAoPromover(escolaId: string, nome: string, expSlots: Array<typeof horariosExperimentaisTable.$inferSelect>): Promise<string[]> {
   if (!expSlots.length) return [];
+  const { aulas, tm, slots, nomeProf, doExp } = await baseDosChoques(escolaId, nome, expSlots);
+  const choques = choquesDeProfessor(aulas, tm, slots, (a) => doExp.has(a));
+  return descreverChoques(choques, tm, (id) => nomeProf.get(id) ?? `Professor #${id}`);
+}
+
+/** [RESOLVER-CHOQUE] o que o promover enxerga: oficial que continua (fora) + aulas do experimento, turmas, horarios. */
+async function baseDosChoques(escolaId: string, nome: string, expSlots: Array<typeof horariosExperimentaisTable.$inferSelect>) {
   const turmaIds = [...new Set(expSlots.map((s) => s.turmaId))];
   const [atrib, tds, oficial, turmas, slots, profs] = await Promise.all([
     carregarAtribuicoes(escolaId, nome),
@@ -1701,10 +1709,35 @@ async function choquesAoPromover(escolaId: string, nome: string, expSlots: Array
   const tm = new Map<number, TurmaHora>(turmas.map((t) => [t.id, { ...t, nivelEnsino: t.nivelEnsino ?? null }]));
   const nomeProf = new Map(profs.map((p) => [p.id, p.nome]));
   type Aula = { turmaId: number; professorId: number | null; diaSemana: number; numeroAula: number; assincrona?: boolean | null };
-  const aulas: Aula[] = [...oficial.filter((h) => !sai(h)), ...expSlots];
-  const choques = choquesDeProfessor(aulas, tm, slots.map((x) => ({ ...x, nivelEnsino: x.nivelEnsino ?? null })), (a) => doExp.has(a));
-  return descreverChoques(choques, tm, (id) => nomeProf.get(id) ?? `Professor #${id}`);
+  const fora = oficial.filter((h) => !sai(h));
+  const aulas: Aula[] = [...fora, ...expSlots];
+  return { aulas, fora, tm, slots: slots.map((x) => ({ ...x, nivelEnsino: x.nivelEnsino ?? null })), nomeProf, doExp };
 }
+
+/** [RESOLVER-CHOQUE] (11/11/2026) para cada choque, as trocas de aula na mesma turma que tiram o choque sem criar outro
+ *  problema (bloqueio, HA, aula fixa ou novo choque). A tela aplica a escolhida pela rota trocar-aulas. */
+router.get("/experimentais/:nome/resolver-choques", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const nome = req.params.nome;
+  const exp = await db.select().from(horariosExperimentaisTable).where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome)));
+  if (!exp.length) { res.json({ choques: [] }); return; }
+  const { fora, tm, slots, nomeProf } = await baseDosChoques(escolaId, nome, exp);
+  const turmaIds = [...new Set(exp.map((s) => s.turmaId))];
+  const aulasValidas = new Map<number, number[]>();
+  for (const t of turmaIds) aulasValidas.set(t, [...(await periodosValidosDaTurma(t, escolaId))].sort((a, b) => a - b));
+  const profIds = [...new Set(exp.map((h) => h.professorId))].concat(-1);
+  const disp = sobreporExperimento(await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, profIds)));
+  const discs = new Map((await db.select({ id: disciplinasTable.id, nome: disciplinasTable.nome }).from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId))).map((d) => [d.id, d.nome]));
+  const travadas = (await lerDestrava(escolaId)) ? new Set<number>() : new Set((await turmasIntegrais(escolaId)).map((t) => t.id)); // [TRAVA-INTEGRAL]
+  const choques = sugerirTrocasParaChoques({
+    exp, fora, turmas: tm, slots, aulasValidas, turmasTravadas: travadas,
+    indisponiveis: disp.filter((d) => !d.disponivel || d.horaAtividadeObrigatoria)
+      .map((d) => ({ professorId: d.professorId, turno: d.turno, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, ha: d.horaAtividadeObrigatoria })),
+    nomeProfessor: (id) => nomeProf.get(id) ?? `Professor #${id}`,
+    nomeDisciplina: (id) => discs.get(id) ?? `Disciplina #${id}`,
+  });
+  res.json({ choques });
+});
 
 /** Choques de professor que impedem aplicar o experimento (a tela confere antes do "Promover para oficial"). */
 router.get("/experimentais/:nome/choques", async (req, res) => {
