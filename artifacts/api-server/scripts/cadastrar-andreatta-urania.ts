@@ -40,7 +40,8 @@ const ANO_LETIVO = 2026;
 const DATA_TURNO: Record<string, string> = { matutino: "31/08", vespertino: "11/05" };
 const MOTIVO_HA = (turno: string) => `Importado do sistema anterior ${DATA_TURNO[turno]} (HA)`;
 const MOTIVO_BLQ = "Bloqueio (importado)";
-const MOTIVO_COR = "Coordenação (importado)";
+// mesmo texto das outras escolas: o PDF escreve "COORD" na celula ([ROTULO-BLOQUEIO] em routes/export.ts)
+const MOTIVO_COR = "Atividade fora de sala (ocupado: COORD)";
 // 3oB: a escola da Espanhol no lugar de Lingua Inglesa I (3 aulas)
 const TROCAS_MATRIZ: Record<string, { sai: string; entra: string; carga: number }> = {
   "3ºB": { sai: "Língua Inglesa I", entra: "Língua Espanhola", carga: 3 },
