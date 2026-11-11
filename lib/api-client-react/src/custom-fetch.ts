@@ -148,12 +148,16 @@ function truncate(text: string, maxLength = 300): string {
   return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
 }
 
+// [ERRO-SEM-HTTP] (11/11/2026) a tela mostra e.message ao usuario: quando o servidor manda uma mensagem, ela vai
+// sozinha (antes vinha "HTTP 423 : ..." na frente). O codigo continua em ApiError.status; o "HTTP ..." so aparece
+// quando o servidor nao mandou texto nenhum.
 function buildErrorMessage(response: Response, data: unknown): string {
-  const prefix = `HTTP ${response.status} ${response.statusText}`;
+  const prefix = `HTTP ${response.status} ${response.statusText}`.trim();
 
   if (typeof data === "string") {
     const text = data.trim();
-    return text ? `${prefix}: ${truncate(text)}` : prefix;
+    // pagina HTML de erro (proxy, servidor fora do ar) nao e mensagem para o usuario
+    return text && !text.startsWith("<") ? truncate(text) : prefix;
   }
 
   const title = getStringField(data, "title");
@@ -163,10 +167,10 @@ function buildErrorMessage(response: Response, data: unknown): string {
     getStringField(data, "error_description") ??
     getStringField(data, "error");
 
-  if (title && detail) return `${prefix}: ${title} — ${detail}`;
-  if (detail) return `${prefix}: ${detail}`;
-  if (message) return `${prefix}: ${message}`;
-  if (title) return `${prefix}: ${title}`;
+  if (title && detail) return `${title} — ${detail}`;
+  if (detail) return detail;
+  if (message) return message;
+  if (title) return title;
 
   return prefix;
 }
