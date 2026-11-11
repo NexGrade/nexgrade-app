@@ -2832,6 +2832,7 @@ function AbaExperimental() {
   const [atualizandoSim, setAtualizandoSim] = useState<Record<string, boolean>>({});
   const simularPromocao = async (nome: string, manterAberto = false) => {
     const temAnterior = manterAberto && !!simDe(nome);
+    if (!manterAberto) setResolucoes((r) => { const n = { ...r }; delete n[nome]; return n; }); // [RESOLVER-CHOQUE] simulacao nova: sugestoes velhas saem
     if (temAnterior) setAtualizandoSim((a) => ({ ...a, [nome]: true }));
     else setSimulacoes((s) => ({ ...s, [nome]: "carregando" }));
     try {
@@ -2890,6 +2891,44 @@ function AbaExperimental() {
       toast({ title: "Não foi possível fazer a troca", description: "O experimento pode ter mudado. Clique em Fechar esta janela de novo.", variant: "destructive" });
       setTrocas((t) => { const n = { ...t }; delete n[k]; return n; });
     } finally { setAplicandoTroca(null); }
+  };
+
+  // [RESOLVER-CHOQUE] (11/11/2026) "Ver como resolver" na caixa de choques: trocas na mesma turma que tiram o choque sem
+  // criar outro problema; "Aplicar" troca no experimento (rota trocar-aulas) e refaz a simulacao com o quadro aberto
+  type CelulaTroca = { diaSemana: number; numeroAula: number };
+  type OpcaoChoque = { turmaId: number; de: CelulaTroca; para: CelulaTroca; texto: string };
+  const [resolucoes, setResolucoes] = useState<Record<string, "carregando" | { erro: string } | { texto: string; opcoes: OpcaoChoque[] }[]>>({});
+  const [aplicandoChoque, setAplicandoChoque] = useState<string | null>(null);
+  const verComoResolver = async (nome: string) => {
+    setResolucoes((r) => ({ ...r, [nome]: "carregando" }));
+    try {
+      const r = await customFetch<{ choques: { texto: string; opcoes: OpcaoChoque[] }[] }>(`/api/horarios/experimentais/${encodeURIComponent(nome)}/resolver-choques`, { responseType: "json" });
+      setResolucoes((x) => ({ ...x, [nome]: r.choques }));
+    } catch (e) {
+      setResolucoes((x) => ({ ...x, [nome]: { erro: e instanceof Error ? e.message : "Não foi possível procurar as trocas agora." } }));
+    }
+  };
+  const aplicarResolucao = async (nome: string, o: OpcaoChoque) => {
+    const k = `${nome}|${o.turmaId}|${o.de.diaSemana}-${o.de.numeroAula}|${o.para.diaSemana}-${o.para.numeroAula}`;
+    setAplicandoChoque(k);
+    try {
+      const r = await customFetch<{ aplicado: boolean; avisos: string[] }>(`/api/horarios/experimentais/${encodeURIComponent(nome)}/trocar-aulas`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ turmaId: o.turmaId, de: o.de, para: o.para }),
+      });
+      if (!r.aplicado) {
+        toast({ title: "A troca não foi feita", description: `${r.avisos.join(" ")} Clique em Ver como resolver de novo.`, variant: "destructive" });
+      } else {
+        toast({ title: "Aulas trocadas no experimento", description: `${o.texto}. A escola não mudou.` });
+      }
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
+      await queryClient.invalidateQueries({ queryKey: ["grade-rascunho", nome] });
+      await queryClient.invalidateQueries({ queryKey: ["rascunho"] });
+      await simularPromocao(nome, true);
+      await verComoResolver(nome);
+    } catch (e) {
+      toast({ title: "Não foi possível trocar", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
+    } finally { setAplicandoChoque(null); }
   };
 
   const handleDelete = async (nome: string) => {
@@ -3228,6 +3267,44 @@ function AbaExperimental() {
                               {sim.choques!.length > 10 && <li>... e mais {sim.choques!.length - 10}</li>}
                             </ul>
                             <p className="mt-1 text-xs">Mude uma das aulas de horário (ou troque o professor) e simule de novo.</p>
+                            {(() => { // [RESOLVER-CHOQUE]
+                              const res = resolucoes[nome];
+                              if (!res) return (
+                                <Button size="sm" variant="outline" className="mt-2 h-7 border-red-300 bg-white text-red-900 hover:bg-red-100" onClick={() => verComoResolver(nome)}>
+                                  <Sparkles className="w-3.5 h-3.5 mr-1.5" />Ver como resolver
+                                </Button>
+                              );
+                              if (res === "carregando") return <p className="mt-2 flex items-center gap-1 text-xs"><Loader2 className="w-3.5 h-3.5 animate-spin" />Procurando trocas que tiram o choque...</p>;
+                              if ("erro" in res) return <p className="mt-2 text-xs">{res.erro}</p>;
+                              if (!res.length) return <p className="mt-2 text-xs">Sem choque agora. Clique em Simular promoção para conferir.</p>;
+                              return (
+                                <div className="mt-2 space-y-2">
+                                  {res.map((c) => (
+                                    <div key={c.texto} className="rounded border border-red-200 bg-white p-2 text-xs">
+                                      <div className="font-medium">{c.texto}</div>
+                                      {c.opcoes.length ? (
+                                        <ul className="mt-1 space-y-1">
+                                          {c.opcoes.map((o) => {
+                                            const k = `${nome}|${o.turmaId}|${o.de.diaSemana}-${o.de.numeroAula}|${o.para.diaSemana}-${o.para.numeroAula}`;
+                                            return (
+                                              <li key={k} className="flex items-center justify-between gap-2">
+                                                <span>{o.texto}</span>
+                                                <Button size="sm" className="h-6 px-2 text-xs shrink-0" disabled={aplicandoChoque !== null} onClick={() => aplicarResolucao(nome, o)}>
+                                                  {aplicandoChoque === k ? "Trocando..." : "Aplicar"}
+                                                </Button>
+                                              </li>
+                                            );
+                                          })}
+                                        </ul>
+                                      ) : (
+                                        <p className="mt-1">Nenhuma troca na mesma turma resolve sem criar outro problema. Gere a turma de novo (botão Turma, no alto) ou troque o professor.</p>
+                                      )}
+                                    </div>
+                                  ))}
+                                  <p className="text-[11px] opacity-80">Cada troca muda só o experimento; a escola não muda até o Promover para oficial.</p>
+                                </div>
+                              );
+                            })()}
                           </div>
                         )}
                         <p className="mt-1 text-xs opacity-80">
