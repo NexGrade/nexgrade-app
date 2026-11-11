@@ -4,6 +4,7 @@ import { aulasFixasTable, turmasTable, disciplinasTable, professoresTable } from
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
+import { recusaTravaIntegral, STATUS_TRAVA_INTEGRAL } from "../lib/trava-integral"; // [TRAVA-INTEGRAL]
 
 // Constraint manual (RNF-GER-XX): trava uma aula específica (turma +
 // disciplina + professor) num dia/slot exato, ANTES do gerador de
@@ -88,6 +89,8 @@ router.post("/", async (req, res) => {
     res.status(409).json({ error: "Já existe uma aula fixa para esta turma neste dia/horário" });
     return;
   }
+  const travaInt = await recusaTravaIntegral(escolaId, [parsed.data.turmaId], "cadastrar aula fixa"); // [TRAVA-INTEGRAL]
+  if (travaInt) { res.status(STATUS_TRAVA_INTEGRAL).json({ error: travaInt }); return; }
 
   const [criado] = await db.insert(aulasFixasTable)
     .values({ escolaId, ...parsed.data })
@@ -110,6 +113,8 @@ router.delete("/:id", async (req, res) => {
     res.status(204).send();
     return;
   }
+  const travaInt = await recusaTravaIntegral(escolaId, [registro.turmaId], "excluir aula fixa"); // [TRAVA-INTEGRAL]
+  if (travaInt) { res.status(STATUS_TRAVA_INTEGRAL).json({ error: travaInt }); return; }
 
   await db.delete(aulasFixasTable).where(eq(aulasFixasTable.id, id));
   res.status(204).send();

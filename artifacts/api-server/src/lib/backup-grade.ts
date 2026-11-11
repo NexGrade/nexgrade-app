@@ -84,6 +84,13 @@ export async function listarBackupsGrade(escolaId: string) {
  * Volta a grade oficial (aulas + HA) para a cópia `id`. Antes, guarda a grade
  * atual como nova cópia, para a volta também ter volta.
  */
+/** [TRAVA-INTEGRAL] as aulas guardadas numa copia (para conferir, antes de voltar, se ela muda a turma integral). */
+export async function aulasDoBackupGrade(escolaId: string, id: number): Promise<DadosBackup["horarios"] | null> {
+  const [b] = await db.select({ dados: gradeBackupsTable.dados }).from(gradeBackupsTable)
+    .where(and(eq(gradeBackupsTable.id, id), eq(gradeBackupsTable.escolaId, escolaId)));
+  return b ? (b.dados as DadosBackup).horarios : null;
+}
+
 export async function restaurarBackupGrade(
   escolaId: string, id: number, travar: (tx: Tx) => Promise<void>, usuarioNome?: string | null,
 ): Promise<{ aulas: number; ha: number; copiaAntesId: number | null } | null> {
