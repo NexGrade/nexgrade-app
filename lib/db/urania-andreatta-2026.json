@@ -1,0 +1,10268 @@
+{
+ "escola": "esc_99494098d00349d2b5442e66",
+ "fonte": {
+  "matutino": "Urania 31/08/2026: HORÁRIO MANHÃ TURMA 31_08.pdf + HORÁRIO MANHÃ PROF GERAL 31_08.pdf",
+  "vespertino": "Urania 11/05/2026: HORÁRIO TARDE TURMA 11_05.pdf + HORÁRIO TARDE PROF GERAL 11_05.pdf"
+ },
+ "horas": {
+  "matutino|fundamental": [
+   "07:30",
+   "08:20",
+   "09:10",
+   "10:20",
+   "11:10"
+  ],
+  "matutino|medio_tecnico": [
+   "07:30",
+   "08:20",
+   "09:10",
+   "10:20",
+   "11:10",
+   "12:00"
+  ],
+  "vespertino|fundamental": [
+   "13:10",
+   "14:00",
+   "14:50",
+   "15:50",
+   "16:40"
+  ]
+ },
+ "turmas": {
+  "9ºA": {
+   "turno": "matutino",
+   "serie": "9º Ano",
+   "nivel": "fundamental",
+   "curso": {
+    "tipo": "oficial",
+    "id": "fund_finais_tempo_parcial_diurno"
+   }
+  },
+  "9ºB": {
+   "turno": "matutino",
+   "serie": "9º Ano",
+   "nivel": "fundamental",
+   "curso": {
+    "tipo": "oficial",
+    "id": "fund_finais_tempo_parcial_diurno"
+   }
+  },
+  "9ºC": {
+   "turno": "matutino",
+   "serie": "9º Ano",
+   "nivel": "fundamental",
+   "curso": {
+    "tipo": "oficial",
+    "id": "fund_finais_tempo_parcial_diurno"
+   }
+  },
+  "1ºA": {
+   "turno": "matutino",
+   "serie": "1ª Série",
+   "nivel": "medio_tecnico",
+   "curso": {
+    "tipo": "tecnico",
+    "codigo": "2511"
+   }
+  },
+  "1ºB": {
+   "turno": "matutino",
+   "serie": "1ª Série",
+   "nivel": "medio_tecnico",
+   "curso": {
+    "tipo": "oficial",
+    "id": "medio_2026_tempo_parcial_diurno_lggchs"
+   }
+  },
+  "2ºA": {
+   "turno": "matutino",
+   "serie": "2ª Série",
+   "nivel": "medio_tecnico",
+   "curso": {
+    "tipo": "oficial",
+    "id": "medio_2026_tempo_parcial_diurno_lggchs"
+   }
+  },
+  "2ºB": {
+   "turno": "matutino",
+   "serie": "2ª Série",
+   "nivel": "medio_tecnico",
+   "curso": {
+    "tipo": "oficial",
+    "id": "medio_2026_tempo_parcial_diurno_lggchs"
+   }
+  },
+  "2ºC": {
+   "turno": "matutino",
+   "serie": "2ª Série",
+   "nivel": "medio_tecnico",
+   "curso": {
+    "tipo": "oficial",
+    "id": "medio_2026_tempo_parcial_diurno_matcnt"
+   }
+  },
+  "3ºA": {
+   "turno": "matutino",
+   "serie": "3ª Série",
+   "nivel": "medio_tecnico",
+   "curso": {
+    "tipo": "tecnico",
+    "codigo": "1624"
+   }
+  },
+  "3ºB": {
+   "turno": "matutino",
+   "serie": "3ª Série",
+   "nivel": "medio_tecnico",
+   "curso": {
+    "tipo": "oficial",
+    "id": "medio_2026_tempo_parcial_diurno_lggchs"
+   }
+  },
+  "6ºA": {
+   "turno": "vespertino",
+   "serie": "6º Ano",
+   "nivel": "fundamental",
+   "curso": {
+    "tipo": "oficial",
+    "id": "fund_finais_tempo_parcial_diurno"
+   }
+  },
+  "6ºB": {
+   "turno": "vespertino",
+   "serie": "6º Ano",
+   "nivel": "fundamental",
+   "curso": {
+    "tipo": "oficial",
+    "id": "fund_finais_tempo_parcial_diurno"
+   }
+  },
+  "6ºC": {
+   "turno": "vespertino",
+   "serie": "6º Ano",
+   "nivel": "fundamental",
+   "curso": {
+    "tipo": "oficial",
+    "id": "fund_finais_tempo_parcial_diurno"
+   }
+  },
+  "6ºD": {
+   "turno": "vespertino",
+   "serie": "6º Ano",
+   "nivel": "fundamental",
+   "curso": {
+    "tipo": "oficial",
+    "id": "fund_finais_tempo_parcial_diurno"
+   }
+  },
+  "7ºA": {
+   "turno": "vespertino",
+   "serie": "7º Ano",
+   "nivel": "fundamental",
+   "curso": {
+    "tipo": "oficial",
+    "id": "fund_finais_tempo_parcial_diurno"
+   }
+  },
+  "7ºB": {
+   "turno": "vespertino",
+   "serie": "7º Ano",
+   "nivel": "fundamental",
+   "curso": {
+    "tipo": "oficial",
+    "id": "fund_finais_tempo_parcial_diurno"
+   }
+  },
+  "7ºC": {
+   "turno": "vespertino",
+   "serie": "7º Ano",
+   "nivel": "fundamental",
+   "curso": {
+    "tipo": "oficial",
+    "id": "fund_finais_tempo_parcial_diurno"
+   }
+  },
+  "8ºA": {
+   "turno": "vespertino",
+   "serie": "8º Ano",
+   "nivel": "fundamental",
+   "curso": {
+    "tipo": "oficial",
+    "id": "fund_finais_tempo_parcial_diurno"
+   }
+  },
+  "8ºB": {
+   "turno": "vespertino",
+   "serie": "8º Ano",
+   "nivel": "fundamental",
+   "curso": {
+    "tipo": "oficial",
+    "id": "fund_finais_tempo_parcial_diurno"
+   }
+  },
+  "8ºC": {
+   "turno": "vespertino",
+   "serie": "8º Ano",
+   "nivel": "fundamental",
+   "curso": {
+    "tipo": "oficial",
+    "id": "fund_finais_tempo_parcial_diurno"
+   }
+  }
+ },
+ "aulas": [
+  {
+   "turma": "9ºA",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ADRIANE",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "ED FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "Rec Matemática",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "Rec Matemática",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "AGATHA",
+   "apoio": true
+  },
+  {
+   "turma": "9ºA",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "Rec Portugês",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 0,
+   "aula": 5,
+   "sigla": "GEO",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 1,
+   "aula": 1,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ADRIANE",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "CIE",
+   "disciplina": "Ciências",
+   "professor": "SIMONE",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 2,
+   "aula": 1,
+   "sigla": "ED FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "Rec Matemática",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "Rec Matemática",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "AGATHA",
+   "apoio": true
+  },
+  {
+   "turma": "9ºA",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "CASIRIS",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "Rec Portugês",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 3,
+   "aula": 1,
+   "sigla": "GEO",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 3,
+   "aula": 2,
+   "sigla": "GEO",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 3,
+   "aula": 3,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 3,
+   "aula": 4,
+   "sigla": "CIE",
+   "disciplina": "Ciências",
+   "professor": "SIMONE",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 3,
+   "aula": 5,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "CASIRIS",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºA",
+   "dia": 4,
+   "aula": 5,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "GEO",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "GEO",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "ED FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "Rec Matemática",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "Rec Matemática",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "AGATHA",
+   "apoio": true
+  },
+  {
+   "turma": "9ºB",
+   "dia": 0,
+   "aula": 5,
+   "sigla": "Rec Portugês",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 1,
+   "aula": 1,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "CIE",
+   "disciplina": "Ciências",
+   "professor": "SIMONE",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ADRIANE",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 2,
+   "aula": 1,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "CASIRIS",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "GEO",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "Rec Matemática",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "Rec Matemática",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "AGATHA",
+   "apoio": true
+  },
+  {
+   "turma": "9ºB",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "Rec Portugês",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "ED FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 3,
+   "aula": 1,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 3,
+   "aula": 2,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 3,
+   "aula": 3,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 3,
+   "aula": 4,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 3,
+   "aula": 5,
+   "sigla": "CIE",
+   "disciplina": "Ciências",
+   "professor": "SIMONE",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "CASIRIS",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "9ºB",
+   "dia": 4,
+   "aula": 5,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ADRIANE",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "ED FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "Rec Matemática",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "Rec Matemática",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "AGATHA",
+   "apoio": true
+  },
+  {
+   "turma": "9ºC",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "GEO",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "GEO",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 0,
+   "aula": 5,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ADRIANE",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 1,
+   "aula": 1,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "CIE",
+   "disciplina": "Ciências",
+   "professor": "SIMONE",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "GEO",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 2,
+   "aula": 1,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "CASIRIS",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "ED FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "Rec Matemática",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "Rec Matemática",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "AGATHA",
+   "apoio": true
+  },
+  {
+   "turma": "9ºC",
+   "dia": 3,
+   "aula": 1,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 3,
+   "aula": 2,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 3,
+   "aula": 3,
+   "sigla": "CIE",
+   "disciplina": "Ciências",
+   "professor": "SIMONE",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 3,
+   "aula": 4,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 3,
+   "aula": 5,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ADRIANE",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "Rec Portugês",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "Rec Portugês",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "CASIRIS",
+   "apoio": false
+  },
+  {
+   "turma": "9ºC",
+   "dia": 4,
+   "aula": 5,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "QUI",
+   "disciplina": "Química",
+   "professor": "MARCOSANT",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "QUI",
+   "disciplina": "Química",
+   "professor": "MARCOSANT",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ADRIANE",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "ED FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 0,
+   "aula": 5,
+   "sigla": "Prin Adm",
+   "disciplina": "Princípios de administração",
+   "professor": "DYANNE",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 0,
+   "aula": 6,
+   "sigla": "Prin Adm",
+   "disciplina": "Princípios de administração",
+   "professor": "DYANNE",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 1,
+   "aula": 1,
+   "sigla": "Ed Digital",
+   "disciplina": "Educação Digital e Computação: Programação e IA",
+   "professor": "AILE",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "BIO",
+   "disciplina": "Biologia",
+   "professor": "ANAFRANCO",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "BIO",
+   "disciplina": "Biologia",
+   "professor": "ANAFRANCO",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AGATHA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 1,
+   "aula": 6,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AGATHA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 2,
+   "aula": 1,
+   "sigla": "Fin Empr",
+   "disciplina": "Finanças empresariais",
+   "professor": "AMALIA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "Fin Empr",
+   "disciplina": "Finanças empresariais",
+   "professor": "AMALIA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "Prin Econ",
+   "disciplina": "Princípios econômicos",
+   "professor": "DYANNE",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AGATHA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "CASIRIS",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 2,
+   "aula": 6,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 3,
+   "aula": 1,
+   "sigla": "Est Mark",
+   "disciplina": "Estratégias de marketing",
+   "professor": "AILE",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 3,
+   "aula": 2,
+   "sigla": "Inf Empr",
+   "disciplina": "Informática empresarial",
+   "professor": "AGATHA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 3,
+   "aula": 3,
+   "sigla": "Inf Empr",
+   "disciplina": "Informática empresarial",
+   "professor": "AGATHA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 3,
+   "aula": 4,
+   "sigla": "GEO",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 3,
+   "aula": 5,
+   "sigla": "GEO",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 3,
+   "aula": 6,
+   "sigla": "ED FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "REC.HUM",
+   "disciplina": "Recursos humanos",
+   "professor": "DYANNE",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "REC.HUM",
+   "disciplina": "Recursos humanos",
+   "professor": "DYANNE",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ADRIANE",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "Tec Integr",
+   "disciplina": "Técnicas integradas",
+   "professor": "DYANNE",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 4,
+   "aula": 5,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "CASIRIS",
+   "apoio": false
+  },
+  {
+   "turma": "1ºA",
+   "dia": 4,
+   "aula": 6,
+   "sigla": "Est Mark",
+   "disciplina": "Estratégias de marketing",
+   "professor": "AILE",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "QUI",
+   "disciplina": "Química",
+   "professor": "MARCOSANT",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ADRIANE",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 0,
+   "aula": 5,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "ANDERSON",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 0,
+   "aula": 6,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "ANDERSON",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 1,
+   "aula": 1,
+   "sigla": "BIO",
+   "disciplina": "Biologia",
+   "professor": "ANAFRANCO",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "BIO",
+   "disciplina": "Biologia",
+   "professor": "ANAFRANCO",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ADRIANE",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "GEO",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "Hist Pr",
+   "disciplina": "História do Paraná",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 1,
+   "aula": 6,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 2,
+   "aula": 1,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AGATHA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "ED FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "ED FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "ED. FIN",
+   "disciplina": "Educação Financeira",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "Geog Pr",
+   "disciplina": "Geografia do Paraná",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 2,
+   "aula": 6,
+   "sigla": "Geog Pr",
+   "disciplina": "Geografia do Paraná",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 3,
+   "aula": 1,
+   "sigla": "ED. FIN",
+   "disciplina": "Educação Financeira",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 3,
+   "aula": 2,
+   "sigla": "Hist Pr",
+   "disciplina": "História do Paraná",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 3,
+   "aula": 3,
+   "sigla": "Arte Pr",
+   "disciplina": "Arte Paranaense",
+   "professor": "AILE",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 3,
+   "aula": 4,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AGATHA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 3,
+   "aula": 5,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 3,
+   "aula": 6,
+   "sigla": "GEO",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "Arte Pr",
+   "disciplina": "Arte Paranaense",
+   "professor": "AILE",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "QUI",
+   "disciplina": "Química",
+   "professor": "MARCOSANT",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "Ed Digital",
+   "disciplina": "Educação Digital e Computação: Programação e IA",
+   "professor": "GILBERTO",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "Ed Digital",
+   "disciplina": "Educação Digital e Computação: Programação e IA",
+   "professor": "GILBERTO",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 4,
+   "aula": 5,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AGATHA",
+   "apoio": false
+  },
+  {
+   "turma": "1ºB",
+   "dia": 4,
+   "aula": 6,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AGATHA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "Fil A Tex",
+   "disciplina": "Filosofia: Análise de Textos Filosóficos",
+   "professor": "EUCLEDIO",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ADRIANE",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "ALEX",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "ALEX",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 0,
+   "aula": 5,
+   "sigla": "ED. FIN",
+   "disciplina": "Educação Financeira",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 0,
+   "aula": 6,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 1,
+   "aula": 1,
+   "sigla": "Lit Prod Tex",
+   "disciplina": "Literatura e Produção de Texto",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "AILE",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ADRIANE",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 1,
+   "aula": 6,
+   "sigla": "SOC",
+   "disciplina": "Sociologia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 2,
+   "aula": 1,
+   "sigla": "SOC",
+   "disciplina": "Sociologia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "Lit Prod Tex",
+   "disciplina": "Literatura e Produção de Texto",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "FILO",
+   "disciplina": "Filosofia",
+   "professor": "EUCLEDIO",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "Fil A Tex",
+   "disciplina": "Filosofia: Análise de Textos Filosóficos",
+   "professor": "EUCLEDIO",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 2,
+   "aula": 6,
+   "sigla": "ED FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 3,
+   "aula": 1,
+   "sigla": "Soc Gov",
+   "disciplina": "Sociologia: Governo, Cidadania e Sociedade",
+   "professor": "GABRIELLE",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 3,
+   "aula": 2,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "AILE",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 3,
+   "aula": 3,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 3,
+   "aula": 4,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 3,
+   "aula": 5,
+   "sigla": "ED FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 3,
+   "aula": 6,
+   "sigla": "ED. FIN",
+   "disciplina": "Educação Financeira",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "ALEX",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "FILO",
+   "disciplina": "Filosofia",
+   "professor": "EUCLEDIO",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "FIS",
+   "disciplina": "Física",
+   "professor": "MARCOSANT",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "FIS",
+   "disciplina": "Física",
+   "professor": "MARCOSANT",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 4,
+   "aula": 5,
+   "sigla": "Soc Gov",
+   "disciplina": "Sociologia: Governo, Cidadania e Sociedade",
+   "professor": "GABRIELLE",
+   "apoio": false
+  },
+  {
+   "turma": "2ºA",
+   "dia": 4,
+   "aula": 6,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "ALEX",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "ED. FIN",
+   "disciplina": "Educação Financeira",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "ALEX",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "FILO",
+   "disciplina": "Filosofia",
+   "professor": "EUCLEDIO",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 0,
+   "aula": 5,
+   "sigla": "ED FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 0,
+   "aula": 6,
+   "sigla": "ED FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 1,
+   "aula": 1,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "SOC",
+   "disciplina": "Sociologia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "SOC",
+   "disciplina": "Sociologia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "AILE",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 1,
+   "aula": 6,
+   "sigla": "Lit Prod Tex",
+   "disciplina": "Literatura e Produção de Texto",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 2,
+   "aula": 1,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "Lit Prod Tex",
+   "disciplina": "Literatura e Produção de Texto",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "Fil A Tex",
+   "disciplina": "Filosofia: Análise de Textos Filosóficos",
+   "professor": "EUCLEDIO",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "FIS",
+   "disciplina": "Física",
+   "professor": "ALEX",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 2,
+   "aula": 6,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 3,
+   "aula": 1,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 3,
+   "aula": 2,
+   "sigla": "Soc Gov",
+   "disciplina": "Sociologia: Governo, Cidadania e Sociedade",
+   "professor": "GABRIELLE",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 3,
+   "aula": 3,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 3,
+   "aula": 4,
+   "sigla": "ED. FIN",
+   "disciplina": "Educação Financeira",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 3,
+   "aula": 5,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "ALEX",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 3,
+   "aula": 6,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "ALEX",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "FILO",
+   "disciplina": "Filosofia",
+   "professor": "EUCLEDIO",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "FIS",
+   "disciplina": "Física",
+   "professor": "ALEX",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "Fil A Tex",
+   "disciplina": "Filosofia: Análise de Textos Filosóficos",
+   "professor": "EUCLEDIO",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "ALEX",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 4,
+   "aula": 5,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "AILE",
+   "apoio": false
+  },
+  {
+   "turma": "2ºB",
+   "dia": 4,
+   "aula": 6,
+   "sigla": "Soc Gov",
+   "disciplina": "Sociologia: Governo, Cidadania e Sociedade",
+   "professor": "GABRIELLE",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "FIS",
+   "disciplina": "Física",
+   "professor": "ALEX",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "FILO",
+   "disciplina": "Filosofia",
+   "professor": "EUCLEDIO",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AMALIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AMALIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 0,
+   "aula": 5,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "EUCLEDIO",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 0,
+   "aula": 6,
+   "sigla": "Fisi e Tec",
+   "disciplina": "Física e Tecnociência",
+   "professor": "ALEX",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 1,
+   "aula": 1,
+   "sigla": "SOC",
+   "disciplina": "Sociologia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "ED. FIN",
+   "disciplina": "Educação Financeira",
+   "professor": "AILE",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 1,
+   "aula": 6,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "AILE",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 2,
+   "aula": 1,
+   "sigla": "FILO",
+   "disciplina": "Filosofia",
+   "professor": "EUCLEDIO",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "EUCLEDIO",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AMALIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AMALIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 2,
+   "aula": 6,
+   "sigla": "FIS",
+   "disciplina": "Física",
+   "professor": "ALEX",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 3,
+   "aula": 1,
+   "sigla": "ED FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 3,
+   "aula": 2,
+   "sigla": "ED FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 3,
+   "aula": 3,
+   "sigla": "SOC",
+   "disciplina": "Sociologia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 3,
+   "aula": 4,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 3,
+   "aula": 5,
+   "sigla": "ED. FIN",
+   "disciplina": "Educação Financeira",
+   "professor": "AILE",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 3,
+   "aula": 6,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "Program",
+   "disciplina": "Programação",
+   "professor": "GILBERTO",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "Program",
+   "disciplina": "Programação",
+   "professor": "GILBERTO",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "Fisi e Tec",
+   "disciplina": "Física e Tecnociência",
+   "professor": "ALEX",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "AILE",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 4,
+   "aula": 5,
+   "sigla": "Robótica",
+   "disciplina": "Robótica",
+   "professor": "GILBERTO",
+   "apoio": false
+  },
+  {
+   "turma": "2ºC",
+   "dia": 4,
+   "aula": 6,
+   "sigla": "Robótica",
+   "disciplina": "Robótica",
+   "professor": "GILBERTO",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "L Gest Pessoas",
+   "disciplina": "Liderança e Gestão de Pessoas",
+   "professor": "DYANNE",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "L Gest Pessoas",
+   "disciplina": "Liderança e Gestão de Pessoas",
+   "professor": "DYANNE",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "NEG.VENDAS",
+   "disciplina": "Negociação e Vendas",
+   "professor": "DYANNE",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 0,
+   "aula": 5,
+   "sigla": "ADM.FIN.ORÇ",
+   "disciplina": "Administração Financeira e Orçamentária",
+   "professor": "AMALIA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 0,
+   "aula": 6,
+   "sigla": "ADM.FIN.ORÇ",
+   "disciplina": "Administração Financeira e Orçamentária",
+   "professor": "AMALIA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 1,
+   "aula": 1,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AGATHA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AGATHA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "ED. FIN",
+   "disciplina": "Educação Financeira",
+   "professor": "AGATHA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "N Direito",
+   "disciplina": "Noções de Direito",
+   "professor": "CESAR",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 1,
+   "aula": 6,
+   "sigla": "N Direito",
+   "disciplina": "Noções de Direito",
+   "professor": "CESAR",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 2,
+   "aula": 1,
+   "sigla": "L Gest Pessoas",
+   "disciplina": "Liderança e Gestão de Pessoas",
+   "professor": "DYANNE",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "L Gest Pessoas",
+   "disciplina": "Liderança e Gestão de Pessoas",
+   "professor": "DYANNE",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "Tec Ferr Gest",
+   "disciplina": "Tecnologias e Ferramentas de Gestão",
+   "professor": "AMALIA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "NEG.VENDAS",
+   "disciplina": "Negociação e Vendas",
+   "professor": "DYANNE",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "PJV",
+   "disciplina": "Projeto de Vida",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 2,
+   "aula": 6,
+   "sigla": "Tec Ferr Gest",
+   "disciplina": "Tecnologias e Ferramentas de Gestão",
+   "professor": "AMALIA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 3,
+   "aula": 1,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 3,
+   "aula": 2,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 3,
+   "aula": 3,
+   "sigla": "ED FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 3,
+   "aula": 4,
+   "sigla": "ED FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 3,
+   "aula": 5,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AGATHA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 3,
+   "aula": 6,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AGATHA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "FIS",
+   "disciplina": "Física",
+   "professor": "CAIO",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "Cont Finanças",
+   "disciplina": "Controladoria e Finanças",
+   "professor": "AMALIA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "Cont Finanças",
+   "disciplina": "Controladoria e Finanças",
+   "professor": "AMALIA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "FIS",
+   "disciplina": "Física",
+   "professor": "CAIO",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 4,
+   "aula": 5,
+   "sigla": "REC.HUM",
+   "disciplina": "Recursos humanos",
+   "professor": "DYANNE",
+   "apoio": false
+  },
+  {
+   "turma": "3ºA",
+   "dia": 4,
+   "aula": 6,
+   "sigla": "REC.HUM",
+   "disciplina": "Recursos humanos",
+   "professor": "DYANNE",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AGATHA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "Rec Portugês",
+   "disciplina": "Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "Mid Dig II",
+   "disciplina": "Arte II",
+   "professor": "ANDERSON",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "Mid Dig II",
+   "disciplina": "Arte II",
+   "professor": "ANDERSON",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 0,
+   "aula": 5,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 0,
+   "aula": 6,
+   "sigla": "Rec Matemática",
+   "disciplina": "Recomposição da Aprendizagem em Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 1,
+   "aula": 1,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AGATHA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "ED FIS",
+   "disciplina": "Educação Física",
+   "professor": "AILE",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "Hist I",
+   "disciplina": "História I",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "PJV",
+   "disciplina": "Projeto de Vida",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 1,
+   "aula": 6,
+   "sigla": "Hist I",
+   "disciplina": "História I",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 2,
+   "aula": 1,
+   "sigla": "Rec Portugês",
+   "disciplina": "Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "Geopolítica",
+   "disciplina": "Geografia I",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "Geopolítica",
+   "disciplina": "Geografia I",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "PORT",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 2,
+   "aula": 6,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AGATHA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 3,
+   "aula": 1,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AGATHA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 3,
+   "aula": 2,
+   "sigla": "ESPANHOL",
+   "disciplina": "Língua Espanhola",
+   "professor": "ALVARO",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 3,
+   "aula": 3,
+   "sigla": "ESPANHOL",
+   "disciplina": "Língua Espanhola",
+   "professor": "ALVARO",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 3,
+   "aula": 4,
+   "sigla": "Gov e Cidad",
+   "disciplina": "Sociologia I",
+   "professor": "GABRIELLE",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 3,
+   "aula": 5,
+   "sigla": "Rec Matemática",
+   "disciplina": "Recomposição da Aprendizagem em Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 3,
+   "aula": 6,
+   "sigla": "ED FIS",
+   "disciplina": "Educação Física",
+   "professor": "AILE",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "ESPANHOL",
+   "disciplina": "Língua Espanhola",
+   "professor": "ALVARO",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "FIS",
+   "disciplina": "Física",
+   "professor": "CAIO",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "FIS",
+   "disciplina": "Física",
+   "professor": "CAIO",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "Gov e Cidad",
+   "disciplina": "Sociologia I",
+   "professor": "GABRIELLE",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 4,
+   "aula": 5,
+   "sigla": "ED. FIN",
+   "disciplina": "Educação Financeira",
+   "professor": "MARCOSANT",
+   "apoio": false
+  },
+  {
+   "turma": "3ºB",
+   "dia": 4,
+   "aula": 6,
+   "sigla": "ED. FIN",
+   "disciplina": "Educação Financeira",
+   "professor": "MARCOSANT",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "REC MATEMÁTICA",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "REC MATEMÁTICA",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "AGATHA",
+   "apoio": true
+  },
+  {
+   "turma": "6ºA",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ALINEP",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 0,
+   "aula": 5,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "ISABELA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 1,
+   "aula": 1,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "CLAUDER",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "CLAUDER",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "CASIRIS",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ALINEP",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ALINEP",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 2,
+   "aula": 1,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "LEIT REC PORT",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "LEIT REC PORT",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "ALINEP",
+   "apoio": true
+  },
+  {
+   "turma": "6ºA",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "LEIT REC PORT",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "LEIT REC PORT",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "ALINEP",
+   "apoio": true
+  },
+  {
+   "turma": "6ºA",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "E FIS",
+   "disciplina": "Educação Física",
+   "professor": "ANTONIOM",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 3,
+   "aula": 1,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 3,
+   "aula": 2,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 3,
+   "aula": 3,
+   "sigla": "E FIS",
+   "disciplina": "Educação Física",
+   "professor": "ANTONIOM",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 3,
+   "aula": 4,
+   "sigla": "E REL",
+   "disciplina": "Ensino Religioso",
+   "professor": "CLAUDER",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 3,
+   "aula": 5,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ALINEP",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "REC MATEMÁTICA",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "REC MATEMÁTICA",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "AGATHA",
+   "apoio": true
+  },
+  {
+   "turma": "6ºA",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "ISABELA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "CASIRIS",
+   "apoio": false
+  },
+  {
+   "turma": "6ºA",
+   "dia": 4,
+   "aula": 5,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "ANAFRANCO",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "REC MATEMÁTICA",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "REC MATEMÁTICA",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "AGATHA",
+   "apoio": true
+  },
+  {
+   "turma": "6ºB",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ALINEP",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 0,
+   "aula": 5,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 1,
+   "aula": 1,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ALINEP",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ALINEP",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "CASIRIS",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "E REL",
+   "disciplina": "Ensino Religioso",
+   "professor": "CLAUDER",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 2,
+   "aula": 1,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "E FIS",
+   "disciplina": "Educação Física",
+   "professor": "ANTONIOM",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "ANAFRANCO",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "LEIT REC PORT",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "LEIT REC PORT",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "ALINEP",
+   "apoio": true
+  },
+  {
+   "turma": "6ºB",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "LEIT REC PORT",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "LEIT REC PORT",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "ALINEP",
+   "apoio": true
+  },
+  {
+   "turma": "6ºB",
+   "dia": 3,
+   "aula": 1,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 3,
+   "aula": 2,
+   "sigla": "E FIS",
+   "disciplina": "Educação Física",
+   "professor": "ANTONIOM",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 3,
+   "aula": 3,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 3,
+   "aula": 4,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 3,
+   "aula": 5,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "REC MATEMÁTICA",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "REC MATEMÁTICA",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "AGATHA",
+   "apoio": true
+  },
+  {
+   "turma": "6ºB",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "CLAUDER",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "CLAUDER",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ALINEP",
+   "apoio": false
+  },
+  {
+   "turma": "6ºB",
+   "dia": 4,
+   "aula": 5,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "CASIRIS",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ALINEP",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ALINEP",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "REC MATEMÁTICA",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "REC MATEMÁTICA",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "AGATHA",
+   "apoio": true
+  },
+  {
+   "turma": "6ºC",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "ISABELA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 0,
+   "aula": 5,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 1,
+   "aula": 1,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AMALIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "LEIT REC PORT",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "LEIT REC PORT",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "ADRIANE",
+   "apoio": true
+  },
+  {
+   "turma": "6ºC",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "LEIT REC PORT",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "LEIT REC PORT",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "ADRIANE",
+   "apoio": true
+  },
+  {
+   "turma": "6ºC",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AMALIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "CASIRIS",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 2,
+   "aula": 1,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ALINEP",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "E FIS",
+   "disciplina": "Educação Física",
+   "professor": "ANTONIOM",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "E FIS",
+   "disciplina": "Educação Física",
+   "professor": "ANTONIOM",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "ISABELA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 3,
+   "aula": 1,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AMALIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 3,
+   "aula": 2,
+   "sigla": "E REL",
+   "disciplina": "Ensino Religioso",
+   "professor": "CLAUDER",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 3,
+   "aula": 3,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "AMALIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 3,
+   "aula": 4,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 3,
+   "aula": 5,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "CASIRIS",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ALINEP",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "REC MATEMÁTICA",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "REC MATEMÁTICA",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "AGATHA",
+   "apoio": true
+  },
+  {
+   "turma": "6ºC",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "CLAUDER",
+   "apoio": false
+  },
+  {
+   "turma": "6ºC",
+   "dia": 4,
+   "aula": 5,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "CLAUDER",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CAIO",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CAIO",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "REC MATEMÁTICA",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "REC MATEMÁTICA",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "AGATHA",
+   "apoio": true
+  },
+  {
+   "turma": "6ºD",
+   "dia": 0,
+   "aula": 5,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ALINEP",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 1,
+   "aula": 1,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ALINEP",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "CASIRIS",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "CLAUDER",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "LEIT REC PORT",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "LEIT REC PORT",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "ADRIANE",
+   "apoio": true
+  },
+  {
+   "turma": "6ºD",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "LEIT REC PORT",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "LEIT REC PORT",
+   "disciplina": "Leitura e Recomposição da Aprendizagem em Língua Portuguesa",
+   "professor": "ADRIANE",
+   "apoio": true
+  },
+  {
+   "turma": "6ºD",
+   "dia": 2,
+   "aula": 1,
+   "sigla": "E FIS",
+   "disciplina": "Educação Física",
+   "professor": "ANTONIOM",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "ISABELA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "ISABELA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CAIO",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CAIO",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 3,
+   "aula": 1,
+   "sigla": "E FIS",
+   "disciplina": "Educação Física",
+   "professor": "ANTONIOM",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 3,
+   "aula": 2,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 3,
+   "aula": 3,
+   "sigla": "E REL",
+   "disciplina": "Ensino Religioso",
+   "professor": "CLAUDER",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 3,
+   "aula": 4,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "VERGINIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 3,
+   "aula": 5,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "CLAUDER",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "CASIRIS",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ALINEP",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "REC MATEMÁTICA",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "CATIA",
+   "apoio": false
+  },
+  {
+   "turma": "6ºD",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "REC MATEMÁTICA",
+   "disciplina": "Rec. Aprend. Matemática",
+   "professor": "AGATHA",
+   "apoio": true
+  },
+  {
+   "turma": "6ºD",
+   "dia": 4,
+   "aula": 5,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ALINEP",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "ANAFRANCO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "ANAFRANCO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 0,
+   "aula": 5,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "JANAINAP",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 1,
+   "aula": 1,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "RED_LEITURA",
+   "disciplina": "Redação e Leitura",
+   "professor": "ROSE",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "E REL",
+   "disciplina": "Ensino Religioso",
+   "professor": "CLAUDER",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ROSE",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 2,
+   "aula": 1,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "KARINA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "JANAINAP",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "JANAINAP",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "ANAFRANCO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 3,
+   "aula": 1,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ROSE",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 3,
+   "aula": 2,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 3,
+   "aula": 3,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "KARINA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 3,
+   "aula": 4,
+   "sigla": "E FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 3,
+   "aula": 5,
+   "sigla": "E FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "RED_LEITURA",
+   "disciplina": "Redação e Leitura",
+   "professor": "ROSE",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ROSE",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºA",
+   "dia": 4,
+   "aula": 5,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "E FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "E FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "JANAINAP",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "JANAINAP",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 0,
+   "aula": 5,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 1,
+   "aula": 1,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ROSE",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "RED_LEITURA",
+   "disciplina": "Redação e Leitura",
+   "professor": "ROSE",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "JANAINAP",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "ANAFRANCO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "ANAFRANCO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 2,
+   "aula": 1,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "KARINA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "ANAFRANCO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 3,
+   "aula": 1,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 3,
+   "aula": 2,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "KARINA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 3,
+   "aula": 3,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ROSE",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 3,
+   "aula": 4,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ROSE",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 3,
+   "aula": 5,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "E REL",
+   "disciplina": "Ensino Religioso",
+   "professor": "CLAUDER",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "RED_LEITURA",
+   "disciplina": "Redação e Leitura",
+   "professor": "ROSE",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºB",
+   "dia": 4,
+   "aula": 5,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "JANAINAP",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "JANAINAP",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 0,
+   "aula": 5,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "KARINA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 1,
+   "aula": 1,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "ANAFRANCO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "RED_LEITURA",
+   "disciplina": "Redação e Leitura",
+   "professor": "ROSE",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "E FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 2,
+   "aula": 1,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "ANAFRANCO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "KARINA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "ANAFRANCO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "JANAINAP",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 3,
+   "aula": 1,
+   "sigla": "E REL",
+   "disciplina": "Ensino Religioso",
+   "professor": "CLAUDER",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 3,
+   "aula": 2,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ROSE",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 3,
+   "aula": 3,
+   "sigla": "E FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 3,
+   "aula": 4,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 3,
+   "aula": 5,
+   "sigla": "RED_LEITURA",
+   "disciplina": "Redação e Leitura",
+   "professor": "ROSE",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "FABIO",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ROSE",
+   "apoio": false
+  },
+  {
+   "turma": "7ºC",
+   "dia": 4,
+   "aula": 5,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "ROSE",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "E FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "E FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 0,
+   "aula": 5,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "SIMONE",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 1,
+   "aula": 1,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "JANAINAP",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "JANAINAP",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "ED. DIGITAL",
+   "disciplina": "Educação Digital e Computação: Programação e IA",
+   "professor": "MICHELE",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CAIO",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 2,
+   "aula": 1,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "ED. DIGITAL",
+   "disciplina": "Educação Digital e Computação: Programação e IA",
+   "professor": "MICHELE",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "KARINA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 3,
+   "aula": 1,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "KARINA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 3,
+   "aula": 2,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CAIO",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 3,
+   "aula": 3,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ANAVIEIRA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 3,
+   "aula": 4,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CAIO",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 3,
+   "aula": 5,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "SIMONE",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "SIMONE",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "RED_LEITURA",
+   "disciplina": "Redação e Leitura",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CAIO",
+   "apoio": false
+  },
+  {
+   "turma": "8ºA",
+   "dia": 4,
+   "aula": 5,
+   "sigla": "RED_LEITURA",
+   "disciplina": "Redação e Leitura",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "SIMONE",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "SIMONE",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "KARINA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CAIO",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 0,
+   "aula": 5,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 1,
+   "aula": 1,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "NOEL",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "E FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "E FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "ED. DIGITAL",
+   "disciplina": "Educação Digital e Computação: Programação e IA",
+   "professor": "MICHELE",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 2,
+   "aula": 1,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "JANAINAP",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "JANAINAP",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CAIO",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "ED. DIGITAL",
+   "disciplina": "Educação Digital e Computação: Programação e IA",
+   "professor": "MICHELE",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 3,
+   "aula": 1,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 3,
+   "aula": 2,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 3,
+   "aula": 3,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CAIO",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 3,
+   "aula": 4,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "KARINA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 3,
+   "aula": 5,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CAIO",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "RED_LEITURA",
+   "disciplina": "Redação e Leitura",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ADRIANE",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ADRIANE",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "RED_LEITURA",
+   "disciplina": "Redação e Leitura",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºB",
+   "dia": 4,
+   "aula": 5,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "SIMONE",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 0,
+   "aula": 1,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 0,
+   "aula": 2,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 0,
+   "aula": 3,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "SIMONE",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 0,
+   "aula": 4,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "SIMONE",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 0,
+   "aula": 5,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CAIO",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 1,
+   "aula": 1,
+   "sigla": "RED_LEITURA",
+   "disciplina": "Redação e Leitura",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 1,
+   "aula": 2,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CAIO",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 1,
+   "aula": 3,
+   "sigla": "ED. DIGITAL",
+   "disciplina": "Educação Digital e Computação: Programação e IA",
+   "professor": "MICHELE",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 1,
+   "aula": 4,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "JANAINAP",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 1,
+   "aula": 5,
+   "sigla": "GEOG",
+   "disciplina": "Geografia",
+   "professor": "JANAINAP",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 2,
+   "aula": 1,
+   "sigla": "L POR",
+   "disciplina": "Língua Portuguesa",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 2,
+   "aula": 2,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CAIO",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 2,
+   "aula": 3,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 2,
+   "aula": 4,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "KARINA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 2,
+   "aula": 5,
+   "sigla": "ED. DIGITAL",
+   "disciplina": "Educação Digital e Computação: Programação e IA",
+   "professor": "MICHELE",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 3,
+   "aula": 1,
+   "sigla": "E FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 3,
+   "aula": 2,
+   "sigla": "E FIS",
+   "disciplina": "Educação Física",
+   "professor": "MARCILIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 3,
+   "aula": 3,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 3,
+   "aula": 4,
+   "sigla": "HIST",
+   "disciplina": "História",
+   "professor": "VANDERLEIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 3,
+   "aula": 5,
+   "sigla": "ART",
+   "disciplina": "Arte",
+   "professor": "KARINA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 4,
+   "aula": 1,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ADRIANE",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 4,
+   "aula": 2,
+   "sigla": "RED_LEITURA",
+   "disciplina": "Redação e Leitura",
+   "professor": "MARIA",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 4,
+   "aula": 3,
+   "sigla": "CIEN",
+   "disciplina": "Ciências",
+   "professor": "SIMONE",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 4,
+   "aula": 4,
+   "sigla": "ING",
+   "disciplina": "Língua Inglesa",
+   "professor": "ADRIANE",
+   "apoio": false
+  },
+  {
+   "turma": "8ºC",
+   "dia": 4,
+   "aula": 5,
+   "sigla": "MAT",
+   "disciplina": "Matemática",
+   "professor": "CAIO",
+   "apoio": false
+  }
+ ],
+ "disponibilidade": [
+  {
+   "professor": "ADRIANE",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 6,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AGATHA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "AGATHA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "AGATHA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "AILE",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AILE",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AILE",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AILE",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AILE",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "AILE",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 6,
+   "tipo": "HA"
+  },
+  {
+   "professor": "AILE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AILE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AILE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AILE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AILE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AILE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AILE",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "AILE",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "AILE",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ALEX",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ALEX",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALEX",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALEX",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALEX",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALEX",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALEX",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALEX",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALEX",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALEX",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALEX",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ALEX",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALEX",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALEX",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALEX",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ALEX",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ALVARO",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "COR"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "COR"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "COR"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "COR"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "COR"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "COR"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "COR"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "COR"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "COR"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "COR"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANDERSON",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 6,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 6,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 6,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CESAR",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "DYANNE",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "DYANNE",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "DYANNE",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "DYANNE",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "DYANNE",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "DYANNE",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "DYANNE",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "DYANNE",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "DYANNE",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "DYANNE",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "DYANNE",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "DYANNE",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "DYANNE",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "DYANNE",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "EUCLEDIO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "EUCLEDIO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 6,
+   "tipo": "HA"
+  },
+  {
+   "professor": "EUCLEDIO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "EUCLEDIO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "EUCLEDIO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "EUCLEDIO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "EUCLEDIO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "EUCLEDIO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "EUCLEDIO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "EUCLEDIO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "EUCLEDIO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "EUCLEDIO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "EUCLEDIO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "EUCLEDIO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "EUCLEDIO",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "EUCLEDIO",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GABRIELLE",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "GILBERTO",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCOSANT",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 6,
+   "tipo": "HA"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "matutino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "matutino",
+   "dia": 2,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "matutino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 6,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "matutino",
+   "dia": 0,
+   "aula": 6,
+   "tipo": "HA"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "matutino",
+   "dia": 4,
+   "aula": 6,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ADRIANE",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ALINEP",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ALINEP",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ALINEP",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ALINEP",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ALINEP",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "AMALIA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAFRANCO",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ANAVIEIRA",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ANTONIOM",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANTONIOM",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANTONIOM",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANTONIOM",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANTONIOM",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANTONIOM",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANTONIOM",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANTONIOM",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANTONIOM",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANTONIOM",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANTONIOM",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ANTONIOM",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ANTONIOM",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANTONIOM",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANTONIOM",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANTONIOM",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ANTONIOM",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CAIO",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CASIRIS",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CATIA",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CLAUDER",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CLAUDER",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CLAUDER",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CLAUDER",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CLAUDER",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "CLAUDER",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CLAUDER",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CLAUDER",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CLAUDER",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "CLAUDER",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "FABIO",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ISABELA",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ISABELA",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ISABELA",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ISABELA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ISABELA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ISABELA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ISABELA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ISABELA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ISABELA",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ISABELA",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ISABELA",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ISABELA",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ISABELA",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ISABELA",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ISABELA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "JANAINAP",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "JANAINAP",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "JANAINAP",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "JANAINAP",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "JANAINAP",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "JANAINAP",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "JANAINAP",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "JANAINAP",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "JANAINAP",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "JANAINAP",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "KARINA",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "KARINA",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "KARINA",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "KARINA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "KARINA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "KARINA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "KARINA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "KARINA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "KARINA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "KARINA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "KARINA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "KARINA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "KARINA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARCILIA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MARIA",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MICHELE",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MICHELE",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MICHELE",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MICHELE",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MICHELE",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MICHELE",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MICHELE",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "MICHELE",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "MICHELE",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MICHELE",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MICHELE",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MICHELE",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MICHELE",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MICHELE",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MICHELE",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MICHELE",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MICHELE",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "MICHELE",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "NOEL",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ROSE",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ROSE",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ROSE",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ROSE",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ROSE",
+   "turno": "vespertino",
+   "dia": 0,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "ROSE",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ROSE",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ROSE",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ROSE",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "ROSE",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "vespertino",
+   "dia": 3,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "SIMONE",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "HA"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "HA"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "HA"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VANDERLEIA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 1,
+   "tipo": "HA"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 2,
+   "tipo": "HA"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "vespertino",
+   "dia": 1,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "vespertino",
+   "dia": 2,
+   "aula": 5,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 1,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 2,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 3,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 4,
+   "tipo": "BLQ"
+  },
+  {
+   "professor": "VERGINIA",
+   "turno": "vespertino",
+   "dia": 4,
+   "aula": 5,
+   "tipo": "BLQ"
+  }
+ ],
+ "professores": {
+  "ADRIANE": "Adriane",
+  "AGATHA": "Agatha",
+  "AILE": "Aile",
+  "ALEX": "Alex",
+  "ALINEP": "Aline P.",
+  "ALVARO": "Alvaro",
+  "AMALIA": "Amália",
+  "ANAFRANCO": "Ana Franco",
+  "ANAVIEIRA": "Ana Vieira",
+  "ANDERSON": "Anderson",
+  "ANTONIOM": "Antonio M.",
+  "CAIO": "Caio",
+  "CASIRIS": "Casiris",
+  "CATIA": "Catia",
+  "CESAR": "Cesar",
+  "CLAUDER": "Clauder",
+  "DYANNE": "Dyanne",
+  "EUCLEDIO": "Euclédio",
+  "FABIO": "Fábio",
+  "GABRIELLE": "Gabrielle",
+  "GILBERTO": "Gilberto",
+  "ISABELA": "Isabela",
+  "JANAINAP": "Janaina P.",
+  "KARINA": "Karina",
+  "MARCILIA": "Marcília",
+  "MARCOSANT": "Marcos Ant.",
+  "MARIA": "Maria",
+  "MICHELE": "Michele",
+  "NOEL": "Noel",
+  "ROSE": "Rose",
+  "SIMONE": "Simone",
+  "VANDERLEIA": "Vanderleia",
+  "VERGINIA": "Verginia"
+ },
+ "avisos": [],
+ "avisos_corrigidos": [
+  "AGATHA Sex 1a: R6A -> R6B (a recomposicao de 6ºA nesse dia e em outra aula; a de 6ºB e nesta)",
+  "AGATHA Sex 2a: R6B -> R6A (a recomposicao de 6ºB nesse dia e em outra aula; a de 6ºA e nesta)"
+ ]
+}
