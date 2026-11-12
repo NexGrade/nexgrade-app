@@ -281,7 +281,7 @@ describe.skipIf(!TEM_BANCO)("modo rascunho: fluxo completo e casos de erro", () 
     // confirmando: troca o vinculo, as aulas ficam com a Bia e a resposta explica
     r = await chamar("PATCH", urlMat1, { professorId: ids.caio, confirmar: true });
     expect(r.body).toMatchObject({ aplicado: true, aulasPassadas: 0 });
-    expect(r.body.aviso).toContain("continuam com o professor anterior");
+    expect(r.body.aviso).toContain("continuam com o anterior");
     [td] = await db.select().from(turmaDisciplinasTable).where(eq(turmaDisciplinasTable.id, ids.tdMat1));
     expect(td!.professorId).toBe(ids.caio);
     expect((await oficialDe(ids.t1)).filter((h) => h.disciplinaId === ids.mat).map((h) => h.professorId)).toEqual([ids.bia, ids.bia]);
