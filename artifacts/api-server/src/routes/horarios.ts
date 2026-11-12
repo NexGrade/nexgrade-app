@@ -3,6 +3,7 @@ import {
   sobreporExperimento, sobreporAtribuicao, middlewareDisponibilidadeExperimental, carregarMudancas, oficialNasChaves, paraDispAntes,
   aplicarMudancasNaOficial, voltarChaves, carregarAtribuicoes, aplicarAtribuicoesNaOficial, voltarAtribuicoes,
   apagarExtrasDoExperimento, registrarExperimento, semTabelaExperimental, comExperimento, type AtribuicaoAntes,
+  sobrepor, comoLinhaDisp,
 } from "../lib/disponibilidade-experimento"; // [DISP-EXPERIMENTAL] [EXPERIMENTO-COMPLETO]
 import { experimentosTable, atribuicaoExperimentalTable, disponibilidadeExperimentalTable } from "@workspace/db"; // [EXPERIMENTO-COMPLETO]
 import { lerRascunho, gravarRascunho, limparRascunho } from "../lib/rascunho"; // [MODO-RASCUNHO]
@@ -63,6 +64,7 @@ import {
   STATUS_TRAVA_INTEGRAL, HORAS_DESTRAVA_PADRAO, HORAS_DESTRAVA_MAX,
 } from "../lib/trava-integral"; // [TRAVA-INTEGRAL]
 import { sugerirTrocasParaChoques, mesmaOpcao } from "../lib/resolver-choque"; // [RESOLVER-CHOQUE]
+import { aulasEmBloqueio, descreverAulasEmBloqueio, chaveBloqueio } from "../lib/bloqueio-no-rascunho"; // [AULA-EM-BLOQUEIO]
 import { estadoDisp } from "./disponibilidade"; // [RESOLVER-CHOQUE-HA]
 
 const router = Router();
@@ -1038,11 +1040,13 @@ router.get("/experimentais/:nome/simulacao", async (req, res) => {
     // [CHOQUE-NA-SIMULACAO] (09/11/2026) o veredito so compara janelas; os choques de professor vao junto para a tela
     // avisar antes de alguem clicar em Promover (teste na Demonstracao: "Tanto faz" com 2 choques)
     let choques: string[] = [];
+    let bloqueios: string[] = []; // [AULA-EM-BLOQUEIO]
     try {
       const exp = await db.select().from(horariosExperimentaisTable).where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, req.params.nome)));
       choques = await choquesAoPromover(escolaId, req.params.nome, exp);
+      bloqueios = await bloqueiosAoPromover(escolaId, req.params.nome, exp);
     } catch (err) { console.error("[CHOQUE-NA-SIMULACAO] falhou ao conferir choques:", err); }
-    res.json({ ...resposta, choques });
+    res.json({ ...resposta, choques, bloqueios });
   } catch (err) {
     res.status(500).json({ error: "Erro ao simular a promoção.", detalhe: err instanceof Error ? err.message : String(err) });
   }
@@ -1193,6 +1197,13 @@ router.post("/experimentais/:nome/promover", async (req, res) => {
     const choques = await choquesAoPromover(escolaId, nome, expSlots);
     if (choques.length) {
       res.status(409).json({ error: `O rascunho tem ${choques.length} choque(s) de professor e não pode ser aplicado. Mude uma das aulas de horário: ${choques.slice(0, 5).join("; ")}${choques.length > 5 ? "; ..." : ""}`, choques });
+      return;
+    }
+    // [AULA-EM-BLOQUEIO] (12/11/2026) aula em horario bloqueado (com a disponibilidade do rascunho): antes passava e so a
+    // tela Conflitos acusava depois (retorno do diretor do Romario)
+    const bloqueios = await bloqueiosAoPromover(escolaId, nome, expSlots);
+    if (bloqueios.length) {
+      res.status(409).json({ error: `O rascunho tem ${bloqueios.length} aula(s) em horário bloqueado do professor e não pode ser aplicado. Mude a aula de horário (ou libere o horário na disponibilidade): ${bloqueios.slice(0, 5).join(" ")}${bloqueios.length > 5 ? " ..." : ""}`, bloqueios });
       return;
     }
   }
@@ -1692,6 +1703,25 @@ async function choquesAoPromover(escolaId: string, nome: string, expSlots: Array
   return descreverChoques(choques, tm, (id) => nomeProf.get(id) ?? `Professor #${id}`);
 }
 
+// [AULA-EM-BLOQUEIO] (12/11/2026) aulas que o promover levaria para a oficial em horario bloqueado do professor, com a
+// disponibilidade do rascunho por cima da oficial (a mesma que o promover aplica). Conferidas: todas as aulas do
+// rascunho, e a oficial que continua so quando o bloqueio vem de uma mudanca do rascunho (bloqueio antigo na oficial
+// de fora nao impede; e da tela Conflitos).
+async function bloqueiosAoPromover(escolaId: string, nome: string, expSlots: Array<typeof horariosExperimentaisTable.$inferSelect>): Promise<string[]> {
+  if (!expSlots.length) return [];
+  const [{ fora, tm, nomeProf }, { linhas: mudancas }, { posicao }] = await Promise.all([
+    baseDosChoques(escolaId, nome, expSlots), carregarMudancas(escolaId, nome), ocupacaoReal(escolaId),
+  ]);
+  const chavesDoRascunho = new Set(mudancas.map((m) => chaveBloqueio(m)));
+  const profsMudancas = new Set(mudancas.map((m) => m.professorId));
+  const foraConferir = fora.filter((h) => h.professorId != null && profsMudancas.has(h.professorId));
+  const profIds = [...new Set([...expSlots.map((h) => h.professorId), ...profsMudancas])].filter((x): x is number => x != null);
+  const oficial = profIds.length ? await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, profIds)) : [];
+  const disp = sobrepor(oficial, mudancas.map(comoLinhaDisp));
+  const lista = aulasEmBloqueio({ aulas: expSlots, aulasSoMudancas: foraConferir, disp, chavesDoRascunho, posicao });
+  return descreverAulasEmBloqueio(lista, (id) => tm.get(id)?.nome ?? `Turma #${id}`, (id) => nomeProf.get(id) ?? `Professor #${id}`);
+}
+
 /** [RESOLVER-CHOQUE] o que o promover enxerga: oficial que continua (fora) + aulas do experimento, turmas, horarios. */
 async function baseDosChoques(escolaId: string, nome: string, expSlots: Array<typeof horariosExperimentaisTable.$inferSelect>) {
   const turmaIds = [...new Set(expSlots.map((s) => s.turmaId))];
@@ -1819,7 +1849,7 @@ async function sugestoesDeChoque(escolaId: string, nome: string, exp: Array<type
 router.get("/experimentais/:nome/choques", async (req, res) => {
   const escolaId = getEscolaId(req);
   const exp = await db.select().from(horariosExperimentaisTable).where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, req.params.nome)));
-  res.json({ choques: await choquesAoPromover(escolaId, req.params.nome, exp) });
+  res.json({ choques: await choquesAoPromover(escolaId, req.params.nome, exp), bloqueios: await bloqueiosAoPromover(escolaId, req.params.nome, exp) }); // [AULA-EM-BLOQUEIO]
 });
 
 /** Descarta o rascunho: apaga tudo o que ele guardava. A oficial nao muda. */

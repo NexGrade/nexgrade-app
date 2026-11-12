@@ -2733,9 +2733,14 @@ function AbaExperimental() {
     // [CHOQUE-ANTES-DE-GRAVAR] [SO-PROMOVER] (09/11/2026) professor em duas turmas no mesmo horario: o servidor recusaria;
     // mostra a lista antes de perguntar (era o "Aplicar na escola" da faixa roxa, que saiu)
     try {
-      const { choques } = await customFetch<{ choques: string[] }>(`/api/horarios/experimentais/${encodeURIComponent(nome)}/choques`);
+      const { choques, bloqueios = [] } = await customFetch<{ choques: string[]; bloqueios?: string[] }>(`/api/horarios/experimentais/${encodeURIComponent(nome)}/choques`);
       if (choques.length) {
         alert(`"${nome}" tem ${choques.length} choque(s) de professor e ainda não pode ser promovido:\n\n${choques.slice(0, 15).map((c) => `• ${c}`).join("\n")}${choques.length > 15 ? `\n• ... e mais ${choques.length - 15}` : ""}\n\nMude uma das aulas de horário (ou troque o professor) e tente de novo.`);
+        return;
+      }
+      // [AULA-EM-BLOQUEIO] (12/11/2026) aula em horario bloqueado do professor: o servidor tambem recusa
+      if (bloqueios.length) {
+        alert(`"${nome}" tem ${bloqueios.length} aula(s) em horário bloqueado do professor e ainda não pode ser promovido:\n\n${bloqueios.slice(0, 15).map((c) => `• ${c}`).join("\n")}${bloqueios.length > 15 ? `\n• ... e mais ${bloqueios.length - 15}` : ""}\n\nMude a aula de horário (ou libere o horário na disponibilidade) e tente de novo.`);
         return;
       }
     } catch { /* a conferencia falhou: o servidor confere de novo ao promover */ }
@@ -2821,6 +2826,7 @@ function AbaExperimental() {
     haMovidas?: Array<{ professorNome: string; sai: string[]; entra: string[] }>;
     veredito: "melhor" | "empate" | "pior" | "primeira"; // [PRIMEIRA-GRADE]
     choques?: string[]; // [CHOQUE-NA-SIMULACAO] professor em duas turmas no mesmo horario: nao pode ser promovido
+    bloqueios?: string[]; // [AULA-EM-BLOQUEIO] aula em horario bloqueado do professor: nao pode ser promovido
   };
   const [simulacoes, setSimulacoes] = useState<Record<string, ResultadoSim | "carregando" | { erro: string }>>({});
   // "1:aula 2:HA 6:aula" -> "1º aula · 2º HA · 3º-5º sem aula/HA · 6º aula"
@@ -3271,6 +3277,16 @@ function AbaExperimental() {
                             <button type="button" className="opacity-60 hover:opacity-100" title="Fechar" onClick={() => setSimulacoes((s) => { const n = { ...s }; delete n[nome]; return n; })}><X className="w-4 h-4" /></button>
                           </div>
                         </div>
+                        {(sim.bloqueios?.length ?? 0) > 0 && ( /* [AULA-EM-BLOQUEIO] */
+                          <div className="mt-2 rounded-md border border-red-300 bg-red-50 p-3 text-red-900">
+                            <div className="font-semibold">⚠ {sim.bloqueios!.length} aula(s) em horário bloqueado do professor: não pode ser promovido assim</div>
+                            <ul className="mt-1 ml-4 list-disc text-xs space-y-0.5">
+                              {sim.bloqueios!.slice(0, 10).map((c) => <li key={c}>{c}</li>)}
+                              {sim.bloqueios!.length > 10 && <li>... e mais {sim.bloqueios!.length - 10}</li>}
+                            </ul>
+                            <p className="mt-1 text-xs">Mude a aula de horário (lápis na grade) ou libere o horário na disponibilidade do rascunho, e simule de novo.</p>
+                          </div>
+                        )}
                         {(sim.choques?.length ?? 0) > 0 && ( /* [CHOQUE-NA-SIMULACAO] */
                           <div className="mt-2 rounded-md border border-red-300 bg-red-50 p-3 text-red-900">
                             <div className="font-semibold">⚠ {sim.choques!.length} choque(s) de professor: não pode ser promovido assim</div>
