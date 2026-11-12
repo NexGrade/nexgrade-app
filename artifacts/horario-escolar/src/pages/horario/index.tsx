@@ -150,6 +150,14 @@ async function pollarStatusCpsat(jobId: string, onProgresso?: (p: ProgressoGerac
 // [HEURISTICO-ESCONDIDO] O gerador simples (heuristico) fica escondido por
 // padrao: nao respeita aula fixa, HA fixa, trio, aula assincrona nem a reserva
 // de HA. So para emergencia (CP-SAT fora do ar). Preferencia lembrada no navegador.
+// [AVISO-NAO-TAMPA] (11/11/2026) ao terminar a geracao/Melhorar, rola ate o cartao do experimento: os botoes dele
+// (Simular promocao, Promover) ficam no alto da tela, e o aviso "Grade gerada" (canto de baixo) nao os tampa mais
+function irAoExperimento(nome: string, tentativas = 10): void {
+  const el = document.getElementById(`exp-${nome}`);
+  if (el) { el.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+  if (tentativas > 0) setTimeout(() => irAoExperimento(nome, tentativas - 1), 200);
+}
+
 function mostrarGeradorSimples(): boolean {
   try { return localStorage.getItem("nexgrade.geradorSimples") === "1"; } catch { return false; }
 }
@@ -2289,7 +2297,7 @@ function AbaExperimental() {
       // da API, sem nenhum jeito de ver sem abrir o DevTools.
       setDetalhesLote({ nomeExperimental: loteForm.nomeExperimental, resultados: result.resultados ?? [] });
       setOpenGerarLote(false);
-      setNomeExpandido(loteForm.nomeExperimental);
+      setNomeExpandido(loteForm.nomeExperimental); irAoExperimento(loteForm.nomeExperimental); // [AVISO-NAO-TAMPA]
       setTurmaExpandidaId(null);
     } catch (err) {
       toast({ title: "Erro ao gerar em massa", description: err instanceof Error ? err.message : undefined, variant: "destructive" });
@@ -2321,7 +2329,7 @@ function AbaExperimental() {
           : `Boa solução em ${Math.round(statusResult.tempoResolucaoS ?? 0)}s (sem prova de que é a melhor possível). Confira antes de promover.`,
       });
       setOpenGerarCpsatTurma(false);
-      setNomeExpandido(nomeExperimental);
+      setNomeExpandido(nomeExperimental); irAoExperimento(nomeExperimental); // [AVISO-NAO-TAMPA]
       // [FIX-MULTI-TURMA] So expande automaticamente a grade de uma
       // turma especifica quando so UMA foi selecionada -- com varias,
       // mostra a lista (mesmo comportamento do turno inteiro).
@@ -2439,7 +2447,7 @@ function AbaExperimental() {
           : `Boa solução em ${Math.round(statusResult.tempoResolucaoS ?? 0)}s (sem prova de que é a melhor possível). Confira antes de promover.`,
       });
       setOpenGerarCpsatTurnoParcial(false);
-      setNomeExpandido(nomeExperimental);
+      setNomeExpandido(nomeExperimental); irAoExperimento(nomeExperimental); // [AVISO-NAO-TAMPA]
       setTurmaExpandidaId(turmaIds.length === 1 ? turmaIds[0] : null);
     } catch (err) {
       const mensagemErro = err instanceof Error ? err.message : String(err);
@@ -2539,7 +2547,7 @@ function AbaExperimental() {
           : `Boa solução em ${Math.round(statusResult.tempoResolucaoS ?? 0)}s (sem prova de que é a melhor possível). Confira antes de promover.`,
       });
       setOpenGerarCpsat(false);
-      setNomeExpandido(nomeExperimental);
+      setNomeExpandido(nomeExperimental); irAoExperimento(nomeExperimental); // [AVISO-NAO-TAMPA]
       setTurmaExpandidaId(null);
     } catch (err) {
       const mensagemErro = err instanceof Error ? err.message : String(err);
@@ -2710,7 +2718,7 @@ function AbaExperimental() {
       toast({ title: `Experimento gerado! ${result.slotsGerados} aulas criadas.${result.conflitos.length ? ` ${result.conflitos.length} aviso(s).` : ""}` });
       setDiagnostico(diagnosticoDe(result)); // [DIAGNOSTICO-GERACAO] por que cada aula nao coube
       setOpenGerar(false);
-      setNomeExpandido(gerarForm.nomeExperimental);
+      setNomeExpandido(gerarForm.nomeExperimental); irAoExperimento(gerarForm.nomeExperimental); // [AVISO-NAO-TAMPA]
       setTurmaExpandidaId(Number(gerarForm.turmaId));
     } catch (err) {
       // [DIAGNOSTICO-GERACAO] antes so "Erro ao gerar experimento", sem o motivo (ex.: turma com aula fixa ou trio)
@@ -2942,6 +2950,10 @@ function AbaExperimental() {
     }
     await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
     await queryClient.invalidateQueries({ queryKey: ["experimentos-resumo"] }); // [DISP-EXPERIMENTAL] [EXPERIMENTO-COMPLETO]
+    // [LIXEIRA-SAI-DO-RASCUNHO] (11/11/2026) apagar o rascunho pela lixeira tambem o encerra: a faixa roxa sai na hora
+    // (antes so sumia no F5), como no Promover
+    try { if (localStorage.getItem("nexgrade.rascunhoLigado") === nome) ligarRascunho(null); } catch { /* sem armazenamento */ }
+    await queryClient.invalidateQueries({ queryKey: ["rascunho"] });
     toast({ title: `Experimento "${nome}" removido` });
   };
 

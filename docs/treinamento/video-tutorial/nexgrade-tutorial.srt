@@ -1,350 +1,327 @@
 1
-00:00:00,556 --> 00:00:02,618
+00:00:00,650 --> 00:00:02,712
 Olá! Eu sou a Nexy, da Nexus Core,
 
 2
-00:00:02,668 --> 00:00:06,532
+00:00:02,762 --> 00:00:06,626
 e vou mostrar como o NexGrade organiza o
 horário da sua escola.
 
 3
-00:00:07,032 --> 00:00:11,502
+00:00:07,126 --> 00:00:11,596
 Vamos ver o cadastro de professores e turmas,
 a disponibilidade e a hora-atividade,
 
 4
-00:00:11,552 --> 00:00:14,987
+00:00:11,646 --> 00:00:15,081
 os conflitos e, no fim, como gerar, melhorar e
 promover a grade.
 
 5
-00:00:15,983 --> 00:00:19,063
+00:00:16,083 --> 00:00:19,163
 Na Visão Geral você vê, de uma vez, quantos
 professores,
 
 6
-00:00:19,113 --> 00:00:22,361
+00:00:19,213 --> 00:00:22,461
 turmas e aulas a escola tem, e os avisos que
 pedem atenção.
 
 7
-00:00:23,349 --> 00:00:27,311
+00:00:23,417 --> 00:00:27,378
 Vamos começar pelo cadastro. Em Professores,
 clique em Novo Professor.
 
 8
-00:00:27,810 --> 00:00:31,896
+00:00:27,878 --> 00:00:31,963
 Preencha o nome e o e-mail. É com esse e-mail
 que o professor entra no sistema.
 
 9
-00:00:32,396 --> 00:00:34,741
+00:00:32,464 --> 00:00:34,808
 Em Disciplinas, marque o que ele pode dar.
 
 10
-00:00:34,791 --> 00:00:37,819
+00:00:34,858 --> 00:00:37,887
 Só essas disciplinas vão aparecer para ele nas
 turmas.
 
 11
-00:00:38,319 --> 00:00:41,933
+00:00:38,387 --> 00:00:42,001
 Clique em Salvar. Pronto: o professor já
 aparece na lista.
 
 12
-00:00:42,949 --> 00:00:46,284
+00:00:42,983 --> 00:00:46,318
 Agora, uma turma nova. Em Turmas, clique em
 Nova Turma.
 
 13
-00:00:46,784 --> 00:00:48,237
+00:00:46,818 --> 00:00:48,271
 Escolha o curso e a série.
 
 14
-00:00:48,287 --> 00:00:51,995
+00:00:48,321 --> 00:00:52,029
 A matriz curricular já traz as disciplinas e a
 carga de cada uma.
 
 15
-00:00:52,494 --> 00:00:56,001
+00:00:52,528 --> 00:00:56,035
 Dê o nome da turma, confira o turno e clique
 em Salvar Turma.
 
 16
-00:00:56,501 --> 00:00:59,816
+00:00:56,747 --> 00:01:00,062
 Logo depois, o sistema pede para distribuir os
 professores.
 
 17
-00:00:59,866 --> 00:01:02,610
+00:01:00,112 --> 00:01:02,856
 Em cada disciplina, escolha o professor na
 lista.
 
 18
-00:01:03,110 --> 00:01:05,746
+00:01:03,356 --> 00:01:05,992
 A lista mostra só os professores habilitados.
 
 19
-00:01:05,796 --> 00:01:09,088
+00:01:06,042 --> 00:01:09,334
 Veja: a professora que acabamos de cadastrar
 já aparece.
 
 20
-00:01:09,587 --> 00:01:13,081
+00:01:09,833 --> 00:01:13,327
 O contador mostra quantas disciplinas ainda
 estão sem professor.
 
 21
-00:01:13,131 --> 00:01:16,514
+00:01:13,377 --> 00:01:16,760
 Na lista de turmas, o filtro Sem professor
 mostra o que falta.
 
 22
-00:01:17,449 --> 00:01:19,471
+00:01:17,750 --> 00:01:19,771
 Para trocar o professor de uma turma,
 
 23
-00:01:19,521 --> 00:01:23,109
+00:01:19,821 --> 00:01:23,410
 abra a turma pelo lápis e escolha o novo
 professor na disciplina.
 
 24
-00:01:23,159 --> 00:01:24,341
+00:01:23,460 --> 00:01:24,642
 A troca grava na hora.
 
 25
-00:01:24,841 --> 00:01:27,846
+00:01:25,142 --> 00:01:28,121
 O sistema leva as aulas da grade para o novo
 professor.
 
 26
-00:01:27,896 --> 00:01:29,957
-Se ele já tiver aula no mesmo horário,
+00:01:28,171 --> 00:01:30,213
+Confira o resultado na grade da turma.
 
 27
-00:01:30,007 --> 00:01:32,568
-o sistema avisa, e as aulas ficam como
-estavam.
-
-28
-00:01:33,067 --> 00:01:35,907
+00:01:30,713 --> 00:01:33,552
 Dica: você também pode trocar pelo lápis na
 aula,
 
-29
-00:01:35,957 --> 00:01:38,973
+28
+00:01:33,602 --> 00:01:36,619
 na grade colorida, e ver na hora onde as aulas
 caem.
 
-30
-00:01:39,983 --> 00:01:43,980
+29
+00:01:37,783 --> 00:01:41,781
 Agora, a Disponibilidade. Escolha o professor
 para ver a semana dele.
 
-31
-00:01:44,480 --> 00:01:47,421
+30
+00:01:42,280 --> 00:01:45,222
 O quadro de cima usa a tabela da SEED: mostra
 quantas
 
-32
-00:01:47,471 --> 00:01:51,090
+31
+00:01:45,272 --> 00:01:48,891
 horas-atividade o professor precisa em cada
 turno e se tudo cabe.
 
-33
-00:01:51,591 --> 00:01:55,758
+32
+00:01:49,391 --> 00:01:53,558
 Na grade, verde é livre, vermelho é bloqueado
 e amarelo é hora-atividade.
 
-34
-00:01:55,808 --> 00:01:57,895
+33
+00:01:53,608 --> 00:01:55,696
 Cada clique muda o estado do horário.
 
-35
-00:01:58,396 --> 00:02:01,314
+34
+00:01:56,196 --> 00:01:59,115
 Para marcar um bloqueio, vá ao turno e clique
 no horário.
 
-36
-00:02:01,364 --> 00:02:03,709
+35
+00:01:59,165 --> 00:02:01,510
 Ele fica vermelho, e o motor não põe aula ali.
 
-37
-00:02:04,210 --> 00:02:06,846
+36
+00:02:02,010 --> 00:02:04,647
 Com dois cliques, o horário vira hora-
 atividade.
 
-38
-00:02:06,896 --> 00:02:10,485
+37
+00:02:04,697 --> 00:02:08,285
 Os botões em cima de cada dia bloqueiam ou
 liberam o dia inteiro.
 
-39
-00:02:10,985 --> 00:02:12,529
+38
+00:02:08,785 --> 00:02:10,329
 Depois, clique em Salvar.
 
-40
-00:02:13,616 --> 00:02:16,743
+39
+00:02:11,449 --> 00:02:14,576
 Antes de gerar, confira os conflitos. Em Gerar
 Grade,
 
-41
-00:02:16,793 --> 00:02:20,999
+40
+00:02:14,626 --> 00:02:18,833
 abra a aba Conflitos. Os cartões mostram
 quantos há em cada prioridade.
 
-42
-00:02:21,499 --> 00:02:25,944
+41
+00:02:19,332 --> 00:02:23,777
 A turma nova aparece com carga insuficiente,
 porque ainda não tem aulas na grade.
 
-43
-00:02:25,994 --> 00:02:28,552
+42
+00:02:23,827 --> 00:02:26,385
 Isso se resolve quando a grade dela for
 gerada.
 
-44
-00:02:29,052 --> 00:02:33,622
+43
+00:02:26,885 --> 00:02:31,455
 Escolha um tipo para filtrar. Em Ver
 sugestões, o sistema explica como resolver.
 
-45
-00:02:34,122 --> 00:02:37,717
+44
+00:02:31,955 --> 00:02:35,550
 Em Ver conflito, a grade abre no professor,
 com o horário em destaque,
 
-46
-00:02:37,767 --> 00:02:39,956
+45
+00:02:35,600 --> 00:02:37,789
 para você ajustar trocando a aula de lugar.
 
-47
-00:02:40,456 --> 00:02:43,753
+46
+00:02:38,289 --> 00:02:41,587
 Se o caso estiver certo, por exemplo um
 combinado da escola,
 
-48
-00:02:43,803 --> 00:02:46,431
+47
+00:02:41,637 --> 00:02:44,265
 clique em Aceitar como está, e ele sai da
 lista.
 
-49
-00:02:47,349 --> 00:02:51,053
+48
+00:02:45,249 --> 00:02:48,953
 Quer testar mudanças sem mexer na escola? Use
 o Modo Rascunho.
 
-50
-00:02:51,552 --> 00:02:53,927
+49
+00:02:49,452 --> 00:02:51,827
 Escolha o que entra no rascunho, por exemplo,
 
-51
-00:02:53,977 --> 00:02:56,244
+50
+00:02:51,877 --> 00:02:54,144
 só a manhã, dê um nome e clique em Começar.
 
-52
-00:02:56,744 --> 00:02:59,265
+51
+00:02:54,644 --> 00:02:57,165
 A faixa roxa mostra que você está no rascunho.
 
-53
-00:02:59,315 --> 00:03:02,954
+52
+00:02:57,215 --> 00:03:00,854
 O que mudar na Grade, na Disponibilidade e em
 Turmas fica só nele.
 
-54
-00:03:03,453 --> 00:03:07,665
+53
+00:03:01,353 --> 00:03:05,565
 Em Ver mudanças, você confere tudo o que já
 mudou em relação à grade da escola.
 
-55
-00:03:08,649 --> 00:03:12,494
-Para gerar a grade, abra a aba Modo
+54
+00:03:06,516 --> 00:03:10,361
+Para montar a grade, abra a aba Modo
 Experimental e escolha Turno inteiro.
 
+55
+00:03:10,861 --> 00:03:15,334
+Aqui há dois caminhos. Gerar grade monta tudo
+do zero, e é para o começo do ano.
+
 56
-00:03:12,993 --> 00:03:15,104
-O nome do rascunho já vem preenchido.
+00:03:15,384 --> 00:03:18,896
+Para ajustar uma grade que já está
+funcionando, use o Melhorar.
 
 57
-00:03:15,154 --> 00:03:19,250
-Confira o turno e clique em Gerar grade. O
-motor monta a manhã do zero.
+00:03:19,396 --> 00:03:21,337
+O Melhorar parte da grade de hoje,
 
 58
-00:03:19,750 --> 00:03:21,634
-O andamento aparece passo a passo.
+00:03:21,387 --> 00:03:24,324
+só troca aulas de lugar e nunca deixa a grade
+pior.
 
 59
-00:03:21,684 --> 00:03:25,217
-A manhã inteira leva alguns minutos; aqui,
-aceleramos a espera.
+00:03:24,374 --> 00:03:27,193
+Leva até dois minutos; aqui, aceleramos a
+espera.
 
 60
-00:03:28,717 --> 00:03:31,665
-Pronto! A grade nova fica no cartão do
-rascunho.
+00:03:30,693 --> 00:03:33,985
+Pronto! Antes de aplicar, clique em Simular
+promoção.
 
 61
-00:03:31,715 --> 00:03:34,475
-Antes de aplicar, clique em Simular promoção.
+00:03:34,485 --> 00:03:37,396
+A simulação compara as janelas e a hora-
+atividade com
 
 62
-00:03:34,974 --> 00:03:38,773
-A simulação compara as janelas e a hora-
-atividade com a grade de hoje.
+00:03:37,446 --> 00:03:40,245
+a grade de hoje e mostra se há choque de
+professor.
 
 63
-00:03:38,823 --> 00:03:39,542
-Neste exemplo,
+00:03:40,295 --> 00:03:41,921
+Com tudo certo, é só promover.
 
 64
-00:03:39,592 --> 00:03:43,996
-a grade feita do zero ficou com mais janelas,
-e o sistema não recomenda promover.
-
-65
-00:03:44,949 --> 00:03:48,641
-Nesse caso, descarte o rascunho. A escola
-continua como está.
-
-66
-00:03:49,793 --> 00:03:52,727
-Agora use o Melhorar. Ele parte da grade de
-hoje,
-
-67
-00:03:52,777 --> 00:03:57,233
-só troca aulas de lugar e nunca deixa a grade
-pior. Leva até dois minutos.
-
-68
-00:04:00,733 --> 00:04:04,680
-Simule de novo. Agora vale promover: a grade
-fica com menos janelas.
-
-69
-00:04:04,730 --> 00:04:09,441
-Se houvesse choque de professor, ele
-apareceria em vermelho, para resolver antes.
-
-70
-00:04:09,940 --> 00:04:13,896
+00:03:42,949 --> 00:03:46,905
 Clique em Promover e confirme. O sistema
 guarda uma cópia de segurança,
 
-71
-00:04:13,946 --> 00:04:16,096
+65
+00:03:46,955 --> 00:03:49,106
 e a grade nova passa a valer na escola.
 
-72
-00:04:17,849 --> 00:04:21,593
+66
+00:03:49,605 --> 00:03:53,548
+Se precisar, em Voltar à grade anterior, você
+recupera a cópia guardada.
+
+67
+00:03:54,516 --> 00:03:58,260
 Em Imprimir Grade, você baixa os PDFs por
 turma e por professor.
 
-73
-00:04:22,093 --> 00:04:26,382
+68
+00:03:58,760 --> 00:04:03,049
 E, se tiver dúvida, pergunte ao Assistente de
 IA, aqui no menu.
 
-74
-00:04:27,239 --> 00:04:30,862
+69
+00:04:03,893 --> 00:04:07,516
 Pronto! Agora é com você. Bom trabalho, e até
 a próxima!
