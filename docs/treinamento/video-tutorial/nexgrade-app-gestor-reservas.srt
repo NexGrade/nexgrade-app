@@ -1,0 +1,116 @@
+1
+00:00:00,650 --> 00:00:06,027
+Olá! Eu sou a Nexy. Agora, o app do gestor de
+reservas: quem organiza laboratórios,
+
+2
+00:00:06,077 --> 00:00:07,924
+quadra, salas e equipamentos.
+
+3
+00:00:08,424 --> 00:00:12,874
+O gestor entra e vê só as Reservas, as Salas e
+a grade da escola, para consultar.
+
+4
+00:00:13,883 --> 00:00:17,055
+Em Reservas, escolha o dia pela data ou pelas
+setas.
+
+5
+00:00:17,105 --> 00:00:19,409
+Os cartões mostram as reservas do dia,
+
+6
+00:00:19,459 --> 00:00:22,445
+as confirmadas, as pendentes e os espaços em
+uso.
+
+7
+00:00:22,944 --> 00:00:27,131
+Logo abaixo, as reservas da semana, aula por
+aula. Azul é reservado,
+
+8
+00:00:27,181 --> 00:00:30,744
+laranja está aguardando, e verde mostra os
+espaços livres.
+
+9
+00:00:31,244 --> 00:00:34,992
+Este pedido foi feito pela professora na Minha
+Agenda e está aguardando.
+
+10
+00:00:35,042 --> 00:00:36,575
+Confira e clique em Confirmar.
+
+11
+00:00:37,075 --> 00:00:40,315
+Se dois professores pedirem o mesmo espaço na
+mesma aula,
+
+12
+00:00:40,365 --> 00:00:42,162
+o gestor escolhe qual confirmar.
+
+13
+00:00:43,183 --> 00:00:44,813
+Para reservar pelo professor,
+
+14
+00:00:44,863 --> 00:00:48,809
+clique em Nova reserva e escolha o professor.
+Aparecem as aulas dele.
+
+15
+00:00:49,309 --> 00:00:52,907
+Clique na aula, escolha o espaço e solicite.
+Feita pelo gestor,
+
+16
+00:00:52,957 --> 00:00:56,440
+a reserva já nasce confirmada, e o professor
+recebe um aviso.
+
+17
+00:00:56,939 --> 00:00:59,683
+Antes de registrar, o sistema confere se o
+espaço
+
+18
+00:00:59,733 --> 00:01:02,135
+está livre e o limite semanal do professor.
+
+19
+00:01:03,150 --> 00:01:06,996
+Em PDF da semana, baixe o quadro da semana ou
+um quadro por espaço,
+
+20
+00:01:07,046 --> 00:01:09,090
+para afixar na porta do laboratório.
+
+21
+00:01:09,590 --> 00:01:13,825
+O Relatório traz as reservas de cada professor
+no período, em PDF ou Excel.
+
+22
+00:01:13,875 --> 00:01:17,995
+E em Bloqueios, você tira um espaço de uso,
+por exemplo, para manutenção.
+
+23
+00:01:18,495 --> 00:01:21,921
+Em Salas, o gestor cadastra e edita os espaços
+da escola.
+
+24
+00:01:22,790 --> 00:01:27,265
+O limite e a prioridade de cada professor
+ficam com a direção ou a coordenação.
+
+25
+00:01:27,315 --> 00:01:28,983
+Bom trabalho, e até a próxima!
