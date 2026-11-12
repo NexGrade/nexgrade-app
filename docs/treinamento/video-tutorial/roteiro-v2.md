@@ -1,3 +1,5 @@
+> **Substituída pela [v3](roteiro-v3.md)** (sem a parte que gerava insegurança).
+
 # Vídeo tutorial do NexGrade — roteiro v2 para aprovação (11/11/2026)
 
 Pedido da dona: incluir cadastro de professores, cadastro de turmas, disponibilidade do professor, bloqueios e HA, trocar professor da turma, atribuir professor para turma, conferir conflitos e ajustar, gerar experimento da grade, melhorar e promover.
