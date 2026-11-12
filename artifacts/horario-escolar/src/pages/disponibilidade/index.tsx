@@ -19,6 +19,7 @@ import {
   getListAulasFixasQueryKey,
   useGetProfessorCarga, // [HA-DEVIDA-UMA-CONTA]
   customFetch, // [DISP-EXPERIMENTAL]
+  ApiError, // [AULA-EM-BLOQUEIO]
 } from "@workspace/api-client-react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useRascunho } from "@/lib/rascunho"; // [MODO-RASCUNHO]
@@ -499,9 +500,19 @@ export function PainelDisponibilidade({ experimento = null, embutido = false }: 
 
     try {
       if (experimento) { // [DISP-EXPERIMENTAL] grava so no experimento
-        await customFetch(`/api/disponibilidade/lote?experimento=${encodeURIComponent(experimento)}`, {
-          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ professorId: professorIdNum, itens }),
+        const gravar = (confirmar?: boolean) => customFetch(`/api/disponibilidade/lote?experimento=${encodeURIComponent(experimento)}`, {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ professorId: professorIdNum, itens, ...(confirmar ? { confirmar } : {}) }),
         });
+        try {
+          await gravar();
+        } catch (e) {
+          // [AULA-EM-BLOQUEIO] (12/11/2026) bloqueio novo onde o rascunho ja tem aula do professor: pergunta antes de gravar
+          const dados = e instanceof ApiError ? (e.data as { precisaConfirmar?: boolean; aulasNoHorario?: string[] } | null) : null;
+          if (!(e instanceof ApiError && e.status === 409 && dados?.precisaConfirmar)) throw e;
+          const lista = (dados.aulasNoHorario ?? []).map((x) => `• ${x}`).join("\n");
+          if (!confirm(`${professorSelecionado?.nome ?? "O professor"} tem aula no rascunho nesse(s) horário(s):\n\n${lista}\n\nSe bloquear, a aula fica onde está até alguém mudá-la de lugar, e o rascunho não pode ser promovido enquanto isso. Bloquear mesmo assim?`)) return;
+          await gravar(true);
+        }
         setOriginal({ ...matriz });
         setRotulosOriginais({ ...rotulos });
         queryClient.invalidateQueries({ queryKey: ["disp-exp", experimento] });

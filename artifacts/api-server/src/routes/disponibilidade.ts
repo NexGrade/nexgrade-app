@@ -8,6 +8,7 @@ import { getEscolaId } from "../lib/escola-id";
 import { turnosComAulaPorProfessor, marcarContraturno } from "../lib/ha-contraturno"; // [HA-CONTRATURNO-ASTERISCO]
 import { carregarAulasIntegraisNoTurno } from "../lib/turno-integral"; // [DOC-TRAVADA]
 import { aulaDOCNoHorario, STATUS_TRAVA_INTEGRAL } from "../lib/trava-integral"; // [DOC-TRAVADA] [TRAVA-INTEGRAL]
+import { aulasDoRascunhoEmBloqueioNovo } from "../lib/bloqueio-no-rascunho"; // [AULA-EM-BLOQUEIO]
 
 // RF-DISP-01 a RF-DISP-03, RF-PROF-04: CRUD da disponibilidade semanal do
 // professor, consumida pelo algoritmo de geração de horário
@@ -70,6 +71,7 @@ const DisponibilidadeLoteInput = z.object({
       horaAtividadeObrigatoria: z.boolean().default(false),
     }),
   ),
+  confirmar: z.boolean().optional(), // [AULA-EM-BLOQUEIO] rascunho: grava o bloqueio mesmo com aula do rascunho no horario
 });
 
 // [FIX] Helper para montar a condição de turno de forma segura —
@@ -225,6 +227,18 @@ router.post("/lote", async (req, res) => {
   if (experimento) {
     if (parsed.data.itens.some((i) => !i.turno)) { res.status(400).json({ error: "Escolha o turno para editar a disponibilidade do experimento." }); return; }
     const professorId = parsed.data.professorId;
+    // [AULA-EM-BLOQUEIO] (12/11/2026) bloqueio novo onde o rascunho ja tem aula do professor: antes gravava calado e o
+    // Promover levava a aula para cima do bloqueio. Sem confirmar, nada grava e a tela mostra as aulas.
+    if (!parsed.data.confirmar) {
+      const aulas = await aulasDoRascunhoEmBloqueioNovo(escolaId, experimento, professorId, parsed.data.itens);
+      if (aulas.length) {
+        res.status(409).json({
+          error: `${professor.nome} tem aula no rascunho nesse(s) horário(s): ${aulas.join("; ")}. A aula fica onde está até mudar de lugar, e o rascunho não pode ser promovido assim.`,
+          aulasNoHorario: aulas, precisaConfirmar: true,
+        });
+        return;
+      }
+    }
     const oficial = await db.select().from(disponibilidadeTable).where(eq(disponibilidadeTable.professorId, professorId));
     const oficialPorChave = new Map(oficial.map((o) => [chaveDisp(o), o]));
     try {

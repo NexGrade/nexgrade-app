@@ -291,4 +291,65 @@ describe.skipIf(!TEM_BANCO)("modo rascunho: fluxo completo e casos de erro", () 
     r = await chamar("PATCH", urlMat1, { professorId: ids.ana });
     expect(r.body).toMatchObject({ aplicado: true, aulasPassadas: 2 });
   });
+
+  it("[AULA-EM-BLOQUEIO] bloquear no rascunho horario com aula pede confirmacao; simulacao e promover recusam ate a aula mudar", async () => {
+    await chamar("POST", "/horarios/rascunho/atual", { nome: "Plano I", alcance: "matutino" });
+    const url = `/horarios/experimentais/${enc("Plano I")}`;
+    const lote = (professorId: number, item: Record<string, unknown>, confirmar?: boolean) =>
+      chamar("POST", `/disponibilidade/lote?experimento=${enc("Plano I")}`, { professorId, itens: [{ turno: "matutino", horaAtividadeObrigatoria: false, ...item }], ...(confirmar ? { confirmar } : {}) });
+    const bloqueioAnaSeg1 = { diaSemana: 0, horarioSlot: 1, disponivel: false, motivo: "Bloqueio (definido na tela)" };
+    // a Ana da Matematica na 1A na segunda 1a: sem confirmar, nada grava e a resposta mostra a aula
+    let r = await lote(ids.ana, bloqueioAnaSeg1);
+    expect(r.status).toBe(409);
+    expect(r.body).toMatchObject({ precisaConfirmar: true, aulasNoHorario: ["1A (Matemática) na segunda, 1ª aula (manhã)"] });
+    const dispNoRascunho = async () => Number(((await db.execute(sql`select count(*)::int n from disponibilidade_experimental where escola_id = ${E} and nome = 'Plano I'`)) as any).rows[0].n);
+    expect(await dispNoRascunho()).toBe(0);
+    // HA movel (manual da tela) em cima de aula nao pede confirmacao: o Promover recalcula a HA
+    r = await lote(ids.caio, { diaSemana: 0, horarioSlot: 3, disponivel: true, horaAtividadeObrigatoria: true, motivo: "HA manual (definida na tela)" });
+    expect(r.status).toBe(201);
+    await lote(ids.caio, { diaSemana: 0, horarioSlot: 3, disponivel: true, motivo: "" }); // volta a livre
+    // confirmando, grava; repetir o mesmo bloqueio (ja bloqueado) nao pergunta de novo
+    expect((await lote(ids.ana, bloqueioAnaSeg1, true)).status).toBe(201);
+    expect((await lote(ids.ana, { ...bloqueioAnaSeg1, motivo: undefined })).status).toBe(201);
+    // a conferencia antes de promover e a simulacao listam a aula no bloqueio
+    const esperado = ["Ana tem bloqueio na segunda, 1ª aula (manhã), onde está a aula da 1A."];
+    const c = await chamar("GET", `${url}/choques`);
+    expect(c.body).toEqual({ choques: [], bloqueios: esperado });
+    const sim = await chamar("GET", `${url}/simulacao`);
+    expect(sim.status).toBe(200);
+    expect(sim.body.bloqueios).toEqual(esperado);
+    // o promover recusa e nada muda: aulas, disponibilidade oficial e rascunho
+    const antes = (await oficialDe(ids.t1)).map((h) => `${lugar(h)}|${h.professorId}`).sort();
+    r = await chamar("POST", `${url}/promover`);
+    expect(r.status).toBe(409);
+    expect(r.body.bloqueios).toEqual(esperado);
+    expect(r.body.error).toContain("horário bloqueado");
+    expect((await oficialDe(ids.t1)).map((h) => `${lugar(h)}|${h.professorId}`).sort()).toEqual(antes);
+    expect((await db.select().from(disponibilidadeTable).where(eq(disponibilidadeTable.professorId, ids.ana))).filter((d) => !d.disponivel)).toEqual([]);
+    expect((await chamar("GET", "/horarios/rascunho/atual")).body.rascunho?.nome).toBe("Plano I");
+    // a aula muda de lugar (segunda 1a -> quarta 1a, vago): sem bloqueio, promove
+    r = await chamar("POST", `${url}/trocar-aulas`, { turmaId: ids.t1, de: { diaSemana: 0, numeroAula: 1 }, para: { diaSemana: 2, numeroAula: 1 }, confirmar: true });
+    expect(r.body.aplicado).toBe(true);
+    expect((await chamar("GET", `${url}/choques`)).body).toEqual({ choques: [], bloqueios: [] });
+    r = await chamar("POST", `${url}/promover`);
+    expect(r.status).toBe(200);
+    expect((await oficialDe(ids.t1)).filter((h) => h.professorId === ids.ana).map(lugar).sort()).toEqual(["0-2", "2-1"]);
+    // volta a grade anterior (os testes seguintes partem dela)
+    expect((await chamar("POST", `/horarios/backups/${r.body.backupId}/restaurar`)).status).toBe(200);
+  });
+
+  it("[AULA-EM-BLOQUEIO] rascunho de turmas escolhidas: bloqueio em cima de aula oficial de turma de fora tambem pergunta e trava o promover", async () => {
+    await chamar("POST", "/horarios/rascunho/atual", { nome: "Plano J", alcance: "turmas", turmaIds: [ids.t1] });
+    const url = `/horarios/experimentais/${enc("Plano J")}`;
+    // a Ana da Matematica na 1B (fora do rascunho) na terca 1a
+    const item = { diaSemana: 1, horarioSlot: 1, turno: "matutino", disponivel: false, motivo: "Bloqueio (definido na tela)", horaAtividadeObrigatoria: false };
+    let r = await chamar("POST", `/disponibilidade/lote?experimento=${enc("Plano J")}`, { professorId: ids.ana, itens: [item] });
+    expect(r.status).toBe(409);
+    expect(r.body.aulasNoHorario).toEqual(["1B (Matemática) na terça, 1ª aula (manhã)"]);
+    r = await chamar("POST", `/disponibilidade/lote?experimento=${enc("Plano J")}`, { professorId: ids.ana, itens: [item], confirmar: true });
+    expect(r.status).toBe(201);
+    expect((await chamar("GET", `${url}/choques`)).body.bloqueios).toEqual(["Ana tem bloqueio na terça, 1ª aula (manhã), onde está a aula da 1B."]);
+    expect((await chamar("POST", `${url}/promover`)).status).toBe(409);
+    await chamar("DELETE", "/horarios/rascunho/atual");
+  });
 });
