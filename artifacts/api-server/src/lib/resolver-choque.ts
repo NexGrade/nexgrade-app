@@ -72,31 +72,8 @@ export function sugerirTrocasParaChoques(e: Entrada): ChoqueComOpcoes[] {
   const temAula = (exp: AulaExp[], prof: number, turno: string, c: Celula) =>
     [...exp, ...e.fora].some((h) => h.professorId === prof && h.diaSemana === c.diaSemana && h.numeroAula === c.numeroAula && turnoDe(h.turmaId) === turno);
 
-  /**
-   * [RESOLVER-CHOQUE-HA] para onde vai a HA movel que esta em `de`: horario do turno sem aula, bloqueio nem outra HA,
-   * no maximo 3 HA no dia. Preferencia: o horario que a aula do professor deixou; depois o mesmo dia, colado a outra
-   * atividade dele (nao abre janela); depois outro dia em que ele ja vem.
-   */
-  const destinoDaHa = (exp: AulaExp[], prof: number, turno: string, de: Celula, liberada: Celula | null, horarios: number[], ocupadasHa: Set<string>): Celula | null => {
-    const haNoDia = (dia: number) => e.indisponiveis.filter((i) => i.professorId === prof && i.turno === turno && i.ha && i.diaSemana === dia && !(i.diaSemana === de.diaSemana && i.horarioSlot === de.numeroAula)).length
-      + [...ocupadasHa].filter((k) => k.startsWith(`${prof}|${turno}|${dia}|`)).length;
-    const livre = (c: Celula) => !mesma(c, de) && !indisp.has(`${prof}|${turno}|${c.diaSemana}|${c.numeroAula}`)
-      && !ocupadasHa.has(`${prof}|${turno}|${c.diaSemana}|${c.numeroAula}`) && !temAula(exp, prof, turno, c) && haNoDia(c.diaSemana) < MAX_HA_DIA;
-    const atividade = (c: Celula) => temAula(exp, prof, turno, c) || indisp.has(`${prof}|${turno}|${c.diaSemana}|${c.numeroAula}`);
-    const vemNoDia = (dia: number) => horarios.some((n) => temAula(exp, prof, turno, { diaSemana: dia, numeroAula: n }));
-    const candidatos: Array<{ c: Celula; nota: number }> = [];
-    for (let dia = 0; dia < 5; dia++) {
-      for (const n of horarios) {
-        const c = { diaSemana: dia, numeroAula: n };
-        if (!livre(c)) continue;
-        const colada = atividade({ diaSemana: dia, numeroAula: n - 1 }) || atividade({ diaSemana: dia, numeroAula: n + 1 });
-        const nota = (liberada && mesma(c, liberada) ? 0 : 10) + (dia === de.diaSemana ? 0 : 5) + (colada ? 0 : 3) + (vemNoDia(dia) ? 0 : 20);
-        candidatos.push({ c, nota });
-      }
-    }
-    candidatos.sort((x, y) => x.nota - y.nota || x.c.diaSemana - y.c.diaSemana || x.c.numeroAula - y.c.numeroAula);
-    return candidatos[0]?.c ?? null;
-  };
+  const destinoDaHa = (exp: AulaExp[], prof: number, turno: string, de: Celula, liberada: Celula | null, horarios: number[], ocupadasHa: Set<string>): Celula | null =>
+    destinoDaHaMovel({ indisponiveis: e.indisponiveis, indisp, temAula: (p, t, c) => temAula(exp, p, t, c), prof, turno, de, liberada, horarios, ocupadasHa });
 
   // um item por choque (o mesmo par pode aparecer duas vezes com duplas/co-docencia)
   const vistos = new Set<string>();
@@ -171,6 +148,36 @@ export function sugerirTrocasParaChoques(e: Entrada): ChoqueComOpcoes[] {
     resultado.push({ texto, opcoes: opcoes.slice(0, limite).map(({ nota: _n, ...o }) => o) });
   }
   return resultado;
+}
+
+/**
+ * [RESOLVER-CHOQUE-HA] para onde vai a HA movel que esta em `de`: horario do turno sem aula, bloqueio nem outra HA,
+ * no maximo 3 HA no dia. Preferencia: o horario que a aula do professor deixou; depois o mesmo dia, colado a outra
+ * atividade dele (nao abre janela); depois outro dia em que ele ja vem. Usada tambem pelo [RESOLVER-BLOQUEIO].
+ */
+export function destinoDaHaMovel(a: {
+  indisponiveis: Indisponivel[]; indisp: Map<string, Indisponivel>; temAula: (prof: number, turno: string, c: Celula) => boolean;
+  prof: number; turno: string; de: Celula; liberada: Celula | null; horarios: number[]; ocupadasHa: Set<string>;
+}): Celula | null {
+  const { indisponiveis, indisp, temAula, prof, turno, de, liberada, horarios, ocupadasHa } = a;
+  const haNoDia = (dia: number) => indisponiveis.filter((i) => i.professorId === prof && i.turno === turno && i.ha && i.diaSemana === dia && !(i.diaSemana === de.diaSemana && i.horarioSlot === de.numeroAula)).length
+    + [...ocupadasHa].filter((k) => k.startsWith(`${prof}|${turno}|${dia}|`)).length;
+  const livre = (c: Celula) => !mesma(c, de) && !indisp.has(`${prof}|${turno}|${c.diaSemana}|${c.numeroAula}`)
+    && !ocupadasHa.has(`${prof}|${turno}|${c.diaSemana}|${c.numeroAula}`) && !temAula(prof, turno, c) && haNoDia(c.diaSemana) < MAX_HA_DIA;
+  const atividade = (c: Celula) => temAula(prof, turno, c) || indisp.has(`${prof}|${turno}|${c.diaSemana}|${c.numeroAula}`);
+  const vemNoDia = (dia: number) => horarios.some((n) => temAula(prof, turno, { diaSemana: dia, numeroAula: n }));
+  const candidatos: Array<{ c: Celula; nota: number }> = [];
+  for (let dia = 0; dia < 5; dia++) {
+    for (const n of horarios) {
+      const c = { diaSemana: dia, numeroAula: n };
+      if (!livre(c)) continue;
+      const colada = atividade({ diaSemana: dia, numeroAula: n - 1 }) || atividade({ diaSemana: dia, numeroAula: n + 1 });
+      const nota = (liberada && mesma(c, liberada) ? 0 : 10) + (dia === de.diaSemana ? 0 : 5) + (colada ? 0 : 3) + (vemNoDia(dia) ? 0 : 20);
+      candidatos.push({ c, nota });
+    }
+  }
+  candidatos.sort((x, y) => x.nota - y.nota || x.c.diaSemana - y.c.diaSemana || x.c.numeroAula - y.c.numeroAula);
+  return candidatos[0]?.c ?? null;
 }
 
 /** Mesma opcao (turma, de, para e as mesmas HA movidas)? Usada pela rota para so aplicar o que ela mesma sugere. */

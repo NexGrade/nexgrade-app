@@ -2938,11 +2938,49 @@ function AbaExperimental() {
       await queryClient.invalidateQueries({ queryKey: ["/api/disponibilidade"] });
       await queryClient.invalidateQueries({ queryKey: ["grade-rascunho", nome] });
       await queryClient.invalidateQueries({ queryKey: ["rascunho"] });
+      setResolucoesBloqueio((x) => { const n = { ...x }; delete n[nome]; return n; }); // [RESOLVER-BLOQUEIO] a lista de bloqueios pode ter mudado
       await simularPromocao(nome, true);
       await verComoResolver(nome);
     } catch (e) {
       toast({ title: "Não foi possível trocar", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
     } finally { setAplicandoChoque(null); }
+  };
+
+  // [RESOLVER-BLOQUEIO] (12/11/2026) "Ver como resolver" na caixa de aula em horario bloqueado: troca de 2 ou ciclo de 3
+  // aulas na mesma turma (ciclo[i] vai para ciclo[i+1]); "Aplicar" muda so o experimento e refaz a simulacao
+  type OpcaoCiclo = {
+    turmaId: number; ciclo: CelulaTroca[]; texto: string; janelasAMais?: number;
+    moverHa?: { professorId: number; turno: string; de: CelulaTroca; para: CelulaTroca; motivo: string | null }[];
+  };
+  const chaveCiclo = (nome: string, o: OpcaoCiclo) => `${nome}|${o.turmaId}|${o.ciclo.map((c) => `${c.diaSemana}-${c.numeroAula}`).join(">")}`;
+  const [resolucoesBloqueio, setResolucoesBloqueio] = useState<Record<string, "carregando" | { erro: string } | { texto: string; opcoes: OpcaoCiclo[] }[]>>({});
+  const [aplicandoBloqueio, setAplicandoBloqueio] = useState<string | null>(null);
+  const verComoResolverBloqueio = async (nome: string) => {
+    setResolucoesBloqueio((r) => ({ ...r, [nome]: "carregando" }));
+    try {
+      const r = await customFetch<{ bloqueios: { texto: string; opcoes: OpcaoCiclo[] }[] }>(`/api/horarios/experimentais/${encodeURIComponent(nome)}/resolver-bloqueios`, { responseType: "json" });
+      setResolucoesBloqueio((x) => ({ ...x, [nome]: r.bloqueios }));
+    } catch (e) {
+      setResolucoesBloqueio((x) => ({ ...x, [nome]: { erro: e instanceof Error ? e.message : "Não foi possível procurar as trocas agora." } }));
+    }
+  };
+  const aplicarResolucaoBloqueio = async (nome: string, o: OpcaoCiclo) => {
+    setAplicandoBloqueio(chaveCiclo(nome, o));
+    try {
+      await customFetch(`/api/horarios/experimentais/${encodeURIComponent(nome)}/resolver-bloqueios/aplicar`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ turmaId: o.turmaId, ciclo: o.ciclo, moverHa: o.moverHa }),
+      });
+      toast({ title: o.moverHa?.length ? "Aulas trocadas e HA mudada no experimento" : "Aulas trocadas no experimento", description: `${o.texto}. A escola não mudou.` });
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/disponibilidade"] });
+      await queryClient.invalidateQueries({ queryKey: ["grade-rascunho", nome] });
+      await queryClient.invalidateQueries({ queryKey: ["rascunho"] });
+      setResolucoes((x) => { const n = { ...x }; delete n[nome]; return n; }); // a lista de choques pode ter mudado
+      await simularPromocao(nome, true);
+      await verComoResolverBloqueio(nome);
+    } catch (e) {
+      toast({ title: "Não foi possível trocar", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
+    } finally { setAplicandoBloqueio(null); }
   };
 
   const handleDelete = async (nome: string) => {
@@ -3285,6 +3323,44 @@ function AbaExperimental() {
                               {sim.bloqueios!.length > 10 && <li>... e mais {sim.bloqueios!.length - 10}</li>}
                             </ul>
                             <p className="mt-1 text-xs">Mude a aula de horário (lápis na grade) ou libere o horário na disponibilidade do rascunho, e simule de novo.</p>
+                            {(() => { // [RESOLVER-BLOQUEIO]
+                              const res = resolucoesBloqueio[nome];
+                              if (!res) return (
+                                <Button size="sm" variant="outline" className="mt-2 h-7 border-red-300 bg-white text-red-900 hover:bg-red-100" onClick={() => verComoResolverBloqueio(nome)}>
+                                  <Sparkles className="w-3.5 h-3.5 mr-1.5" />Ver como resolver
+                                </Button>
+                              );
+                              if (res === "carregando") return <p className="mt-2 flex items-center gap-1 text-xs"><Loader2 className="w-3.5 h-3.5 animate-spin" />Procurando trocas que tiram a aula do bloqueio...</p>;
+                              if ("erro" in res) return <p className="mt-2 text-xs">{res.erro}</p>;
+                              if (!res.length) return <p className="mt-2 text-xs">Nenhuma aula em bloqueio agora. Clique em Simular promoção para conferir.</p>;
+                              return (
+                                <div className="mt-2 space-y-2">
+                                  {res.map((c) => (
+                                    <div key={c.texto} className="rounded border border-red-200 bg-white p-2 text-xs">
+                                      <div className="font-medium">{c.texto}</div>
+                                      {c.opcoes.length ? (
+                                        <ul className="mt-1 space-y-1">
+                                          {c.opcoes.map((o) => {
+                                            const k = chaveCiclo(nome, o);
+                                            return (
+                                              <li key={k} className="flex items-center justify-between gap-2">
+                                                <span>{o.texto}</span>
+                                                <Button size="sm" className="h-6 px-2 text-xs shrink-0" disabled={aplicandoBloqueio !== null} onClick={() => aplicarResolucaoBloqueio(nome, o)}>
+                                                  {aplicandoBloqueio === k ? "Trocando..." : "Aplicar"}
+                                                </Button>
+                                              </li>
+                                            );
+                                          })}
+                                        </ul>
+                                      ) : (
+                                        <p className="mt-1">Nenhuma troca na mesma turma resolve sem criar outro problema. Libere o horário na disponibilidade do rascunho ou gere a turma de novo (botão Turma, no alto).</p>
+                                      )}
+                                    </div>
+                                  ))}
+                                  <p className="text-[11px] opacity-80">Cada troca muda só o experimento; a escola não muda até o Promover para oficial.</p>
+                                </div>
+                              );
+                            })()}
                           </div>
                         )}
                         {(sim.choques?.length ?? 0) > 0 && ( /* [CHOQUE-NA-SIMULACAO] */
