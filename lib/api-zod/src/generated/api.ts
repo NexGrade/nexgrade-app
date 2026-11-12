@@ -121,7 +121,18 @@ export const GetProfessorCargaResponse = zod.object({
   "cadastroPrincipal": zod.object({
   "id": zod.number(),
   "nome": zod.string()
-}).optional().describe('[MESMA-PESSOA-HA] Quando este e um cadastro secundario: o cadastro principal, que recebe a HA.')
+}).optional().describe('[MESMA-PESSOA-HA] Quando este e um cadastro secundario: o cadastro principal, que recebe a HA.'),
+  "turmas": zod.array(zod.object({
+  "turmaId": zod.number(),
+  "turma": zod.string(),
+  "turno": zod.string(),
+  "disciplinaId": zod.number(),
+  "disciplina": zod.string(),
+  "aulasVinculo": zod.number().nullable().describe('Aulas por semana pelo vinculo da turma; nulo quando a aula esta na grade mas o vinculo nao e deste professor.'),
+  "aulasGrade": zod.number().describe('Aulas deste professor na grade oficial.'),
+  "papel": zod.enum(['titular', 'apoio']).describe('apoio = co-docencia (segundo professor da mesma aula).'),
+  "trio": zod.boolean().describe('Disciplina de docencia por trio.')
+})).optional().describe('[TURMAS-DO-PROFESSOR] Turmas em que o professor da aula: uma linha por turma e disciplina, com as aulas por semana pelo vinculo (turma_disciplinas) e pela grade oficial (horarios).')
 })
 
 
