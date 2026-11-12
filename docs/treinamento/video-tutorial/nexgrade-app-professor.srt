@@ -1,0 +1,71 @@
+1
+00:00:00,509 --> 00:00:04,902
+Olá! Eu sou a Nexy. Agora vamos ver o app do
+professor, a Minha Agenda.
+
+2
+00:00:05,402 --> 00:00:09,489
+O professor entra com o e-mail que a escola
+cadastrou, no computador ou no celular.
+
+3
+00:00:10,483 --> 00:00:13,240
+Logo no alto, o calendário da escola mostra o
+mês,
+
+4
+00:00:13,290 --> 00:00:16,945
+com os feriados, os recessos e o início e o
+fim de cada trimestre.
+
+5
+00:00:17,444 --> 00:00:20,244
+Mais abaixo está a grade de aulas dele, por
+turno.
+
+6
+00:00:20,294 --> 00:00:24,175
+Cada dia mostra a data da semana, e a hora-
+atividade aparece marcada.
+
+7
+00:00:24,675 --> 00:00:29,087
+Em Baixar PDF, ele leva a própria grade para
+imprimir ou mandar por mensagem.
+
+8
+00:00:30,117 --> 00:00:33,664
+Para reservar um espaço, clique em Nova
+reserva e escolha o dia.
+
+9
+00:00:34,164 --> 00:00:38,649
+Depois, o período e as aulas. O sistema já
+mostra as aulas dele em cada horário.
+
+10
+00:00:39,150 --> 00:00:43,104
+Escolha o espaço, confira o objetivo e clique
+em Solicitar reserva.
+
+11
+00:00:43,154 --> 00:00:45,794
+Em Minhas reservas, ele acompanha os pedidos.
+
+12
+00:00:46,750 --> 00:00:51,111
+No celular, a agenda mostra um dia por vez, e
+dá para instalar como aplicativo.
+
+13
+00:00:51,945 --> 00:00:54,337
+Se aparecer que o e-mail não foi liberado,
+
+14
+00:00:54,387 --> 00:00:57,477
+é porque o e-mail da conta não bate com o do
+cadastro.
+
+15
+00:00:57,527 --> 00:00:59,629
+Fale com a secretaria. Até a próxima!

@@ -19,7 +19,7 @@ Versão no ar no site (página do NexGrade). Substitui a v2 a pedido da dona: ti
 
 **2. Cadastrar professor**
 - Vamos começar pelo cadastro. Em Professores, clique em Novo Professor.
-- Preencha o nome e o e-mail. É com esse e-mail que o professor entra no sistema.
+- Preencha o nome e o e-mail. É com esse e-mail que o professor entra no app do professor, a Minha Agenda, no celular ou no computador.
 - Em Disciplinas, marque o que ele pode dar. Só essas disciplinas vão aparecer para ele nas turmas.
 - Clique em Salvar. Pronto: o professor já aparece na lista.
 
