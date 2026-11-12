@@ -67,6 +67,33 @@ export type ProfessorCargaCadastroPrincipal = {
   nome: string;
 };
 
+/**
+ * apoio = co-docencia (segundo professor da mesma aula).
+ */
+export type TurmaDoProfessorPapel = typeof TurmaDoProfessorPapel[keyof typeof TurmaDoProfessorPapel];
+
+
+export const TurmaDoProfessorPapel = {
+  titular: 'titular',
+  apoio: 'apoio',
+} as const;
+
+export interface TurmaDoProfessor {
+  turmaId: number;
+  turma: string;
+  turno: string;
+  disciplinaId: number;
+  disciplina: string;
+  /** Aulas por semana pelo vinculo da turma; nulo quando a aula esta na grade mas o vinculo nao e deste professor. */
+  aulasVinculo: number | null;
+  /** Aulas deste professor na grade oficial. */
+  aulasGrade: number;
+  /** apoio = co-docencia (segundo professor da mesma aula). */
+  papel: TurmaDoProfessorPapel;
+  /** Disciplina de docencia por trio. */
+  trio: boolean;
+}
+
 export interface ProfessorCarga {
   professorId: number;
   totalAulas: number;
@@ -83,6 +110,8 @@ export interface ProfessorCarga {
   cadastrosLigados?: ProfessorCargaCadastrosLigadosItem[];
   /** [MESMA-PESSOA-HA] Quando este e um cadastro secundario: o cadastro principal, que recebe a HA. */
   cadastroPrincipal?: ProfessorCargaCadastroPrincipal;
+  /** [TURMAS-DO-PROFESSOR] Turmas em que o professor da aula: uma linha por turma e disciplina, com as aulas por semana pelo vinculo (turma_disciplinas) e pela grade oficial (horarios). */
+  turmas?: TurmaDoProfessor[];
 }
 
 /**

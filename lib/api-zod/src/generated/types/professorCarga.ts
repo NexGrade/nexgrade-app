@@ -11,6 +11,7 @@ import type { ProfessorCargaHaAlocadaPorTurno } from './professorCargaHaAlocadaP
 import type { ProfessorCargaHaInstitucionalPorTurno } from './professorCargaHaInstitucionalPorTurno';
 import type { ProfessorCargaPorDia } from './professorCargaPorDia';
 import type { ProfessorCargaPorTurno } from './professorCargaPorTurno';
+import type { TurmaDoProfessor } from './turmaDoProfessor';
 
 export interface ProfessorCarga {
   professorId: number;
@@ -28,4 +29,6 @@ export interface ProfessorCarga {
   cadastrosLigados?: ProfessorCargaCadastrosLigadosItem[];
   /** [MESMA-PESSOA-HA] Quando este e um cadastro secundario: o cadastro principal, que recebe a HA. */
   cadastroPrincipal?: ProfessorCargaCadastroPrincipal;
+  /** [TURMAS-DO-PROFESSOR] Turmas em que o professor da aula: uma linha por turma e disciplina, com as aulas por semana pelo vinculo (turma_disciplinas) e pela grade oficial (horarios). */
+  turmas?: TurmaDoProfessor[];
 }

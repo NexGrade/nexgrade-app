@@ -2107,6 +2107,31 @@ components:
           properties:
             id: { type: integer }
             nome: { type: string }
+        turmas:
+          type: array
+          description: "[TURMAS-DO-PROFESSOR] Turmas em que o professor da aula: uma linha por turma e disciplina, com as aulas por semana pelo vinculo (turma_disciplinas) e pela grade oficial (horarios)."
+          items:
+            $ref: "#/components/schemas/TurmaDoProfessor"
+
+    TurmaDoProfessor:
+      type: object
+      required: [turmaId, turma, turno, disciplinaId, disciplina, aulasVinculo, aulasGrade, papel, trio]
+      properties:
+        turmaId: { type: integer }
+        turma: { type: string }
+        turno: { type: string }
+        disciplinaId: { type: integer }
+        disciplina: { type: string }
+        aulasVinculo:
+          type: integer
+          nullable: true
+          description: "Aulas por semana pelo vinculo da turma; nulo quando a aula esta na grade mas o vinculo nao e deste professor."
+        aulasGrade: { type: integer, description: "Aulas deste professor na grade oficial." }
+        papel:
+          type: string
+          enum: [titular, apoio]
+          description: "apoio = co-docencia (segundo professor da mesma aula)."
+        trio: { type: boolean, description: "Disciplina de docencia por trio." }
 
     Disciplina:
       type: object

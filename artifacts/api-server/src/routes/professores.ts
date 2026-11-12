@@ -18,6 +18,9 @@ import { registrarAuditoria } from "../lib/audit";
 import { ehProfessorEstudio, haDevidaPorTurno } from "../lib/hora-atividade"; // [HA-DEVIDA-UMA-CONTA]
 import { carregarMapaIntegral, slotReal } from "../lib/turno-integral"; // [COTA-INTEGRAL-TURNO-REAL]
 import { ehHAMovel, ehHAManualDaTela, ehFORContaComoHA } from "../lib/ha-contraturno"; // [HA-DEVIDA-UMA-CONTA] [FOR-CONTA-COMO-HA]
+import { turmaDisciplinasTable, itensMatrizTable } from "@workspace/db"; // [TURMAS-DO-PROFESSOR]
+import { or, sql } from "drizzle-orm";
+import { montarTurmasDoProfessor } from "../lib/turmas-do-professor"; // [TURMAS-DO-PROFESSOR]
 
 const router = Router();
 
@@ -192,7 +195,7 @@ router.get("/:id/carga", async (req, res) => {
   // lib/hora-atividade.ts) e pra regra de "HA no mesmo turno das aulas"
   // (Resolução SEED 7.200/2025, Art. 11, §4º).
   const slotsBrutos = await db
-    .select({ diaSemana: horariosTable.diaSemana, turno: turmasTable.turno, numeroAula: horariosTable.numeroAula, disciplinaId: horariosTable.disciplinaId })
+    .select({ diaSemana: horariosTable.diaSemana, turno: turmasTable.turno, numeroAula: horariosTable.numeroAula, disciplinaId: horariosTable.disciplinaId, turmaId: horariosTable.turmaId })
     .from(horariosTable)
     .innerJoin(turmasTable, eq(horariosTable.turmaId, turmasTable.id))
     .where(and(eq(horariosTable.professorId, parsed.data.id), eq(horariosTable.escolaId, escolaId)));
@@ -271,6 +274,8 @@ router.get("/:id/carga", async (req, res) => {
     haAlocadaPorTurno[turno] = (haAlocadaPorTurno[turno] ?? 0) + 1;
   });
 
+  const turmasDoProfessor = await carregarTurmasDoProfessor(escolaId, professor, slotsBrutos); // [TURMAS-DO-PROFESSOR]
+
   res.json({
     professorId: parsed.data.id,
     totalAulas: slots.length,
@@ -283,8 +288,68 @@ router.get("/:id/carga", async (req, res) => {
     haAlocadaPorTurno,
     cadastrosLigados,
     ...(cadastroPrincipal ? { cadastroPrincipal } : {}),
+    turmas: turmasDoProfessor,
   });
 });
+
+// [TURMAS-DO-PROFESSOR] (11/11/2026) turmas e disciplinas do professor, pelo vinculo (turma_disciplinas,
+// titular ou co-docencia) e pela grade oficial (horarios). Ver lib/turmas-do-professor.ts.
+async function carregarTurmasDoProfessor(
+  escolaId: string,
+  professor: { id: number; nome: string },
+  aulasNaGrade: { turmaId: number; disciplinaId: number }[],
+) {
+  const turmas = await db
+    .select({ id: turmasTable.id, nome: turmasTable.nome, turno: turmasTable.turno, matrizCurricularId: turmasTable.matrizCurricularId })
+    .from(turmasTable)
+    .where(eq(turmasTable.escolaId, escolaId));
+  const turmaIds = turmas.map((t) => t.id);
+  if (turmaIds.length === 0) return [];
+  const habilitadas = await db
+    .select({ disciplinaId: professorDisciplinasTable.disciplinaId })
+    .from(professorDisciplinasTable)
+    .where(eq(professorDisciplinasTable.professorId, professor.id));
+  const disciplinasHabilitadas = new Set(habilitadas.map((h) => h.disciplinaId));
+  const vinculos = await db
+    .select({
+      turmaId: turmaDisciplinasTable.turmaId, disciplinaId: turmaDisciplinasTable.disciplinaId,
+      professorId: turmaDisciplinasTable.professorId, professorApoioId: turmaDisciplinasTable.professorApoioId,
+      cargaHorariaSemanalOverride: turmaDisciplinasTable.cargaHorariaSemanalOverride, grupoTrio: turmaDisciplinasTable.grupoTrio,
+    })
+    .from(turmaDisciplinasTable)
+    .where(and(
+      inArray(turmaDisciplinasTable.turmaId, turmaIds),
+      or(
+        eq(turmaDisciplinasTable.professorId, professor.id),
+        eq(turmaDisciplinasTable.professorApoioId, professor.id),
+        // vinculo sem professor: pode ser dele pela regra do nome "(turma)" (montarTurmasDoProfessor decide)
+        ...(disciplinasHabilitadas.size > 0
+          ? [and(sql`${turmaDisciplinasTable.professorId} is null`, inArray(turmaDisciplinasTable.disciplinaId, [...disciplinasHabilitadas]))!]
+          : []),
+      ),
+    ));
+  const disciplinas = await db
+    .select({ id: disciplinasTable.id, nome: disciplinasTable.nome, cargaSemanal: disciplinasTable.cargaSemanal })
+    .from(disciplinasTable)
+    .where(eq(disciplinasTable.escolaId, escolaId));
+  const matrizIds = [...new Set(turmas.map((t) => t.matrizCurricularId).filter((m): m is number => m != null))];
+  const itens = matrizIds.length > 0
+    ? await db
+      .select({ matrizCurricularId: itensMatrizTable.matrizCurricularId, disciplinaId: itensMatrizTable.disciplinaId, cargaHorariaSemanal: itensMatrizTable.cargaHorariaSemanal })
+      .from(itensMatrizTable)
+      .where(inArray(itensMatrizTable.matrizCurricularId, matrizIds))
+    : [];
+  return montarTurmasDoProfessor({
+    professorId: professor.id,
+    nomeProfessor: professor.nome,
+    disciplinasHabilitadas,
+    vinculos,
+    aulasNaGrade,
+    turmas: new Map(turmas.map((t) => [t.id, t])),
+    disciplinas: new Map(disciplinas.map((d) => [d.id, d])),
+    cargaMatriz: new Map(itens.map((i) => [`${i.matrizCurricularId}-${i.disciplinaId}`, i.cargaHorariaSemanal])),
+  });
+}
 
 // [PORTAL DO PROFESSOR] Convida o professor a entrar na organizacao
 // Clerk da escola (por e-mail) para acessar /minha-agenda. Usa o

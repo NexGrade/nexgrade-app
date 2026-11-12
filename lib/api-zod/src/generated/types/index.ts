@@ -147,6 +147,8 @@ export * from './stats';
 export * from './trimestreLetivo';
 export * from './turma';
 export * from './turmaDisciplinasComCargaItem';
+export * from './turmaDoProfessor';
+export * from './turmaDoProfessorPapel';
 export * from './turmaInput';
 export * from './turmaInputDisciplinasConfig';
 export * from './turmaInputTurno';

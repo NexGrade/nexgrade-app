@@ -13,7 +13,8 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { CalendarClock, ArrowRight, RefreshCw, AlertTriangle, CheckCircle2, X, Wrench } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CalendarClock, ArrowRight, RefreshCw, AlertTriangle, CheckCircle2, X, Wrench, School } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MultiSelectBusca } from "@/components/multi-select-busca";
 
@@ -508,6 +509,71 @@ export default function ProfessorEditar() {
           </Card>
         </div>
       </div>
+
+      {/* [TURMAS-DO-PROFESSOR] (11/11/2026, pedido da dona) turmas em que o professor da aula: uma linha por
+          turma e disciplina, pelo vinculo da turma e pela grade oficial; quando divergem, mostra os dois */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <School className="h-4 w-4" />
+            Turmas em que dá aula
+          </CardTitle>
+          <CardDescription>
+            Pelas disciplinas das turmas e pela grade oficial. Clique na turma para abrir a grade dela.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {isLoadingCarga ? (
+            <Skeleton className="h-16 w-full" />
+          ) : (cargaData?.turmas?.length ?? 0) === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma turma com este professor ainda.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Turma</TableHead>
+                    <TableHead>Turno</TableHead>
+                    <TableHead>Disciplina</TableHead>
+                    <TableHead className="text-right">Aulas por semana</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {cargaData!.turmas!.map((t) => {
+                    const diverge = t.aulasVinculo !== t.aulasGrade;
+                    return (
+                      <TableRow key={`${t.turmaId}-${t.disciplinaId}`}>
+                        <TableCell className="font-medium">
+                          <Link href={`/turmas/${t.turmaId}/horario`} className="text-primary hover:underline">{t.turma}</Link>
+                        </TableCell>
+                        <TableCell className="capitalize">{t.turno}</TableCell>
+                        <TableCell>
+                          <span>{t.disciplina}</span>
+                          {t.papel === "apoio" && (
+                            <Badge variant="outline" className="ml-2 text-xs" title="Segundo professor da mesma aula">co-docência</Badge>
+                          )}
+                          {t.trio && <Badge variant="outline" className="ml-2 text-xs">trio</Badge>}
+                        </TableCell>
+                        <TableCell className="text-right whitespace-nowrap">
+                          {!diverge ? (
+                            <span className="font-medium">{t.aulasGrade}</span>
+                          ) : (
+                            <span className="text-amber-700" title="O número da turma e o da grade oficial estão diferentes">
+                              {t.aulasVinculo == null ? "sem vínculo na turma" : `${t.aulasVinculo} na turma`}
+                              {" · "}
+                              <span className="font-medium">{t.aulasGrade} na grade</span>
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* [PROFESSOR-QUADROS-LADO] (01/11/2026) disponibilidade, corrigir conflitos e regenerar lado a lado,
           abaixo do cadastro (antes empilhados na coluna da direita, deixando um vazio embaixo do formulario) */}
