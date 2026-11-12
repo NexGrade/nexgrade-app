@@ -51,13 +51,16 @@ export interface CargaProfessor {
 // [CARGA-PROFESSOR] Aulas de cada professor por turno, pela MESMA regra de
 // carga do payload do CP-SAT (override -> matriz -> padrao da disciplina).
 // Fonte unica usada pela validacao de capacidade e pela cota de HA do motor.
-export async function calcularCargaPorProfessor(escolaId: string): Promise<{ cargas: CargaProfessor[]; slots: (typeof horarioSlotsTable.$inferSelect)[]; disp: (typeof disponibilidadeTable.$inferSelect)[]; principal: Map<number, number> }> {
+// [TROCA-CONTA-CAPACIDADE] (11/11/2026) `trocaSimulada`: faz a conta como se a linha de turma_disciplinas ja tivesse o
+// professor novo (a tela de Turmas avisa antes de gravar se ele vai caber no turno).
+export async function calcularCargaPorProfessor(escolaId: string, trocaSimulada?: { linhaId: number; professorId: number | null }): Promise<{ cargas: CargaProfessor[]; slots: (typeof horarioSlotsTable.$inferSelect)[]; disp: (typeof disponibilidadeTable.$inferSelect)[]; principal: Map<number, number> }> {
   const turmas = await db.select().from(turmasTable).where(and(eq(turmasTable.escolaId, escolaId), eq(turmasTable.fantasma, false)));
   if (turmas.length === 0) return { cargas: [], slots: [], disp: [], principal: new Map() };
   const turmaIds = turmas.map((t) => t.id);
   const matrizIds = [...new Set(turmas.map((t) => t.matrizCurricularId).filter((id): id is number => id != null))];
   const [tds, disciplinas, professores, profDiscs, itensMatriz, slots] = await Promise.all([
-    db.select().from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, turmaIds)).then((r) => sobreporAtribuicao(r)), // [EXPERIMENTO-COMPLETO]
+    db.select().from(turmaDisciplinasTable).where(inArray(turmaDisciplinasTable.turmaId, turmaIds)).then((r) => sobreporAtribuicao(r))
+      .then((r) => trocaSimulada ? r.map((td) => td.id === trocaSimulada.linhaId ? { ...td, professorId: trocaSimulada.professorId } : td) : r), // [EXPERIMENTO-COMPLETO] [TROCA-CONTA-CAPACIDADE]
     db.select().from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId)),
     db.select().from(professoresTable).where(eq(professoresTable.escolaId, escolaId)),
     db.select().from(professorDisciplinasTable),
@@ -368,4 +371,17 @@ export async function capacidadeDoProfessor(escolaId: string, professorId: numbe
     .sort((a, b) => ordem.indexOf(a) - ordem.indexOf(b));
   const porTurno = await Promise.all(turnos.map((t) => validarCapacidadeProfessores(escolaId, t, { professorId, incluirOk: true, dados })));
   return porTurno.flat();
+}
+
+// [TROCA-CONTA-CAPACIDADE] (11/11/2026) Achado no video tutorial: trocar o professor em Turmas para alguem com choque
+// deixava as aulas da grade com o anterior e o vinculo com o novo; a geracao seguinte do turno nao fechava (Diego
+// Ferreira: 5 aulas na manha, 3 horarios livres) e a tela de Turmas nao dizia nada. Devolve os erros de capacidade do
+// professor novo, turno a turno, como se a linha ja fosse dele (mesma conta da tela de gerar).
+export async function capacidadeAposTroca(escolaId: string, linhaId: number, professorNovo: number): Promise<ProblemaCapacidade[]> {
+  const dados = await calcularCargaPorProfessor(escolaId, { linhaId, professorId: professorNovo });
+  const carga = dados.cargas.find((c) => c.professorId === professorNovo);
+  if (!carga) return [];
+  const turnos = Object.entries(carga.aulasPorTurno).filter(([, n]) => n > 0).map(([t]) => t);
+  const porTurno = await Promise.all(turnos.map((t) => validarCapacidadeProfessores(escolaId, t, { professorId: professorNovo, dados })));
+  return porTurno.flat().filter((p) => p.nivel === "erro");
 }

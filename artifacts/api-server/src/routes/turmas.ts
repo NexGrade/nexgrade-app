@@ -14,6 +14,7 @@ import { z } from "zod";
 import { getEscolaId } from "../lib/escola-id";
 import { registrarAuditoria } from "../lib/audit";
 import { planejarTrocaNaGrade, passarAulasParaProfessor } from "../lib/troca-professor-grade"; // [TROCA-LEVA-AULAS]
+import { capacidadeAposTroca } from "../lib/capacidade-professor"; // [TROCA-CONTA-CAPACIDADE]
 import { salvarBackupGrade } from "../lib/backup-grade"; // [TROCA-LEVA-AULAS]
 import { mensagemDaTravaDeChoque } from "../lib/choques-professor"; // [TROCA-LEVA-AULAS]
 import { recusaTravaIntegral, STATUS_TRAVA_INTEGRAL } from "../lib/trava-integral"; // [TRAVA-INTEGRAL]
@@ -437,10 +438,16 @@ router.patch("/:turmaId/disciplinas/linha/:linhaId", async (req, res) => {
   const plano = novo != null && linha.professorId != null && novo !== linha.professorId
     ? await planejarTrocaNaGrade(escolaId, turmaId, linha.disciplinaId, linha.professorId, novo)
     : null;
-  if (plano && plano.aulaIds.length && (plano.choques.length || plano.avisos.length) && !parsed.data.confirmar) {
+  // [TROCA-CONTA-CAPACIDADE] (11/11/2026) o vinculo e o que a proxima geracao usa: se o professor novo nao cabe no
+  // turno com essa disciplina, avisa antes (mesma conta da tela de gerar), com ou sem choque na grade
+  const capacidade = novo != null && novo !== linha.professorId
+    ? (await capacidadeAposTroca(escolaId, linhaId, novo)).map((p) => `${p.professor}: ${p.mensagem}`)
+    : [];
+  const temAvisoNaGrade = !!plano && plano.aulaIds.length > 0 && (plano.choques.length > 0 || plano.avisos.length > 0);
+  if ((temAvisoNaGrade || capacidade.length) && !parsed.data.confirmar) {
     res.json({
-      aplicado: false, choques: plano.choques, avisos: plano.avisos,
-      aulasNaGrade: plano.aulaIds.length,
+      aplicado: false, choques: plano?.choques ?? [], avisos: plano?.avisos ?? [], capacidade,
+      aulasNaGrade: plano?.aulaIds.length ?? 0,
     });
     return;
   }
@@ -451,7 +458,7 @@ router.patch("/:turmaId/disciplinas/linha/:linhaId", async (req, res) => {
   let aviso: string | null = null;
   if (plano && plano.aulaIds.length) {
     if (plano.choques.length) {
-      aviso = `As ${plano.aulaIds.length} aula(s) da grade continuam com o professor anterior por causa de choque de horário. Mude essas aulas de horário (ou gere a grade de novo) para passar ao professor novo.`;
+      aviso = `O vínculo passou para o professor novo, mas as ${plano.aulaIds.length} aula(s) da grade continuam com o anterior por causa de choque de horário. A próxima geração do turno já usa o professor novo. Para passar as aulas agora, mude-as de horário na grade.`;
     } else {
       try {
         const b = await salvarBackupGrade(escolaId, `Antes de trocar o professor de uma disciplina na turma ${turma.nome}`);
@@ -470,6 +477,7 @@ router.patch("/:turmaId/disciplinas/linha/:linhaId", async (req, res) => {
     req, escolaId, entidade: "turma_disciplinas", entidadeId: linhaId,
     acao: "alteracao", dadosAnteriores: linha, dadosNovos: { ...linha, professorId: novo, aulasPassadas },
   });
+  if (capacidade.length) aviso = [aviso, `Atenção: ${capacidade.join(" ")}`].filter(Boolean).join(" "); // [TROCA-CONTA-CAPACIDADE]
   res.json({ ...result, aplicado: true, aulasPassadas, aviso });
 });
 

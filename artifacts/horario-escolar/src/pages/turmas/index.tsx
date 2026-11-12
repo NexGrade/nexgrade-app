@@ -164,15 +164,18 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
     const url = `/api/turmas/${turmaId}/disciplinas/linha/${linhaId}`;
     setSalvando(url);
     try {
-      type Resp = { aplicado?: boolean; choques?: string[]; avisos?: string[]; aulasNaGrade?: number; aulasPassadas?: number; aviso?: string | null };
+      type Resp = { aplicado?: boolean; choques?: string[]; avisos?: string[]; capacidade?: string[]; aulasNaGrade?: number; aulasPassadas?: number; aviso?: string | null };
       const enviar = (confirmar: boolean) => customFetch<Resp>(url, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ professorId, confirmar }) });
       let r = await enviar(false);
       if (r.aplicado === false) {
-        const choques = r.choques ?? [], avisos = r.avisos ?? [];
+        const choques = r.choques ?? [], avisos = r.avisos ?? [], capacidade = r.capacidade ?? [];
+        // [TROCA-CONTA-CAPACIDADE] (11/11/2026) dizer com todas as letras que o vinculo muda e a proxima geracao usa o novo
         const texto = [
           ...(choques.length ? [`O professor novo já tem aula em outra turma em horário(s) desta disciplina:`, ...choques.map((x) => `• ${x}`),
-            ``, `Se trocar, as ${r.aulasNaGrade ?? ""} aula(s) da grade CONTINUAM com o professor anterior até você mudar esses horários (ou gerar a grade de novo).`] : []),
+            ``, `Se trocar, a disciplina passa para o professor novo, mas as ${r.aulasNaGrade ?? ""} aula(s) da grade CONTINUAM com o anterior até você mudar esses horários na grade. A próxima geração do turno já vai usar o professor novo.`] : []),
           ...(avisos.length ? [``, ...avisos.map((x) => `• ${x}`)] : []),
+          ...(capacidade.length ? [``, `Com essa troca, a próxima geração do turno não vai fechar:`, ...capacidade.map((x) => `• ${x}`),
+            `Antes de gerar, libere horários na Disponibilidade dele ou escolha outro professor.`] : []),
         ].join("\n");
         if (!confirm(`Atenção:\n\n${texto.trim()}\n\nTrocar o professor mesmo assim?`)) return;
         r = await enviar(true);
