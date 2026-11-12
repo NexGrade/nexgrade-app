@@ -65,6 +65,7 @@ import {
 } from "../lib/trava-integral"; // [TRAVA-INTEGRAL]
 import { sugerirTrocasParaChoques, mesmaOpcao } from "../lib/resolver-choque"; // [RESOLVER-CHOQUE]
 import { aulasEmBloqueio, descreverAulasEmBloqueio, chaveBloqueio } from "../lib/bloqueio-no-rascunho"; // [AULA-EM-BLOQUEIO]
+import { sugerirTrocasParaBloqueios, mesmaOpcaoCiclo } from "../lib/resolver-bloqueio"; // [RESOLVER-BLOQUEIO]
 import { estadoDisp } from "./disponibilidade"; // [RESOLVER-CHOQUE-HA]
 
 const router = Router();
@@ -1819,6 +1820,77 @@ async function gravarDispNoExperimento(
         disponibilidadeExperimentalTable.diaSemana, disponibilidadeExperimentalTable.horarioSlot, disponibilidadeExperimentalTable.turno],
       set: { ...valores, atualizadoEm: new Date() },
     });
+}
+
+// [RESOLVER-BLOQUEIO] (12/11/2026) "Ver como resolver" do quadro de aula em horario bloqueado: trocas (de 2 ou ciclo de 3
+// aulas) na mesma turma que tiram a aula do bloqueio sem criar choque, outro bloqueio nem HA presa. Aplica so no rascunho.
+router.get("/experimentais/:nome/resolver-bloqueios", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const nome = req.params.nome;
+  const exp = await db.select().from(horariosExperimentaisTable).where(and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome)));
+  res.json({ bloqueios: await comExperimento(escolaId, nome, () => sugestoesDeBloqueio(escolaId, nome, exp)) });
+});
+
+const AplicarCicloBody = z.object({
+  turmaId: z.number().int(),
+  ciclo: z.array(z.object({ diaSemana: z.number().int(), numeroAula: z.number().int() })).min(2).max(3),
+  moverHa: AplicarResolucaoBody.shape.moverHa,
+});
+router.post("/experimentais/:nome/resolver-bloqueios/aplicar", async (req, res) => {
+  const escolaId = getEscolaId(req);
+  const nome = req.params.nome;
+  const b = AplicarCicloBody.safeParse(req.body);
+  if (!b.success) { res.status(400).json({ error: "Dados inválidos." }); return; }
+  const travaInt = await recusaTravaIntegral(escolaId, [b.data.turmaId], "trocar aula de lugar"); // [TRAVA-INTEGRAL]
+  if (travaInt) { res.status(STATUS_TRAVA_INTEGRAL).json({ error: travaInt }); return; }
+  const doExp = and(eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome));
+  const exp = await db.select().from(horariosExperimentaisTable).where(doExp);
+  const pedida = { turmaId: b.data.turmaId, ciclo: b.data.ciclo, moverHa: b.data.moverHa?.map((m) => ({ ...m, motivo: m.motivo ?? null })) };
+  const opcao = (await comExperimento(escolaId, nome, () => sugestoesDeBloqueio(escolaId, nome, exp)))
+    .flatMap((x) => x.opcoes).find((o) => mesmaOpcaoCiclo(o, pedida));
+  if (!opcao) { res.status(409).json({ error: "Essa troca não resolve mais (o rascunho mudou). Clique em Ver como resolver de novo." }); return; }
+  // ids de cada horario do ciclo ANTES de mexer: o bloco de ciclo[i] vai para ciclo[i+1]
+  const idsPor = opcao.ciclo.map((c) => exp.filter((h) => h.turmaId === opcao.turmaId && h.diaSemana === c.diaSemana && h.numeroAula === c.numeroAula).map((h) => h.id));
+  try {
+    await db.transaction(async (tx) => {
+      for (const m of opcao.moverHa ?? []) {
+        await gravarDispNoExperimento(tx, escolaId, nome, m.professorId, m.turno, m.de, { disponivel: true, horaAtividadeObrigatoria: false, motivo: null });
+        await gravarDispNoExperimento(tx, escolaId, nome, m.professorId, m.turno, m.para, { disponivel: true, horaAtividadeObrigatoria: true, motivo: m.motivo });
+      }
+      for (let i = 0; i < opcao.ciclo.length; i++) {
+        const para = opcao.ciclo[(i + 1) % opcao.ciclo.length]!;
+        if (idsPor[i]!.length) await tx.update(horariosExperimentaisTable).set({ diaSemana: para.diaSemana, numeroAula: para.numeroAula }).where(inArray(horariosExperimentaisTable.id, idsPor[i]!));
+      }
+    });
+  } catch (e) {
+    if (semTabelaExperimental(e)) { res.status(503).json({ error: "O rascunho ainda não está pronto no banco (falta a atualização do sistema). Avise o suporte NexGrade." }); return; }
+    throw e;
+  }
+  res.json({ aplicado: true, opcao });
+});
+
+/** [RESOLVER-BLOQUEIO] sugestoes para as aulas em bloqueio do experimento (precisa do contexto da disponibilidade dele). */
+async function sugestoesDeBloqueio(escolaId: string, nome: string, exp: Array<typeof horariosExperimentaisTable.$inferSelect>) {
+  if (!exp.length) return [];
+  const { fora, tm, slots, nomeProf } = await baseDosChoques(escolaId, nome, exp);
+  const turmaIds = [...new Set(exp.map((s) => s.turmaId))];
+  const aulasValidas = new Map<number, number[]>();
+  for (const t of turmaIds) aulasValidas.set(t, [...(await periodosValidosDaTurma(t, escolaId))].sort((a, b) => a - b));
+  const profIds = [...new Set(exp.map((h) => h.professorId))].concat(-1);
+  const disp = sobreporExperimento(await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, profIds)));
+  const discs = new Map((await db.select({ id: disciplinasTable.id, nome: disciplinasTable.nome }).from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId))).map((d) => [d.id, d.nome]));
+  const travadas = (await lerDestrava(escolaId)) ? new Set<number>() : new Set((await turmasIntegrais(escolaId)).map((t) => t.id)); // [TRAVA-INTEGRAL]
+  return sugerirTrocasParaBloqueios({
+    exp, fora, turmas: tm, slots, aulasValidas, turmasTravadas: travadas,
+    indisponiveis: disp.filter((d) => !d.disponivel || d.horaAtividadeObrigatoria)
+      .map((d) => ({
+        professorId: d.professorId, turno: d.turno, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, ha: d.horaAtividadeObrigatoria,
+        movel: d.horaAtividadeObrigatoria && d.disponivel !== false && ehHAMovel(d.motivo), motivo: d.motivo,
+        bloqueia: ehBloqueioParaMotor(d), // [AULA-EM-BLOQUEIO] mesma regra do quadro vermelho
+      })),
+    nomeProfessor: (id) => nomeProf.get(id) ?? `Professor #${id}`,
+    nomeDisciplina: (id) => discs.get(id) ?? `Disciplina #${id}`,
+  });
 }
 
 /** As sugestoes do "Ver como resolver" para o experimento como esta agora (precisa do contexto da disponibilidade dele). */
