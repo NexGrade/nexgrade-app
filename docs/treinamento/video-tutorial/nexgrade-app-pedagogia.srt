@@ -1,0 +1,106 @@
+1
+00:00:00,510 --> 00:00:02,184
+Olá! Eu sou a Nexy. Agora,
+
+2
+00:00:02,234 --> 00:00:06,561
+o app da pedagogia: o acompanhamento do dia a
+dia dos professores.
+
+3
+00:00:07,061 --> 00:00:11,170
+Quem tem o cargo Pedagogia entra e já vê, no
+menu da esquerda, só o que precisa.
+
+4
+00:00:12,183 --> 00:00:15,082
+Em Presença dos professores, escolha o dia e o
+turno.
+
+5
+00:00:15,132 --> 00:00:16,862
+Aparece um cartão por professor,
+
+6
+00:00:16,912 --> 00:00:19,866
+com as aulas, a hora-atividade e as aulas
+assíncronas.
+
+7
+00:00:20,366 --> 00:00:22,609
+Em cada aula, marque P para presente,
+
+8
+00:00:22,659 --> 00:00:25,708
+F para falta, A para atraso ou S para
+substituído.
+
+9
+00:00:26,208 --> 00:00:29,331
+No S, escolha quem deu a aula. No balão do
+cartão,
+
+10
+00:00:29,381 --> 00:00:31,552
+você escreve uma observação do dia.
+
+11
+00:00:34,665 --> 00:00:38,794
+Restantes igual a Presente marca todas as
+aulas que ainda estão em branco.
+
+12
+00:00:38,844 --> 00:00:40,206
+Depois, clique em Salvar.
+
+13
+00:00:40,706 --> 00:00:43,050
+O PDF e o Excel do dia ficam no topo,
+
+14
+00:00:43,100 --> 00:00:48,032
+e o Relatório por período junta tudo: geral,
+individual, total e assíncronas.
+
+15
+00:00:49,017 --> 00:00:52,793
+Em Licenças, clique em Nova Licença e escolha
+o professor, o tipo,
+
+16
+00:00:52,843 --> 00:00:55,750
+as datas e o substituto. O motivo não é
+registrado,
+
+17
+00:00:55,800 --> 00:00:57,837
+para proteger os dados do professor.
+
+18
+00:00:58,817 --> 00:01:02,053
+Em Comunicados, escreva o título e a mensagem
+e envie.
+
+19
+00:01:02,103 --> 00:01:04,304
+O comunicado fica na lista da escola.
+
+20
+00:01:07,183 --> 00:01:10,963
+Em Relatórios Pedagógicos ficam a presença do
+dia, as faltas do mês,
+
+21
+00:01:11,013 --> 00:01:13,948
+a folha de ponto e a carga horária de cada
+professor.
+
+22
+00:01:14,447 --> 00:01:19,024
+E em Consulta, a pedagogia vê o horário e o
+calendário da escola, só para consultar.
+
+23
+00:01:19,845 --> 00:01:23,535
+O professor não vê essas telas. Bom trabalho,
+e até a próxima!
