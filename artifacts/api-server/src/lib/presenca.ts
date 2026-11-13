@@ -138,7 +138,7 @@ export type ObservacaoPeriodo = { data: string; turno: string; professorId: numb
 export type TabelaRelatorio = {
   titulo: string; subtitulo: string; vazio: string;
   colunas: Array<{ titulo: string; peso: number; alinhar?: "centro" }>;
-  linhas: Array<{ celulas: string[]; destaque?: boolean; grupo?: boolean; cabecalho?: boolean }>;
+  linhas: Array<{ celulas: string[]; destaque?: boolean; grupo?: boolean; cabecalho?: boolean; mesclarDe?: number }>;
 };
 
 const dataBR = (iso: string) => iso.split("-").reverse().join("/");
@@ -228,9 +228,10 @@ export function relatorioPeriodo(o: {
     if (resumo.length) linhas.push({ celulas: ["TOTAL", String(total.presente), String(total.falta), String(total.atraso), String(total.substituido), String(soma("substituiu")), String(total.marcadas), percentualPresenca(total)] });
     if (ocorrencias.length) {
       linhas.push({ grupo: true, celulas: ["Ocorrências do período (faltas, atrasos e substituições)", "", "", "", "", "", "", ""] });
-      linhas.push({ cabecalho: true, celulas: ["Professor", "Data", "Aula", "Situação", "Substituto", "Observação", "", ""] });
+      // [PDF-TABELA-SEGUNDA-TABELA] a Observacao ocupa as 3 ultimas colunas (sai inteira no PDF)
+      linhas.push({ cabecalho: true, mesclarDe: 5, celulas: ["Professor", "Data", "Aula", "Situação", "Substituto", "Observação", "", ""] });
       for (const r of ocorrencias) linhas.push({
-        destaque: r.status === "falta",
+        destaque: r.status === "falta", mesclarDe: 5,
         celulas: [nome(r.professorId), dataBR(r.data), `${ROTULO_TURNO[r.turno] ?? r.turno} ${r.numeroAula}ª`, ROTULO_STATUS[r.status], substituto(r),
           [obsDoDia.get(`${r.data}|${r.turno}|${r.professorId}`), r.observacao].filter(Boolean).join(" · "), "", ""],
       });

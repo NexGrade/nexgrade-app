@@ -1,6 +1,9 @@
 // [PRESENCA-PEDAGOGIA] (28/10/2026) PDF simples de tabela (A4 retrato), usado pelos relatorios
 // da presenca dos professores: cabecalho com a escola e o titulo, tabela com quebra de pagina
 // (repete os titulos das colunas) e rodape com a data em que foi gerado.
+// [PDF-TABELA-SEGUNDA-TABELA] (12/11/2026, Romario) a segunda tabela da folha (linha `cabecalho`) que continua na outra
+// pagina repete os titulos DELA (antes repetia os da primeira: "Presente, Falta..." em cima das ocorrencias), e
+// `mesclarDe` junta as celulas do fim numa so (a Observacao usa as 3 ultimas colunas e nao sai cortada).
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import { sanitizarTextoPdf } from "./pdf-grade";
 
@@ -9,7 +12,11 @@ const AZUL = rgb(0.12, 0.2, 0.42), BRANCO = rgb(1, 1, 1), CINZA = rgb(0.45, 0.45
 const BORDA = rgb(0.75, 0.75, 0.75), ZEBRA = rgb(0.96, 0.96, 0.97), DESTAQUE = rgb(1, 0.92, 0.92);
 
 export type ColunaTabela = { titulo: string; peso: number; alinhar?: "centro" };
-export type LinhaTabela = { celulas: string[]; destaque?: boolean; grupo?: boolean; cabecalho?: boolean };
+export type LinhaTabela = {
+  celulas: string[]; destaque?: boolean; grupo?: boolean; cabecalho?: boolean;
+  /** a celula deste indice ocupa ate a ultima coluna (as celulas depois dela sao ignoradas no PDF) */
+  mesclarDe?: number;
+};
 
 /** a fonte padrao do PDF nao tem travessao nem aspas curvas: troca antes de sanitizar */
 function limpar(t: string): string {
@@ -38,14 +45,22 @@ export async function gerarPdfTabela(o: {
   const larguras = o.colunas.map((c) => (c.peso / somaPesos) * util);
   const H_LINHA = 15, H_CAB = 16, TAM = 7.8;
 
+  // [PDF-TABELA-SEGUNDA-TABELA] celulas com a largura de cada uma (a de `mesclarDe` vai ate o fim)
+  const celulasComLargura = (l: { celulas: string[]; mesclarDe?: number }) => {
+    const ate = l.mesclarDe != null && l.mesclarDe < larguras.length ? l.mesclarDe : larguras.length - 1;
+    return l.celulas.slice(0, ate + 1).map((t, i) => ({
+      t, i, larg: i === ate ? larguras.slice(i).reduce((s, w) => s + w, 0) : larguras[i]!,
+    }));
+  };
   let page: PDFPage, y = 0;
+  let cabecalhoAtual: LinhaTabela = { celulas: o.colunas.map((c) => c.titulo) };
   const cabecalhoColunas = () => {
     let x = MARGEM;
     page.drawRectangle({ x: MARGEM, y: y - H_CAB, width: util, height: H_CAB, color: AZUL });
-    o.colunas.forEach((c, i) => {
-      page.drawText(caber(c.titulo, bold, TAM, larguras[i]! - 6), { x: x + 3, y: y - H_CAB + 5, size: TAM, font: bold, color: BRANCO });
-      x += larguras[i]!;
-    });
+    for (const c of celulasComLargura(cabecalhoAtual)) {
+      page.drawText(caber(c.t, bold, TAM, c.larg - 6), { x: x + 3, y: y - H_CAB + 5, size: TAM, font: bold, color: BRANCO });
+      x += c.larg;
+    }
     y -= H_CAB;
   };
   const nova = () => {
@@ -64,15 +79,17 @@ export async function gerarPdfTabela(o: {
     return pdf.save();
   }
   o.linhas.forEach((l, idx) => {
-    if (y - H_LINHA < MARGEM + 12) nova();
     if (l.cabecalho) { // segunda tabela na mesma folha, com os titulos dela
+      // sem espaco para os titulos e ao menos uma linha: comeca na pagina seguinte (ja com os titulos dela)
+      cabecalhoAtual = l;
+      if (y - 8 - H_CAB - H_LINHA < MARGEM + 12) { nova(); return; }
       y -= 8;
-      page.drawRectangle({ x: MARGEM, y: y - H_CAB, width: util, height: H_CAB, color: AZUL });
-      let xc = MARGEM;
-      l.celulas.forEach((t, i) => { page.drawText(caber(t, bold, TAM, larguras[i]! - 6), { x: xc + 3, y: y - H_CAB + 5, size: TAM, font: bold, color: BRANCO }); xc += larguras[i]!; });
-      y -= H_CAB;
+      cabecalhoColunas();
       return;
     }
+    // titulo de secao seguido dos titulos de uma tabela nova: nao fica sozinho no pe da pagina
+    const precisa = l.grupo && o.linhas[idx + 1]?.cabecalho ? H_LINHA + 8 + H_CAB + H_LINHA : H_LINHA;
+    if (y - precisa < MARGEM + 12) nova();
     const fundo = l.destaque ? DESTAQUE : l.grupo ? rgb(0.9, 0.93, 0.98) : idx % 2 ? ZEBRA : BRANCO;
     page.drawRectangle({ x: MARGEM, y: y - H_LINHA, width: util, height: H_LINHA, color: fundo, borderColor: BORDA, borderWidth: 0.4 });
     if (l.grupo) { // titulo de secao: uma linha so, na largura toda
@@ -81,15 +98,16 @@ export async function gerarPdfTabela(o: {
       return;
     }
     let x = MARGEM;
-    l.celulas.forEach((t, i) => {
-      const f = l.grupo || i === 0 ? bold : font;
-      const larg = larguras[i]! - 6;
-      const txt = caber(t, f, TAM, larg);
-      const tx = o.colunas[i]?.alinhar === "centro" ? x + larguras[i]! / 2 - f.widthOfTextAtSize(txt, TAM) / 2 : x + 3;
+    for (const { t, i, larg: largCel } of celulasComLargura(l)) {
+      const f = i === 0 ? bold : font;
+      const txt = caber(t, f, TAM, largCel - 6);
+      // a celula mesclada fica a esquerda (texto livre, como a Observacao)
+      const centro = o.colunas[i]?.alinhar === "centro" && largCel === larguras[i];
+      const tx = centro ? x + largCel / 2 - f.widthOfTextAtSize(txt, TAM) / 2 : x + 3;
       page.drawText(txt, { x: tx, y: y - H_LINHA + 4.5, size: TAM, font: f, color: rgb(0.1, 0.1, 0.1) });
       if (i > 0) page.drawLine({ start: { x, y }, end: { x, y: y - H_LINHA }, thickness: 0.4, color: BORDA });
-      x += larguras[i]!;
-    });
+      x += largCel;
+    }
     y -= H_LINHA;
   });
   return pdf.save();
