@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aulasEmBloqueio, chaveBloqueio, descreverAulasEmBloqueio, type LinhaDispBloqueio } from "../bloqueio-no-rascunho";
+import { aulasEmBloqueio, chaveBloqueio, descreverAulasEmBloqueio, ehHAManualDoRascunho, type LinhaDispBloqueio } from "../bloqueio-no-rascunho";
 
 // [AULA-EM-BLOQUEIO] (12/11/2026) regra pura: que aula conta como "em horario bloqueado" antes de promover
 const linha = (o: Partial<LinhaDispBloqueio>): LinhaDispBloqueio => ({
@@ -39,5 +39,17 @@ describe("aulasEmBloqueio", () => {
   it("texto para a tela", () => {
     const lista = aulasEmBloqueio({ aulas: [aula({ diaSemana: 2 })], disp: [linha({ diaSemana: 2, motivo: null })], posicao });
     expect(descreverAulasEmBloqueio(lista, () => "9ME", () => "Maria Eloi")).toEqual(["Maria Eloi tem bloqueio na quarta, 1ª aula (manhã), onde está a aula da 9ME."]);
+  });
+  it("[HA-SOBRE-AULA] HA manual que o rascunho marcou prende o horario; a oficial, a automatica e a importada nao", () => {
+    const chaves = new Set([chaveBloqueio({ professorId: 1, turno: "matutino", diaSemana: 0, horarioSlot: 1 })]);
+    const ha = (motivo: string) => linha({ disponivel: true, horaAtividadeObrigatoria: true, motivo });
+    expect(aulasEmBloqueio({ aulas: [aula()], disp: [ha("HA manual (definida na tela)")], chavesDoRascunho: chaves, posicao })).toHaveLength(1);
+    expect(aulasEmBloqueio({ aulas: [aula()], disp: [ha("HA manual (definida na tela)")], chavesDoRascunho: new Set(), posicao })).toEqual([]);
+    expect(ehHAManualDoRascunho(ha("Importado do sistema anterior (H.A.)"), chaves)).toBe(false);
+    expect(ehHAManualDoRascunho(ha("Hora-atividade institucional (recalculada automaticamente)"), chaves)).toBe(false);
+    expect(ehHAManualDoRascunho(linha({ disponivel: true, horaAtividadeObrigatoria: false, motivo: "HA manual (definida na tela)" }), chaves)).toBe(false);
+    const lista = aulasEmBloqueio({ aulas: [aula({ diaSemana: 3 })], disp: [ha("HA manual (definida na tela)")].map((d) => ({ ...d, diaSemana: 3 })),
+      chavesDoRascunho: new Set([chaveBloqueio({ professorId: 1, turno: "matutino", diaSemana: 3, horarioSlot: 1 })]), posicao });
+    expect(descreverAulasEmBloqueio(lista, () => "2STM", () => "Hilda")).toEqual(["Hilda tem HA marcada no rascunho na quinta, 1ª aula (manhã), onde está a aula da 2STM."]);
   });
 });

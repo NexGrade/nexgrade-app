@@ -304,10 +304,11 @@ describe.skipIf(!TEM_BANCO)("modo rascunho: fluxo completo e casos de erro", () 
     expect(r.body).toMatchObject({ precisaConfirmar: true, aulasNoHorario: ["1A (Matemática) na segunda, 1ª aula (manhã)"] });
     const dispNoRascunho = async () => Number(((await db.execute(sql`select count(*)::int n from disponibilidade_experimental where escola_id = ${E} and nome = 'Plano I'`)) as any).rows[0].n);
     expect(await dispNoRascunho()).toBe(0);
-    // HA movel (manual da tela) em cima de aula nao pede confirmacao: o Promover recalcula a HA
+    // [HA-SOBRE-AULA] HA manual marcada no rascunho em cima de aula tambem pergunta (antes passava calada)
     r = await lote(ids.caio, { diaSemana: 0, horarioSlot: 3, disponivel: true, horaAtividadeObrigatoria: true, motivo: "HA manual (definida na tela)" });
-    expect(r.status).toBe(201);
-    await lote(ids.caio, { diaSemana: 0, horarioSlot: 3, disponivel: true, motivo: "" }); // volta a livre
+    expect(r.status).toBe(409);
+    expect(r.body.aulasNoHorario).toEqual(["1A (Português) na segunda, 3ª aula (manhã)"]);
+    expect(await dispNoRascunho()).toBe(0);
     // confirmando, grava; repetir o mesmo bloqueio (ja bloqueado) nao pergunta de novo
     expect((await lote(ids.ana, bloqueioAnaSeg1, true)).status).toBe(201);
     expect((await lote(ids.ana, { ...bloqueioAnaSeg1, motivo: undefined })).status).toBe(201);
@@ -351,5 +352,39 @@ describe.skipIf(!TEM_BANCO)("modo rascunho: fluxo completo e casos de erro", () 
     expect((await chamar("GET", `${url}/choques`)).body.bloqueios).toEqual(["Ana tem bloqueio na terça, 1ª aula (manhã), onde está a aula da 1B."]);
     expect((await chamar("POST", `${url}/promover`)).status).toBe(409);
     await chamar("DELETE", "/horarios/rascunho/atual");
+  });
+  it("[HA-SOBRE-AULA] HA comum marcada no rascunho em cima de aula: pergunta, aparece no quadro, o Ver como resolver tira a aula e a HA fica", async () => {
+    // caso do Romario (12/11): o diretor marcou HA onde a professora tinha aula e "ele manteve a aula"
+    await chamar("POST", "/horarios/rascunho/atual", { nome: "Plano K", alcance: "matutino" });
+    const url = `/horarios/experimentais/${enc("Plano K")}`;
+    const haCaioSeg3 = { diaSemana: 0, horarioSlot: 3, turno: "matutino", disponivel: true, horaAtividadeObrigatoria: true, motivo: "HA manual (definida na tela)" };
+    let r = await chamar("POST", `/disponibilidade/lote?experimento=${enc("Plano K")}`, { professorId: ids.caio, itens: [haCaioSeg3] });
+    expect(r.status).toBe(409);
+    expect(r.body).toMatchObject({ precisaConfirmar: true, aulasNoHorario: ["1A (Português) na segunda, 3ª aula (manhã)"] });
+    r = await chamar("POST", `/disponibilidade/lote?experimento=${enc("Plano K")}`, { professorId: ids.caio, itens: [haCaioSeg3], confirmar: true });
+    expect(r.status).toBe(201);
+    const esperado = ["Caio tem HA marcada no rascunho na segunda, 3ª aula (manhã), onde está a aula da 1A."];
+    expect((await chamar("GET", `${url}/choques`)).body).toEqual({ choques: [], bloqueios: esperado });
+    expect((await chamar("GET", `${url}/simulacao`)).body.bloqueios).toEqual(esperado);
+    const antes = (await oficialDe(ids.t1)).map((h) => `${lugar(h)}|${h.professorId}`).sort();
+    r = await chamar("POST", `${url}/promover`);
+    expect(r.status).toBe(409);
+    expect((await oficialDe(ids.t1)).map((h) => `${lugar(h)}|${h.professorId}`).sort()).toEqual(antes);
+    // Ver como resolver: tira a aula de la sem mexer na HA marcada
+    const rb = await chamar("GET", `${url}/resolver-bloqueios`);
+    expect(rb.body.bloqueios).toHaveLength(1);
+    expect(rb.body.bloqueios[0].texto).toContain("Caio tem HA na segunda 3ª aula");
+    const opcao = rb.body.bloqueios[0].opcoes[0];
+    expect(opcao).toBeTruthy();
+    expect((opcao.moverHa ?? []).some((m: any) => m.professorId === ids.caio && m.de.diaSemana === 0 && m.de.numeroAula === 3)).toBe(false);
+    r = await chamar("POST", `${url}/resolver-bloqueios/aplicar`, { turmaId: opcao.turmaId, ciclo: opcao.ciclo, moverHa: opcao.moverHa });
+    expect(r.body.aplicado).toBe(true);
+    expect((await chamar("GET", `${url}/choques`)).body).toEqual({ choques: [], bloqueios: [] });
+    r = await chamar("POST", `${url}/promover`);
+    expect(r.status).toBe(200);
+    expect((await oficialDe(ids.t1)).filter((h) => h.professorId === ids.caio).map(lugar)).not.toContain("0-3");
+    expect((await db.select().from(disponibilidadeTable).where(eq(disponibilidadeTable.professorId, ids.caio)))
+      .filter((d) => d.horaAtividadeObrigatoria).map((d) => `${d.diaSemana}-${d.horarioSlot}`)).toContain("0-3");
+    expect((await chamar("POST", `/horarios/backups/${r.body.backupId}/restaurar`)).status).toBe(200);
   });
 });

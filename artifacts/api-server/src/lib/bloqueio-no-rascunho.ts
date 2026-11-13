@@ -5,7 +5,8 @@
 // e bloqueio para o motor (bloqueio de verdade, HA fixa ou HA de probatorio). HA movel nao conta: o Promover a recalcula.
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db, disponibilidadeTable, disponibilidadeExperimentalTable, horariosExperimentaisTable, horariosTable, turmasTable, disciplinasTable, horarioSlotsTable } from "@workspace/db";
-import { ehBloqueioParaMotor, ehBloqueioReal, ehHaFixa } from "./bloqueio-real";
+import { ehBloqueioParaMotor, ehBloqueioReal, ehHaFixa, ehHaProbatorio } from "./bloqueio-real";
+import { ehHAManualDaTela } from "./ha-contraturno"; // [HA-SOBRE-AULA]
 import { mapaIntegralDosSlots, posicaoReal } from "./turno-integral";
 
 export type LinhaDispBloqueio = {
@@ -19,6 +20,18 @@ export type AulaEmBloqueio<A extends AulaBloqueio> = { aula: A; linha: LinhaDisp
 const chave = (professorId: number, turno: string | null, dia: number, aula: number) => `${professorId}|${turno ?? ""}|${dia}|${aula}`;
 
 /**
+ * [HA-SOBRE-AULA] (12/11/2026) Retorno do diretor do Romario: "bloqueei para HA e ele manteve a aula". A HA comum
+ * marcada na tela ("HA manual") e movel: fora do rascunho o recalculo a tira de cima da aula e a aula fica. Mas quem
+ * marca HA NO RASCUNHO num horario com aula quer a aula fora dali; antes nada acusava e o Promover devolvia a HA para
+ * outro horario. Agora essa HA (so a manual, so a que o rascunho mudou) prende o horario como bloqueio: a aula aparece
+ * no quadro vermelho, o "Ver como resolver" sugere a troca e o Promover recusa ate a aula sair.
+ */
+export function ehHAManualDoRascunho(d: LinhaDispBloqueio, chavesDoRascunho?: Set<string>): boolean {
+  return !!d.horaAtividadeObrigatoria && d.disponivel !== false && ehHAManualDaTela(d.motivo)
+    && !!chavesDoRascunho?.has(chave(d.professorId, d.turno, d.diaSemana, d.horarioSlot));
+}
+
+/**
  * Aulas em horario bloqueado. `aulas` = as que serao conferidas contra qualquer bloqueio; `aulasSoMudancas` = as que
  * so contam se o bloqueio vier de uma mudanca do rascunho (`chavesDoRascunho`): a grade oficial de fora do rascunho nao
  * impede promover por um bloqueio antigo, mas impede se o rascunho bloquear em cima dela.
@@ -29,7 +42,7 @@ export function aulasEmBloqueio<A extends AulaBloqueio>(opts: {
   posicao: (a: A) => PosicaoReal | null;
 }): AulaEmBloqueio<A>[] {
   const bloqueios = new Map<string, LinhaDispBloqueio>();
-  for (const d of opts.disp) if (ehBloqueioParaMotor(d)) bloqueios.set(chave(d.professorId, d.turno, d.diaSemana, d.horarioSlot), d);
+  for (const d of opts.disp) if (ehBloqueioParaMotor(d) || ehHAManualDoRascunho(d, opts.chavesDoRascunho)) bloqueios.set(chave(d.professorId, d.turno, d.diaSemana, d.horarioSlot), d);
   const out: AulaEmBloqueio<A>[] = [];
   const vistos = new Set<string>();
   const conferir = (a: A, soMudancas: boolean) => {
@@ -59,7 +72,8 @@ const TURNO: Record<string, string> = { matutino: "manhã", vespertino: "tarde",
 
 export function tipoDoBloqueio(d: LinhaDispBloqueio): string {
   if (ehBloqueioReal(d)) return "bloqueio";
-  return ehHaFixa(d) ? "HA fixa" : "HA de probatório";
+  if (ehHaFixa(d)) return "HA fixa";
+  return ehHaProbatorio(d) ? "HA de probatório" : "HA marcada no rascunho"; // [HA-SOBRE-AULA]
 }
 
 /** Textos para a tela: "Maria Eloi tem bloqueio na quarta, 1ª aula (manhã), onde está a aula da 9ME." */
@@ -93,7 +107,10 @@ export async function aulasDoRascunhoEmBloqueioNovo(escolaId: string, nome: stri
     const antes = atual.get(k);
     // motivo omitido = mantem o da linha (a tela faz isso quando continua bloqueio)
     const depois = { disponivel: it.disponivel, horaAtividadeObrigatoria: it.horaAtividadeObrigatoria, motivo: it.motivo ?? antes?.motivo ?? null };
-    if (ehBloqueioParaMotor(depois) && !(antes && ehBloqueioParaMotor(antes))) novos.add(k);
+    // [HA-SOBRE-AULA] HA manual gravada no rascunho tambem prende o horario (ver ehHAManualDoRascunho)
+    const prende = (d: { disponivel: boolean | null; horaAtividadeObrigatoria: boolean | null; motivo?: string | null }) =>
+      ehBloqueioParaMotor(d) || (!!d.horaAtividadeObrigatoria && d.disponivel !== false && ehHAManualDaTela(d.motivo));
+    if (prende(depois) && !(antes && prende(antes))) novos.add(k);
   }
   if (!novos.size) return [];
   type AulaPos = { turmaId: number; disciplinaId: number; diaSemana: number; numeroAula: number; assincrona: boolean | null };
