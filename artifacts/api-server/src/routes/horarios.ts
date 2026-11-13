@@ -64,7 +64,7 @@ import {
   STATUS_TRAVA_INTEGRAL, HORAS_DESTRAVA_PADRAO, HORAS_DESTRAVA_MAX,
 } from "../lib/trava-integral"; // [TRAVA-INTEGRAL]
 import { sugerirTrocasParaChoques, mesmaOpcao } from "../lib/resolver-choque"; // [RESOLVER-CHOQUE]
-import { aulasEmBloqueio, descreverAulasEmBloqueio, chaveBloqueio } from "../lib/bloqueio-no-rascunho"; // [AULA-EM-BLOQUEIO]
+import { aulasEmBloqueio, descreverAulasEmBloqueio, chaveBloqueio, ehHAManualDoRascunho } from "../lib/bloqueio-no-rascunho"; // [AULA-EM-BLOQUEIO] [HA-SOBRE-AULA]
 import { sugerirTrocasParaBloqueios, mesmaOpcaoCiclo } from "../lib/resolver-bloqueio"; // [RESOLVER-BLOQUEIO]
 import { estadoDisp } from "./disponibilidade"; // [RESOLVER-CHOQUE-HA]
 
@@ -1869,6 +1869,12 @@ router.post("/experimentais/:nome/resolver-bloqueios/aplicar", async (req, res) 
   res.json({ aplicado: true, opcao });
 });
 
+/** [HA-SOBRE-AULA] chaves (professor|turno|dia|aula) da disponibilidade que o rascunho mudou */
+async function chavesDaDispDoRascunho(escolaId: string, nome: string): Promise<Set<string>> {
+  const { linhas } = await carregarMudancas(escolaId, nome);
+  return new Set(linhas.map((m) => chaveBloqueio(m)));
+}
+
 /** [RESOLVER-BLOQUEIO] sugestoes para as aulas em bloqueio do experimento (precisa do contexto da disponibilidade dele). */
 async function sugestoesDeBloqueio(escolaId: string, nome: string, exp: Array<typeof horariosExperimentaisTable.$inferSelect>) {
   if (!exp.length) return [];
@@ -1880,14 +1886,18 @@ async function sugestoesDeBloqueio(escolaId: string, nome: string, exp: Array<ty
   const disp = sobreporExperimento(await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, profIds)));
   const discs = new Map((await db.select({ id: disciplinasTable.id, nome: disciplinasTable.nome }).from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId))).map((d) => [d.id, d.nome]));
   const travadas = (await lerDestrava(escolaId)) ? new Set<number>() : new Set((await turmasIntegrais(escolaId)).map((t) => t.id)); // [TRAVA-INTEGRAL]
+  const chavesDoRascunho = await chavesDaDispDoRascunho(escolaId, nome); // [HA-SOBRE-AULA]
   return sugerirTrocasParaBloqueios({
     exp, fora, turmas: tm, slots, aulasValidas, turmasTravadas: travadas,
     indisponiveis: disp.filter((d) => !d.disponivel || d.horaAtividadeObrigatoria)
-      .map((d) => ({
-        professorId: d.professorId, turno: d.turno, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, ha: d.horaAtividadeObrigatoria,
-        movel: d.horaAtividadeObrigatoria && d.disponivel !== false && ehHAMovel(d.motivo), motivo: d.motivo,
-        bloqueia: ehBloqueioParaMotor(d), // [AULA-EM-BLOQUEIO] mesma regra do quadro vermelho
-      })),
+      .map((d) => {
+        const haDoRascunho = ehHAManualDoRascunho(d, chavesDoRascunho); // [HA-SOBRE-AULA] presa: nenhuma aula entra, a HA fica
+        return {
+          professorId: d.professorId, turno: d.turno, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, ha: d.horaAtividadeObrigatoria,
+          movel: d.horaAtividadeObrigatoria && d.disponivel !== false && ehHAMovel(d.motivo) && !haDoRascunho, motivo: d.motivo,
+          bloqueia: ehBloqueioParaMotor(d) || haDoRascunho, // [AULA-EM-BLOQUEIO] mesma regra do quadro vermelho
+        };
+      }),
     nomeProfessor: (id) => nomeProf.get(id) ?? `Professor #${id}`,
     nomeDisciplina: (id) => discs.get(id) ?? `Disciplina #${id}`,
   });
@@ -1904,13 +1914,15 @@ async function sugestoesDeChoque(escolaId: string, nome: string, exp: Array<type
   const disp = sobreporExperimento(await db.select().from(disponibilidadeTable).where(inArray(disponibilidadeTable.professorId, profIds)));
   const discs = new Map((await db.select({ id: disciplinasTable.id, nome: disciplinasTable.nome }).from(disciplinasTable).where(eq(disciplinasTable.escolaId, escolaId))).map((d) => [d.id, d.nome]));
   const travadas = (await lerDestrava(escolaId)) ? new Set<number>() : new Set((await turmasIntegrais(escolaId)).map((t) => t.id)); // [TRAVA-INTEGRAL]
+  const chavesDoRascunho = await chavesDaDispDoRascunho(escolaId, nome); // [HA-SOBRE-AULA]
   return sugerirTrocasParaChoques({
     exp, fora, turmas: tm, slots, aulasValidas, turmasTravadas: travadas,
     indisponiveis: disp.filter((d) => !d.disponivel || d.horaAtividadeObrigatoria)
       .map((d) => ({
         professorId: d.professorId, turno: d.turno, diaSemana: d.diaSemana, horarioSlot: d.horarioSlot, ha: d.horaAtividadeObrigatoria,
         // [RESOLVER-CHOQUE-HA] so HA movel (automatica, importada, manual da tela) muda de lugar; fixa e probatorio nunca
-        movel: d.horaAtividadeObrigatoria && d.disponivel !== false && ehHAMovel(d.motivo), motivo: d.motivo,
+        // [HA-SOBRE-AULA] a HA manual marcada no rascunho tambem fica: quem a marcou quer aquele horario sem aula
+        movel: d.horaAtividadeObrigatoria && d.disponivel !== false && ehHAMovel(d.motivo) && !ehHAManualDoRascunho(d, chavesDoRascunho), motivo: d.motivo,
       })),
     nomeProfessor: (id) => nomeProf.get(id) ?? `Professor #${id}`,
     nomeDisciplina: (id) => discs.get(id) ?? `Disciplina #${id}`,

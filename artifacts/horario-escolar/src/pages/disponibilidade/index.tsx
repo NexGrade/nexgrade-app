@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   useListProfessores,
   useListTurmas, // [DISP-POR-TURMA]
+  useListDisciplinas, // [DISP-AULAS-DO-RASCUNHO]
   useListDisponibilidade,
   useSetDisponibilidadeLote,
   useListHorarioSlots,
@@ -173,10 +174,35 @@ export function PainelDisponibilidade({ experimento = null, embutido = false }: 
   // própria grade de disponibilidade quais horários ele já dá aula de
   // verdade -- só informativo, não interfere no estado editável
   // (disponível/bloqueado/HA) da célula.
-  const { data: horariosProf = [], isLoading: carregandoHorarios } = useListHorarios(
+  const { data: horariosOficiais = [], isLoading: carregandoOficiais } = useListHorarios(
     professorIdNum ? { professorId: professorIdNum } : {},
     { query: { enabled: !!professorIdNum, queryKey: getListHorariosQueryKey(professorIdNum ? { professorId: professorIdNum } : {}) } },
   );
+  // [DISP-AULAS-DO-RASCUNHO] (12/11/2026) com o rascunho ligado, as aulas mostradas sao as do rascunho (e, das turmas que
+  // ficaram fora dele, as da grade que vale hoje), como o Promover vai gravar. Antes a tela mostrava sempre a grade que
+  // vale hoje, e uma aula ja trocada no rascunho continuava aparecendo no lugar antigo (retorno do diretor do Romario).
+  // Mesma consulta da aba Grade do rascunho (grade-rascunho.tsx): uma troca la atualiza aqui.
+  const aulasRascunho = useQuery({
+    queryKey: ["grade-rascunho", experimento],
+    queryFn: () => customFetch<Array<{ nome: string; turmaId: number; disciplinaId: number; professorId: number | null; diaSemana: number; numeroAula: number; assincrona?: boolean | null }>>("/api/horarios/experimentais"),
+    enabled: !!experimento,
+  });
+  const { data: disciplinasEscola = [] } = useListDisciplinas();
+  const horariosProf = useMemo(() => {
+    if (!experimento || !professorIdNum) return horariosOficiais;
+    const linhas = (aulasRascunho.data ?? []).filter((l) => l.nome === experimento);
+    if (!linhas.length) return horariosOficiais; // rascunho ainda sem grade
+    const turmasDentro = new Set(linhas.map((l) => l.turmaId));
+    const turmaPorId = new Map((turmasTodas as any[]).map((t) => [t.id, t]));
+    const nomeDisc = new Map<number, string>();
+    for (const d of disciplinasEscola as any[]) nomeDisc.set(d.id, d.nome);
+    for (const h of horariosOficiais as any[]) if (h.disciplina?.nome) nomeDisc.set(h.disciplinaId ?? h.disciplina?.id, h.disciplina.nome);
+    const doRascunho = linhas.filter((l) => l.professorId === professorIdNum).map((l, i) => ({
+      id: -1 - i, ...l, turma: turmaPorId.get(l.turmaId), disciplina: { id: l.disciplinaId, nome: nomeDisc.get(l.disciplinaId) ?? "aula" },
+    }));
+    return [...(horariosOficiais as any[]).filter((h) => !turmasDentro.has(h.turmaId ?? h.turma?.id)), ...doRascunho];
+  }, [experimento, professorIdNum, horariosOficiais, aulasRascunho.data, turmasTodas, disciplinasEscola]) as typeof horariosOficiais;
+  const carregandoHorarios = carregandoOficiais || (!!experimento && aulasRascunho.isLoading);
   const horariosDoTurno = useMemo(
     () => horariosProf.filter((h: any) => h.turma?.turno === turno),
     [horariosProf, turno],
@@ -362,6 +388,17 @@ export function PainelDisponibilidade({ experimento = null, embutido = false }: 
         return;
       }
     }
+    // [HA-SOBRE-AULA] (12/11/2026) marcar HA onde o professor tem aula nao tira a aula dali (retorno do diretor do
+    // Romario: "bloqueei para HA e ele manteve a aula"). Avisa o que acontece e o caminho para tirar a aula.
+    if ((proximo === "ha_obrigatoria" || proximo === "ha_fixa") && real) {
+      const aula = `${real.turma?.nome ?? "?"} — ${real.disciplina?.nome ?? "?"}`;
+      const texto = experimento
+        ? `Esse horário tem aula no rascunho (${aula}). Marcar HA aqui não tira a aula sozinho: ela aparece em vermelho na simulação do rascunho (aba Modo Experimental), onde o botão "Ver como resolver" sugere a troca. O rascunho só pode ser promovido depois que a aula mudar de lugar. Marcar HA mesmo assim?`
+        : proximo === "ha_obrigatoria"
+          ? `Esse horário tem aula (${aula}). Na grade que vale hoje, a HA comum não tira a aula: ela é refeita em outro horário livre. Para a aula sair daqui, faça a mudança no rascunho (o "Ver como resolver" sugere a troca). Marcar HA mesmo assim?`
+          : `Esse horário tem aula (${aula}). A HA fixa prende o horário, mas a aula só sai daqui quando a grade for gerada de novo ou trocada no rascunho; até lá, a tela Conflitos acusa. Marcar HA fixa mesmo assim?`;
+      if (!confirm(texto)) return;
+    }
     setMatriz((prev) => ({ ...prev, [key]: proximo }));
   };
 
@@ -510,7 +547,7 @@ export function PainelDisponibilidade({ experimento = null, embutido = false }: 
           const dados = e instanceof ApiError ? (e.data as { precisaConfirmar?: boolean; aulasNoHorario?: string[] } | null) : null;
           if (!(e instanceof ApiError && e.status === 409 && dados?.precisaConfirmar)) throw e;
           const lista = (dados.aulasNoHorario ?? []).map((x) => `• ${x}`).join("\n");
-          if (!confirm(`${professorSelecionado?.nome ?? "O professor"} tem aula no rascunho nesse(s) horário(s):\n\n${lista}\n\nSe bloquear, a aula fica onde está até alguém mudá-la de lugar, e o rascunho não pode ser promovido enquanto isso. Bloquear mesmo assim?`)) return;
+          if (!confirm(`${professorSelecionado?.nome ?? "O professor"} tem aula no rascunho nesse(s) horário(s):\n\n${lista}\n\nSe gravar, a aula fica onde está até alguém mudá-la de lugar (botão "Ver como resolver" na simulação do rascunho), e o rascunho não pode ser promovido enquanto isso. Gravar mesmo assim?`)) return;
           await gravar(true);
         }
         setOriginal({ ...matriz });
