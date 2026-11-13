@@ -6,6 +6,7 @@ import {
   horarioSlotsTable, turmaDisciplinasTable, trimestresLetivosTable, matrizesCurricularesTable, itensMatrizTable,
   escolasTable, horariosExperimentaisTable, codigosRcoDisciplinaTable, // [RCO-EXPORT-BANCO]
   calendarioEscolarTable, // [PONTO-DIARIO]
+  equipeApoioTable, // [EQUIPE-APOIO]
 } from "@workspace/db";
 import { and, eq, inArray, isNull, notInArray, sql } from "drizzle-orm";
 import { GRADES_SEED_RCO } from "../lib/grades-seed-rco"; // [RCO-EXPORT-BANCO]
@@ -32,6 +33,7 @@ import { carregarMapaIntegral, mapaIntegralDosSlots, projetarIntegral } from "..
 import { mapaRevezamento, hojeBrasil } from "../lib/revezamento-trio"; // [REVEZAMENTO-TRIO]
 import { carregarAssSoTurma, carregarPeriodosExtrasFinais, podarLinhasExtras } from "../lib/assincrona-so-turma"; // [ASS-SO-TURMA]
 import { gerarPdfPontoDiario, type PontoDiario, type CelulaPonto, type LinhaPonto } from "../lib/pdf-ponto-diario"; // [PONTO-DIARIO]
+import { linhasEquipeDoTurno, semTabelaEquipe, type PessoaEquipe } from "../lib/equipe-apoio"; // [EQUIPE-APOIO]
 import { carregarDadosAgenda, agendaDoPeriodo, presenciaisDoTrio } from "../lib/agenda-assincronas-dados"; // [CALENDARIO-ASSINCRONAS]
 import { calendarioPorTurma } from "../lib/agenda-assincronas";
 import { gerarPdfCalendarioAssincronas, gerarPdfCalendarioLadoALado } from "../lib/pdf-calendario-assincronas";
@@ -300,6 +302,16 @@ router.get("/ponto", async (req, res) => {
 // letiva do turno. ?formato=pdf (padrao) ou json (a tela monta o Excel com essas linhas).
 const ROTULO_TURNO: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" };
 const NOME_DIA = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+// [EQUIPE-APOIO] (12/11/2026) pedagogos, PAEE, interpretes, PAC e Sala de Recursos que assinam o ponto.
+// Sem a migracao (tabela equipe_apoio) o ponto sai como antes, so com os professores.
+async function carregarEquipeApoio(escolaId: string): Promise<PessoaEquipe[]> {
+  try {
+    return await db.select().from(equipeApoioTable).where(eq(equipeApoioTable.escolaId, escolaId));
+  } catch (e) {
+    if (semTabelaEquipe(e)) return [];
+    throw e;
+  }
+}
 async function montarPontoDiario(escolaId: string, dataISO: string, turnoFiltro: string): Promise<PontoDiario | { erro: string }> {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dataISO)) return { erro: "Data inválida." };
   const d = new Date(`${dataISO}T12:00:00Z`);
@@ -328,6 +340,7 @@ async function montarPontoDiario(escolaId: string, dataISO: string, turnoFiltro:
   const ehAssSoTurma = await carregarAssSoTurma(escolaId);
   const turmaMap = new Map(turmas.map((t) => [t.id, t]));
   const discMap = new Map(disciplinas.map((x) => [x.id, x]));
+  const equipe = await carregarEquipeApoio(escolaId); // [EQUIPE-APOIO]
   const semAula = eventos.find((e) => !e.diaLetivo && ["feriado", "recesso", "ponto_facultativo", "estudo_planejamento"].includes(e.tipo));
   const aviso = semAula ? `Atenção: ${semAula.descricao} (${semAula.tipo.replace("_", " ")}) — dia sem aula no calendário da escola.` : null;
 
@@ -368,7 +381,7 @@ async function montarPontoDiario(escolaId: string, dataISO: string, turnoFiltro:
       if (!temAlgo) continue;
       linhas.push({ professor: prof.nome, celulas, aulas: celulas.filter((c) => c.tipo === "aula").length, ha: celulas.filter((c) => c.tipo === "ha").length });
     }
-    resultado.turnos.push({ turno, rotulo: ROTULO_TURNO[turno] ?? turno, colunas, linhas });
+    resultado.turnos.push({ turno, rotulo: ROTULO_TURNO[turno] ?? turno, colunas, linhas, equipe: linhasEquipeDoTurno(equipe, diaSemana, turno) });
   }
   return resultado;
 }

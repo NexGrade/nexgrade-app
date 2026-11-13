@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { ClipboardList, Download, FileText, Loader2, NotebookPen, TrendingUp } from "lucide-react";
 import { CardPontoDiario } from "@/components/ponto-diario"; // [PONTO-DIARIO]
+import { CardEquipeApoio } from "@/components/equipe-apoio"; // [EQUIPE-APOIO]
 import { useBaixarArquivo, montarUrl, SEMANA_ATUAL, SEMANA_PROXIMA } from "@/hooks/use-baixar-arquivo";
 import { ListasPedagogicas } from "@/components/listas-pedagogicas"; // [PEDAGOGIA]
 import { Link } from "wouter";
@@ -174,6 +175,8 @@ export default function RelatoriosPedagogicosPage() {
             </Button>
           </CardContent>
         </Card>
+
+        <CardEquipeApoio />
       </div>
 
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Carga horária</h2>

@@ -71,6 +71,13 @@
       "when": 1793972321967,
       "tag": "0009_overjoyed_selene",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794529986283,
+      "tag": "0010_overjoyed_annihilus",
+      "breakpoints": true
     }
   ]
 }

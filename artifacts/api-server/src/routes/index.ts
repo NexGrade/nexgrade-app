@@ -34,6 +34,7 @@ import viradaAnoRouter from "./virada-ano"; // [VIRADA-ANO]
 import codigosRcoRouter from "./codigos-rco"; // [CODIGOS-RCO-TELA]
 import arquivoRcoRouter from "./arquivo-rco"; // [ARQUIVO-RCO]
 import pedagogiaRouter from "./pedagogia"; // [PRESENCA-PEDAGOGIA]
+import equipeApoioRouter from "./equipe-apoio"; // [EQUIPE-APOIO]
 import regrasDistribuicaoRouter from "./regras-distribuicao"; // [LIMITE-DISCIPLINA]
 import { exigirAdminParaAlterar } from "../lib/permissao"; // [PERMISSAO-PAPEL]
 import { carregarAcesso } from "../lib/acesso"; // [ACESSOS-ESCOLA]
@@ -95,6 +96,7 @@ router.use("/minha-agenda", minhaAgendaRouter);
 router.use("/virada-ano", viradaAnoRouter); // [VIRADA-ANO]
 router.use("/codigos-rco", codigosRcoRouter); // [CODIGOS-RCO-TELA]
 router.use("/arquivo-rco", arquivoRcoRouter); // [ARQUIVO-RCO]
+router.use("/pedagogia/equipe-apoio", equipeApoioRouter); // [EQUIPE-APOIO] antes de /pedagogia; mesma regra de permissao
 router.use("/pedagogia", pedagogiaRouter); // [PRESENCA-PEDAGOGIA]
 router.use("/regras-distribuicao", regrasDistribuicaoRouter); // [LIMITE-DISCIPLINA]
 
