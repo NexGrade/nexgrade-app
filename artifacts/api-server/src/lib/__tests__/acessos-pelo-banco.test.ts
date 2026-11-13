@@ -120,6 +120,18 @@ describe("com ACESSOS_PELO_BANCO=1", () => {
     }
   });
 
+  it("equipe de apoio do ponto: pedagogia e equipe gestora leem e cadastram; professor e reservas nao [EQUIPE-APOIO]", () => {
+    const alteracoes: Array<[string, string]> = [["POST", "/pedagogia/equipe-apoio"], ["PUT", "/pedagogia/equipe-apoio/3"], ["DELETE", "/Pedagogia/Equipe-Apoio/3"]];
+    for (const cargo of ["pedagogia", "direcao", "coordenacao", "secretaria"]) {
+      expect(rodar(req({ path: "/pedagogia/equipe-apoio", cargo })).passou, `${cargo} GET`).toBe(true);
+      for (const [method, path] of alteracoes) expect(rodar(req({ method, path, cargo })).passou, `${cargo} ${method} ${path}`).toBe(true);
+    }
+    for (const cargo of ["professor", "reservas"]) {
+      expect(rodar(req({ path: "/pedagogia/equipe-apoio", cargo })), `${cargo} GET`).toMatchObject({ passou: false, status: 403 });
+      for (const [method, path] of alteracoes) expect(rodar(req({ method, path, cargo })), `${cargo} ${method} ${path}`).toMatchObject({ passou: false, status: 403 });
+    }
+  });
+
   it("gestor de reservas so altera reservas e salas (sem as regras por professor)", () => {
     expect(rodar(req({ method: "POST", path: "/reservas", cargo: "reservas" })).passou).toBe(true);
     for (const [method, path] of [["POST", "/salas"], ["PATCH", "/Salas/3"], ["DELETE", "/salas/3"]]) { // [GESTOR-SALAS]

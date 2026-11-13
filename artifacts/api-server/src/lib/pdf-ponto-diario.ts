@@ -6,12 +6,16 @@
 // (sai melhor em copia). A4 RETRATO, cada turno numa folha so: a altura da linha e a fonte
 // se ajustam a quantidade de professores (fonte ate 9,5 pt). So passa para outra folha se
 // a linha ficaria baixa demais para escrever (menos de ~4,6 mm); ai o cabecalho se repete.
+// [EQUIPE-APOIO] (12/11/2026) Depois dos professores, um bloco "Equipe pedagogica e de apoio"
+// (pedagogos, PAEE, interpretes, PAC, Sala de Recursos): sem aula de turma, as colunas das aulas
+// viram uma celula larga com a funcao; situacao e observacao iguais as dos professores.
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import { sanitizarTextoPdf } from "./pdf-grade";
 
 export type CelulaPonto = { texto: string; tipo: "aula" | "ha" | "atividade" | "indisponivel" | "livre" };
 export type LinhaPonto = { professor: string; celulas: CelulaPonto[]; aulas: number; ha: number };
-export type TurnoPonto = { turno: string; rotulo: string; colunas: Array<{ numeroAula: number; hora: string }>; linhas: LinhaPonto[] };
+export type LinhaEquipePonto = { nome: string; funcao: string };
+export type TurnoPonto = { turno: string; rotulo: string; colunas: Array<{ numeroAula: number; hora: string }>; linhas: LinhaPonto[]; equipe?: LinhaEquipePonto[] };
 export type PontoDiario = { escola: string; data: string; dataBR: string; diaSemana: string; aviso: string | null; turnos: TurnoPonto[] };
 
 const LARGURA = 595.28;
@@ -59,11 +63,12 @@ export async function gerarPdfPontoDiario(p: PontoDiario): Promise<Uint8Array> {
   function novaPagina(turno: TurnoPonto | null): { page: PDFPage; y: number } {
     const page = pdf.addPage([LARGURA, ALTURA]);
     paginas.push(page);
-    const titulo = `${p.escola} — Ponto diário${turno ? " · " + turno.rotulo : ""} · ${p.diaSemana}, ${p.dataBR}`;
+    const titulo = `${p.escola} · Ponto diário${turno ? " · " + turno.rotulo : ""} · ${p.diaSemana}, ${p.dataBR}`;
     page.drawText(caber(titulo, bold, 11.5, LARGURA - 2 * MARGEM), { x: MARGEM, y: ALTURA - MARGEM - 10, size: 11.5, font: bold, color: PRETO });
     let y = ALTURA - MARGEM - 23;
     if (turno) {
-      const legenda = `${turno.linhas.length} professores · HA = hora-atividade · Situação: marque P Presente · F Falta · AT Atestado · ATR Atraso`;
+      const nEquipe = turno.equipe?.length ?? 0;
+      const legenda = `${turno.linhas.length} professores${nEquipe ? ` · ${nEquipe} da equipe de apoio` : ""} · HA = hora-atividade · Situação: marque P Presente · F Falta · AT Atestado · ATR Atraso`;
       page.drawText(caber(legenda, font, 8.5, LARGURA - 2 * MARGEM), { x: MARGEM, y, size: 8.5, font, color: PRETO });
       y -= 12;
     }
@@ -74,13 +79,15 @@ export async function gerarPdfPontoDiario(p: PontoDiario): Promise<Uint8Array> {
     return { page, y: y - 2 };
   }
 
-  if (!p.turnos.some((t) => t.linhas.length)) {
+  const temGente = (t: TurnoPonto) => t.linhas.length > 0 || (t.equipe?.length ?? 0) > 0;
+  if (!p.turnos.some(temGente)) {
     const { page, y } = novaPagina(null);
     page.drawText("Nenhum professor com aula ou hora-atividade neste dia.", { x: MARGEM, y: y - 10, size: 11, font, color: CINZA_TEXTO });
   }
 
   for (const turno of p.turnos) {
-    if (!turno.linhas.length) continue;
+    if (!temGente(turno)) continue;
+    const equipe = turno.equipe ?? [];
     const larguraUtil = LARGURA - 2 * MARGEM;
     const n = Math.max(1, turno.colunas.length);
     const wProf = 47 * MM, wSit = 7 * MM;
@@ -104,8 +111,10 @@ export async function gerarPdfPontoDiario(p: PontoDiario): Promise<Uint8Array> {
       ["Observação"],
     ];
 
-    const linhasVerticais = (page: PDFPage, yTopo: number, yBase: number) => {
+    // juntarAulas: linha da equipe de apoio, sem as divisoes entre o nome e as colunas das aulas
+    const linhasVerticais = (page: PDFPage, yTopo: number, yBase: number, juntarAulas = false) => {
       for (let i = 1; i < xs.length - 1; i++) {
+        if (juntarAulas && i > 1 && i < iFimAulas) continue;
         const grossa = i === iFimAulas || i === iFimSit;
         page.drawLine({ start: { x: xs[i]!, y: yTopo }, end: { x: xs[i]!, y: yBase }, thickness: grossa ? 1 : 0.4, color: grossa ? PRETO : CINZA_BORDA });
       }
@@ -113,7 +122,8 @@ export async function gerarPdfPontoDiario(p: PontoDiario): Promise<Uint8Array> {
 
     let { page, y } = novaPagina(turno);
     // altura da linha para caber o turno inteiro numa folha (entre 4,6 mm e 7,4 mm)
-    const hLinha = Math.max(4.6 * MM, Math.min(7.4 * MM, (y - hCab - RODAPE) / turno.linhas.length));
+    const totalLinhas = turno.linhas.length + (equipe.length ? equipe.length + 1 : 0); // +1: titulo do bloco da equipe
+    const hLinha = Math.max(4.6 * MM, Math.min(7.4 * MM, (y - hCab - RODAPE) / totalLinhas));
     const tamNome = Math.min(9.5, hLinha * 0.55);
     const tamTurma = Math.min(9, tamNome - 0.3);
     const cabecalho = () => {
@@ -155,6 +165,39 @@ export async function gerarPdfPontoDiario(p: PontoDiario): Promise<Uint8Array> {
       linhasVerticais(page, y, yb);
       y = yb;
     });
+
+    // [EQUIPE-APOIO] bloco da equipe de apoio, depois dos professores
+    if (equipe.length) {
+      const tituloEquipe = () => {
+        const yb = y - hLinha;
+        page.drawRectangle({ x: MARGEM, y: yb, width: larguraUtil, height: hLinha, color: CINZA_CAB, borderColor: CINZA_BORDA, borderWidth: 0.4 });
+        page.drawText(caber("Equipe pedagógica e de apoio", bold, tamNome, larguraUtil - 6), { x: MARGEM + 3, y: yb + hLinha / 2 - tamNome * 0.35, size: tamNome, font: bold, color: PRETO });
+        y = yb;
+      };
+      // o titulo nao fica sozinho no fim da folha
+      if (y - 2 * hLinha < RODAPE - 0.5) {
+        ({ page, y } = novaPagina(turno));
+        cabecalho();
+      }
+      tituloEquipe();
+      equipe.forEach((pessoa, idx) => {
+        if (y - hLinha < RODAPE - 0.5) {
+          ({ page, y } = novaPagina(turno));
+          cabecalho();
+          tituloEquipe();
+        }
+        const yb = y - hLinha;
+        const yTexto = yb + hLinha / 2 - tamNome * 0.35;
+        if (idx % 2 === 1) page.drawRectangle({ x: MARGEM, y: yb, width: xs[iFimAulas]! - MARGEM, height: hLinha, color: CINZA_ZEBRA });
+        page.drawText(caber(pessoa.nome, font, tamNome, wProf - 6), { x: MARGEM + 3, y: yTexto, size: tamNome, font, color: PRETO });
+        const x0 = xs[1]!, w = xs[iFimAulas]! - x0;
+        const t = caber(pessoa.funcao, font, tamTurma, w - 6);
+        page.drawText(t, { x: x0 + (w - font.widthOfTextAtSize(t, tamTurma)) / 2, y: yTexto, size: tamTurma, font, color: PRETO });
+        page.drawRectangle({ x: MARGEM, y: yb, width: larguraUtil, height: hLinha, borderColor: CINZA_BORDA, borderWidth: 0.4 });
+        linhasVerticais(page, y, yb, true);
+        y = yb;
+      });
+    }
   }
 
   paginas.forEach((page, i) => {

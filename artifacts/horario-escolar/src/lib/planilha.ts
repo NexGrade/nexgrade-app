@@ -31,6 +31,8 @@ export type Aba = {
   alturaLinha?: number;
   /** cor de uma célula; `indice` é a posição da linha em `linhas` */
   destaque?: (valor: Valor, coluna: number, linha: Valor[], indice: number) => Destaque | undefined;
+  /** [EQUIPE-APOIO] junta as colunas `de` a `ate` (posições a partir de 0) da linha `indice` numa célula só */
+  mesclar?: (indice: number) => { de: number; ate: number } | undefined;
 };
 
 const AZUL = "FF1566C1"; // --primary do sistema (hsl 212 80% 42%)
@@ -120,6 +122,11 @@ export async function baixarExcel(abas: Aba[], arquivo: string, escola?: string)
         } else if (i % 2 === 1) {
           cel.fill = { type: "pattern", pattern: "solid", fgColor: { argb: ZEBRA } };
         }
+      }
+      const m = a.mesclar?.(i);
+      if (m && m.ate > m.de && m.de >= 0 && m.ate < n) {
+        ws.mergeCells(r.number, m.de + 1, r.number, m.ate + 1);
+        r.getCell(m.de + 1).alignment = { vertical: "middle", horizontal: "center", wrapText: true };
       }
     });
 

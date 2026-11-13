@@ -14,7 +14,10 @@ import { useToast } from "@/hooks/use-toast";
 type Celula = { texto: string; tipo: "aula" | "ha" | "atividade" | "indisponivel" | "livre" };
 type Ponto = {
   escola: string; data: string; dataBR: string; diaSemana: string; aviso: string | null;
-  turnos: Array<{ turno: string; rotulo: string; colunas: Array<{ numeroAula: number; hora: string }>; linhas: Array<{ professor: string; celulas: Celula[] }> }>;
+  turnos: Array<{
+    turno: string; rotulo: string; colunas: Array<{ numeroAula: number; hora: string }>; linhas: Array<{ professor: string; celulas: Celula[] }>;
+    equipe?: Array<{ nome: string; funcao: string }>; // [EQUIPE-APOIO]
+  }>;
 };
 
 function hojeLocal(): string {
@@ -63,7 +66,15 @@ export function CardPontoDiario() {
       const p = await customFetch<Ponto>(url("json"));
       // HA em azul, atividades em âmbar, horário fora do professor em cinza; linhas altas para assinar
       const COR: Partial<Record<Celula["tipo"], Destaque>> = { ha: "azul", atividade: "ambar", indisponivel: "cinza" };
-      await gerarExcel(p.turnos.map((t) => ({
+      await gerarExcel(p.turnos.map((t) => {
+        // [EQUIPE-APOIO] depois dos professores: uma linha de título e cada pessoa com a função nas colunas das aulas
+        const equipe = t.equipe ?? [];
+        const nAulas = t.colunas.length;
+        const iTituloEquipe = equipe.length ? t.linhas.length : -1;
+        const linhasEquipe = equipe.length
+          ? [["Equipe pedagógica e de apoio", ...t.colunas.map(() => ""), ""], ...equipe.map((e) => [e.nome, e.funcao, ...t.colunas.slice(1).map(() => ""), ""])]
+          : [];
+        return {
         nome: t.rotulo,
         titulo: "Ponto diário",
         subtitulo: `${t.rotulo} · ${p.diaSemana}, ${p.dataBR}`,
@@ -73,14 +84,21 @@ export function CardPontoDiario() {
           ...t.colunas.map((c) => ({ titulo: `${c.numeroAula}ª aula\n${c.hora}`, largura: 16, tipo: "centro" as const })),
           { titulo: "Situação\n(Presente / Falta / Atestado / Atraso)", largura: 34 },
         ],
-        linhas: t.linhas.map((l) => [l.professor, ...l.celulas.map((c) => (c.tipo === "indisponivel" ? "-----" : c.texto)), ""]),
+        linhas: [...t.linhas.map((l) => [l.professor, ...l.celulas.map((c) => (c.tipo === "indisponivel" ? "-----" : c.texto)), ""]), ...linhasEquipe],
         vazio: "Nenhum professor com aula ou hora-atividade neste turno.",
         alturaLinha: 28,
         destaque: (_v, c, _l, i) => {
+          if (i === iTituloEquipe) return "cinza";
           const cel = c > 0 ? t.linhas[i]?.celulas[c - 1] : undefined;
           return cel ? COR[cel.tipo] : undefined;
         },
-      })), `ponto_diario_${data}_${turno}.xlsx`, p.escola);
+        mesclar: (i) => {
+          if (i === iTituloEquipe) return { de: 0, ate: nAulas + 1 };
+          if (iTituloEquipe >= 0 && i > iTituloEquipe && nAulas > 1) return { de: 1, ate: nAulas };
+          return undefined;
+        },
+        };
+      }), `ponto_diario_${data}_${turno}.xlsx`, p.escola);
     } catch (e) { erro(e); } finally { setGerando(null); }
   };
 
@@ -90,7 +108,7 @@ export function CardPontoDiario() {
         <CardTitle className="flex items-center gap-2 text-base">
           <CalendarCheck className="w-4 h-4" /> Ponto Diário
         </CardTitle>
-        <CardDescription>Folha de ponto de um dia: aulas, hora-atividade e atividades de cada professor, com a situação de cada um para marcar: presente, falta, atestado ou atraso.</CardDescription>
+        <CardDescription>Folha de ponto de um dia: aulas, hora-atividade e atividades de cada professor, com a situação de cada um para marcar: presente, falta, atestado ou atraso. A equipe de apoio cadastrada sai no fim da folha.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
