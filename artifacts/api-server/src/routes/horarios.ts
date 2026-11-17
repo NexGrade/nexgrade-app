@@ -7,7 +7,7 @@ import {
 } from "../lib/disponibilidade-experimento"; // [DISP-EXPERIMENTAL] [EXPERIMENTO-COMPLETO]
 import { experimentosTable, atribuicaoExperimentalTable, disponibilidadeExperimentalTable } from "@workspace/db"; // [EXPERIMENTO-COMPLETO]
 import { lerRascunho, gravarRascunho, limparRascunho } from "../lib/rascunho"; // [MODO-RASCUNHO]
-import { aulasDePartidaDoMelhorar } from "../lib/rascunho-melhorar"; // [RASCUNHO-MELHORAR]
+import { aulasDePartidaDoMelhorar, professorDoVinculoAtual } from "../lib/rascunho-melhorar"; // [RASCUNHO-MELHORAR] [MELHORAR-PROFESSOR-NOVO]
 import { choquesDeProfessor, descreverChoques, mensagemDaTravaDeChoque, type TurmaHora } from "../lib/choques-professor"; // [CHOQUE-ANTES-DE-GRAVAR]
 import axios from "axios";
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -1655,7 +1655,9 @@ const NovoRascunhoBody = z.object({
   turmaIds: z.array(z.number().int()).max(200).optional(),
 });
 
-/** Cria o rascunho da escola: um experimento com a grade oficial copiada (turno, turmas escolhidas ou a escola toda). */
+/** Cria o rascunho da escola: um experimento EM BRANCO com o alcance escolhido (turno, turmas escolhidas ou a escola toda).
+ *  [RASCUNHO-EM-BRANCO] (17/11/2026) pedido da dona: o rascunho nao copia mais a grade oficial. Ele abre vazio e a grade
+ *  aparece quando a escola gera (do zero) ou melhora (o Melhorar parte da oficial enquanto o rascunho nao tem aulas). */
 router.post("/rascunho/atual", async (req, res) => {
   const escolaId = getEscolaId(req);
   const b = NovoRascunhoBody.safeParse({ ...req.body, nome: typeof req.body?.nome === "string" ? req.body.nome.trim().slice(0, 80) : "" });
@@ -1688,7 +1690,7 @@ router.post("/rascunho/atual", async (req, res) => {
     if (semTabelaExperimental(e)) { res.status(503).json({ error: "O rascunho ainda não está pronto no banco (falta a atualização do sistema). Avise o suporte NexGrade." }); return; }
     throw e;
   }
-  const aulas = await copiarOficialParaExperimento(escolaId, nome, alcance === "turmas" ? "todos" : alcance, turmaIds);
+  const aulas = 0; // [RASCUNHO-EM-BRANCO]
   const quem = (req as unknown as { acesso?: { email?: string } }).acesso?.email ?? null;
   await gravarRascunho(escolaId, { nome, criadoEm: new Date().toISOString(), criadoPor: quem, alcance, ...(turmaIds ? { turmaIds } : {}) });
   res.status(201).json({ nome, aulas, alcance, turmaIds: turmaIds ?? null });
@@ -2040,10 +2042,14 @@ router.put("/experimentais/:nome/atribuicoes", async (req, res) => {
   const professorAntes = atual.has(linha.td.id) ? atual.get(linha.td.id)! : linha.td.professorId ?? null;
   // [RASCUNHO-ALCANCE] (09/11/2026) turma fora do rascunho (rascunho de um turno ou de turmas escolhidas): entra nele com a
   // grade oficial copiada, para as aulas acompanharem o professor novo (sem isso, ao aplicar, so o vinculo mudaria)
+  // [RASCUNHO-EM-BRANCO] (17/11/2026) so quando o rascunho ja tem grade: em branco, a troca fica so guardada e o Gerar ou o
+  // Melhorar ja usam o professor novo ([MELHORAR-PROFESSOR-NOVO] passa a ele as aulas que a oficial tem do anterior)
   if (b.data.professorId !== professorAntes && (await lerRascunho(escolaId).catch(() => null))?.nome === nome) {
-    const [temNoExp] = await db.select({ id: horariosExperimentaisTable.id }).from(horariosExperimentaisTable).where(and(
-      eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome), eq(horariosExperimentaisTable.turmaId, linha.td.turmaId))).limit(1);
-    if (!temNoExp) await copiarOficialParaExperimento(escolaId, nome, "todos", linha.td.turmaId);
+    const [rascunhoTemGrade] = await db.select({ id: horariosExperimentaisTable.id }).from(horariosExperimentaisTable).where(and(
+      eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome))).limit(1);
+    const [temNoExp] = rascunhoTemGrade ? await db.select({ id: horariosExperimentaisTable.id }).from(horariosExperimentaisTable).where(and(
+      eq(horariosExperimentaisTable.escolaId, escolaId), eq(horariosExperimentaisTable.nome, nome), eq(horariosExperimentaisTable.turmaId, linha.td.turmaId))).limit(1) : [];
+    if (rascunhoTemGrade && !temNoExp) await copiarOficialParaExperimento(escolaId, nome, "todos", linha.td.turmaId);
   }
   // [RASCUNHO-AVISO-PROFESSOR] (06/11/2026) antes de trocar: o professor novo ja tem aula em outra turma, bloqueio ou HA
   // nos horarios desta disciplina? Sem confirmar, so devolve os avisos (como a troca de aulas).
@@ -3259,6 +3265,7 @@ async function runCpsatGeneracaoUnica(
   const haMovelAtual: Array<{ professor: string; dia: number; aula: number }> = [];
   const haOcupadoFixo: Array<{ professor: string; dia: number; aula: number }> = [];
   const haNaoMovelPorProfessor = new Map<string, number>();
+  const aulasPassadasAoVinculo: string[] = []; // [MELHORAR-PROFESSOR-NOVO]
   if (modoMelhoria) {
     const DIAS_NOME = ["Segunda", "Terca", "Quarta", "Quinta", "Sexta"];
     const codigoPorChave = new Map<string, { codigoSae: string; disciplina: string }>();
@@ -3278,18 +3285,33 @@ async function runCpsatGeneracaoUnica(
     if (turmasComGradeNoExp.size) console.log(`[RASCUNHO-MELHORAR] "${nomeExperimental}": melhorando a partir da grade do experimento em ${turmasComGradeNoExp.size} turma(s)`);
     const semMapa: string[] = [];
     const idsPassthrough = new Set([...passthroughSoTurma, ...passthroughAcompanhante].map((x) => x.id)); // [ASS-SO-TURMA] [ACOMPANHANTE]
-    for (const h of oficiais) {
-      if (idsPassthrough.has(h.id)) continue;
+    const paraOMotor = oficiais.filter((h) => !idsPassthrough.has(h.id));
+    // [MELHORAR-PROFESSOR-NOVO] (17/11/2026) aula que ficou com o professor anterior depois da troca em Turmas: passa
+    // para o professor do vinculo atual (um so candidato) em vez de recusar o Melhorar
+    const profOriginal = (h: { professorId: number | null }) => h.professorId != null ? professorMap.get(h.professorId)?.nome : undefined;
+    const linhasVinculo = disciplinasTurma.flatMap((d) => {
+      const ids = chaveParaIds.get(`${d.turma}||${d.codigoSae}`);
+      return ids ? [{ turmaId: ids.turmaId, disciplinaId: ids.disciplinaId, professor: d.professor, assincrona: !!ids.assincrona }] : [];
+    });
+    const professorNovo = professorDoVinculoAtual(
+      paraOMotor.map((h) => ({ turmaId: h.turmaId, disciplinaId: h.disciplinaId, professor: profOriginal(h), assincrona: !!h.assincrona })), linhasVinculo);
+    const DIA_CURTO = ["seg", "ter", "qua", "qui", "sex"];
+    for (const [i, h] of paraOMotor.entries()) {
       const turmaH = turmaMap.get(h.turmaId);
-      const profNome = h.professorId != null ? professorMap.get(h.professorId)?.nome : undefined;
+      const profAntes = profOriginal(h);
+      const profNome = professorNovo.get(i) ?? profAntes;
       const info = turmaH && profNome ? codigoPorChave.get(`${h.turmaId}|${h.disciplinaId}|${profNome}|${h.assincrona ? 1 : 0}`) : undefined; // [ASSINCRONA-TRIO]
       if (!turmaH || !profNome || !info) {
         semMapa.push(`${turmaH?.nome ?? `turma #${h.turmaId}`} | disciplina #${h.disciplinaId} | ${profNome ?? `professor #${h.professorId}`} | dia ${h.diaSemana} aula ${h.numeroAula}`);
         continue;
       }
+      if (professorNovo.has(i)) { // [MELHORAR-PROFESSOR-NOVO]
+        aulasPassadasAoVinculo.push(`${turmaH.nome}, ${info.disciplina}, ${DIA_CURTO[h.diaSemana] ?? h.diaSemana} ${h.numeroAula}ª: ${profAntes ?? "sem professor"} → ${profNome}`);
+      }
       if (baseDeEspelho.has(`${turmaH.nome}||${info.codigoSae}`)) continue; // [TRIO-MESMO-PROFESSOR] a base ja representa esta aula
       aulasIniciais.push({ turma: turmaH.nome, codigoSae: info.codigoSae, disciplina: info.disciplina, professor: profNome, dia: h.diaSemana, diaNome: DIAS_NOME[h.diaSemana] ?? String(h.diaSemana), aula: h.numeroAula });
     }
+    if (aulasPassadasAoVinculo.length) console.log(`[MELHORAR-PROFESSOR-NOVO] ${aulasPassadasAoVinculo.length} aula(s) passadas ao professor do vinculo: ${aulasPassadasAoVinculo.join("; ")}`);
     // [HA-OCUPA-MELHORIA] HA de hoje dos professores do turno: o motor conta como horario ocupado,
     // para nao "consertar" um vao que a HA ja tapa
     const haHoje = professorIdsUsados.size
@@ -3577,7 +3599,8 @@ async function runCpsatGeneracaoUnica(
       otimo: resultado.otimo,
       tempoResolucaoS: resultado.tempoResolucaoS,
       ...((resultado as { paradoPeloUsuario?: boolean }).paradoPeloUsuario ? { paradoPeloUsuario: true } : {}), // [PARAR-MOTOR]
-      ...(modoMelhoria ? { modo: "melhoria", janelasProfessorAntes: (resultado as { janelasProfessorAntes?: number }).janelasProfessorAntes, janelasProfessorDepois: (resultado as { janelasProfessorDepois?: number }).janelasProfessorDepois } : {}), // [MELHORAR-GRADE]
+      ...(aulasPassadasAoVinculo.length ? { aulasPassadasAoVinculo } : {}), // [MELHORAR-PROFESSOR-NOVO]
+      ...(modoMelhoria ? { modo: "melhoria", janelasProfessorAntes:(resultado as { janelasProfessorAntes?: number }).janelasProfessorAntes, janelasProfessorDepois: (resultado as { janelasProfessorDepois?: number }).janelasProfessorDepois } : {}), // [MELHORAR-GRADE]
       totalTurmas: turmasDoTurno.length,
       totalSlots: gravados.length,
       naoMapeadas: naoMapeadas.length,

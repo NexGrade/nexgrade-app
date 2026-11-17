@@ -83,6 +83,8 @@ describe.skipIf(!TEM_BANCO)("ver como resolver: aula em horario bloqueado (caso 
 
   it("sugere o ciclo de tres aulas, aplica so no rascunho e o promover deixa de recusar", async () => {
     expect((await chamar("POST", "/horarios/rascunho/atual", { nome: NOME, alcance: "matutino" })).status).toBe(201);
+    // [RASCUNHO-EM-BRANCO] o rascunho abre vazio; a grade (que viria do Gerar/Melhorar) entra pelo restaurar-turma
+    for (const turmaId of [ids.t, ids.u]) expect((await chamar("POST", `${URL_EXP}/restaurar-turma`, { turmaId })).status).toBe(200);
     // Nicolas bloqueado quarta e quinta no rascunho (pede confirmacao: ha aula dele na quinta 2a)
     const itens = [2, 3].flatMap((d) => [1, 2].map((a) => ({ diaSemana: d, horarioSlot: a, turno: "matutino", disponivel: false, motivo: "Bloqueio (definido na tela)", horaAtividadeObrigatoria: false })));
     expect((await chamar("POST", `/disponibilidade/lote?experimento=${encodeURIComponent(NOME)}`, { professorId: ids.nic, itens })).status).toBe(409);

@@ -70,7 +70,8 @@ export function RascunhoBarra() {
       ligarRascunho(r.nome);
       setNovoAberto(false); setNome(""); setTurmasEscolhidas([]);
       await atualizarTudo();
-      toast({ title: `Rascunho "${r.nome}" criado`, description: `A grade oficial de ${descreverAlcance({ alcance: r.alcance, turmaIds: r.turmaIds ?? undefined }, nomeTurma)} (${r.aulas} aulas) foi copiada para o rascunho. Mexa à vontade: nada vale para a escola até ${PROMOVER_TEXTO}.` });
+      // [RASCUNHO-EM-BRANCO] (17/11/2026) o rascunho abre em branco: a grade vem do Gerar ou do Melhorar
+      toast({ title: `Rascunho "${r.nome}" criado (${descreverAlcance({ alcance: r.alcance, turmaIds: r.turmaIds ?? undefined }, nomeTurma)})`, description: `Ele começa em branco. Gere a grade em Gerar Grade (do zero ou "Melhorar"). Nada vale para a escola até ${PROMOVER_TEXTO}.` });
     } catch (e) {
       toast({ title: "Não foi possível criar o rascunho", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
     } finally { setOcupado(null); }
@@ -130,7 +131,8 @@ export function RascunhoBarra() {
             <div className="flex flex-wrap items-center gap-2">
               <Button size="sm" variant="secondary" className="h-9 bg-white text-violet-800 hover:bg-violet-50" onClick={() => void verMudancas()}>Ver mudanças</Button>
               {/* [IR-PROMOVER] (09/11/2026) leva ao Modo Experimental com o rascunho em destaque e a simulacao pronta; quem decide e o Promover de la */}
-              <Button size="sm" className="h-9 bg-emerald-500 text-white hover:bg-emerald-600" title="Abre o Modo Experimental com o rascunho e a simulação, para conferir e promover"
+              <Button size="sm" className="h-9 bg-emerald-500 text-white hover:bg-emerald-600" disabled={rascunho.aulas === 0} /* [RASCUNHO-EM-BRANCO] */
+                title={rascunho.aulas === 0 ? "O rascunho ainda está em branco: gere a grade primeiro (Gerar Grade)" : "Abre o Modo Experimental com o rascunho e a simulação, para conferir e promover"}
                 onClick={() => navegar(`/horario?tab=experimental&experimento=${encodeURIComponent(rascunho.nome)}`)}>
                 Promover para oficial…
               </Button>
@@ -178,15 +180,16 @@ export function RascunhoBarra() {
           <DialogHeader><DialogTitle>Começar rascunho</DialogTitle></DialogHeader>
           <div className="space-y-3 text-sm">
             <p className="text-muted-foreground">
-              O rascunho começa como uma cópia da grade de hoje (só do turno ou das turmas que você escolher). Dentro dele você troca aulas na Grade, muda a Disponibilidade e o professor das disciplinas em Turmas,
-              e gera a grade de novo se quiser. <strong>Nada vale para a escola até {PROMOVER_TEXTO}.</strong>
+              {/* [RASCUNHO-EM-BRANCO] */}
+              O rascunho começa <strong>em branco</strong> (só do turno ou das turmas que você escolher). Mude a Disponibilidade e o professor das disciplinas em Turmas
+              e gere a grade em Gerar Grade: do zero ou com "Melhorar", que parte da grade de hoje. Depois troque aulas na Grade se quiser. <strong>Nada vale para a escola até {PROMOVER_TEXTO}.</strong>
             </p>
             <div className="space-y-1.5">
               <Label>O que entra no rascunho</Label>
               <select className="w-full rounded-md border bg-background px-3 py-2 text-sm" value={alcance} onChange={(e) => setAlcance(e.target.value)}>
                 {ALCANCES.filter((a) => a.v === "todos" || a.v === "turmas" || turnosDaEscola.has(a.v)).map((a) => <option key={a.v} value={a.v}>{a.r}</option>)}
               </select>
-              <p className="text-xs text-muted-foreground">Só essa parte da grade é copiada, gerada e aplicada. O resto da escola não muda.</p>
+              <p className="text-xs text-muted-foreground">Só essa parte da grade é gerada e aplicada. O resto da escola não muda.</p>
               {alcance === "turmas" && (
                 <div className="max-h-48 overflow-y-auto rounded-md border p-2 space-y-1">
                   {turmasOrdenadas.map((t) => (

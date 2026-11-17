@@ -71,9 +71,18 @@ const ABAS = [
 ] as const;
 type AbaKey = typeof ABAS[number]["key"];
 
+// [MELHORAR-PROFESSOR-NOVO] (17/11/2026) aulas que estavam com o professor anterior (troca feita em Turmas) e o
+// Melhorar passou para o professor do vinculo atual
+function avisoAulasPassadasAoVinculo(r: { aulasPassadasAoVinculo?: string[] }): string {
+  const l = r.aulasPassadasAoVinculo ?? [];
+  if (!l.length) return "";
+  return ` ${l.length} aula(s) estavam com o professor anterior e passaram para o professor que está em Turmas: ${l.slice(0, 6).join("; ")}${l.length > 6 ? "; …" : ""}.`;
+}
+
 type StatusCpsatResult = {
   jobStatus: "running" | "done" | "error" | "cancelado";
   paradoPeloUsuario?: boolean; // [PARAR-MOTOR]
+  aulasPassadasAoVinculo?: string[]; // [MELHORAR-PROFESSOR-NOVO]
   httpStatusOriginal?: number;
   totalTurmas?: number;
   totalSlots?: number;
@@ -2258,7 +2267,10 @@ function AbaExperimental() {
       setMudancasAbertas((m) => ({ ...m, [nome]: { erro: e instanceof Error ? e.message : "Não foi possível carregar as mudanças." } }));
     }
   };
-  const nomes = [...new Set([...expSlots.map((s) => s.nome), ...resumoDe.keys()])];
+  // [RASCUNHO-EM-BRANCO] (17/11/2026) pedido da dona: o rascunho em branco (sem aula ainda) nao aparece na lista; ele entra
+  // quando a grade for gerada ou melhorada
+  const nomes = [...new Set([...expSlots.map((s) => s.nome), ...resumoDe.keys()])]
+    .filter((n) => n !== rascunhoInfo?.nome || expSlots.some((s) => s.nome === n));
   const diasSemanaExp = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
 
   const handleGerarLote = async () => {
@@ -2285,7 +2297,7 @@ function AbaExperimental() {
         }),
         responseType: "json",
       });
-      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] }); void queryClient.invalidateQueries({ queryKey: ["rascunho"] }); void queryClient.invalidateQueries({ queryKey: ["grade-rascunho"] }); // [RASCUNHO-EM-BRANCO] faixa roxa e aba Grade do rascunho
       toast({
         title: `Lote gerado! ${result.totalTurmas} turma(s), ${result.totalSlots} aulas criadas.`,
         description: result.totalConflitos > 0 || result.turmasComErro > 0
@@ -2319,14 +2331,15 @@ function AbaExperimental() {
       if (statusResult.jobStatus === "error") {
         throw new Error(statusResult.mensagem || statusResult.detalhe || statusResult.error || "Erro ao gerar a grade.");
       }
-      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] }); void queryClient.invalidateQueries({ queryKey: ["rascunho"] }); void queryClient.invalidateQueries({ queryKey: ["grade-rascunho"] }); // [RASCUNHO-EM-BRANCO] faixa roxa e aba Grade do rascunho
       toast({
         title: `Grade gerada: ${statusResult.totalSlots} aulas criadas.`,
-        description: statusResult.paradoPeloUsuario // [PARAR-MOTOR]
+        description: (statusResult.paradoPeloUsuario // [PARAR-MOTOR]
           ? `Você parou o cálculo aos ${Math.round(statusResult.tempoResolucaoS ?? 0)}s: esta é a melhor grade encontrada até ali. Confira antes de promover.`
           : statusResult.status === "OPTIMAL"
           ? `Solução ótima em ${Math.round(statusResult.tempoResolucaoS ?? 0)}s.`
-          : `Boa solução em ${Math.round(statusResult.tempoResolucaoS ?? 0)}s (sem prova de que é a melhor possível). Confira antes de promover.`,
+          : `Boa solução em ${Math.round(statusResult.tempoResolucaoS ?? 0)}s (sem prova de que é a melhor possível). Confira antes de promover.`)
+          + avisoAulasPassadasAoVinculo(statusResult), // [MELHORAR-PROFESSOR-NOVO]
       });
       setOpenGerarCpsatTurma(false);
       setNomeExpandido(nomeExperimental); irAoExperimento(nomeExperimental); // [AVISO-NAO-TAMPA]
@@ -2437,14 +2450,15 @@ function AbaExperimental() {
       if (statusResult.jobStatus === "error") {
         throw new Error(statusResult.mensagem || statusResult.detalhe || statusResult.error || "Erro ao gerar a grade.");
       }
-      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] }); void queryClient.invalidateQueries({ queryKey: ["rascunho"] }); void queryClient.invalidateQueries({ queryKey: ["grade-rascunho"] }); // [RASCUNHO-EM-BRANCO] faixa roxa e aba Grade do rascunho
       toast({
         title: `Grade gerada: ${statusResult.totalSlots} aulas criadas.`,
-        description: statusResult.paradoPeloUsuario // [PARAR-MOTOR]
+        description: (statusResult.paradoPeloUsuario // [PARAR-MOTOR]
           ? `Você parou o cálculo aos ${Math.round(statusResult.tempoResolucaoS ?? 0)}s: esta é a melhor grade encontrada até ali. Confira antes de promover.`
           : statusResult.status === "OPTIMAL"
           ? `Solução ótima em ${Math.round(statusResult.tempoResolucaoS ?? 0)}s.`
-          : `Boa solução em ${Math.round(statusResult.tempoResolucaoS ?? 0)}s (sem prova de que é a melhor possível). Confira antes de promover.`,
+          : `Boa solução em ${Math.round(statusResult.tempoResolucaoS ?? 0)}s (sem prova de que é a melhor possível). Confira antes de promover.`)
+          + avisoAulasPassadasAoVinculo(statusResult), // [MELHORAR-PROFESSOR-NOVO]
       });
       setOpenGerarCpsatTurnoParcial(false);
       setNomeExpandido(nomeExperimental); irAoExperimento(nomeExperimental); // [AVISO-NAO-TAMPA]
@@ -2537,14 +2551,15 @@ function AbaExperimental() {
       if (statusResult.jobStatus === "error") {
         throw new Error(statusResult.mensagem || statusResult.detalhe || statusResult.error || "Erro ao gerar a grade.");
       }
-      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] }); void queryClient.invalidateQueries({ queryKey: ["rascunho"] }); void queryClient.invalidateQueries({ queryKey: ["grade-rascunho"] }); // [RASCUNHO-EM-BRANCO] faixa roxa e aba Grade do rascunho
       toast({
         title: `Grade gerada: ${statusResult.totalTurmas} turma(s), ${statusResult.totalSlots} aulas criadas.`,
-        description: statusResult.paradoPeloUsuario // [PARAR-MOTOR]
+        description: (statusResult.paradoPeloUsuario // [PARAR-MOTOR]
           ? `Você parou o cálculo aos ${Math.round(statusResult.tempoResolucaoS ?? 0)}s: esta é a melhor grade encontrada até ali. Confira antes de promover.`
           : statusResult.status === "OPTIMAL"
           ? `Solução ótima em ${Math.round(statusResult.tempoResolucaoS ?? 0)}s.`
-          : `Boa solução em ${Math.round(statusResult.tempoResolucaoS ?? 0)}s (sem prova de que é a melhor possível). Confira antes de promover.`,
+          : `Boa solução em ${Math.round(statusResult.tempoResolucaoS ?? 0)}s (sem prova de que é a melhor possível). Confira antes de promover.`)
+          + avisoAulasPassadasAoVinculo(statusResult), // [MELHORAR-PROFESSOR-NOVO]
       });
       setOpenGerarCpsat(false);
       setNomeExpandido(nomeExperimental); irAoExperimento(nomeExperimental); // [AVISO-NAO-TAMPA]
@@ -2645,7 +2660,7 @@ function AbaExperimental() {
     // [RASCUNHO-NOME-FIXO] no rascunho, melhora o proprio rascunho (parte da grade dele)
     const nome = rascunhoNome ?? (cpsatForm.nomeExperimental.trim() || `CPSAT-${cpsatForm.turno}`).replace(/^(CPSAT|Grade)-/, "MELHORIA-");
     if (!confirm(rascunhoNome
-      ? `Melhorar o rascunho "${nome}" no turno ${cpsatForm.turno} por trocas de aulas?\n\nParte da grade do rascunho; a escola nao muda ate "Promover para oficial".`
+      ? `Melhorar o rascunho "${nome}" no turno ${cpsatForm.turno} por trocas de aulas?\n\n${rascunhoInfo?.aulas === 0 ? "O rascunho está em branco: parte da grade de hoje, já com os professores e a disponibilidade do rascunho" : "Parte da grade do rascunho"}; a escola não muda até "Promover para oficial".` /* [RASCUNHO-EM-BRANCO] */
       : `Melhorar a grade OFICIAL do ${cpsatForm.turno} por trocas de aulas?\n\nO resultado vira o experimento "${nome}". A grade oficial nao muda ate voce promover.`)) return;
     setMelhorandoCpsat(true);
     setGerandoCpsat(true);
@@ -2714,7 +2729,7 @@ function AbaExperimental() {
           experimental: true,
         },
       });
-      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] }); void queryClient.invalidateQueries({ queryKey: ["rascunho"] }); void queryClient.invalidateQueries({ queryKey: ["grade-rascunho"] }); // [RASCUNHO-EM-BRANCO] faixa roxa e aba Grade do rascunho
       toast({ title: `Experimento gerado! ${result.slotsGerados} aulas criadas.${result.conflitos.length ? ` ${result.conflitos.length} aviso(s).` : ""}` });
       setDiagnostico(diagnosticoDe(result)); // [DIAGNOSTICO-GERACAO] por que cada aula nao coube
       setOpenGerar(false);
@@ -2757,7 +2772,7 @@ function AbaExperimental() {
     setPromovendo(nome);
     try {
       const r: any = await promover({ nome: encodeURIComponent(nome) }); // [NOME-EXPERIMENTO] espaço no fim do nome sumia do endereço
-      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] }); void queryClient.invalidateQueries({ queryKey: ["rascunho"] }); void queryClient.invalidateQueries({ queryKey: ["grade-rascunho"] }); // [RASCUNHO-EM-BRANCO] faixa roxa e aba Grade do rascunho
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios"] });
       await queryClient.invalidateQueries({ queryKey: ["/api/horarios/backups"] }); // [BACKUP-GRADE]
       await queryClient.invalidateQueries({ queryKey: ["experimentos-resumo"] }); // [DISP-EXPERIMENTAL] [EXPERIMENTO-COMPLETO]
@@ -2899,7 +2914,7 @@ function AbaExperimental() {
       });
       toast({ title: "Troca feita no experimento", description: `A grade oficial não mudou. Janelas do experimento: ${o.janelasDepois}.` });
       setTrocas({});
-      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] }); void queryClient.invalidateQueries({ queryKey: ["rascunho"] }); void queryClient.invalidateQueries({ queryKey: ["grade-rascunho"] }); // [RASCUNHO-EM-BRANCO] faixa roxa e aba Grade do rascunho
       await simularPromocao(nome, true); // [FECHAR-JANELA-SEGUIDO] o quadro continua aberto para a proxima janela
     } catch {
       toast({ title: "Não foi possível fazer a troca", description: "O experimento pode ter mudado. Clique em Fechar esta janela de novo.", variant: "destructive" });
@@ -2934,7 +2949,7 @@ function AbaExperimental() {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(o),
       });
       toast({ title: o.moverHa?.length ? "Aulas trocadas e HA mudada no experimento" : "Aulas trocadas no experimento", description: `${o.texto}. A escola não mudou.` });
-      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] }); void queryClient.invalidateQueries({ queryKey: ["rascunho"] }); void queryClient.invalidateQueries({ queryKey: ["grade-rascunho"] }); // [RASCUNHO-EM-BRANCO] faixa roxa e aba Grade do rascunho
       await queryClient.invalidateQueries({ queryKey: ["/api/disponibilidade"] });
       await queryClient.invalidateQueries({ queryKey: ["grade-rascunho", nome] });
       await queryClient.invalidateQueries({ queryKey: ["rascunho"] });
@@ -2992,7 +3007,7 @@ function AbaExperimental() {
       toast({ title: "Não foi possível remover o experimento", description: "Nada foi apagado. Recarregue a página e tente de novo.", variant: "destructive" });
       return;
     }
-    await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] });
+    await queryClient.invalidateQueries({ queryKey: ["/api/horarios/experimentais"] }); void queryClient.invalidateQueries({ queryKey: ["rascunho"] }); void queryClient.invalidateQueries({ queryKey: ["grade-rascunho"] }); // [RASCUNHO-EM-BRANCO] faixa roxa e aba Grade do rascunho
     await queryClient.invalidateQueries({ queryKey: ["experimentos-resumo"] }); // [DISP-EXPERIMENTAL] [EXPERIMENTO-COMPLETO]
     // [LIXEIRA-SAI-DO-RASCUNHO] (11/11/2026) apagar o rascunho pela lixeira tambem o encerra: a faixa roxa sai na hora
     // (antes so sumia no F5), como no Promover
