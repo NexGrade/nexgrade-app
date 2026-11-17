@@ -115,6 +115,9 @@ export function diagnosticarGeracao(httpStatus: number, body: Record<string, any
     } else if (Array.isArray(body.semMapa) && body.semMapa.length) {
       titulo = "Não dá para melhorar: há aulas da grade oficial sem vínculo";
       problemas.push(...body.semMapa.slice(0, 30).map((s: unknown) => ({ oQue: typeof s === "string" ? s : JSON.stringify(s), sugestao: "Corrija o vínculo da turma (professor/disciplina) ou use Gerar do zero em vez de Melhorar." })));
+    } else if (body.error === "SERVIDOR_NAO_LIGOU") { // [CPSAT-DESPERTADOR] (17/11/2026)
+      titulo = "O servidor de cálculo não ligou";
+      problemas.push({ oQue: String(body.mensagem ?? "O servidor de cálculo não ligou. Nada foi calculado nem salvo."), sugestao: body.dica ?? "Tente de novo em 1 ou 2 minutos." });
     } else if (httpStatus === 502) {
       titulo = "O servidor de cálculo não respondeu";
       problemas.push({ oQue: "A grade não foi calculada porque o servidor de cálculo não respondeu (pode estar ligando).", sugestao: body.dica ?? "Tente de novo em 1 ou 2 minutos." });
