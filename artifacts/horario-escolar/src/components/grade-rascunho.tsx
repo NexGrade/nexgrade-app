@@ -190,9 +190,16 @@ export function GradeRascunho({ nome }: { nome: string }) {
           Trocar de lugar: clique numa aula (ou num horário vago) e depois em outra da mesma turma. Trocar o professor: lápis na aula. Gerar de novo com o motor: aba Modo Experimental (o nome do rascunho já vem preenchido).
         </p>
       </div>
-      {!turmaSel && <p className="text-sm text-muted-foreground">Escolha uma turma do período ou "Todas as turmas".</p>}
+      {/* [RASCUNHO-EM-BRANCO] (17/11/2026) o rascunho abre vazio: a grade aparece depois de gerar ou melhorar */}
+      {!q.isLoading && linhasRascunho.length === 0 ? (
+        <div className="rounded-lg border-2 border-dashed border-violet-300 bg-violet-50/60 px-4 py-6 text-center text-sm text-violet-900">
+          <strong className="block text-base">O rascunho ainda está em branco</strong>
+          Gere a grade dele em <strong>Gerar Grade</strong> (o nome do rascunho já vem preenchido): do zero, ou com <strong>"Melhorar"</strong>, que parte da grade de hoje.
+          Antes, se quiser, mude a Disponibilidade e o professor das disciplinas em Turmas: o motor já usa o que estiver no rascunho.
+        </div>
+      ) : !turmaSel && <p className="text-sm text-muted-foreground">Escolha uma turma do período ou "Todas as turmas".</p>}
       {turmaSel && q.isLoading && <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="w-4 h-4 animate-spin" /> Carregando...</div>}
-      {turmaSel && !q.isLoading && <div className="space-y-5">{mostrar.map(gradeDaTurma)}</div>}
+      {turmaSel && !q.isLoading && linhasRascunho.length > 0 && <div className="space-y-5">{mostrar.map(gradeDaTurma)}</div>}
 
       <Dialog open={!!editando} onOpenChange={(v) => { if (!v) setEditando(null); }}>
         <DialogContent className="max-w-md">

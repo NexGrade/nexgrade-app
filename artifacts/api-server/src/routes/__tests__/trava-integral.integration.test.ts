@@ -104,9 +104,10 @@ describe.skipIf(!TEM_BANCO)("trava da turma integral", () => {
     expect((await chamar("POST", "/horarios/rascunho/atual", { nome: "Com DOC", alcance: "turmas", turmaIds: [ids.doc, ids.t1] })).status).toBe(423);
     expect((await chamar("POST", "/horarios/rascunho/atual", { nome: "Escola" })).status).toBe(201);
     const url = `/horarios/experimentais/${enc("Escola")}`;
+    expect((await chamar("POST", `${url}/restaurar-turma`, { turmaId: ids.t1 })).status).toBe(200); // [RASCUNHO-EM-BRANCO] grade gerada da turma comum
     expect((await chamar("POST", `${url}/trocar-aulas`, { turmaId: ids.doc, de: { diaSemana: 0, numeroAula: 1 }, para: { diaSemana: 0, numeroAula: 3 } })).status).toBe(423);
     expect((await chamar("PUT", `${url}/atribuicoes`, { turmaDisciplinaId: ids.tdMatDoc, professorId: ids.bia })).status).toBe(423);
-    // a turma comum troca e o rascunho promove (a integral foi copiada igual)
+    // a turma comum troca e o rascunho promove (a integral nao entra no rascunho em branco e nao muda)
     expect((await chamar("POST", `${url}/trocar-aulas`, { turmaId: ids.t1, de: { diaSemana: 1, numeroAula: 1 }, para: { diaSemana: 1, numeroAula: 3 }, confirmar: true })).status).toBe(200);
     const p = await chamar("POST", `${url}/promover`);
     expect(p.status).toBeLessThan(300);

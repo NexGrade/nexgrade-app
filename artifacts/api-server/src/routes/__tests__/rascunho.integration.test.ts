@@ -35,6 +35,11 @@ const ids = { ana: 0, bia: 0, caio: 0, mat: 0, por: 0, t1: 0, t2: 0, tdMat1: 0, 
 const oficialDe = (turmaId: number) => db.select().from(horariosTable).where(and(eq(horariosTable.escolaId, E), eq(horariosTable.turmaId, turmaId)));
 const doRascunho = (nome: string) => db.select().from(horariosExperimentaisTable).where(and(eq(horariosExperimentaisTable.escolaId, E), eq(horariosExperimentaisTable.nome, nome)));
 const lugar = (h: { diaSemana: number; numeroAula: number }) => `${h.diaSemana}-${h.numeroAula}`;
+// [RASCUNHO-EM-BRANCO] (17/11/2026) o rascunho abre vazio; na escola a grade vem do Gerar ou do Melhorar (motor). Aqui, sem
+// motor, a grade das turmas entra pelo "voltar a turma como esta na escola" (restaurar-turma), que copia a oficial dela.
+async function encher(nome: string, turmaIds: number[]) {
+  for (const turmaId of turmaIds) expect((await chamar("POST", `/horarios/experimentais/${enc(nome)}/restaurar-turma`, { turmaId })).status).toBe(200);
+}
 
 describe.skipIf(!TEM_BANCO)("modo rascunho: fluxo completo e casos de erro", () => {
   beforeAll(async () => {
@@ -100,7 +105,9 @@ describe.skipIf(!TEM_BANCO)("modo rascunho: fluxo completo e casos de erro", () 
     await db.delete(horariosExperimentaisTable).where(and(eq(horariosExperimentaisTable.escolaId, E), eq(horariosExperimentaisTable.nome, "Já existe")));
     const r = await chamar("POST", "/horarios/rascunho/atual", { nome: "Plano A" });
     expect(r.status).toBe(201);
-    expect(r.body.aulas).toBe(5); // a grade oficial inteira copiada
+    expect(r.body.aulas).toBe(0); // [RASCUNHO-EM-BRANCO] abre em branco, sem copiar a oficial
+    expect(await doRascunho("Plano A")).toEqual([]);
+    expect((await chamar("GET", "/horarios/rascunho/atual")).body.rascunho).toMatchObject({ nome: "Plano A", aulas: 0 });
     expect((await chamar("POST", "/horarios/rascunho/atual", { nome: "Plano B" })).status).toBe(409);
     await chamar("DELETE", "/horarios/rascunho/atual");
   });
@@ -126,6 +133,7 @@ describe.skipIf(!TEM_BANCO)("modo rascunho: fluxo completo e casos de erro", () 
 
   it("[RASCUNHO-AVISO-PROFESSOR] trocar o professor avisa choque com aula em outra turma e com bloqueio; so troca confirmando", async () => {
     await chamar("POST", "/horarios/rascunho/atual", { nome: "Plano G" });
+    await encher("Plano G", [ids.t1, ids.t2]);
     const url = `/horarios/experimentais/${enc("Plano G")}`;
     // no rascunho, o Caio tambem tem Portugues na 1B na segunda 1a (mesmo horario da Matematica da 1A)
     await db.insert(horariosExperimentaisTable).values({ escolaId: E, nome: "Plano G", turmaId: ids.t2, disciplinaId: ids.por, professorId: ids.caio, diaSemana: 0, numeroAula: 1 });
@@ -164,6 +172,7 @@ describe.skipIf(!TEM_BANCO)("modo rascunho: fluxo completo e casos de erro", () 
 
   it("fluxo completo: mudar professor, disponibilidade e aulas no rascunho, aplicar e voltar pela copia", async () => {
     expect((await chamar("POST", "/horarios/rascunho/atual", { nome: "Plano F" })).status).toBe(201);
+    await encher("Plano F", [ids.t1, ids.t2]);
     const url = `/horarios/experimentais/${enc("Plano F")}`;
     // 1) Matematica da 1A: Ana -> Bia (as 2 aulas passam para a Bia no rascunho)
     let r = await chamar("PUT", `${url}/atribuicoes`, { turmaDisciplinaId: ids.tdMat1, professorId: ids.bia });
@@ -217,16 +226,24 @@ describe.skipIf(!TEM_BANCO)("modo rascunho: fluxo completo e casos de erro", () 
     expect(bloqueiosAna).toEqual([]);
   });
 
-  it("[RASCUNHO-ALCANCE] rascunho so de turmas escolhidas; turma de fora entra ao trocar o professor", async () => {
+  it("[RASCUNHO-ALCANCE] rascunho so de turmas escolhidas; com grade, turma de fora entra ao trocar o professor", async () => {
     expect((await chamar("POST", "/horarios/rascunho/atual", { nome: "So 1A", alcance: "turmas", turmaIds: [] })).status).toBe(400);
     expect((await chamar("POST", "/horarios/rascunho/atual", { nome: "So tarde", alcance: "vespertino" })).status).toBe(400); // a escola nao tem tarde
     const r = await chamar("POST", "/horarios/rascunho/atual", { nome: "So 1A", alcance: "turmas", turmaIds: [ids.t1] });
     expect(r.status).toBe(201);
-    expect(r.body).toMatchObject({ aulas: 3, alcance: "turmas", turmaIds: [ids.t1] });
-    expect((await chamar("GET", "/horarios/rascunho/atual")).body.rascunho).toMatchObject({ alcance: "turmas", turmaIds: [ids.t1], aulas: 3 });
+    expect(r.body).toMatchObject({ aulas: 0, alcance: "turmas", turmaIds: [ids.t1] });
+    expect((await chamar("GET", "/horarios/rascunho/atual")).body.rascunho).toMatchObject({ alcance: "turmas", turmaIds: [ids.t1], aulas: 0 });
+    // [RASCUNHO-EM-BRANCO] em branco, trocar o professor so guarda a troca: nenhuma turma entra no rascunho
+    let t = await chamar("PUT", `/horarios/experimentais/${enc("So 1A")}/atribuicoes`, { turmaDisciplinaId: ids.tdPor2, professorId: ids.bia, confirmar: true });
+    expect(t.body).toMatchObject({ aplicado: true, aulasAtualizadas: 0 });
+    expect(await doRascunho("So 1A")).toEqual([]);
+    expect((await chamar("GET", `/horarios/experimentais/${enc("So 1A")}/atribuicoes`)).body.filter((a: any) => a.mudou).map((a: any) => a.professorId)).toEqual([ids.bia]);
+    t = await chamar("PUT", `/horarios/experimentais/${enc("So 1A")}/atribuicoes`, { turmaDisciplinaId: ids.tdPor2, professorId: ids.caio }); // volta
+    expect(t.body.aplicado).toBe(true);
+    // com a grade da 1A no rascunho (depois de gerar), Portugues da 1B (fora): Caio -> Bia; a 1B entra e a aula passa para a Bia
+    await encher("So 1A", [ids.t1]);
     expect(new Set((await doRascunho("So 1A")).map((h) => h.turmaId))).toEqual(new Set([ids.t1]));
-    // Portugues da 1B (fora do rascunho): Caio -> Bia; a 1B entra no rascunho e a aula passa para a Bia
-    const t = await chamar("PUT", `/horarios/experimentais/${enc("So 1A")}/atribuicoes`, { turmaDisciplinaId: ids.tdPor2, professorId: ids.bia, confirmar: true });
+    t = await chamar("PUT", `/horarios/experimentais/${enc("So 1A")}/atribuicoes`, { turmaDisciplinaId: ids.tdPor2, professorId: ids.bia, confirmar: true });
     expect(t.body).toMatchObject({ aplicado: true, aulasAtualizadas: 1 });
     expect((await doRascunho("So 1A")).filter((h) => h.turmaId === ids.t2).map((h) => [h.disciplinaId, h.professorId]).sort())
       .toEqual([[ids.mat, ids.ana], [ids.por, ids.bia]].sort());
@@ -236,6 +253,7 @@ describe.skipIf(!TEM_BANCO)("modo rascunho: fluxo completo e casos de erro", () 
 
   it("[CHOQUE-ANTES-DE-GRAVAR] rascunho com professor em duas turmas no mesmo horario nao e aplicado, e diz qual", async () => {
     await chamar("POST", "/horarios/rascunho/atual", { nome: "Plano H", alcance: "matutino" });
+    await encher("Plano H", [ids.t1, ids.t2]);
     const url = `/horarios/experimentais/${enc("Plano H")}`;
     // Caio com Portugues na 1B na segunda 1a e, confirmando o aviso, a Matematica da 1A (segunda 1a e 2a) tambem
     await db.insert(horariosExperimentaisTable).values({ escolaId: E, nome: "Plano H", turmaId: ids.t2, disciplinaId: ids.por, professorId: ids.caio, diaSemana: 0, numeroAula: 1 });
@@ -294,6 +312,7 @@ describe.skipIf(!TEM_BANCO)("modo rascunho: fluxo completo e casos de erro", () 
 
   it("[AULA-EM-BLOQUEIO] bloquear no rascunho horario com aula pede confirmacao; simulacao e promover recusam ate a aula mudar", async () => {
     await chamar("POST", "/horarios/rascunho/atual", { nome: "Plano I", alcance: "matutino" });
+    await encher("Plano I", [ids.t1, ids.t2]);
     const url = `/horarios/experimentais/${enc("Plano I")}`;
     const lote = (professorId: number, item: Record<string, unknown>, confirmar?: boolean) =>
       chamar("POST", `/disponibilidade/lote?experimento=${enc("Plano I")}`, { professorId, itens: [{ turno: "matutino", horaAtividadeObrigatoria: false, ...item }], ...(confirmar ? { confirmar } : {}) });
@@ -341,6 +360,7 @@ describe.skipIf(!TEM_BANCO)("modo rascunho: fluxo completo e casos de erro", () 
 
   it("[AULA-EM-BLOQUEIO] rascunho de turmas escolhidas: bloqueio em cima de aula oficial de turma de fora tambem pergunta e trava o promover", async () => {
     await chamar("POST", "/horarios/rascunho/atual", { nome: "Plano J", alcance: "turmas", turmaIds: [ids.t1] });
+    await encher("Plano J", [ids.t1]);
     const url = `/horarios/experimentais/${enc("Plano J")}`;
     // a Ana da Matematica na 1B (fora do rascunho) na terca 1a
     const item = { diaSemana: 1, horarioSlot: 1, turno: "matutino", disponivel: false, motivo: "Bloqueio (definido na tela)", horaAtividadeObrigatoria: false };
@@ -356,6 +376,7 @@ describe.skipIf(!TEM_BANCO)("modo rascunho: fluxo completo e casos de erro", () 
   it("[HA-SOBRE-AULA] HA comum marcada no rascunho em cima de aula: pergunta, aparece no quadro, o Ver como resolver tira a aula e a HA fica", async () => {
     // caso do Romario (12/11): o diretor marcou HA onde a professora tinha aula e "ele manteve a aula"
     await chamar("POST", "/horarios/rascunho/atual", { nome: "Plano K", alcance: "matutino" });
+    await encher("Plano K", [ids.t1, ids.t2]);
     const url = `/horarios/experimentais/${enc("Plano K")}`;
     const haCaioSeg3 = { diaSemana: 0, horarioSlot: 3, turno: "matutino", disponivel: true, horaAtividadeObrigatoria: true, motivo: "HA manual (definida na tela)" };
     let r = await chamar("POST", `/disponibilidade/lote?experimento=${enc("Plano K")}`, { professorId: ids.caio, itens: [haCaioSeg3] });

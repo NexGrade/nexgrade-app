@@ -224,14 +224,17 @@ describe.skipIf(!TEM_BANCO)("disponibilidade em experimento: integracao com banc
     expect(volta!.professorId).toBe(ids.ana);
   });
 
-  it("[MODO-RASCUNHO] rascunho da escola: cria com a grade copiada, um so por vez, mostra as diferencas, restaura a turma e descarta", async () => {
+  it("[MODO-RASCUNHO] rascunho da escola: cria em branco, um so por vez, mostra as diferencas, restaura a turma e descarta", async () => {
     expect((await chamar("GET", "/horarios/rascunho/atual")).body).toEqual({ rascunho: null });
     let r = await chamar("POST", "/horarios/rascunho/atual", { nome: "Rascunho 1" });
     expect(r.status).toBe(201);
-    expect(r.body.aulas).toBeGreaterThan(0);
+    expect(r.body.aulas).toBe(0); // [RASCUNHO-EM-BRANCO] abre em branco
     expect((await chamar("POST", "/horarios/rascunho/atual", { nome: "Outro" })).status).toBe(409);
     r = await chamar("GET", "/horarios/rascunho/atual");
-    expect(r.body.rascunho).toMatchObject({ nome: "Rascunho 1", aulas: expect.any(Number) });
+    expect(r.body.rascunho).toMatchObject({ nome: "Rascunho 1", aulas: 0 });
+    // a grade entra pelo Gerar/Melhorar (motor); aqui, pelo "voltar a turma como esta na escola"
+    expect((await chamar("POST", `/horarios/experimentais/${enc("Rascunho 1")}/restaurar-turma`, { turmaId: ids.turma })).status).toBe(200);
+    expect((await chamar("GET", "/horarios/rascunho/atual")).body.rascunho.aulas).toBeGreaterThan(0);
     const [aula] = await db.select().from(horariosTable).where(eq(horariosTable.escolaId, E));
     const livre = aula!.numeroAula === 1 ? 2 : 1;
     r = await chamar("POST", `/horarios/experimentais/${enc("Rascunho 1")}/trocar-aulas`, { turmaId: ids.turma, de: { diaSemana: aula!.diaSemana, numeroAula: aula!.numeroAula }, para: { diaSemana: aula!.diaSemana, numeroAula: livre }, confirmar: true });
@@ -249,6 +252,7 @@ describe.skipIf(!TEM_BANCO)("disponibilidade em experimento: integracao com banc
 
   it("[MODO-RASCUNHO] aplicar (promover) o rascunho limpa o rascunho da escola", async () => {
     await chamar("POST", "/horarios/rascunho/atual", { nome: "Rascunho 2" });
+    await chamar("POST", `/horarios/experimentais/${enc("Rascunho 2")}/restaurar-turma`, { turmaId: ids.turma }); // [RASCUNHO-EM-BRANCO] grade gerada
     const r = await chamar("POST", `/horarios/experimentais/${enc("Rascunho 2")}/promover`);
     expect(r.status).toBe(200);
     expect((await chamar("GET", "/horarios/rascunho/atual")).body).toEqual({ rascunho: null });
