@@ -335,12 +335,12 @@ MEXER NO RASCUNHO
 - Com o rascunho ainda em branco, a grade colorida mostra "O rascunho ainda está em branco": troque o professor em Turmas e mude a Disponibilidade antes de gerar; o motor já usa o que estiver no rascunho. O lápis e a troca de aulas na Grade aparecem depois de gerar.
 - Rascunho de um turno ou de algumas turmas, já com grade: trocar o professor de uma turma de fora coloca essa turma no rascunho.
 GERAR OU MELHORAR (aba Modo Experimental; o nome e o turno do rascunho já vêm preenchidos)
-- Primeiro passo de todo rascunho: gerar do zero ou "Melhorar". O botão "Promover para oficial…" da faixa roxa só se ativa depois disso.
+- Primeiro passo de todo rascunho: o "Melhorar" (parte da grade de hoje e mexe só no que for preciso). Gerar do zero ("Gerar grade") fica para começo de ano ou escola nova. O botão "Promover para oficial…" da faixa roxa só se ativa depois que o rascunho tiver grade.
 - Depois de ter grade, se só trocou aulas de lugar ou o professor: não precisa gerar de novo.
 - Quer tirar janelas sem refazer: "Melhorar" (na janela do Turno inteiro). Com o rascunho em branco, parte da grade de hoje, já com os professores e a disponibilidade do rascunho; com grade, parte da grade do rascunho, com as suas trocas. Aula que ficou com o professor anterior depois de uma troca em Turmas passa para o professor novo, e a mensagem final lista essas aulas. Leva cerca de 2 minutos e pode rodar de novo.
 - Janela que o Melhorar e o "Fechar esta janela" não tiram costuma vir da disponibilidade do professor (dias inteiros bloqueados, HA no meio do dia): mais tempo não resolve; libere um horário dele no rascunho e melhore de novo.
 - Mudou a disponibilidade e aulas caíram em cima de bloqueio: "Turma" ou "Turno parcial" só nas turmas afetadas (elas são refeitas do zero; as trocas feitas à mão nelas se perdem). "Turno inteiro" refaz o período todo.
-- Ordem recomendada: disponibilidade e professores → gerar ou melhorar → trocas finas → simulação → Promover para oficial.
+- Ordem recomendada: começar o rascunho → disponibilidade e professores → Melhorar → trocas finas → simulação → Promover para oficial.
 VER, PROMOVER, SAIR E DESCARTAR (botões da faixa roxa)
 - "Ver mudanças": lista única com professores, disponibilidade e aulas (antes → depois), com "desfazer" em cada item e "voltar como está na escola" por turma.
 - "Promover para oficial…": abre o Modo Experimental com o rascunho em destaque e a simulação já calculada (janelas e HA). Confira e clique em "Promover para oficial" no cartão do rascunho. Se houver choque de professor (o mesmo professor em duas turmas no mesmo horário), aparece a lista de choques e nada vai para a escola. Ao promover, a grade, a disponibilidade e os professores do rascunho passam a valer: o professor novo passa a ser o da disciplina (tela Turmas) e recebe as aulas; quem saiu perde só as aulas daquela disciplina naquela turma; a HA é refeita só no turno do rascunho. Antes, o sistema guarda uma cópia: "Voltar à grade anterior" (Modo Experimental) desfaz tudo, inclusive professores e disponibilidade.
@@ -348,7 +348,7 @@ VER, PROMOVER, SAIR E DESCARTAR (botões da faixa roxa)
 - "Descartar": apaga o rascunho e tudo o que foi mudado nele (aulas, professores e disponibilidade). A escola fica como estava.
 BOM SABER
 - Um rascunho por vez na escola; toda a direção, coordenação e secretaria vê o mesmo, e cada pessoa entra ou sai dele no próprio navegador. Professores, pedagogia e gestor de reservas não veem o rascunho.
-- O rascunho também aparece na lista do Modo Experimental; apagar por ali também encerra o rascunho.
+- O rascunho aparece na lista do Modo Experimental depois que tiver grade (em branco, não aparece); apagar por ali também encerra o rascunho.
 - Em Turmas, co-docência, trio e quantidade de aulas assíncronas mudam a escola direto, mesmo com o rascunho ligado (a tela avisa).
 - Fora do rascunho, trocar o professor em Turmas passa as aulas da grade para o novo professor na hora (com cópia de segurança). Se ele já tiver aula em outra turma nesses horários, o sistema avisa e as aulas ficam com o professor anterior até alguém mudar esses horários.`,
   },
