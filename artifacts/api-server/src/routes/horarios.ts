@@ -8,6 +8,7 @@ import {
 import { experimentosTable, atribuicaoExperimentalTable, disponibilidadeExperimentalTable } from "@workspace/db"; // [EXPERIMENTO-COMPLETO]
 import { lerRascunho, gravarRascunho, limparRascunho } from "../lib/rascunho"; // [MODO-RASCUNHO]
 import { aulasDePartidaDoMelhorar, professorDoVinculoAtual } from "../lib/rascunho-melhorar"; // [RASCUNHO-MELHORAR] [MELHORAR-PROFESSOR-NOVO]
+import { pedirParaLigar, esperarServidor, MENSAGEM_SERVIDOR_NAO_LIGOU, DICA_SERVIDOR_NAO_LIGOU } from "../lib/servidor-calculo"; // [CPSAT-DESPERTADOR]
 import { choquesDeProfessor, descreverChoques, mensagemDaTravaDeChoque, type TurmaHora } from "../lib/choques-professor"; // [CHOQUE-ANTES-DE-GRAVAR]
 import axios from "axios";
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -2489,48 +2490,28 @@ const CPSAT_TOKEN = (process.env.CPSAT_TOKEN ?? "").trim();
 const CPSAT_DESPERTADOR_URL = (process.env.CPSAT_DESPERTADOR_URL ?? "").trim();
 const CPSAT_DESPERTADOR_TOKEN = (process.env.CPSAT_DESPERTADOR_TOKEN ?? "").trim();
 
-async function acordarMaquinaCpsat(maxEsperaMs = 120_000): Promise<void> {
-  if (!CPSAT_DESPERTADOR_URL || !CPSAT_DESPERTADOR_TOKEN) return;
-  const inicio = Date.now();
-  while (Date.now() - inicio < maxEsperaMs) {
-    try {
-      const r = await axios.post(CPSAT_DESPERTADOR_URL, {}, {
-        headers: { "X-Token": CPSAT_DESPERTADOR_TOKEN },
-        timeout: 30_000,
-        validateStatus: () => true,
-      });
-      if (r.status === 200 || r.status === 202) {
-        console.log(`[CPSAT-DESPERTADOR] maquina ${r.data?.status ?? "?"} (acao: ${r.data?.acao ?? "?"})`);
-        return;
-      }
-      if (r.status !== 409) {
-        // Falha do despertador nao bloqueia: segue para a espera normal.
-        console.error(`[CPSAT-DESPERTADOR] resposta ${r.status}: ${JSON.stringify(r.data)}`);
-        return;
-      }
-      // 409 = maquina ainda desligando; espera e pede para ligar de novo.
-    } catch (err) {
-      console.error("[CPSAT-DESPERTADOR] falha ao chamar o despertador:", err);
-      return;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 10_000));
-  }
+// [CPSAT-DESPERTADOR] (17/11/2026) a repeticao e a espera ficam em lib/servidor-calculo.ts (testadas)
+async function acordarMaquinaCpsat(): Promise<boolean> {
+  if (!CPSAT_DESPERTADOR_URL || !CPSAT_DESPERTADOR_TOKEN) return true;
+  return pedirParaLigar({
+    chamar: () => axios.post(CPSAT_DESPERTADOR_URL, {}, { headers: { "X-Token": CPSAT_DESPERTADOR_TOKEN }, timeout: 30_000, validateStatus: () => true }),
+  });
 }
 
-async function aguardarCpsatServiceAcordado(maxEsperaMs = 90_000): Promise<void> {
-  const inicio = Date.now();
-  while (Date.now() - inicio < maxEsperaMs) {
-    try {
+async function aguardarCpsatServiceAcordado(maxEsperaMs = 90_000): Promise<boolean> {
+  return esperarServidor({
+    maxEsperaMs,
+    checar: async () => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
-      const response = await fetch(`${CPSAT_SERVICE_URL}/`, { signal: controller.signal }); // [FIX-HEALTHZ] nexgrade-cpsat so tem "/" e "/gerar-grade" -- "/api/healthz" nunca existiu nesse servico, sempre dava 404 e desperdicava ate 90s por geracao.
-      clearTimeout(timeoutId);
-      if (response.ok) return;
-    } catch {
-      // Ainda hibernado/acordando (ou instavel) -- tenta de novo.
-    }
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-  }
+      try {
+        const response = await fetch(`${CPSAT_SERVICE_URL}/`, { signal: controller.signal }); // [FIX-HEALTHZ] nexgrade-cpsat so tem "/" e "/gerar-grade" -- "/api/healthz" nunca existiu nesse servico, sempre dava 404 e desperdicava ate 90s por geracao.
+        return response.ok;
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    },
+  });
 }
 
 // [PROGRESSO-GERACAO] (16/10/2026) etapas da geracao, para a tela mostrar o andamento em vez de
@@ -3395,9 +3376,17 @@ async function runCpsatGeneracaoUnica(
 
   detalharEtapa(`${turmasDoTurno.length} turma(s), ${disciplinasTurma.reduce((s, d) => s + d.aulasSemana, 0)} aula(s), ${new Set(disciplinasTurma.map((d) => d.professor)).size} professor(es)`); // [PROGRESSO-GERACAO]
   marcarEtapa("servidor", "Ligando o servidor de cálculo", "Se ele estava desligado, leva 1 a 2 minutos"); // [PROGRESSO-GERACAO]
-  await acordarMaquinaCpsat(); // [CPSAT-DESPERTADOR]
+  const despertadorAceitou = await acordarMaquinaCpsat(); // [CPSAT-DESPERTADOR]
   // [CPSAT-DESPERTADOR] com a maquina sob demanda, o boot + uvicorn leva ~1-2 min.
-  await aguardarCpsatServiceAcordado(CPSAT_DESPERTADOR_URL ? 240_000 : 90_000);
+  const servidorLigado = await aguardarCpsatServiceAcordado(CPSAT_DESPERTADOR_URL ? 240_000 : 90_000);
+  if (!servidorLigado) {
+    // (17/11/2026) antes seguia e chamava o motor desligado; a tela dizia "nao respondeu" quase 5 min depois
+    console.error(`[CPSAT-DESPERTADOR] servidor de calculo nao respondeu (despertador ${despertadorAceitou ? "aceitou" : "falhou"}); geracao cancelada antes de chamar o motor`);
+    return {
+      httpStatus: 503,
+      body: { error: "SERVIDOR_NAO_LIGOU", mensagem: MENSAGEM_SERVIDOR_NAO_LIGOU, dica: DICA_SERVIDOR_NAO_LIGOU, despertador: despertadorAceitou ? "aceitou" : "falhou" },
+    };
+  }
 
   const MAX_TENTATIVAS_CPSAT = 2;
   let ultimoErroCpsat: unknown = null;

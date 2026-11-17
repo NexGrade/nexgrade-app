@@ -78,6 +78,12 @@ describe("diagnostico da geracao", () => {
     expect(d.problemas[0]!.sugestao).toBe("Tente de novo em 1 ou 2 minutos.");
   });
 
+  it("[CPSAT-DESPERTADOR] servidor que nao ligou tem titulo proprio e a dica do suporte", () => {
+    const d = diagnosticarGeracao(503, { error: "SERVIDOR_NAO_LIGOU", mensagem: "O servidor de cálculo não ligou. Nada foi calculado nem salvo.", dica: "Tente de novo em 1 ou 2 minutos." })!;
+    expect(d.titulo).toBe("O servidor de cálculo não ligou");
+    expect(d.problemas).toEqual([{ oQue: "O servidor de cálculo não ligou. Nada foi calculado nem salvo.", sugestao: "Tente de novo em 1 ou 2 minutos." }]);
+  });
+
   it("turma que os professores nao conseguem cobrir no dia: sugestao aponta Disponibilidade e limite por dia [TURMA-POR-DIA]", () => {
     const c = "Turma 2MF: precisa de 30 aulas por semana, mas os professores dela só conseguem cobrir 28 (bloqueios de cada um + limite por dia de cada disciplina). Por dia: Segunda 4 de 6.";
     expect(sugestaoParaCausa(c)).toBe("Faltam 2 aulas na turma 2MF: libere horários dos professores dela nos dias indicados (Disponibilidade), ou aumente o limite por dia de alguma disciplina dela (Regras de Distribuição).");

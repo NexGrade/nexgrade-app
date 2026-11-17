@@ -3431,32 +3431,64 @@ function AbaExperimental() {
                           (conta aula, HA e atividade fora de sala). Turno comparado: {sim.turnos.join(", ")}.
                         </p>
 
-                        <div className="mt-3 grid grid-cols-2 gap-2">
-                          <div className="rounded-md border bg-white/70 p-3">
-                            <div className="text-xs opacity-70">Grade oficial hoje</div>
-                            <div className="text-2xl font-bold">{hoje.janelas} <span className="text-sm font-normal">janela(s)</span></div>
-                          </div>
-                          <div className="rounded-md border bg-white/70 p-3">
-                            <div className="text-xs opacity-70">Se promover este experimento</div>
-                            <div className="text-2xl font-bold">{sim.experimento.janelas} <span className="text-sm font-normal">janela(s)</span></div>
-                            <div className={`text-xs font-medium ${corDif}`}>{textoDif}</div>
-                          </div>
-                        </div>
-                        {sim.turnos.length > 1 && hoje.porTurno && sim.experimento.porTurno && ( /* [HA-OUTRO-TURNO] */
-                          <ul className="mt-2 space-y-0.5 text-xs">
-                            {sim.turnos.map((t) => {
-                              const antes = hoje.porTurno?.[t] ?? 0, depois = sim.experimento.porTurno?.[t] ?? 0;
-                              const soPelaHA = !!sim.turnosDoExperimento && !sim.turnosDoExperimento.includes(t);
-                              const nomeT = ({ matutino: "Manhã", vespertino: "Tarde", noturno: "Noite" } as Record<string, string>)[t] ?? t;
-                              return (
-                                <li key={t} className={soPelaHA && depois > antes ? "font-medium text-red-700" : undefined}>
-                                  {nomeT}: {antes} → {depois} janela(s)
-                                  {soPelaHA && " — este turno não está no experimento: muda porque a HA de quem teve aula mexida é refeita"}
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        )}
+                        {(() => { // [SIMULACAO-TURNO-DO-RASCUNHO] (17/11/2026) pedido da dona: o numero grande era o total da escola (manha + tarde)
+                          // e parecia que as turmas do rascunho tinham as janelas da tarde. Com o experimento em parte dos turnos, o destaque e
+                          // so desses turnos; os outros (que entram pela HA refeita) e o total da escola ficam embaixo.
+                          const nomeT = (t: string) => ({ matutino: "Manhã", vespertino: "Tarde", noturno: "Noite", integral: "Integral" } as Record<string, string>)[t] ?? t;
+                          const porTurnoOk = sim.turnos.length > 1 && !!hoje.porTurno && !!sim.experimento.porTurno && !!sim.turnosDoExperimento?.length;
+                          const doRascunho = porTurnoOk ? sim.turnos.filter((t) => sim.turnosDoExperimento!.includes(t)) : [];
+                          const fora = porTurnoOk ? sim.turnos.filter((t) => !sim.turnosDoExperimento!.includes(t)) : [];
+                          const destacar = doRascunho.length > 0 && fora.length > 0;
+                          const soma = (pt: Record<string, number> | undefined, ts: string[]) => ts.reduce((n, t) => n + (pt?.[t] ?? 0), 0);
+                          const antesD = destacar ? soma(hoje.porTurno, doRascunho) : hoje.janelas;
+                          const depoisD = destacar ? soma(sim.experimento.porTurno, doRascunho) : sim.experimento.janelas;
+                          const difD = depoisD - antesD;
+                          const textoD = primeira ? textoDif : difD > 0 ? `${difD} a mais` : difD < 0 ? `${-difD} a menos` : "igual à oficial";
+                          const corD = primeira ? corDif : difD > 0 ? "text-red-700" : difD < 0 ? "text-green-700" : "text-slate-600";
+                          const rotulo = destacar ? ` · ${doRascunho.map(nomeT).join(" e ")}` : "";
+                          return (
+                            <>
+                              <div className="mt-3 grid grid-cols-2 gap-2">
+                                <div className="rounded-md border bg-white/70 p-3">
+                                  <div className="text-xs opacity-70">Grade oficial hoje{rotulo}</div>
+                                  <div className="text-2xl font-bold">{antesD} <span className="text-sm font-normal">janela(s)</span></div>
+                                </div>
+                                <div className="rounded-md border bg-white/70 p-3">
+                                  <div className="text-xs opacity-70">Se promover este experimento{rotulo}</div>
+                                  <div className="text-2xl font-bold">{depoisD} <span className="text-sm font-normal">janela(s)</span></div>
+                                  <div className={`text-xs font-medium ${corD}`}>{textoD}</div>
+                                </div>
+                              </div>
+                              {destacar ? (
+                                <ul className="mt-2 space-y-0.5 text-xs">
+                                  {fora.map((t) => {
+                                    const antes = hoje.porTurno?.[t] ?? 0, depois = sim.experimento.porTurno?.[t] ?? 0;
+                                    return (
+                                      <li key={t} className={depois > antes ? "font-medium text-red-700" : undefined}>
+                                        {nomeT(t)} (fora do rascunho): {antes} → {depois} janela(s){depois === antes ? ", não muda" : ""}
+                                        {" — mesmos professores do rascunho; aparece só para conferir que esse turno não piora"}
+                                      </li>
+                                    );
+                                  })}
+                                  <li className="opacity-70">Total da escola: {hoje.janelas} → {sim.experimento.janelas} janela(s)</li>
+                                </ul>
+                              ) : sim.turnos.length > 1 && hoje.porTurno && sim.experimento.porTurno && ( /* [HA-OUTRO-TURNO] */
+                                <ul className="mt-2 space-y-0.5 text-xs">
+                                  {sim.turnos.map((t) => {
+                                    const antes = hoje.porTurno?.[t] ?? 0, depois = sim.experimento.porTurno?.[t] ?? 0;
+                                    const soPelaHA = !!sim.turnosDoExperimento && !sim.turnosDoExperimento.includes(t);
+                                    return (
+                                      <li key={t} className={soPelaHA && depois > antes ? "font-medium text-red-700" : undefined}>
+                                        {nomeT(t)}: {antes} → {depois} janela(s)
+                                        {soPelaHA && " — este turno não está no experimento: muda porque a HA de quem teve aula mexida é refeita"}
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
+                              )}
+                            </>
+                          );
+                        })()}
                         {sim.oficialHoje && sim.oficial.janelas !== hoje.janelas && (
                           <p className="mt-1 text-xs opacity-70">Para comparar: se a HA da oficial fosse recalculada pela regra, ela teria {sim.oficial.janelas} janela(s).</p>
                         )}
