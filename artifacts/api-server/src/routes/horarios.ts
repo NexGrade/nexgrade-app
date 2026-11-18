@@ -2641,6 +2641,9 @@ async function runCpsatGeneration(
         return { httpStatus: resultadoCoordenado.httpStatus, body: { ...resultadoCoordenado.body, coordenado: true } };
       }
       if (pararFoiPedido()) return resultadoCoordenado; // [PARAR-MOTOR] parou antes de ter grade: nao tenta o plano B
+      // [CPSAT-DESPERTADOR] (18/11/2026) servidor de calculo nao ligou: o plano B tentaria ligar de novo e a tela
+      // so mostraria o erro ~13 min depois. Devolve o aviso na hora.
+      if (resultadoCoordenado.body?.error === "SERVIDOR_NAO_LIGOU") return resultadoCoordenado;
       // [DIAGNOSTICO-COORDENACAO] Loga o motivo exato que o motor CP-SAT deu
       // pra nao achar solucao coordenada -- antes esse texto (raw.mensagem)
       // era descartado silenciosamente ao cair no fallback, sem aparecer em
