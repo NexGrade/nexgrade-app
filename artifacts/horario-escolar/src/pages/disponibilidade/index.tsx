@@ -931,13 +931,19 @@ export function PainelDisponibilidade({ experimento = null, embutido = false }: 
               </table>
             </div>
 
-            <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 rounded-lg p-3">
-              <Info className="w-3.5 h-3.5 shrink-0" />
-              Clique numa célula para alternar entre Disponível → Bloqueado → Hora-Atividade obrigatória → HA fixa (casos excepcionais: o motor nunca coloca aula nela). Atividades fora de sala (FORM, COORD, PAEE...) são marcadas com o
-              botão "Modo atividade". Use os
-              botões "Bloquear/Liberar" para afetar um dia inteiro de uma vez. O ícone de livro no canto mostra onde o
-              professor já dá aula de verdade (turma + disciplina aparecem ao passar o mouse). O motor de geração de
-              horários nunca alocará o professor em slots bloqueados ou marcados como Hora-Atividade obrigatória.
+            {/* [AJUDA-HA-COMUM] (13/11/2026, texto aprovado pela dona) o texto antigo dizia que o motor "nunca alocara" o
+                professor em horario de HA; para a HA comum isso nao vale (ela muda de lugar), e confundiu o diretor do Romario */}
+            <div className="mt-4 flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 rounded-lg p-3">
+              <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p>Clique numa célula para alternar entre Disponível → Bloqueado → HA → HA fixa.</p>
+                <ul className="space-y-0.5">
+                  <li>• <strong>Bloqueado</strong> e <strong>HA fixa</strong> (com cadeado): o motor nunca coloca aula ali.</li>
+                  <li>• <strong>HA</strong> (sem cadeado): é a hora-atividade do professor, mas o sistema pode mudá-la de lugar para encaixar as aulas e evitar janelas.</li>
+                  <li>• Marcar Bloqueado, HA ou HA fixa num horário que <strong>já tem aula</strong> não tira a aula de lá: no rascunho, ela aparece em vermelho na simulação, e o botão "Ver como resolver" sugere a troca.</li>
+                </ul>
+                <p>Atividades fora de sala (FORM, COORD, PAEE...) são marcadas pelo botão "Modo atividade". O ícone de livro mostra onde o professor já dá aula.</p>
+              </div>
             </div>
           </CardContent>
         </Card>
