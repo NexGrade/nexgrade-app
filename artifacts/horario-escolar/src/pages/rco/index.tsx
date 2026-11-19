@@ -12,6 +12,7 @@ import { Download, BarChart3, Hash, FileUp, Bookmark, RefreshCw } from "lucide-r
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter"; // [CODIGOS-RCO-TELA]
 import { montarUrl as buildUrl, salvarBlob } from "@/hooks/use-baixar-arquivo";
+import { AUTOMACAO_RCO_LIGADA } from "@/lib/rco-automacao"; // [RCO-AUTOMACAO-DESLIGADA]
 
 export default function ExportarRcoPage() {
   const { toast } = useToast();
@@ -98,6 +99,8 @@ export default function ExportarRcoPage() {
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2"><BarChart3 className="w-6 h-6" /> Exportar para o RCO</h1>
         <p className="text-muted-foreground text-sm">Leve a grade do NexGrade para o RCO, um turno de cada vez. Antes, confira se os códigos estão completos em Códigos do RCO.</p>{/* [RCO-TEXTO-SIMPLES] (01/11/2026) sem termos tecnicos */}
+        {/* [RCO-AVISO-VINCULO] (19/11/2026) mesmo aviso de independencia do rodape do site */}
+        <p className="text-xs text-muted-foreground mt-1">O NexGrade não tem vínculo com a SEED-PR. A grade entra no RCO pela própria escola, com o seu acesso: pelo arquivo ou pelo atalho.</p>
         <div className="flex flex-wrap gap-2 mt-3">
           <Button asChild size="sm" variant="outline"><Link href="/cursos?tab=codigos-rco"><Hash className="w-4 h-4 mr-1.5" />Códigos do RCO</Link></Button>
           <Button asChild size="sm" variant="outline"><Link href="/arquivo-rco"><FileUp className="w-4 h-4 mr-1.5" />Arquivo do RCO</Link></Button>
@@ -150,7 +153,9 @@ export default function ExportarRcoPage() {
                   <div className="space-y-2">
                     <p>
                       <strong>{turmasScript.turmas.length} de {turmasScript.totalTurmasRco} turma(s)</strong> têm duas ou mais disciplinas no mesmo horário (aulas do trio, ou aula assíncrona junto com a presencial). O arquivo leva só uma disciplina por horário.
-                      {" "}Para gravar essas turmas certinho, use o atalho <strong>Gravar no RCO</strong>, logo abaixo: ele grava todas as turmas do turno, sem precisar do arquivo.
+                      {AUTOMACAO_RCO_LIGADA
+                        ? <>{" "}Para essas turmas, use o atalho <strong>Preencher no RCO</strong>, logo abaixo: com o RCO aberto no seu acesso, ele preenche todas as turmas do turno, sem precisar do arquivo.</>
+                        : <>{" "}Importe o arquivo normalmente e, depois, a secretaria completa a segunda disciplina dessas turmas direto no RCO, com o próprio acesso.</>}
                     </p>
                     <ul className="list-disc list-inside space-y-0.5">
                       {turmasScript.turmas.map((t) => <li key={t.codTurma}><strong>{t.turma}</strong>: {t.motivos.join("; ")}</li>)}
@@ -163,6 +168,7 @@ export default function ExportarRcoPage() {
               // [RCO-TEXTO-SIMPLES] o que e do suporte fica recolhido (decisao de 28/10: F12 e com o suporte NexGrade)
               <details className="mt-4 rounded-md border bg-background/60 p-3">
                 <summary className="cursor-pointer text-sm font-medium text-muted-foreground">Opções do suporte NexGrade</summary>
+                {AUTOMACAO_RCO_LIGADA && (<>{/* [RCO-AUTOMACAO-DESLIGADA] script do F12 escondido */}
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button size="sm" variant="outline" onClick={() => handleScriptRco(false)} disabled={loadingScript} className="gap-1.5">
                     <Download className="w-3.5 h-3.5" /> {loadingScript ? "Gerando..." : "Script para o Console (F12)"}
@@ -178,12 +184,13 @@ export default function ExportarRcoPage() {
                 Ele mostra a prévia de cada turma e só grava depois que você confirmar. Leva as assíncronas na mesma célula da aula presencial, como o RCO registra.
                 O arquivo regrava a turma inteira: se usar os dois, o script vem <strong>depois</strong>.
               </p>
+              </>)}
               <div className="mt-4 flex items-start gap-2.5">
                 <Checkbox id="seed-assinc" checked={seedAssinc} onCheckedChange={(c) => setSeedAssinc(c === true)} className="mt-0.5" />
                 <div className="space-y-0.5">
                   <Label htmlFor="seed-assinc" className="cursor-pointer">Incluir aulas assíncronas</Label>
                   <p className="text-xs text-muted-foreground">
-                    Deixe desmarcado. No arquivo o RCO guarda só uma disciplina por horário, e a assíncrona apagaria a aula presencial do mesmo horário. As assíncronas vão para o RCO pelo atalho Gravar no RCO, junto com a presencial.
+                    Deixe desmarcado. No arquivo o RCO guarda só uma disciplina por horário, e a assíncrona apagaria a aula presencial do mesmo horário.{AUTOMACAO_RCO_LIGADA ? " As assíncronas vão para o RCO pelo atalho Preencher no RCO, junto com a presencial." : " Se precisar das assíncronas no RCO, a secretaria as inclui direto no RCO, com o próprio acesso."}
                   </p>
                 </div>
               </div>
@@ -218,7 +225,7 @@ export default function ExportarRcoPage() {
             )}
           </CardContent>
         </Card>
-        {seedEstado === "PR" && <AtalhoRco />}
+        {AUTOMACAO_RCO_LIGADA && seedEstado === "PR" && <AtalhoRco />}{/* [RCO-AUTOMACAO-DESLIGADA] */}
       </div>
     </div>
   );
@@ -264,10 +271,11 @@ function AtalhoRco() {
   return (
     <Card className="lg:col-span-2">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base"><Bookmark className="w-4 h-4" /> Ou grave direto no RCO com o atalho</CardTitle>
+        <CardTitle className="flex items-center gap-2 text-base"><Bookmark className="w-4 h-4" /> Ou preencha no RCO com o atalho</CardTitle>
         <CardDescription>
-          Grava a grade de todas as turmas do turno direto no RCO, inclusive as aulas do trio e as assíncronas, sem precisar do arquivo.
-          Antes de gravar, ele mostra como vai ficar cada turma e só grava depois que você confirmar.
+          {/* [RCO-AUTOMACAO-CHAVE] (19/11/2026) texto: quem lanca no RCO e a escola, com o proprio acesso */}
+          Com o RCO aberto no seu acesso, o atalho preenche a grade de todas as turmas do turno, inclusive as aulas do trio e as assíncronas, sem precisar do arquivo.
+          Antes, ele mostra como vai ficar cada turma e só salva no RCO depois que você confirmar.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
@@ -284,17 +292,17 @@ function AtalhoRco() {
                   onClick={(e) => { e.preventDefault(); toast({ title: "Arraste o botão para a barra de favoritos", description: "Clicar aqui não faz nada: o atalho funciona dentro da tela do RCO." }); }}
                   className="inline-flex items-center gap-2 rounded-md bg-[#1565C0] px-4 py-2 font-medium text-white shadow hover:bg-[#0D47A1] cursor-grab"
                 >
-                  <Bookmark className="w-4 h-4" /> Gravar no RCO
+                  <Bookmark className="w-4 h-4" /> Preencher no RCO
                 </a>
               ) : (
                 <span className="text-muted-foreground">Carregando o atalho...</span>
               )}
             </div>
           </li>
-          <li>No RCO, abra <strong>Grade de Horário</strong>, escolha o <strong>Período Letivo</strong> e o <strong>Turno</strong> e clique no favorito <strong>Gravar no RCO</strong>.</li>
+          <li>No RCO, abra <strong>Grade de Horário</strong>, escolha o <strong>Período Letivo</strong> e o <strong>Turno</strong> e clique no favorito <strong>Preencher no RCO</strong>.</li>
         </ol>
         <p className="text-xs text-muted-foreground">
-          O atalho é desta escola: quem tiver o favorito grava esta grade no RCO em que estiver logado. Se um computador não deve mais ter o atalho, gere um novo.
+          O atalho é desta escola: quem tiver o favorito preenche esta grade no RCO em que estiver logado, com o acesso dessa pessoa. Se um computador não deve mais ter o atalho, gere um novo.
           {data?.ultimoUsoEm && <> Último uso: {new Date(data.ultimoUsoEm).toLocaleString("pt-BR")}.</>}
         </p>
         <Button size="sm" variant="outline" onClick={trocar} disabled={trocando || !data} className="gap-1.5">

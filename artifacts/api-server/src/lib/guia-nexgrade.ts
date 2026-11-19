@@ -32,7 +32,7 @@ export const GUIA_NEXGRADE: Record<string, TopicoGuia> = {
 7. Salas (menu Gestor de reservas → Salas): cadastre os espaços (salas, laboratórios, quadra).
 8. Gerar Grade (tela Horário) → Modo Experimental: gere a grade (botão Turno inteiro), compare com "Simular promoção" e clique em "Promover para oficial".
 9. Usuários: libere o acesso da direção, coordenação, secretaria e gestor de reservas. Professores não precisam: entram com o e-mail do cadastro em Professores.
-10. Cursos e Disciplinas → aba Códigos do RCO, e 3. RCO → Arquivo do RCO: confira os códigos SERE das turmas e os Códigos Externos das disciplinas; se a equipe NexGrade pedir, envie o arquivo da Grade de Horário do RCO.
+10. Cursos e Disciplinas → aba Códigos do RCO, e 3. RCO → Arquivo do RCO: confira os códigos SERE das turmas e os Códigos Externos das disciplinas; se a equipe NexGrade pedir, a direção ou a secretaria baixa no RCO, com o próprio acesso, o arquivo da Grade de Horário e envia.
 11. 3. RCO → Exportar para o RCO: grave a grade no RCO (veja o assunto "rco").`,
   },
 
@@ -396,22 +396,23 @@ Depois de importar professores, marque as disciplinas de cada um em Professores;
   },
 
   rco: {
-    titulo: "Gravar a grade no RCO (arquivo XML)",
+    titulo: "Levar a grade ao RCO (arquivo XML)",
     palavras: ["rco", "registro de classe", "sere", "xml", "incluir via arquivo", "script", "console", "f12", "trio", "dupla", "ifa", "lançar no rco", "exportar para o rco", "gravar no rco", "grade no rco"],
     texto: `Menu 3. RCO → Exportar para o RCO. Só direção, coordenação e secretaria. Faça por turno (Matutino, Vespertino, Noturno, Integral). Antes: Código INEP em Escola → Dados da Escola e códigos em Cursos e Disciplinas → aba Códigos do RCO (o sistema avisa o que falta e leva para a tela).
 
 COMO GRAVAR
 - Arquivo da grade (botão "Baixar o arquivo da grade", formato XML): um arquivo com todas as turmas do turno. No RCO: Grade de Horário → escolha o Período Letivo e o turno certo → Incluir via Arquivo. Limite do RCO: grava UMA disciplina por horário e substitui a grade inteira de cada turma.
-- O aviso abaixo do botão diz, para o turno escolhido, se alguma turma tem mais de uma disciplina no mesmo horário (trio/dupla do IFA ou disciplinas diferentes com o mesmo código). Verde = só o XML basta. Amarelo = lista as turmas: importe o XML normalmente e avise o suporte NexGrade, que faz a gravação dessas turmas no RCO.
-- Assíncronas ficam fora por padrão (o RCO fica igual ao PDF por turma). A caixa "Incluir aulas assíncronas" fica em "Opções do suporte NexGrade" (recolhida, junto com o script do F12) e só deve ser marcada se a escola pedir.
-- Nenhum passo do RCO feito pela escola usa F12 ou Console: o que precisa disso é feito só pelo suporte NexGrade.`,
+- O aviso abaixo do botão diz, para o turno escolhido, se alguma turma tem mais de uma disciplina no mesmo horário (trio/dupla do IFA ou disciplinas diferentes com o mesmo código). Verde = só o XML basta. Amarelo = lista as turmas: use o atalho "Preencher no RCO" (quadro abaixo), que leva todas as turmas do turno, inclusive trio e assíncronas; ou importe o XML e complete essas turmas direto no RCO. Na dúvida, chame o suporte NexGrade.
+- Assíncronas ficam fora por padrão (o RCO fica igual ao PDF por turma). A caixa "Incluir aulas assíncronas" fica em "Opções do suporte NexGrade" (recolhida) e só deve ser marcada se a escola pedir.
+- Atalho "Preencher no RCO" (quadro "Ou preencha no RCO com o atalho"): arraste o botão uma vez para a barra de favoritos; no RCO, com o próprio acesso, abra Grade de Horário, escolha o Período Letivo e o Turno e clique no favorito. Ele mostra como vai ficar cada turma e só salva depois que a pessoa confirmar.
+- Quem lança a grade no RCO é sempre a escola, com o próprio acesso (pelo arquivo ou pelo atalho). O NexGrade não tem vínculo com a SEED-PR.`,
   },
 
   arquivo_rco: {
-    titulo: "Arquivo do RCO (enviar à equipe NexGrade o cadastro oficial da escola)",
+    titulo: "Arquivo do RCO (enviar à equipe NexGrade o cadastro da escola no RCO)",
     palavras: ["arquivo do rco", "enviar arquivo", "exportação do rco", "pedido", "selo pedido", "cadastro oficial", "códigos sere", "matriz oficial"],
     texto: `Menu 3. RCO → Arquivo do RCO. Quando a equipe NexGrade pede, o item do menu aparece com o selo amarelo "Pedido" e a tela mostra a mensagem.
-1. O RCO não tem um botão para baixar este arquivo: ele é baixado junto com o suporte NexGrade (atendimento remoto ou na escola), com a secretaria ou a direção logada no RCO, na tela Grade de Horário com o Período Letivo atual. É um .XML com o cadastro oficial (disciplinas com Código Externo, turmas com código SERE e a matriz de cada turma).
+1. Quem baixa o arquivo é a direção ou a secretaria, com o próprio acesso ao RCO, na tela Grade de Horário com o Período Letivo atual. O RCO não tem um botão para isso: o suporte NexGrade orienta o passo a passo (atendimento remoto ou na escola), mas não acessa o RCO pela escola. É um .XML com o cadastro da escola no RCO (disciplinas com Código Externo, turmas com código SERE e a matriz de cada turma).
 2. No NexGrade: "Escolher o arquivo .XML e enviar". O sistema confere se é o arquivo certo e mostra o resumo (turmas por turno, disciplinas, linhas de grade). O selo "Pedido" some.
 - Enviar NÃO muda nada no cadastro nem na grade: o arquivo fica guardado para a equipe NexGrade conferir códigos e cargas. Um envio novo substitui o anterior.
 - Só direção, coordenação e secretaria enviam e baixam o arquivo.`,
@@ -476,13 +477,13 @@ Cargos:
 
 ROTEIRO DO COMEÇO DO ANO (depois que a SEED cria as turmas no SERE/RCO)
 1. Virada do ano (acima).
-2. Arquivo do RCO: a secretaria baixa no RCO e envia (os códigos SERE das turmas mudam todo ano).
+2. Arquivo do RCO: a direção ou a secretaria baixa no RCO, com o próprio acesso, e envia (os códigos SERE das turmas mudam todo ano).
 3. Cursos e Disciplinas → aba Códigos do RCO: atualizar o código SERE de cada turma (e da parte IF) e o Código Externo das disciplinas novas.
 4. Conferir as disciplinas e cargas de cada turma com a matriz oficial.
 5. Esquemas de aula (inclusive Integral), professores, vínculos, disponibilidade e aulas fixas (trios, assíncronas, Prática).
 6. Gerar no Modo Experimental, resolver Conflitos, conferir os PDFs e promover.
-7. Gravar no RCO por turno: XML com todas as turmas e depois o script só das turmas com trio (assunto "rco").
-8. Durante o ano: mudou aula, corrigir no NexGrade e rodar o script só das turmas que mudaram.`,
+7. Levar a grade ao RCO por turno: pelo arquivo XML (Incluir via Arquivo) ou pelo atalho "Preencher no RCO", que também leva as turmas com trio (assunto "rco").
+8. Durante o ano: mudou aula, corrigir no NexGrade e levar de novo ao RCO pelo atalho ou pelo arquivo.`,
   },
 
   historico: {

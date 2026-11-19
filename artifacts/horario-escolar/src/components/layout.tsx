@@ -102,7 +102,7 @@ const navGroups: GrupoMenu[] = [
     numero: 3,
     items: [
       { href: "/rco", label: "Exportar para o RCO", icon: BarChart3 }, // [MENU-UNICO] tela propria
-      { href: "/arquivo-rco", label: "Arquivo do RCO", icon: FileUp }, // [ARQUIVO-RCO]
+      { href: "/arquivo-rco", label: "Arquivo do RCO", icon: FileUp }, // [ARQUIVO-RCO] a escola baixa no RCO com o proprio acesso e envia aqui
     ],
   },
   secaoGestorReservas,

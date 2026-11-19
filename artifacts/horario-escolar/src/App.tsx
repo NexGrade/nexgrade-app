@@ -183,8 +183,10 @@ const clerkAppearance = {
 const BENEFICIOS = [
   { icon: Sparkles, titulo: "Geração automática da grade", texto: "Monta a grade respeitando as regras da escola, a disponibilidade e a hora-atividade dos professores." },
   { icon: Lock, titulo: "Aulas fixas, trio e assíncronas", texto: "As regras da SEED-PR já previstas: aulas travadas, docência por trio e aulas assíncronas." },
-  { icon: CalendarDays, titulo: "Turnos, calendário e matrizes oficiais", texto: "Calendário letivo da SEED-PR e cursos com as matrizes já cadastrados para começar rápido." },
-  { icon: FileUp, titulo: "Grava a grade no RCO", texto: "Pelo arquivo ou pelo atalho “Gravar no RCO”, sem digitar a grade de novo." },
+  // [TEXTO-JURIDICO-LOGIN] (19/11/2026) sem "matrizes oficiais" nem "Grava a grade no RCO" (regra de texto):
+  // a tela de login e publica; a secretaria e quem lanca a grade no RCO, com o proprio acesso
+  { icon: CalendarDays, titulo: "Turnos, calendário e matrizes conforme a SEED-PR", texto: "Calendário letivo e cursos com as matrizes já cadastrados para começar rápido." },
+  { icon: FileUp, titulo: "Arquivo e atalho para o RCO", texto: "A secretaria lança a grade no RCO com o próprio acesso, pelo arquivo ou pelo atalho, sem digitar de novo." },
   { icon: ClipboardCheck, titulo: "Presença dos professores", texto: "Lista do dia no celular, faltas do mês e folha de ponto para assinar." },
   { icon: DoorOpen, titulo: "Reservas de salas e equipamentos", texto: "Agenda de reservas com regras por professor e controle de tablets e laboratórios." },
   { icon: Printer, titulo: "Relatórios em PDF e Excel", texto: "Grade por turma, por professor e quadro geral, além de planilhas prontas para imprimir." },
