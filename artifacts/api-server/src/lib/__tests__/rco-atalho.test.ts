@@ -58,15 +58,15 @@ describe("atalho de gravacao no RCO [RCO-ATALHO]", () => {
     expect(ehLeituraSomenteAdmin("/Export/RCO-Script/Atalho/")).toBe(true);
   });
 
-  it("automacao do RCO desligada por padrao; so liga com RCO_AUTOMACAO_LIGADA=1 [RCO-AUTOMACAO-DESLIGADA]", () => {
+  it("atalho e script do RCO ligados por padrao; RCO_AUTOMACAO_LIGADA=0 desliga [RCO-AUTOMACAO-CHAVE]", () => {
     const antes = process.env.RCO_AUTOMACAO_LIGADA;
     try {
       delete process.env.RCO_AUTOMACAO_LIGADA;
-      expect(automacaoRcoLigada()).toBe(false);
-      process.env.RCO_AUTOMACAO_LIGADA = "true";
-      expect(automacaoRcoLigada()).toBe(false);
+      expect(automacaoRcoLigada()).toBe(true);
       process.env.RCO_AUTOMACAO_LIGADA = "1";
       expect(automacaoRcoLigada()).toBe(true);
+      process.env.RCO_AUTOMACAO_LIGADA = "0";
+      expect(automacaoRcoLigada()).toBe(false);
     } finally {
       if (antes === undefined) delete process.env.RCO_AUTOMACAO_LIGADA; else process.env.RCO_AUTOMACAO_LIGADA = antes;
     }

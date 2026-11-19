@@ -24,7 +24,7 @@ router.use(rateLimit({
 router.get("/:arquivo", async (req, res) => {
   res.setHeader("Content-Type", "application/javascript; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
-  if (!automacaoRcoLigada()) { // [RCO-AUTOMACAO-DESLIGADA] favoritos antigos so mostram o aviso, nada grava
+  if (!automacaoRcoLigada()) { // [RCO-AUTOMACAO-CHAVE] desligado (RCO_AUTOMACAO_LIGADA=0): o favorito so mostra o aviso
     res.status(410).send(scriptDeAviso("o atalho foi desligado. Use o arquivo da grade em Exportar para o RCO e importe pelo Incluir via Arquivo."));
     return;
   }

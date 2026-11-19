@@ -402,9 +402,10 @@ Depois de importar professores, marque as disciplinas de cada um em Professores;
 
 COMO GRAVAR
 - Arquivo da grade (botão "Baixar o arquivo da grade", formato XML): um arquivo com todas as turmas do turno. No RCO: Grade de Horário → escolha o Período Letivo e o turno certo → Incluir via Arquivo. Limite do RCO: grava UMA disciplina por horário e substitui a grade inteira de cada turma.
-- O aviso abaixo do botão diz, para o turno escolhido, se alguma turma tem mais de uma disciplina no mesmo horário (trio/dupla do IFA ou disciplinas diferentes com o mesmo código). Verde = só o XML basta. Amarelo = lista as turmas: importe o XML normalmente e, depois, a secretaria completa a segunda disciplina dessas turmas direto no RCO, com o próprio acesso.
+- O aviso abaixo do botão diz, para o turno escolhido, se alguma turma tem mais de uma disciplina no mesmo horário (trio/dupla do IFA ou disciplinas diferentes com o mesmo código). Verde = só o XML basta. Amarelo = lista as turmas: use o atalho "Preencher no RCO" (quadro abaixo), que leva todas as turmas do turno, inclusive trio e assíncronas; ou importe o XML e complete essas turmas direto no RCO. Na dúvida, chame o suporte NexGrade.
 - Assíncronas ficam fora por padrão (o RCO fica igual ao PDF por turma). A caixa "Incluir aulas assíncronas" fica em "Opções do suporte NexGrade" (recolhida) e só deve ser marcada se a escola pedir.
-- O NexGrade só gera o arquivo; quem importa no RCO é a secretaria, com o próprio acesso. O NexGrade não tem vínculo com a SEED-PR. Não existe atalho nem script para gravar no RCO: se perguntarem, diga que hoje o caminho é só o arquivo.`,
+- Atalho "Preencher no RCO" (quadro "Ou preencha no RCO com o atalho"): arraste o botão uma vez para a barra de favoritos; no RCO, com o próprio acesso, abra Grade de Horário, escolha o Período Letivo e o Turno e clique no favorito. Ele mostra como vai ficar cada turma e só salva depois que a pessoa confirmar.
+- Quem lança a grade no RCO é sempre a escola, com o próprio acesso (pelo arquivo ou pelo atalho). O NexGrade não tem vínculo com a SEED-PR.`,
   },
 
   arquivo_rco: {
@@ -481,8 +482,8 @@ ROTEIRO DO COMEÇO DO ANO (depois que a SEED cria as turmas no SERE/RCO)
 4. Conferir as disciplinas e cargas de cada turma com a matriz oficial.
 5. Esquemas de aula (inclusive Integral), professores, vínculos, disponibilidade e aulas fixas (trios, assíncronas, Prática).
 6. Gerar no Modo Experimental, resolver Conflitos, conferir os PDFs e promover.
-7. Levar a grade ao RCO por turno: baixar o arquivo XML no NexGrade e a secretaria importa no RCO (Incluir via Arquivo); turmas com trio a secretaria completa direto no RCO (assunto "rco").
-8. Durante o ano: mudou aula, corrigir no NexGrade, baixar o arquivo de novo e a secretaria importa no RCO.`,
+7. Levar a grade ao RCO por turno: pelo arquivo XML (Incluir via Arquivo) ou pelo atalho "Preencher no RCO", que também leva as turmas com trio (assunto "rco").
+8. Durante o ano: mudou aula, corrigir no NexGrade e levar de novo ao RCO pelo atalho ou pelo arquivo.`,
   },
 
   historico: {
