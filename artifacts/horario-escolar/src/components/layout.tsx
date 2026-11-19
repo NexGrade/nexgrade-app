@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSituacaoArquivoRco } from "@/lib/arquivo-rco"; // [ARQUIVO-RCO]
-import { AUTOMACAO_RCO_LIGADA } from "@/lib/rco-automacao"; // [RCO-AUTOMACAO-DESLIGADA]
 import { useSituacaoAcesso, AvisoFimAvaliacao } from "@/lib/situacao-acesso"; // [TRAVA-AVALIACAO]
 import { RascunhoBarra } from "@/components/rascunho-barra"; // [MODO-RASCUNHO]
 
@@ -103,8 +102,7 @@ const navGroups: GrupoMenu[] = [
     numero: 3,
     items: [
       { href: "/rco", label: "Exportar para o RCO", icon: BarChart3 }, // [MENU-UNICO] tela propria
-      // [ARQUIVO-RCO] [RCO-AUTOMACAO-DESLIGADA] (19/11/2026) escondido enquanto a automacao do RCO estiver desligada
-      ...(AUTOMACAO_RCO_LIGADA ? [{ href: "/arquivo-rco", label: "Arquivo do RCO", icon: FileUp }] : []),
+      { href: "/arquivo-rco", label: "Arquivo do RCO", icon: FileUp }, // [ARQUIVO-RCO] a escola baixa no RCO com o proprio acesso e envia aqui
     ],
   },
   secaoGestorReservas,
@@ -241,7 +239,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     : navGroups;
 
   // [ARQUIVO-RCO] pedido em aberto da equipe NexGrade: o item do menu ganha o selo "Pedido"
-  const { data: situacaoArquivoRco } = useSituacaoArquivoRco(AUTOMACAO_RCO_LIGADA && !ehGestorMenu && !ehPedagogiaMenu);
+  const { data: situacaoArquivoRco } = useSituacaoArquivoRco(!ehGestorMenu && !ehPedagogiaMenu);
   const { data: situacaoAcesso } = useSituacaoAcesso(); // [TRAVA-AVALIACAO] aviso dos ultimos dias da avaliacao
   const seloDoItem = (href: string, badge?: string) => (href === "/arquivo-rco" && situacaoArquivoRco?.solicitado ? "Pedido" : badge);
 

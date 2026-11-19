@@ -58,7 +58,7 @@ export default function ArquivoRcoPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Arquivo do RCO</h1>
         <p className="text-muted-foreground">
-          Envie à equipe NexGrade o arquivo que o RCO gera na tela Grade de Horário. Ele traz o cadastro oficial da escola
+          Envie à equipe NexGrade o arquivo que o RCO gera na tela Grade de Horário. Ele traz o cadastro da escola no RCO
           (disciplinas, turmas e a matriz de cada turma) e evita digitar códigos à mão.
         </p>
       </div>
@@ -76,14 +76,15 @@ export default function ArquivoRcoPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">1. Baixe o arquivo no RCO com o suporte NexGrade</CardTitle>
-          <CardDescription>O RCO não tem um botão para isso: o arquivo é baixado junto com a nossa equipe.</CardDescription>
+          <CardTitle className="text-base">1. A direção ou a secretaria baixa o arquivo no RCO</CardTitle>
+          <CardDescription>Com o próprio acesso ao RCO. O RCO não tem um botão para isso: o suporte NexGrade orienta o passo a passo.</CardDescription>
         </CardHeader>
         <CardContent className="text-sm space-y-2">
-          {/* [RCO-F12-SUPORTE] (28/10/2026) decisao: o que usa F12 no RCO e feito so pelo suporte NexGrade */}
+          {/* [RCO-F12-SUPORTE] (28/10/2026) o que usa F12 no RCO e feito com orientacao do suporte NexGrade
+              [RCO-AUTOMACAO-DESLIGADA] (19/11/2026) quem baixa e a escola, com o proprio acesso; o suporte so orienta */}
           <ol className="list-decimal list-inside space-y-1.5">
-            <li>Combine um atendimento com o <strong>suporte NexGrade</strong> (remoto ou na escola), com a secretaria ou a direção logada no RCO.</li>
-            <li>No RCO, abra <strong>Grade de Horário</strong> e escolha o <strong>Período Letivo</strong> atual. A nossa equipe baixa o arquivo <strong>.XML</strong>.</li>
+            <li>Combine um atendimento com o <strong>suporte NexGrade</strong> (remoto ou na escola) para receber a orientação.</li>
+            <li>Com o <strong>seu acesso</strong> ao RCO, abra <strong>Grade de Horário</strong>, escolha o <strong>Período Letivo</strong> atual e baixe o arquivo <strong>.XML</strong>, seguindo a orientação.</li>
             <li>Não abra nem altere o arquivo antes de enviar.</li>
           </ol>
         </CardContent>

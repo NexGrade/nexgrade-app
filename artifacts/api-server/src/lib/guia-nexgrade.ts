@@ -32,7 +32,7 @@ export const GUIA_NEXGRADE: Record<string, TopicoGuia> = {
 7. Salas (menu Gestor de reservas → Salas): cadastre os espaços (salas, laboratórios, quadra).
 8. Gerar Grade (tela Horário) → Modo Experimental: gere a grade (botão Turno inteiro), compare com "Simular promoção" e clique em "Promover para oficial".
 9. Usuários: libere o acesso da direção, coordenação, secretaria e gestor de reservas. Professores não precisam: entram com o e-mail do cadastro em Professores.
-10. Cursos e Disciplinas → aba Códigos do RCO: confira os códigos SERE das turmas e os Códigos Externos das disciplinas.
+10. Cursos e Disciplinas → aba Códigos do RCO, e 3. RCO → Arquivo do RCO: confira os códigos SERE das turmas e os Códigos Externos das disciplinas; se a equipe NexGrade pedir, a direção ou a secretaria baixa no RCO, com o próprio acesso, o arquivo da Grade de Horário e envia.
 11. 3. RCO → Exportar para o RCO: grave a grade no RCO (veja o assunto "rco").`,
   },
 
@@ -408,9 +408,13 @@ COMO GRAVAR
   },
 
   arquivo_rco: {
-    titulo: "Arquivo do RCO (recurso desligado no momento)",
+    titulo: "Arquivo do RCO (enviar à equipe NexGrade o cadastro da escola no RCO)",
     palavras: ["arquivo do rco", "enviar arquivo", "exportação do rco", "pedido", "selo pedido", "cadastro oficial", "códigos sere", "matriz oficial"],
-    texto: `[RCO-AUTOMACAO-DESLIGADA] (19/11/2026) A tela Arquivo do RCO está fora do menu no momento. Os códigos SERE das turmas e os Códigos Externos das disciplinas são conferidos e digitados em Cursos e Disciplinas → aba Códigos do RCO. Se perguntarem sobre o arquivo, diga que hoje não é preciso enviar nada. Só direção, coordenação e secretaria mexem nos códigos.`,
+    texto: `Menu 3. RCO → Arquivo do RCO. Quando a equipe NexGrade pede, o item do menu aparece com o selo amarelo "Pedido" e a tela mostra a mensagem.
+1. Quem baixa o arquivo é a direção ou a secretaria, com o próprio acesso ao RCO, na tela Grade de Horário com o Período Letivo atual. O RCO não tem um botão para isso: o suporte NexGrade orienta o passo a passo (atendimento remoto ou na escola), mas não acessa o RCO pela escola. É um .XML com o cadastro da escola no RCO (disciplinas com Código Externo, turmas com código SERE e a matriz de cada turma).
+2. No NexGrade: "Escolher o arquivo .XML e enviar". O sistema confere se é o arquivo certo e mostra o resumo (turmas por turno, disciplinas, linhas de grade). O selo "Pedido" some.
+- Enviar NÃO muda nada no cadastro nem na grade: o arquivo fica guardado para a equipe NexGrade conferir códigos e cargas. Um envio novo substitui o anterior.
+- Só direção, coordenação e secretaria enviam e baixam o arquivo.`,
   },
 
   codigos_rco: {
@@ -419,7 +423,7 @@ COMO GRAVAR
     texto: `Menu Cursos e Disciplinas → aba Códigos do RCO. Só direção, coordenação e secretaria.
 - Turmas: código da turma no SERE (o RCO recusa sem ele). 3º ano com duas turmas no RCO: código FGB (formação geral) e código da parte IF; cada disciplina vai para a parte certa automaticamente.
 - Disciplinas: Código Externo do RCO (é o que o RCO usa; não é o SAE). Disciplina própria da turma também precisa (ex.: Prática de Formação = 1269 nas duas turmas).
-- Os códigos SERE das turmas mudam todo ano: confira no começo do ano.`,
+- Os códigos SERE das turmas mudam todo ano: confira no começo do ano (o arquivo do RCO, em Arquivo do RCO, traz todos).`,
   },
 
   escola_config: {
@@ -472,7 +476,7 @@ Cargos:
 
 ROTEIRO DO COMEÇO DO ANO (depois que a SEED cria as turmas no SERE/RCO)
 1. Virada do ano (acima).
-2. Cursos e Disciplinas → aba Códigos do RCO: os códigos SERE das turmas mudam todo ano.
+2. Arquivo do RCO: a direção ou a secretaria baixa no RCO, com o próprio acesso, e envia (os códigos SERE das turmas mudam todo ano).
 3. Cursos e Disciplinas → aba Códigos do RCO: atualizar o código SERE de cada turma (e da parte IF) e o Código Externo das disciplinas novas.
 4. Conferir as disciplinas e cargas de cada turma com a matriz oficial.
 5. Esquemas de aula (inclusive Integral), professores, vínculos, disponibilidade e aulas fixas (trios, assíncronas, Prática).

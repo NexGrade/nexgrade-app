@@ -103,7 +103,7 @@ export default function ExportarRcoPage() {
         <p className="text-xs text-muted-foreground mt-1">O NexGrade não tem vínculo com a SEED-PR. A importação no RCO é feita pela secretaria da escola, com o próprio acesso.</p>
         <div className="flex flex-wrap gap-2 mt-3">
           <Button asChild size="sm" variant="outline"><Link href="/cursos?tab=codigos-rco"><Hash className="w-4 h-4 mr-1.5" />Códigos do RCO</Link></Button>
-          {AUTOMACAO_RCO_LIGADA && <Button asChild size="sm" variant="outline"><Link href="/arquivo-rco"><FileUp className="w-4 h-4 mr-1.5" />Arquivo do RCO</Link></Button>}
+          <Button asChild size="sm" variant="outline"><Link href="/arquivo-rco"><FileUp className="w-4 h-4 mr-1.5" />Arquivo do RCO</Link></Button>
         </div>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
