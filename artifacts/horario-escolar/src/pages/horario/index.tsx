@@ -3050,7 +3050,7 @@ function AbaExperimental() {
         <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 text-sm text-purple-800 flex-1 mr-4">
           <p className="font-medium mb-1">Como funciona o Modo Experimental?</p>
           <ul className="list-disc space-y-0.5 pl-5">{/* [MODO-EXPERIMENTAL-TOPICOS] */}
-            <li>Gere versões alternativas do horário sem mexer na grade oficial. Toda geração e todo "Melhorar" partem sempre da <strong>grade oficial atual</strong>, nunca de outro experimento.</li>
+            <li>Gere versões alternativas do horário sem mexer na grade oficial. {/* [RASCUNHO-EM-BRANCO] (17/11/2026) */}O <strong>"Melhorar"</strong> parte da <strong>grade oficial atual</strong>; no <strong>rascunho</strong>, depois do primeiro Melhorar, parte da grade do próprio rascunho, com as suas trocas. Nunca parte de outro experimento.</li>
             <li>Compare com a oficial em <strong>Simular promoção</strong> e ajuste o que precisar.</li>
             <li>Quando estiver satisfeito, clique em <strong>Promover para oficial</strong> para aplicar. Antes, o sistema guarda uma cópia da oficial; se algo der errado, use <strong>Voltar à grade anterior</strong>.</li>
           </ul>
