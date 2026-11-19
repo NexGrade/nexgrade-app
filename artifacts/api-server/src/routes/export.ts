@@ -15,7 +15,7 @@ import { lerExportacaoRco, disciplinasPorTurma } from "../lib/rco-exportacao"; /
 import { resolverCoddisc } from "../lib/rco-codigos"; // [CODIGOS-RCO-TELA]
 import { gerarScriptRco, type TurmaRcoScript, type CelulaRco } from "../lib/rco-script"; // [RCO-SCRIPT]
 import { turmasQuePrecisamDoScript } from "../lib/rco-turmas-script"; // [RCO-TURMAS-SCRIPT]
-import { chaveDoAtalho, trocarChaveDoAtalho, montarFavorito, origemValida } from "../lib/rco-atalho"; // [RCO-ATALHO]
+import { chaveDoAtalho, trocarChaveDoAtalho, montarFavorito, origemValida, automacaoRcoLigada, MSG_AUTOMACAO_DESLIGADA } from "../lib/rco-atalho"; // [RCO-ATALHO] [RCO-AUTOMACAO-DESLIGADA]
 import { getEscolaId } from "../lib/escola-id";
 import { registrarAuditoria } from "../lib/audit"; // [RCO-ATALHO]
 import { buscarReservasParaRelatorio, gerarPdfReservasPorProfessor } from "../lib/relatorio-reservas"; // [RELATORIO-RESERVAS]
@@ -751,6 +751,7 @@ export async function scriptRcoDaEscola(escolaId: string, turno: string, soMulti
 }
 
 router.get("/rco-script", async (req, res) => {
+  if (!automacaoRcoLigada()) { res.status(410).json({ error: MSG_AUTOMACAO_DESLIGADA }); return; } // [RCO-AUTOMACAO-DESLIGADA]
   const escolaId = getEscolaId(req);
   const turno = typeof req.query.turno === "string" ? req.query.turno : "";
   const r = await scriptRcoDaEscola(escolaId, turno, req.query.apenas === "multiplas");
@@ -763,6 +764,7 @@ router.get("/rco-script", async (req, res) => {
 // [RCO-ATALHO] favorito "Gravar no RCO" (sem F12): chave da escola e o codigo do favorito. So direcao,
 // coordenacao e secretaria (prefixo /export/rco-script em lib/permissao.ts). ?origem = endereco do NexGrade.
 router.get("/rco-script/atalho", async (req, res) => {
+  if (!automacaoRcoLigada()) { res.status(410).json({ error: MSG_AUTOMACAO_DESLIGADA }); return; } // [RCO-AUTOMACAO-DESLIGADA]
   const escolaId = getEscolaId(req);
   const origem = typeof req.query.origem === "string" ? req.query.origem : "";
   if (!origemValida(origem)) { res.status(400).json({ error: "Endereço do NexGrade inválido." }); return; }
@@ -771,6 +773,7 @@ router.get("/rco-script/atalho", async (req, res) => {
 });
 
 router.post("/rco-script/atalho/trocar", async (req, res) => {
+  if (!automacaoRcoLigada()) { res.status(410).json({ error: MSG_AUTOMACAO_DESLIGADA }); return; } // [RCO-AUTOMACAO-DESLIGADA]
   const escolaId = getEscolaId(req);
   const origem = typeof req.body?.origem === "string" ? req.body.origem : "";
   if (!origemValida(origem)) { res.status(400).json({ error: "Endereço do NexGrade inválido." }); return; }

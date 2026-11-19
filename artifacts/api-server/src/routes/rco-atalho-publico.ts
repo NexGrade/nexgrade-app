@@ -4,7 +4,7 @@
 // previa e confirmacao) ou um alert com o motivo de nao gravar.
 import { Router } from "express";
 import rateLimit, { ipKeyGenerator } from "express-rate-limit";
-import { escolaDaChave, marcarUsoDoAtalho, scriptDeAviso } from "../lib/rco-atalho";
+import { escolaDaChave, marcarUsoDoAtalho, scriptDeAviso, automacaoRcoLigada } from "../lib/rco-atalho";
 import { scriptRcoDaEscola } from "./export";
 import { logger } from "../lib/logger";
 
@@ -24,6 +24,10 @@ router.use(rateLimit({
 router.get("/:arquivo", async (req, res) => {
   res.setHeader("Content-Type", "application/javascript; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
+  if (!automacaoRcoLigada()) { // [RCO-AUTOMACAO-DESLIGADA] favoritos antigos so mostram o aviso, nada grava
+    res.status(410).send(scriptDeAviso("o atalho foi desligado. Use o arquivo da grade em Exportar para o RCO e importe pelo Incluir via Arquivo."));
+    return;
+  }
   const chave = req.params.arquivo.replace(/\.js$/, "");
   const turno = typeof req.query.turno === "string" ? req.query.turno : "";
   const escolaId = await escolaDaChave(chave);

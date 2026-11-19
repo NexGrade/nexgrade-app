@@ -10,6 +10,16 @@ import { randomBytes } from "node:crypto";
 import { db, configuracoesTable } from "@workspace/db";
 import { and, eq, sql } from "drizzle-orm";
 
+// [RCO-AUTOMACAO-DESLIGADA] (19/11/2026) Decisao da dona: ate a adequacao a LGPD e a orientacao
+// juridica, o NexGrade so gera o ARQUIVO da grade (a escola importa no RCO pelo "Incluir via Arquivo").
+// O atalho "Gravar no RCO" e o script do F12, que preenchem a grade dentro da tela do RCO, ficam
+// desligados. Para religar: RCO_AUTOMACAO_LIGADA=1 na API e AUTOMACAO_RCO_LIGADA no frontend
+// (artifacts/horario-escolar/src/lib/rco-automacao.ts).
+export function automacaoRcoLigada(): boolean {
+  return process.env.RCO_AUTOMACAO_LIGADA === "1";
+}
+export const MSG_AUTOMACAO_DESLIGADA = "Este recurso está desligado. Use o arquivo da grade em Exportar para o RCO e importe no RCO pelo Incluir via Arquivo.";
+
 export const CHAVE_CONFIG_ATALHO = "rco_atalho";
 const FORMATO_CHAVE = /^[A-Za-z0-9_-]{20,64}$/;
 

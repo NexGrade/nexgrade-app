@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import vm from "node:vm";
 vi.mock("@workspace/db", () => ({ db: {}, configuracoesTable: {} }));
-import { montarFavorito, origemValida, scriptDeAviso } from "../rco-atalho";
+import { montarFavorito, origemValida, scriptDeAviso, automacaoRcoLigada } from "../rco-atalho";
 import { ehLeituraSomenteAdmin } from "../permissao";
 
 const CHAVE = "abcDEF123_-abcDEF123_-abcDEF12";
@@ -56,5 +56,19 @@ describe("atalho de gravacao no RCO [RCO-ATALHO]", () => {
   it("chave do atalho: so direcao, coordenacao e secretaria leem [PERMISSAO-PAPEL]", () => {
     expect(ehLeituraSomenteAdmin("/export/rco-script/atalho")).toBe(true);
     expect(ehLeituraSomenteAdmin("/Export/RCO-Script/Atalho/")).toBe(true);
+  });
+
+  it("automacao do RCO desligada por padrao; so liga com RCO_AUTOMACAO_LIGADA=1 [RCO-AUTOMACAO-DESLIGADA]", () => {
+    const antes = process.env.RCO_AUTOMACAO_LIGADA;
+    try {
+      delete process.env.RCO_AUTOMACAO_LIGADA;
+      expect(automacaoRcoLigada()).toBe(false);
+      process.env.RCO_AUTOMACAO_LIGADA = "true";
+      expect(automacaoRcoLigada()).toBe(false);
+      process.env.RCO_AUTOMACAO_LIGADA = "1";
+      expect(automacaoRcoLigada()).toBe(true);
+    } finally {
+      if (antes === undefined) delete process.env.RCO_AUTOMACAO_LIGADA; else process.env.RCO_AUTOMACAO_LIGADA = antes;
+    }
   });
 });
