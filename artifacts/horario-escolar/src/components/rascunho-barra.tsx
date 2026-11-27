@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { useToast } from "@/hooks/use-toast";
 import { usePapelEfetivo } from "@/lib/papeis";
 import { useRascunho, ligarRascunho } from "@/lib/rascunho";
-import { FileEdit, Loader2, RotateCcw, ShieldCheck } from "lucide-react";
+import { FileEdit, ListChecks, Loader2, RotateCcw, ShieldCheck } from "lucide-react";
 
 export const PAGINAS_DO_RASCUNHO = ["/horario", "/disponibilidade", "/turmas"];
 export const naPaginaDoRascunho = (local: string) => PAGINAS_DO_RASCUNHO.some((p) => local.startsWith(p));
@@ -150,10 +150,13 @@ export function RascunhoBarra() {
             <span className="flex-1 min-w-[14rem] text-sm">
               <strong className="text-base">{rascunho.nome}</strong>
               <span className="ml-2 rounded bg-white/20 px-1.5 py-0.5 text-[11px] font-semibold">{descreverAlcance(rascunho, nomeTurma)}</span>
-              <span className="block text-violet-100">O que você mudar na Grade, na Disponibilidade e em Turmas fica só no rascunho. Nada vale para a escola até {PROMOVER_TEXTO}.</span>
+              <span className="block text-violet-100">Nada vale para a escola até promover, em Gerar Grade → Modo Experimental.</span>{/* [FAIXA-LIMPA] (27/11/2026) texto curto, pedido da dona */}
             </span>
             <div className="flex flex-wrap items-center gap-2">
-              <Button size="sm" variant="secondary" className="h-9 bg-white text-violet-800 hover:bg-violet-50" onClick={() => void verMudancas()}>Ver mudanças</Button>
+              {/* [FAIXA-LIMPA] "Ver mudancas" continua (lista com desfazer), mas discreto como os outros botoes da faixa */}
+              <Button size="sm" variant="ghost" className="h-9 text-white/90 hover:bg-white/15 hover:text-white" onClick={() => void verMudancas()} title="Lista do que mudou no rascunho (professores, disponibilidade e aulas), com desfazer">
+                <ListChecks className="w-4 h-4 mr-1.5" />Ver mudanças
+              </Button>
               {/* [PROMOVER-SO-NO-EXPERIMENTAL] (27/11/2026) pedido da dona: sem o atalho "Promover para oficial…" na faixa;
                   promover so no cartao do rascunho em Gerar Grade → Modo Experimental (que confere os choques) */}
               <Button size="sm" variant="ghost" className="h-9 text-white hover:bg-white/15 hover:text-white" onClick={() => ligarRascunho(null)} title="Volta a mostrar a escola como está (o rascunho continua guardado)">Sair do rascunho</Button>
