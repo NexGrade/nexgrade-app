@@ -145,7 +145,7 @@ HORÁRIO DA TURMA
     titulo: "Disponibilidade, hora-atividade (HA) e aulas fixas",
     palavras: ["disponibilidade", "bloqueio", "indisponível", "hora-atividade", "ha", "ha*", "ha fixa", "contraturno", "fixar aula", "aula fixa"],
     texto: `Menu Disponibilidade (ou, no cadastro do professor, "Gerenciar disponibilidade").
-1. Escolha o professor (dá para buscar pelo nome) e a aba do turno (Matutino, Vespertino, Noturno). Para achar mais rápido, escolha antes a turma ("Todas as turmas" ou uma turma): a lista mostra só os professores dela.
+1. Escolha o professor (dá para buscar pelo nome) e a aba do turno (Matutino, Vespertino, Noturno). Para achar mais rápido, escolha antes a turma no campo "Professores da turma": a lista mostra só os professores dela (os atribuídos às disciplinas da turma, mesmo turma nova ainda sem aulas, e os que têm aula nela; no rascunho, os do rascunho). A turma não muda a grade da semana, só encurta a lista. "Ver todos" volta à lista inteira.
 2. Clique nas células da grade. Cada clique muda o estado: Disponível (verde) → Bloqueado (vermelho) → Hora-Atividade obrigatória (amarelo) → HA fixa (o motor não move) → volta para Disponível.
 3. Clique em "Salvar" (ou "Desfazer" para descartar). Repita para cada turno em que o professor trabalha.
 - O livrinho no canto da célula mostra onde o professor já tem aula, com o nome da disciplina e a turma embaixo.

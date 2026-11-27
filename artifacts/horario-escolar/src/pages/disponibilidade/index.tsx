@@ -7,6 +7,8 @@ import { useConfirmar } from "@/components/confirmar"; // [CONFIRMAR-NEXGRADE]
 import {
   useListProfessores,
   useListTurmas, // [DISP-POR-TURMA]
+  useGetTurma, // [PROFESSORES-DA-TURMA]
+  getGetTurmaQueryKey,
   useListDisciplinas, // [DISP-AULAS-DO-RASCUNHO]
   useListDisponibilidade,
   useSetDisponibilidadeLote,
@@ -132,7 +134,17 @@ export function PainelDisponibilidade({ experimento = null, embutido = false }: 
     { turmaId: turmaFiltroNum },
     { query: { enabled: !!turmaFiltroNum, queryKey: getListHorariosQueryKey({ turmaId: turmaFiltroNum }) } },
   );
-  const profsDaTurma = new Set((aulasDaTurma as Array<{ professorId?: number | null }>).map((h) => h.professorId).filter((id): id is number => id != null));
+  // [PROFESSORES-DA-TURMA] (27/11/2026) a dona achou que o filtro nao funcionava: so olhava as aulas da grade que vale
+  // hoje (turma nova, sem aulas, ficava com a lista vazia; no rascunho, a troca de professor nao aparecia). Agora conta
+  // tambem o professor atribuido a cada disciplina (Turmas -> lapis), e no rascunho a atribuicao e as aulas do rascunho.
+  const { data: turmaDoFiltro } = useGetTurma(turmaFiltroNum ?? 0, {
+    query: { enabled: !!turmaFiltroNum && !experimento, queryKey: getGetTurmaQueryKey(turmaFiltroNum ?? 0) },
+  });
+  const atribRascunho = useQuery({
+    queryKey: ["atribuicoes-exp", experimento],
+    queryFn: () => customFetch<Array<{ turmaId: number; professorId: number | null }>>(`/api/horarios/experimentais/${encodeURIComponent(experimento!)}/atribuicoes`),
+    enabled: !!experimento && !!turmaFiltroNum,
+  });
 
   const { data: slots = [], isLoading: carregandoSlots } = useListHorarioSlots(
     // No matutino, sempre pede o esquema "medio_tecnico" (6 aulas) em
@@ -204,6 +216,25 @@ export function PainelDisponibilidade({ experimento = null, embutido = false }: 
     }));
     return [...(horariosOficiais as any[]).filter((h) => !turmasDentro.has(h.turmaId ?? h.turma?.id)), ...doRascunho];
   }, [experimento, professorIdNum, horariosOficiais, aulasRascunho.data, turmasTodas, disciplinasEscola]) as typeof horariosOficiais;
+  // [PROFESSORES-DA-TURMA] professores da turma escolhida: atribuidos as disciplinas + com aula na grade
+  // (no rascunho, a grade do rascunho; se a turma ficou fora dele, a que vale hoje)
+  const profsDaTurma = useMemo(() => {
+    const s = new Set<number>();
+    if (!turmaFiltroNum) return s;
+    const add = (id: number | null | undefined) => { if (id != null) s.add(id); };
+    if (experimento) {
+      for (const a of atribRascunho.data ?? []) if (a.turmaId === turmaFiltroNum) add(a.professorId);
+      const doRascunho = (aulasRascunho.data ?? []).filter((l) => l.nome === experimento && l.turmaId === turmaFiltroNum);
+      if (doRascunho.length) doRascunho.forEach((l) => add(l.professorId));
+      else (aulasDaTurma as Array<{ professorId?: number | null }>).forEach((h) => add(h.professorId));
+    } else {
+      for (const l of ((turmaDoFiltro as any)?.disciplinasComCarga ?? []) as Array<{ professorId?: number | null }>) add(l.professorId);
+      (aulasDaTurma as Array<{ professorId?: number | null }>).forEach((h) => add(h.professorId));
+    }
+    return s;
+  }, [turmaFiltroNum, experimento, atribRascunho.data, aulasRascunho.data, aulasDaTurma, turmaDoFiltro]);
+  const turmaFiltroNome = (turmasTodas as Array<{ id: number; nome: string }>).find((t) => t.id === turmaFiltroNum)?.nome;
+  const profsAtivosDaTurma = professores.filter((p) => p.ativo && profsDaTurma.has(p.id)).length;
   const carregandoHorarios = carregandoOficiais || (!!experimento && aulasRascunho.isLoading);
   const horariosDoTurno = useMemo(
     () => horariosProf.filter((h: any) => h.turma?.turno === turno),
@@ -630,23 +661,41 @@ export function PainelDisponibilidade({ experimento = null, embutido = false }: 
       {professorIdNum && <ContaProfessor professorId={professorIdNum} turno={turno} deltaLivres={deltaLivres} experimento={experimento} />}{/* [CONTA-NA-HORA] [CONTA-NO-RASCUNHO] */}
 
       <div className="flex flex-wrap items-center gap-4">
-        {/* [DISP-POR-TURMA] */}
-        <SeletorBusca
-          className="w-56"
-          options={[{ value: "", label: "Todas as turmas" }, ...[...turmasTodas].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { numeric: true })).map((t) => ({ value: String(t.id), label: t.nome }))]}
-          value={turmaFiltro}
-          onChange={setTurmaFiltro}
-          placeholder="Todas as turmas"
-          buscarPlaceholder="Buscar turma..."
-        />
-        <SeletorBusca
-          className="w-72"
-          options={professores.filter((p) => p.ativo && (!turmaFiltroNum || profsDaTurma.has(p.id))).map((p) => ({ value: String(p.id), label: p.nome }))}
-          value={professorId}
-          onChange={setProfessorId}
-          placeholder={carregandoProfessores ? "Carregando..." : "Selecione um professor"}
-          buscarPlaceholder="Buscar professor por nome..."
-        />
+        {/* [DISP-POR-TURMA] [PROFESSORES-DA-TURMA] a turma só encurta a lista de professores: o rótulo e a linha de baixo dizem isso */}
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
+              Professores da turma
+              <SeletorBusca
+                className="w-56"
+                options={[{ value: "", label: "Todas as turmas" }, ...[...turmasTodas].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { numeric: true })).map((t) => ({ value: String(t.id), label: t.nome }))]}
+                value={turmaFiltro}
+                onChange={setTurmaFiltro}
+                placeholder="Todas as turmas"
+                buscarPlaceholder="Buscar turma..."
+              />
+            </div>
+            <div className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
+              Professor
+              <SeletorBusca
+                className="w-72"
+                options={professores.filter((p) => p.ativo && (!turmaFiltroNum || profsDaTurma.has(p.id))).map((p) => ({ value: String(p.id), label: p.nome }))}
+                value={professorId}
+                onChange={setProfessorId}
+                placeholder={carregandoProfessores ? "Carregando..." : "Selecione um professor"}
+                buscarPlaceholder="Buscar professor por nome..."
+              />
+            </div>
+          </div>
+          {turmaFiltroNum && (
+            <p className="text-xs text-muted-foreground">
+              {profsAtivosDaTurma > 0
+                ? <>A lista de professores mostra só {profsAtivosDaTurma === 1 ? "o professor" : `os ${profsAtivosDaTurma} professores`} da turma {turmaFiltroNome}{experimento ? " no rascunho" : ""}.</>
+                : <>A turma {turmaFiltroNome} ainda não tem professor{experimento ? " no rascunho" : ""}: distribua em Turmas (lápis da turma).</>}{" "}
+              <button type="button" className="underline hover:text-foreground" onClick={() => setTurmaFiltro("")}>Ver todos</button>
+            </p>
+          )}
+        </div>
 
 
         <Tabs value={turno} onValueChange={(v) => setTurno(v as Turno)}>
