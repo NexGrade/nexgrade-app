@@ -3885,7 +3885,7 @@ function AbaExperimental() {
           </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenGerarCpsatTurma(false)}>Cancelar</Button>
+            {!(gerandoCpsatTurma && progressoCpsat) && <Button variant="outline" onClick={() => setOpenGerarCpsatTurma(false)}>Cancelar</Button>}{/* [UM-CANCELAR] */}
             <Button onClick={handleGerarCpsatTurma} disabled={gerandoCpsatTurma}>{gerandoCpsatTurma ? "Gerando…" : "Gerar grade"}</Button>
           </DialogFooter>
         </DialogContent>
@@ -3952,7 +3952,7 @@ function AbaExperimental() {
           </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpenGerarCpsatTurnoParcial(false)}>Cancelar</Button>
+            {!(gerandoCpsatTurnoParcial && progressoCpsat) && <Button variant="outline" onClick={() => setOpenGerarCpsatTurnoParcial(false)}>Cancelar</Button>}{/* [UM-CANCELAR] */}
             <Button onClick={handleGerarCpsatTurnoParcial} disabled={gerandoCpsatTurnoParcial}>{gerandoCpsatTurnoParcial ? "Gerando…" : "Gerar grade"}</Button>
           </DialogFooter>
         </DialogContent>
@@ -4005,7 +4005,10 @@ function AbaExperimental() {
           </div>
           </div>
           <DialogFooter className="flex-wrap gap-2 sm:space-x-0">
-            <Button
+            {/* [UM-CANCELAR] (27/11/2026) pedido da dona: eram dois botoes de cancelar durante a geracao. Com o quadro de
+                andamento na tela, o cancelar fica so nele ("Cancelar sem salvar", ao lado do "Parar e usar a melhor"); o do
+                rodape so aparece antes de comecar e no "Iniciando a geracao", quando o quadro ainda nao tem botoes. */}
+            {!(gerandoCpsat && progressoCpsat) && <Button
               variant="outline"
               onClick={async () => {
                 if (gerandoCpsat && jobIdAtual) {
@@ -4024,7 +4027,7 @@ function AbaExperimental() {
               }}
             >
               {gerandoCpsat ? "Cancelar geração" : "Cancelar"}
-            </Button>
+            </Button>}
             {/* [SUGERIR-MELHORAR] no rascunho, o Melhorar e o botao principal */}
             <Button variant={rascunhoNome ? "default" : "outline"} onClick={handleMelhorarGradeOficial} disabled={gerandoCpsat} title="Parte da grade de hoje (ou do rascunho). Primeiro muda de lugar a HA móvel para tirar janela; só troca aulas de lugar se ainda sobrar janela. Nunca fica pior que a grade de partida.">{melhorandoCpsat ? "Melhorando..." : rascunhoNome ? "Melhorar (recomendado)" : "Melhorar grade oficial"}</Button>
             <Button variant={rascunhoNome ? "outline" : "default"} onClick={handleGerarCpsat} disabled={gerandoCpsat}>{gerandoCpsat && !melhorandoCpsat ? "Gerando…" : rascunhoNome ? "Gerar do zero" : "Gerar grade"}</Button>
