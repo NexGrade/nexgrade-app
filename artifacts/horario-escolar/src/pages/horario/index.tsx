@@ -2765,9 +2765,16 @@ function AbaExperimental() {
     } catch { /* a conferencia falhou: o servidor confere de novo ao promover */ }
     const qtdTurmas = new Set(expSlots.filter((s) => s.nome === nome).map((s) => s.turmaId)).size;
     const simAviso = simDe(nome);
-    const aviso = simAviso?.veredito === "pior"
-      ? `ATENÇÃO: a simulação recomenda NÃO promover (${simAviso.experimento.janelas} janela(s) de professor depois de promover, contra ${(simAviso.oficialHoje ?? simAviso.oficial).janelas} na oficial de hoje).\n\n`
-      : "";
+    const pioram = simAviso ? turnosQuePioram(simAviso) : []; // [VEREDITO-POR-TURNO]
+    const NOME_T: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite", integral: "Integral" };
+    const aviso = !pioram.length ? ""
+      : pioram[0]!.turno
+        ? `ATENÇÃO: piora ${pioram.map((x) => `na ${NOME_T[x.turno] ?? x.turno} (${x.antes} → ${x.depois} janela(s) de professor)`).join(" e ")}.
+
+`
+        : `ATENÇÃO: a simulação recomenda NÃO promover (${pioram[0]!.depois} janela(s) de professor depois de promover, contra ${pioram[0]!.antes} na oficial de hoje).
+
+`;
     const disp = dispDoExp.get(nome); // [DISP-EXPERIMENTAL]
     const nAtrib = resumoDe.get(nome)?.atribuicoes ?? 0; // [EXPERIMENTO-COMPLETO]
     const avisoDisp = (disp ? `\n\nA disponibilidade deste experimento (${disp.mudancas} mudança(s) de ${disp.professores} professor(es)) também passa a valer na oficial.` : "")
@@ -2860,6 +2867,13 @@ function AbaExperimental() {
     return partes.join(" · ");
   };
   const simDe = (nome: string) => { const s = simulacoes[nome]; return s && s !== "carregando" && !("erro" in s) ? s : null; };
+  // [VEREDITO-POR-TURNO] (27/11/2026) turnos do rascunho que pioram (cada turno pela sua conta); sem conta por turno, o veredito do servidor
+  const turnosQuePioram = (s: ResultadoSim): Array<{ turno: string; antes: number; depois: number }> => {
+    const hoje = s.oficialHoje ?? s.oficial;
+    const ts = s.turnos.length > 1 && hoje.porTurno && s.experimento.porTurno && s.turnosDoExperimento?.length ? s.turnos.filter((t) => s.turnosDoExperimento!.includes(t)) : [];
+    if (ts.length > 1) return ts.map((t) => ({ turno: t, antes: hoje.porTurno?.[t] ?? 0, depois: s.experimento.porTurno?.[t] ?? 0 })).filter((x) => x.depois > x.antes);
+    return s.veredito === "pior" ? [{ turno: "", antes: hoje.janelas, depois: s.experimento.janelas }] : [];
+  };
   // [FECHAR-JANELA-SEGUIDO] (01/11/2026) depois de uma troca a simulacao e refeita SEM fechar o quadro: o resultado anterior
   // fica na tela com "Atualizando..." ate o novo chegar (antes o quadro sumia e era preciso simular de novo a cada janela)
   const [atualizandoSim, setAtualizandoSim] = useState<Record<string, boolean>>({});
@@ -3267,10 +3281,10 @@ function AbaExperimental() {
                       </Button>
                       <Button
                         size="sm" variant="outline"
-                        className={simDe(nome)?.veredito === "pior"
+                        className={(simDe(nome) && turnosQuePioram(simDe(nome)!).length) /* [VEREDITO-POR-TURNO] */
                           ? "border-amber-400 text-amber-800 hover:bg-amber-50 gap-1.5"
                           : "border-green-300 text-green-700 hover:bg-green-50 gap-1.5"}
-                        title={simDe(nome)?.veredito === "pior" ? "A simulação recomenda não promover: a grade oficial tem menos janelas" : undefined}
+                        title={simDe(nome) && turnosQuePioram(simDe(nome)!).length ? "A simulação mostra mais janelas em pelo menos um turno" : undefined}
                         onClick={() => handlePromover(nome)}
                         disabled={promovendo !== null}
                       >
@@ -3313,14 +3327,25 @@ function AbaExperimental() {
                     const has = sim.haMovidas ?? [];
                     const qtdAulas = sim.aulasMudando ?? movidas.length;
                     const dif = sim.experimento.janelas - hoje.janelas;
-                    const cor = sim.veredito === "melhor" ? "border-green-300 bg-green-50 text-green-900"
-                      : sim.veredito === "empate" || sim.veredito === "primeira" ? "border-slate-300 bg-slate-50 text-slate-800"
-                      : "border-amber-300 bg-amber-50 text-amber-900";
-                    const titulo = sim.veredito === "primeira" ? "Primeira grade deste turno: ainda não há grade oficial para comparar" // [PRIMEIRA-GRADE]
-                      : sim.veredito === "melhor" ? "Vale promover: a nova grade deixa menos horários vagos"
-                      : sim.veredito === "empate" ? "Tanto faz: o número de horários vagos é o mesmo da oficial"
-                      : "Não recomendo promover: a nova grade deixa mais horários vagos";
                     const primeira = sim.veredito === "primeira"; // [PRIMEIRA-GRADE] sem oficial no turno: nada a comparar
+                    // [VEREDITO-POR-TURNO] (27/11/2026) pedido da dona: com o rascunho em mais de um turno, o veredito olha cada turno.
+                    // Antes somava: Manha 1 → 0 e Tarde 0 → 1 dava "Tanto faz", escondendo que a tarde piorou.
+                    const NOME_TURNO_V: Record<string, string> = { matutino: "Manhã", vespertino: "Tarde", noturno: "Noite", integral: "Integral" };
+                    const turnosV = !primeira && sim.turnos.length > 1 && hoje.porTurno && sim.experimento.porTurno && sim.turnosDoExperimento?.length
+                      ? sim.turnos.filter((t) => sim.turnosDoExperimento!.includes(t)) : [];
+                    const porTurnoV = turnosV.map((t) => ({ t, antes: hoje.porTurno?.[t] ?? 0, depois: sim.experimento.porTurno?.[t] ?? 0 }));
+                    const usarPorTurno = porTurnoV.length > 1;
+                    const melhoraV = porTurnoV.some((x) => x.depois < x.antes), pioraV = porTurnoV.some((x) => x.depois > x.antes);
+                    const vered = usarPorTurno ? (melhoraV && pioraV ? "misto" : melhoraV ? "melhor" : pioraV ? "pior" : "empate") : sim.veredito;
+                    const cor = vered === "melhor" ? "border-green-300 bg-green-50 text-green-900"
+                      : vered === "empate" || vered === "primeira" ? "border-slate-300 bg-slate-50 text-slate-800"
+                      : "border-amber-300 bg-amber-50 text-amber-900";
+                    const titulo = vered === "primeira" ? "Primeira grade deste turno: ainda não há grade oficial para comparar" // [PRIMEIRA-GRADE]
+                      : vered === "misto" ? "Depende do turno: melhora em um e piora em outro"
+                      : vered === "melhor" ? "Vale promover: a nova grade deixa menos horários vagos"
+                      : vered === "empate" ? "Tanto faz: o número de horários vagos é o mesmo da oficial"
+                      : "Não recomendo promover: a nova grade deixa mais horários vagos";
+                    const subtituloV = usarPorTurno ? porTurnoV.map((x) => `${NOME_TURNO_V[x.t] ?? x.t}: ${x.depois < x.antes ? "melhora" : x.depois > x.antes ? "piora" : "igual"} (${x.antes} → ${x.depois})`).join(" · ") : null;
                     const textoDif = primeira ? "não há grade oficial para comparar" : dif > 0 ? `${dif} a mais` : dif < 0 ? `${-dif} a menos` : "igual à oficial";
                     const corDif = primeira ? "text-slate-600" : dif > 0 ? "text-red-700" : dif < 0 ? "text-green-700" : "text-slate-600";
                     const chave = (d: JanelaSim) => `${d.professorNome}|${d.dia}|${d.turno}`;
@@ -3330,7 +3355,10 @@ function AbaExperimental() {
                     return (
                       <div className={`mb-3 rounded-md border p-4 text-sm ${cor}`}>
                         <div className="flex items-start justify-between gap-2">
-                          <div className="font-semibold text-base">{titulo}</div>
+                          <div>
+                            <div className="font-semibold text-base">{titulo}</div>
+                            {subtituloV && <div className="text-sm font-medium opacity-90">{subtituloV}</div>}{/* [VEREDITO-POR-TURNO] */}
+                          </div>
                           <div className="flex items-center gap-2">
                             {atualizandoSim[nome] && ( /* [FECHAR-JANELA-SEGUIDO] */
                               <span className="flex items-center gap-1 text-xs font-normal opacity-80"><Loader2 className="w-3.5 h-3.5 animate-spin" />Atualizando a simulação...</span>
