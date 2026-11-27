@@ -2593,7 +2593,7 @@ function AbaExperimental() {
   const confirmarCapacidadeAntes = async (turno: string): Promise<boolean> => {
     try {
       const cap = await customFetch<{ problemas: Array<{ professor: string; nivel: string; mensagem: string }> }>(
-        `/api/horarios/capacidade?turno=${encodeURIComponent(turno)}`, { responseType: "json" });
+        `/api/horarios/capacidade?turno=${encodeURIComponent(turno)}${rascunhoNome ? `&nomeExperimental=${encodeURIComponent(rascunhoNome)}` : ""}`, { responseType: "json" }); // [CONTA-NO-RASCUNHO]
       const naoFecha = cap.problemas.filter((p) => p.nivel === "erro" && /não fecha|nao fecha/.test(p.mensagem));
       if (!naoFecha.length) return true;
       const lista = naoFecha.slice(0, 8).map((p) => `• ${p.professor}: ${p.mensagem}`).join("\n");
@@ -3050,7 +3050,11 @@ function AbaExperimental() {
         <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 text-sm text-purple-800 flex-1 mr-4">
           <p className="font-medium mb-1">Como funciona o Modo Experimental?</p>
           <ul className="list-disc space-y-0.5 pl-5">{/* [MODO-EXPERIMENTAL-TOPICOS] */}
-            <li>Gere versões alternativas do horário sem mexer na grade oficial. Toda geração e todo "Melhorar" partem sempre da <strong>grade oficial atual</strong>, nunca de outro experimento.</li>
+            {rascunhoNome ? ( /* [RASCUNHO-VISUAL] (27/11/2026) no rascunho o texto antigo ("partem da oficial") confundia */
+              <li>Você está no <strong>rascunho "{rascunhoNome}"</strong>: gerar e "Melhorar" usam a disponibilidade e os professores do rascunho, e o resultado fica no rascunho. O "Melhorar" parte da grade do rascunho (ou da grade de hoje, se ele estiver em branco).</li>
+            ) : (
+              <li>Gere versões alternativas do horário sem mexer na grade oficial. Toda geração e todo "Melhorar" partem sempre da <strong>grade oficial atual</strong>, nunca de outro experimento.</li>
+            )}
             <li>Compare com a oficial em <strong>Simular promoção</strong> e ajuste o que precisar.</li>
             <li>Quando estiver satisfeito, clique em <strong>Promover para oficial</strong> para aplicar. Antes, o sistema guarda uma cópia da oficial; se algo der errado, use <strong>Voltar à grade anterior</strong>.</li>
           </ul>
@@ -3812,7 +3816,7 @@ function AbaExperimental() {
               <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
               A nova grade é salva como experimento, para você revisar e comparar. A grade oficial só muda quando você clicar em Promover.
             </div>
-            {gerandoCpsatTurma && <ProgressoGeracao dados={progressoCpsat} acoes={acoesGeracao} />}
+            {gerandoCpsatTurma && <ProgressoGeracao dados={progressoCpsat} acoes={acoesGeracao} antesDaHA />}
           </div>
           </div>
           <DialogFooter>
@@ -3879,7 +3883,7 @@ function AbaExperimental() {
               <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
               Escolha um turno e marque só as turmas que entram nesta geração. As turmas que ficarem de fora não mudam, e os horários dos professores delas são respeitados. A nova grade é salva como experimento.
             </div>
-            {gerandoCpsatTurnoParcial && <ProgressoGeracao dados={progressoCpsat} acoes={acoesGeracao} />}
+            {gerandoCpsatTurnoParcial && <ProgressoGeracao dados={progressoCpsat} acoes={acoesGeracao} antesDaHA />}
           </div>
           </div>
           <DialogFooter>
@@ -3923,8 +3927,8 @@ function AbaExperimental() {
             </div>
           </div>
           <div className="space-y-4 py-2">
-            {gerandoCpsat && <ProgressoGeracao dados={progressoCpsat} acoes={acoesGeracao} />}
-            <PainelCapacidade turno={cpsatForm.turno} /> {/* [CAPACIDADE-POR-TURNO] */}
+            {gerandoCpsat && <ProgressoGeracao dados={progressoCpsat} acoes={acoesGeracao} antesDaHA={!melhorandoCpsat} />}{/* [JANELAS-ANTES-DA-HA] */}
+            <PainelCapacidade turno={cpsatForm.turno} experimento={rascunhoNome} /> {/* [CAPACIDADE-POR-TURNO] [CONTA-NO-RASCUNHO] */}
           </div>
           </div>
           <DialogFooter className="flex-wrap gap-2 sm:space-x-0">

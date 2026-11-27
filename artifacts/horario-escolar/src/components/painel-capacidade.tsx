@@ -25,11 +25,15 @@ interface RespostaCapacidade {
 const NOME_TURNO: Record<string, string> = { matutino: "manhã", vespertino: "tarde", noturno: "noite" };
 
 // [CAPACIDADE-POR-TURNO] com `turno`, mostra so os professores e a conta desse turno
-export function PainelCapacidade({ turno }: { turno?: string } = {}) {
+// [CONTA-NO-RASCUNHO] (27/11/2026) com `experimento` (rascunho ligado), a conta usa a disponibilidade e os professores dele
+export function PainelCapacidade({ turno, experimento }: { turno?: string; experimento?: string | null } = {}) {
   const [verAvisos, setVerAvisos] = useState(false);
-  const url = turno ? `/api/horarios/capacidade?turno=${encodeURIComponent(turno)}` : "/api/horarios/capacidade";
+  const params = new URLSearchParams();
+  if (turno) params.set("turno", turno);
+  if (experimento) params.set("nomeExperimental", experimento);
+  const url = `/api/horarios/capacidade${params.size ? `?${params.toString()}` : ""}`;
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["/api/horarios/capacidade", turno ?? "todos"],
+    queryKey: ["/api/horarios/capacidade", turno ?? "todos", experimento ?? null],
     queryFn: () => customFetch<RespostaCapacidade>(url, { responseType: "json" }),
     staleTime: 0,
   });

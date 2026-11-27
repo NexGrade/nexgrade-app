@@ -623,7 +623,7 @@ export function PainelDisponibilidade({ experimento = null, embutido = false }: 
           </span>
         </div>
       )}{/* [HA-POR-TURNO-NA-TELA] */}
-      {professorIdNum && <ContaProfessor professorId={professorIdNum} turno={turno} deltaLivres={deltaLivres} />}{/* [CONTA-NA-HORA] */}
+      {professorIdNum && <ContaProfessor professorId={professorIdNum} turno={turno} deltaLivres={deltaLivres} experimento={experimento} />}{/* [CONTA-NA-HORA] [CONTA-NO-RASCUNHO] */}
 
       <div className="flex flex-wrap items-center gap-4">
         {/* [DISP-POR-TURMA] */}
