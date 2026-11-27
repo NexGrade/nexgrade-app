@@ -185,7 +185,10 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
       await queryClient.invalidateQueries({ queryKey: getGetTurmaQueryKey(turmaId) });
       await queryClient.invalidateQueries(); // a grade tambem mudou
       toast({
-        title: professorId == null ? "Professor removido" : r.aulasPassadas ? `Professor trocado: ${r.aulasPassadas} aula(s) da grade passaram para ele` : "Professor definido",
+        // [TROCA-AVISO-NOME] (27/11/2026) o nome no lugar de "passaram para ele" (vale para professora também)
+        title: professorId == null ? "Professor removido" : r.aulasPassadas
+          ? `Troca feita: ${r.aulasPassadas} aula(s) da grade passaram para ${professores.find((p) => p.id === professorId)?.nome ?? "o novo professor"}`
+          : "Professor definido",
         description: r.aviso ?? undefined,
         variant: r.aviso && !r.aulasPassadas ? "destructive" : undefined,
       });

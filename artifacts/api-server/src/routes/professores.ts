@@ -129,10 +129,14 @@ router.patch("/:id", async (req, res) => {
     res.status(404).json({ error: "Professor não encontrado" });
     return;
   }
-  await db
-    .update(professoresTable)
-    .set(data)
-    .where(and(eq(professoresTable.id, id), eq(professoresTable.escolaId, escolaId)));
+  // [PATCH-SO-DISCIPLINAS] (27/11/2026) so as disciplinas no corpo: sem campo do professor para gravar,
+  // o drizzle recusava o update vazio ("No values to set") e a rota dava 500
+  if (Object.values(data).some((v) => v !== undefined)) {
+    await db
+      .update(professoresTable)
+      .set(data)
+      .where(and(eq(professoresTable.id, id), eq(professoresTable.escolaId, escolaId)));
+  }
   if (disciplinaIds !== undefined) {
     await db.delete(professorDisciplinasTable).where(eq(professorDisciplinasTable.professorId, id));
     if (disciplinaIds.length > 0) {
