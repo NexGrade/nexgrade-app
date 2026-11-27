@@ -3454,8 +3454,33 @@ function AbaExperimental() {
                           const textoD = primeira ? textoDif : difD > 0 ? `${difD} a mais` : difD < 0 ? `${-difD} a menos` : "igual à oficial";
                           const corD = primeira ? corDif : difD > 0 ? "text-red-700" : difD < 0 ? "text-green-700" : "text-slate-600";
                           const rotulo = destacar ? ` · ${doRascunho.map(nomeT).join(" e ")}` : "";
+                          // [JANELAS-POR-TURNO] (27/11/2026) pedido da dona: as janelas aparecem por turno, nunca somadas ("Manhã e Tarde").
+                          // Rascunho com mais de um turno: um par de quadros (hoje → se promover) para cada turno dele.
+                          const turnosSeparados = porTurnoOk && doRascunho.length > 1 ? doRascunho : [];
+                          const difTexto = (d: number) => d > 0 ? `${d} a mais` : d < 0 ? `${-d} a menos` : "igual à oficial";
+                          const difCor = (d: number) => d > 0 ? "text-red-700" : d < 0 ? "text-green-700" : "text-slate-600";
                           return (
                             <>
+                              {turnosSeparados.length > 0 ? (
+                                <div className="mt-3 space-y-2">
+                                  {turnosSeparados.map((t) => {
+                                    const antes = hoje.porTurno?.[t] ?? 0, depois = sim.experimento.porTurno?.[t] ?? 0;
+                                    return (
+                                      <div key={t} className="grid grid-cols-2 gap-2">
+                                        <div className="rounded-md border bg-white/70 p-3">
+                                          <div className="text-xs opacity-70">Grade oficial hoje · {nomeT(t)}</div>
+                                          <div className="text-2xl font-bold">{antes} <span className="text-sm font-normal">janela(s)</span></div>
+                                        </div>
+                                        <div className="rounded-md border bg-white/70 p-3">
+                                          <div className="text-xs opacity-70">Se promover este experimento · {nomeT(t)}</div>
+                                          <div className="text-2xl font-bold">{depois} <span className="text-sm font-normal">janela(s)</span></div>
+                                          <div className={`text-xs font-medium ${difCor(depois - antes)}`}>{difTexto(depois - antes)}</div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              ) : (
                               <div className="mt-3 grid grid-cols-2 gap-2">
                                 <div className="rounded-md border bg-white/70 p-3">
                                   <div className="text-xs opacity-70">Grade oficial hoje{rotulo}</div>
@@ -3467,6 +3492,7 @@ function AbaExperimental() {
                                   <div className={`text-xs font-medium ${corD}`}>{textoD}</div>
                                 </div>
                               </div>
+                              )}
                               {destacar ? (
                                 <ul className="mt-2 space-y-0.5 text-xs">
                                   {fora.map((t) => {
@@ -3478,7 +3504,6 @@ function AbaExperimental() {
                                       </li>
                                     );
                                   })}
-                                  <li className="opacity-70">Total da escola: {hoje.janelas} → {sim.experimento.janelas} janela(s)</li>
                                 </ul>
                               ) : sim.turnos.length > 1 && hoje.porTurno && sim.experimento.porTurno && ( /* [HA-OUTRO-TURNO] */
                                 <ul className="mt-2 space-y-0.5 text-xs">
