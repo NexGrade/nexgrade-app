@@ -156,7 +156,7 @@ function NotificationBellAdmin() {
 }
 
 // [MENU-ORGANIZADO] (31/10/2026) o mesmo menu no computador e no celular
-function MenuLateral({ grupos, isActive, seloDoItem }: { grupos: GrupoMenu[]; isActive: (href: string) => boolean; seloDoItem: (href: string, badge?: string) => string | undefined }) {
+function MenuLateral({ grupos, isActive, seloDoItem }: { grupos: GrupoMenu[]; isActive: (href: string) => boolean; seloDoItem: (href: string, badge?: string, label?: string) => string | undefined }) {
   return (
     <nav className="flex-1 py-4 px-3 pb-6 overflow-y-auto">
       {grupos.map((group, gi) => (
@@ -190,12 +190,12 @@ function MenuLateral({ grupos, isActive, seloDoItem }: { grupos: GrupoMenu[]; is
               >
                 <item.icon className="w-4 h-4 shrink-0" />
                 <span className="flex-1">{item.label}</span>
-                {seloDoItem(item.href, item.badge) && (
+                {seloDoItem(item.href, item.badge, item.label) && (
                   <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none",
                     item.href === "/arquivo-rco" ? "bg-amber-100 text-amber-800"
-                      : seloDoItem(item.href, item.badge) === "Rascunho" ? "bg-violet-600 text-white" // [RASCUNHO-VISUAL]
+                      : seloDoItem(item.href, item.badge, item.label) === "Rascunho" ? "bg-violet-600 text-white" // [RASCUNHO-VISUAL]
                       : "bg-[#42A5F5]/15 text-[#1565C0]")}>
-                    {seloDoItem(item.href, item.badge)}
+                    {seloDoItem(item.href, item.badge, item.label)}
                   </span>
                 )}
               </Link>
@@ -244,8 +244,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { data: situacaoArquivoRco } = useSituacaoArquivoRco(!ehGestorMenu && !ehPedagogiaMenu);
   const { data: situacaoAcesso } = useSituacaoAcesso(); // [TRAVA-AVALIACAO] aviso dos ultimos dias da avaliacao
   const rascunhoTela = useRascunhoNaTela(); // [RASCUNHO-VISUAL]
-  const seloDoItem = (href: string, badge?: string) => (href === "/arquivo-rco" && situacaoArquivoRco?.solicitado ? "Pedido"
-    : rascunhoTela.ligado && naPaginaDoRascunho(href) ? "Rascunho" : badge);
+  // [RASCUNHO-VISUAL] "Consultar grade" abre a mesma tela, mas o nome sugere a oficial: sem selo (pedido da dona, 27/11)
+  const seloDoItem = (href: string, badge?: string, label?: string) => (href === "/arquivo-rco" && situacaoArquivoRco?.solicitado ? "Pedido"
+    : rascunhoTela.ligado && naPaginaDoRascunho(href) && label !== "Consultar grade" ? "Rascunho" : badge);
 
   // [MENU-CELULAR] menu do celular: fecha ao trocar de tela
   const [menuAberto, setMenuAberto] = useState(false);
@@ -287,7 +288,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
         {/* [RASCUNHO-VISUAL] no rascunho, a area da tela ganha moldura e fundo roxos: da para saber de longe que nao e a grade real */}
         <div className={cn("flex-1 overflow-auto p-4 md:p-8",
-          rascunhoTela.ligado && rascunhoTela.naPagina && "bg-violet-50 ring-[6px] ring-inset ring-violet-500")}>
+          rascunhoTela.ligado && rascunhoTela.naPagina && "bg-violet-100 ring-[6px] ring-inset ring-violet-500")}>
           <div className="max-w-6xl mx-auto">
             {!ehGestorMenu && !ehPedagogiaMenu && <AvisoFimAvaliacao situacao={situacaoAcesso} />}{/* [TRAVA-AVALIACAO] direcao, coordenacao e secretaria */}
             <RascunhoBarra />{/* [MODO-RASCUNHO] */}
