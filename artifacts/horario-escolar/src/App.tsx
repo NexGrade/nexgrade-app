@@ -15,7 +15,7 @@ import { ConfirmarProvider } from "@/components/confirmar"; // [CONFIRMAR-NEXGRA
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Layout } from "@/components/layout";
-import { Sparkles, Lock, CalendarDays, DoorOpen, FileUp, ShieldCheck, LogOut, Mail, UserPlus, Building2, ArrowLeft, ClipboardCheck, Printer, Smartphone } from "lucide-react"; // [LOGIN] [BOTAO-SAIR] [MASTER-VOLTAR] [LOGIN-RECURSOS]
+import { Sparkles, Lock, DoorOpen, FileUp, ShieldCheck, LogOut, Mail, UserPlus, Building2, ArrowLeft, ClipboardCheck, Printer } from "lucide-react"; // [LOGIN] [BOTAO-SAIR] [MASTER-VOLTAR] [LOGIN-RECURSOS]
 
 // [FIX] Divisão do pacote JS (code-splitting) -- antes, todas as ~24
 // telas eram importadas de forma estática aqui no topo, o que fazia o
@@ -181,17 +181,16 @@ const clerkAppearance = {
 // [LOGIN] Beneficios mostrados ao lado do formulario (so o que o NexGrade tem hoje).
 // [LOGIN-RECURSOS] (01/11/2026) lista atualizada com o que o sistema faz hoje (antes falava em CSV e
 // "arquivo para o sistema oficial" e nao mostrava presenca, RCO, celular e pedagogia)
+// [LOGIN-RESUMO] (27/11/2026) seis cartoes com uma linha cada, so o essencial.
+// [TEXTO-JURIDICO-LOGIN] a tela de login e publica: sem "oficial", "conforme", "integrado" ou "lanca no RCO"
+// (a secretaria importa o arquivo com o proprio acesso) e sem afirmacoes sobre LGPD.
 const BENEFICIOS = [
-  { icon: Sparkles, titulo: "Geração automática da grade", texto: "Monta a grade respeitando as regras da escola, a disponibilidade e a hora-atividade dos professores." },
-  { icon: Lock, titulo: "Aulas fixas, trio e assíncronas", texto: "As regras da SEED-PR já previstas: aulas travadas, docência por trio e aulas assíncronas." },
-  // [TEXTO-JURIDICO-LOGIN] (19/11/2026) sem "matrizes oficiais" nem "Grava a grade no RCO" (regra de texto):
-  // a tela de login e publica; a secretaria e quem lanca a grade no RCO, com o proprio acesso
-  { icon: CalendarDays, titulo: "Turnos, calendário e matrizes conforme a SEED-PR", texto: "Calendário letivo e cursos com as matrizes já cadastrados para começar rápido." },
-  { icon: FileUp, titulo: "Arquivo e atalho para o RCO", texto: "A secretaria lança a grade no RCO com o próprio acesso, pelo arquivo ou pelo atalho, sem digitar de novo." },
-  { icon: ClipboardCheck, titulo: "Presença dos professores", texto: "Lista do dia no celular, faltas do mês e folha de ponto para assinar." },
-  { icon: DoorOpen, titulo: "Reservas de salas e equipamentos", texto: "Agenda de reservas com regras por professor e controle de tablets e laboratórios." },
-  { icon: Printer, titulo: "Relatórios em PDF e Excel", texto: "Grade por turma, por professor e quadro geral, além de planilhas prontas para imprimir." },
-  { icon: Smartphone, titulo: "Cada um com o seu acesso, até no celular", texto: "Direção, coordenação, secretaria, pedagogia, gestor de reservas e professor." },
+  { icon: Sparkles, titulo: "Grade gerada automaticamente", texto: "Respeita as regras da escola, a disponibilidade e a hora-atividade." },
+  { icon: Lock, titulo: "Regras da rede estadual", texto: "Aulas fixas, trio, assíncronas e matrizes alinhadas à SEED-PR." },
+  { icon: FileUp, titulo: "Arquivo compatível com o RCO", texto: "A secretaria importa com o próprio acesso, sem digitar de novo." },
+  { icon: ClipboardCheck, titulo: "Presença dos professores", texto: "Lista do dia no celular, faltas e folha de ponto." },
+  { icon: DoorOpen, titulo: "Reservas", texto: "Salas, tablets e laboratórios com regras por professor." },
+  { icon: Printer, titulo: "Relatórios em PDF e Excel", texto: "Grade por turma, por professor e quadro geral." },
 ];
 
 // [LOGIN] Moldura comum do login/cadastro: formulario a esquerda, beneficios a direita
@@ -243,7 +242,7 @@ function AuthShell({ subtitulo, aviso, children }: { subtitulo: string; aviso: A
             ))}
           </div>
           <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs leading-snug text-emerald-800">
-            Pensado para a realidade de cada escola, do ensino fundamental ao médio técnico.
+            Cada cargo com o seu acesso, até no celular. Do fundamental ao médio técnico.
           </p>
         </aside>
       </div>
