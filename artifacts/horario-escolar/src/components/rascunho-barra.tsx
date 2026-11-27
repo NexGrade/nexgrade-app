@@ -154,12 +154,8 @@ export function RascunhoBarra() {
             </span>
             <div className="flex flex-wrap items-center gap-2">
               <Button size="sm" variant="secondary" className="h-9 bg-white text-violet-800 hover:bg-violet-50" onClick={() => void verMudancas()}>Ver mudanças</Button>
-              {/* [IR-PROMOVER] (09/11/2026) leva ao Modo Experimental com o rascunho em destaque e a simulacao pronta; quem decide e o Promover de la */}
-              <Button size="sm" className="h-9 bg-emerald-500 text-white hover:bg-emerald-600" disabled={rascunho.aulas === 0} /* [RASCUNHO-EM-BRANCO] */
-                title={rascunho.aulas === 0 ? "O rascunho ainda está em branco: gere a grade primeiro (Gerar Grade)" : "Abre o Modo Experimental com o rascunho e a simulação, para conferir e promover"}
-                onClick={() => navegar(`/horario?tab=experimental&experimento=${encodeURIComponent(rascunho.nome)}`)}>
-                Promover para oficial…
-              </Button>
+              {/* [PROMOVER-SO-NO-EXPERIMENTAL] (27/11/2026) pedido da dona: sem o atalho "Promover para oficial…" na faixa;
+                  promover so no cartao do rascunho em Gerar Grade → Modo Experimental (que confere os choques) */}
               <Button size="sm" variant="ghost" className="h-9 text-white hover:bg-white/15 hover:text-white" onClick={() => ligarRascunho(null)} title="Volta a mostrar a escola como está (o rascunho continua guardado)">Sair do rascunho</Button>
               <Button size="sm" variant="ghost" className="h-9 text-rose-100 hover:bg-white/15 hover:text-white" disabled={ocupado !== null} onClick={() => void descartar()}>Descartar</Button>
             </div>
