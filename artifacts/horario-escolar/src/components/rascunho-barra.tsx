@@ -12,9 +12,20 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { useToast } from "@/hooks/use-toast";
 import { usePapelEfetivo } from "@/lib/papeis";
 import { useRascunho, ligarRascunho } from "@/lib/rascunho";
-import { FileEdit, Loader2, RotateCcw } from "lucide-react";
+import { FileEdit, Loader2, RotateCcw, ShieldCheck } from "lucide-react";
 
-const PAGINAS_DO_RASCUNHO = ["/horario", "/disponibilidade", "/turmas"];
+export const PAGINAS_DO_RASCUNHO = ["/horario", "/disponibilidade", "/turmas"];
+export const naPaginaDoRascunho = (local: string) => PAGINAS_DO_RASCUNHO.some((p) => local.startsWith(p));
+
+// [RASCUNHO-VISUAL] (27/11/2026) pedido da dona: as vezes nao dava para saber se estava no rascunho ou na grade real.
+// Moldura roxa na area da tela e selo "Rascunho" no menu, so para quem edita a grade e so nas telas que o rascunho muda.
+export function useRascunhoNaTela() {
+  const papel = usePapelEfetivo();
+  const [local] = useLocation();
+  const { rascunho, ligado } = useRascunho();
+  const podeEditar = !papel.carregando && !papel.ehProfessor && !papel.ehGestor && !papel.ehPedagogia;
+  return { ligado: podeEditar && ligado, naPagina: naPaginaDoRascunho(local), nome: rascunho?.nome ?? null };
+}
 export const PROMOVER_TEXTO = 'o "Promover para oficial" (Gerar Grade → Modo Experimental)'; // [SO-PROMOVER]
 type MudancaDisp = { professorId: number; professor: string; turno: string; diaSemana: number; horarioSlot: number; antes: string; depois: string };
 type MudancaAtrib = { turmaDisciplinaId: number; turma: string; disciplina: string; professorOficialId: number | null; professorId: number | null; mudou: boolean };
@@ -57,7 +68,7 @@ export function RascunhoBarra() {
   const [mudancas, setMudancas] = useState<null | "carregando" | { disp: MudancaDisp[]; atrib: MudancaAtrib[]; aulas: DifTurma[]; profs: Map<number, string> }>(null);
 
   if (papel.carregando || papel.ehProfessor || papel.ehGestor || papel.ehPedagogia) return null;
-  const naPagina = PAGINAS_DO_RASCUNHO.some((p) => local.startsWith(p));
+  const naPagina = naPaginaDoRascunho(local);
   const atualizarTudo = async () => { await recarregar(); await qc.invalidateQueries(); };
 
   const criar = async () => {
@@ -117,7 +128,20 @@ export function RascunhoBarra() {
   return (
     <>
       {/* [RASCUNHO-EVIDENTE] (06/11/2026) pedido da dona: rascunho bem visivel. Dentro dele: faixa roxa cheia, presa no topo */}
-      {ligado && rascunho && (
+      {/* [RASCUNHO-VISUAL] fora de Grade, Disponibilidade e Turmas a tela mostra a escola como esta: faixa curta que diz isso */}
+      {ligado && rascunho && !naPagina && (
+        <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border-2 border-violet-300 bg-violet-50 px-4 py-2.5 text-sm text-violet-900">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-700 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-white">
+            <FileEdit className="w-3.5 h-3.5" />Rascunho ligado
+          </span>
+          <span className="flex-1 min-w-[14rem]">
+            Você está no rascunho <strong>{rascunho.nome}</strong>, mas <strong>esta tela mostra a escola como está</strong>. O rascunho só aparece em Gerar Grade, Disponibilidade e Turmas.
+          </span>
+          <Button size="sm" className="h-8 bg-violet-700 text-white hover:bg-violet-800" onClick={() => navegar("/horario")}>Ver a grade do rascunho</Button>
+          <Button size="sm" variant="ghost" className="h-8 text-violet-800 hover:bg-violet-100" onClick={() => ligarRascunho(null)}>Sair do rascunho</Button>
+        </div>
+      )}
+      {ligado && rascunho && naPagina && (
         <div className="sticky top-0 z-30 -mt-1 mb-4 rounded-lg bg-violet-700 px-4 py-3 text-white shadow-md ring-2 ring-violet-300">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider">
@@ -140,6 +164,15 @@ export function RascunhoBarra() {
               <Button size="sm" variant="ghost" className="h-9 text-rose-100 hover:bg-white/15 hover:text-white" disabled={ocupado !== null} onClick={() => void descartar()}>Descartar</Button>
             </div>
           </div>
+        </div>
+      )}
+      {/* [RASCUNHO-VISUAL] fora do rascunho, nas telas que ele muda: selo verde dizendo que e a grade que vale na escola */}
+      {!ligado && naPagina && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white">
+            <ShieldCheck className="w-3.5 h-3.5" />Grade oficial
+          </span>
+          <span>Você está vendo a escola como está, fora do rascunho: é o que vale hoje para professores e turmas.</span>
         </div>
       )}
       {!ligado && rascunho && naPagina && (

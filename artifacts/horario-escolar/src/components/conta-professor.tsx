@@ -21,11 +21,15 @@ type ContaTurno = {
 const NOME_TURNO: Record<string, string> = { matutino: "manhã", vespertino: "tarde", noturno: "noite" };
 const pl = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
 
-export function ContaProfessor({ professorId, turno, deltaLivres }: { professorId: number; turno: string; deltaLivres: number }) {
+// [CONTA-NO-RASCUNHO] (27/11/2026) com o rascunho ligado, a conta usa a disponibilidade dele (?nomeExperimental=,
+// o middleware do servidor sobrepoe). Antes a conta salva era sempre a oficial: depois de Salvar no rascunho os
+// cliques zeravam e a caixa voltava ao numero antigo ("22 horarios livres" com a terca ja liberada).
+export function ContaProfessor({ professorId, turno, deltaLivres, experimento }: { professorId: number; turno: string; deltaLivres: number; experimento?: string | null }) {
+  const sufixo = experimento ? `?nomeExperimental=${encodeURIComponent(experimento)}` : "";
   const { data, isLoading, isError } = useQuery({
     // comeca com "/api/horarios/capacidade": invalidar essa chave (Salvar, tela de gerar) refaz esta conta tambem
-    queryKey: ["/api/horarios/capacidade", "professor", professorId],
-    queryFn: () => customFetch<{ turnos: ContaTurno[] }>(`/api/horarios/capacidade/professor/${professorId}`, { responseType: "json" }),
+    queryKey: ["/api/horarios/capacidade", "professor", professorId, experimento ?? null],
+    queryFn: () => customFetch<{ turnos: ContaTurno[] }>(`/api/horarios/capacidade/professor/${professorId}${sufixo}`, { responseType: "json" }),
     staleTime: 0,
   });
   if (isLoading || isError || !data) return null; // sem a conta, a tela segue como antes

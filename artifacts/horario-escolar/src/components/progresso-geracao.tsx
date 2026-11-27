@@ -36,7 +36,7 @@ function formatarTempo(ms: number): string {
 }
 
 /** Linha das janelas de professor (ou de turma, quando o motor ainda nao mede as de professor) a cada grade melhor. */
-function LinhaJanelas({ pontos }: { pontos: Array<{ t: number; v: number }> }) {
+function LinhaJanelas({ pontos, antesDaHA }: { pontos: Array<{ t: number; v: number }>; antesDaHA?: boolean }) {
   if (pontos.length < 2) return null;
   const L = 400, A = 80, M = 6;
   const tMin = Math.min(...pontos.map((p) => p.t));
@@ -58,14 +58,17 @@ function LinhaJanelas({ pontos }: { pontos: Array<{ t: number; v: number }> }) {
       ))}
     </svg>
     <div className="flex justify-between text-[11px] tabular-nums text-muted-foreground">
-      <span>{pontos[0]!.v} janela(s) no início</span>
+      <span>{pontos[0]!.v} janela(s) no início{antesDaHA ? " (antes da HA)" : ""}</span>
       <span>agora: {ultimo.v}</span>
     </div>
     </>
   );
 }
 
-function PainelMotor({ motor }: { motor: ProgressoMotor }) {
+// [JANELAS-ANTES-DA-HA] (27/11/2026) no Gerar do zero o motor conta as janelas entre as AULAS; a HA entra depois e
+// ocupa parte desses buracos (teste de 27/11: o grafico terminou em 16 e a simulacao deu 0). No Melhorar o motor ja
+// estima as janelas com a HA encaixada [JANELAS-COM-HA-ENCAIXADA]. A tela diz qual conta esta mostrando.
+function PainelMotor({ motor, antesDaHA }: { motor: ProgressoMotor; antesDaHA?: boolean }) {
   const sol = motor.solucoes;
   const comProf = sol.filter((s) => s.janelasProfessor != null);
   const serie = (comProf.length >= 2 ? comProf.map((s) => ({ t: s.t, v: s.janelasProfessor! })) : sol.filter((s) => s.janelasTurma != null).map((s) => ({ t: s.t, v: s.janelasTurma! })));
@@ -81,18 +84,23 @@ function PainelMotor({ motor }: { motor: ProgressoMotor }) {
         <>
           <div className="text-xs text-muted-foreground">
             {sol.length} grade(s) melhor(es) encontrada(s)
-            {ultimaProf != null && <> · <span className="font-medium text-foreground">{ultimaProf}</span> janela(s) de professor</>}
+            {ultimaProf != null && <> · <span className="font-medium text-foreground">{ultimaProf}</span> janela(s) de professor{antesDaHA ? " entre as aulas" : ""}</>}
             {ultimaTurma != null && <> · {ultimaTurma} de turma</>}
             {ultimaHa != null && ultimaHa > 0 && <> · HA sem espaço: {ultimaHa}</>}
           </div>
-          <LinhaJanelas pontos={serie} />
+          <LinhaJanelas pontos={serie} antesDaHA={antesDaHA} />
+          {antesDaHA && ultimaProf != null && ultimaProf > 0 && (
+            <div className="mt-1 text-[11px] text-muted-foreground">
+              Ainda sem a hora-atividade: depois do cálculo a HA ocupa parte desses horários vagos. O número final de janelas aparece em "Simular promoção".
+            </div>
+          )}
         </>
       )}
     </div>
   );
 }
 
-export function ProgressoGeracao({ dados, terminou = false, acoes }: { dados: ProgressoGeracaoDados | null; terminou?: boolean; acoes?: AcoesGeracao }) {
+export function ProgressoGeracao({ dados, terminou = false, acoes, antesDaHA = false }: { dados: ProgressoGeracaoDados | null; terminou?: boolean; acoes?: AcoesGeracao; /** [JANELAS-ANTES-DA-HA] Gerar do zero */ antesDaHA?: boolean }) {
   const [agora, setAgora] = useState(() => Date.now());
   useEffect(() => {
     if (terminou) return;
@@ -133,7 +141,7 @@ export function ProgressoGeracao({ dados, terminou = false, acoes }: { dados: Pr
               <div className="min-w-0 flex-1">
                 <div className={`text-sm ${emAndamento ? "font-medium" : "text-muted-foreground"}`}>{e.rotulo}</div>
                 {e.detalhe && <div className="text-xs text-muted-foreground">{e.detalhe}</div>}
-                {e.id === "calculo" && i === ultimoCalculo && dados.motor && <PainelMotor motor={dados.motor} />}
+                {e.id === "calculo" && i === ultimoCalculo && dados.motor && <PainelMotor motor={dados.motor} antesDaHA={antesDaHA} />}
               </div>
               <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{formatarTempo(duracao)}</span>
             </li>
