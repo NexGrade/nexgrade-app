@@ -49,7 +49,7 @@ export function descreverAlcance(r: { alcance?: string; turmaIds?: number[] }, n
 export function RascunhoBarra() {
   const papel = usePapelEfetivo();
   const [local, navegar] = useLocation();
-  const { rascunho, ligado, recarregar } = useRascunho();
+  const { rascunho, ligado, recarregar, carregando: carregandoRascunho } = useRascunho();
   const qc = useQueryClient();
   const { toast } = useToast();
   const [novoAberto, setNovoAberto] = useState(false);
@@ -68,6 +68,9 @@ export function RascunhoBarra() {
   const [mudancas, setMudancas] = useState<null | "carregando" | { disp: MudancaDisp[]; atrib: MudancaAtrib[]; aulas: DifTurma[]; profs: Map<number, string> }>(null);
 
   if (papel.carregando || papel.ehProfessor || papel.ehGestor || papel.ehPedagogia) return null;
+  // [SEM-PISCAR] (27/11/2026) enquanto nao se sabe se ha rascunho, nada aparece: antes piscavam o selo "Grade oficial" e o
+  // convite "Comecar rascunho" por 1 a 3 s antes da faixa roxa, com o rascunho ligado
+  if (carregandoRascunho) return null;
   const naPagina = naPaginaDoRascunho(local);
   const atualizarTudo = async () => { await recarregar(); await qc.invalidateQueries(); };
 
