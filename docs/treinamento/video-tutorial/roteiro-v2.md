@@ -1,5 +1,3 @@
-> **Substituída pela [v3](roteiro-v3.md)** (sem a parte que gerava insegurança).
-
 # Vídeo tutorial do NexGrade — roteiro v2 para aprovação (11/11/2026)
 
 Pedido da dona: incluir cadastro de professores, cadastro de turmas, disponibilidade do professor, bloqueios e HA, trocar professor da turma, atribuir professor para turma, conferir conflitos e ajustar, gerar experimento da grade, melhorar e promover.
@@ -11,7 +9,7 @@ Os nomes novos (professor e turma) são fictícios, só da cópia local.
 |---|------|------------------------|-------|
 | 0 | Abertura | Nexy se apresenta e diz o que o vídeo cobre | — |
 | 1 | Visão Geral | Números da escola e avisos | — |
-| 2 | **Cadastrar professor** | Professores → Novo Professor → nome, e-mail, disciplinas que pode dar → Salvar; o professor aparece na lista | sim |
+| 2 | **Cadastrar professor** | Professores → Novo Professor → nome, e-mail, disciplinas que leciona → Salvar; o professor aparece na lista | sim |
 | 3 | **Cadastrar turma** | Turmas → Nova Turma → nível, curso e série (a matriz traz as disciplinas e a carga) → nome, turno, código do SERE → Salvar | sim |
 | 4 | **Atribuir professor** | Na turma nova, cada disciplina recebe o professor (a lista mostra só os habilitados); o filtro "Sem professor" mostra o que falta | sim |
 | 5 | Trocar professor | Abrir uma turma, trocar o professor de uma disciplina; as aulas vão junto; aviso quando há choque; dica da grade colorida (lápis na aula) | já tinha, fica igual |
@@ -27,7 +25,7 @@ Observação: a cena 9 mostra o caso real da cópia local. Se a grade gerada do 
 
 ## Versão gravada (11/11/2026, noite)
 
-- Arquivos: a legenda `nexgrade-tutorial.srt` fica aqui. O vídeo (MP4) **não** entra no repositório: está no site (`nexus-core-site`, `video/nexgrade-tutorial.mp4`, página do NexGrade). As versões em tamanho cheio (com legenda na imagem e com legenda que liga e desliga) ficaram no PC da dona, em `docs/treinamento/video-tutorial/`, fora do Git.
+- Arquivos: `nexgrade-tutorial.mp4`, `nexgrade-tutorial-legenda-na-imagem.mp4` e `nexgrade-tutorial.srt` (substituem a v1).
 - Duração: **4 min 32 s**. Voz neural Francisca (pt-BR). Nexy na abertura, nas dicas e no fechamento.
 - Dados fictícios criados só na cópia local: professora **Ana Teste** (Língua Portuguesa) e turma **6º Ano Teste** (Vespertino).
 - Resultados: gerar do zero → "Não recomendo promover"; Melhorar → "Vale promover"; promovido com cópia de segurança.
@@ -35,7 +33,7 @@ Observação: a cena 9 mostra o caso real da cópia local. Se a grade gerada do 
 ### Narração final
 
 **0. Abertura (Nexy)**
-- Olá! Eu sou a Nexy, da Nexus Core, e vou mostrar como o NexGrade organiza o horário da sua escola.
+- Olá! Eu sou a Nexy. Em poucos minutos, você vai ver como montar o horário da sua escola no NexGrade.
 - Vamos ver o cadastro de professores e turmas, a disponibilidade e a hora-atividade, os conflitos e, no fim, como gerar, melhorar e promover a grade.
 
 **1. Visão Geral**
@@ -44,7 +42,7 @@ Observação: a cena 9 mostra o caso real da cópia local. Se a grade gerada do 
 **2. Cadastrar professor**
 - Vamos começar pelo cadastro. Em Professores, clique em Novo Professor.
 - Preencha o nome e o e-mail. É com esse e-mail que o professor entra no sistema.
-- Em Disciplinas, marque o que ele pode dar. Só essas disciplinas vão aparecer para ele nas turmas.
+- Em Disciplinas, marque o que ele leciona. Só essas disciplinas vão aparecer para ele nas turmas.
 - Clique em Salvar. Pronto: o professor já aparece na lista.
 
 **3. Cadastrar turma e atribuir professores**
@@ -100,3 +98,12 @@ Observação: a cena 9 mostra o caso real da cópia local. Se a grade gerada do 
 
 **11. Fechamento (Nexy)**
 - Pronto! Agora é com você. Bom trabalho, e até a próxima!
+
+## Nova narração (12/11/2026)
+
+Pedido da dona, valendo para os quatro vídeos do site (passo a passo, professor, pedagogia e gestor de reservas):
+- Voz trocada da Francisca para a **Thalita** (`pt-BR-ThalitaMultilingualNeural`, edge-tts), mais natural. A imagem é a mesma; cada frase foi encaixada no tempo da cena (velocidade de +0% a +23% só onde precisou) e a última imagem fica parada até o fim da fala. Volume +4 dB para ficar igual ao anterior.
+- Abertura do passo a passo sem "da Nexus Core" (ficava repetitivo): "Olá! Eu sou a Nexy. Em poucos minutos, você vai ver como montar o horário da sua escola no NexGrade."
+- Cadastro do professor: "marque o que ele **leciona**" (era "pode dar").
+- Selo da abertura e das capas: "Com a Nexy" (era "Com a Nexy, da Nexus Core").
+- Duração do passo a passo: 4 min 12 s. As versões com a Francisca ficaram em `versao-francisca/`.

@@ -38,7 +38,7 @@ A Nexy (cartaz enviado pela dona em 11/11) aparece na abertura (cartaz inteiro),
 - Mais abaixo, cada disciplina tem o seu professor. A lista mostra só os professores habilitados para ela.
 
 **3. Professores**
-- Em Professores está a equipe da escola, com as disciplinas que cada um pode dar.
+- Em Professores está a equipe da escola, com as disciplinas que cada um leciona.
 - Ao abrir um professor, você confere os dados, as disciplinas e as turmas dele.
 
 **4. Cursos e Disciplinas**

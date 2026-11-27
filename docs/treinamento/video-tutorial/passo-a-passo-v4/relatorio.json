@@ -1,0 +1,392 @@
+{
+ "fim_audio": 329.915833,
+ "grupos": [
+  {
+   "g": 0,
+   "ini": 0.79,
+   "dur": 6.13,
+   "vaga": 6.23,
+   "rate": 3,
+   "cabe": true,
+   "texto": "Olá! Eu sou a Nexy. Em poucos minutos, você vai ver como mon"
+  },
+  {
+   "g": 1,
+   "ini": 7.27,
+   "dur": 8.49,
+   "vaga": 8.71,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Vamos ver o cadastro de professores e turmas, a disponibilid"
+  },
+  {
+   "g": 2,
+   "ini": 16.22,
+   "dur": 6.78,
+   "vaga": 7.08,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Na Visão Geral você vê, de uma vez, quantos professores, tur"
+  },
+  {
+   "g": 3,
+   "ini": 23.56,
+   "dur": 4.18,
+   "vaga": 4.21,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Vamos começar pelo cadastro. Em Professores, clique em Novo "
+  },
+  {
+   "g": 4,
+   "ini": 28.02,
+   "dur": 7.02,
+   "vaga": 7.13,
+   "rate": 4,
+   "cabe": true,
+   "texto": "Preencha o nome e o e-mail. É com esse e-mail que o professo"
+  },
+  {
+   "g": 5,
+   "ini": 35.4,
+   "dur": 5.63,
+   "vaga": 5.67,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Em Disciplinas, marque o que ele leciona. Só essas disciplin"
+  },
+  {
+   "g": 6,
+   "ini": 41.32,
+   "dur": 3.79,
+   "vaga": 4.47,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Clique em Salvar. Pronto: o professor já aparece na lista."
+  },
+  {
+   "g": 7,
+   "ini": 46.04,
+   "dur": 3.49,
+   "vaga": 5.18,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Agora, uma turma nova. Em Turmas, clique em Nova Turma."
+  },
+  {
+   "g": 8,
+   "ini": 51.47,
+   "dur": 5.52,
+   "vaga": 12.72,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Escolha o curso e a série. A matriz curricular já traz as di"
+  },
+  {
+   "g": 9,
+   "ini": 64.44,
+   "dur": 3.68,
+   "vaga": 9.55,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Dê o nome da turma, confira o turno e clique em Salvar Turma"
+  },
+  {
+   "g": 10,
+   "ini": 74.24,
+   "dur": 6.5,
+   "vaga": 6.85,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Logo depois, o sistema pede para distribuir os professores. "
+  },
+  {
+   "g": 11,
+   "ini": 81.34,
+   "dur": 6.36,
+   "vaga": 7.12,
+   "rate": 0,
+   "cabe": true,
+   "texto": "A lista mostra só os professores habilitados. Veja: a profes"
+  },
+  {
+   "g": 12,
+   "ini": 88.71,
+   "dur": 3.52,
+   "vaga": 4.45,
+   "rate": 0,
+   "cabe": true,
+   "texto": "O contador mostra quantas disciplinas ainda estão sem profes"
+  },
+  {
+   "g": 13,
+   "ini": 93.41,
+   "dur": 3.59,
+   "vaga": 6.08,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Na lista de turmas, o filtro Sem professor mostra o que falt"
+  },
+  {
+   "g": 14,
+   "ini": 99.74,
+   "dur": 7.31,
+   "vaga": 13.72,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Para trocar o professor de uma turma, abra a turma pelo lápi"
+  },
+  {
+   "g": 15,
+   "ini": 113.71,
+   "dur": 5.37,
+   "vaga": 12.05,
+   "rate": 0,
+   "cabe": true,
+   "texto": "O sistema leva as aulas da grade para o novo professor. Conf"
+  },
+  {
+   "g": 16,
+   "ini": 126.01,
+   "dur": 7.22,
+   "vaga": 7.58,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Dica: no Modo Rascunho, você também pode trocar pelo lápis n"
+  },
+  {
+   "g": 17,
+   "ini": 133.84,
+   "dur": 4.21,
+   "vaga": 7.92,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Agora, a Disponibilidade. Escolha o professor para ver a sem"
+  },
+  {
+   "g": 18,
+   "ini": 142.0,
+   "dur": 7.03,
+   "vaga": 7.42,
+   "rate": 0,
+   "cabe": true,
+   "texto": "O quadro de cima usa a tabela da SEED: mostra quantas horas-"
+  },
+  {
+   "g": 19,
+   "ini": 149.67,
+   "dur": 6.71,
+   "vaga": 7.05,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Na grade, verde é livre, vermelho é bloqueado e amarelo é ho"
+  },
+  {
+   "g": 20,
+   "ini": 156.97,
+   "dur": 5.61,
+   "vaga": 6.75,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Para marcar um bloqueio, vá ao turno e clique no horário. El"
+  },
+  {
+   "g": 21,
+   "ini": 163.97,
+   "dur": 6.66,
+   "vaga": 7.18,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Com dois cliques, o horário vira hora-atividade. Os botões e"
+  },
+  {
+   "g": 22,
+   "ini": 171.4,
+   "dur": 1.55,
+   "vaga": 4.12,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Depois, clique em Salvar."
+  },
+  {
+   "g": 23,
+   "ini": 175.77,
+   "dur": 7.87,
+   "vaga": 11.08,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Antes de gerar, confira os conflitos. Em Gerar Grade, abra a"
+  },
+  {
+   "g": 24,
+   "ini": 187.1,
+   "dur": 7.51,
+   "vaga": 7.88,
+   "rate": 0,
+   "cabe": true,
+   "texto": "A turma nova aparece com carga insuficiente, porque ainda nã"
+  },
+  {
+   "g": 25,
+   "ini": 195.24,
+   "dur": 4.83,
+   "vaga": 6.58,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Escolha um tipo para filtrar. Em Ver sugestões, o sistema ex"
+  },
+  {
+   "g": 26,
+   "ini": 202.07,
+   "dur": 6.2,
+   "vaga": 6.58,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Em Ver conflito, a grade abre no professor, com o horário em"
+  },
+  {
+   "g": 27,
+   "ini": 208.9,
+   "dur": 6.34,
+   "vaga": 10.88,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Se o caso estiver certo, por exemplo um combinado da escola,"
+  },
+  {
+   "g": 28,
+   "ini": 220.04,
+   "dur": 3.88,
+   "vaga": 5.42,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Quer testar mudanças sem mexer na escola? Use o Modo Rascunh"
+  },
+  {
+   "g": 29,
+   "ini": 225.7,
+   "dur": 4.96,
+   "vaga": 8.58,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Escolha o que entra no rascunho, por exemplo, só a manhã, dê"
+  },
+  {
+   "g": 30,
+   "ini": 234.54,
+   "dur": 5.45,
+   "vaga": 10.25,
+   "rate": 0,
+   "cabe": true,
+   "texto": "A faixa e a moldura roxas mostram que você está no rascunho,"
+  },
+  {
+   "g": 31,
+   "ini": 245.04,
+   "dur": 3.74,
+   "vaga": 4.12,
+   "rate": 0,
+   "cabe": true,
+   "texto": "O que mudar na Grade, na Disponibilidade e em Turmas fica só"
+  },
+  {
+   "g": 32,
+   "ini": 249.4,
+   "dur": 4.44,
+   "vaga": 7.25,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Em Ver mudanças, você confere tudo o que já mudou em relação"
+  },
+  {
+   "g": 33,
+   "ini": 256.9,
+   "dur": 4.03,
+   "vaga": 6.38,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Para montar a grade, abra a aba Modo Experimental e escolha "
+  },
+  {
+   "g": 34,
+   "ini": 263.54,
+   "dur": 8.59,
+   "vaga": 11.18,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Aqui há dois caminhos. Gerar do zero monta tudo de novo, e é"
+  },
+  {
+   "g": 35,
+   "ini": 274.97,
+   "dur": 8.31,
+   "vaga": 8.68,
+   "rate": 0,
+   "cabe": true,
+   "texto": "O Melhorar parte da grade de hoje, só troca aulas de lugar e"
+  },
+  {
+   "g": 36,
+   "ini": 283.9,
+   "dur": 3.43,
+   "vaga": 4.35,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Pronto! Antes de aplicar, clique em Simular promoção."
+  },
+  {
+   "g": 37,
+   "ini": 288.5,
+   "dur": 7.92,
+   "vaga": 9.22,
+   "rate": 0,
+   "cabe": true,
+   "texto": "A simulação compara as janelas e a hora-atividade com a grad"
+  },
+  {
+   "g": 38,
+   "ini": 297.97,
+   "dur": 6.53,
+   "vaga": 10.28,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Clique em Promover e confirme. O sistema guarda uma cópia de"
+  },
+  {
+   "g": 39,
+   "ini": 308.5,
+   "dur": 4.12,
+   "vaga": 5.15,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Se precisar, em Voltar à grade anterior, você recupera a cóp"
+  },
+  {
+   "g": 40,
+   "ini": 313.9,
+   "dur": 3.94,
+   "vaga": 4.28,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Em Imprimir Grade, você baixa os PDFs por turma e por profes"
+  },
+  {
+   "g": 41,
+   "ini": 318.44,
+   "dur": 4.53,
+   "vaga": 6.85,
+   "rate": 0,
+   "cabe": true,
+   "texto": "E, se tiver dúvida, pergunte ao Assistente de IA, aqui no me"
+  },
+  {
+   "g": 42,
+   "ini": 325.53,
+   "dur": 3.78,
+   "vaga": 33.15,
+   "rate": 0,
+   "cabe": true,
+   "texto": "Pronto! Agora é com você. Bom trabalho, e até a próxima!"
+  }
+ ]
+}

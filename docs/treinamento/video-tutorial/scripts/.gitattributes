@@ -1,0 +1,2 @@
+# scripts do Git Bash: sem CRLF (senao ": command not found")
+*.sh text eol=lf
