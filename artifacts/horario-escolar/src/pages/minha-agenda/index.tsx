@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmar } from "@/components/confirmar"; // [CONFIRMAR-NEXGRADE]
 import { NovaReservaDialog, useReservasTablets, CHAVE_TABLETS, type PreenchimentoReserva } from "@/components/nova-reserva-dialog"; // [NOVA-RESERVA-COMPARTILHADA]
 import { QuadroSemanaReservas } from "@/components/quadro-semana-reservas"; // [QUADRO-SEMANA]
 
@@ -176,6 +177,7 @@ export default function MinhaAgendaPage() {
   const [dataLivres, setDataLivres] = useState(() => { const h = new Date(); return `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, "0")}-${String(h.getDate()).padStart(2, "0")}`; });
   const [preencher, setPreencher] = useState<PreenchimentoReserva | null>(null);
   const queryClient = useQueryClient();
+  const confirmar = useConfirmar();
   const { data: professor, isLoading: carregandoProfessor } = useGetMeuProfessor();
   const { data: notificacoes } = useGetMinhaAgendaNotificacoes({
     query: { queryKey: getGetMinhaAgendaNotificacoesQueryKey(), enabled: !!professor, refetchInterval: 30000 },
@@ -203,7 +205,7 @@ export default function MinhaAgendaPage() {
   const { data: reservasTablets } = useReservasTablets(!!professor); // [RECURSOS-TABLETS]
   const [cancelandoTablet, setCancelandoTablet] = useState<number | null>(null);
   async function cancelarTablet(id: number) {
-    if (!window.confirm("Cancelar esta reserva de equipamento? As unidades voltam a ficar livres.")) return;
+    if (!(await confirmar({ titulo: "Cancelar esta reserva de equipamento?", texto: "As unidades voltam a ficar livres.", confirmar: "Cancelar a reserva", cancelar: "Voltar", perigo: true }))) return;
     setCancelandoTablet(id);
     try {
       await customFetchOcupacao("/api/minha-agenda/recursos/reservas/" + id, { method: "DELETE", responseType: "json" });

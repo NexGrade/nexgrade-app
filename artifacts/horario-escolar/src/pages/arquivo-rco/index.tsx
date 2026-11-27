@@ -8,12 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmar } from "@/components/confirmar"; // [CONFIRMAR-NEXGRADE]
 import { AlertTriangle, CheckCircle2, Download, FileUp, Loader2 } from "lucide-react";
 import { CHAVE_ARQUIVO_RCO, ROTULO_TURNO, dataHora, useSituacaoArquivoRco } from "@/lib/arquivo-rco";
 
 export default function ArquivoRcoPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const confirmar = useConfirmar();
   const entrada = useRef<HTMLInputElement>(null);
   const [enviando, setEnviando] = useState(false);
   const { data, isLoading } = useSituacaoArquivoRco();
@@ -101,11 +103,11 @@ export default function ArquivoRcoPage() {
             type="file"
             accept=".xml,.XML,application/xml,text/xml"
             className="hidden"
-            onChange={(e) => {
+            onChange={async (e) => {
               const f = e.target.files?.[0];
               if (!f) return;
               // [ARQUIVO-RCO-CONFIRMAR] (01/11/2026) um clique no arquivo errado apagava o envio certo
-              if (data?.enviado && !window.confirm(`Já existe um arquivo enviado em ${dataHora(data.enviado.enviadoEm)} (${data.enviado.nomeArquivo}). Enviar "${f.name}" no lugar dele?`)) {
+              if (data?.enviado && !(await confirmar({ titulo: `Enviar "${f.name}" no lugar do arquivo anterior?`, texto: `Já existe um arquivo enviado em ${dataHora(data.enviado.enviadoEm)} (${data.enviado.nomeArquivo}).`, confirmar: "Enviar no lugar" }))) {
                 e.target.value = "";
                 return;
               }

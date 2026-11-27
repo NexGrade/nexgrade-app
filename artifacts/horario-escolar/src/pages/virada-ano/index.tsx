@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmar } from "@/components/confirmar"; // [CONFIRMAR-NEXGRADE]
 
 // [VIRADA-ANO] (24/10/2026) Virada do ano letivo (plano: claude/plano-virada-ano-letivo.md).
 // As turmas continuam (sao a "vaga" na grade) e passam para o ano novo; a escola so ajusta o que mudou:
@@ -57,6 +58,7 @@ async function baixar(url: string, nome: string) {
 export default function ViradaAnoPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const confirmar = useConfirmar();
   const { data: previa, isLoading, isError, error } = useQuery({
     queryKey: ["virada-ano-previa"],
     queryFn: () => customFetch<Previa>("/api/virada-ano/previa", { responseType: "json" }),
@@ -120,7 +122,7 @@ export default function ViradaAnoPage() {
 
   async function desfazer() {
     if (!s?.ultimaVirada) return;
-    if (!window.confirm(`Desfazer a virada para ${s.ultimaVirada.anoPara}?\n\nTudo volta como estava em ${s.ultimaVirada.anoDe}: turmas, professores, grade oficial, experimentos e disponibilidade. Turmas criadas depois da virada serão excluídas.`)) return;
+    if (!(await confirmar({ titulo: `Desfazer a virada para ${s.ultimaVirada.anoPara}?`, texto: `Tudo volta como estava em ${s.ultimaVirada.anoDe}: turmas, professores, grade oficial, experimentos e disponibilidade. Turmas criadas depois da virada serão excluídas.`, confirmar: "Desfazer a virada", perigo: true }))) return;
     setEnviando(true);
     try {
       await customFetch("/api/virada-ano/desfazer", { method: "POST", responseType: "json" });

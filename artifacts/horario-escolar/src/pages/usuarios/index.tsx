@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmar } from "@/components/confirmar"; // [CONFIRMAR-NEXGRADE]
 import { Plus, Shield, Mail, Search, Trash2, X, Loader2, Info } from "lucide-react";
 import { usePapelEfetivo } from "@/lib/papeis"; // [ACESSOS-ESCOLA]
 
@@ -55,6 +56,7 @@ function mensagemErro(err: unknown): string {
 export default function UsuariosPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const confirmar = useConfirmar();
   const [busca, setBusca] = useState("");
   const [aberto, setAberto] = useState(false);
   const [form, setForm] = useState<{ nome: string; email: string; cargo: Cargo }>({ nome: "", email: "", cargo: "reservas" });
@@ -160,8 +162,8 @@ export default function UsuariosPage() {
                 {(a.tipo === "membro" || pelobanco) && !a.ehVoce && (
                   <Select
                     value={a.cargo}
-                    onValueChange={(v) => {
-                      if (v !== a.cargo && window.confirm("Mudar o cargo de " + a.nome + " para " + (cargosLista.find((c) => c.valor === v)?.rotulo ?? v) + "?")) {
+                    onValueChange={async (v) => {
+                      if (v !== a.cargo && (await confirmar({ titulo: "Mudar o cargo de " + a.nome + " para " + (cargosLista.find((c) => c.valor === v)?.rotulo ?? v) + "?", confirmar: "Mudar o cargo" }))) {
                         trocarCargo.mutate({ userId: a.id, cargo: v as Cargo });
                       }
                     }}
@@ -177,9 +179,9 @@ export default function UsuariosPage() {
                     size="icon"
                     title={a.tipo === "membro" || pelobanco ? "Remover acesso" : "Cancelar convite"}
                     disabled={remover.isPending}
-                    onClick={() => {
+                    onClick={async () => {
                       const pergunta = a.tipo === "membro" || pelobanco ? "Remover o acesso de " + a.nome + " a esta escola?" : "Cancelar o convite de " + a.email + "?";
-                      if (window.confirm(pergunta)) remover.mutate(a);
+                      if (await confirmar({ titulo: pergunta, confirmar: a.tipo === "membro" || pelobanco ? "Remover acesso" : "Cancelar convite", cancelar: "Voltar", perigo: true })) remover.mutate(a);
                     }}
                   >
                     {a.tipo === "membro" || pelobanco ? <Trash2 className="h-4 w-4 text-destructive" /> : <X className="h-4 w-4" />}

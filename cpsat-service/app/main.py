@@ -107,6 +107,7 @@ def gerar_grade_endpoint(payload: dict):
         progresso.iniciar(payload.get("progressoId"))  # [PROGRESSO-MOTOR]
         disciplinas_raw = payload.get("disciplinasTurma", [])
         bloqueios_raw = payload.get("bloqueiosProfessor", [])
+        _ligar_estimativa_ha(payload)  # [JANELAS-COM-HA-NO-GERAR]
         turno = payload.get("turno", "matutino")
         aulas_por_dia = payload.get("aulasPorDia", 5)
         turmas_raw = payload.get("turmas", [])
@@ -131,6 +132,8 @@ def gerar_grade_endpoint(payload: dict):
         return resultado
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        _desligar_estimativa_ha()  # [JANELAS-COM-HA-NO-GERAR]
 
 @app.post("/gerar-grade-coordenada")
 def gerar_grade_coordenada_endpoint(payload: dict):
@@ -143,6 +146,7 @@ def gerar_grade_coordenada_endpoint(payload: dict):
         turno = payload.get("turno", "matutino")
         aulas_por_dia = payload.get("aulasPorDia", 5)
         turmas_raw = payload.get("turmas", [])
+        _ligar_estimativa_ha(payload)  # [JANELAS-COM-HA-NO-GERAR]
         n_tentativas = payload.get("nTentativas", 5)
         tempo_coordenacao_s = payload.get("tempoCoordenacaoS", 120)
         tempo_fase_s = payload.get("tempoFaseS", 300)
@@ -171,6 +175,22 @@ def gerar_grade_coordenada_endpoint(payload: dict):
         return resultado
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        _desligar_estimativa_ha()  # [JANELAS-COM-HA-NO-GERAR]
+
+
+# [JANELAS-COM-HA-NO-GERAR] (27/11/2026) o Gerar do zero tambem mostra ao vivo as janelas ja descontando a HA movel
+# (antes so o Melhorar; a tela do Gerar mostrava as janelas entre as aulas e a simulacao terminava bem menor).
+# So muda o numero do progresso; a otimizacao e a mesma. Sem "haParaEstimativa" (API antiga), fica como antes.
+def _ligar_estimativa_ha(payload: dict) -> None:
+    from .estimativa_ha import criar_estimador
+    from .solver import _CTX
+    _CTX.estimador_ha = criar_estimador(payload.get("haParaEstimativa"), payload.get("bloqueiosProfessor"))
+
+
+def _desligar_estimativa_ha() -> None:
+    from .solver import _CTX
+    _CTX.estimador_ha = None
 
 
 # [MELHORAR-GRADE] Parte de uma grade ja existente (ex.: a OFICIAL do turno):

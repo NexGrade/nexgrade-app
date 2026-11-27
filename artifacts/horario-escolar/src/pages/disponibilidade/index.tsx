@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmar } from "@/components/confirmar"; // [CONFIRMAR-NEXGRADE]
 import {
   useListProfessores,
   useListTurmas, // [DISP-POR-TURMA]
@@ -98,6 +99,7 @@ export default function DisponibilidadePage() {
 export function PainelDisponibilidade({ experimento = null, embutido = false }: { experimento?: string | null; embutido?: boolean }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const confirmar = useConfirmar();
   const [professorId, setProfessorId] = useState<string>("");
   const [turno, setTurno] = useState<Turno>("matutino");
   const [matriz, setMatriz] = useState<CelulaState>({});
@@ -369,7 +371,7 @@ export function PainelDisponibilidade({ experimento = null, embutido = false }: 
   const hasChanges = JSON.stringify(matriz) !== JSON.stringify(original) ||
     Object.keys(matriz).some((k) => rotuloSeAtividade(matriz, rotulos, k) !== rotuloSeAtividade(original, rotulosOriginais, k));
 
-  const toggle = (dia: number, numeroAula: number) => {
+  const toggle = async (dia: number, numeroAula: number) => {
     if (aulaDOC(dia, numeroAula)) { avisarDOC(dia, numeroAula); return; } // [DOC-TRAVADA]
     if (modoFixarAula) { setOpcaoFixar(""); setCelulaFixar({ dia, numeroAula }); return; } // [AULA-FIXA-DISP]
     if (modoAtividade) { setRotuloEscolhido(rotulos[cellKey(dia, numeroAula)] ?? ""); setCelulaAtividade({ dia, numeroAula }); return; } // [ATIVIDADE-FORA-DE-SALA]
@@ -384,7 +386,7 @@ export function PainelDisponibilidade({ experimento = null, embutido = false }: 
     if (proximo === "bloqueado" && real) {
       const turmaNome = real.turma?.nome ?? "?";
       const discNome = real.disciplina?.nome ?? "?";
-      if (!confirm(`Esse horário já tem aula real marcada (${turmaNome} — ${discNome}). Bloquear aqui vai gerar um conflito de "professor indisponível" na grade. Continuar mesmo assim?`)) {
+      if (!(await confirmar({ titulo: "Bloquear mesmo assim?", texto: `Esse horário já tem aula real marcada (${turmaNome} — ${discNome}). Bloquear aqui vai gerar um conflito de "professor indisponível" na grade.`, confirmar: "Bloquear mesmo assim" }))) {
         return;
       }
     }
@@ -393,22 +395,23 @@ export function PainelDisponibilidade({ experimento = null, embutido = false }: 
     if ((proximo === "ha_obrigatoria" || proximo === "ha_fixa") && real) {
       const aula = `${real.turma?.nome ?? "?"} — ${real.disciplina?.nome ?? "?"}`;
       const texto = experimento
-        ? `Esse horário tem aula no rascunho (${aula}). Marcar HA aqui não tira a aula sozinho: ela aparece em vermelho na simulação do rascunho (aba Modo Experimental), onde o botão "Ver como resolver" sugere a troca. O rascunho só pode ser promovido depois que a aula mudar de lugar. Marcar HA mesmo assim?`
+        ? `Esse horário tem aula no rascunho (${aula}). Marcar HA aqui não tira a aula sozinho: ela aparece em vermelho na simulação do rascunho (aba Modo Experimental), onde o botão "Ver como resolver" sugere a troca. O rascunho só pode ser promovido depois que a aula mudar de lugar.`
         : proximo === "ha_obrigatoria"
-          ? `Esse horário tem aula (${aula}). Na grade que vale hoje, a HA comum não tira a aula: ela é refeita em outro horário livre. Para a aula sair daqui, faça a mudança no rascunho (o "Ver como resolver" sugere a troca). Marcar HA mesmo assim?`
-          : `Esse horário tem aula (${aula}). A HA fixa prende o horário, mas a aula só sai daqui quando a grade for gerada de novo ou trocada no rascunho; até lá, a tela Conflitos acusa. Marcar HA fixa mesmo assim?`;
-      if (!confirm(texto)) return;
+          ? `Esse horário tem aula (${aula}). Na grade que vale hoje, a HA comum não tira a aula: ela é refeita em outro horário livre. Para a aula sair daqui, faça a mudança no rascunho (o "Ver como resolver" sugere a troca).`
+          : `Esse horário tem aula (${aula}). A HA fixa prende o horário, mas a aula só sai daqui quando a grade for gerada de novo ou trocada no rascunho; até lá, a tela Conflitos acusa.`;
+      const fixa = !experimento && proximo === "ha_fixa";
+      if (!(await confirmar({ titulo: fixa ? "Marcar HA fixa mesmo assim?" : "Marcar HA mesmo assim?", texto, confirmar: fixa ? "Marcar HA fixa" : "Marcar HA" }))) return;
     }
     setMatriz((prev) => ({ ...prev, [key]: proximo }));
   };
 
   // [ATIVIDADE-FORA-DE-SALA] marcar / remover atividade na celula escolhida
-  const marcarAtividade = () => {
+  const marcarAtividade = async () => {
     if (!celulaAtividade) return;
     const rotulo = limparRotulo(rotuloEscolhido);
     if (!rotulo) return;
     const real = aulaReal(celulaAtividade.dia, celulaAtividade.numeroAula);
-    if (real && !confirm(`Esse horário já tem aula real marcada (${real.turma?.nome ?? "?"} — ${real.disciplina?.nome ?? "?"}). Marcar uma atividade aqui vai gerar um conflito de "professor indisponível". Continuar mesmo assim?`)) return;
+    if (real && !(await confirmar({ titulo: "Marcar a atividade mesmo assim?", texto: `Esse horário já tem aula real marcada (${real.turma?.nome ?? "?"} — ${real.disciplina?.nome ?? "?"}). Marcar uma atividade aqui vai gerar um conflito de "professor indisponível".`, confirmar: "Marcar mesmo assim" }))) return;
     const key = cellKey(celulaAtividade.dia, celulaAtividade.numeroAula);
     setMatriz((prev) => ({ ...prev, [key]: "atividade" }));
     setRotulos((prev) => ({ ...prev, [key]: rotulo }));
@@ -547,7 +550,7 @@ export function PainelDisponibilidade({ experimento = null, embutido = false }: 
           const dados = e instanceof ApiError ? (e.data as { precisaConfirmar?: boolean; aulasNoHorario?: string[] } | null) : null;
           if (!(e instanceof ApiError && e.status === 409 && dados?.precisaConfirmar)) throw e;
           const lista = (dados.aulasNoHorario ?? []).map((x) => `• ${x}`).join("\n");
-          if (!confirm(`${professorSelecionado?.nome ?? "O professor"} tem aula no rascunho nesse(s) horário(s):\n\n${lista}\n\nSe gravar, a aula fica onde está até alguém mudá-la de lugar (botão "Ver como resolver" na simulação do rascunho), e o rascunho não pode ser promovido enquanto isso. Gravar mesmo assim?`)) return;
+          if (!(await confirmar({ titulo: "Gravar mesmo assim?", texto: `${professorSelecionado?.nome ?? "O professor"} tem aula no rascunho nesse(s) horário(s):\n\n${lista}\n\nSe gravar, a aula fica onde está até alguém mudá-la de lugar (botão "Ver como resolver" na simulação do rascunho), e o rascunho não pode ser promovido enquanto isso.`, confirmar: "Gravar mesmo assim" }))) return;
           await gravar(true);
         }
         setOriginal({ ...matriz });
@@ -604,7 +607,8 @@ export function PainelDisponibilidade({ experimento = null, embutido = false }: 
 
       {experimento && (
         <p className="text-sm text-violet-900 rounded-md border border-violet-200 bg-violet-50 px-3 py-2">
-          Mudanças feitas aqui ficam só no experimento <strong>{experimento}</strong> (horários com contorno roxo). A disponibilidade oficial só muda ao promover.
+          {/* [SEM-REPETIR] (27/11/2026) a faixa roxa ja diz que nada vale ate promover; aqui fica so o que e desta tela */}
+          Horários com contorno roxo foram mudados no rascunho.
         </p>
       )}{/* [DISP-EXPERIMENTAL] */}
       {experimento && dispExp.isError && (
@@ -750,7 +754,7 @@ export function PainelDisponibilidade({ experimento = null, embutido = false }: 
                     {celulaAtividade && matriz[cellKey(celulaAtividade.dia, celulaAtividade.numeroAula)] === "atividade" && (
                       <Button variant="outline" className="text-destructive hover:text-destructive" onClick={removerAtividade}>Remover atividade</Button>
                     )}
-                    <Button onClick={marcarAtividade} disabled={!limparRotulo(rotuloEscolhido)} className="gap-1"><Tag className="w-3.5 h-3.5" />Marcar</Button>
+                    <Button onClick={() => void marcarAtividade()} disabled={!limparRotulo(rotuloEscolhido)} className="gap-1"><Tag className="w-3.5 h-3.5" />Marcar</Button>
                   </DialogFooter>
                 </div>
               </DialogContent>
@@ -871,7 +875,7 @@ export function PainelDisponibilidade({ experimento = null, embutido = false }: 
                         return (
                           <td key={dia} className="p-0">
                             <button
-                              onClick={() => toggle(dia, slot.numeroAula)}
+                              onClick={() => void toggle(dia, slot.numeroAula)}
                               className={cn(
                                 "relative w-full h-12 rounded-md border-2 transition-all text-xs font-semibold",
                                 estado === "disponivel" &&

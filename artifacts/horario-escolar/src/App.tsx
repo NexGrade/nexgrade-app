@@ -11,6 +11,7 @@ import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
 import { useGetEscolaAtual, getGetEscolaAtualQueryKey, useMasterWhoami, getMasterWhoamiQueryKey, setAuthTokenGetter } from "@workspace/api-client-react";
 import { Toaster } from "@/components/ui/toaster";
+import { ConfirmarProvider } from "@/components/confirmar"; // [CONFIRMAR-NEXGRADE]
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Layout } from "@/components/layout";
@@ -815,6 +816,7 @@ function App() {
       <ApiAuthBridge />
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
+        <ConfirmarProvider>{/* [CONFIRMAR-NEXGRADE] */}
           {/* OrgSwitchWatcher fica aqui dentro por conveniencia -- nao tem
               mais dependencia estrita do Wouter (usa window.location.href
               para o reload, nao useLocation), mas manter perto do Router
@@ -842,6 +844,7 @@ function App() {
             </div>
           </WouterRouter>
           <Toaster />
+        </ConfirmarProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </ClerkProvider>

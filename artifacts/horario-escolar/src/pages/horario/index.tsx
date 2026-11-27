@@ -26,6 +26,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmar } from "@/components/confirmar"; // [CONFIRMAR-NEXGRADE]
 import { ToastAction } from "@/components/ui/toast"; // [HA-TRAVADA-NA-GRADE]
 import { AceitarConflito, TIPOS_ACEITAVEIS } from "@/components/aceitar-conflito"; // [CONFLITO-ACEITO]
 import { SeletorBusca } from "@/components/seletor-busca";
@@ -1010,6 +1011,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
   const { mutateAsync: gerar } = useGerarHorario();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const confirmar = useConfirmar();
 
   const queryParams: any = {};
   if (turmaId !== "all") queryParams.turmaId = Number(turmaId);
@@ -1205,7 +1207,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
   const handleGerarGrade = async () => {
     if (!isTurmaSelected) return;
     const nomeTurma = turmas?.find((t) => String(t.id) === turmaId)?.nome ?? turmaId;
-    if (!confirm(`Gerar a grade de "${nomeTurma}"? Isso substitui a grade atual dessa turma, se já existir.`)) return;
+    if (!(await confirmar({ titulo: `Gerar a grade de "${nomeTurma}"?`, texto: "Isso substitui a grade atual dessa turma, se já existir.", confirmar: "Gerar" }))) return;
     setGerando(true);
     try {
       const result = await gerar({
@@ -1284,7 +1286,7 @@ function AbaGrade({ somenteConsulta = false }: { somenteConsulta?: boolean }) { 
 
   async function handleExcluirAula() {
     const nomes = detalheSlots.map((s) => s.professorNome).join(" + ");
-    if (!confirm(`Excluir esta aula (${nomes})? Essa ação não pode ser desfeita.`)) return;
+    if (!(await confirmar({ titulo: `Excluir esta aula (${nomes})?`, texto: "Essa ação não pode ser desfeita.", confirmar: "Excluir", perigo: true }))) return;
     setExcluindo(true);
     try {
       for (const s of detalheSlots) {
@@ -1851,6 +1853,7 @@ function destinoDoConflito(c: ConflitoItem): { href: string; rotulo: string } | 
 function AbaConflitos() {
   const [, irPara] = useLocation(); // [CONFLITO-VAI-AO-PROBLEMA]
   const { toast } = useToast();
+  const confirmar = useConfirmar();
   // [TETO-LIBERADO] professores autorizados a passar do teto de aulas do turno
   const TURNO_NOME: Record<string, string> = { matutino: "manhã", vespertino: "tarde", noturno: "noite" };
   const { data: liberacoesTeto = [], refetch: recarregarLiberacoes } = useQuery({
@@ -1860,7 +1863,7 @@ function AbaConflitos() {
   const [liberando, setLiberando] = useState<string | null>(null);
   const autorizarTeto = async (c: { professorId?: number | null; turno?: string | null; total?: number | null; limite?: number | null; descricao: string }) => {
     if (c.professorId == null || !c.turno) return;
-    if (!confirm(`${c.descricao}\n\nAutorizar este professor a dar ${c.total} aulas na ${TURNO_NOME[c.turno] ?? c.turno} (o teto é ${c.limite})?\n\nO conflito some. Se ele ganhar mais aulas nesse turno, o conflito volta. Dá para revogar depois aqui mesmo.`)) return;
+    if (!(await confirmar({ titulo: `Autorizar este professor a dar ${c.total} aulas na ${TURNO_NOME[c.turno] ?? c.turno} (o teto é ${c.limite})?`, texto: `${c.descricao}\n\nO conflito some. Se ele ganhar mais aulas nesse turno, o conflito volta. Dá para revogar depois aqui mesmo.`, confirmar: "Autorizar" }))) return;
     setLiberando(`${c.professorId}|${c.turno}`);
     try {
       await customFetch("/api/conflitos/teto-liberar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ professorId: c.professorId, turno: c.turno }) });
@@ -1877,7 +1880,7 @@ function AbaConflitos() {
   });
   const [verAceitos, setVerAceitos] = useState(false);
   const aceitarConflito = async (c: { tipo: string; descricao: string }) => {
-    if (!confirm(`${c.descricao}\n\nAceitar este conflito como está? Ele some da lista. Se a grade mudar (outro dia, outra turma), ele volta a aparecer. Dá para desfazer depois em "Aceitos como estão".`)) return;
+    if (!(await confirmar({ titulo: "Aceitar este conflito como está?", texto: `${c.descricao}\n\nEle some da lista. Se a grade mudar (outro dia, outra turma), ele volta a aparecer. Dá para desfazer depois em "Aceitos como estão".`, confirmar: "Aceitar como está" }))) return;
     try {
       await customFetch("/api/conflitos/aceitar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo: c.tipo, descricao: c.descricao }) });
       await Promise.all([refetch(), recarregarAceitos()]);
@@ -1889,7 +1892,7 @@ function AbaConflitos() {
   const [aceitandoTodos, setAceitandoTodos] = useState(false);
   const aceitarTodos = async (itens: Array<{ tipo: string; descricao: string }>, rotulo: string) => {
     if (!itens.length) return;
-    if (!confirm(`Aceitar como estão os ${itens.length} conflito(s) ${rotulo}?\n\nEles somem da lista. Se a grade mudar (outro dia, outra turma), voltam a aparecer. Dá para desfazer um a um em "Aceitos como estão".`)) return;
+    if (!(await confirmar({ titulo: `Aceitar como estão os ${itens.length} conflito(s) ${rotulo}?`, texto: `Eles somem da lista. Se a grade mudar (outro dia, outra turma), voltam a aparecer. Dá para desfazer um a um em "Aceitos como estão".`, confirmar: "Aceitar como estão" }))) return;
     setAceitandoTodos(true);
     try {
       const r = await customFetch<{ aceitos: number; ignorados: number }>("/api/conflitos/aceitar-varios", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ itens: itens.map((c) => ({ tipo: c.tipo, descricao: c.descricao })) }), responseType: "json" });
@@ -1908,7 +1911,7 @@ function AbaConflitos() {
     }
   };
   const revogarTeto = async (l: { professorId: number; professorNome: string; turno: string }) => {
-    if (!confirm(`Revogar a autorização de ${l.professorNome} na ${TURNO_NOME[l.turno] ?? l.turno}? O conflito de aulas demais volta a aparecer.`)) return;
+    if (!(await confirmar({ titulo: `Revogar a autorização de ${l.professorNome} na ${TURNO_NOME[l.turno] ?? l.turno}?`, texto: "O conflito de aulas demais volta a aparecer.", confirmar: "Revogar", perigo: true }))) return;
     try {
       await customFetch(`/api/conflitos/teto-liberar/${l.professorId}/${l.turno}`, { method: "DELETE" });
       await Promise.all([refetch(), recarregarLiberacoes()]);
@@ -2148,6 +2151,7 @@ function AbaExperimental() {
   const { mutateAsync: gerar } = useGerarHorario();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const confirmar = useConfirmar();
 
   const [openGerar, setOpenGerar] = useState(false);
   const [gerando, setGerando] = useState(false);
@@ -2597,7 +2601,7 @@ function AbaExperimental() {
       const naoFecha = cap.problemas.filter((p) => p.nivel === "erro" && /não fecha|nao fecha/.test(p.mensagem));
       if (!naoFecha.length) return true;
       const lista = naoFecha.slice(0, 8).map((p) => `• ${p.professor}: ${p.mensagem}`).join("\n");
-      return confirm(`${naoFecha.length} professor(es) têm mais aulas do que horários livres neste turno:\n\n${lista}${naoFecha.length > 8 ? `\n• ... e mais ${naoFecha.length - 8}` : ""}\n\nCom isso o motor deve responder que não existe grade. Corrija antes (Disponibilidade ou carga), ou clique OK para tentar mesmo assim.`);
+      return await confirmar({ titulo: `${naoFecha.length} professor(es) têm mais aulas do que horários livres neste turno`, texto: `${lista}${naoFecha.length > 8 ? `\n• ... e mais ${naoFecha.length - 8}` : ""}\n\nCom isso o motor deve responder que não existe grade. Corrija antes (Disponibilidade ou carga), ou clique em "Tentar mesmo assim".`, confirmar: "Tentar mesmo assim" });
     } catch {
       return true; // sem a conta, segue como antes
     }
@@ -2659,9 +2663,9 @@ function AbaExperimental() {
   const handleMelhorarGradeOficial = async () => {
     // [RASCUNHO-NOME-FIXO] no rascunho, melhora o proprio rascunho (parte da grade dele)
     const nome = rascunhoNome ?? (cpsatForm.nomeExperimental.trim() || `CPSAT-${cpsatForm.turno}`).replace(/^(CPSAT|Grade)-/, "MELHORIA-");
-    if (!confirm(rascunhoNome
-      ? `Melhorar o rascunho "${nome}" no turno ${cpsatForm.turno} por trocas de aulas?\n\n${rascunhoInfo?.aulas === 0 ? "O rascunho está em branco: parte da grade de hoje, já com os professores e a disponibilidade do rascunho" : "Parte da grade do rascunho"}; a escola não muda até "Promover para oficial".` /* [RASCUNHO-EM-BRANCO] */
-      : `Melhorar a grade OFICIAL do ${cpsatForm.turno} por trocas de aulas?\n\nO resultado vira o experimento "${nome}". A grade oficial nao muda ate voce promover.`)) return;
+    if (!(await confirmar(rascunhoNome
+      ? { titulo: `Melhorar o rascunho "${nome}" no turno ${cpsatForm.turno} por trocas de aulas?`, texto: `${rascunhoInfo?.aulas === 0 ? "O rascunho está em branco: parte da grade de hoje, já com os professores e a disponibilidade do rascunho" : "Parte da grade do rascunho"}; a escola não muda até "Promover para oficial".`, confirmar: "Melhorar" } /* [RASCUNHO-EM-BRANCO] */
+      : { titulo: `Melhorar a grade OFICIAL do ${cpsatForm.turno} por trocas de aulas?`, texto: `O resultado vira o experimento "${nome}". A grade oficial nao muda ate voce promover.`, confirmar: "Melhorar" }))) return;
     setMelhorandoCpsat(true);
     setGerandoCpsat(true);
     try {
@@ -2768,7 +2772,7 @@ function AbaExperimental() {
     const nAtrib = resumoDe.get(nome)?.atribuicoes ?? 0; // [EXPERIMENTO-COMPLETO]
     const avisoDisp = (disp ? `\n\nA disponibilidade deste experimento (${disp.mudancas} mudança(s) de ${disp.professores} professor(es)) também passa a valer na oficial.` : "")
       + (nAtrib ? `\n\nA atribuição deste experimento (${nAtrib} disciplina(s) com outro professor) também passa a valer na oficial.` : "");
-    if (!confirm(`${aviso}Promover "${nome}" para horário oficial? Isso substituirá o horário atual de ${qtdTurmas} turma(s) envolvida(s).${avisoDisp}\n\nAntes de trocar, o sistema guarda uma cópia da grade oficial atual (aulas, HA${disp ? " e a disponibilidade que muda" : ""}). Se precisar, use "Voltar à grade anterior".`)) return;
+    if (!(await confirmar({ titulo: `Promover "${nome}" para horário oficial?`, texto: `${aviso}Isso substituirá o horário atual de ${qtdTurmas} turma(s) envolvida(s).${avisoDisp}\n\nAntes de trocar, o sistema guarda uma cópia da grade oficial atual (aulas, HA${disp ? " e a disponibilidade que muda" : ""}). Se precisar, use "Voltar à grade anterior".`, confirmar: "Promover" }))) return;
     setPromovendo(nome);
     try {
       const r: any = await promover({ nome: encodeURIComponent(nome) }); // [NOME-EXPERIMENTO] espaço no fim do nome sumia do endereço
@@ -2811,7 +2815,7 @@ function AbaExperimental() {
   const [restaurandoId, setRestaurandoId] = useState<number | null>(null);
   const handleRestaurarBackup = async (b: BackupGrade) => {
     const quando = new Date(b.createdAt).toLocaleString("pt-BR");
-    if (!confirm(`Voltar a grade oficial para a cópia de ${quando}?\n(${b.motivo})\n\nAulas (${b.qtdAulas}) e HA (${b.qtdHa}) de TODOS os turnos voltam a ficar exatamente como estavam nessa hora. A grade de agora também é guardada antes, então dá para desfazer.`)) return;
+    if (!(await confirmar({ titulo: `Voltar a grade oficial para a cópia de ${quando}?`, texto: `(${b.motivo})\n\nAulas (${b.qtdAulas}) e HA (${b.qtdHa}) de TODOS os turnos voltam a ficar exatamente como estavam nessa hora. A grade de agora também é guardada antes, então dá para desfazer.`, confirmar: "Voltar à cópia" }))) return;
     setRestaurandoId(b.id);
     try {
       const r = await customFetch<{ aulas: number; ha: number }>(`/api/horarios/backups/${b.id}/restaurar`, { method: "POST", responseType: "json" });
@@ -3000,7 +3004,7 @@ function AbaExperimental() {
 
   const handleDelete = async (nome: string) => {
     const r0 = resumoDe.get(nome);
-    if (!confirm(`Remover o experimento "${nome}"?${r0 && (r0.disponibilidade || r0.atribuicoes) ? " As mudanças de disponibilidade e de atribuição dele também são apagadas (a oficial não muda)." : ""}`)) return;
+    if (!(await confirmar({ titulo: `Remover o experimento "${nome}"?`, texto: r0 && (r0.disponibilidade || r0.atribuicoes) ? "As mudanças de disponibilidade e de atribuição dele também são apagadas (a oficial não muda)." : undefined, confirmar: "Remover", perigo: true }))) return;
     try {
       await deleteExp({ nome: encodeURIComponent(nome) }); // [NOME-EXPERIMENTO] espaço no fim do nome sumia do endereço
     } catch {
@@ -3814,7 +3818,15 @@ function AbaExperimental() {
           <div className="space-y-4 py-2">
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md p-2.5">
               <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
-              A nova grade é salva como experimento, para você revisar e comparar. A grade oficial só muda quando você clicar em Promover.
+              {/* [SUGERIR-MELHORAR] (27/11/2026) teste da Demonstracao: com 2 professores mudados, o Gerar do zero mudou 528 aulas
+                  de lugar. Para ajuste, o caminho e o Melhorar (decisao da dona: Gerar = comeco de ano) */}
+              {rascunhoNome ? (
+                <span><strong>Recomendado: Melhorar.</strong> Ele parte da grade de hoje (ou da grade do rascunho) e só troca aulas de lugar.
+                  {" "}<strong>Gerar do zero</strong> refaz tudo e muda quase todas as aulas: é para o começo do ano.</span>
+              ) : (
+                <span>A nova grade é salva como experimento, para você revisar e comparar. A grade oficial só muda quando você clicar em Promover.
+                  {" "}Para ajustar uma grade que já funciona, prefira o <strong>Melhorar</strong>: ele mexe só no necessário.</span>
+              )}
             </div>
             {gerandoCpsatTurma && <ProgressoGeracao dados={progressoCpsat} acoes={acoesGeracao} antesDaHA />}
           </div>
@@ -3900,7 +3912,15 @@ function AbaExperimental() {
           <div className="space-y-4 py-2">
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-blue-50 border border-blue-100 rounded-md p-2.5">
               <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600" />
-              A nova grade é salva como experimento, para você revisar e comparar. A grade oficial só muda quando você clicar em Promover.
+              {/* [SUGERIR-MELHORAR] (27/11/2026) teste da Demonstracao: com 2 professores mudados, o Gerar do zero mudou 528 aulas
+                  de lugar. Para ajuste, o caminho e o Melhorar (decisao da dona: Gerar = comeco de ano) */}
+              {rascunhoNome ? (
+                <span><strong>Recomendado: Melhorar.</strong> Ele parte da grade de hoje (ou da grade do rascunho) e só troca aulas de lugar.
+                  {" "}<strong>Gerar do zero</strong> refaz tudo e muda quase todas as aulas: é para o começo do ano.</span>
+              ) : (
+                <span>A nova grade é salva como experimento, para você revisar e comparar. A grade oficial só muda quando você clicar em Promover.
+                  {" "}Para ajustar uma grade que já funciona, prefira o <strong>Melhorar</strong>: ele mexe só no necessário.</span>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label>Nome do experimento *</Label>
@@ -3952,8 +3972,9 @@ function AbaExperimental() {
             >
               {gerandoCpsat ? "Cancelar geração" : "Cancelar"}
             </Button>
-            <Button variant="outline" onClick={handleMelhorarGradeOficial} disabled={gerandoCpsat} title="Parte da grade oficial deste turno. Primeiro muda de lugar a HA móvel (automática ou importada) para tirar janela; só troca aulas de lugar se ainda sobrar janela. Nunca fica pior que a oficial.">{melhorandoCpsat ? "Melhorando..." : "Melhorar grade oficial"}</Button>
-            <Button onClick={handleGerarCpsat} disabled={gerandoCpsat}>{gerandoCpsat && !melhorandoCpsat ? "Gerando…" : "Gerar grade"}</Button>
+            {/* [SUGERIR-MELHORAR] no rascunho, o Melhorar e o botao principal */}
+            <Button variant={rascunhoNome ? "default" : "outline"} onClick={handleMelhorarGradeOficial} disabled={gerandoCpsat} title="Parte da grade de hoje (ou do rascunho). Primeiro muda de lugar a HA móvel para tirar janela; só troca aulas de lugar se ainda sobrar janela. Nunca fica pior que a grade de partida.">{melhorandoCpsat ? "Melhorando..." : rascunhoNome ? "Melhorar (recomendado)" : "Melhorar grade oficial"}</Button>
+            <Button variant={rascunhoNome ? "outline" : "default"} onClick={handleGerarCpsat} disabled={gerandoCpsat}>{gerandoCpsat && !melhorandoCpsat ? "Gerando…" : rascunhoNome ? "Gerar do zero" : "Gerar grade"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -49,7 +49,9 @@ def definir_fase(nome: str, pid=None) -> None:
             r["atualizadoEm"] = time.time()
 
 
-def registrar_solucao(pid, janelas_professor: int | None, janelas_turma: int | None = None, ha_faltando: int | None = None) -> None:
+def registrar_solucao(pid, janelas_professor: int | None, janelas_turma: int | None = None, ha_faltando: int | None = None,
+                      com_ha: bool = False) -> None:
+    """com_ha: janelas_professor ja desconta a HA movel encaixada [JANELAS-COM-HA-NO-GERAR] (a tela escolhe o rotulo)."""
     if not pid:
         return
     with _lock:
@@ -63,6 +65,7 @@ def registrar_solucao(pid, janelas_professor: int | None, janelas_turma: int | N
             **({"janelasProfessor": int(janelas_professor)} if janelas_professor is not None else {}),
             **({"janelasTurma": int(janelas_turma)} if janelas_turma is not None else {}),
             **({"haFaltando": int(ha_faltando)} if ha_faltando is not None else {}),
+            **({"comHA": True} if com_ha else {}),
         })
         if len(r["solucoes"]) > MAX_SOLUCOES:
             r["solucoes"] = r["solucoes"][:1] + r["solucoes"][-(MAX_SOLUCOES - 1):]

@@ -68,7 +68,7 @@ class _ObservadorProgresso(cp_model.CpSolverSolutionCallback):
         try:
             jp = (self._estimar((p, d, a) for (p, d, a, v) in self._posicoes if self.Value(v))
                   if self._estimar else self._valor(self._jp))  # [JANELAS-COM-HA-ENCAIXADA]
-            progresso.registrar_solucao(self._pid, jp, self._valor(self._jt), self._valor(self._ha))
+            progresso.registrar_solucao(self._pid, jp, self._valor(self._jt), self._valor(self._ha), com_ha=bool(self._estimar))
             if progresso.pedido_parar(self._pid):  # [PARAR-MOTOR]
                 self.StopSearch()
         except Exception:
@@ -782,7 +782,7 @@ def gerar_grade(
         )
         resultado["aulas"] = aulas_otimizadas
         if estimar_ha and pid_fase3:  # [JANELAS-COM-HA-ENCAIXADA] numero final, ja com a HA encaixada
-            progresso.registrar_solucao(pid_fase3, estimar_ha((a["professor"], a["dia"], a["aula"]) for a in aulas_otimizadas))
+            progresso.registrar_solucao(pid_fase3, estimar_ha((a["professor"], a["dia"], a["aula"]) for a in aulas_otimizadas), com_ha=True)
         resultado["janelasProfessorAntes"] = janelas_antes
         resultado["janelasProfessorDepois"] = janelas_depois
     else:

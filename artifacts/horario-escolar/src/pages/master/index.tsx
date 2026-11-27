@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmar } from "@/components/confirmar"; // [CONFIRMAR-NEXGRADE]
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
@@ -158,6 +159,7 @@ function formatVencimento(data: string | null | undefined) {
 function EscolasTable() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const confirmar = useConfirmar();
   const { data: escolas, isLoading } = useListEscolasMaster({ query: { queryKey: getListEscolasMasterQueryKey() } });
   const { data: planos } = useListPlanosMaster({ query: { queryKey: getListPlanosMasterQueryKey() } });
   const atualizar = useUpdateEscolaMaster();
@@ -208,7 +210,7 @@ function EscolasTable() {
   }
 
   async function liberarSuporte(id: string, nome: string) {
-    if (!window.confirm("Liberar o seu acesso de suporte em " + nome + "?\n\nEle fica visível para a escola em Usuários, como \"Nexus Core (suporte)\", com cargo Coordenação. A escola pode remover quando quiser.")) return;
+    if (!(await confirmar({ titulo: "Liberar o seu acesso de suporte em " + nome + "?", texto: "Ele fica visível para a escola em Usuários, como \"Nexus Core (suporte)\", com cargo Coordenação. A escola pode remover quando quiser.", confirmar: "Liberar acesso" }))) return;
     setLiberando(id);
     try {
       const r = await customFetch<{ mensagem?: string }>("/api/master/escolas/" + encodeURIComponent(id) + "/meu-acesso", { method: "POST", responseType: "json" });
@@ -223,7 +225,7 @@ function EscolasTable() {
 
   // [VIRADA-ANO] (24/10/2026) libera a virada do ano letivo antes do fim do ano (teste ou caso especial)
   async function liberarVirada(id: string, nome: string) {
-    if (!window.confirm("Liberar a virada do ano letivo em " + nome + " antes do fim do ano letivo?\n\nA escola passa a poder virar para o ano seguinte (com backup e desfazer). Use para a escola de demonstração ou em caso especial.")) return;
+    if (!(await confirmar({ titulo: "Liberar a virada do ano letivo em " + nome + " antes do fim do ano letivo?", texto: "A escola passa a poder virar para o ano seguinte (com backup e desfazer). Use para a escola de demonstração ou em caso especial.", confirmar: "Liberar a virada" }))) return;
     try {
       const r = await customFetch<{ mensagem?: string }>("/api/master/escolas/" + encodeURIComponent(id) + "/liberar-virada", { method: "POST", responseType: "json" });
       toast({ title: "Virada liberada", description: r?.mensagem });
@@ -253,8 +255,8 @@ function EscolasTable() {
     );
   }
 
-  function cancelarAssinaturaDaEscola(id: string, nomeFantasia: string) {
-    if (!window.confirm(`Cancelar a assinatura Asaas de "${nomeFantasia}"? Isso encerra a cobrança recorrente de verdade, não é reversível por aqui.`)) {
+  async function cancelarAssinaturaDaEscola(id: string, nomeFantasia: string) {
+    if (!(await confirmar({ titulo: `Cancelar a assinatura Asaas de "${nomeFantasia}"?`, texto: "Isso encerra a cobrança recorrente de verdade, não é reversível por aqui.", confirmar: "Cancelar a assinatura", cancelar: "Voltar", perigo: true }))) {
       return;
     }
     cancelarAssinatura.mutate(
@@ -486,7 +488,7 @@ function EscolasTable() {
                       variant="ghost"
                       className="-ml-2 h-8 gap-1 text-destructive hover:text-destructive"
                       disabled={cancelarAssinatura.isPending}
-                      onClick={() => cancelarAssinaturaDaEscola(e.id, e.nomeFantasia)}
+                      onClick={() => void cancelarAssinaturaDaEscola(e.id, e.nomeFantasia)}
                     >
                       <XCircle className="h-3.5 w-3.5" /> Cancelar assinatura
                     </Button>

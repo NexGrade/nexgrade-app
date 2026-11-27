@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2, GraduationCap, CalendarDays, UserX } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmar } from "@/components/confirmar"; // [CONFIRMAR-NEXGRADE]
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -55,6 +56,7 @@ function segundaDestaSemanaISO() { return segundaUTC(new Date(Date.now() - 3 * 3
 function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const confirmar = useConfirmar();
   const { data: turma, isLoading } = useGetTurma(turmaId, { query: { queryKey: getGetTurmaQueryKey(turmaId) } });
   const { data: professores = [] } = useListProfessores();
   const [salvando, setSalvando] = useState<string | null>(null);
@@ -82,7 +84,7 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
       const enviar = (confirmar: boolean) => customFetch<{ aplicado: boolean; avisos?: string[] }>(`/api/horarios/experimentais/${encodeURIComponent(rascunho!)}/atribuicoes`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ turmaDisciplinaId, professorId, confirmar }) });
       const r = await enviar(false);
       if (!r.aplicado) {
-        if (!confirm(`Atenção:\n\n${(r.avisos ?? []).map((x) => `• ${x}`).join("\n")}\n\nTrocar o professor mesmo assim?`)) return;
+        if (!(await confirmar({ titulo: "Trocar o professor mesmo assim?", texto: `Atenção:\n\n${(r.avisos ?? []).map((x) => `• ${x}`).join("\n")}`, confirmar: "Trocar mesmo assim" }))) return;
         await enviar(true);
       }
       await queryClient.invalidateQueries({ queryKey: ["atribuicoes-exp", rascunho] });
@@ -136,7 +138,7 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
     for (const g of gs) await chamar(`/api/turmas/${turmaId}/disciplinas/${g.disciplinaId}/modalidade`, "PATCH", { trioInicio: v }, `Trio ${rotulo}: semana 1 = ${v.split("-").reverse().join("/")}`);
   }
   async function desfazerTrio(rotulo: string) {
-    if (!confirm(`Desfazer o trio ${rotulo}? As disciplinas voltam a ser independentes.`)) return;
+    if (!(await confirmar({ titulo: `Desfazer o trio ${rotulo}?`, texto: "As disciplinas voltam a ser independentes.", confirmar: "Desfazer o trio" }))) return;
     for (const g of grupos.filter((x) => x.trio === rotulo)) {
       await chamar(`/api/turmas/${turmaId}/disciplinas/${g.disciplinaId}/modalidade`, "PATCH", { grupoTrio: null }, `${g.nome} saiu do trio ${rotulo}`);
     }
@@ -177,7 +179,7 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
           ...(capacidade.length ? [``, `Com essa troca, a próxima geração do turno não vai fechar:`, ...capacidade.map((x) => `• ${x}`),
             `Antes de gerar, libere horários na Disponibilidade dele ou escolha outro professor.`] : []),
         ].join("\n");
-        if (!confirm(`Atenção:\n\n${texto.trim()}\n\nTrocar o professor mesmo assim?`)) return;
+        if (!(await confirmar({ titulo: "Trocar o professor mesmo assim?", texto: `Atenção:\n\n${texto.trim()}`, confirmar: "Trocar mesmo assim" }))) return;
         r = await enviar(true);
       }
       await queryClient.invalidateQueries({ queryKey: getGetTurmaQueryKey(turmaId) });
@@ -329,7 +331,8 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
       </div>
       {rascunho && (
         <p className="rounded-md border border-violet-200 bg-violet-50 px-3 py-2 text-xs text-violet-900">
-          Rascunho ligado: a troca de professor fica só no rascunho. Co-docência, trio e aulas assíncronas ainda mudam a escola direto.
+          {/* [SEM-REPETIR] (27/11/2026) a faixa roxa ja diz que a troca fica no rascunho; aqui so a excecao */}
+          Atenção: co-docência, trio e aulas assíncronas mudam a escola direto, mesmo no rascunho.
         </p>
       )}{/* [MODO-RASCUNHO] */}
       <div className="space-y-2">
@@ -355,7 +358,7 @@ function ProfessoresPorDisciplina({ turmaId }: { turmaId: number }) {
                     {l.mudouNoRascunho && <span className="text-[11px] font-semibold rounded bg-violet-100 text-violet-800 px-1.5 py-0.5">no rascunho</span>}
                     {i > 0 && (
                       <Button type="button" size="sm" variant="ghost" className="h-8 px-2 text-destructive hover:text-destructive" disabled={salvando !== null}
-                        onClick={() => { if (confirm(`Remover o 2º professor de ${g.nome}? A disciplina continua com o 1º professor.`)) chamar(`/api/turmas/${turmaId}/disciplinas/linha/${l.turmaDisciplinaId}`, "DELETE", undefined, "Co-docência removida"); }}>
+                        onClick={async () => { if (await confirmar({ titulo: `Remover o 2º professor de ${g.nome}?`, texto: "A disciplina continua com o 1º professor.", confirmar: "Remover", perigo: true })) chamar(`/api/turmas/${turmaId}/disciplinas/linha/${l.turmaDisciplinaId}`, "DELETE", undefined, "Co-docência removida"); }}>
                         remover
                       </Button>
                     )}
