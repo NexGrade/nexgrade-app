@@ -26,7 +26,7 @@ export const GUIA_NEXGRADE: Record<string, TopicoGuia> = {
 1. Escola → aba Dados da Escola: confira nome, CNPJ, INEP, NRE e turnos ofertados.
 2. Calendário e Turnos → aba Esquema de aulas por turno: configure os horários das aulas de cada turno, inclusive o Integral se a escola tiver turma de período integral (sem isso a Disponibilidade e a geração não funcionam para aquele turno). Na aba Calendário letivo, confira o calendário (escola nova já vem com o oficial SEED-PR; se estiver vazio, clique em "Usar o calendário oficial SEED-PR").
 3. Cursos e Disciplinas → aba Catálogo SEED-PR: importe o catálogo oficial e marque os cursos que a escola oferece. Confira as disciplinas na aba Disciplinas.
-4. Professores: cadastre cada professor com as disciplinas que ele pode lecionar (ou use Cadastro da escola → Importar planilhas).
+4. Professores: cadastre cada professor com as disciplinas que ele pode lecionar (ou use Configurações → Importar planilhas).
 5. Turmas: crie as turmas escolhendo curso e série/matriz; depois, na edição da turma, escolha o professor de cada disciplina.
 6. Disponibilidade: marque bloqueios e hora-atividade (HA) de cada professor, por turno.
 7. Salas (menu Gestor de reservas → Salas): cadastre os espaços (salas, laboratórios, quadra).
@@ -101,7 +101,7 @@ ABA DISCIPLINAS
 2. Preencha Nome Completo e Email (obrigatório — é o e-mail que o professor usa para entrar na Minha Agenda). Telefone é opcional. O e-mail cadastrado já libera o acesso do professor à Minha Agenda, sem convite: basta ele criar a conta com esse mesmo e-mail no endereço do sistema.
 3. Em Disciplinas, marque todas que ele pode lecionar (isso diz em quais disciplinas ele é habilitado; a ligação com as turmas é feita em Turmas).
 4. Clique em "Salvar Professor(a)".
-Muitos professores de uma vez: use Cadastro da escola → Importar planilhas (tipo Professores).
+Muitos professores de uma vez: use Configurações → Importar planilhas (tipo Professores).
 
 EDITAR / CONSULTAR (clique no professor na lista)
 - Status do Professor: professores inativos não recebem aulas no horário automático.
@@ -356,7 +356,7 @@ BOM SABER
   importar: {
     titulo: "Importar planilhas (CSV)",
     palavras: ["importar", "csv", "planilha", "excel", "carga em lote", "subir dados"],
-    texto: `Menu Cadastro da escola → Importar planilhas (Importação Inteligente) — professores, turmas e disciplinas via CSV.
+    texto: `Menu Configurações → Importar planilhas (Importação Inteligente) — professores, turmas e disciplinas via CSV.
 1. Em "Tipo de dado", escolha Professores, Turmas ou Disciplinas.
 2. Baixe o "Modelo" CSV. Colunas: Professores = nome;email;telefone;cargaHorariaTotal (e-mail institucional; não use CPF nem matrícula) | Turmas = nome;serie;turno;anoLetivo | Disciplinas = nome;cargaSemanal;cor.
 3. Preencha no Excel e salve como CSV (separador ponto-e-vírgula; primeira linha é o cabeçalho; UTF-8 com ou sem BOM).
@@ -392,7 +392,7 @@ Depois de importar professores, marque as disciplinas de cada um em Professores;
   - Carga Horária Cumprida × Exigida: PDF por turma com o cumprido no ano x o exigido.
 - Arquivo XML do RCO: 3. RCO → Exportar para o RCO (assunto "rco").
 - Relatório de Reservas: na tela Reservas.
-- Planilha da grade (Excel formatado, completa ou de uma turma: a lista de todas as aulas e uma aba com o quadro de cada turma): no fim da tela Grade de Horário → Imprimir Grade. Cadastro da escola → Importar planilhas: professores, turmas e disciplinas por CSV.`,
+- Planilha da grade (Excel formatado, completa ou de uma turma: a lista de todas as aulas e uma aba com o quadro de cada turma): no fim da tela Grade de Horário → Imprimir Grade. Configurações → Importar planilhas: professores, turmas e disciplinas por CSV.`,
   },
 
   rco: {

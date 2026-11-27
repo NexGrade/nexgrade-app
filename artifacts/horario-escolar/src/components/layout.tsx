@@ -79,7 +79,6 @@ const navGroups: GrupoMenu[] = [
     label: "Cadastro da escola",
     numero: 1,
     items: [
-      { href: "/importar", label: "Importar planilhas", icon: Upload }, // [MENU-27-11] começo de escola nova: antes em Configurações
       { href: "/calendario", label: "Calendário e Turnos", icon: CalendarDays }, // [FASE-C3]
       { href: "/cursos", label: "Cursos e Disciplinas", icon: Library }, // [FASE-C2] cursos, matrizes e disciplinas [CODIGOS-NA-CURSOS] e codigos do RCO
       { href: "/professores", label: "Professores", icon: Users },
@@ -120,6 +119,7 @@ const navGroups: GrupoMenu[] = [
     items: [
       { href: "/escola", label: "Escola", icon: Landmark }, // [FASE-C1] dados, configuracoes e assinatura
       { href: "/usuarios", label: "Usuários", icon: Shield },
+      { href: "/importar", label: "Importar planilhas", icon: Upload }, // [MENU-27-11] fica aqui a pedido da dona (pensando na versão para escolas particulares)
       { href: "/virada-ano", label: "Virada do ano", icon: CalendarClock }, // [VIRADA-ANO]
       { href: "/audit", label: "Histórico", icon: History }, // [MENU-ORDEM-USO] consulta, por ultimo
     ],
