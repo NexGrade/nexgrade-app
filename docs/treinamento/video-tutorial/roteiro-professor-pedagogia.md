@@ -1,4 +1,4 @@
-# Vídeos curtos: app do professor e app da pedagogia (11/11/2026, aprovado e no site)
+# Vídeos curtos: app do professor e app da pedagogia — roteiro para aprovação (11/11/2026)
 
 Mesma base dos outros vídeos: Escola Demonstração numa cópia local (dados fictícios), voz Francisca, Nexy na abertura e no fechamento, legenda em português. Cada vídeo tem **1 a 2 minutos**.
 
@@ -33,38 +33,3 @@ A fala do e-mail passa a ser:
 | 8 | Fechamento (Nexy) | O professor não vê essas telas; quem usa é a direção, a coordenação, a secretaria e a pedagogia. |
 
 Onde publicar: os dois vídeos curtos na página do NexGrade, logo abaixo do vídeo principal (ou num bloco "Vídeos curtos" com os três).
-
-## Gravado
-
-- App do professor: **1 min**, login simulado da professora fictícia Patrícia Fernandes. Arquivos: legenda `nexgrade-app-professor.srt`; vídeo no site (`video/nexgrade-app-professor.mp4`).
-- App da pedagogia: **1 min 24 s**, login simulado com o cargo Pedagogia (acesso pelo banco, como no ar). Legenda `nexgrade-app-pedagogia.srt`; vídeo no site.
-- Vídeo principal: só a cena do cadastro do professor foi regravada, com a fala nova do e-mail (4 min 11 s).
-- O botão "Instalar app" não aparece no navegador da gravação; a narração só cita que dá para instalar no celular.
-
-### Narração — App do professor
-
-- Olá! Eu sou a Nexy. Agora vamos ver o app do professor, a Minha Agenda.
-- O professor entra com o e-mail que a escola cadastrou, no computador ou no celular.
-- Logo no alto, o calendário da escola mostra o mês, com os feriados, os recessos e o início e o fim de cada trimestre.
-- Mais abaixo está a grade de aulas dele, por turno. Cada dia mostra a data da semana, e a hora-atividade aparece marcada.
-- Em Baixar PDF, ele leva a própria grade para imprimir ou mandar por mensagem.
-- Para reservar um espaço, clique em Nova reserva e escolha o dia.
-- Depois, o período e as aulas. O sistema já mostra as aulas dele em cada horário.
-- Escolha o espaço, confira o objetivo e clique em Solicitar reserva. Em Minhas reservas, ele acompanha os pedidos.
-- No celular, a agenda mostra um dia por vez, e dá para instalar como aplicativo.
-- Se aparecer que o e-mail não foi liberado, é porque o e-mail da conta não bate com o do cadastro. Fale com a secretaria. Até a próxima!
-
-### Narração — App da pedagogia
-
-- Olá! Eu sou a Nexy. Agora, o app da pedagogia: o acompanhamento do dia a dia dos professores.
-- Quem tem o cargo Pedagogia entra e já vê, no menu da esquerda, só o que precisa.
-- Em Presença dos professores, escolha o dia e o turno. Aparece um cartão por professor, com as aulas, a hora-atividade e as aulas assíncronas.
-- Em cada aula, marque P para presente, F para falta, A para atraso ou S para substituído.
-- No S, escolha quem deu a aula. No balão do cartão, você escreve uma observação do dia.
-- Restantes igual a Presente marca todas as aulas que ainda estão em branco. Depois, clique em Salvar.
-- O PDF e o Excel do dia ficam no topo, e o Relatório por período junta tudo: geral, individual, total e assíncronas.
-- Em Licenças, clique em Nova Licença e escolha o professor, o tipo, as datas e o substituto. O motivo não é registrado, para proteger os dados do professor.
-- Em Comunicados, escreva o título e a mensagem e envie. O comunicado fica na lista da escola.
-- Em Relatórios Pedagógicos ficam a presença do dia, as faltas do mês, a folha de ponto e a carga horária de cada professor.
-- E em Consulta, a pedagogia vê o horário e o calendário da escola, só para consultar.
-- O professor não vê essas telas. Bom trabalho, e até a próxima!
