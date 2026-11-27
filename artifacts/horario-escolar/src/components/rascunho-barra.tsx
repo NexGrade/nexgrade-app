@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmar } from "@/components/confirmar"; // [CONFIRMAR-NEXGRADE]
 import { usePapelEfetivo } from "@/lib/papeis";
 import { useRascunho, ligarRascunho } from "@/lib/rascunho";
 import { FileEdit, ListChecks, Loader2, RotateCcw, ShieldCheck } from "lucide-react";
@@ -52,6 +53,7 @@ export function RascunhoBarra() {
   const { rascunho, ligado, recarregar, carregando: carregandoRascunho } = useRascunho();
   const qc = useQueryClient();
   const { toast } = useToast();
+  const confirmar = useConfirmar();
   const [novoAberto, setNovoAberto] = useState(false);
   const [nome, setNome] = useState("");
   const [alcance, setAlcance] = useState("matutino"); // [RASCUNHO-ALCANCE]
@@ -115,7 +117,7 @@ export function RascunhoBarra() {
   };
 
   const descartar = async () => {
-    if (!rascunho || !confirm(`Descartar o rascunho "${rascunho.nome}"? Tudo o que foi mudado nele é apagado. A escola continua como está.`)) return;
+    if (!rascunho || !(await confirmar({ titulo: `Descartar o rascunho "${rascunho.nome}"?`, texto: "Tudo o que foi mudado nele é apagado. A escola continua como está.", confirmar: "Descartar", perigo: true }))) return;
     setOcupado("descartar");
     try {
       await customFetch("/api/horarios/rascunho/atual", { method: "DELETE" });

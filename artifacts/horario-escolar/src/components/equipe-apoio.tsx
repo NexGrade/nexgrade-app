@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Loader2, Pencil, Plus, Trash2, UsersRound } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmar } from "@/components/confirmar"; // [CONFIRMAR-NEXGRADE]
 import { mensagemErro } from "@/lib/presenca";
 
 type Turno = "matutino" | "vespertino" | "noturno";
@@ -54,6 +55,7 @@ const formVazio = (): Form => ({ nome: "", funcao: "pedagogo", complemento: "", 
 export function CardEquipeApoio() {
   const { toast } = useToast();
   const qc = useQueryClient();
+  const confirmar = useConfirmar();
   const { data, isLoading } = useQuery({ queryKey: [URL_API], queryFn: () => customFetch<Lista>(URL_API) });
   const [form, setForm] = useState<Form | null>(null);
   const [salvando, setSalvando] = useState(false);
@@ -95,7 +97,7 @@ export function CardEquipeApoio() {
   };
 
   const remover = async (p: Pessoa) => {
-    if (!window.confirm(`Tirar ${p.nome} da equipe de apoio? Ela deixa de sair no Ponto Diário.`)) return;
+    if (!(await confirmar({ titulo: `Tirar ${p.nome} da equipe de apoio?`, texto: "Ela deixa de sair no Ponto Diário.", confirmar: "Tirar", perigo: true }))) return;
     setRemovendo(p.id);
     try {
       await customFetch(`${URL_API}/${p.id}`, { method: "DELETE", responseType: "json" } as never);

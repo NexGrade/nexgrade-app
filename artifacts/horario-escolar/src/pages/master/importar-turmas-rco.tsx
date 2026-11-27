@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmar } from "@/components/confirmar"; // [CONFIRMAR-NEXGRADE]
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { AlertTriangle } from "lucide-react";
 
@@ -41,6 +42,7 @@ const erroDe = (err: unknown) => {
 export function ImportarTurmasRcoDialog({ escola, onOpenChange }: { escola: { id: string; nome: string }; onOpenChange: (v: boolean) => void }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const confirmar = useConfirmar();
   const [ano, setAno] = useState(new Date().getFullYear());
   const [comEspanhola, setComEspanhola] = useState(false);
   const [aplicando, setAplicando] = useState(false);
@@ -56,12 +58,11 @@ export function ImportarTurmasRcoDialog({ escola, onOpenChange }: { escola: { id
   async function aplicar() {
     if (!p) return;
     const r = p.resumo;
-    if (!window.confirm(
-      `Gravar em ${escola.nome} (ano letivo ${ano})?\n\n` +
+    if (!(await confirmar({ titulo: `Gravar em ${escola.nome} (ano letivo ${ano})?`, confirmar: "Gravar", texto:
       `• ${r.turmasNovas} turma(s) nova(s), ${r.vinculos} vínculos turma × disciplina\n` +
       `• ${r.disciplinasNovas} disciplina(s) nova(s), ${r.codigosAGravar} Código(s) Externo(s) gravado(s) em disciplinas da escola\n` +
       (p.comEspanhola ? "• com Língua Espanhola\n" : "") +
-      `\nNão mexe em professores, grade nem em turmas que já existem.`)) return;
+      `\nNão mexe em professores, grade nem em turmas que já existem.` }))) return;
     setAplicando(true);
     try {
       const res = await customFetch<{ mensagem?: string }>(url, {

@@ -2519,7 +2519,7 @@ async function aguardarCpsatServiceAcordado(maxEsperaMs = 90_000): Promise<boole
 // AsyncLocalStorage (sem passar callback por todas as chamadas). Fora de um job, nao faz nada.
 interface EtapaGeracao { id: string; rotulo: string; inicioMs: number; fimMs?: number; detalhe?: string }
 // [PROGRESSO-MOTOR] andamento vindo do proprio motor (GET /progresso/:id na VM): fase e cada grade melhor
-interface ProgressoMotor { fase: string; decorridoS: number; parar?: boolean; solucoes: Array<{ t: number; fase: string; janelasProfessor?: number; janelasTurma?: number; haFaltando?: number }> }
+interface ProgressoMotor { fase: string; decorridoS: number; parar?: boolean; solucoes: Array<{ t: number; fase: string; janelasProfessor?: number; janelasTurma?: number; haFaltando?: number; comHA?: boolean }> } // [JANELAS-COM-HA-NO-GERAR]
 interface ProgressoGeracao { etapas: EtapaGeracao[]; fase?: string; jobId?: string; motor?: ProgressoMotor; pararPedido?: boolean }
 const progressoGeracao = new AsyncLocalStorage<ProgressoGeracao>();
 function marcarEtapa(id: string, rotulo: string, detalhe?: string): void {
@@ -3422,7 +3422,10 @@ async function runCpsatGeneracaoUnica(
         if (c > 0) cotasMovel[p] = c;
       }
       const haParaEstimativa = { cotas: cotasMovel, ocupados: ocupadosMotor };
-      const corpoMotor = { ...(modoMelhoria ? { ...payloadComHa, aulasIniciais, haAtual, haParaEstimativa } : payloadComHa), ...(progressoId ? { progressoId } : {}) }; // [HA-OCUPA-MELHORIA] [JANELAS-COM-HA-ENCAIXADA]
+      // [JANELAS-COM-HA-NO-GERAR] (27/11/2026) o Gerar do zero tambem manda a estimativa: a tela mostrava as janelas entre
+      // as aulas (16) e a simulacao, com a HA encaixada, 0. No Gerar a HA toda conta como movel (cota do turno).
+      // Motor antigo ignora o campo (so o progresso muda; a grade e a mesma).
+      const corpoMotor = { ...(modoMelhoria ? { ...payloadComHa, aulasIniciais, haAtual, haParaEstimativa } : { ...payloadComHa, haParaEstimativa }), ...(progressoId ? { progressoId } : {}) }; // [HA-OCUPA-MELHORIA] [JANELAS-COM-HA-ENCAIXADA]
       const axiosResponse = await axios.post(`${CPSAT_SERVICE_URL}/${modoMelhoria ? "melhorar-grade" : usarCoordenacao ? "gerar-grade-coordenada" : "gerar-grade"}`, corpoMotor, { // [MELHORAR-GRADE] [HA-NO-CPSAT]
         headers: { "Content-Type": "application/json", ...(CPSAT_TOKEN ? { "X-NexGrade-Token": CPSAT_TOKEN } : {}) }, // [CPSAT-TOKEN]
         timeout: timeoutMs,

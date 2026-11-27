@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { customFetch, useListTurmas, useListDisciplinas, useListProfessores } from "@workspace/api-client-react";
 import { SeletorBusca } from "@/components/seletor-busca";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmar } from "@/components/confirmar"; // [CONFIRMAR-NEXGRADE]
 import { Loader2, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,6 +25,7 @@ const PERIODOS = [{ v: "matutino", r: "Manhã" }, { v: "vespertino", r: "Tarde" 
 export function GradeRascunho({ nome }: { nome: string }) {
   const { toast } = useToast();
   const qc = useQueryClient();
+  const confirmar = useConfirmar();
   const { data: turmas = [] } = useListTurmas();
   const { data: disciplinas = [] } = useListDisciplinas();
   const { data: professores = [] } = useListProfessores();
@@ -78,7 +80,7 @@ export function GradeRascunho({ nome }: { nome: string }) {
         });
         const r = await enviar(false);
         if (!r.aplicado) {
-          if (!confirm(`Atenção:\n\n${(r.avisos ?? []).map((x) => `• ${x}`).join("\n")}\n\nTrocar o professor mesmo assim?`)) continue;
+          if (!(await confirmar({ titulo: "Trocar o professor mesmo assim?", texto: `Atenção:\n\n${(r.avisos ?? []).map((x) => `• ${x}`).join("\n")}`, confirmar: "Trocar mesmo assim" }))) continue;
           await enviar(true);
         }
         mudou++;
@@ -103,7 +105,7 @@ export function GradeRascunho({ nome }: { nome: string }) {
     try {
       let r = await customFetch<{ aplicado: boolean; avisos: string[] }>(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo) });
       if (!r.aplicado) {
-        if (!confirm(`Atenção:\n\n${r.avisos.map((a) => `• ${a}`).join("\n")}\n\nTrocar mesmo assim?`)) return;
+        if (!(await confirmar({ titulo: "Trocar mesmo assim?", texto: `Atenção:\n\n${r.avisos.map((a) => `• ${a}`).join("\n")}`, confirmar: "Trocar mesmo assim" }))) return;
         r = await customFetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...corpo, confirmar: true }) });
       }
       await qc.invalidateQueries({ queryKey: ["grade-rascunho", nome] });

@@ -69,6 +69,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmar } from "@/components/confirmar"; // [CONFIRMAR-NEXGRADE]
 
 const days = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"];
 const salaTypes: Record<string, string> = {
@@ -316,6 +317,7 @@ export default function ReservasPage() {
   const [editing, setEditing] = useState<Reserva | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const confirmar = useConfirmar();
   const somenteConsulta = useEhPedagogia(); // [PEDAGOGIA] ve em que sala cada professor esta, sem alterar
 
   const reservationsQuery = useListReservas({ data: selectedDate }, {
@@ -437,8 +439,8 @@ export default function ReservasPage() {
     });
   };
 
-  const removeReservation = (id: number) => {
-    if (!window.confirm("Excluir esta reserva? Essa ação não pode ser desfeita.")) return;
+  const removeReservation = async (id: number) => {
+    if (!(await confirmar({ titulo: "Excluir esta reserva?", texto: "Essa ação não pode ser desfeita.", confirmar: "Excluir", perigo: true }))) return;
     deleteReserva.mutate({ id }, {
       onSuccess: () => {
         invalidateReservations();
@@ -630,7 +632,7 @@ export default function ReservasPage() {
                       {reserva.status === "pendente" && <Button data-testid={`button-confirm-reservation-${reserva.id}`} size="sm" onClick={() => changeStatus(reserva.id, "confirmada")} disabled={updateReserva.isPending}><Check className="mr-1.5 h-3.5 w-3.5" /> Confirmar</Button>}
                       {reserva.status !== "cancelada" && <Button data-testid={`button-cancel-reservation-${reserva.id}`} size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive" onClick={() => changeStatus(reserva.id, "cancelada")} disabled={updateReserva.isPending}><X className="h-4 w-4" /></Button>}
                       <Button data-testid={`button-edit-reservation-${reserva.id}`} size="icon" variant="ghost" onClick={() => openEdit(reserva)}><CalendarDays className="h-4 w-4" /></Button>
-                      <Button data-testid={`button-delete-reservation-${reserva.id}`} size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive" onClick={() => removeReservation(reserva.id)} disabled={deleteReserva.isPending}><Trash2 className="h-4 w-4" /></Button>
+                      <Button data-testid={`button-delete-reservation-${reserva.id}`} size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive" onClick={() => void removeReservation(reserva.id)} disabled={deleteReserva.isPending}><Trash2 className="h-4 w-4" /></Button>
                     </div>}
                   </div>
                 </CardContent>

@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox"; // [RCO-ASSINCRONAS]
 import { Download, BarChart3, Hash, FileUp, Bookmark, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmar } from "@/components/confirmar"; // [CONFIRMAR-NEXGRADE]
 import { Link } from "wouter"; // [CODIGOS-RCO-TELA]
 import { montarUrl as buildUrl, salvarBlob } from "@/hooks/use-baixar-arquivo";
 import { AUTOMACAO_RCO_LIGADA } from "@/lib/rco-automacao"; // [RCO-AUTOMACAO-DESLIGADA]
@@ -238,6 +239,7 @@ type RespostaAtalho = { favorito: string; criadaEm: string; ultimoUsoEm: string 
 function AtalhoRco() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const confirmar = useConfirmar();
   const origem = window.location.origin;
   const chave = ["/api/export/rco-script/atalho", origem];
   const { data, isError } = useQuery({
@@ -252,7 +254,7 @@ function AtalhoRco() {
   useEffect(() => { if (link.current && data?.favorito) link.current.setAttribute("href", data.favorito); }, [data?.favorito]);
 
   const trocar = async () => {
-    if (!confirm("Gerar um atalho novo? O atalho antigo para de funcionar em todos os computadores e cada um precisa arrastar o novo.")) return;
+    if (!(await confirmar({ titulo: "Gerar um atalho novo?", texto: "O atalho antigo para de funcionar em todos os computadores e cada um precisa arrastar o novo.", confirmar: "Gerar atalho novo" }))) return;
     setTrocando(true);
     try {
       const novo = await customFetch<RespostaAtalho>("/api/export/rco-script/atalho/trocar", {

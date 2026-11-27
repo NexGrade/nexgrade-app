@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmar } from "@/components/confirmar"; // [CONFIRMAR-NEXGRADE]
 import { NOME_TURNO, ehSalaTablets } from "@/lib/reservas-formato";
 
 // [BLOQUEIOS] (17/10/2026) Gestor de reservas, coordenacao, direcao e secretaria bloqueiam salas e equipamentos
@@ -43,6 +44,7 @@ const quandoTexto = (b: BloqueioItem) =>
 export function BotaoBloqueios({ aoMudar }: { aoMudar?: () => void }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const confirmar = useConfirmar();
   const [aberto, setAberto] = useState(false);
   const [novo, setNovo] = useState(false);
   const [enviando, setEnviando] = useState(false);
@@ -113,7 +115,7 @@ export function BotaoBloqueios({ aoMudar }: { aoMudar?: () => void }) {
     setEnviando(true);
     try {
       const previa = await enviar({ somenteConferir: true });
-      if (previa.reservasAfetadas > 0 && !window.confirm(`Já há ${previa.reservasAfetadas} reserva(s) nesse período. Elas ficarão PENDENTES e os professores serão avisados. Bloquear mesmo assim?`)) return;
+      if (previa.reservasAfetadas > 0 && !(await confirmar({ titulo: "Bloquear mesmo assim?", texto: `Já há ${previa.reservasAfetadas} reserva(s) nesse período. Elas ficarão PENDENTES e os professores serão avisados.`, confirmar: "Bloquear mesmo assim" }))) return;
       await enviar({});
       toast({ title: "Bloqueio criado", description: previa.reservasAfetadas > 0 ? `${previa.reservasAfetadas} reserva(s) ficaram pendentes e os professores foram avisados.` : "O espaço não aceita mais reservas nesse período." });
       limpar();
@@ -127,7 +129,7 @@ export function BotaoBloqueios({ aoMudar }: { aoMudar?: () => void }) {
   }
 
   async function liberar(b: BloqueioItem) {
-    if (!window.confirm(`Liberar ${b.alvoNome} (${b.motivoRotulo}, ${periodoTexto(b)})? Ele volta a aceitar reservas.`)) return;
+    if (!(await confirmar({ titulo: `Liberar ${b.alvoNome} (${b.motivoRotulo}, ${periodoTexto(b)})?`, texto: "Ele volta a aceitar reservas.", confirmar: "Liberar" }))) return;
     setRemovendo(b.id);
     try {
       await customFetch(`/api/reservas/bloqueios/${b.id}`, { method: "DELETE", responseType: "json" });

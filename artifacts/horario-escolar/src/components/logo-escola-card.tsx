@@ -9,6 +9,7 @@ import { customFetch } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmar } from "@/components/confirmar"; // [CONFIRMAR-NEXGRADE]
 import { ImageIcon, Upload, Trash2, Save } from "lucide-react";
 
 const URL_ESCOLA = "/api/escolas/me";
@@ -69,6 +70,7 @@ function mensagemDeErro(err: unknown, padrao: string): string {
 export function LogoEscolaCard({ className }: { className?: string }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const confirmar = useConfirmar();
   const inputRef = useRef<HTMLInputElement>(null);
   const [previa, setPrevia] = useState<string | null>(null);
   const [processando, setProcessando] = useState(false);
@@ -135,7 +137,7 @@ export function LogoEscolaCard({ className }: { className?: string }) {
 
   const remover = async () => {
     if (previa) { setPrevia(null); return; } // so descarta a previa ainda nao salva
-    if (!window.confirm("Remover a logo da escola?")) return;
+    if (!(await confirmar({ titulo: "Remover a logo da escola?", confirmar: "Remover", perigo: true }))) return;
     setSalvando(true);
     try {
       await customFetch(URL_LOGO, { method: "DELETE", responseType: "json" } as any);

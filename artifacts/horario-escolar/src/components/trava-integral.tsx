@@ -5,6 +5,7 @@ import { customFetch } from "@workspace/api-client-react";
 import { Lock, LockOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmar } from "@/components/confirmar"; // [CONFIRMAR-NEXGRADE]
 import { useSomenteConsultaGrade } from "@/lib/papeis";
 import { useState } from "react";
 
@@ -17,6 +18,7 @@ export function TravaIntegral() {
   const { toast } = useToast();
   const somenteConsulta = useSomenteConsultaGrade();
   const [ocupado, setOcupado] = useState(false);
+  const confirmar = useConfirmar();
   const q = useQuery({
     queryKey: ["trava-integral"],
     queryFn: () => customFetch<Situacao>("/api/horarios/trava-integral"),
@@ -27,7 +29,7 @@ export function TravaIntegral() {
   const nomes = s.turmas.map((t) => t.nome).join(", ");
 
   const mudar = async (acao: "destravar" | "travar") => {
-    if (acao === "destravar" && !confirm(`Destravar ${nomes} (turma integral) por 1 hora?\n\nNesse tempo, as aulas, os horários e os professores dela podem ser mudados (gerar, rascunho, trocar aula, Turmas). Depois de 1 hora ela volta a travar sozinha.`)) return;
+    if (acao === "destravar" && !(await confirmar({ titulo: `Destravar ${nomes} (turma integral) por 1 hora?`, texto: "Nesse tempo, as aulas, os horários e os professores dela podem ser mudados (gerar, rascunho, trocar aula, Turmas). Depois de 1 hora ela volta a travar sozinha.", confirmar: "Destravar por 1 hora" }))) return;
     setOcupado(true);
     try {
       const r = await customFetch<Situacao>(`/api/horarios/trava-integral/${acao}`, {

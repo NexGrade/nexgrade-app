@@ -14,7 +14,7 @@ export interface EtapaGeracao {
 }
 
 // [PROGRESSO-MOTOR] andamento do proprio motor: fase e cada grade melhor encontrada
-export interface SolucaoMotor { t: number; fase: string; janelasProfessor?: number; janelasTurma?: number; haFaltando?: number }
+export interface SolucaoMotor { t: number; fase: string; janelasProfessor?: number; janelasTurma?: number; haFaltando?: number; /** [JANELAS-COM-HA-NO-GERAR] ja desconta a HA */ comHA?: boolean }
 export interface ProgressoMotor { fase: string; decorridoS: number; parar?: boolean; solucoes: SolucaoMotor[] }
 
 /** [PARAR-MOTOR] acoes durante o calculo */
@@ -68,8 +68,10 @@ function LinhaJanelas({ pontos, antesDaHA }: { pontos: Array<{ t: number; v: num
 // [JANELAS-ANTES-DA-HA] (27/11/2026) no Gerar do zero o motor conta as janelas entre as AULAS; a HA entra depois e
 // ocupa parte desses buracos (teste de 27/11: o grafico terminou em 16 e a simulacao deu 0). No Melhorar o motor ja
 // estima as janelas com a HA encaixada [JANELAS-COM-HA-ENCAIXADA]. A tela diz qual conta esta mostrando.
-function PainelMotor({ motor, antesDaHA }: { motor: ProgressoMotor; antesDaHA?: boolean }) {
+function PainelMotor({ motor, antesDaHA: antesDaHAPedido }: { motor: ProgressoMotor; antesDaHA?: boolean }) {
   const sol = motor.solucoes;
+  // [JANELAS-COM-HA-NO-GERAR] (27/11/2026) motor novo ja manda o numero com a HA encaixada (comHA): ai o rotulo "antes da HA" sai
+  const antesDaHA = antesDaHAPedido && ![...sol].reverse().find((s) => s.janelasProfessor != null)?.comHA;
   const comProf = sol.filter((s) => s.janelasProfessor != null);
   const serie = (comProf.length >= 2 ? comProf.map((s) => ({ t: s.t, v: s.janelasProfessor! })) : sol.filter((s) => s.janelasTurma != null).map((s) => ({ t: s.t, v: s.janelasTurma! })));
   const ultimaProf = [...sol].reverse().find((s) => s.janelasProfessor != null)?.janelasProfessor;

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { customFetch } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmar } from "@/components/confirmar"; // [CONFIRMAR-NEXGRADE]
 
 export const TIPOS_ACEITAVEIS = new Set([
   "pausa_entre_turnos", "intervalo_entre_turnos", "janelas_excessivas", "aulas_geminadas_excedidas",
@@ -13,12 +14,13 @@ export const TIPOS_ACEITAVEIS = new Set([
 export function AceitarConflito({ tipo, descricao, depois }: { tipo: string | null; descricao: string; depois?: () => void }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const confirmar = useConfirmar();
   const [feito, setFeito] = useState(false);
   const [gravando, setGravando] = useState(false);
   if (!tipo || !TIPOS_ACEITAVEIS.has(tipo)) return null;
   if (feito) return <span className="text-xs font-medium">Aceito como está</span>;
   const aceitar = async () => {
-    if (!confirm(`${descricao}\n\nAceitar este conflito como está? Ele some da lista de conflitos. Se a grade mudar (outro dia, outra turma), ele volta a aparecer.`)) return;
+    if (!(await confirmar({ titulo: "Aceitar este conflito como está?", texto: `${descricao}\n\nEle some da lista de conflitos. Se a grade mudar (outro dia, outra turma), ele volta a aparecer.`, confirmar: "Aceitar como está" }))) return;
     setGravando(true);
     try {
       await customFetch("/api/conflitos/aceitar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo, descricao }) });
