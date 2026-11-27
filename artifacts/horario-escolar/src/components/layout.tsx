@@ -11,7 +11,8 @@ import {
   Settings, Printer, Sparkles, Upload, CreditCard, Library, Clock,
   SlidersHorizontal, Landmark, DoorOpen, CalendarClock,
   FileUp, // [ARQUIVO-RCO]
-  NotebookPen, BarChart3, // [MENU-UNICO]
+  NotebookPen, FileOutput, // [MENU-UNICO] [MENU-27-11] Exportar para o RCO com ícone de arquivo saindo (antes gráfico de barras)
+  ChevronDown, // [MENU-RECOLHER]
   Menu, X, ClipboardCheck, // [MENU-CELULAR] [PRESENCA-PEDAGOGIA]
   Home, Wand2, Search, // [MENU-DESTAQUE]
 } from "lucide-react";
@@ -27,6 +28,7 @@ type GrupoMenu = {
   numero?: number;
   icone?: Icone;
   principal?: boolean;
+  recolhivel?: boolean; // [MENU-RECOLHER] (27/11/2026) seção que não é etapa: fecha com um clique no título
   items: Array<{ href: string; label: string; icon: Icone; badge?: string; principal?: boolean }>;
 };
 
@@ -101,19 +103,23 @@ const navGroups: GrupoMenu[] = [
     label: "RCO",
     numero: 3,
     items: [
-      { href: "/rco", label: "Exportar para o RCO", icon: BarChart3 }, // [MENU-UNICO] tela propria
+      { href: "/rco", label: "Exportar para o RCO", icon: FileOutput }, // [MENU-UNICO] tela propria
       { href: "/arquivo-rco", label: "Arquivo do RCO", icon: FileUp }, // [ARQUIVO-RCO] a escola baixa no RCO com o proprio acesso e envia aqui
     ],
   },
-  secaoGestorReservas,
-  secaoPedagogia,
+  // [MENU-RECOLHER] (27/11/2026) no menu completo, as seções dos cargos e Configurações ficam recolhidas: o menu
+  // cabia em duas telas. [MENU-27-11] sem o "Consultar grade" do gestor: abre a mesma tela do Gerar Grade
+  // (os dois ficavam marcados juntos). No menu do próprio cargo nada muda.
+  { ...secaoGestorReservas, recolhivel: true, items: secaoGestorReservas.items.filter((i) => i.label !== "Consultar grade") },
+  { ...secaoPedagogia, recolhivel: true },
   {
     label: "Configurações",
     icone: Settings,
+    recolhivel: true,
     items: [
       { href: "/escola", label: "Escola", icon: Landmark }, // [FASE-C1] dados, configuracoes e assinatura
       { href: "/usuarios", label: "Usuários", icon: Shield },
-      { href: "/importar", label: "Importar planilhas", icon: Upload },
+      { href: "/importar", label: "Importar planilhas", icon: Upload }, // [MENU-27-11] fica aqui a pedido da dona (pensando na versão para escolas particulares)
       { href: "/virada-ano", label: "Virada do ano", icon: CalendarClock }, // [VIRADA-ANO]
       { href: "/audit", label: "Histórico", icon: History }, // [MENU-ORDEM-USO] consulta, por ultimo
     ],
@@ -127,7 +133,7 @@ const menuPedagogia: GrupoMenu[] = [
     label: "Consulta",
     icone: Search,
     items: [
-      { href: "/horario", label: "Horário", icon: Calendar },
+      { href: "/horario", label: "Consultar grade", icon: Calendar }, // [MENU-27-11] mesmo nome do gestor de reservas (antes "Horário")
       { href: "/calendario", label: "Calendário", icon: CalendarDays },
     ],
   },
@@ -156,13 +162,27 @@ function NotificationBellAdmin() {
 }
 
 // [MENU-ORGANIZADO] (31/10/2026) o mesmo menu no computador e no celular
+// [MENU-RECOLHER] secoes abertas pela pessoa (guardado neste navegador; sem storage, comeca tudo fechado)
+const CHAVE_MENU_ABERTAS = "nexgrade-menu-secoes-abertas";
+function lerSecoesAbertas(): string[] {
+  try { const v = JSON.parse(localStorage.getItem(CHAVE_MENU_ABERTAS) ?? "[]"); return Array.isArray(v) ? v : []; } catch { return []; }
+}
+
 function MenuLateral({ grupos, isActive, seloDoItem }: { grupos: GrupoMenu[]; isActive: (href: string) => boolean; seloDoItem: (href: string, badge?: string, label?: string) => string | undefined }) {
+  const [abertas, setAbertas] = useState<string[]>(lerSecoesAbertas);
+  const alternar = (label: string) => setAbertas((atual) => {
+    const nova = atual.includes(label) ? atual.filter((l) => l !== label) : [...atual, label];
+    try { localStorage.setItem(CHAVE_MENU_ABERTAS, JSON.stringify(nova)); } catch { /* sem storage: so nesta tela */ }
+    return nova;
+  });
   return (
     <nav className="flex-1 py-4 px-3 pb-6 overflow-y-auto">
-      {grupos.map((group, gi) => (
-        <div key={group.label} className={cn(gi > 0 && "mt-4 pt-4 border-t border-border")}>
-          {/* [MENU-DESTAQUE] titulo da secao: numero da etapa ou icone, em letra legivel */}
-          <p className="flex items-center gap-2 px-3 mb-1.5 text-[13px] font-semibold text-foreground">
+      {grupos.map((group, gi) => {
+        // [MENU-RECOLHER] a secao da tela aberta fica sempre aberta (a pessoa ve onde esta)
+        const temAtiva = group.items.some((i) => isActive(i.href));
+        const aberta = !group.recolhivel || temAtiva || abertas.includes(group.label);
+        const conteudoTitulo = (
+          <>
             {group.numero ? (
               <span className={cn("w-5 h-5 shrink-0 rounded-full flex items-center justify-center text-[11px] font-bold",
                 group.principal ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary")}>
@@ -172,8 +192,22 @@ function MenuLateral({ grupos, isActive, seloDoItem }: { grupos: GrupoMenu[]; is
               <group.icone className="w-4 h-4 shrink-0 text-primary" />
             ) : null}
             {group.label}
-          </p>
-          <div className="space-y-0.5">
+          </>
+        );
+        return (
+        <div key={group.label} className={cn(gi > 0 && (group.recolhivel ? "mt-2 pt-2" : "mt-4 pt-4"), gi > 0 && "border-t border-border")}>
+          {/* [MENU-DESTAQUE] titulo da secao: numero da etapa ou icone, em letra legivel */}
+          {group.recolhivel ? (
+            <button type="button" onClick={() => !temAtiva && alternar(group.label)} aria-expanded={aberta}
+              className={cn("w-full flex items-center gap-2 px-3 py-1 rounded-md text-[13px] font-semibold text-foreground",
+                !temAtiva && "hover:bg-accent", aberta && "mb-1.5")}>
+              {conteudoTitulo}
+              <ChevronDown className={cn("ml-auto w-4 h-4 text-muted-foreground transition-transform", !aberta && "-rotate-90", temAtiva && "opacity-40")} />
+            </button>
+          ) : (
+            <p className="flex items-center gap-2 px-3 mb-1.5 text-[13px] font-semibold text-foreground">{conteudoTitulo}</p>
+          )}
+          {aberta && <div className="space-y-0.5">
             {group.items.map((item) => (
               <Link
                 key={item.href}
@@ -200,9 +234,10 @@ function MenuLateral({ grupos, isActive, seloDoItem }: { grupos: GrupoMenu[]; is
                 )}
               </Link>
             ))}
-          </div>
+          </div>}
         </div>
-      ))}
+        );
+      })}
       <div className="pt-4 mt-2 border-t border-border space-y-1">
         <div className="flex items-center gap-3 px-3 py-1 rounded-md text-sm font-medium text-muted-foreground">
           <NotificationBellAdmin />

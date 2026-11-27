@@ -233,7 +233,7 @@ O Assistente de IA não gera grade — ele só explica o caminho.`,
   grade_conflitos: {
     titulo: "Grade oficial e Conflitos (ver, filtrar, aula manual, HA e bloqueios pela grade)",
     palavras: ["grade", "ver horário", "filtrar", "aula manual", "adicionar aula", "excluir aula", "conflito", "conflitos", "vago", "livre", "indisponível", "turnos lado a lado", "trocar ha", "bloquear"],
-    texto: `Menu Gerar Grade (tela Horário) → aba Grade. A pedagogia abre a mesma tela em Consulta → Horário e o gestor de reservas em Consultar grade.
+    texto: `Menu Gerar Grade (tela Horário) → aba Grade. A pedagogia abre a mesma tela em Consulta → Consultar grade e o gestor de reservas em Consultar grade.
 - Filtre por Turno (Matutino, Vespertino, Noturno ou Integral), por Turma ou por Professor (botão "Limpar" volta ao início). Selecione uma turma, um professor ou um turno para ver a grade.
 - Turma integral: a grade mostra todas as aulas do esquema Integral (ex.: 11), com a hora de cada linha, mesmo vazias.
 - Na grade do PROFESSOR, a aula da turma integral aparece no turno real (manhã ou tarde) e na linha correspondente; por isso a hora pode diferir um pouco da grade da turma (ex.: 15:00 no integral = 3ª aula da tarde, 14:45).
