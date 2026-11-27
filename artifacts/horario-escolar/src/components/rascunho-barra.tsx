@@ -176,7 +176,7 @@ export function RascunhoBarra() {
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-700 text-white"><FileEdit className="w-4 h-4" /></span>
           <span className="flex-1 min-w-[14rem] text-sm">
             <strong className="block text-base">Existe o rascunho “{rascunho.nome}”</strong>
-            {rascunho.criadoPor ? `Começado por ${rascunho.criadoPor}. ` : ""}Agora você está vendo a escola como está.
+            {rascunho.criadoPor ? `Começado por ${rascunho.criadoPor}.` : "Ele fica guardado até você entrar de novo."}{/* [RASCUNHO-VISUAL] o selo verde acima ja diz que e a escola como esta */}
           </span>
           <Button className="h-9 bg-violet-700 text-white hover:bg-violet-800" onClick={() => ligarRascunho(rascunho.nome)}>
             <FileEdit className="w-4 h-4 mr-1.5" />Entrar no rascunho
